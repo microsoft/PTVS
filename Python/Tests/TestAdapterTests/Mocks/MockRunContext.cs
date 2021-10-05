@@ -16,49 +16,34 @@
 
 namespace TestAdapterTests.Mocks
 {
-    class MockRunContext : IRunContext
-    {
-        public MockRunContext(IRunSettings runSettings, IReadOnlyList<TestCase> testCases, string resultsDirectory)
-        {
-            RunSettings = runSettings;
-            TestCases = testCases;
-            TestRunDirectory = resultsDirectory;
-        }
+	class MockRunContext : IRunContext
+	{
+		public MockRunContext(IRunSettings runSettings, IReadOnlyList<TestCase> testCases, string resultsDirectory)
+		{
+			RunSettings = runSettings;
+			TestCases = testCases;
+			TestRunDirectory = resultsDirectory;
+		}
 
-        public IReadOnlyList<TestCase> TestCases { get; }
+		public IReadOnlyList<TestCase> TestCases { get; }
 
-        public ITestCaseFilterExpression GetTestCaseFilter(IEnumerable<string> supportedProperties, Func<string, TestProperty> propertyProvider)
-        {
-            throw new NotImplementedException();
-        }
+		public ITestCaseFilterExpression GetTestCaseFilter(IEnumerable<string> supportedProperties, Func<string, TestProperty> propertyProvider)
+		{
+			throw new NotImplementedException();
+		}
 
-        public bool InIsolation
-        {
-            get { throw new NotImplementedException(); }
-        }
+		public bool InIsolation => throw new NotImplementedException();
 
-        public bool IsBeingDebugged
-        {
-            get { return false; }
-        }
+		public bool IsBeingDebugged => false;
 
-        public bool IsDataCollectionEnabled
-        {
-            get { throw new NotImplementedException(); }
-        }
+		public bool IsDataCollectionEnabled => throw new NotImplementedException();
 
-        public bool KeepAlive
-        {
-            get { throw new NotImplementedException(); }
-        }
+		public bool KeepAlive => throw new NotImplementedException();
 
-        public string SolutionDirectory
-        {
-            get { throw new NotImplementedException(); }
-        }
+		public string SolutionDirectory => throw new NotImplementedException();
 
-        public string TestRunDirectory { get; }
+		public string TestRunDirectory { get; }
 
-        public IRunSettings RunSettings { get; }
-    }
+		public IRunSettings RunSettings { get; }
+	}
 }

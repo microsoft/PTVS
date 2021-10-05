@@ -16,15 +16,15 @@
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 {
-    internal interface IPyBaseStringObject : IPyObject
-    {
-    }
+	internal interface IPyBaseStringObject : IPyObject
+	{
+	}
 
-    internal static class PyBaseStringExtensions
-    {
-        public static string ToStringOrNull(this IPyBaseStringObject s)
-        {
-            return s == null ? null : s.ToString();
-        }
-    }
+	internal static class PyBaseStringExtensions
+	{
+		public static string ToStringOrNull(this IPyBaseStringObject s)
+		{
+			return s == null ? null : s.ToString();
+		}
+	}
 }

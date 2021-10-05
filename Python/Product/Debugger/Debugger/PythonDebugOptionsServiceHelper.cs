@@ -16,25 +16,25 @@
 
 namespace Microsoft.PythonTools.Debugger
 {
-    internal static class PythonDebugOptionsServiceHelper
-    {
-        private static IPythonDebugOptionsService _pythonDebugOptions;
+	internal static class PythonDebugOptionsServiceHelper
+	{
+		private static IPythonDebugOptionsService _pythonDebugOptions;
 
-        public static IPythonDebugOptionsService Options
-        {
-            get
-            {
-                if (_pythonDebugOptions == null)
-                {
-                    var shell = (IVsShell)Package.GetGlobalService(typeof(SVsShell));
-                    var ptvsPackage = Guids.PythonToolsPackageGUID;
-                    shell.LoadPackage(ref ptvsPackage, out _);
+		public static IPythonDebugOptionsService Options
+		{
+			get
+			{
+				if (_pythonDebugOptions == null)
+				{
+					var shell = (IVsShell)Package.GetGlobalService(typeof(SVsShell));
+					var ptvsPackage = Guids.PythonToolsPackageGUID;
+					shell.LoadPackage(ref ptvsPackage, out _);
 
-                    _pythonDebugOptions = (IPythonDebugOptionsService)Package.GetGlobalService(typeof(IPythonDebugOptionsService));
-                }
+					_pythonDebugOptions = (IPythonDebugOptionsService)Package.GetGlobalService(typeof(IPythonDebugOptionsService));
+				}
 
-                return _pythonDebugOptions;
-            }
-        }
-    }
+				return _pythonDebugOptions;
+			}
+		}
+	}
 }

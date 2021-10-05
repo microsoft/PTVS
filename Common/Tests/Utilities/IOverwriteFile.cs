@@ -16,16 +16,16 @@
 
 namespace TestUtilities
 {
-    public interface IOverwriteFile : IDisposable
-    {
-        string Text { get; }
+	public interface IOverwriteFile : IDisposable
+	{
+		string Text { get; }
 
-        void No();
+		void No();
 
-        bool AllItems { get; set; }
+		bool AllItems { get; set; }
 
-        void Yes();
+		void Yes();
 
-        void Cancel();
-    }
+		void Cancel();
+	}
 }

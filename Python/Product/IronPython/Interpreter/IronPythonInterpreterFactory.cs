@@ -16,21 +16,21 @@
 
 namespace Microsoft.IronPythonTools.Interpreter
 {
-    class IronPythonAstInterpreterFactory : AstPythonInterpreterFactory
-    {
-        public IronPythonAstInterpreterFactory(VisualStudioInterpreterConfiguration config, InterpreterFactoryCreationOptions options)
-            : base(config, options)
-        {
-        }
+	class IronPythonAstInterpreterFactory : AstPythonInterpreterFactory
+	{
+		public IronPythonAstInterpreterFactory(VisualStudioInterpreterConfiguration config, InterpreterFactoryCreationOptions options)
+			: base(config, options)
+		{
+		}
 
-        public IronPythonAstInterpreterFactory(Dictionary<string, object> properties) :
-            this(VisualStudioInterpreterConfiguration.CreateFromDictionary(properties), InterpreterFactoryCreationOptions.FromDictionary(properties))
-        { }
+		public IronPythonAstInterpreterFactory(Dictionary<string, object> properties) :
+			this(VisualStudioInterpreterConfiguration.CreateFromDictionary(properties), InterpreterFactoryCreationOptions.FromDictionary(properties))
+		{ }
 
-        public override IPythonInterpreter CreateInterpreter()
-        {
-            var pythonInterpreter = base.CreateInterpreter();
-            return new IronPythonInterpreter(this, pythonInterpreter);
-        }
-    }
+		public override IPythonInterpreter CreateInterpreter()
+		{
+			var pythonInterpreter = base.CreateInterpreter();
+			return new IronPythonInterpreter(this, pythonInterpreter);
+		}
+	}
 }

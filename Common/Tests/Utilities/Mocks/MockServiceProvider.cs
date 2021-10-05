@@ -16,73 +16,71 @@
 
 namespace TestUtilities.Mocks
 {
-    public class MockServiceProvider : IServiceContainer
-    {
-        public readonly Dictionary<Guid, object> Services = new Dictionary<Guid, object>();
-        private readonly Dictionary<Guid, Func<object>> _serviceCreators = new Dictionary<Guid, Func<object>>();
-        public readonly IComponentModel ComponentModel;
+	public class MockServiceProvider : IServiceContainer
+	{
+		public readonly Dictionary<Guid, object> Services = new Dictionary<Guid, object>();
+		private readonly Dictionary<Guid, Func<object>> _serviceCreators = new Dictionary<Guid, Func<object>>();
+		public readonly IComponentModel ComponentModel;
 
-        public MockServiceProvider() : this(new MockComponentModel()) { }
-        public MockServiceProvider(IComponentModel componentModel)
-        {
-            ComponentModel = componentModel;
-            Services[typeof(SComponentModel).GUID] = componentModel;
-        }
+		public MockServiceProvider() : this(new MockComponentModel()) { }
+		public MockServiceProvider(IComponentModel componentModel)
+		{
+			ComponentModel = componentModel;
+			Services[typeof(SComponentModel).GUID] = componentModel;
+		}
 
-        public object GetService(Type serviceType)
-        {
-            object service;
-            Console.WriteLine("MockServiceProvider.GetService({0})", serviceType.Name);
-            if (Services.TryGetValue(serviceType.GUID, out service))
-            {
-                return service;
-            }
-            Func<object> serviceCreator;
-            if (_serviceCreators.TryGetValue(serviceType.GUID, out serviceCreator))
-            {
-                Console.WriteLine("Creating service {0} lazily", serviceType.Name);
-                _serviceCreators.Remove(serviceType.GUID);
-                Services[serviceType.GUID] = service = serviceCreator();
-                return service;
-            }
-            return null;
-        }
+		public object GetService(Type serviceType)
+		{
+			Console.WriteLine("MockServiceProvider.GetService({0})", serviceType.Name);
+			if (Services.TryGetValue(serviceType.GUID, out global::System.Object service))
+			{
+				return service;
+			}
+			if (_serviceCreators.TryGetValue(serviceType.GUID, out Func<global::System.Object> serviceCreator))
+			{
+				Console.WriteLine("Creating service {0} lazily", serviceType.Name);
+				_serviceCreators.Remove(serviceType.GUID);
+				Services[serviceType.GUID] = service = serviceCreator();
+				return service;
+			}
+			return null;
+		}
 
-        public void AddService(Type serviceType, ServiceCreatorCallback callback, bool promote)
-        {
-            if (callback == null)
-            {
-                Services[serviceType.GUID] = null;
-            }
-            else
-            {
-                _serviceCreators[serviceType.GUID] = () => callback(this, serviceType);
-            }
-        }
+		public void AddService(Type serviceType, ServiceCreatorCallback callback, bool promote)
+		{
+			if (callback == null)
+			{
+				Services[serviceType.GUID] = null;
+			}
+			else
+			{
+				_serviceCreators[serviceType.GUID] = () => callback(this, serviceType);
+			}
+		}
 
-        public void AddService(Type serviceType, ServiceCreatorCallback callback)
-        {
-            AddService(serviceType, callback, true);
-        }
+		public void AddService(Type serviceType, ServiceCreatorCallback callback)
+		{
+			AddService(serviceType, callback, true);
+		}
 
-        public void AddService(Type serviceType, object serviceInstance, bool promote)
-        {
-            Services[serviceType.GUID] = serviceInstance;
-        }
+		public void AddService(Type serviceType, object serviceInstance, bool promote)
+		{
+			Services[serviceType.GUID] = serviceInstance;
+		}
 
-        public void AddService(Type serviceType, object serviceInstance)
-        {
-            AddService(serviceType, serviceInstance, true);
-        }
+		public void AddService(Type serviceType, object serviceInstance)
+		{
+			AddService(serviceType, serviceInstance, true);
+		}
 
-        public void RemoveService(Type serviceType, bool promote)
-        {
-            Services.Remove(serviceType.GUID);
-        }
+		public void RemoveService(Type serviceType, bool promote)
+		{
+			Services.Remove(serviceType.GUID);
+		}
 
-        public void RemoveService(Type serviceType)
-        {
-            RemoveService(serviceType, true);
-        }
-    }
+		public void RemoveService(Type serviceType)
+		{
+			RemoveService(serviceType, true);
+		}
+	}
 }

@@ -16,15 +16,15 @@
 
 namespace TestUtilities.Mocks
 {
-    public class MockGlyphService : IGlyphService
-    {
-        #region IGlyphService Members
+	public class MockGlyphService : IGlyphService
+	{
+		#region IGlyphService Members
 
-        public ImageSource GetGlyph(StandardGlyphGroup group, StandardGlyphItem item)
-        {
-            return new DrawingImage();
-        }
+		public ImageSource GetGlyph(StandardGlyphGroup group, StandardGlyphItem item)
+		{
+			return new DrawingImage();
+		}
 
-        #endregion
-    }
+		#endregion
+	}
 }

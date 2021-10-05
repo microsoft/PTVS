@@ -16,38 +16,38 @@
 
 namespace PythonToolsMockTests
 {
-    class MockClipboardService : IClipboardService
-    {
-        private IDataObject _data;
+	class MockClipboardService : IClipboardService
+	{
+		private IDataObject _data;
 
-        public void SetClipboard(IDataObject dataObject)
-        {
-            _data = dataObject;
-        }
+		public void SetClipboard(IDataObject dataObject)
+		{
+			_data = dataObject;
+		}
 
-        public IDataObject GetClipboard()
-        {
-            return _data;
-        }
+		public IDataObject GetClipboard()
+		{
+			return _data;
+		}
 
-        public void FlushClipboard()
-        {
-            // TODO: We could try and copy the data locally, instead we just keep it alive.
-        }
+		public void FlushClipboard()
+		{
+			// TODO: We could try and copy the data locally, instead we just keep it alive.
+		}
 
-        public bool OpenClipboard()
-        {
-            return true;
-        }
+		public bool OpenClipboard()
+		{
+			return true;
+		}
 
-        public void EmptyClipboard()
-        {
-            _data = null;
-        }
+		public void EmptyClipboard()
+		{
+			_data = null;
+		}
 
-        public void CloseClipboard()
-        {
-        }
-    }
+		public void CloseClipboard()
+		{
+		}
+	}
 
 }

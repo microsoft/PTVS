@@ -16,22 +16,22 @@
 
 namespace DebuggerTests
 {
-    internal static class TastExtensions
-    {
-        public static async Task<T> CancelAfter<T>(int milliseconds, string message = null)
-        {
-            message = message ?? $"Timed out after {milliseconds} ms";
-            await Task.Delay(Debugger.IsAttached ? Timeout.Infinite : milliseconds);
-            throw new TaskCanceledException(message);
-        }
+	internal static class TastExtensions
+	{
+		public static async Task<T> CancelAfter<T>(int milliseconds, string message = null)
+		{
+			message = message ?? $"Timed out after {milliseconds} ms";
+			await Task.Delay(Debugger.IsAttached ? Timeout.Infinite : milliseconds);
+			throw new TaskCanceledException(message);
+		}
 
-        public static Task CancelAfter(int milliseconds, string message = null) =>
-            CancelAfter<object>(milliseconds, message);
+		public static Task CancelAfter(int milliseconds, string message = null) =>
+			CancelAfter<object>(milliseconds, message);
 
-        public static Task WithTimeout(this Task task, int milliseconds, string message = null) =>
-            Task.WhenAny(task, CancelAfter(milliseconds, message)).Unwrap();
+		public static Task WithTimeout(this Task task, int milliseconds, string message = null) =>
+			Task.WhenAny(task, CancelAfter(milliseconds, message)).Unwrap();
 
-        public static Task<T> WithTimeout<T>(this Task<T> task, int milliseconds, string message = null) =>
-            Task.WhenAny(task, CancelAfter<T>(milliseconds, message)).Unwrap();
-    }
+		public static Task<T> WithTimeout<T>(this Task<T> task, int milliseconds, string message = null) =>
+			Task.WhenAny(task, CancelAfter<T>(milliseconds, message)).Unwrap();
+	}
 }

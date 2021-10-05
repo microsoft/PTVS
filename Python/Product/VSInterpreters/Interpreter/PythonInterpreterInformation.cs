@@ -16,45 +16,45 @@
 
 namespace Microsoft.PythonTools.Interpreter
 {
-    class PythonInterpreterInformation
-    {
+	class PythonInterpreterInformation
+	{
 #if !NO_FACTORIES
-        private IPythonInterpreterFactory _factory;
+		private IPythonInterpreterFactory _factory;
 #endif
 
-        public readonly InterpreterConfiguration Configuration;
-        public readonly string Vendor;
-        public readonly string VendorUrl;
-        public readonly string SupportUrl;
+		public readonly InterpreterConfiguration Configuration;
+		public readonly string Vendor;
+		public readonly string VendorUrl;
+		public readonly string SupportUrl;
 
-        public PythonInterpreterInformation(
-            InterpreterConfiguration configuration,
-            string vendor,
-            string vendorUrl,
-            string supportUrl
-        )
-        {
-            Configuration = configuration;
-            Vendor = vendor;
-            VendorUrl = vendorUrl;
-            SupportUrl = supportUrl;
-        }
+		public PythonInterpreterInformation(
+			InterpreterConfiguration configuration,
+			string vendor,
+			string vendorUrl,
+			string supportUrl
+		)
+		{
+			Configuration = configuration;
+			Vendor = vendor;
+			VendorUrl = vendorUrl;
+			SupportUrl = supportUrl;
+		}
 
 #if !NO_FACTORIES
-        public IPythonInterpreterFactory GetOrCreateFactory(Func<PythonInterpreterInformation, IPythonInterpreterFactory> creator)
-        {
-            if (_factory == null)
-            {
-                lock (this)
-                {
-                    if (_factory == null)
-                    {
-                        _factory = creator(this);
-                    }
-                }
-            }
-            return _factory;
-        }
+		public IPythonInterpreterFactory GetOrCreateFactory(Func<PythonInterpreterInformation, IPythonInterpreterFactory> creator)
+		{
+			if (_factory == null)
+			{
+				lock (this)
+				{
+					if (_factory == null)
+					{
+						_factory = creator(this);
+					}
+				}
+			}
+			return _factory;
+		}
 #endif
-    }
+	}
 }

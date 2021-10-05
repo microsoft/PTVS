@@ -16,90 +16,90 @@
 
 namespace Microsoft.IronPythonTools.Interpreter
 {
-    class IronPythonBuiltinFunctionTarget : IPythonFunctionOverload
-    {
-        private readonly IronPythonInterpreter _interpreter;
-        private RemoteInterpreterProxy _remote;
-        private readonly ObjectIdentityHandle _overload;
-        private readonly IronPythonType _declaringType;
-        private IParameterInfo[] _params;
-        private List<IPythonType> _returnType;
+	class IronPythonBuiltinFunctionTarget : IPythonFunctionOverload
+	{
+		private readonly IronPythonInterpreter _interpreter;
+		private RemoteInterpreterProxy _remote;
+		private readonly ObjectIdentityHandle _overload;
+		private readonly IronPythonType _declaringType;
+		private IParameterInfo[] _params;
+		private List<IPythonType> _returnType;
 
-        public IronPythonBuiltinFunctionTarget(IronPythonInterpreter interpreter, ObjectIdentityHandle overload, IronPythonType declType)
-        {
-            Debug.Assert(interpreter.Remote.TypeIs<MethodBase>(overload));
-            _interpreter = interpreter;
-            _interpreter.UnloadingDomain += Interpreter_UnloadingDomain;
-            _remote = _interpreter.Remote;
-            _overload = overload;
-            _declaringType = declType;
-        }
+		public IronPythonBuiltinFunctionTarget(IronPythonInterpreter interpreter, ObjectIdentityHandle overload, IronPythonType declType)
+		{
+			Debug.Assert(interpreter.Remote.TypeIs<MethodBase>(overload));
+			_interpreter = interpreter;
+			_interpreter.UnloadingDomain += Interpreter_UnloadingDomain;
+			_remote = _interpreter.Remote;
+			_overload = overload;
+			_declaringType = declType;
+		}
 
-        private void Interpreter_UnloadingDomain(object sender, EventArgs e)
-        {
-            _remote = null;
-            _interpreter.UnloadingDomain -= Interpreter_UnloadingDomain;
-        }
+		private void Interpreter_UnloadingDomain(object sender, EventArgs e)
+		{
+			_remote = null;
+			_interpreter.UnloadingDomain -= Interpreter_UnloadingDomain;
+		}
 
-        #region IBuiltinFunctionTarget Members
+		#region IBuiltinFunctionTarget Members
 
-        // FIXME
-        public string Documentation
-        {
-            get { return ""; }
-        }
+		// FIXME
+		public string Documentation
+		{
+			get { return ""; }
+		}
 
-        // FIXME
-        public string ReturnDocumentation
-        {
-            get { return ""; }
-        }
+		// FIXME
+		public string ReturnDocumentation
+		{
+			get { return ""; }
+		}
 
-        public IParameterInfo[] GetParameters()
-        {
-            if (_params == null)
-            {
-                var ri = _remote;
-                bool isInstanceExtensionMethod = ri != null ? ri.IsInstanceExtensionMethod(_overload, _declaringType.Value) : false;
+		public IParameterInfo[] GetParameters()
+		{
+			if (_params == null)
+			{
+				var ri = _remote;
+				bool isInstanceExtensionMethod = ri != null ? ri.IsInstanceExtensionMethod(_overload, _declaringType.Value) : false;
 
-                var parameters = ri != null ? ri.GetParametersNoCodeContext(_overload) : new ObjectIdentityHandle[0];
-                var res = new List<IParameterInfo>(parameters.Length);
-                foreach (var param in parameters)
-                {
-                    if (res.Count == 0 && isInstanceExtensionMethod)
-                    {
-                        // skip instance parameter
-                        isInstanceExtensionMethod = false;
-                        continue;
-                    }
-                    else
-                    {
-                        res.Add(new IronPythonParameterInfo(_interpreter, param));
-                    }
-                }
+				var parameters = ri != null ? ri.GetParametersNoCodeContext(_overload) : new ObjectIdentityHandle[0];
+				var res = new List<IParameterInfo>(parameters.Length);
+				foreach (var param in parameters)
+				{
+					if (res.Count == 0 && isInstanceExtensionMethod)
+					{
+						// skip instance parameter
+						isInstanceExtensionMethod = false;
+						continue;
+					}
+					else
+					{
+						res.Add(new IronPythonParameterInfo(_interpreter, param));
+					}
+				}
 
-                _params = res.ToArray();
-            }
-            return _params;
-        }
+				_params = res.ToArray();
+			}
+			return _params;
+		}
 
-        public IReadOnlyList<IPythonType> ReturnType
-        {
-            get
-            {
-                if (_returnType == null)
-                {
-                    _returnType = new List<IPythonType>();
-                    var ri = _remote;
-                    if (ri != null)
-                    {
-                        _returnType.Add(_interpreter.GetTypeFromType(ri.GetBuiltinFunctionOverloadReturnType(_overload)));
-                    }
-                }
-                return _returnType;
-            }
-        }
+		public IReadOnlyList<IPythonType> ReturnType
+		{
+			get
+			{
+				if (_returnType == null)
+				{
+					_returnType = new List<IPythonType>();
+					var ri = _remote;
+					if (ri != null)
+					{
+						_returnType.Add(_interpreter.GetTypeFromType(ri.GetBuiltinFunctionOverloadReturnType(_overload)));
+					}
+				}
+				return _returnType;
+			}
+		}
 
-        #endregion
-    }
+		#endregion
+	}
 }

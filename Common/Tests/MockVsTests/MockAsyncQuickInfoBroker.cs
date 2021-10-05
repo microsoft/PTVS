@@ -16,27 +16,27 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-    [Export(typeof(IAsyncQuickInfoBroker))]
-    class MockAsyncQuickInfoBroker : IAsyncQuickInfoBroker
-    {
-        public bool IsQuickInfoActive(ITextView textView)
-        {
-            throw new NotImplementedException();
-        }
+	[Export(typeof(IAsyncQuickInfoBroker))]
+	class MockAsyncQuickInfoBroker : IAsyncQuickInfoBroker
+	{
+		public bool IsQuickInfoActive(ITextView textView)
+		{
+			throw new NotImplementedException();
+		}
 
-        public Task<IAsyncQuickInfoSession> TriggerQuickInfoAsync(ITextView textView, ITrackingPoint triggerPoint = null, QuickInfoSessionOptions options = QuickInfoSessionOptions.None, CancellationToken cancellationToken = new CancellationToken())
-        {
-            throw new NotImplementedException();
-        }
+		public Task<IAsyncQuickInfoSession> TriggerQuickInfoAsync(ITextView textView, ITrackingPoint triggerPoint = null, QuickInfoSessionOptions options = QuickInfoSessionOptions.None, CancellationToken cancellationToken = new CancellationToken())
+		{
+			throw new NotImplementedException();
+		}
 
-        public IAsyncQuickInfoSession GetSession(ITextView textView)
-        {
-            throw new NotImplementedException();
-        }
+		public IAsyncQuickInfoSession GetSession(ITextView textView)
+		{
+			throw new NotImplementedException();
+		}
 
-        public Task<QuickInfoItemsCollection> GetQuickInfoItemsAsync(ITextView textView, ITrackingPoint triggerPoint, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
-    }
+		public Task<QuickInfoItemsCollection> GetQuickInfoItemsAsync(ITextView textView, ITrackingPoint triggerPoint, CancellationToken cancellationToken)
+		{
+			throw new NotImplementedException();
+		}
+	}
 }

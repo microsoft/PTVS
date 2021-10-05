@@ -16,37 +16,36 @@
 
 namespace CookiecutterTests
 {
-    class MockGitHubClient : IGitHubClient
-    {
-        public Dictionary<Tuple<string, string>, string> Descriptions { get; } = new Dictionary<Tuple<string, string>, string>();
+	class MockGitHubClient : IGitHubClient
+	{
+		public Dictionary<Tuple<string, string>, string> Descriptions { get; } = new Dictionary<Tuple<string, string>, string>();
 
-        public Task<bool> FileExistsAsync(GitHubRepoSearchItem repo, string filePath)
-        {
-            throw new NotImplementedException();
-        }
+		public Task<bool> FileExistsAsync(GitHubRepoSearchItem repo, string filePath)
+		{
+			throw new NotImplementedException();
+		}
 
-        public Task<GitHubRepoSearchItem> GetRepositoryDetails(string owner, string name)
-        {
-            string description;
-            if (Descriptions.TryGetValue(Tuple.Create(owner, name), out description))
-            {
-                var item = new GitHubRepoSearchItem();
-                item.Description = description;
+		public Task<GitHubRepoSearchItem> GetRepositoryDetails(string owner, string name)
+		{
+			if (Descriptions.TryGetValue(Tuple.Create(owner, name), out global::System.String description))
+			{
+				var item = new GitHubRepoSearchItem();
+				item.Description = description;
 
-                return Task.FromResult(item);
-            }
+				return Task.FromResult(item);
+			}
 
-            throw new WebException();
-        }
+			throw new WebException();
+		}
 
-        public Task<GitHubRepoSearchResult> SearchRepositoriesAsync(string requestUrl)
-        {
-            throw new NotImplementedException();
-        }
+		public Task<GitHubRepoSearchResult> SearchRepositoriesAsync(string requestUrl)
+		{
+			throw new NotImplementedException();
+		}
 
-        public Task<GitHubRepoSearchResult> StartSearchRepositoriesAsync(string[] terms)
-        {
-            throw new NotImplementedException();
-        }
-    }
+		public Task<GitHubRepoSearchResult> StartSearchRepositoriesAsync(string[] terms)
+		{
+			throw new NotImplementedException();
+		}
+	}
 }

@@ -16,38 +16,38 @@
 
 namespace Microsoft.PythonTools.EnvironmentsList
 {
-    sealed class DataListBox : ListBox
-    {
-        protected override AutomationPeer OnCreateAutomationPeer()
-        {
-            return new DataListBoxAutomationPeer(this);
-        }
+	sealed class DataListBox : ListBox
+	{
+		protected override AutomationPeer OnCreateAutomationPeer()
+		{
+			return new DataListBoxAutomationPeer(this);
+		}
 
-        sealed class DataListBoxAutomationPeer : ListBoxAutomationPeer
-        {
-            public DataListBoxAutomationPeer(ListBox owner) : base(owner) { }
+		sealed class DataListBoxAutomationPeer : ListBoxAutomationPeer
+		{
+			public DataListBoxAutomationPeer(ListBox owner) : base(owner) { }
 
-            protected override ItemAutomationPeer CreateItemAutomationPeer(object item)
-            {
-                return new DataListBoxItemAutomationPeer(item, this);
-            }
-        }
+			protected override ItemAutomationPeer CreateItemAutomationPeer(object item)
+			{
+				return new DataListBoxItemAutomationPeer(item, this);
+			}
+		}
 
-        sealed class DataListBoxItemAutomationPeer : ListBoxItemAutomationPeer
-        {
-            public DataListBoxItemAutomationPeer(object owner, SelectorAutomationPeer selectorAutomationPeer) : base(owner, selectorAutomationPeer)
-            {
-            }
+		sealed class DataListBoxItemAutomationPeer : ListBoxItemAutomationPeer
+		{
+			public DataListBoxItemAutomationPeer(object owner, SelectorAutomationPeer selectorAutomationPeer) : base(owner, selectorAutomationPeer)
+			{
+			}
 
-            protected override string GetClassNameCore()
-            {
-                return "DataListBoxItem";
-            }
+			protected override string GetClassNameCore()
+			{
+				return "DataListBoxItem";
+			}
 
-            protected override AutomationControlType GetAutomationControlTypeCore()
-            {
-                return AutomationControlType.DataItem;
-            }
-        }
-    }
+			protected override AutomationControlType GetAutomationControlTypeCore()
+			{
+				return AutomationControlType.DataItem;
+			}
+		}
+	}
 }

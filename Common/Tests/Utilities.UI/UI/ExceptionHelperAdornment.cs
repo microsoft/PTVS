@@ -16,20 +16,20 @@
 
 namespace TestUtilities.UI
 {
-    public class ExceptionHelperAdornment : AutomationWrapper
-    {
-        public ExceptionHelperAdornment(AutomationElement element)
-            : base(element)
-        {
-        }
+	public class ExceptionHelperAdornment : AutomationWrapper
+	{
+		public ExceptionHelperAdornment(AutomationElement element)
+			: base(element)
+		{
+		}
 
-        public string Description
-        {
-            get
-            {
-                var desc = FindByAutomationId("ExceptionDescription");
-                return (((TextPattern)desc.GetCurrentPattern(TextPattern.Pattern)).DocumentRange.GetText(-1).ToString());
-            }
-        }
-    }
+		public string Description
+		{
+			get
+			{
+				var desc = FindByAutomationId("ExceptionDescription");
+				return (((TextPattern)desc.GetCurrentPattern(TextPattern.Pattern)).DocumentRange.GetText(-1).ToString());
+			}
+		}
+	}
 }

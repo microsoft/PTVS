@@ -16,30 +16,30 @@
 
 namespace TestUtilities.Mocks
 {
-    internal sealed class KeyWeakReferenceComparer : IEqualityComparer<object>
-    {
-        public int GetHashCode(object obj) => obj is KeyWeakReference key ? key.HashCode : obj.GetHashCode();
+	internal sealed class KeyWeakReferenceComparer : IEqualityComparer<object>
+	{
+		public int GetHashCode(object obj) => obj is KeyWeakReference key ? key.HashCode : obj.GetHashCode();
 
-        bool IEqualityComparer<object>.Equals(object x, object y)
-        {
-            var xIsAlive = IsAlive(x, out var xTarget);
-            var yIsAlive = IsAlive(y, out var yTarget);
+		bool IEqualityComparer<object>.Equals(object x, object y)
+		{
+			var xIsAlive = IsAlive(x, out var xTarget);
+			var yIsAlive = IsAlive(y, out var yTarget);
 
-            return xIsAlive
-                ? yIsAlive && Equals(xTarget, yTarget)
-                : !yIsAlive && x == y;
-        }
+			return xIsAlive
+				? yIsAlive && Equals(xTarget, yTarget)
+				: !yIsAlive && x == y;
+		}
 
-        private static bool IsAlive(object obj, out object target)
-        {
-            if (obj is KeyWeakReference key)
-            {
-                target = key.Target;
-                return key.IsAlive;
-            }
+		private static bool IsAlive(object obj, out object target)
+		{
+			if (obj is KeyWeakReference key)
+			{
+				target = key.Target;
+				return key.IsAlive;
+			}
 
-            target = obj;
-            return false;
-        }
-    }
+			target = obj;
+			return false;
+		}
+	}
 }

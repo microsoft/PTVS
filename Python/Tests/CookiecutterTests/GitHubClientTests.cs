@@ -16,16 +16,16 @@
 
 namespace CookiecutterTests
 {
-    [TestClass]
-    public class GitHubClientTests
-    {
-        [TestMethod]
-        public async Task CheckEncoding()
-        {
-            // Use a repository with a description in Chinese to check UTF-8 decoding
-            var client = new GitHubClient();
-            var details = await client.GetRepositoryDetails("chenyinxin", "cookiecutter-bitadmin-core");
-            AssertUtil.Contains(details.Description, "BitAdminCore是基于net core的管理应用快速开发框架");
-        }
-    }
+	[TestClass]
+	public class GitHubClientTests
+	{
+		[TestMethod]
+		public async Task CheckEncoding()
+		{
+			// Use a repository with a description in Chinese to check UTF-8 decoding
+			var client = new GitHubClient();
+			var details = await client.GetRepositoryDetails("chenyinxin", "cookiecutter-bitadmin-core");
+			AssertUtil.Contains(details.Description, "BitAdminCore是基于net core的管理应用快速开发框架");
+		}
+	}
 }

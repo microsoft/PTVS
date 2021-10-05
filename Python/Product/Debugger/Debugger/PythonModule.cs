@@ -16,37 +16,37 @@
 
 namespace Microsoft.PythonTools.Debugger
 {
-    class PythonModule
-    {
-        public PythonModule(int moduleId, string filename, string moduleName, bool isUserCode)
-        {
-            ModuleId = moduleId;
-            Filename = filename;
-            ModuleName = moduleName;
-            IsUserCode = isUserCode;
-        }
+	class PythonModule
+	{
+		public PythonModule(int moduleId, string filename, string moduleName, bool isUserCode)
+		{
+			ModuleId = moduleId;
+			Filename = filename;
+			ModuleName = moduleName;
+			IsUserCode = isUserCode;
+		}
 
-        public int ModuleId { get; }
-        public string Filename { get; }
-        public string ModuleName { get; }
-        public bool IsUserCode { get; }
+		public int ModuleId { get; }
+		public string Filename { get; }
+		public string ModuleName { get; }
+		public bool IsUserCode { get; }
 
-        public string Name
-        {
-            get
-            {
-                if (!string.IsNullOrEmpty(ModuleName))
-                {
-                    return ModuleName;
-                }
+		public string Name
+		{
+			get
+			{
+				if (!string.IsNullOrEmpty(ModuleName))
+				{
+					return ModuleName;
+				}
 
-                if (PathUtils.IsValidPath(Filename))
-                {
-                    return Path.GetFileNameWithoutExtension(Filename);
-                }
-                return Filename;
-            }
-        }
+				if (PathUtils.IsValidPath(Filename))
+				{
+					return Path.GetFileNameWithoutExtension(Filename);
+				}
+				return Filename;
+			}
+		}
 
-    }
+	}
 }

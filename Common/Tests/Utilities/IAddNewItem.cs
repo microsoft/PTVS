@@ -16,10 +16,10 @@
 
 namespace TestUtilities
 {
-    public interface IAddNewItem : IDisposable
-    {
-        string FileName { get; set; }
+	public interface IAddNewItem : IDisposable
+	{
+		string FileName { get; set; }
 
-        void OK();
-    }
+		void OK();
+	}
 }

@@ -16,130 +16,130 @@
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 {
-    [StructProxy(StructName = "_ts")]
-    internal class PyThreadState : StructProxy
-    {
-        private class Fields
-        {
-            public StructField<PointerProxy<PyThreadState>> next;
-            public StructField<PointerProxy<PyFrameObject>> frame;
-            public StructField<Int32Proxy> use_tracing;
-            public StructField<PointerProxy> c_tracefunc;
-            public StructField<PointerProxy<PyObject>> curexc_type;
-            public StructField<PointerProxy<PyObject>> curexc_value;
-            public StructField<PointerProxy<PyObject>> curexc_traceback;
-            [FieldProxy(MaxVersion = PythonLanguageVersion.V36)]
-            public StructField<PointerProxy<PyObject>> exc_type;
-            [FieldProxy(MaxVersion = PythonLanguageVersion.V36)]
-            public StructField<PointerProxy<PyObject>> exc_value;
-            [FieldProxy(MaxVersion = PythonLanguageVersion.V36)]
-            public StructField<PointerProxy<PyObject>> exc_traceback;
+	[StructProxy(StructName = "_ts")]
+	internal class PyThreadState : StructProxy
+	{
+		private class Fields
+		{
+			public StructField<PointerProxy<PyThreadState>> next;
+			public StructField<PointerProxy<PyFrameObject>> frame;
+			public StructField<Int32Proxy> use_tracing;
+			public StructField<PointerProxy> c_tracefunc;
+			public StructField<PointerProxy<PyObject>> curexc_type;
+			public StructField<PointerProxy<PyObject>> curexc_value;
+			public StructField<PointerProxy<PyObject>> curexc_traceback;
+			[FieldProxy(MaxVersion = PythonLanguageVersion.V36)]
+			public StructField<PointerProxy<PyObject>> exc_type;
+			[FieldProxy(MaxVersion = PythonLanguageVersion.V36)]
+			public StructField<PointerProxy<PyObject>> exc_value;
+			[FieldProxy(MaxVersion = PythonLanguageVersion.V36)]
+			public StructField<PointerProxy<PyObject>> exc_traceback;
 
-            [FieldProxy(MinVersion = PythonLanguageVersion.V37)]
-            public StructField<PyErr_StackItem> exc_state;
-            [FieldProxy(MinVersion = PythonLanguageVersion.V37)]
-            public StructField<PointerProxy<PyErr_StackItem>> exc_info;
+			[FieldProxy(MinVersion = PythonLanguageVersion.V37)]
+			public StructField<PyErr_StackItem> exc_state;
+			[FieldProxy(MinVersion = PythonLanguageVersion.V37)]
+			public StructField<PointerProxy<PyErr_StackItem>> exc_info;
 
-            public StructField<Int32Proxy> thread_id;
-        }
+			public StructField<Int32Proxy> thread_id;
+		}
 
-        private readonly Fields _fields;
+		private readonly Fields _fields;
 
-        public PyThreadState(DkmProcess process, ulong address)
-            : base(process, address)
-        {
-            InitializeStruct(this, out _fields);
-        }
+		public PyThreadState(DkmProcess process, ulong address)
+			: base(process, address)
+		{
+			InitializeStruct(this, out _fields);
+		}
 
-        public static PyThreadState TryCreate(DkmProcess process, ulong address)
-        {
-            if (address == 0)
-            {
-                return null;
-            }
-            return new PyThreadState(process, address);
-        }
+		public static PyThreadState TryCreate(DkmProcess process, ulong address)
+		{
+			if (address == 0)
+			{
+				return null;
+			}
+			return new PyThreadState(process, address);
+		}
 
-        public PointerProxy<PyThreadState> next
-        {
-            get { return GetFieldProxy(_fields.next); }
-        }
+		public PointerProxy<PyThreadState> next
+		{
+			get { return GetFieldProxy(_fields.next); }
+		}
 
-        public PointerProxy<PyFrameObject> frame
-        {
-            get { return GetFieldProxy(_fields.frame); }
-        }
+		public PointerProxy<PyFrameObject> frame
+		{
+			get { return GetFieldProxy(_fields.frame); }
+		}
 
-        public Int32Proxy use_tracing
-        {
-            get { return GetFieldProxy(_fields.use_tracing); }
-        }
+		public Int32Proxy use_tracing
+		{
+			get { return GetFieldProxy(_fields.use_tracing); }
+		}
 
-        public PointerProxy c_tracefunc
-        {
-            get { return GetFieldProxy(_fields.c_tracefunc); }
-        }
+		public PointerProxy c_tracefunc
+		{
+			get { return GetFieldProxy(_fields.c_tracefunc); }
+		}
 
-        public PointerProxy<PyObject> curexc_type
-        {
-            get { return GetFieldProxy(_fields.curexc_type); }
-        }
+		public PointerProxy<PyObject> curexc_type
+		{
+			get { return GetFieldProxy(_fields.curexc_type); }
+		}
 
-        public PointerProxy<PyObject> curexc_value
-        {
-            get { return GetFieldProxy(_fields.curexc_value); }
-        }
+		public PointerProxy<PyObject> curexc_value
+		{
+			get { return GetFieldProxy(_fields.curexc_value); }
+		}
 
-        public PointerProxy<PyObject> curexc_traceback
-        {
-            get { return GetFieldProxy(_fields.curexc_traceback); }
-        }
+		public PointerProxy<PyObject> curexc_traceback
+		{
+			get { return GetFieldProxy(_fields.curexc_traceback); }
+		}
 
-        public PointerProxy<PyObject> exc_type(PythonLanguageVersion version) => version < PythonLanguageVersion.V37
-            ? GetFieldProxy(_fields.exc_type)
-            : GetFieldProxy(_fields.exc_state).exc_type;
+		public PointerProxy<PyObject> exc_type(PythonLanguageVersion version) => version < PythonLanguageVersion.V37
+			? GetFieldProxy(_fields.exc_type)
+			: GetFieldProxy(_fields.exc_state).exc_type;
 
-        public PointerProxy<PyObject> exc_value(PythonLanguageVersion version) => version < PythonLanguageVersion.V37
-            ? GetFieldProxy(_fields.exc_value)
-            : GetFieldProxy(_fields.exc_state).exc_value;
+		public PointerProxy<PyObject> exc_value(PythonLanguageVersion version) => version < PythonLanguageVersion.V37
+			? GetFieldProxy(_fields.exc_value)
+			: GetFieldProxy(_fields.exc_state).exc_value;
 
-        public PointerProxy<PyObject> exc_traceback(PythonLanguageVersion version) => version < PythonLanguageVersion.V37
-            ? GetFieldProxy(_fields.exc_traceback)
-            : GetFieldProxy(_fields.exc_state).exc_traceback;
-
-
-        public Int32Proxy thread_id
-        {
-            get { return GetFieldProxy(_fields.thread_id); }
-        }
-
-        public static IEnumerable<PyThreadState> GetThreadStates(DkmProcess process)
-        {
-            return PyInterpreterState.GetInterpreterStates(process).SelectMany(interp => interp.GetThreadStates());
-        }
+		public PointerProxy<PyObject> exc_traceback(PythonLanguageVersion version) => version < PythonLanguageVersion.V37
+			? GetFieldProxy(_fields.exc_traceback)
+			: GetFieldProxy(_fields.exc_state).exc_traceback;
 
 
-    }
+		public Int32Proxy thread_id
+		{
+			get { return GetFieldProxy(_fields.thread_id); }
+		}
 
-    [StructProxy(MinVersion = PythonLanguageVersion.V37, StructName = "_PyErr_StackItem")]
-    class PyErr_StackItem : StructProxy
-    {
-        private class Fields
-        {
-            public StructField<PointerProxy<PyObject>> exc_type, exc_value, exc_traceback;
-        }
+		public static IEnumerable<PyThreadState> GetThreadStates(DkmProcess process)
+		{
+			return PyInterpreterState.GetInterpreterStates(process).SelectMany(interp => interp.GetThreadStates());
+		}
 
-        private readonly Fields _fields;
 
-        public PyErr_StackItem(DkmProcess process, ulong address)
-            : base(process, address)
-        {
-            InitializeStruct(this, out _fields);
-        }
+	}
 
-        public PointerProxy<PyObject> exc_type => GetFieldProxy(_fields.exc_type);
-        public PointerProxy<PyObject> exc_value => GetFieldProxy(_fields.exc_value);
-        public PointerProxy<PyObject> exc_traceback => GetFieldProxy(_fields.exc_traceback);
-    }
+	[StructProxy(MinVersion = PythonLanguageVersion.V37, StructName = "_PyErr_StackItem")]
+	class PyErr_StackItem : StructProxy
+	{
+		private class Fields
+		{
+			public StructField<PointerProxy<PyObject>> exc_type, exc_value, exc_traceback;
+		}
+
+		private readonly Fields _fields;
+
+		public PyErr_StackItem(DkmProcess process, ulong address)
+			: base(process, address)
+		{
+			InitializeStruct(this, out _fields);
+		}
+
+		public PointerProxy<PyObject> exc_type => GetFieldProxy(_fields.exc_type);
+		public PointerProxy<PyObject> exc_value => GetFieldProxy(_fields.exc_value);
+		public PointerProxy<PyObject> exc_traceback => GetFieldProxy(_fields.exc_traceback);
+	}
 
 }

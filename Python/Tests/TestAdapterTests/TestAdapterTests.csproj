@@ -54,10 +54,21 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>C:\Users\peezo\source\repos\PeezoSlug\PTVS\\Build\xTVS.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Python.Analysis.Engine" />
     <Reference Include="Microsoft.VisualStudio.TestPlatform.ObjectModel">
       <HintPath>$(DevEnvDir)\CommonExtensions\Microsoft\TestWindow\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\MSTest.TestFramework.2.2.7\lib\net45\Microsoft.VisualStudio.TestPlatform.TestFramework.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\MSTest.TestFramework.2.2.7\lib\net45\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.TestWindow.Interfaces">
       <HintPath>$(DevEnvDir)\CommonExtensions\Microsoft\TestWindow\Microsoft.VisualStudio.TestWindow.Interfaces.dll</HintPath>
@@ -81,7 +92,15 @@
     <Compile Include="Mocks\MockTestExecutionRecorder.cs" />
     <Compile Include="CodeCoverageTests.cs" />
     <Compile Include="ProjectInfoTests.cs" />
+    <Compile Include="PythonVersion.cs" />
+    <Compile Include="PythonVersion1.cs" />
+    <Compile Include="TestCategory.cs" />
     <Compile Include="TestDiscovererParseTests.cs" />
+    <Compile Include="TestDiscovererTests35.cs" />
+    <Compile Include="TestDiscovererTests37.cs" />
+    <Compile Include="TestExecutorTests.CoverageInfo.cs" />
+    <Compile Include="TestExecutorTests.StackFrameComparer.cs" />
+    <Compile Include="TestExecutorTestsBase1.cs" />
     <Compile Include="TestInfo.cs" />
     <Compile Include="TestDiscovererTests.cs" />
     <Compile Include="TestEnvironment.cs" />

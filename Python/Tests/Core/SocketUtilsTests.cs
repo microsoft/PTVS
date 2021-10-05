@@ -16,23 +16,23 @@
 
 namespace PythonToolsTests
 {
-    [TestClass]
-    public class SocketUtilsTests
-    {
-        [TestMethod, Priority(UnitTestPriority.P0)]
-        public void GetRandomPortListener()
-        {
-            var listener = SocketUtils.GetRandomPortListener(IPAddress.Loopback, out int port);
-            try
-            {
-                Assert.IsNotNull(listener);
-                Assert.AreEqual(port, ((IPEndPoint)listener.LocalEndpoint).Port);
-                Assert.IsTrue(port >= 49152 && port < 65536);
-            }
-            finally
-            {
-                listener?.Stop();
-            }
-        }
-    }
+	[TestClass]
+	public class SocketUtilsTests
+	{
+		[TestMethod, Priority(UnitTestPriority.P0)]
+		public void GetRandomPortListener()
+		{
+			var listener = SocketUtils.GetRandomPortListener(IPAddress.Loopback, out int port);
+			try
+			{
+				Assert.IsNotNull(listener);
+				Assert.AreEqual(port, ((IPEndPoint)listener.LocalEndpoint).Port);
+				Assert.IsTrue(port >= 49152 && port < 65536);
+			}
+			finally
+			{
+				listener?.Stop();
+			}
+		}
+	}
 }

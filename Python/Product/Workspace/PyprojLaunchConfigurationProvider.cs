@@ -16,32 +16,32 @@
 
 namespace Microsoft.PythonTools.Workspace
 {
-    [ExportLaunchConfigurationProvider(
-        ProviderType,
-        new[] { FileExtension },
-        PyprojLaunchDebugTargetProvider.LaunchTypeName,
-        PyprojLaunchDebugTargetProvider.JsonSchema
-    )]
-    class PyprojLaunchConfigurationProvider : ILaunchConfigurationProvider
-    {
-        public const string ProviderType = "CCA8088B-06BC-4AE7-8521-FC66628ABE13";
+	[ExportLaunchConfigurationProvider(
+		ProviderType,
+		new[] { FileExtension },
+		PyprojLaunchDebugTargetProvider.LaunchTypeName,
+		PyprojLaunchDebugTargetProvider.JsonSchema
+	)]
+	class PyprojLaunchConfigurationProvider : ILaunchConfigurationProvider
+	{
+		public const string ProviderType = "CCA8088B-06BC-4AE7-8521-FC66628ABE13";
 
-        private const string FileExtension = ".pyproj";
+		private const string FileExtension = ".pyproj";
 
-        public bool IsDebugLaunchActionSupported(DebugLaunchActionContext debugLaunchActionContext)
-        {
-            var settings = debugLaunchActionContext.LaunchConfiguration;
-            var moniker = settings.GetValue(PyprojLaunchDebugTargetProvider.ProjectKey, string.Empty);
-            if (string.IsNullOrEmpty(moniker) || !FileExtension.Equals(Path.GetExtension(moniker), StringComparison.OrdinalIgnoreCase))
-            {
-                return false;
-            }
+		public bool IsDebugLaunchActionSupported(DebugLaunchActionContext debugLaunchActionContext)
+		{
+			var settings = debugLaunchActionContext.LaunchConfiguration;
+			var moniker = settings.GetValue(PyprojLaunchDebugTargetProvider.ProjectKey, string.Empty);
+			if (string.IsNullOrEmpty(moniker) || !FileExtension.Equals(Path.GetExtension(moniker), StringComparison.OrdinalIgnoreCase))
+			{
+				return false;
+			}
 
-            return true;
-        }
+			return true;
+		}
 
-        public void CustomizeLaunchConfiguration(DebugLaunchActionContext debugLaunchActionContext, IPropertySettings launchSettings)
-        {
-        }
-    }
+		public void CustomizeLaunchConfiguration(DebugLaunchActionContext debugLaunchActionContext, IPropertySettings launchSettings)
+		{
+		}
+	}
 }

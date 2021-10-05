@@ -16,135 +16,135 @@
 
 namespace Microsoft.IronPythonTools.Interpreter
 {
-    sealed class XamlProjectEntry : IXamlProjectEntry
-    {
-        private XamlAnalysis _analysis;
-        private int _version;
-        private string _content;
-        private Dictionary<object, object> _properties;
-        private readonly HashSet<IProjectEntry> _dependencies = new HashSet<IProjectEntry>();
+	sealed class XamlProjectEntry : IXamlProjectEntry
+	{
+		private XamlAnalysis _analysis;
+		private int _version;
+		private string _content;
+		private Dictionary<object, object> _properties;
+		private readonly HashSet<IProjectEntry> _dependencies = new HashSet<IProjectEntry>();
 
-        public XamlProjectEntry(string filePath, Uri documentUri)
-        {
-            FilePath = filePath;
-            DocumentUri = documentUri;
-        }
+		public XamlProjectEntry(string filePath, Uri documentUri)
+		{
+			FilePath = filePath;
+			DocumentUri = documentUri;
+		}
 
-        public void ParseContent(TextReader content, IAnalysisCookie fileCookie)
-        {
-            _content = content.ReadToEnd();
-        }
+		public void ParseContent(TextReader content, IAnalysisCookie fileCookie)
+		{
+			_content = content.ReadToEnd();
+		}
 
-        public void AddDependency(IProjectEntry projectEntry)
-        {
-            lock (_dependencies)
-            {
-                _dependencies.Add(projectEntry);
-            }
-        }
+		public void AddDependency(IProjectEntry projectEntry)
+		{
+			lock (_dependencies)
+			{
+				_dependencies.Add(projectEntry);
+			}
+		}
 
-        #region IProjectEntry Members
+		#region IProjectEntry Members
 
-        public bool IsAnalyzed
-        {
-            get { return _analysis != null; }
-        }
+		public bool IsAnalyzed
+		{
+			get { return _analysis != null; }
+		}
 
-        public void Analyze(CancellationToken cancel)
-        {
-            if (cancel.IsCancellationRequested)
-            {
-                return;
-            }
+		public void Analyze(CancellationToken cancel)
+		{
+			if (cancel.IsCancellationRequested)
+			{
+				return;
+			}
 
-            lock (this)
-            {
-                if (string.IsNullOrEmpty(_content))
-                {
-                    return;
-                }
+			lock (this)
+			{
+				if (string.IsNullOrEmpty(_content))
+				{
+					return;
+				}
 
-                _analysis = new XamlAnalysis(new StringReader(_content));
+				_analysis = new XamlAnalysis(new StringReader(_content));
 
-                _version++;
+				_version++;
 
-                // update any .py files which depend upon us.
-                for (var deps = GetNewDependencies(null); deps.Any(); deps = GetNewDependencies(deps))
-                {
-                    foreach (var dep in deps)
-                    {
-                        dep.Analyze(cancel);
-                    }
-                }
-            }
-        }
+				// update any .py files which depend upon us.
+				for (var deps = GetNewDependencies(null); deps.Any(); deps = GetNewDependencies(deps))
+				{
+					foreach (var dep in deps)
+					{
+						dep.Analyze(cancel);
+					}
+				}
+			}
+		}
 
-        private HashSet<IProjectEntry> GetNewDependencies(HashSet<IProjectEntry> oldDependencies)
-        {
-            HashSet<IProjectEntry> deps;
-            lock (_dependencies)
-            {
-                deps = new HashSet<IProjectEntry>(_dependencies);
-            }
+		private HashSet<IProjectEntry> GetNewDependencies(HashSet<IProjectEntry> oldDependencies)
+		{
+			HashSet<IProjectEntry> deps;
+			lock (_dependencies)
+			{
+				deps = new HashSet<IProjectEntry>(_dependencies);
+			}
 
-            if (oldDependencies != null)
-            {
-                deps.ExceptWith(oldDependencies);
-            }
+			if (oldDependencies != null)
+			{
+				deps.ExceptWith(oldDependencies);
+			}
 
-            return deps;
-        }
+			return deps;
+		}
 
-        public string FilePath { get; }
-        public Uri DocumentUri { get; }
-        public IDocument Document => null;
+		public string FilePath { get; }
+		public Uri DocumentUri { get; }
+		public IDocument Document => null;
 
-        public int AnalysisVersion
-        {
-            get
-            {
-                return _version;
-            }
-        }
+		public int AnalysisVersion
+		{
+			get
+			{
+				return _version;
+			}
+		}
 
-        public Dictionary<object, object> Properties
-        {
-            get
-            {
-                if (_properties == null)
-                {
-                    _properties = new Dictionary<object, object>();
-                }
-                return _properties;
-            }
-        }
+		public Dictionary<object, object> Properties
+		{
+			get
+			{
+				if (_properties == null)
+				{
+					_properties = new Dictionary<object, object>();
+				}
+				return _properties;
+			}
+		}
 
-        public IModuleContext AnalysisContext
-        {
-            get { return null; }
-        }
+		public IModuleContext AnalysisContext
+		{
+			get { return null; }
+		}
 
-        public void RemovedFromProject() { }
+		public void RemovedFromProject() { }
 
-        #endregion
+		#endregion
 
-        #region IXamlProjectEntry Members
+		#region IXamlProjectEntry Members
 
-        public XamlAnalysis Analysis
-        {
-            get { return _analysis; }
-        }
+		public XamlAnalysis Analysis
+		{
+			get { return _analysis; }
+		}
 
-        #endregion
+		#endregion
 
-        public void Dispose() { }
-    }
+		public void Dispose() { }
+	}
 
-    interface IXamlProjectEntry : IExternalProjectEntry
-    {
-        XamlAnalysis Analysis
-        {
-            get;
-        }
-    }
+	interface IXamlProjectEntry : IExternalProjectEntry
+	{
+		XamlAnalysis Analysis
+		{
+			get;
+		}
+	}
 }

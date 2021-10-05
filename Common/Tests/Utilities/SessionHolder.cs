@@ -16,25 +16,25 @@
 
 namespace TestUtilities
 {
-    public class SessionHolder<T> : IDisposable where T : IIntellisenseSession
-    {
-        public readonly T Session;
-        private readonly IEditor _owner;
+	public class SessionHolder<T> : IDisposable where T : IIntellisenseSession
+	{
+		public readonly T Session;
+		private readonly IEditor _owner;
 
-        public SessionHolder(T session, IEditor owner)
-        {
-            Assert.IsNotNull(session);
-            Session = session;
-            _owner = owner;
-        }
+		public SessionHolder(T session, IEditor owner)
+		{
+			Assert.IsNotNull(session);
+			Session = session;
+			_owner = owner;
+		}
 
-        void IDisposable.Dispose()
-        {
-            if (!Session.IsDismissed)
-            {
-                _owner.Invoke(() => { Session.Dismiss(); });
-            }
-        }
-    }
+		void IDisposable.Dispose()
+		{
+			if (!Session.IsDismissed)
+			{
+				_owner.Invoke(() => { Session.Dismiss(); });
+			}
+		}
+	}
 
 }

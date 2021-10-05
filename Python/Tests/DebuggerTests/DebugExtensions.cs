@@ -16,56 +16,56 @@
 
 namespace DebuggerTests
 {
-    static class DebugExtensions
-    {
-        internal static PythonProcess DebugProcess(this PythonDebugger debugger, PythonVersion version, string filename, TextWriter debugLog, Func<PythonProcess, PythonThread, Task> onLoaded = null, bool resumeOnProcessLoaded = true, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput, string cwd = null, string arguments = "")
-        {
-            string fullPath = Path.GetFullPath(filename);
-            string dir = cwd ?? Path.GetFullPath(Path.GetDirectoryName(filename));
-            if (!String.IsNullOrEmpty(arguments))
-            {
-                arguments = "\"" + fullPath + "\" " + arguments;
-            }
-            else
-            {
-                arguments = "\"" + fullPath + "\"";
-            }
-            var process = debugger.CreateProcess(version.Version, version.InterpreterPath, arguments, dir, "", interpreterOptions, debugOptions, debugLog);
-            process.DebuggerOutput += (sender, args) =>
-            {
-                Console.WriteLine("{0}: {1}", args.Thread?.Id, args.Output);
-            };
-            process.ProcessLoaded += async (sender, args) =>
-            {
-                if (onLoaded != null)
-                {
-                    await onLoaded(process, args.Thread);
-                }
-                if (resumeOnProcessLoaded)
-                {
-                    await process.ResumeAsync(default(CancellationToken));
-                }
-            };
+	static class DebugExtensions
+	{
+		internal static PythonProcess DebugProcess(this PythonDebugger debugger, PythonVersion version, string filename, TextWriter debugLog, Func<PythonProcess, PythonThread, Task> onLoaded = null, bool resumeOnProcessLoaded = true, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput, string cwd = null, string arguments = "")
+		{
+			string fullPath = Path.GetFullPath(filename);
+			string dir = cwd ?? Path.GetFullPath(Path.GetDirectoryName(filename));
+			if (!String.IsNullOrEmpty(arguments))
+			{
+				arguments = "\"" + fullPath + "\" " + arguments;
+			}
+			else
+			{
+				arguments = "\"" + fullPath + "\"";
+			}
+			var process = debugger.CreateProcess(version.Version, version.InterpreterPath, arguments, dir, "", interpreterOptions, debugOptions, debugLog);
+			process.DebuggerOutput += (sender, args) =>
+			{
+				Console.WriteLine("{0}: {1}", args.Thread?.Id, args.Output);
+			};
+			process.ProcessLoaded += async (sender, args) =>
+			{
+				if (onLoaded != null)
+				{
+					await onLoaded(process, args.Thread);
+				}
+				if (resumeOnProcessLoaded)
+				{
+					await process.ResumeAsync(default(CancellationToken));
+				}
+			};
 
-            return process;
-        }
+			return process;
+		}
 
-        internal static PythonBreakpoint AddBreakpointByFileExtension(this PythonProcess newproc, int line, string finalBreakFilename)
-        {
-            PythonBreakpoint breakPoint;
-            var ext = Path.GetExtension(finalBreakFilename);
+		internal static PythonBreakpoint AddBreakpointByFileExtension(this PythonProcess newproc, int line, string finalBreakFilename)
+		{
+			PythonBreakpoint breakPoint;
+			var ext = Path.GetExtension(finalBreakFilename);
 
-            if (String.Equals(ext, ".html", StringComparison.OrdinalIgnoreCase) ||
-                String.Equals(ext, ".htm", StringComparison.OrdinalIgnoreCase) ||
-                String.Equals(ext, ".djt", StringComparison.OrdinalIgnoreCase))
-            {
-                breakPoint = newproc.AddDjangoBreakpoint(finalBreakFilename, line);
-            }
-            else
-            {
-                breakPoint = newproc.AddBreakpoint(finalBreakFilename, line);
-            }
-            return breakPoint;
-        }
-    }
+			if (String.Equals(ext, ".html", StringComparison.OrdinalIgnoreCase) ||
+				String.Equals(ext, ".htm", StringComparison.OrdinalIgnoreCase) ||
+				String.Equals(ext, ".djt", StringComparison.OrdinalIgnoreCase))
+			{
+				breakPoint = newproc.AddDjangoBreakpoint(finalBreakFilename, line);
+			}
+			else
+			{
+				breakPoint = newproc.AddBreakpoint(finalBreakFilename, line);
+			}
+			return breakPoint;
+		}
+	}
 }

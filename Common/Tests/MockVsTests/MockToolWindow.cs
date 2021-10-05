@@ -16,84 +16,84 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-    class MockToolWindow : IVsWindowFrame
-    {
-        private readonly object _docView;
+	class MockToolWindow : IVsWindowFrame
+	{
+		private readonly object _docView;
 
-        public MockToolWindow(object docView)
-        {
-            _docView = docView;
-        }
+		public MockToolWindow(object docView)
+		{
+			_docView = docView;
+		}
 
-        public int CloseFrame(uint grfSaveOptions)
-        {
-            throw new NotImplementedException();
-        }
+		public int CloseFrame(uint grfSaveOptions)
+		{
+			throw new NotImplementedException();
+		}
 
-        public int GetFramePos(VSSETFRAMEPOS[] pdwSFP, out Guid pguidRelativeTo, out int px, out int py, out int pcx, out int pcy)
-        {
-            throw new NotImplementedException();
-        }
+		public int GetFramePos(VSSETFRAMEPOS[] pdwSFP, out Guid pguidRelativeTo, out int px, out int py, out int pcx, out int pcy)
+		{
+			throw new NotImplementedException();
+		}
 
-        public int GetGuidProperty(int propid, out Guid pguid)
-        {
-            throw new NotImplementedException();
-        }
+		public int GetGuidProperty(int propid, out Guid pguid)
+		{
+			throw new NotImplementedException();
+		}
 
-        public int GetProperty(int propid, out object pvar)
-        {
-            if (propid == (int)__VSFPROPID.VSFPROPID_DocView)
-            {
-                pvar = _docView;
-                return VSConstants.S_OK;
-            }
+		public int GetProperty(int propid, out object pvar)
+		{
+			if (propid == (int)__VSFPROPID.VSFPROPID_DocView)
+			{
+				pvar = _docView;
+				return VSConstants.S_OK;
+			}
 
-            throw new NotImplementedException();
-        }
+			throw new NotImplementedException();
+		}
 
-        public int Hide()
-        {
-            throw new NotImplementedException();
-        }
+		public int Hide()
+		{
+			throw new NotImplementedException();
+		}
 
-        public int IsOnScreen(out int pfOnScreen)
-        {
-            throw new NotImplementedException();
-        }
+		public int IsOnScreen(out int pfOnScreen)
+		{
+			throw new NotImplementedException();
+		}
 
-        public int IsVisible()
-        {
-            throw new NotImplementedException();
-        }
+		public int IsVisible()
+		{
+			throw new NotImplementedException();
+		}
 
-        public int QueryViewInterface(ref Guid riid, out IntPtr ppv)
-        {
-            throw new NotImplementedException();
-        }
+		public int QueryViewInterface(ref Guid riid, out IntPtr ppv)
+		{
+			throw new NotImplementedException();
+		}
 
-        public int SetFramePos(VSSETFRAMEPOS dwSFP, ref Guid rguidRelativeTo, int x, int y, int cx, int cy)
-        {
-            throw new NotImplementedException();
-        }
+		public int SetFramePos(VSSETFRAMEPOS dwSFP, ref Guid rguidRelativeTo, int x, int y, int cx, int cy)
+		{
+			throw new NotImplementedException();
+		}
 
-        public int SetGuidProperty(int propid, ref Guid rguid)
-        {
-            throw new NotImplementedException();
-        }
+		public int SetGuidProperty(int propid, ref Guid rguid)
+		{
+			throw new NotImplementedException();
+		}
 
-        public int SetProperty(int propid, object var)
-        {
-            throw new NotImplementedException();
-        }
+		public int SetProperty(int propid, object var)
+		{
+			throw new NotImplementedException();
+		}
 
-        public int Show()
-        {
-            throw new NotImplementedException();
-        }
+		public int Show()
+		{
+			throw new NotImplementedException();
+		}
 
-        public int ShowNoActivate()
-        {
-            throw new NotImplementedException();
-        }
-    }
+		public int ShowNoActivate()
+		{
+			throw new NotImplementedException();
+		}
+	}
 }

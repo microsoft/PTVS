@@ -16,114 +16,114 @@
 
 namespace TestUtilities.Mocks
 {
-    class MockNormalizedTextChangeCollection : INormalizedTextChangeCollection
-    {
-        private readonly ITextChange[] _changes;
+	class MockNormalizedTextChangeCollection : INormalizedTextChangeCollection
+	{
+		private readonly ITextChange[] _changes;
 
-        public MockNormalizedTextChangeCollection(params ITextChange[] changes)
-        {
-            _changes = changes;
-        }
+		public MockNormalizedTextChangeCollection(params ITextChange[] changes)
+		{
+			_changes = changes;
+		}
 
-        public bool IncludesLineChanges
-        {
-            get
-            {
-                foreach (var change in _changes)
-                {
-                    if (change.OldText.IndexOfAny(new[] { '\r', '\n' }) != -1 ||
-                        change.NewText.IndexOfAny(new[] { '\r', '\n' }) != -1)
-                    {
-                        return true;
-                    }
-                }
-                return false;
-            }
-        }
+		public bool IncludesLineChanges
+		{
+			get
+			{
+				foreach (var change in _changes)
+				{
+					if (change.OldText.IndexOfAny(new[] { '\r', '\n' }) != -1 ||
+						change.NewText.IndexOfAny(new[] { '\r', '\n' }) != -1)
+					{
+						return true;
+					}
+				}
+				return false;
+			}
+		}
 
-        public int IndexOf(ITextChange item)
-        {
-            for (int i = 0; i < _changes.Length; i++)
-            {
-                if (_changes[i] == item)
-                {
-                    return i;
-                }
-            }
-            return -1;
-        }
+		public int IndexOf(ITextChange item)
+		{
+			for (int i = 0; i < _changes.Length; i++)
+			{
+				if (_changes[i] == item)
+				{
+					return i;
+				}
+			}
+			return -1;
+		}
 
-        public void Insert(int index, ITextChange item)
-        {
-            throw new NotImplementedException();
-        }
+		public void Insert(int index, ITextChange item)
+		{
+			throw new NotImplementedException();
+		}
 
-        public void RemoveAt(int index)
-        {
-            throw new NotImplementedException();
-        }
+		public void RemoveAt(int index)
+		{
+			throw new NotImplementedException();
+		}
 
-        public ITextChange this[int index]
-        {
-            get
-            {
-                return _changes[index];
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
+		public ITextChange this[int index]
+		{
+			get
+			{
+				return _changes[index];
+			}
+			set
+			{
+				throw new NotImplementedException();
+			}
+		}
 
-        public void Add(ITextChange item)
-        {
-            throw new NotImplementedException();
-        }
+		public void Add(ITextChange item)
+		{
+			throw new NotImplementedException();
+		}
 
-        public void Clear()
-        {
-            throw new NotImplementedException();
-        }
+		public void Clear()
+		{
+			throw new NotImplementedException();
+		}
 
-        public bool Contains(ITextChange item)
-        {
-            throw new NotImplementedException();
-        }
+		public bool Contains(ITextChange item)
+		{
+			throw new NotImplementedException();
+		}
 
-        public void CopyTo(ITextChange[] array, int arrayIndex)
-        {
-            _changes.CopyTo(array, arrayIndex);
-        }
+		public void CopyTo(ITextChange[] array, int arrayIndex)
+		{
+			_changes.CopyTo(array, arrayIndex);
+		}
 
-        public int Count
-        {
-            get { return _changes.Length; }
-        }
+		public int Count
+		{
+			get { return _changes.Length; }
+		}
 
-        public bool IsReadOnly
-        {
-            get { throw new NotImplementedException(); }
-        }
+		public bool IsReadOnly
+		{
+			get { throw new NotImplementedException(); }
+		}
 
-        public bool Remove(ITextChange item)
-        {
-            throw new NotImplementedException();
-        }
+		public bool Remove(ITextChange item)
+		{
+			throw new NotImplementedException();
+		}
 
-        public IEnumerator<ITextChange> GetEnumerator()
-        {
-            foreach (var change in _changes)
-            {
-                yield return change;
-            }
-        }
+		public IEnumerator<ITextChange> GetEnumerator()
+		{
+			foreach (var change in _changes)
+			{
+				yield return change;
+			}
+		}
 
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-        {
-            foreach (var change in _changes)
-            {
-                yield return change;
-            }
-        }
-    }
+		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+		{
+			foreach (var change in _changes)
+			{
+				yield return change;
+			}
+		}
+	}
 }

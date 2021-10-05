@@ -16,11 +16,11 @@
 
 namespace TestUtilities.UI
 {
-    public class TypeBrowserPane : TreeView
-    {
-        public TypeBrowserPane(AutomationElement element)
-            : base(element)
-        {
-        }
-    }
+	public class TypeBrowserPane : TreeView
+	{
+		public TypeBrowserPane(AutomationElement element)
+			: base(element)
+		{
+		}
+	}
 }

@@ -16,37 +16,37 @@
 
 namespace TestUtilities.Mocks
 {
-    internal sealed class KeyWeakReference : WeakReference
-    {
-        public int HashCode { get; }
+	internal sealed class KeyWeakReference : WeakReference
+	{
+		public int HashCode { get; }
 
-        public KeyWeakReference(object target) : base(target)
-        {
-            HashCode = target.GetHashCode();
-        }
+		public KeyWeakReference(object target) : base(target)
+		{
+			HashCode = target.GetHashCode();
+		}
 
-        public override int GetHashCode() => HashCode;
+		public override int GetHashCode() => HashCode;
 
-        public override bool Equals(object obj) => Equals(obj as KeyWeakReference);
+		public override bool Equals(object obj) => Equals(obj as KeyWeakReference);
 
-        public bool Equals(KeyWeakReference other)
-        {
-            if (other == null)
-            {
-                return false;
-            }
+		public bool Equals(KeyWeakReference other)
+		{
+			if (other == null)
+			{
+				return false;
+			}
 
-            if (ReferenceEquals(this, other))
-            {
-                return true;
-            }
+			if (ReferenceEquals(this, other))
+			{
+				return true;
+			}
 
-            if (IsAlive && other.IsAlive)
-            {
-                return Equals(Target, other.Target);
-            }
+			if (IsAlive && other.IsAlive)
+			{
+				return Equals(Target, other.Target);
+			}
 
-            return !IsAlive && !other.IsAlive && HashCode == other.HashCode;
-        }
-    }
+			return !IsAlive && !other.IsAlive && HashCode == other.HashCode;
+		}
+	}
 }

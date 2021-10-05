@@ -16,17 +16,16 @@
 
 namespace PythonToolsMockTests
 {
-    [Export(typeof(IIntellisenseSessionStackMapService))]
-    class MockIntellisenseSessionStackMapService : IIntellisenseSessionStackMapService
-    {
-        public IIntellisenseSessionStack GetStackForTextView(ITextView textView)
-        {
-            MockIntellisenseSessionStack stack;
-            if (!textView.Properties.TryGetProperty<MockIntellisenseSessionStack>(typeof(MockIntellisenseSessionStack), out stack))
-            {
-                textView.Properties[typeof(MockIntellisenseSessionStack)] = stack = new MockIntellisenseSessionStack();
-            }
-            return stack;
-        }
-    }
+	[Export(typeof(IIntellisenseSessionStackMapService))]
+	class MockIntellisenseSessionStackMapService : IIntellisenseSessionStackMapService
+	{
+		public IIntellisenseSessionStack GetStackForTextView(ITextView textView)
+		{
+			if (!textView.Properties.TryGetProperty<MockIntellisenseSessionStack>(typeof(MockIntellisenseSessionStack), out MockIntellisenseSessionStack stack))
+			{
+				textView.Properties[typeof(MockIntellisenseSessionStack)] = stack = new MockIntellisenseSessionStack();
+			}
+			return stack;
+		}
+	}
 }

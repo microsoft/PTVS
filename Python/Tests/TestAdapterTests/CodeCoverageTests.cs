@@ -18,22 +18,22 @@ extern alias pt;
 
 namespace TestAdapterTests
 {
-    [TestClass]
-    public class CodeCoverageTests
-    {
-        [TestMethod, Priority(UnitTestPriority.P0)]
-        public void TestBestFile()
-        {
-            var file1 = "C:\\Some\\Path\\file1.py";
-            var file2 = "C:\\Some\\Path\\file2.py";
-            var best = CodeCoverage.UpdateBestFile(null, file1);
-            Assert.AreEqual(best, file1);
+	[TestClass]
+	public class CodeCoverageTests
+	{
+		[TestMethod, Priority(UnitTestPriority.P0)]
+		public void TestBestFile()
+		{
+			var file1 = "C:\\Some\\Path\\file1.py";
+			var file2 = "C:\\Some\\Path\\file2.py";
+			var best = CodeCoverage.UpdateBestFile(null, file1);
+			Assert.AreEqual(best, file1);
 
-            best = CodeCoverage.UpdateBestFile(null, file1);
-            Assert.AreEqual(best, file1);
+			best = CodeCoverage.UpdateBestFile(null, file1);
+			Assert.AreEqual(best, file1);
 
-            best = CodeCoverage.UpdateBestFile(best, file2);
-            Assert.AreEqual("C:\\Some\\Path", best);
-        }
-    }
+			best = CodeCoverage.UpdateBestFile(best, file2);
+			Assert.AreEqual("C:\\Some\\Path", best);
+		}
+	}
 }

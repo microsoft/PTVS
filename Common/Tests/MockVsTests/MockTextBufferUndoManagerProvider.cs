@@ -16,18 +16,18 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-    [Export(typeof(ITextBufferUndoManagerProvider))]
-    public class MockTextBufferUndoManagerProvider : ITextBufferUndoManagerProvider
-    {
-        public ITextBufferUndoManager GetTextBufferUndoManager(ITextBuffer textBuffer)
-        {
-            return textBuffer.Properties
-                .GetOrCreateSingletonProperty(() => new MockTextBufferUndoManager(textBuffer));
-        }
+	[Export(typeof(ITextBufferUndoManagerProvider))]
+	public class MockTextBufferUndoManagerProvider : ITextBufferUndoManagerProvider
+	{
+		public ITextBufferUndoManager GetTextBufferUndoManager(ITextBuffer textBuffer)
+		{
+			return textBuffer.Properties
+				.GetOrCreateSingletonProperty(() => new MockTextBufferUndoManager(textBuffer));
+		}
 
-        public void RemoveTextBufferUndoManager(ITextBuffer textBuffer)
-        {
-            textBuffer.Properties.RemoveProperty(typeof(MockTextBufferUndoManager));
-        }
-    }
+		public void RemoveTextBufferUndoManager(ITextBuffer textBuffer)
+		{
+			textBuffer.Properties.RemoveProperty(typeof(MockTextBufferUndoManager));
+		}
+	}
 }

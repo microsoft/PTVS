@@ -16,77 +16,77 @@
 
 namespace TestUtilities.Mocks
 {
-    public class MockTextVersion : ITextVersion2
-    {
-        private readonly int _version;
-        private readonly MockTextImageVersion _imageVersion;
-        internal readonly MockTextSnapshot _snapshot;
-        private MockTextVersion _nextVersion;
-        private INormalizedTextChangeCollection _changes;
+	public class MockTextVersion : ITextVersion2
+	{
+		private readonly int _version;
+		private readonly MockTextImageVersion _imageVersion;
+		internal readonly MockTextSnapshot _snapshot;
+		private MockTextVersion _nextVersion;
+		private INormalizedTextChangeCollection _changes;
 
-        public MockTextVersion(int version, MockTextSnapshot snapshot)
-        {
-            _version = version;
-            _snapshot = snapshot;
-            _imageVersion = new MockTextImageVersion(this);
-        }
+		public MockTextVersion(int version, MockTextSnapshot snapshot)
+		{
+			_version = version;
+			_snapshot = snapshot;
+			_imageVersion = new MockTextImageVersion(this);
+		}
 
-        /// <summary>
-        /// changes to get to the next version
-        /// </summary>
-        public INormalizedTextChangeCollection Changes => _changes;
+		/// <summary>
+		/// changes to get to the next version
+		/// </summary>
+		public INormalizedTextChangeCollection Changes => _changes;
 
-        public ITrackingSpan CreateCustomTrackingSpan(Span span, TrackingFidelityMode trackingFidelity, object customState, CustomTrackToVersion behavior)
-        {
-            throw new NotImplementedException();
-        }
+		public ITrackingSpan CreateCustomTrackingSpan(Span span, TrackingFidelityMode trackingFidelity, object customState, CustomTrackToVersion behavior)
+		{
+			throw new NotImplementedException();
+		}
 
-        public ITrackingPoint CreateTrackingPoint(int position, PointTrackingMode trackingMode, TrackingFidelityMode trackingFidelity)
-        {
-            throw new NotImplementedException();
-        }
+		public ITrackingPoint CreateTrackingPoint(int position, PointTrackingMode trackingMode, TrackingFidelityMode trackingFidelity)
+		{
+			throw new NotImplementedException();
+		}
 
-        public ITrackingPoint CreateTrackingPoint(int position, PointTrackingMode trackingMode)
-        {
-            throw new NotImplementedException();
-        }
+		public ITrackingPoint CreateTrackingPoint(int position, PointTrackingMode trackingMode)
+		{
+			throw new NotImplementedException();
+		}
 
-        public ITrackingSpan CreateTrackingSpan(int start, int length, SpanTrackingMode trackingMode, TrackingFidelityMode trackingFidelity)
-        {
-            throw new NotImplementedException();
-        }
+		public ITrackingSpan CreateTrackingSpan(int start, int length, SpanTrackingMode trackingMode, TrackingFidelityMode trackingFidelity)
+		{
+			throw new NotImplementedException();
+		}
 
-        public ITrackingSpan CreateTrackingSpan(int start, int length, SpanTrackingMode trackingMode)
-        {
-            throw new NotImplementedException();
-        }
+		public ITrackingSpan CreateTrackingSpan(int start, int length, SpanTrackingMode trackingMode)
+		{
+			throw new NotImplementedException();
+		}
 
-        public ITrackingSpan CreateTrackingSpan(Span span, SpanTrackingMode trackingMode, TrackingFidelityMode trackingFidelity)
-        {
-            throw new NotImplementedException();
-        }
+		public ITrackingSpan CreateTrackingSpan(Span span, SpanTrackingMode trackingMode, TrackingFidelityMode trackingFidelity)
+		{
+			throw new NotImplementedException();
+		}
 
-        public ITrackingSpan CreateTrackingSpan(Span span, SpanTrackingMode trackingMode)
-        {
-            throw new NotImplementedException();
-        }
+		public ITrackingSpan CreateTrackingSpan(Span span, SpanTrackingMode trackingMode)
+		{
+			throw new NotImplementedException();
+		}
 
-        public int Length => _snapshot.Length;
+		public int Length => _snapshot.Length;
 
-        public ITextVersion Next => _nextVersion;
+		public ITextVersion Next => _nextVersion;
 
-        public int ReiteratedVersionNumber => throw new NotImplementedException();
+		public int ReiteratedVersionNumber => throw new NotImplementedException();
 
-        public ITextBuffer TextBuffer => _snapshot.TextBuffer;
+		public ITextBuffer TextBuffer => _snapshot.TextBuffer;
 
-        public int VersionNumber => _version;
+		public int VersionNumber => _version;
 
-        public ITextImageVersion ImageVersion => _imageVersion;
+		public ITextImageVersion ImageVersion => _imageVersion;
 
-        internal void SetNext(MockTextVersion nextVersion, params ITextChange[] changes)
-        {
-            _nextVersion = nextVersion;
-            _changes = new MockNormalizedTextChangeCollection(changes);
-        }
-    }
+		internal void SetNext(MockTextVersion nextVersion, params ITextChange[] changes)
+		{
+			_nextVersion = nextVersion;
+			_changes = new MockNormalizedTextChangeCollection(changes);
+		}
+	}
 }

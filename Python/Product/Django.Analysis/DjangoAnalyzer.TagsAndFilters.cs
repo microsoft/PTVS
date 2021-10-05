@@ -16,23 +16,23 @@
 
 namespace Microsoft.PythonTools.Django.Analysis
 {
-    partial class DjangoAnalyzer
-    {
-        #region Known Tags / Filters
+	partial class DjangoAnalyzer
+	{
+		#region Known Tags / Filters
 
-        private static Dictionary<string, string> MakeKnownFiltersTable()
-        {
-            return new Dictionary<string, string>() {
-                { "dictsort", @"Takes a list of dicts, returns that list sorted by the property given in the argument." },
-                { "dictsortreversed", @"Takes a list of dicts, returns that list sorted in reverse order by the property given in the argument." },
-                { "addslashes", @"Adds slashes before quotes. Useful for escaping strings in CSV, for
+		private static Dictionary<string, string> MakeKnownFiltersTable()
+		{
+			return new Dictionary<string, string>() {
+				{ "dictsort", @"Takes a list of dicts, returns that list sorted by the property given in the argument." },
+				{ "dictsortreversed", @"Takes a list of dicts, returns that list sorted in reverse order by the property given in the argument." },
+				{ "addslashes", @"Adds slashes before quotes. Useful for escaping strings in CSV, for
 example. Less useful for escaping JavaScript; use the ``escapejs``
 filter instead.
 " },
-                { "capfirst", @"Capitalizes the first character of the value." },
-                { "escapejs", @"Hex encodes characters for use in JavaScript strings." },
-                { "fix_ampersands", @"Replaces ampersands with ``&amp;`` entities." },
-                { "floatformat", @"Displays a float to a specified number of decimal places.
+				{ "capfirst", @"Capitalizes the first character of the value." },
+				{ "escapejs", @"Hex encodes characters for use in JavaScript strings." },
+				{ "fix_ampersands", @"Replaces ampersands with ``&amp;`` entities." },
+				{ "floatformat", @"Displays a float to a specified number of decimal places.
 
 If called without an argument, it displays the floating point number with
 one decimal place -- but only if there's a decimal place to be displayed:
@@ -60,18 +60,18 @@ only if there are places to be displayed:
 
 If the input float is infinity or NaN, the (platform-dependent) string
 representation of that value will be displayed." },
-                { "iriencode", @"Escapes an IRI value for use in a URL." },
-                {"linenumbers", @"Displays text with line numbers."},
-                {"lower", @"Converts a string into all lowercase."},
-                {"make_list", @"Returns the value turned into a list.
+				{ "iriencode", @"Escapes an IRI value for use in a URL." },
+				{"linenumbers", @"Displays text with line numbers."},
+				{"lower", @"Converts a string into all lowercase."},
+				{"make_list", @"Returns the value turned into a list.
 
 For an integer, it's a list of digits.
 For a string, it's a list of characters.
 "},
-                {"slugify", @"Normalizes string, converts to lowercase, removes non-alpha characters,
+				{"slugify", @"Normalizes string, converts to lowercase, removes non-alpha characters,
 and converts spaces to hyphens.
 "},
-                {"stringformat", @"Formats the variable according to the arg, a string formatting specifier.
+				{"stringformat", @"Formats the variable according to the arg, a string formatting specifier.
 
 This specifier uses Python string formating syntax, with the exception that
 the leading ""%"" is dropped.
@@ -79,81 +79,81 @@ the leading ""%"" is dropped.
 See http://docs.python.org/lib/typesseq-strings.html for documentation
 of Python string formatting
 "},
-                {"title", @"Converts a string into titlecase."},
-                {"truncatechars", @"Truncates a string after a certain number of characters.
+				{"title", @"Converts a string into titlecase."},
+				{"truncatechars", @"Truncates a string after a certain number of characters.
 
 Argument: Number of characters to truncate after.
 "},
-                {"truncatewords", @"Truncates a string after a certain number of words.
+				{"truncatewords", @"Truncates a string after a certain number of words.
 
 Argument: Number of words to truncate after.
 
 Newlines within the string are removed.
 "},
-                {"truncatewords_html", @"Truncates HTML after a certain number of words.
+				{"truncatewords_html", @"Truncates HTML after a certain number of words.
 
 Argument: Number of words to truncate after.
 
 Newlines in the HTML are preserved.
 "},
-                {"upper", @"Converts a string into all uppercase."},
-                {"urlencode", @"Escapes a value for use in a URL.
+				{"upper", @"Converts a string into all uppercase."},
+				{"urlencode", @"Escapes a value for use in a URL.
 
 Takes an optional ``safe`` parameter used to determine the characters which
 should not be escaped by Django's ``urlquote`` method. If not provided, the
 default safe characters will be used (but an empty string can be provided
 when *all* characters should be escaped).
 "},
-                {"urlize", @"Converts URLs in plain text into clickable links."},
-                {"urlizetrunc", @"Converts URLs into clickable links, truncating URLs to the given character
+				{"urlize", @"Converts URLs in plain text into clickable links."},
+				{"urlizetrunc", @"Converts URLs into clickable links, truncating URLs to the given character
 limit, and adding 'rel=nofollow' attribute to discourage spamming.
 
 Argument: Length to truncate URLs to.
 "},
-                {"wordcount", @"Returns the number of words."},
-                {"wordwrap", @"Wraps words at specified line length.
+				{"wordcount", @"Returns the number of words."},
+				{"wordwrap", @"Wraps words at specified line length.
 
 Argument: number of characters to wrap the text at.
 "},
-                {"ljust", @"Left-aligns the value in a field of a given width.
+				{"ljust", @"Left-aligns the value in a field of a given width.
 
 Argument: field size.
 "},
-                {"rjust", @"Right-aligns the value in a field of a given width.
+				{"rjust", @"Right-aligns the value in a field of a given width.
 
 Argument: field size.
 "},
-                {"center", @"Centers the value in a field of a given width."},
-                {"cut", @"Removes all values of arg from the given string."},
-                {"escape_filter", @"Marks the value as a string that should not be auto-escaped."},
-                {"force_escape", @"Escapes a string's HTML. This returns a new string containing the escaped
+				{"center", @"Centers the value in a field of a given width."},
+				{"cut", @"Removes all values of arg from the given string."},
+				{"escape_filter", @"Marks the value as a string that should not be auto-escaped."},
+				{"force_escape", @"Escapes a string's HTML. This returns a new string containing the escaped
 characters (as opposed to ""escape"", which marks the content for later
 possible escaping).
 "},
-                {"linebreaks_filter", @"Replaces line breaks in plain text with appropriate HTML; a single
+				{"linebreaks_filter", @"Replaces line breaks in plain text with appropriate HTML; a single
 newline becomes an HTML line break (``<br />``) and a new line
 followed by a blank line becomes a paragraph break (``</p>``).
 "},
-                {"linebreaksbr", @"    Converts all newlines in a piece of plain text to HTML line breaks (``<br />``)."},
-                {"safe", @"Marks the value as a string that should not be auto-escaped."},
-                {"safeseq", @"A ""safe"" filter for sequences. Marks each element in the sequence,
+				{"linebreaksbr", @"    Converts all newlines in a piece of plain text to HTML line breaks (``<br />``)."},
+				{"safe", @"Marks the value as a string that should not be auto-escaped."},
+				{"safeseq", @"A ""safe"" filter for sequences. Marks each element in the sequence,
 individually, as safe, after converting them to unicode. Returns a list
 with the results.
 "},
-                {"removetags", @"Removes a space separated list of [X]HTML tags from the output."},
-                {"striptags", @"Strips all [X]HTML tags."},
-                {"first", @"Returns the first item in a list."},
-                {"join", @"Joins a list with a string, like Python's ``str.join(list)``."},
-                {"last", @"Returns the last item in a list"},
-                {"length", @"Returns the length of the value - useful for lists."},
-                {"length_is", @"Returns a boolean of whether the value's length is the argument."},
-                {"random", @"Returns a random item from the list."},
-                {"slice_filter", @"Returns a slice of the list.
+				{"removetags", @"Removes a space separated list of [X]HTML tags from the output."},
+				{"striptags", @"Strips all [X]HTML tags."},
+				{"first", @"Returns the first item in a list."},
+				{"join", @"Joins a list with a string, like Python's ``str.join(list)``."},
+				{"last", @"Returns the last item in a list"},
+				{"length", @"Returns the length of the value - useful for lists."},
+				{"length_is", @"Returns a boolean of whether the value's length is the argument."},
+				{"random", @"Returns a random item from the list."},
+				{"slice_filter", @"Returns a slice of the list.
 
 Uses the same syntax as Python's list slicing; see
 http://diveintopython.org/native_data_types/lists.html#odbchelper.list.slice
 for an introduction."},
-                {"unordered_list", @"Recursively takes a self-nested list and returns an HTML unordered list --
+				{"unordered_list", @"Recursively takes a self-nested list and returns an HTML unordered list --
 WITHOUT opening and closing <ul> tags.
 
 The list is assumed to be in the proper format. For example, if ``var``
@@ -171,20 +171,20 @@ then ``{{ var|unordered_list }}`` would return::
             <li>Illinois</li>
     </ul>
     </li>"},
-                {"add", @"Adds the arg to the value."},
-                {"get_digit", @"Given a whole number, returns the requested digit of it, where 1 is the
+				{"add", @"Adds the arg to the value."},
+				{"get_digit", @"Given a whole number, returns the requested digit of it, where 1 is the
 right-most digit, 2 is the second-right-most digit, etc. Returns the
 original value for invalid input (if input or argument is not an integer,
 or if argument is less than 1). Otherwise, output is always an integer.
 "},
-                {"date", @"Formats a date according to the given format."},
-                {"time", @"Formats a time according to the given format."},
-                {"timesince", @"Formats a date as the time since that date (i.e. ""4 days, 6 hours"")."},
-                {"timeuntil", @"Formats a date as the time until that date (i.e. ""4 days, 6 hours"")."},
-                {"default", @"If value is unavailable, use given default."},
-                {"default_if_none", @"If value is None, use given default."},
-                {"divibleby", @"Returns True if the value is devisible by the argument."},
-                {"yesno", @"Given a string mapping values for true, false and (optionally) None,
+				{"date", @"Formats a date according to the given format."},
+				{"time", @"Formats a time according to the given format."},
+				{"timesince", @"Formats a date as the time since that date (i.e. ""4 days, 6 hours"")."},
+				{"timeuntil", @"Formats a date as the time until that date (i.e. ""4 days, 6 hours"")."},
+				{"default", @"If value is unavailable, use given default."},
+				{"default_if_none", @"If value is None, use given default."},
+				{"divibleby", @"Returns True if the value is devisible by the argument."},
+				{"yesno", @"Given a string mapping values for true, false and (optionally) None,
 returns one of those strings according to the value:
 
 ==========  ======================  ==================================
@@ -197,8 +197,8 @@ Value       Argument                Outputs
                                     if no mapping for None is given.
 ==========  ======================  ==================================
 "},
-                {"filesizeformat", @"Formats the value like a 'human-readable' file size (i.e. 13 KB, 4.1 MB, 102 bytes, etc)."},
-                {"pluralize", @"Returns a plural suffix if the value is not 1. By default, 's' is used as
+				{"filesizeformat", @"Formats the value like a 'human-readable' file size (i.e. 13 KB, 4.1 MB, 102 bytes, etc)."},
+				{"pluralize", @"Returns a plural suffix if the value is not 1. By default, 's' is used as
 the suffix:
 
 * If value is 0, vote{{ value|pluralize }} displays ""0 votes"".
@@ -219,41 +219,41 @@ plural case:
 * If value is 1, cand{{ value|pluralize:""y,ies"" }} displays ""1 candy"".
 * If value is 2, cand{{ value|pluralize:""y,ies"" }} displays ""2 candies"".
 "},
-                {"phone2numeric", @"Takes a phone number and converts it in to its numerical equivalent."},
-                {"pprint", @"A wrapper around pprint.pprint -- for debugging, really."},
-                {"language_name", @""},
-                {"language_name_local", @""},
-                {"language_bidi", @""},
-                {"localize", @"Forces a value to be rendered as a localized value, regardless of the value of ``settings.USE_L10N``."},
-                {"unlocalize", @"Forces a value to be rendered as a non-localized value, regardless of the value of ``settings.USE_L10N``."},
-                {"localtime", @"Converts a datetime to local time in the active time zone.
+				{"phone2numeric", @"Takes a phone number and converts it in to its numerical equivalent."},
+				{"pprint", @"A wrapper around pprint.pprint -- for debugging, really."},
+				{"language_name", @""},
+				{"language_name_local", @""},
+				{"language_bidi", @""},
+				{"localize", @"Forces a value to be rendered as a localized value, regardless of the value of ``settings.USE_L10N``."},
+				{"unlocalize", @"Forces a value to be rendered as a non-localized value, regardless of the value of ``settings.USE_L10N``."},
+				{"localtime", @"Converts a datetime to local time in the active time zone.
 
 This only makes sense within a {% localtime off %} block."},
-                {"utc", @"Converts a datetime to UTC."},
-                {"do_timezone", @"Converts a datetime to local time in a given time zone.
+				{"utc", @"Converts a datetime to UTC."},
+				{"do_timezone", @"Converts a datetime to local time in a given time zone.
 
 The argument must be an instance of a tzinfo subclass or a time zone name.
 If it is a time zone name, pytz is required.
 
 Naive datetimes are assumed to be in local time in the default time zone."},
-                {"admin_urlname", @""},
-                {"cell_count", @"Returns the number of cells used in a tabular inline"},
-                {"ordinal", @"Converts an integer to its ordinal as a string. 1 is '1st', 2 is '2nd',
+				{"admin_urlname", @""},
+				{"cell_count", @"Returns the number of cells used in a tabular inline"},
+				{"ordinal", @"Converts an integer to its ordinal as a string. 1 is '1st', 2 is '2nd',
 3 is '3rd', etc. Works for any integer."},
-                {"intcomma", @"Converts an integer to a string containing commas every three digits.
+				{"intcomma", @"Converts an integer to a string containing commas every three digits.
 For example, 3000 becomes '3,000' and 45000 becomes '45,000'."},
-                {"intword", @"Converts a large integer to a friendly text representation. Works best
+				{"intword", @"Converts a large integer to a friendly text representation. Works best
 for numbers over 1 million. For example, 1000000 becomes '1.0 million',
 1200000 becomes '1.2 million' and '1200000000' becomes '1.2 billion'."},
-                {"apnumber", @"For numbers 1-9, returns the number spelled out. Otherwise, returns the
+				{"apnumber", @"For numbers 1-9, returns the number spelled out. Otherwise, returns the
 number. This follows Associated Press style."},
-                {"naturalday", @"For date values that are tomorrow, today or yesterday compared to
+				{"naturalday", @"For date values that are tomorrow, today or yesterday compared to
 present day returns representing string. Otherwise, returns a string
 formatted according to settings.DATE_FORMAT."},
-                {"naturaltime", @"For date and time values shows how many seconds, minutes or hours ago
+				{"naturaltime", @"For date and time values shows how many seconds, minutes or hours ago
 compared to current timestamp returns representing string."},
-                {"textile", @""},
-                {"markdown", @"Runs Markdown over a given value, optionally using various
+				{"textile", @""},
+				{"markdown", @"Runs Markdown over a given value, optionally using various
 extensions python-markdown supports.
 
 Syntax::
@@ -267,25 +267,25 @@ extension in the list.
 If the version of Markdown in use does not support extensions,
 they will be silently ignored.
 "},
-                {"restructuredtext", @""},
-            };
-        }
+				{"restructuredtext", @""},
+			};
+		}
 
-        private static Dictionary<string, string> MakeKnownTagsTable()
-        {
-            return new Dictionary<string, string>() {
-                {"elif", "adds an additional condition to an if block"},
-                {"endfor", "ends a for block"},
-                {"endifequal", "ends an ifequal block"},
-                {"endifnotequal", "ends an ifnotequal block"},
-                {"endifchanged", "ends an ifchanged block"},
-                {"endautoescape", "ends an autoescape block"},
-                {"endcomment", "ends a comment block"},
-                {"endfilter", "ends a filter block"},
-                {"endspaceless", "ends a spaceless block"},
-                {"endwith", "ends a with block"},
-                {"endif", "ends an if or elif block"},
-                {"include", @"Loads a template and renders it with the current context. You can pass
+		private static Dictionary<string, string> MakeKnownTagsTable()
+		{
+			return new Dictionary<string, string>() {
+				{"elif", "adds an additional condition to an if block"},
+				{"endfor", "ends a for block"},
+				{"endifequal", "ends an ifequal block"},
+				{"endifnotequal", "ends an ifnotequal block"},
+				{"endifchanged", "ends an ifchanged block"},
+				{"endautoescape", "ends an autoescape block"},
+				{"endcomment", "ends a comment block"},
+				{"endfilter", "ends a filter block"},
+				{"endspaceless", "ends a spaceless block"},
+				{"endwith", "ends a with block"},
+				{"endif", "ends an if or elif block"},
+				{"include", @"Loads a template and renders it with the current context. You can pass
 additional context using keyword arguments.
 
 Example::
@@ -299,8 +299,8 @@ the included template::
     {% include ""fob/some_include"" only %}
     {% include ""fob/some_include"" with oar=""1"" only %}
 "},
-                {"block", @"Define a block that can be overridden by child templates."},
-                {"extends", @"Signal that this template extends a parent template.
+				{"block", @"Define a block that can be overridden by child templates."},
+				{"extends", @"Signal that this template extends a parent template.
 
 This tag may be used in two ways: ``{% extends ""base"" %}`` (with quotes)
 uses the literal value ""base"" as the name of the parent template to extend,
@@ -308,7 +308,7 @@ or ``{% extends variable %}`` uses the value of ``variable`` as either the
 name of the parent template to extend (if it evaluates to a string) or as
 the parent tempate itelf (if it evaluates to a Template object).
 "},
-                {"cycle", @"Cycles among the given strings each time this tag is encountered.
+				{"cycle", @"Cycles among the given strings each time this tag is encountered.
 
 Within a loop, cycles among the given strings each time through
 the loop::
@@ -339,10 +339,10 @@ from returning any value::
             ...
         </tr>
     {% endfor %}"},
-                {"comment", @"Ignores everything between ``{% comment %}`` and ``{% endcomment %}``."},
-                {"autoescape", @"Force autoescape behavior for this block."},
-                {"csrf_token", @""},
-                {"debug", @"Outputs a whole load of debugging information, including the current
+				{"comment", @"Ignores everything between ``{% comment %}`` and ``{% endcomment %}``."},
+				{"autoescape", @"Force autoescape behavior for this block."},
+				{"csrf_token", @""},
+				{"debug", @"Outputs a whole load of debugging information, including the current
 context and imported modules.
 
 Sample usage::
@@ -350,7 +350,7 @@ Sample usage::
     <pre>
         {% debug %}
     </pre>"},
-                {"filter", @"Filters the contents of the block through variable filters.
+				{"filter", @"Filters the contents of the block through variable filters.
 
 Filters can also be piped through each other, and they can have
 arguments -- just like in variable syntax.
@@ -365,7 +365,7 @@ Note that the ``escape`` and ``safe`` filters are not acceptable arguments.
 Instead, use the ``autoescape`` tag to manage autoescaping for blocks of
 template code.
 "},
-                {"firstof", @"Outputs the first variable passed that is not False, without escaping.
+				{"firstof", @"Outputs the first variable passed that is not False, without escaping.
 
 Outputs nothing if all the passed variables are False.
 
@@ -395,7 +395,7 @@ If you want to escape the output, use a filter tag::
     {% filter force_escape %}
         {% firstof var1 var2 var3 ""fallback value"" %}
     {% endfilter %}"},
-                {"for", @"Loops over each item in an array.
+				{"for", @"Loops over each item in an array.
 
 For example, to display a list of athletes given ``athlete_list``::
 
@@ -454,7 +454,7 @@ The for loop sets a number of variables available within the loop:
     ``forloop.parentloop``      For nested loops, this is the loop ""above"" the
                                 current one
     ==========================  ================================================"},
-                {"ifequal", @"Outputs the contents of the block if the two arguments equal each other.
+				{"ifequal", @"Outputs the contents of the block if the two arguments equal each other.
 
 Examples::
 
@@ -467,9 +467,9 @@ Examples::
     {% else %}
         ...
     {% endifnotequal %}"},
-                {"ifnotequal", @"Outputs the contents of the block if the two arguments are not equal.
+				{"ifnotequal", @"Outputs the contents of the block if the two arguments are not equal.
     See ifequal."},
-                {"if", @"The ``{% if %}`` tag evaluates a variable, and if that variable is ""true""
+				{"if", @"The ``{% if %}`` tag evaluates a variable, and if that variable is ""true""
 (i.e., exists, is not empty, and is not a false boolean value), the
 contents of the block are output:
 
@@ -525,7 +525,7 @@ All supported operators are: ``or``, ``and``, ``in``, ``not in``
 ``==`` (or ``=``), ``!=``, ``>``, ``>=``, ``<`` and ``<=``.
 
 Operator precedence follows Python."},
-                {"ifchanged", @"Checks if a value has changed from the last iteration of a loop.
+				{"ifchanged", @"Checks if a value has changed from the last iteration of a loop.
 
 The ``{% ifchanged %}`` block tag is used within a loop. It has two
 possible uses.
@@ -551,7 +551,7 @@ possible uses.
                 {{ date.hour }}
             {% endifchanged %}
         {% endfor %}"},
-                {"ssi", @"Outputs the contents of a given file into the page.
+				{"ssi", @"Outputs the contents of a given file into the page.
 
 Like a simple ""include"" tag, the ``ssi`` tag includes the contents
 of another file -- which must be specified using an absolute path --
@@ -563,7 +563,7 @@ If the optional ""parsed"" parameter is given, the contents of the included
 file are evaluated as template code, with the current context::
 
     {% ssi /home/html/ljworld.com/includes/right_generic.html parsed %}"},
-                {"load", @"Loads a custom template tag set.
+				{"load", @"Loads a custom template tag set.
 
 For example, to load the template tags in
 ``django/templatetags/news/photos.py``::
@@ -575,7 +575,7 @@ a library::
 
     {% load byline from news %}
 "},
-                {"now", @"Displays the date, formatted according to the given string.
+				{"now", @"Displays the date, formatted according to the given string.
 
 Uses the same format as PHP's ``date()`` function; see http://php.net/date
 for all the possible values.
@@ -583,7 +583,7 @@ for all the possible values.
 Sample usage::
 
     It is {% now ""jS F Y H:i"" %}"},
-                {"regroup", @"Regroups a list of alike objects by a common attribute.
+				{"regroup", @"Regroups a list of alike objects by a common attribute.
 
 This complex tag is best illustrated by use of an example:  say that
 ``people`` is a list of ``Person`` objects that have ``first_name``,
@@ -625,7 +625,7 @@ people was not sorted by gender, you'd need to make sure it is sorted
 before using it, i.e.::
 
     {% regroup people|dictsort:""gender"" by gender as grouped %}"},
-                {"spaceless", @"Removes whitespace between HTML tags, including tab and newline characters.
+				{"spaceless", @"Removes whitespace between HTML tags, including tab and newline characters.
 
     Example usage::
 
@@ -647,7 +647,7 @@ before using it, i.e.::
                 Hello
             </strong>
         {% endspaceless %}"},
-                {"templatetag", @"Outputs one of the bits used to compose template tags.
+				{"templatetag", @"Outputs one of the bits used to compose template tags.
 
 Since the template system has no concept of ""escaping"", to display one of
 the bits used in template tags, you must use the ``{% templatetag %}`` tag.
@@ -666,7 +666,7 @@ The argument tells which template bit to output:
     ``opencomment``     ``{#``
     ``closecomment``    ``#}``
     ==================  ======="},
-                {"url", @"Returns an absolute URL matching given view with its parameters.
+				{"url", @"Returns an absolute URL matching given view with its parameters.
 
 This is a way to define links that aren't tied to a particular URL
 configuration::
@@ -698,7 +698,7 @@ then in a template you can create a link for a certain client like this::
     {% url app_name.client client.id %}
 
 The URL will look like ``/clients/client/123/``."},
-                {"widthratio", @"For creating oar charts and such, this tag calculates the ratio of a given
+				{"widthratio", @"For creating oar charts and such, this tag calculates the ratio of a given
 value to a maximum value, and then applies that ratio to a constant.
 
 For example::
@@ -708,7 +708,7 @@ For example::
 Above, if ``this_value`` is 175 and ``max_value`` is 200, the image in
 the above example will be 88 pixels wide (because 175/200 = .875;
 .875 * 100 = 87.5 which is rounded up to 88)."},
-                {"with", @"Adds one or more values to the context (inside of this block) for caching
+				{"with", @"Adds one or more values to the context (inside of this block) for caching
 and easy access.
 
 For example::
@@ -725,7 +725,7 @@ Multiple values can be added to the context::
 
 The legacy format of ``{% with person.some_sql_method as total %}`` is
 still accepted."},
-                {"cache", @"This will cache the contents of a template fragment for a given amount
+				{"cache", @"This will cache the contents of a template fragment for a given amount
 of time.
 
 Usage::
@@ -743,7 +743,7 @@ This tag also supports varying by a list of arguments::
     {% endcache %}
 
 Each unique set of arguments will result in a unique cache entry."},
-                {"localize", @"Forces or prevents localization of values, regardless of the value of
+				{"localize", @"Forces or prevents localization of values, regardless of the value of
 `settings.USE_L10N`.
 
 Sample usage::
@@ -751,13 +751,13 @@ Sample usage::
     {% localize off %}
         var pi = {{ 3.1415 }};
     {% endlocalize %}"},
-                {"localtime", @"Forces or prevents conversion of datetime objects to local time,
+				{"localtime", @"Forces or prevents conversion of datetime objects to local time,
 regardless of the value of ``settings.USE_TZ``.
 
 Sample usage::
 
     {% localtime off %}{{ value_in_utc }}{% endlocaltime %}"},
-                {"timezone", @"Enables a given time zone just for this block.
+				{"timezone", @"Enables a given time zone just for this block.
 
 The ``timezone`` argument must be an instance of a ``tzinfo`` subclass, a
 time zone name, or ``None``. If is it a time zone name, pytz is required.
@@ -768,7 +768,7 @@ Sample usage::
     {% timezone ""Europe/Paris"" %}
         It is {{ now }} in Paris.
     {% endtimezone %}"},
-                {"get_current_timezone", @"Stores the name of the current time zone in the context.
+				{"get_current_timezone", @"Stores the name of the current time zone in the context.
 
 Usage::
 
@@ -776,7 +776,7 @@ Usage::
 
 This will fetch the currently active time zone and put its name
 into the ``TIME_ZONE`` context variable."},
-                {"get_available_languages", @"This will store a list of available languages
+				{"get_available_languages", @"This will store a list of available languages
 in the context.
 
 Usage::
@@ -789,7 +789,7 @@ Usage::
 This will just pull the LANGUAGES setting from
 your setting file (or the default settings) and
 put it into the named variable."},
-                {"get_language_info", @"This will store the language information dictionary for the given language
+				{"get_language_info", @"This will store the language information dictionary for the given language
 code in a context variable.
 
 Usage::
@@ -799,7 +799,7 @@ Usage::
     {{ l.name }}
     {{ l.name_local }}
     {{ l.bidi|yesno:""bi-directional,uni-directional"" }}"},
-                {"get_language_info_list", @"This will store a list of language information dictionaries for the given
+				{"get_language_info_list", @"This will store a list of language information dictionaries for the given
 language codes in a context variable. The language codes can be specified
 either as a list of strings or a settings.LANGUAGES style tuple (or any
 sequence of sequences whose first items are language codes).
@@ -813,7 +813,7 @@ Usage::
         {{ l.name_local }}
         {{ l.bidi|yesno:""bi-directional,uni-directional"" }}
     {% endfor %}"},
-                {"get_current_language", @"This will store the current language in the context.
+				{"get_current_language", @"This will store the current language in the context.
 
 Usage::
 
@@ -822,7 +822,7 @@ Usage::
 This will fetch the currently active language and
 put it's value into the ``language`` context
 variable."},
-                {"get_current_language_bidi", @"This will store the current language layout in the context.
+				{"get_current_language_bidi", @"This will store the current language layout in the context.
 
 Usage::
 
@@ -831,7 +831,7 @@ Usage::
 This will fetch the currently active language's layout and
 put it's value into the ``bidi`` context variable.
 True indicates right-to-left layout, otherwise left-to-right"},
-                {"blocktrans", @"This will translate a block of text with parameters.
+				{"blocktrans", @"This will translate a block of text with parameters.
 
 Usage::
 
@@ -862,7 +862,7 @@ Contextual translations are supported::
 
 This is equivalent to calling pgettext/npgettext instead of
 (u)gettext/(u)ngettext."},
-                {"trans", @"This will mark a string for translation and will
+				{"trans", @"This will mark a string for translation and will
 translate the string for the current language.
 
 Usage::
@@ -900,14 +900,14 @@ Contextual translations are also supported::
     {% trans ""this is a test"" context ""greeting"" %}
 
 This is equivalent to calling pgettext instead of (u)gettext."},
-                {"language", @"This will enable the given language just for this block.
+				{"language", @"This will enable the given language just for this block.
 
 Usage::
 
     {% language ""de"" %}
         This is {{ oar }} and {{ boo }}.
     {% endlanguage %}"},
-                {"get_admin_log", @"Populates a template variable with the admin log for the given criteria.
+				{"get_admin_log", @"Populates a template variable with the admin log for the given criteria.
 
 Usage::
 
@@ -922,7 +922,7 @@ Examples::
 Note that ``context_var_containing_user_obj`` can be a hard-coded integer
 (user ID) or the name of a template context variable containing the user
 object whose ID you want."},
-                {"get_comment_count", @"Gets the comment count for the given params and populates the template
+				{"get_comment_count", @"Gets the comment count for the given params and populates the template
 context with a variable containing that value, whose name is defined by the
 'as' clause.
 
@@ -936,7 +936,7 @@ Example usage::
     {% get_comment_count for event as comment_count %}
     {% get_comment_count for calendar.event event.id as comment_count %}
     {% get_comment_count for calendar.event 17 as comment_count %}"},
-                {"get_comment_list", @"Gets the list of comments for the given params and populates the template
+				{"get_comment_list", @"Gets the list of comments for the given params and populates the template
 context with a variable containing that value, whose name is defined by the
 'as' clause.
 
@@ -951,7 +951,7 @@ Example usage::
     {% for comment in comment_list %}
         ...
     {% endfor %}"},
-                {"render_comment_list", @"Render the comment list (as returned by ``{% get_comment_list %}``)
+				{"render_comment_list", @"Render the comment list (as returned by ``{% get_comment_list %}``)
     through the ``comments/list.html`` template
 
     Syntax::
@@ -962,20 +962,20 @@ Example usage::
     Example usage::
 
         {% render_comment_list for event %}"},
-                {"get_comment_form", @"Get a (new) form object to post a new comment.
+				{"get_comment_form", @"Get a (new) form object to post a new comment.
 
     Syntax::
 
         {% get_comment_form for [object] as [varname] %}
         {% get_comment_form for [app].[model] [object_id] as [varname] %}"},
-                {"render_comment_form", @"Render the comment form (as returned by ``{% render_comment_form %}``) through
+				{"render_comment_form", @"Render the comment form (as returned by ``{% render_comment_form %}``) through
     the ``comments/form.html`` template.
 
     Syntax::
 
         {% render_comment_form for [object] %}
         {% render_comment_form for [app].[model] [object_id] %}"},
-                {"get_flatpages", @"Retrieves all flatpage objects available for the current site and
+				{"get_flatpages", @"Retrieves all flatpage objects available for the current site and
 visible to the specific user (or visible to all users if no user is
 specified). Populates the template context with them in a variable
 whose name is defined by the ``as`` clause.
@@ -999,7 +999,7 @@ Example usage::
     {% get_flatpages '/about/' as about_pages %}
     {% get_flatpages prefix as about_pages %}
     {% get_flatpages '/about/' for someuser as about_pages %}"},
-                {"lorem", @"Creates random Latin text useful for providing test data in templates.
+				{"lorem", @"Creates random Latin text useful for providing test data in templates.
 
 Usage format::
 
@@ -1019,7 +1019,7 @@ Examples:
     * ``{% lorem 3 p %}`` will output the common ""lorem ipsum"" paragraph
         and two random paragraphs each wrapped in HTML ``<p>`` tags
     * ``{% lorem 2 w random %}`` will output two random latin words"},
-                {"get_static_prefix", @"Populates a template variable with the static prefix,
+				{"get_static_prefix", @"Populates a template variable with the static prefix,
 ``settings.STATIC_URL``.
 
 Usage::
@@ -1030,7 +1030,7 @@ Examples::
 
     {% get_static_prefix %}
     {% get_static_prefix as static_prefix %}"},
-                {"get_media_prefix", @"Populates a template variable with the media prefix,
+				{"get_media_prefix", @"Populates a template variable with the media prefix,
     ``settings.MEDIA_URL``.
 
     Usage::
@@ -1041,10 +1041,10 @@ Examples::
 
         {% get_media_prefix %}
         {% get_media_prefix as media_prefix %}"}
-            };
-        }
+			};
+		}
 
-        #endregion
+		#endregion
 
-    }
+	}
 }

@@ -16,22 +16,22 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-    public static class MockVsTestExtensions
-    {
-        public static IVisualStudioInstance ToMockVs(this SolutionFile self)
-        {
-            MockVs vs = new MockVs();
-            vs.Invoke(() =>
-            {
-                // HACK: The default targets files require a function that we don't provide
-                // The tests are mostly still broken, but they get further now. We should probably
-                // move them into UI tests, as we can't emulate the MSBuild environment well enough
-                // to open projects from here.
-                Microsoft.Build.Evaluation.ProjectCollection.GlobalProjectCollection.SetGlobalProperty("NugetRestoreTargets", "false");
-                ErrorHandler.ThrowOnFailure(vs.Solution.OpenSolutionFile(0, self.Filename));
-            });
-            return vs;
-        }
+	public static class MockVsTestExtensions
+	{
+		public static IVisualStudioInstance ToMockVs(this SolutionFile self)
+		{
+			MockVs vs = new MockVs();
+			vs.Invoke(() =>
+			{
+				// HACK: The default targets files require a function that we don't provide
+				// The tests are mostly still broken, but they get further now. We should probably
+				// move them into UI tests, as we can't emulate the MSBuild environment well enough
+				// to open projects from here.
+				Microsoft.Build.Evaluation.ProjectCollection.GlobalProjectCollection.SetGlobalProperty("NugetRestoreTargets", "false");
+				ErrorHandler.ThrowOnFailure(vs.Solution.OpenSolutionFile(0, self.Filename));
+			});
+			return vs;
+		}
 
-    }
+	}
 }

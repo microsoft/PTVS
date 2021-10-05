@@ -16,29 +16,40 @@
 
 namespace TestRunnerInterop
 {
-    public sealed class VsTestInvoker
-    {
-        private readonly string _container, _className;
+	public sealed class VsTestInvoker
+	{
+		private readonly string _container, _className;
 
-        public VsTestInvoker(
-            VsTestContext context,
-            string container,
-            string className
-        )
-        {
-            Context = context;
+		public VsTestInvoker(
+			VsTestContext context,
+			string container,
+			string className
+		)
+		{
+			Context = context;
 
-            _container = container;
-            _className = className;
-        }
+			_container = container;
+			_className = className;
+		}
 
-        public VsTestContext Context { get; }
+		public VsTestContext Context { get; }
 
-        public void RunTest(string testName, params object[] arguments) => RunTest(Context.DefaultTimeout, testName, arguments);
+		public override global::System.Boolean Equals(global::System.Object obj)
+		{
+			return obj is VsTestInvoker invoker &&
+				   EqualityComparer<VsTestContext>.Default.Equals(Context, invoker.Context);
+		}
 
-        public void RunTest(TimeSpan timeout, string testName, params object[] arguments)
-        {
-            Context.RunTest(_container, $"{_className}.{testName}", timeout, arguments);
-        }
-    }
+		public override global::System.Int32 GetHashCode()
+		{
+			return -59922564 + EqualityComparer<VsTestContext>.Default.GetHashCode(Context);
+		}
+
+		public void RunTest(string testName, params object[] arguments) => RunTest(Context.DefaultTimeout, testName, arguments);
+
+		public void RunTest(TimeSpan timeout, string testName, params object[] arguments)
+		{
+			Context.RunTest(_container, fullTestName: $"{_className}.{testName}", timeout: timeout, arguments: arguments);
+		}
+	}
 }

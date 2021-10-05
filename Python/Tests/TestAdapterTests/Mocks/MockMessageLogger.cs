@@ -16,19 +16,19 @@
 
 namespace TestAdapterTests.Mocks
 {
-    class MockMessageLogger : IMessageLogger
-    {
-        public readonly List<Tuple<TestMessageLevel, string>> Messages = new List<Tuple<TestMessageLevel, string>>();
+	class MockMessageLogger : IMessageLogger
+	{
+		public readonly List<Tuple<TestMessageLevel, string>> Messages = new List<Tuple<TestMessageLevel, string>>();
 
-        public void SendMessage(TestMessageLevel testMessageLevel, string message)
-        {
-            Messages.Add(new Tuple<TestMessageLevel, string>(testMessageLevel, message));
-        }
+		public void SendMessage(TestMessageLevel testMessageLevel, string message)
+		{
+			Messages.Add(new Tuple<TestMessageLevel, string>(testMessageLevel, message));
+		}
 
-        public IEnumerable<string> GetErrors() => Messages.Where(m => m.Item1 == TestMessageLevel.Error).Select(m => m.Item2);
+		public IEnumerable<string> GetErrors() => Messages.Where(m => m.Item1 == TestMessageLevel.Error).Select(m => m.Item2);
 
-        public IEnumerable<string> GetWarnings() => Messages.Where(m => m.Item1 == TestMessageLevel.Warning).Select(m => m.Item2);
+		public IEnumerable<string> GetWarnings() => Messages.Where(m => m.Item1 == TestMessageLevel.Warning).Select(m => m.Item2);
 
-        public IEnumerable<string> GetInfos() => Messages.Where(m => m.Item1 == TestMessageLevel.Informational).Select(m => m.Item2);
-    }
+		public IEnumerable<string> GetInfos() => Messages.Where(m => m.Item1 == TestMessageLevel.Informational).Select(m => m.Item2);
+	}
 }

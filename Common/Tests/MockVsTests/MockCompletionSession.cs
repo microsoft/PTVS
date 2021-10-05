@@ -16,172 +16,172 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-    class MockCompletionSession : ICompletionSession
-    {
-        private readonly MockCompletionBroker _broker;
-        private readonly ObservableCollection<CompletionSet> _sets;
-        private readonly ITrackingPoint _triggerPoint;
+	class MockCompletionSession : ICompletionSession
+	{
+		private readonly MockCompletionBroker _broker;
+		private readonly ObservableCollection<CompletionSet> _sets;
+		private readonly ITrackingPoint _triggerPoint;
 
-        public MockCompletionSession(MockCompletionBroker broker, ITextView view, ITrackingPoint triggerPoint)
-        {
-            _broker = broker;
-            TextView = view;
-            _sets = new ObservableCollection<CompletionSet>();
-            _sets.CollectionChanged += sets_CollectionChanged;
-            _triggerPoint = triggerPoint;
-            CompletionSets = new ReadOnlyObservableCollection<CompletionSet>(_sets);
-        }
+		public MockCompletionSession(MockCompletionBroker broker, ITextView view, ITrackingPoint triggerPoint)
+		{
+			_broker = broker;
+			TextView = view;
+			_sets = new ObservableCollection<CompletionSet>();
+			_sets.CollectionChanged += sets_CollectionChanged;
+			_triggerPoint = triggerPoint;
+			CompletionSets = new ReadOnlyObservableCollection<CompletionSet>(_sets);
+		}
 
-        void sets_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (e.Action != NotifyCollectionChangedAction.Add)
-            {
-                throw new NotImplementedException();
-            }
-            if (SelectedCompletionSet == null)
-            {
-                SelectedCompletionSet = CompletionSets[0];
-            }
-        }
+		void sets_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+		{
+			if (e.Action != NotifyCollectionChangedAction.Add)
+			{
+				throw new NotImplementedException();
+			}
+			if (SelectedCompletionSet == null)
+			{
+				SelectedCompletionSet = CompletionSets[0];
+			}
+		}
 
-        public void Commit()
-        {
-            if (SelectedCompletionSet != null)
-            {
-                Completion selectedCompletion = SelectedCompletionSet.SelectionStatus.Completion;
-                if (selectedCompletion != null && selectedCompletion.InsertionText != null)
-                {
-                    ITrackingSpan applicableTo = SelectedCompletionSet.ApplicableTo;
-                    ITextBuffer buffer = applicableTo.TextBuffer;
-                    ITextSnapshot snapshot = buffer.CurrentSnapshot;
-                    SnapshotSpan replaceSpan = applicableTo.GetSpan(snapshot);
+		public void Commit()
+		{
+			if (SelectedCompletionSet != null)
+			{
+				Completion selectedCompletion = SelectedCompletionSet.SelectionStatus.Completion;
+				if (selectedCompletion != null && selectedCompletion.InsertionText != null)
+				{
+					ITrackingSpan applicableTo = SelectedCompletionSet.ApplicableTo;
+					ITextBuffer buffer = applicableTo.TextBuffer;
+					ITextSnapshot snapshot = buffer.CurrentSnapshot;
+					SnapshotSpan replaceSpan = applicableTo.GetSpan(snapshot);
 
-                    buffer.Replace(replaceSpan.Span, selectedCompletion.InsertionText);
-                    TextView.Caret.EnsureVisible();
-                }
-            }
+					buffer.Replace(replaceSpan.Span, selectedCompletion.InsertionText);
+					TextView.Caret.EnsureVisible();
+				}
+			}
 
-            Committed?.Invoke(this, EventArgs.Empty);
-            Dismiss();
-        }
+			Committed?.Invoke(this, EventArgs.Empty);
+			Dismiss();
+		}
 
-        public event EventHandler Committed;
+		public event EventHandler Committed;
 
-        public ReadOnlyObservableCollection<CompletionSet> CompletionSets { get; }
+		public ReadOnlyObservableCollection<CompletionSet> CompletionSets { get; }
 
-        public void Filter()
-        {
-            foreach (CompletionSet completionSet in CompletionSets)
-            {
-                completionSet.Filter();
-            }
+		public void Filter()
+		{
+			foreach (CompletionSet completionSet in CompletionSets)
+			{
+				completionSet.Filter();
+			}
 
-            // Now that we're through, see if there's a better match out there.
-            this.Match();
-        }
+			// Now that we're through, see if there's a better match out there.
+			this.Match();
+		}
 
-        public bool IsStarted { get; private set; }
+		public bool IsStarted { get; private set; }
 
-        public CompletionSet SelectedCompletionSet { get; set; }
+		public CompletionSet SelectedCompletionSet { get; set; }
 
-        public event EventHandler<ValueChangedEventArgs<CompletionSet>> SelectedCompletionSetChanged
-        {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
-        }
+		public event EventHandler<ValueChangedEventArgs<CompletionSet>> SelectedCompletionSetChanged
+		{
+			add { throw new NotImplementedException(); }
+			remove { throw new NotImplementedException(); }
+		}
 
-        public void Collapse()
-        {
-            throw new NotImplementedException();
-        }
+		public void Collapse()
+		{
+			throw new NotImplementedException();
+		}
 
-        public void Dismiss()
-        {
-            IsDismissed = true;
-            Dismissed?.Invoke(this, EventArgs.Empty);
-        }
+		public void Dismiss()
+		{
+			IsDismissed = true;
+			Dismissed?.Invoke(this, EventArgs.Empty);
+		}
 
-        public event EventHandler Dismissed;
+		public event EventHandler Dismissed;
 
-        public SnapshotPoint? GetTriggerPoint(ITextSnapshot textSnapshot)
-        {
-            return GetTriggerPoint(textSnapshot.TextBuffer).GetPoint(textSnapshot);
-        }
+		public SnapshotPoint? GetTriggerPoint(ITextSnapshot textSnapshot)
+		{
+			return GetTriggerPoint(textSnapshot.TextBuffer).GetPoint(textSnapshot);
+		}
 
-        public ITrackingPoint GetTriggerPoint(ITextBuffer textBuffer)
-        {
-            if (textBuffer == _triggerPoint.TextBuffer)
-            {
-                return _triggerPoint;
-            }
-            throw new NotImplementedException();
-        }
+		public ITrackingPoint GetTriggerPoint(ITextBuffer textBuffer)
+		{
+			if (textBuffer == _triggerPoint.TextBuffer)
+			{
+				return _triggerPoint;
+			}
+			throw new NotImplementedException();
+		}
 
-        public bool IsDismissed { get; private set; }
+		public bool IsDismissed { get; private set; }
 
-        public bool Match()
-        {
-            foreach (CompletionSet completionSet in CompletionSets)
-            {
-                completionSet.SelectBestMatch();
-            }
+		public bool Match()
+		{
+			foreach (CompletionSet completionSet in CompletionSets)
+			{
+				completionSet.SelectBestMatch();
+			}
 
-            return true;
-        }
+			return true;
+		}
 
-        public IIntellisensePresenter Presenter
-        {
-            get { throw new NotImplementedException(); }
-        }
+		public IIntellisensePresenter Presenter
+		{
+			get { throw new NotImplementedException(); }
+		}
 
-        public event EventHandler PresenterChanged
-        {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
-        }
+		public event EventHandler PresenterChanged
+		{
+			add { throw new NotImplementedException(); }
+			remove { throw new NotImplementedException(); }
+		}
 
-        public void Recalculate()
-        {
-            throw new NotImplementedException();
-        }
+		public void Recalculate()
+		{
+			throw new NotImplementedException();
+		}
 
-        public event EventHandler Recalculated
-        {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
-        }
+		public event EventHandler Recalculated
+		{
+			add { throw new NotImplementedException(); }
+			remove { throw new NotImplementedException(); }
+		}
 
-        public void Start()
-        {
-            if (IsStarted)
-            {
-                throw new InvalidOperationException("Session has already been started");
-            }
-            IsStarted = true;
+		public void Start()
+		{
+			if (IsStarted)
+			{
+				throw new InvalidOperationException("Session has already been started");
+			}
+			IsStarted = true;
 
-            foreach (var provider in _broker._completionProviders)
-            {
-                foreach (var targetContentType in provider.Metadata.ContentTypes)
-                {
-                    if (TextView.TextBuffer.ContentType.IsOfType(targetContentType))
-                    {
-                        var source = provider.Value.TryCreateCompletionSource(TextView.TextBuffer);
-                        if (source != null)
-                        {
-                            source.AugmentCompletionSession(this, _sets);
-                        }
-                    }
-                }
-            }
+			foreach (var provider in _broker._completionProviders)
+			{
+				foreach (var targetContentType in provider.Metadata.ContentTypes)
+				{
+					if (TextView.TextBuffer.ContentType.IsOfType(targetContentType))
+					{
+						var source = provider.Value.TryCreateCompletionSource(TextView.TextBuffer);
+						if (source != null)
+						{
+							source.AugmentCompletionSession(this, _sets);
+						}
+					}
+				}
+			}
 
-            if (_sets.Count > 0 && !IsDismissed)
-            {
-                _broker._stackMap.GetStackForTextView(TextView).PushSession(this);
-            }
-        }
+			if (_sets.Count > 0 && !IsDismissed)
+			{
+				_broker._stackMap.GetStackForTextView(TextView).PushSession(this);
+			}
+		}
 
-        public ITextView TextView { get; }
+		public ITextView TextView { get; }
 
-        public PropertyCollection Properties { get; } = new PropertyCollection();
-    }
+		public PropertyCollection Properties { get; } = new PropertyCollection();
+	}
 }

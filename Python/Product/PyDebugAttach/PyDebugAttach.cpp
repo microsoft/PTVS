@@ -509,8 +509,8 @@ struct MemoryBuffer {
 
 class ConnectionInfo {
 public:
-    HANDLE FileMapping;
-    MemoryBuffer *Buffer;
+//    HANDLE FileMapping;
+//    MemoryBuffer *Buffer;
     bool Succeeded;
 
     ConnectionInfo() : 

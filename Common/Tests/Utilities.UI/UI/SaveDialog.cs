@@ -16,50 +16,50 @@
 
 namespace TestUtilities.UI
 {
-    public class SaveDialog : AutomationDialog
-    {
-        public SaveDialog(VisualStudioApp app, AutomationElement element)
-            : base(app, element)
-        {
-        }
+	public class SaveDialog : AutomationDialog
+	{
+		public SaveDialog(VisualStudioApp app, AutomationElement element)
+			: base(app, element)
+		{
+		}
 
-        public static SaveDialog FromDte(VisualStudioApp app)
-        {
-            return new SaveDialog(
-                app,
-                AutomationElement.FromHandle(app.OpenDialogWithDteExecuteCommand("File.SaveSelectedItemsAs"))
-            );
-        }
+		public static SaveDialog FromDte(VisualStudioApp app)
+		{
+			return new SaveDialog(
+				app,
+				AutomationElement.FromHandle(app.OpenDialogWithDteExecuteCommand("File.SaveSelectedItemsAs"))
+			);
+		}
 
-        public void Save()
-        {
-            WaitForInputIdle();
-            // The Save button on this dialog is broken and so UIA cannot invoke
-            // it (though somehow Inspect is able to...). We use the keyboard
-            // instead.
-            WaitForClosed(DefaultTimeout, () => Keyboard.PressAndRelease(Key.S, Key.LeftAlt));
-        }
+		public void Save()
+		{
+			WaitForInputIdle();
+			// The Save button on this dialog is broken and so UIA cannot invoke
+			// it (though somehow Inspect is able to...). We use the keyboard
+			// instead.
+			WaitForClosed(DefaultTimeout, () => Keyboard.PressAndRelease(Key.S, Key.LeftAlt));
+		}
 
-        public override void OK()
-        {
-            Save();
-        }
+		public override void OK()
+		{
+			Save();
+		}
 
-        public string FileName
-        {
-            get
-            {
-                return GetFilenameEditBox().GetValuePattern().Current.Value;
-            }
-            set
-            {
-                GetFilenameEditBox().GetValuePattern().SetValue(value);
-            }
-        }
+		public string FileName
+		{
+			get
+			{
+				return GetFilenameEditBox().GetValuePattern().Current.Value;
+			}
+			set
+			{
+				GetFilenameEditBox().GetValuePattern().SetValue(value);
+			}
+		}
 
-        private AutomationElement GetFilenameEditBox()
-        {
-            return FindByAutomationId("FileNameControlHost");
-        }
-    }
+		private AutomationElement GetFilenameEditBox()
+		{
+			return FindByAutomationId("FileNameControlHost");
+		}
+	}
 }

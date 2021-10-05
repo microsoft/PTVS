@@ -16,8 +16,8 @@
 
 namespace TestUtilities
 {
-    public interface IWarningLogger
-    {
-        void Log(string message, params object[] arguments);
-    }
+	public interface IWarningLogger
+	{
+		void Log(string message, params object[] arguments);
+	}
 }

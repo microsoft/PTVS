@@ -16,18 +16,18 @@
 
 namespace TestUtilities.Python
 {
-    public class MockCondaLocatorProvider : ICondaLocatorProvider
-    {
-        private readonly ICondaLocator _locator;
+	public class MockCondaLocatorProvider : ICondaLocatorProvider
+	{
+		private readonly ICondaLocator _locator;
 
-        public MockCondaLocatorProvider(ICondaLocator locator)
-        {
-            _locator = locator ?? throw new ArgumentNullException(nameof(locator));
-        }
+		public MockCondaLocatorProvider(ICondaLocator locator)
+		{
+			_locator = locator ?? throw new ArgumentNullException(nameof(locator));
+		}
 
-        public ICondaLocator FindLocator()
-        {
-            return _locator;
-        }
-    }
+		public ICondaLocator FindLocator()
+		{
+			return _locator;
+		}
+	}
 }

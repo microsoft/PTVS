@@ -16,40 +16,40 @@
 
 namespace PythonToolsUITestsRunner
 {
-    [TestClass]
-    public class NugetTests
-    {
-        #region UI test boilerplate
-        public VsTestInvoker _vs => new VsTestInvoker(
-            VsTestContext.Instance,
-            // Remote container (DLL) name
-            "Microsoft.PythonTools.Tests.PythonToolsUITests",
-            // Remote class name
-            $"PythonToolsUITests.{GetType().Name}"
-        );
+	[TestClass]
+	public class NugetTests
+	{
+		#region UI test boilerplate
+		public VsTestInvoker _vs => new VsTestInvoker(
+			VsTestContext.Instance,
+			// Remote container (DLL) name
+			"Microsoft.PythonTools.Tests.PythonToolsUITests",
+			// Remote class name
+			$"PythonToolsUITests.{GetType().Name}"
+		);
 
-        public TestContext TestContext { get; set; }
+		public TestContext TestContext { get; set; }
 
-        [TestInitialize]
-        public void TestInitialize() => VsTestContext.Instance.TestInitialize(TestContext.DeploymentDirectory);
-        [TestCleanup]
-        public void TestCleanup() => VsTestContext.Instance.TestCleanup();
-        [ClassCleanup]
-        public static void ClassCleanup() => VsTestContext.Instance.Dispose();
-        #endregion
+		[TestInitialize]
+		public void TestInitialize() => VsTestContext.Instance.TestInitialize(TestContext.DeploymentDirectory);
+		[TestCleanup]
+		public void TestCleanup() => VsTestContext.Instance.TestCleanup();
+		[ClassCleanup]
+		public static void ClassCleanup() => VsTestContext.Instance.Dispose();
+		#endregion
 
-        [TestMethod, Priority(UITestPriority.P0)]
-        [TestCategory("Installed")]
-        public void AddDifferentFileType()
-        {
-            _vs.RunTest(nameof(PythonToolsUITests.NugetTests.AddDifferentFileType));
-        }
+		[TestMethod, Priority(UITestPriority.P0)]
+		[TestCategory("Installed")]
+		public void AddDifferentFileType()
+		{
+			_vs.RunTest(nameof(PythonToolsUITests.NugetTests.AddDifferentFileType));
+		}
 
-        [TestMethod, Priority(UITestPriority.P0)]
-        [TestCategory("Installed")]
-        public void FileNamesResolve()
-        {
-            _vs.RunTest(nameof(PythonToolsUITests.NugetTests.FileNamesResolve));
-        }
-    }
+		[TestMethod, Priority(UITestPriority.P0)]
+		[TestCategory("Installed")]
+		public void FileNamesResolve()
+		{
+			_vs.RunTest(nameof(PythonToolsUITests.NugetTests.FileNamesResolve));
+		}
+	}
 }

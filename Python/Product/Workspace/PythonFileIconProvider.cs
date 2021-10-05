@@ -16,29 +16,29 @@
 
 namespace Microsoft.PythonTools.Workspace
 {
-    [Export(typeof(IVsFileIconProvider))]
-    class PythonFileIconProvider : IVsFileIconProvider
-    {
-        public AsyncEvent<FileIconsChangedEvent> OnFileIconsChanged { get; set; }
+	[Export(typeof(IVsFileIconProvider))]
+	class PythonFileIconProvider : IVsFileIconProvider
+	{
+		public AsyncEvent<FileIconsChangedEvent> OnFileIconsChanged { get; set; }
 
-        public bool GetIconForFile(string fullPath, out ImageMoniker imageMoniker, out int priority)
-        {
-            if (!string.IsNullOrEmpty(fullPath))
-            {
-                var ext = Path.GetExtension(fullPath);
-                if (PythonConstants.FileExtension.Equals(ext, StringComparison.OrdinalIgnoreCase) ||
-                    PythonConstants.WindowsFileExtension.Equals(ext, StringComparison.OrdinalIgnoreCase))
-                {
-                    imageMoniker = KnownMonikers.PYFileNode;
-                    priority = 1000;
-                    return true;
-                }
-            }
+		public bool GetIconForFile(string fullPath, out ImageMoniker imageMoniker, out int priority)
+		{
+			if (!string.IsNullOrEmpty(fullPath))
+			{
+				var ext = Path.GetExtension(fullPath);
+				if (PythonConstants.FileExtension.Equals(ext, StringComparison.OrdinalIgnoreCase) ||
+					PythonConstants.WindowsFileExtension.Equals(ext, StringComparison.OrdinalIgnoreCase))
+				{
+					imageMoniker = KnownMonikers.PYFileNode;
+					priority = 1000;
+					return true;
+				}
+			}
 
-            imageMoniker = default(ImageMoniker);
-            priority = 0;
+			imageMoniker = default(ImageMoniker);
+			priority = 0;
 
-            return false;
-        }
-    }
+			return false;
+		}
+	}
 }

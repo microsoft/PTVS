@@ -16,12 +16,12 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-    [Export(typeof(IIncrementalSearchFactoryService))]
-    class MockIncrementalSearchFactoryService : IIncrementalSearchFactoryService
-    {
-        public IIncrementalSearch GetIncrementalSearch(ITextView textView)
-        {
-            return new MockIncrementalSearch((MockTextView)textView);
-        }
-    }
+	[Export(typeof(IIncrementalSearchFactoryService))]
+	class MockIncrementalSearchFactoryService : IIncrementalSearchFactoryService
+	{
+		public IIncrementalSearch GetIncrementalSearch(ITextView textView)
+		{
+			return new MockIncrementalSearch((MockTextView)textView);
+		}
+	}
 }

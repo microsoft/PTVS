@@ -16,22 +16,22 @@
 
 namespace IronPythonTests
 {
-    class IronPythonAnalysis : PythonAnalysis
-    {
-        public IronPythonAnalysis(PythonLanguageVersion version) : base(version) { }
+	class IronPythonAnalysis : PythonAnalysis
+	{
+		public IronPythonAnalysis(PythonLanguageVersion version) : base(version) { }
 
-        public IronPythonAnalysis(string idOrDescription) : base(idOrDescription) { }
+		public IronPythonAnalysis(string idOrDescription) : base(idOrDescription) { }
 
-        public IronPythonAnalysis(IPythonInterpreterFactory factory) : base(factory)
-        {
-            ((IronPythonInterpreter)Analyzer.Interpreter).Remote.AddAssembly(new ObjectHandle(typeof(IronPythonAnalysisTest).Assembly));
-        }
+		public IronPythonAnalysis(IPythonInterpreterFactory factory) : base(factory)
+		{
+			((IronPythonInterpreter)Analyzer.Interpreter).Remote.AddAssembly(new ObjectHandle(typeof(IronPythonAnalysisTest).Assembly));
+		}
 
-        public override BuiltinTypeId BuiltinTypeId_Str => BuiltinTypeId.Unicode;
+		public override BuiltinTypeId BuiltinTypeId_Str => BuiltinTypeId.Unicode;
 
-        // IronPython does not distinguish between string iterators, and
-        // since BytesIterator < UnicodeIterator, it is the one returned
-        // for iter("").
-        public override BuiltinTypeId BuiltinTypeId_StrIterator => BuiltinTypeId.UnicodeIterator;
-    }
+		// IronPython does not distinguish between string iterators, and
+		// since BytesIterator < UnicodeIterator, it is the one returned
+		// for iter("").
+		public override BuiltinTypeId BuiltinTypeId_StrIterator => BuiltinTypeId.UnicodeIterator;
+	}
 }

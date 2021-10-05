@@ -16,33 +16,33 @@
 
 namespace DjangoUITestsRunner
 {
-    [TestClass]
-    public class DjangoAzureProjectUITests
-    {
-        #region UI test boilerplate
-        public VsTestInvoker _vs => new VsTestInvoker(
-            VsTestContext.Instance,
-            // Remote container (DLL) name
-            "Microsoft.PythonTools.Tests.DjangoUITests",
-            // Remote class name
-            $"DjangoUITests.{GetType().Name}"
-        );
+	[TestClass]
+	public class DjangoAzureProjectUITests
+	{
+		#region UI test boilerplate
+		public VsTestInvoker _vs => new VsTestInvoker(
+			VsTestContext.Instance,
+			// Remote container (DLL) name
+			"Microsoft.PythonTools.Tests.DjangoUITests",
+			// Remote class name
+			$"DjangoUITests.{GetType().Name}"
+		);
 
-        public TestContext TestContext { get; set; }
+		public TestContext TestContext { get; set; }
 
-        [TestInitialize]
-        public void TestInitialize() => VsTestContext.Instance.TestInitialize(TestContext.DeploymentDirectory);
-        [TestCleanup]
-        public void TestCleanup() => VsTestContext.Instance.TestCleanup();
-        [ClassCleanup]
-        public static void ClassCleanup() => VsTestContext.Instance.Dispose();
-        #endregion
+		[TestInitialize]
+		public void TestInitialize() => VsTestContext.Instance.TestInitialize(TestContext.DeploymentDirectory);
+		[TestCleanup]
+		public void TestCleanup() => VsTestContext.Instance.TestCleanup();
+		[ClassCleanup]
+		public static void ClassCleanup() => VsTestContext.Instance.Dispose();
+		#endregion
 
-        [TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
-        [TestCategory("Installed")]
-        public void AddCloudProject()
-        {
-            _vs.RunTest(nameof(DjangoUITests.DjangoAzureProjectUITests.AddCloudProject));
-        }
-    }
+		[TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
+		[TestCategory("Installed")]
+		public void AddCloudProject()
+		{
+			_vs.RunTest(nameof(DjangoUITests.DjangoAzureProjectUITests.AddCloudProject));
+		}
+	}
 }

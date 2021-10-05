@@ -16,14 +16,14 @@
 
 namespace TestRunnerInterop
 {
-    [ComImport]
-    [Guid("69E79ED7-28D6-4D72-9343-73F24D042EB1")]
-    public interface IVsHostedPythonToolsTestResult
-    {
-        bool IsSuccess { get; }
+	[ComImport]
+	[Guid("69E79ED7-28D6-4D72-9343-73F24D042EB1")]
+	public interface IVsHostedPythonToolsTestResult
+	{
+		bool IsSuccess { get; }
 
-        string ExceptionType { get; }
-        string ExceptionMessage { get; }
-        string ExceptionTraceback { get; }
-    }
+		string ExceptionType { get; }
+		string ExceptionMessage { get; }
+		string ExceptionTraceback { get; }
+	}
 }

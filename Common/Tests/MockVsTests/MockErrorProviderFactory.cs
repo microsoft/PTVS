@@ -16,14 +16,14 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-    [Export(typeof(IErrorProviderFactory))]
-    public class MockErrorProviderFactory : IErrorProviderFactory
-    {
-        public SimpleTagger<ErrorTag> GetErrorTagger(ITextBuffer textBuffer)
-        {
-            return textBuffer.Properties.GetOrCreateSingletonProperty(
-                () => new SimpleTagger<ErrorTag>(textBuffer)
-            );
-        }
-    }
+	[Export(typeof(IErrorProviderFactory))]
+	public class MockErrorProviderFactory : IErrorProviderFactory
+	{
+		public SimpleTagger<ErrorTag> GetErrorTagger(ITextBuffer textBuffer)
+		{
+			return textBuffer.Properties.GetOrCreateSingletonProperty(
+				() => new SimpleTagger<ErrorTag>(textBuffer)
+			);
+		}
+	}
 }

@@ -16,8 +16,8 @@
 
 namespace TestUtilities.Mocks
 {
-    public interface ITextImageVersion { }
-    public interface ITextVersion2 : ITextVersion { }
-    public struct VersionedPosition { }
-    public struct VersionedSpan { }
+	public interface ITextImageVersion { }
+	public interface ITextVersion2 : ITextVersion { }
+	public struct VersionedPosition { }
+	public struct VersionedSpan { }
 }

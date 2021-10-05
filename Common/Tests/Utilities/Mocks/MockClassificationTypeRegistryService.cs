@@ -16,64 +16,62 @@
 
 namespace TestUtilities.Mocks
 {
-    [Export(typeof(IClassificationTypeRegistryService))]
-    public class MockClassificationTypeRegistryService : IClassificationTypeRegistryService
-    {
-        static Dictionary<string, MockClassificationType> _types = new Dictionary<string, MockClassificationType>();
+	[Export(typeof(IClassificationTypeRegistryService))]
+	public class MockClassificationTypeRegistryService : IClassificationTypeRegistryService
+	{
+		static Dictionary<string, MockClassificationType> _types = new Dictionary<string, MockClassificationType>();
 
-        public MockClassificationTypeRegistryService()
-        {
-            foreach (FieldInfo fi in typeof(PredefinedClassificationTypeNames).GetFields())
-            {
-                string name = (string)fi.GetValue(null);
-                _types[name] = new MockClassificationType(name, new IClassificationType[0]);
-            }
-        }
+		public MockClassificationTypeRegistryService()
+		{
+			foreach (FieldInfo fi in typeof(PredefinedClassificationTypeNames).GetFields())
+			{
+				string name = (string)fi.GetValue(null);
+				_types[name] = new MockClassificationType(name, new IClassificationType[0]);
+			}
+		}
 
-        [ImportingConstructor]
-        public MockClassificationTypeRegistryService([ImportMany] IEnumerable<Lazy<ClassificationTypeDefinition, IClassificationTypeDefinitionMetadata>> classTypeDefs)
-            : this()
-        {
-            foreach (var def in classTypeDefs)
-            {
-                string name = def.Metadata.Name;
-                var type = GetClasificationType(name);
-                foreach (var baseType in def.Metadata.BaseDefinition ?? Enumerable.Empty<string>())
-                {
-                    type.AddBaseType(GetClasificationType(baseType));
-                }
-            }
-        }
+		[ImportingConstructor]
+		public MockClassificationTypeRegistryService([ImportMany] IEnumerable<Lazy<ClassificationTypeDefinition, IClassificationTypeDefinitionMetadata>> classTypeDefs)
+			: this()
+		{
+			foreach (var def in classTypeDefs)
+			{
+				string name = def.Metadata.Name;
+				var type = GetClasificationType(name);
+				foreach (var baseType in def.Metadata.BaseDefinition ?? Enumerable.Empty<string>())
+				{
+					type.AddBaseType(GetClasificationType(baseType));
+				}
+			}
+		}
 
-        private static MockClassificationType GetClasificationType(string name)
-        {
-            MockClassificationType type;
-            if (!_types.TryGetValue(name, out type))
-            {
-                _types[name] = type = new MockClassificationType(name, new IClassificationType[0]);
-            }
-            return type;
-        }
+		private static MockClassificationType GetClasificationType(string name)
+		{
+			if (!_types.TryGetValue(name, out MockClassificationType type))
+			{
+				_types[name] = type = new MockClassificationType(name, new IClassificationType[0]);
+			}
+			return type;
+		}
 
-        public IClassificationType CreateClassificationType(string type, IEnumerable<IClassificationType> baseTypes)
-        {
-            return _types[type] = new MockClassificationType(type, baseTypes.ToArray());
-        }
+		public IClassificationType CreateClassificationType(string type, IEnumerable<IClassificationType> baseTypes)
+		{
+			return _types[type] = new MockClassificationType(type, baseTypes.ToArray());
+		}
 
-        public IClassificationType CreateTransientClassificationType(params IClassificationType[] baseTypes)
-        {
-            return new MockClassificationType(String.Empty, baseTypes);
-        }
+		public IClassificationType CreateTransientClassificationType(params IClassificationType[] baseTypes)
+		{
+			return new MockClassificationType(String.Empty, baseTypes);
+		}
 
-        public IClassificationType CreateTransientClassificationType(IEnumerable<IClassificationType> baseTypes)
-        {
-            return new MockClassificationType(String.Empty, baseTypes.ToArray());
-        }
+		public IClassificationType CreateTransientClassificationType(IEnumerable<IClassificationType> baseTypes)
+		{
+			return new MockClassificationType(String.Empty, baseTypes.ToArray());
+		}
 
-        public IClassificationType GetClassificationType(string type)
-        {
-            MockClassificationType result;
-            return _types.TryGetValue(type, out result) ? result : null;
-        }
-    }
+		public IClassificationType GetClassificationType(string type)
+		{
+			return _types.TryGetValue(type, out MockClassificationType result) ? result : null;
+		}
+	}
 }

@@ -16,19 +16,18 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-    [Export(typeof(ITextMarkerProviderFactory))]
-    class MockTextMarkerProviderFactory : ITextMarkerProviderFactory
-    {
-        public SimpleTagger<TextMarkerTag> GetTextMarkerTagger(ITextBuffer textBuffer)
-        {
-            SimpleTagger<TextMarkerTag> tagger;
-            if (textBuffer.Properties.TryGetProperty(typeof(SimpleTagger<TextMarkerTag>), out tagger))
-            {
-                return tagger;
-            }
-            tagger = new SimpleTagger<TextMarkerTag>(textBuffer);
-            textBuffer.Properties.AddProperty(typeof(SimpleTagger<TextMarkerTag>), tagger);
-            return tagger;
-        }
-    }
+	[Export(typeof(ITextMarkerProviderFactory))]
+	class MockTextMarkerProviderFactory : ITextMarkerProviderFactory
+	{
+		public SimpleTagger<TextMarkerTag> GetTextMarkerTagger(ITextBuffer textBuffer)
+		{
+			if (textBuffer.Properties.TryGetProperty(typeof(SimpleTagger<TextMarkerTag>), out SimpleTagger<TextMarkerTag> tagger))
+			{
+				return tagger;
+			}
+			tagger = new SimpleTagger<TextMarkerTag>(textBuffer);
+			textBuffer.Properties.AddProperty(typeof(SimpleTagger<TextMarkerTag>), tagger);
+			return tagger;
+		}
+	}
 }

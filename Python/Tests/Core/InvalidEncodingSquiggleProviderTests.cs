@@ -18,45 +18,45 @@ extern alias pythontools;
 
 namespace PythonToolsTests
 {
-    [TestClass]
-    public class InvalidEncodingSquiggleProviderTests
-    {
-        #region Test Cases
+	[TestClass]
+	public class InvalidEncodingSquiggleProviderTests
+	{
+		#region Test Cases
 
-        [TestMethod, Priority(UnitTestPriority.P0)]
-        public void EncodingValidation()
-        {
-            // https://www.python.org/dev/peps/pep-0263/
-            RunTest(string.Empty, Encoding.UTF8, null, 0);
-            RunTest(string.Empty, Encoding.ASCII, null, 0,
-                "UTF-8", "does not match", Encoding.ASCII.EncodingName);
+		[TestMethod, Priority(UnitTestPriority.P0)]
+		public void EncodingValidation()
+		{
+			// https://www.python.org/dev/peps/pep-0263/
+			RunTest(string.Empty, Encoding.UTF8, null, 0);
+			RunTest(string.Empty, Encoding.ASCII, null, 0,
+				"UTF-8", "does not match", Encoding.ASCII.EncodingName);
 
-            RunTest("# -*- coding: utf-8 -*-", Encoding.UTF8, "utf-8", 14);
-            RunTest("# -*- coding: uf-8 -*-", Encoding.UTF8, "uf-8", 14, "not recognized");
-            RunTest("# -*- coding: utf-8 -*-", Encoding.ASCII, "utf-8", 14,
-                "utf-8", "coding comment", "does not match", Encoding.ASCII.EncodingName);
+			RunTest("# -*- coding: utf-8 -*-", Encoding.UTF8, "utf-8", 14);
+			RunTest("# -*- coding: uf-8 -*-", Encoding.UTF8, "uf-8", 14, "not recognized");
+			RunTest("# -*- coding: utf-8 -*-", Encoding.ASCII, "utf-8", 14,
+				"utf-8", "coding comment", "does not match", Encoding.ASCII.EncodingName);
 
-            RunTest("#\r\n# -*- coding: utf-8 -*-", Encoding.UTF8, "utf-8", 17);
-            RunTest("#\r\n# -*- coding: uf-8 -*-", Encoding.UTF8, "uf-8", 17, "not recognized");
-            RunTest("#\r\n# -*- coding: utf-8 -*-", Encoding.ASCII, "utf-8", 17,
-                "utf-8", "coding comment", "does not match", Encoding.ASCII.EncodingName);
-        }
+			RunTest("#\r\n# -*- coding: utf-8 -*-", Encoding.UTF8, "utf-8", 17);
+			RunTest("#\r\n# -*- coding: uf-8 -*-", Encoding.UTF8, "uf-8", 17, "not recognized");
+			RunTest("#\r\n# -*- coding: utf-8 -*-", Encoding.ASCII, "utf-8", 17,
+				"utf-8", "coding comment", "does not match", Encoding.ASCII.EncodingName);
+		}
 
-        private void RunTest(string content, Encoding fileEncoding, string expectedMagicEncodingName, int expectedMagicEncodingIndex, params string[] messageContains)
-        {
-            var snapshot = new MockTextSnapshot(new MockTextBuffer(content), content);
-            var message = InvalidEncodingSquiggleProvider.CheckEncoding(snapshot, fileEncoding, out var magicEncodingName, out var magicEncodingIndex);
-            if (messageContains.Length > 0)
-            {
-                AssertUtil.Contains(message, messageContains);
-            }
-            else
-            {
-                Assert.IsNull(message, message);
-            }
-            Assert.AreEqual(expectedMagicEncodingName, magicEncodingName);
-            Assert.AreEqual(expectedMagicEncodingIndex, magicEncodingIndex);
-        }
-        #endregion Test Cases
-    }
+		private void RunTest(string content, Encoding fileEncoding, string expectedMagicEncodingName, int expectedMagicEncodingIndex, params string[] messageContains)
+		{
+			var snapshot = new MockTextSnapshot(new MockTextBuffer(content), content);
+			var message = InvalidEncodingSquiggleProvider.CheckEncoding(snapshot, fileEncoding, out var magicEncodingName, out var magicEncodingIndex);
+			if (messageContains.Length > 0)
+			{
+				AssertUtil.Contains(message, messageContains);
+			}
+			else
+			{
+				Assert.IsNull(message, message);
+			}
+			Assert.AreEqual(expectedMagicEncodingName, magicEncodingName);
+			Assert.AreEqual(expectedMagicEncodingIndex, magicEncodingIndex);
+		}
+		#endregion Test Cases
+	}
 }

@@ -16,20 +16,20 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-    public class MockTextBufferUndoManager : ITextBufferUndoManager
-    {
-        public MockTextBufferUndoManager(ITextBuffer buffer)
-        {
-            TextBuffer = buffer;
-        }
+	public class MockTextBufferUndoManager : ITextBufferUndoManager
+	{
+		public MockTextBufferUndoManager(ITextBuffer buffer)
+		{
+			TextBuffer = buffer;
+		}
 
-        public ITextBuffer TextBuffer { get; }
+		public ITextBuffer TextBuffer { get; }
 
-        public ITextUndoHistory TextBufferUndoHistory => throw new NotImplementedException();
+		public ITextUndoHistory TextBufferUndoHistory => throw new NotImplementedException();
 
-        public void UnregisterUndoHistory()
-        {
-            throw new NotImplementedException();
-        }
-    }
+		public void UnregisterUndoHistory()
+		{
+			throw new NotImplementedException();
+		}
+	}
 }

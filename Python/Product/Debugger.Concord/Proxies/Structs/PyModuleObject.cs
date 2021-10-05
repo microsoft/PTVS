@@ -16,24 +16,24 @@
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 {
-    internal class PyModuleObject : PyObject
-    {
-        private class Fields
-        {
-            public StructField<PointerProxy<PyDictObject>> md_dict;
-        }
+	internal class PyModuleObject : PyObject
+	{
+		private class Fields
+		{
+			public StructField<PointerProxy<PyDictObject>> md_dict;
+		}
 
-        private readonly Fields _fields;
+		private readonly Fields _fields;
 
-        public PyModuleObject(DkmProcess process, ulong address)
-            : base(process, address)
-        {
-            InitializeStruct(this, out _fields);
-        }
+		public PyModuleObject(DkmProcess process, ulong address)
+			: base(process, address)
+		{
+			InitializeStruct(this, out _fields);
+		}
 
-        public PointerProxy<PyDictObject> md_dict
-        {
-            get { return GetFieldProxy(_fields.md_dict); }
-        }
-    }
+		public PointerProxy<PyDictObject> md_dict
+		{
+			get { return GetFieldProxy(_fields.md_dict); }
+		}
+	}
 }

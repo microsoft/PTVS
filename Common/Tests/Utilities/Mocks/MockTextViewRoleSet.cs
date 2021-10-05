@@ -16,19 +16,19 @@
 
 namespace TestUtilities.Mocks
 {
-    class MockTextViewRoleSet : ITextViewRoleSet
-    {
-        private HashSet<string> _roles = new HashSet<string>();
+	class MockTextViewRoleSet : ITextViewRoleSet
+	{
+		private HashSet<string> _roles = new HashSet<string>();
 
-        public bool Contains(string textViewRole) => _roles.Contains(textViewRole);
-        public bool ContainsAll(IEnumerable<string> textViewRoles) => textViewRoles.All(r => _roles.Contains(r));
-        public bool ContainsAny(IEnumerable<string> textViewRoles) => textViewRoles.Any(r => _roles.Contains(r));
-        public IEnumerator<string> GetEnumerator() => _roles.GetEnumerator();
-        public ITextViewRoleSet UnionWith(ITextViewRoleSet roleSet)
-        {
-            _roles.UnionWith(roleSet);
-            return this;
-        }
-        IEnumerator IEnumerable.GetEnumerator() => _roles.GetEnumerator();
-    }
+		public bool Contains(string textViewRole) => _roles.Contains(textViewRole);
+		public bool ContainsAll(IEnumerable<string> textViewRoles) => textViewRoles.All(r => _roles.Contains(r));
+		public bool ContainsAny(IEnumerable<string> textViewRoles) => textViewRoles.Any(r => _roles.Contains(r));
+		public IEnumerator<string> GetEnumerator() => _roles.GetEnumerator();
+		public ITextViewRoleSet UnionWith(ITextViewRoleSet roleSet)
+		{
+			_roles.UnionWith(roleSet);
+			return this;
+		}
+		IEnumerator IEnumerable.GetEnumerator() => _roles.GetEnumerator();
+	}
 }

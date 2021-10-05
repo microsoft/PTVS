@@ -16,16 +16,16 @@
 
 namespace Microsoft.PythonTools.EnvironmentsList
 {
-    public interface IEnvironmentViewExtension
-    {
-        int SortPriority { get; }
+	public interface IEnvironmentViewExtension
+	{
+		int SortPriority { get; }
 
-        string LocalizedDisplayName { get; }
+		string LocalizedDisplayName { get; }
 
-        FrameworkElement WpfObject { get; }
+		FrameworkElement WpfObject { get; }
 
-        object HelpContent { get; }
+		object HelpContent { get; }
 
-        string HelpText { get; }
-    }
+		string HelpText { get; }
+	}
 }

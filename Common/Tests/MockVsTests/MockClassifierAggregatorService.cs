@@ -16,75 +16,75 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-    [Export(typeof(IClassifierAggregatorService))]
-    public class MockClassifierAggregatorService : IClassifierAggregatorService
-    {
-        [ImportMany]
-        internal IEnumerable<Lazy<IClassifierProvider, IContentTypeMetadata>> _providers = null;
+	[Export(typeof(IClassifierAggregatorService))]
+	public class MockClassifierAggregatorService : IClassifierAggregatorService
+	{
+		[ImportMany]
+		internal IEnumerable<Lazy<IClassifierProvider, IContentTypeMetadata>> _providers = null;
 
-        public IClassifier GetClassifier(ITextBuffer textBuffer)
-        {
-            if (_providers == null)
-            {
-                return null;
-            }
+		public IClassifier GetClassifier(ITextBuffer textBuffer)
+		{
+			if (_providers == null)
+			{
+				return null;
+			}
 
-            var contentType = textBuffer.ContentType;
-            return new AggregatedClassifier(
-                textBuffer,
-                _providers.Where(e => e.Metadata.ContentTypes.Any(c => contentType.IsOfType(c)))
-                    .Select(e => e.Value)
-            );
-        }
+			var contentType = textBuffer.ContentType;
+			return new AggregatedClassifier(
+				textBuffer,
+				_providers.Where(e => e.Metadata.ContentTypes.Any(c => contentType.IsOfType(c)))
+					.Select(e => e.Value)
+			);
+		}
 
-        sealed class AggregatedClassifier : IClassifier, IDisposable
-        {
-            private readonly ITextBuffer _buffer;
-            private readonly IReadOnlyList<IClassifier> _classifiers;
+		sealed class AggregatedClassifier : IClassifier, IDisposable
+		{
+			private readonly ITextBuffer _buffer;
+			private readonly IReadOnlyList<IClassifier> _classifiers;
 
-            public AggregatedClassifier(ITextBuffer textBuffer, IEnumerable<IClassifierProvider> providers)
-            {
-                _buffer = textBuffer;
-                _classifiers = providers.Select(p => p.GetClassifier(_buffer)).ToList();
-                foreach (var c in _classifiers)
-                {
-                    c.ClassificationChanged += Subclassification_Changed;
-                }
-            }
+			public AggregatedClassifier(ITextBuffer textBuffer, IEnumerable<IClassifierProvider> providers)
+			{
+				_buffer = textBuffer;
+				_classifiers = providers.Select(p => p.GetClassifier(_buffer)).ToList();
+				foreach (var c in _classifiers)
+				{
+					c.ClassificationChanged += Subclassification_Changed;
+				}
+			}
 
-            private void Subclassification_Changed(object sender, ClassificationChangedEventArgs e)
-            {
-                var c = (IClassifier)sender;
-                var refreshSpans = c.GetClassificationSpans(e.ChangeSpan);
-                ClassificationChanged?.Invoke(this, e);
-            }
+			private void Subclassification_Changed(object sender, ClassificationChangedEventArgs e)
+			{
+				var c = (IClassifier)sender;
+				var refreshSpans = c.GetClassificationSpans(e.ChangeSpan);
+				ClassificationChanged?.Invoke(this, e);
+			}
 
-            public void Dispose()
-            {
-                foreach (var c in _classifiers)
-                {
-                    c.ClassificationChanged -= Subclassification_Changed;
-                    (c as IDisposable)?.Dispose();
-                }
-            }
+			public void Dispose()
+			{
+				foreach (var c in _classifiers)
+				{
+					c.ClassificationChanged -= Subclassification_Changed;
+					(c as IDisposable)?.Dispose();
+				}
+			}
 
-            public event EventHandler<ClassificationChangedEventArgs> ClassificationChanged;
+			public event EventHandler<ClassificationChangedEventArgs> ClassificationChanged;
 
-            public IList<ClassificationSpan> GetClassificationSpans(SnapshotSpan span)
-            {
-                return _classifiers.SelectMany(c =>
-                {
-                    try
-                    {
-                        return c.GetClassificationSpans(span);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine("Error getting classification spans.\r\n{0}", ex);
-                        return Enumerable.Empty<ClassificationSpan>();
-                    }
-                }).ToList();
-            }
-        }
-    }
+			public IList<ClassificationSpan> GetClassificationSpans(SnapshotSpan span)
+			{
+				return _classifiers.SelectMany(c =>
+				{
+					try
+					{
+						return c.GetClassificationSpans(span);
+					}
+					catch (Exception ex)
+					{
+						Debug.WriteLine("Error getting classification spans.\r\n{0}", ex);
+						return Enumerable.Empty<ClassificationSpan>();
+					}
+				}).ToList();
+			}
+		}
+	}
 }

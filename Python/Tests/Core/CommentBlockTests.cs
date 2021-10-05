@@ -16,320 +16,320 @@
 
 namespace PythonToolsTests
 {
-    [TestClass]
-    public class CommentBlockTests
-    {
-        [TestInitialize]
-        public void TestInitialize() => TestEnvironmentImpl.TestInitialize();
+	[TestClass]
+	public class CommentBlockTests
+	{
+		[TestInitialize]
+		public void TestInitialize() => TestEnvironmentImpl.TestInitialize();
 
-        [TestCleanup]
-        public void TestCleanup() => TestEnvironmentImpl.TestCleanup();
+		[TestCleanup]
+		public void TestCleanup() => TestEnvironmentImpl.TestCleanup();
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void TestCommentCurrentLine()
-        {
-            var editorTestToolset = new EditorTestToolset();
-            var view = editorTestToolset.CreatePythonTextView(@"print 'hello'
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public void TestCommentCurrentLine()
+		{
+			var editorTestToolset = new EditorTestToolset();
+			var view = editorTestToolset.CreatePythonTextView(@"print 'hello'
 print 'goodbye'
 ");
 
 
-            editorTestToolset.UIThread.Invoke(() =>
-            {
-                view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(0).Start);
-                view.CommentOrUncommentBlock(true);
-            });
+			editorTestToolset.UIThread.Invoke(() =>
+			{
+				view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(0).Start);
+				view.CommentOrUncommentBlock(true);
+			});
 
-            Assert.AreEqual(@"#print 'hello'
+			Assert.AreEqual(@"#print 'hello'
 print 'goodbye'
 ",
-                view.GetText());
+				view.GetText());
 
-            editorTestToolset.UIThread.Invoke(() =>
-            {
-                view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(1).Start);
-                view.CommentOrUncommentBlock(true);
-            });
+			editorTestToolset.UIThread.Invoke(() =>
+			{
+				view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(1).Start);
+				view.CommentOrUncommentBlock(true);
+			});
 
-            Assert.AreEqual(@"#print 'hello'
+			Assert.AreEqual(@"#print 'hello'
 #print 'goodbye'
 ",
-                view.GetText());
-        }
+				view.GetText());
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void TestUnCommentCurrentLine()
-        {
-            var editorTestToolset = new EditorTestToolset();
-            var view = editorTestToolset.CreatePythonTextView(@"#print 'hello'
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public void TestUnCommentCurrentLine()
+		{
+			var editorTestToolset = new EditorTestToolset();
+			var view = editorTestToolset.CreatePythonTextView(@"#print 'hello'
 #print 'goodbye'");
 
-            editorTestToolset.UIThread.Invoke(() =>
-            {
-                view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(0).Start);
-                view.CommentOrUncommentBlock(false);
-            });
+			editorTestToolset.UIThread.Invoke(() =>
+			{
+				view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(0).Start);
+				view.CommentOrUncommentBlock(false);
+			});
 
-            Assert.AreEqual(@"print 'hello'
+			Assert.AreEqual(@"print 'hello'
 #print 'goodbye'",
-                 view.GetText());
+				 view.GetText());
 
-            editorTestToolset.UIThread.Invoke(() =>
-            {
-                view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(1).Start);
-                view.CommentOrUncommentBlock(false);
-            });
+			editorTestToolset.UIThread.Invoke(() =>
+			{
+				view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(1).Start);
+				view.CommentOrUncommentBlock(false);
+			});
 
-            Assert.AreEqual(@"print 'hello'
+			Assert.AreEqual(@"print 'hello'
 print 'goodbye'",
-                view.GetText());
-        }
+				view.GetText());
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void TestComment()
-        {
-            var editorTestToolset = new EditorTestToolset();
-            var view = editorTestToolset.CreatePythonTextView(@"print 'hello'
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public void TestComment()
+		{
+			var editorTestToolset = new EditorTestToolset();
+			var view = editorTestToolset.CreatePythonTextView(@"print 'hello'
 print 'goodbye'
 ");
 
-            editorTestToolset.UIThread.Invoke(() =>
-            {
-                view.SelectAll();
-                view.CommentOrUncommentBlock(true);
-            });
+			editorTestToolset.UIThread.Invoke(() =>
+			{
+				view.SelectAll();
+				view.CommentOrUncommentBlock(true);
+			});
 
-            Assert.AreEqual(@"#print 'hello'
+			Assert.AreEqual(@"#print 'hello'
 #print 'goodbye'
 ",
-                 view.GetText());
-        }
+				 view.GetText());
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void TestCommentEmptyLine()
-        {
-            var editorTestToolset = new EditorTestToolset();
-            var view = editorTestToolset.CreatePythonTextView(@"print 'hello'
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public void TestCommentEmptyLine()
+		{
+			var editorTestToolset = new EditorTestToolset();
+			var view = editorTestToolset.CreatePythonTextView(@"print 'hello'
 
 print 'goodbye'
 ");
 
-            editorTestToolset.UIThread.Invoke(() =>
-            {
-                view.SelectAll();
-                view.CommentOrUncommentBlock(true);
-            });
+			editorTestToolset.UIThread.Invoke(() =>
+			{
+				view.SelectAll();
+				view.CommentOrUncommentBlock(true);
+			});
 
-            Assert.AreEqual(@"#print 'hello'
+			Assert.AreEqual(@"#print 'hello'
 
 #print 'goodbye'
 ",
-                 view.GetText());
-        }
+				 view.GetText());
+		}
 
-        private static MockTextBuffer MockTextBuffer(string code)
-        {
-            return new MockTextBuffer(code, PythonCoreConstants.ContentType, "C:\\fob.py");
-        }
+		private static MockTextBuffer MockTextBuffer(string code)
+		{
+			return new MockTextBuffer(code, PythonCoreConstants.ContentType, "C:\\fob.py");
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void TestCommentWhiteSpaceLine()
-        {
-            var editorTestToolset = new EditorTestToolset();
-            var view = editorTestToolset.CreatePythonTextView(@"print 'hello'
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public void TestCommentWhiteSpaceLine()
+		{
+			var editorTestToolset = new EditorTestToolset();
+			var view = editorTestToolset.CreatePythonTextView(@"print 'hello'
    
 print 'goodbye'
 ");
 
-            editorTestToolset.UIThread.Invoke(() =>
-            {
-                view.SelectAll();
-                view.CommentOrUncommentBlock(true);
-            });
+			editorTestToolset.UIThread.Invoke(() =>
+			{
+				view.SelectAll();
+				view.CommentOrUncommentBlock(true);
+			});
 
-            Assert.AreEqual(@"#print 'hello'
+			Assert.AreEqual(@"#print 'hello'
    
 #print 'goodbye'
 ",
-                 view.GetText());
-        }
+				 view.GetText());
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void TestCommentIndented()
-        {
-            var editorTestToolset = new EditorTestToolset();
-            var view = editorTestToolset.CreatePythonTextView(@"def f():
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public void TestCommentIndented()
+		{
+			var editorTestToolset = new EditorTestToolset();
+			var view = editorTestToolset.CreatePythonTextView(@"def f():
     print 'hello'
     print 'still here'
     print 'goodbye'");
 
-            editorTestToolset.UIThread.Invoke(() =>
-            {
-                view.Select(@"    print 'hello'
+			editorTestToolset.UIThread.Invoke(() =>
+			{
+				view.Select(@"    print 'hello'
     print 'still here'");
-                view.CommentOrUncommentBlock(true);
-            });
+				view.CommentOrUncommentBlock(true);
+			});
 
-            Assert.AreEqual(@"def f():
+			Assert.AreEqual(@"def f():
     #print 'hello'
     #print 'still here'
     print 'goodbye'",
-                    view.GetText());
-        }
+					view.GetText());
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void TestCommentIndentedBlankLine()
-        {
-            var editorTestToolset = new EditorTestToolset();
-            var view = editorTestToolset.CreatePythonTextView(@"def f():
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public void TestCommentIndentedBlankLine()
+		{
+			var editorTestToolset = new EditorTestToolset();
+			var view = editorTestToolset.CreatePythonTextView(@"def f():
     print 'hello'
 
     print 'still here'
     print 'goodbye'");
 
-            editorTestToolset.UIThread.Invoke(() =>
-            {
-                view.Select(@"    print 'hello'
+			editorTestToolset.UIThread.Invoke(() =>
+			{
+				view.Select(@"    print 'hello'
 
     print 'still here'");
-                view.CommentOrUncommentBlock(true);
-            });
+				view.CommentOrUncommentBlock(true);
+			});
 
-            Assert.AreEqual(@"def f():
+			Assert.AreEqual(@"def f():
     #print 'hello'
 
     #print 'still here'
     print 'goodbye'",
-                    view.GetText());
-        }
+					view.GetText());
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void TestCommentBlankLine()
-        {
-            var editorTestToolset = new EditorTestToolset();
-            var view = editorTestToolset.CreatePythonTextView(@"print('hi')
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public void TestCommentBlankLine()
+		{
+			var editorTestToolset = new EditorTestToolset();
+			var view = editorTestToolset.CreatePythonTextView(@"print('hi')
 
 print('bye')");
 
-            editorTestToolset.UIThread.Invoke(() =>
-            {
-                view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(1).Start);
-                view.CommentOrUncommentBlock(true);
-            });
+			editorTestToolset.UIThread.Invoke(() =>
+			{
+				view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(1).Start);
+				view.CommentOrUncommentBlock(true);
+			});
 
-            Assert.AreEqual(@"print('hi')
+			Assert.AreEqual(@"print('hi')
 
 print('bye')",
-             view.GetText());
-        }
+			 view.GetText());
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void TestCommentIndentedWhiteSpaceLine()
-        {
-            var editorTestToolset = new EditorTestToolset();
-            var view = editorTestToolset.CreatePythonTextView(@"def f():
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public void TestCommentIndentedWhiteSpaceLine()
+		{
+			var editorTestToolset = new EditorTestToolset();
+			var view = editorTestToolset.CreatePythonTextView(@"def f():
     print 'hello'
   
     print 'still here'
     print 'goodbye'");
 
-            editorTestToolset.UIThread.Invoke(() =>
-            {
-                view.Select(@"    print 'hello'
+			editorTestToolset.UIThread.Invoke(() =>
+			{
+				view.Select(@"    print 'hello'
   
     print 'still here'");
-                view.CommentOrUncommentBlock(true);
-            });
+				view.CommentOrUncommentBlock(true);
+			});
 
-            Assert.AreEqual(@"def f():
+			Assert.AreEqual(@"def f():
     #print 'hello'
   
     #print 'still here'
     print 'goodbye'",
-                    view.GetText());
-        }
+					view.GetText());
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void TestUnCommentIndented()
-        {
-            var editorTestToolset = new EditorTestToolset();
-            var view = editorTestToolset.CreatePythonTextView(@"def f():
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public void TestUnCommentIndented()
+		{
+			var editorTestToolset = new EditorTestToolset();
+			var view = editorTestToolset.CreatePythonTextView(@"def f():
     #print 'hello'
     #print 'still here'
     print 'goodbye'");
 
-            editorTestToolset.UIThread.Invoke(() =>
-            {
-                view.Select(@"    #print 'hello'
+			editorTestToolset.UIThread.Invoke(() =>
+			{
+				view.Select(@"    #print 'hello'
     #print 'still here'");
-                view.CommentOrUncommentBlock(false);
-            });
+				view.CommentOrUncommentBlock(false);
+			});
 
-            Assert.AreEqual(@"def f():
+			Assert.AreEqual(@"def f():
     print 'hello'
     print 'still here'
     print 'goodbye'",
-                    view.GetText());
-        }
+					view.GetText());
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void TestUnComment()
-        {
-            var editorTestToolset = new EditorTestToolset();
-            var view = editorTestToolset.CreatePythonTextView(@"#print 'hello'
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public void TestUnComment()
+		{
+			var editorTestToolset = new EditorTestToolset();
+			var view = editorTestToolset.CreatePythonTextView(@"#print 'hello'
 #print 'goodbye'");
 
-            editorTestToolset.UIThread.Invoke(() =>
-            {
-                view.SelectAll();
-                view.CommentOrUncommentBlock(false);
-            });
+			editorTestToolset.UIThread.Invoke(() =>
+			{
+				view.SelectAll();
+				view.CommentOrUncommentBlock(false);
+			});
 
-            var expected = @"print 'hello'
+			var expected = @"print 'hello'
 print 'goodbye'";
-            Assert.AreEqual(expected, view.GetText());
-        }
+			Assert.AreEqual(expected, view.GetText());
+		}
 
-        /// <summary>
-        /// http://pytools.codeplex.com/workitem/814
-        /// </summary>
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void TestCommentStartOfLastLine()
-        {
-            var editorTestToolset = new EditorTestToolset();
-            var view = editorTestToolset.CreatePythonTextView(@"print 'hello'
+		/// <summary>
+		/// http://pytools.codeplex.com/workitem/814
+		/// </summary>
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public void TestCommentStartOfLastLine()
+		{
+			var editorTestToolset = new EditorTestToolset();
+			var view = editorTestToolset.CreatePythonTextView(@"print 'hello'
 print 'goodbye'");
 
-            editorTestToolset.UIThread.Invoke(() =>
-            {
-                view.Select(@"print 'hello'
+			editorTestToolset.UIThread.Invoke(() =>
+			{
+				view.Select(@"print 'hello'
 ");
-                view.CommentOrUncommentBlock(true);
-            });
+				view.CommentOrUncommentBlock(true);
+			});
 
-            var expected = @"#print 'hello'
+			var expected = @"#print 'hello'
 print 'goodbye'";
-            Assert.AreEqual(expected, view.GetText());
-        }
+			Assert.AreEqual(expected, view.GetText());
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void TestCommentAfterCodeIsNotUncommented()
-        {
-            var editorTestToolset = new EditorTestToolset();
-            var view = editorTestToolset.CreatePythonTextView(@"print 'hello' #comment that should stay a comment
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public void TestCommentAfterCodeIsNotUncommented()
+		{
+			var editorTestToolset = new EditorTestToolset();
+			var view = editorTestToolset.CreatePythonTextView(@"print 'hello' #comment that should stay a comment
 #print 'still here' # another comment that should stay a comment
 print 'goodbye'");
 
-            editorTestToolset.UIThread.Invoke(() =>
-            {
-                view.Select(0, view.GetText().IndexOf("print 'goodbye'"));
-                view.CommentOrUncommentBlock(false);
-            });
+			editorTestToolset.UIThread.Invoke(() =>
+			{
+				view.Select(0, view.GetText().IndexOf("print 'goodbye'"));
+				view.CommentOrUncommentBlock(false);
+			});
 
-            Assert.AreEqual(@"print 'hello' #comment that should stay a comment
+			Assert.AreEqual(@"print 'hello' #comment that should stay a comment
 print 'still here' # another comment that should stay a comment
 print 'goodbye'",
-                view.GetText());
-        }
-    }
+				view.GetText());
+		}
+	}
 }

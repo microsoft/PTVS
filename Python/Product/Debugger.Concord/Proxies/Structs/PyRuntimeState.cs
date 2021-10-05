@@ -16,75 +16,75 @@
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 {
-    /// <summary>
-    /// In Python 3.7, many global variables were combined into the _PyRuntime struct.
-    /// </summary>
-    [StructProxy(MinVersion = PythonLanguageVersion.V37, StructName = "_PyRuntimeState")]
-    internal class PyRuntimeState : StructProxy
-    {
-        private class Fields
-        {
-            public StructField<BoolProxy> core_initialized;
-            public StructField<BoolProxy> initialized;
-            public StructField<pyinterpreters> interpreters;
-            public StructField<ceval_runtime_state> ceval;
-        }
+	/// <summary>
+	/// In Python 3.7, many global variables were combined into the _PyRuntime struct.
+	/// </summary>
+	[StructProxy(MinVersion = PythonLanguageVersion.V37, StructName = "_PyRuntimeState")]
+	internal class PyRuntimeState : StructProxy
+	{
+		private class Fields
+		{
+			public StructField<BoolProxy> core_initialized;
+			public StructField<BoolProxy> initialized;
+			public StructField<pyinterpreters> interpreters;
+			public StructField<ceval_runtime_state> ceval;
+		}
 
-        private readonly Fields _fields;
+		private readonly Fields _fields;
 
-        public PyRuntimeState(DkmProcess process, ulong address)
-            : base(process, address)
-        {
-            InitializeStruct(this, out _fields);
-        }
+		public PyRuntimeState(DkmProcess process, ulong address)
+			: base(process, address)
+		{
+			InitializeStruct(this, out _fields);
+		}
 
-        public BoolProxy core_initialized => GetFieldProxy(_fields.core_initialized);
-        public BoolProxy initialized => GetFieldProxy(_fields.initialized);
-        public pyinterpreters interpreters => GetFieldProxy(_fields.interpreters);
-        public ceval_runtime_state ceval => GetFieldProxy(_fields.ceval);
+		public BoolProxy core_initialized => GetFieldProxy(_fields.core_initialized);
+		public BoolProxy initialized => GetFieldProxy(_fields.initialized);
+		public pyinterpreters interpreters => GetFieldProxy(_fields.interpreters);
+		public ceval_runtime_state ceval => GetFieldProxy(_fields.ceval);
 
 
-        [StructProxy(MinVersion = PythonLanguageVersion.V37, StructName = "pyinterpreters")]
-        public class pyinterpreters : StructProxy
-        {
-            private class Fields
-            {
-                public StructField<PointerProxy<PyInterpreterState>> head;
-                public StructField<PointerProxy<PyInterpreterState>> main;
-            }
+		[StructProxy(MinVersion = PythonLanguageVersion.V37, StructName = "pyinterpreters")]
+		public class pyinterpreters : StructProxy
+		{
+			private class Fields
+			{
+				public StructField<PointerProxy<PyInterpreterState>> head;
+				public StructField<PointerProxy<PyInterpreterState>> main;
+			}
 
-            private readonly Fields _fields;
+			private readonly Fields _fields;
 
-            public pyinterpreters(DkmProcess process, ulong address)
-                : base(process, address)
-            {
-                InitializeStruct(this, out _fields);
-            }
+			public pyinterpreters(DkmProcess process, ulong address)
+				: base(process, address)
+			{
+				InitializeStruct(this, out _fields);
+			}
 
-            public PointerProxy<PyInterpreterState> head => GetFieldProxy(_fields.head);
-            public PointerProxy<PyInterpreterState> main => GetFieldProxy(_fields.main);
-        }
+			public PointerProxy<PyInterpreterState> head => GetFieldProxy(_fields.head);
+			public PointerProxy<PyInterpreterState> main => GetFieldProxy(_fields.main);
+		}
 
-        [StructProxy(MinVersion = PythonLanguageVersion.V37, StructName = "_ceval_runtime_state")]
-        public class ceval_runtime_state : StructProxy
-        {
-            private class Fields
-            {
-                public StructField<Int32Proxy> recursion_limit;
-                public StructField<Int32Proxy> tracing_possible;
-            }
+		[StructProxy(MinVersion = PythonLanguageVersion.V37, StructName = "_ceval_runtime_state")]
+		public class ceval_runtime_state : StructProxy
+		{
+			private class Fields
+			{
+				public StructField<Int32Proxy> recursion_limit;
+				public StructField<Int32Proxy> tracing_possible;
+			}
 
-            private readonly Fields _fields;
+			private readonly Fields _fields;
 
-            public ceval_runtime_state(DkmProcess process, ulong address)
-                : base(process, address)
-            {
-                InitializeStruct(this, out _fields);
-            }
+			public ceval_runtime_state(DkmProcess process, ulong address)
+				: base(process, address)
+			{
+				InitializeStruct(this, out _fields);
+			}
 
-            public Int32Proxy recursion_limit => GetFieldProxy(_fields.recursion_limit);
-            public Int32Proxy tracing_possible => GetFieldProxy(_fields.tracing_possible);
-        }
-    }
+			public Int32Proxy recursion_limit => GetFieldProxy(_fields.recursion_limit);
+			public Int32Proxy tracing_possible => GetFieldProxy(_fields.tracing_possible);
+		}
+	}
 
 }

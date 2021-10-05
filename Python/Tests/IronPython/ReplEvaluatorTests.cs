@@ -16,231 +16,231 @@
 
 namespace IronPythonTests
 {
-    [TestClass]
-    public class IronPythonReplEvaluatorTests
-    {
-        static IronPythonReplEvaluatorTests()
-        {
-            AssertListener.Initialize();
-        }
+	[TestClass]
+	public class IronPythonReplEvaluatorTests
+	{
+		static IronPythonReplEvaluatorTests()
+		{
+			AssertListener.Initialize();
+		}
 
-        protected virtual PythonVersion PythonVersion
-        {
-            get
-            {
-                return PythonPaths.IronPython27;
-            }
-        }
+		protected virtual PythonVersion PythonVersion
+		{
+			get
+			{
+				return PythonPaths.IronPython27;
+			}
+		}
 
-        private PythonInteractiveEvaluator Evaluator
-        {
-            get
-            {
-                PythonVersion.AssertInstalled();
-                return new PythonInteractiveEvaluator(PythonToolsTestUtilities.CreateMockServiceProvider())
-                {
-                    Configuration = new LaunchConfiguration(PythonVersion.Configuration)
-                };
-            }
-        }
+		private PythonInteractiveEvaluator Evaluator
+		{
+			get
+			{
+				PythonVersion.AssertInstalled();
+				return new PythonInteractiveEvaluator(PythonToolsTestUtilities.CreateMockServiceProvider())
+				{
+					Configuration = new LaunchConfiguration(PythonVersion.Configuration)
+				};
+			}
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void IronPythonModuleName()
-        {
-            using (var replEval = Evaluator)
-            {
-                var replWindow = new MockReplWindow(replEval);
-                replEval._Initialize(replWindow).Wait();
-                replWindow.ClearScreen();
-                var execute = replEval.ExecuteText("__name__");
-                execute.Wait();
-                Assert.IsTrue(execute.Result.IsSuccessful);
-                Assert.AreEqual(replWindow.Output, "'__main__'\n");
-                replWindow.ClearScreen();
-            }
-        }
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public void IronPythonModuleName()
+		{
+			using (var replEval = Evaluator)
+			{
+				var replWindow = new MockReplWindow(replEval);
+				replEval._Initialize(replWindow).Wait();
+				replWindow.ClearScreen();
+				var execute = replEval.ExecuteText("__name__");
+				execute.Wait();
+				Assert.IsTrue(execute.Result.IsSuccessful);
+				Assert.AreEqual(replWindow.Output, "'__main__'\n");
+				replWindow.ClearScreen();
+			}
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void IronPythonSignatures()
-        {
-            using (var replEval = Evaluator)
-            {
-                var replWindow = new MockReplWindow(replEval);
-                replEval._Initialize(replWindow).Wait();
-                var execute = replEval.ExecuteText("from System import Array");
-                execute.Wait();
-                Assert.IsTrue(execute.Result.IsSuccessful);
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public void IronPythonSignatures()
+		{
+			using (var replEval = Evaluator)
+			{
+				var replWindow = new MockReplWindow(replEval);
+				replEval._Initialize(replWindow).Wait();
+				var execute = replEval.ExecuteText("from System import Array");
+				execute.Wait();
+				Assert.IsTrue(execute.Result.IsSuccessful);
 
-                OverloadDoc[] sigs = null;
-                for (int retries = 0; retries < 5 && sigs == null; retries += 1)
-                {
-                    sigs = replEval.GetSignatureDocumentation("Array[int]");
-                }
-                Assert.IsNotNull(sigs, "GetSignatureDocumentation timed out");
-                Assert.AreEqual(1, sigs.Length);
-                Assert.AreEqual("Array[int](: int)\r\n", sigs[0].Documentation);
-            }
-        }
+				OverloadDoc[] sigs = null;
+				for (int retries = 0; retries < 5 && sigs == null; retries += 1)
+				{
+					sigs = replEval.GetSignatureDocumentation("Array[int]");
+				}
+				Assert.IsNotNull(sigs, "GetSignatureDocumentation timed out");
+				Assert.AreEqual(1, sigs.Length);
+				Assert.AreEqual("Array[int](: int)\r\n", sigs[0].Documentation);
+			}
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void IronPythonCommentInput()
-        {
-            // http://pytools.codeplex.com/workitem/649
-            using (var replEval = Evaluator)
-            {
-                var replWindow = new MockReplWindow(replEval);
-                replEval._Initialize(replWindow).Wait();
-                var execute = replEval.ExecuteText("#fob\n1+2");
-                execute.Wait();
-                Assert.IsTrue(execute.Result.IsSuccessful);
-            }
-        }
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public void IronPythonCommentInput()
+		{
+			// http://pytools.codeplex.com/workitem/649
+			using (var replEval = Evaluator)
+			{
+				var replWindow = new MockReplWindow(replEval);
+				replEval._Initialize(replWindow).Wait();
+				var execute = replEval.ExecuteText("#fob\n1+2");
+				execute.Wait();
+				Assert.IsTrue(execute.Result.IsSuccessful);
+			}
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void ConsoleWriteLineTest()
-        {
-            // http://pytools.codeplex.com/workitem/649
-            using (var replEval = Evaluator)
-            {
-                var replWindow = new MockReplWindow(replEval);
-                replEval._Initialize(replWindow).Wait();
-                var execute = replEval.ExecuteText("import System");
-                execute.Wait();
-                Assert.IsTrue(execute.Result.IsSuccessful);
-                replWindow.ClearScreen();
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public void ConsoleWriteLineTest()
+		{
+			// http://pytools.codeplex.com/workitem/649
+			using (var replEval = Evaluator)
+			{
+				var replWindow = new MockReplWindow(replEval);
+				replEval._Initialize(replWindow).Wait();
+				var execute = replEval.ExecuteText("import System");
+				execute.Wait();
+				Assert.IsTrue(execute.Result.IsSuccessful);
+				replWindow.ClearScreen();
 
-                execute = replEval.ExecuteText("System.Console.WriteLine(42)");
-                execute.Wait();
-                Assert.AreEqual(replWindow.Output, "42\n");
-                replWindow.ClearScreen();
+				execute = replEval.ExecuteText("System.Console.WriteLine(42)");
+				execute.Wait();
+				Assert.AreEqual(replWindow.Output, "42\n");
+				replWindow.ClearScreen();
 
-                Assert.IsTrue(execute.Result.IsSuccessful);
+				Assert.IsTrue(execute.Result.IsSuccessful);
 
-                execute = replEval.ExecuteText("System.Console.Write(42)");
-                execute.Wait();
+				execute = replEval.ExecuteText("System.Console.Write(42)");
+				execute.Wait();
 
-                Assert.IsTrue(execute.Result.IsSuccessful);
+				Assert.IsTrue(execute.Result.IsSuccessful);
 
-                Assert.AreEqual(replWindow.Output, "42");
-            }
-        }
+				Assert.AreEqual(replWindow.Output, "42");
+			}
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void GenericMethodCompletions()
-        {
-            // http://pytools.codeplex.com/workitem/661
-            using (var replEval = Evaluator)
-            {
-                var replWindow = new MockReplWindow(replEval);
-                replEval._Initialize(replWindow).Wait();
-                var execute = replEval.ExecuteText("from System.Threading.Tasks import Task");
-                execute.Wait();
-                Assert.IsTrue(execute.Result.IsSuccessful);
-                replWindow.ClearScreen();
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public void GenericMethodCompletions()
+		{
+			// http://pytools.codeplex.com/workitem/661
+			using (var replEval = Evaluator)
+			{
+				var replWindow = new MockReplWindow(replEval);
+				replEval._Initialize(replWindow).Wait();
+				var execute = replEval.ExecuteText("from System.Threading.Tasks import Task");
+				execute.Wait();
+				Assert.IsTrue(execute.Result.IsSuccessful);
+				replWindow.ClearScreen();
 
-                execute = replEval.ExecuteText("def func1(): print 'hello world'\r\n\r\n");
-                execute.Wait();
-                replWindow.ClearScreen();
+				execute = replEval.ExecuteText("def func1(): print 'hello world'\r\n\r\n");
+				execute.Wait();
+				replWindow.ClearScreen();
 
-                Assert.IsTrue(execute.Result.IsSuccessful);
+				Assert.IsTrue(execute.Result.IsSuccessful);
 
-                execute = replEval.ExecuteText("t = Task.Factory.StartNew(func1)");
-                execute.Wait();
-                Assert.IsTrue(execute.Result.IsSuccessful);
+				execute = replEval.ExecuteText("t = Task.Factory.StartNew(func1)");
+				execute.Wait();
+				Assert.IsTrue(execute.Result.IsSuccessful);
 
-                replWindow.TextView.TextBuffer.Properties.AddProperty(typeof(VsProjectAnalyzer), replEval.Analyzer);
+				replWindow.TextView.TextBuffer.Properties.AddProperty(typeof(VsProjectAnalyzer), replEval.Analyzer);
 
-                CompletionResult[] names = null;
-                for (int retries = 0; retries < 5 && names == null; retries += 1)
-                {
-                    names = replEval.GetMemberNames("t");
-                }
-                Assert.IsNotNull(names, "GetMemberNames call timed out");
-                foreach (var name in names)
-                {
-                    Debug.WriteLine(name.Name);
-                }
-            }
-        }
+				CompletionResult[] names = null;
+				for (int retries = 0; retries < 5 && names == null; retries += 1)
+				{
+					names = replEval.GetMemberNames("t");
+				}
+				Assert.IsNotNull(names, "GetMemberNames call timed out");
+				foreach (var name in names)
+				{
+					Debug.WriteLine(name.Name);
+				}
+			}
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public async Task NoTraceFunction()
-        {
-            // http://pytools.codeplex.com/workitem/662
-            using (var replEval = Evaluator)
-            {
-                var replWindow = new MockReplWindow(replEval);
-                await replEval._Initialize(replWindow);
-                var execute = await replEval.ExecuteText("import sys");
-                Assert.IsTrue(execute.IsSuccessful);
-                replWindow.ClearScreen();
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public async Task NoTraceFunction()
+		{
+			// http://pytools.codeplex.com/workitem/662
+			using (var replEval = Evaluator)
+			{
+				var replWindow = new MockReplWindow(replEval);
+				await replEval._Initialize(replWindow);
+				var execute = await replEval.ExecuteText("import sys");
+				Assert.IsTrue(execute.IsSuccessful);
+				replWindow.ClearScreen();
 
-                await replEval.ExecuteText("print '[%s]' % sys.gettrace(),");
-                Assert.AreEqual("[None]", replWindow.Output);
-                replWindow.ClearScreen();
-            }
-        }
+				await replEval.ExecuteText("print '[%s]' % sys.gettrace(),");
+				Assert.AreEqual("[None]", replWindow.Output);
+				replWindow.ClearScreen();
+			}
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void CommentFollowedByBlankLine()
-        {
-            // http://pytools.codeplex.com/workitem/659
-            using (var replEval = Evaluator)
-            {
-                var replWindow = new MockReplWindow(replEval);
-                replEval._Initialize(replWindow).Wait();
-                var execute = replEval.ExecuteText("# fob\r\n\r\n    \r\n\t\t\r\na = 42");
-                execute.Wait();
-                Assert.IsTrue(execute.Result.IsSuccessful);
-                replWindow.ClearScreen();
-            }
-        }
-
-
-
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void AttachSupportMultiThreaded()
-        {
-            // http://pytools.codeplex.com/workitem/663
-            using (var replEval = Evaluator)
-            {
-                var replWindow = new MockReplWindow(replEval);
-                replEval._Initialize(replWindow).Wait();
-                var code = new[] {
-                    "import threading",
-                    "def sayHello():\r\n    pass",
-                    "t1 = threading.Thread(target=sayHello)",
-                    "t1.start()",
-                    "t2 = threading.Thread(target=sayHello)",
-                    "t2.start()"
-                };
-                foreach (var line in code)
-                {
-                    var execute = replEval.ExecuteText(line);
-                    execute.Wait();
-                    Assert.IsTrue(execute.Result.IsSuccessful);
-                }
-
-                replWindow.ClearScreen();
-                var finalExecute = replEval.ExecuteText("42");
-                finalExecute.Wait();
-                Assert.IsTrue(finalExecute.Result.IsSuccessful);
-                Assert.AreEqual(replWindow.Output, "42\n");
-            }
-        }
-    }
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public void CommentFollowedByBlankLine()
+		{
+			// http://pytools.codeplex.com/workitem/659
+			using (var replEval = Evaluator)
+			{
+				var replWindow = new MockReplWindow(replEval);
+				replEval._Initialize(replWindow).Wait();
+				var execute = replEval.ExecuteText("# fob\r\n\r\n    \r\n\t\t\r\na = 42");
+				execute.Wait();
+				Assert.IsTrue(execute.Result.IsSuccessful);
+				replWindow.ClearScreen();
+			}
+		}
 
 
-    [TestClass]
-    public class IronPythonx64ReplEvaluatorTests : IronPythonReplEvaluatorTests
-    {
-        protected override PythonVersion PythonVersion
-        {
-            get
-            {
-                return PythonPaths.IronPython27_x64;
-            }
-        }
-    }
+
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public void AttachSupportMultiThreaded()
+		{
+			// http://pytools.codeplex.com/workitem/663
+			using (var replEval = Evaluator)
+			{
+				var replWindow = new MockReplWindow(replEval);
+				replEval._Initialize(replWindow).Wait();
+				var code = new[] {
+					"import threading",
+					"def sayHello():\r\n    pass",
+					"t1 = threading.Thread(target=sayHello)",
+					"t1.start()",
+					"t2 = threading.Thread(target=sayHello)",
+					"t2.start()"
+				};
+				foreach (var line in code)
+				{
+					var execute = replEval.ExecuteText(line);
+					execute.Wait();
+					Assert.IsTrue(execute.Result.IsSuccessful);
+				}
+
+				replWindow.ClearScreen();
+				var finalExecute = replEval.ExecuteText("42");
+				finalExecute.Wait();
+				Assert.IsTrue(finalExecute.Result.IsSuccessful);
+				Assert.AreEqual(replWindow.Output, "42\n");
+			}
+		}
+	}
+
+
+	[TestClass]
+	public class IronPythonx64ReplEvaluatorTests : IronPythonReplEvaluatorTests
+	{
+		protected override PythonVersion PythonVersion
+		{
+			get
+			{
+				return PythonPaths.IronPython27_x64;
+			}
+		}
+	}
 }
 

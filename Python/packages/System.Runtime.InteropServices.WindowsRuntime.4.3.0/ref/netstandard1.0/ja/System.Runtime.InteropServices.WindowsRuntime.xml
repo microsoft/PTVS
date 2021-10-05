@@ -1,0 +1,197 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<doc>
+  <assembly>
+    <name>System.Runtime.InteropServices.WindowsRuntime</name>
+  </assembly>
+  <members>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.DefaultInterfaceAttribute">
+      <summary>マネージ Windows ランタイム のクラスの既定のインターフェイスを指定します。</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.DefaultInterfaceAttribute.#ctor(System.Type)">
+      <summary>
+        <see cref="T:System.Runtime.InteropServices.WindowsRuntime.DefaultInterfaceAttribute" /> クラスの新しいインスタンスを初期化します。</summary>
+      <param name="defaultInterface">属性が適用されるクラスのための既定のインターフェイスとして指定されたインターフェイス型。</param>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.DefaultInterfaceAttribute.DefaultInterface">
+      <summary>既定のインターフェイスの型を取得します。</summary>
+      <returns>既定のインターフェイスの型。</returns>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken">
+      <summary>イベント ハンドラーが Windows ランタイム イベントに追加されたときに返されるトークン。後にイベントからイベント ハンドラーを削除するために、トークンが使用されます。</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken.Equals(System.Object)">
+      <summary>現在のオブジェクトが、指定されたオブジェクトと等しいかどうかを示す値を返します。</summary>
+      <returns>現在のオブジェクトが <paramref name="obj" /> に等しい場合は true。それ以外の場合は false。</returns>
+      <param name="obj">比較対象のオブジェクト。</param>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken.GetHashCode">
+      <summary>対象のインスタンスのハッシュ コードを返します。</summary>
+      <returns>対象のインスタンスのハッシュ コード。</returns>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken.op_Equality(System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken,System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken)">
+      <summary>2 つの <see cref="T:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken" /> インスタンスが等しいかどうかを示します。</summary>
+      <returns>2 つのオブジェクトが等しい場合は true。それ以外の場合は false。</returns>
+      <param name="left">比較する 1 番目のインスタンス。</param>
+      <param name="right">比較する 2 番目のインスタンス。</param>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken.op_Inequality(System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken,System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken)">
+      <summary>2 つの <see cref="T:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken" /> インスタンスが等しくないかどうかを示します。</summary>
+      <returns>2 つのインスタンスが等しくない場合は true。それ以外の場合は false。</returns>
+      <param name="left">比較する 1 番目のインスタンス。</param>
+      <param name="right">比較する 2 番目のインスタンス。</param>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1">
+      <summary>デリゲートとイベント トークン間のマッピングを格納し、マネージ コードの Windows ランタイム イベントの実装をサポートします。</summary>
+      <typeparam name="T">特定のイベントのイベント ハンドラー デリゲートの型。</typeparam>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.#ctor">
+      <summary>
+        <see cref="T:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1" /> クラスの新しいインスタンスを初期化します。</summary>
+      <exception cref="T:System.InvalidOperationException">
+        <paramref name="T" /> がデリゲート型でありません。</exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.AddEventHandler(`0)">
+      <summary>指定したイベント ハンドラーをテーブルと呼び出しリストに追加し、イベント ハンドラーを削除するために使用できるトークンを返します。</summary>
+      <returns>テーブルと呼び出しリストからイベント ハンドラーを削除するために使用できるトークン。</returns>
+      <param name="handler">追加するイベント ハンドラー。</param>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.GetOrCreateEventRegistrationTokenTable(System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable{`0}@)">
+      <summary>これが nullでない場合には、指定されたイベントの登録トークン テーブルを返します。それ以外の場合、新しいイベント登録トークン テーブルを返します。</summary>
+      <returns>これが null でない場合は <paramref name="refEventTable" /> で指定されたイベント登録トークン テーブル。それ以外の場合は新しいイベント登録トークン テーブル。</returns>
+      <param name="refEventTable">参照渡しされるイベント登録テーブル トークン。</param>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.InvocationList">
+      <summary>追加されて、まだ削除されていないすべてのイベント ハンドラー デリゲートが呼び出しリストに含まれる <paramref name="T" /> 型のデリゲートを取得または設定します。このデリゲートを呼び出すと、すべてのイベント ハンドラーが呼び出されます。</summary>
+      <returns>イベント用に現在登録されているすべてのイベント ハンドラー デリゲートを表す型 <paramref name="T" /> のデリゲート。</returns>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.RemoveEventHandler(System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken)">
+      <summary>テーブルと呼び出しリストから指定したトークンに関連付けられているイベント ハンドラーを削除します。</summary>
+      <param name="token">イベント ハンドラーが追加されたときに返されたトークン。</param>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.RemoveEventHandler(`0)">
+      <summary>テーブルと呼び出しリストから、指定されたイベント ハンドラー デリゲートを削除します。</summary>
+      <param name="handler">削除するイベント ハンドラー。</param>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.IActivationFactory">
+      <summary>Windows ランタイム によるクラスのアクティブ化を有効にします。</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.IActivationFactory.ActivateInstance">
+      <summary>
+        <see cref="T:System.Runtime.InteropServices.WindowsRuntime.IActivationFactory" /> インターフェイスによって作成された Windows ランタイム クラスの新しいインスタンスを返します。</summary>
+      <returns>Windows ランタイム クラスの新しいインスタンス。</returns>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute">
+      <summary>指定したインターフェイスを最初に実装したターゲット型のバージョンを指定します。</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.#ctor(System.Type,System.Byte,System.Byte,System.Byte,System.Byte)">
+      <summary>対象の型が実装するインターフェイスと、そのインターフェイスを最初に実装したバージョンを指定して、<see cref="T:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute" /> クラスの新しいインスタンスを初期化します。</summary>
+      <param name="interfaceType">指定されたターゲット型バージョンで最初に実装されたインターフェイス。</param>
+      <param name="majorVersion">最初に <paramref name="interfaceType" /> を実装した対象の型のバージョンのメジャー部分。</param>
+      <param name="minorVersion">最初に <paramref name="interfaceType" /> を実装した対象の型のバージョンのマイナー部分。</param>
+      <param name="buildVersion">最初に <paramref name="interfaceType" /> を実装した対象の型のバージョンのビルド部分。</param>
+      <param name="revisionVersion">最初に <paramref name="interfaceType" /> を実装したターゲット型のバージョンのリビジョン構成要素。</param>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.BuildVersion">
+      <summary>最初にインターフェイスを実装した対象の型のバージョンのビルド コンポーネントを取得します。</summary>
+      <returns>バージョンのビルド コンポーネント。</returns>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.InterfaceType">
+      <summary>ターゲット型が実装しているインターフェイスの型を取得します。</summary>
+      <returns>インターフェイスの型。</returns>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.MajorVersion">
+      <summary>最初にインターフェイスを実装した対象の型のバージョンのメジャー部分を取得します。</summary>
+      <returns>バージョンのメジャー部分。</returns>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.MinorVersion">
+      <summary>最初にインターフェイスを実装した対象の型のバージョンのマイナー部分を取得します。</summary>
+      <returns>バージョンのマイナー部分。</returns>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.RevisionVersion">
+      <summary>最初にインターフェイスを実装した対象の型のバージョンのリビジョン部分を取得します。</summary>
+      <returns>バージョンのリビジョン部分。</returns>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArrayAttribute">
+      <summary>Windows ランタイム コンポーネントの配列パラメーターに適用された場合は、このパラメーターに渡された配列の内容が入力のみに使用されることを指定します。呼び出し元は、配列が呼び出しによって変更されるのを防ぐ必要があります。マネージ コードを使用して作成された呼び出し元に関する重要な情報については、「解説」セクションを参照してください。</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArrayAttribute.#ctor">
+      <summary>
+        <see cref="T:System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArrayAttribute" /> クラスの新しいインスタンスを初期化します。 </summary>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.ReturnValueNameAttribute">
+      <summary>Windows ランタイム コンポーネントでメソッドの戻り値の名前を指定します。</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.ReturnValueNameAttribute.#ctor(System.String)">
+      <summary>
+        <see cref="T:System.Runtime.InteropServices.WindowsRuntime.ReturnValueNameAttribute" /> クラスの新しいインスタンスを初期化して、戻り値の名前を指定します。</summary>
+      <param name="name">戻り値の名前。</param>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.ReturnValueNameAttribute.Name">
+      <summary>Windows ランタイム コンポーネントでメソッドの戻り値に対して指定された名前を取得します。</summary>
+      <returns>メソッド操作の戻り値の名前。</returns>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal">
+      <summary>.NET Framework と Windows ランタイム の間のマーシャリング データにヘルパー メソッドを提供します。</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.AddEventHandler``1(System.Func{``0,System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken},System.Action{System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken},``0)">
+      <summary>指定したイベント ハンドラーを Windows ランタイム イベントに追加します。</summary>
+      <param name="addMethod">Windows ランタイム イベントにイベント ハンドラーを追加するメソッドを表すデリゲート。</param>
+      <param name="removeMethod">Windows ランタイム イベントからイベント ハンドラーを削除するメソッドを表すデリゲート。</param>
+      <param name="handler">追加されるイベント ハンドラーを表すデリゲート。</param>
+      <typeparam name="T">イベント ハンドラーを表すデリゲートの型。</typeparam>
+      <exception cref="T:System.ArgumentNullException">
+        <paramref name="addMethod" /> は null なので、または<paramref name="removeMethod" /> は null なので、</exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.FreeHString(System.IntPtr)">
+      <summary>指定した Windows ランタイム HSTRING を解放します。</summary>
+      <param name="ptr">開放する HSTRING のアドレス。</param>
+      <exception cref="T:System.PlatformNotSupportedException">Windows ランタイム は、現在のバージョンのオペレーティング システムではサポートされません。</exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.GetActivationFactory(System.Type)">
+      <summary>指定した Windows ランタイム 型のアクティベーション ファクトリ インターフェイスを実装するオブジェクトを返します。</summary>
+      <returns>アクティベーション ファクトリ インターフェイスを実装するオブジェクト。</returns>
+      <param name="type">アクティベーション ファクトリ インターフェイスを取得する Windows ランタイム の型。</param>
+      <exception cref="T:System.ArgumentException">
+        <paramref name="type" /> は Windows ランタイム 型を表しません (つまり、Windows ランタイム 自体に属するか、または Windows ランタイム のコンポーネントで定義されいます)。または<paramref name="type" /> に指定されたオブジェクトは、共通言語ランタイム型システムによって提供されていません。</exception>
+      <exception cref="T:System.ArgumentNullException">
+        <paramref name="type" /> は null なので、</exception>
+      <exception cref="T:System.TypeLoadException">指定した Windows ランタイム クラスが、適切に登録されていません。たとえば、.winmd ファイルは見つかりましたが、Windows ランタイム は実装を見つけられませんでした。</exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.PtrToStringHString(System.IntPtr)">
+      <summary>指定した Windows ランタイム HSTRING のコピーを含むマネージ文字列を返します。</summary>
+      <returns>
+        <paramref name="ptr" /> が <see cref="F:System.IntPtr.Zero" /> でない場合は HSTRING のコピーを含むマネージ文字列。それ以外の場合は <see cref="F:System.String.Empty" />。</returns>
+      <param name="ptr">コピーする HSTRING へのアンマネージ ポインター。</param>
+      <exception cref="T:System.PlatformNotSupportedException">Windows ランタイム は、現在のバージョンのオペレーティング システムではサポートされません。</exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.RemoveAllEventHandlers(System.Action{System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken})">
+      <summary>指定されたメソッドを使用して削除できるイベント ハンドラーをすべて削除します。</summary>
+      <param name="removeMethod">Windows ランタイム イベントからイベント ハンドラーを削除するメソッドを表すデリゲート。</param>
+      <exception cref="T:System.ArgumentNullException">
+        <paramref name="removeMethod" /> は null なので、</exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.RemoveEventHandler``1(System.Action{System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken},``0)">
+      <summary>指定したイベント ハンドラーを Windows ランタイム イベントから削除します。</summary>
+      <param name="removeMethod">Windows ランタイム イベントからイベント ハンドラーを削除するメソッドを表すデリゲート。</param>
+      <param name="handler">削除されるイベント ハンドラー。</param>
+      <typeparam name="T">イベント ハンドラーを表すデリゲートの型。</typeparam>
+      <exception cref="T:System.ArgumentNullException">
+        <paramref name="removeMethod" /> は null なので、</exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.StringToHString(System.String)">
+      <summary>Windows ランタイム HSTRING を割り当て、指定したマネージ文字列をそこにコピーします。</summary>
+      <returns>新しい HSTRING へのアンマネージ ポインター。または、<paramref name="s" /> が <see cref="F:System.String.Empty" /> の場合、<see cref="F:System.IntPtr.Zero" />。</returns>
+      <param name="s">コピーするマネージ文字列。</param>
+      <exception cref="T:System.PlatformNotSupportedException">Windows ランタイム は、現在のバージョンのオペレーティング システムではサポートされません。</exception>
+      <exception cref="T:System.ArgumentNullException">
+        <paramref name="s" /> は null なので、</exception>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArrayAttribute">
+      <summary>Windows ランタイム コンポーネントの配列パラメーターに適用された場合は、このパラメーターに渡された配列の内容が出力のみに使用されることを指定します。呼び出し元はコンテンツが初期化されることを保証せず、呼び出されたメソッドはコンテンツを読み取りません。マネージ コードを使用して作成された呼び出し元に関する重要な情報については、「解説」セクションを参照してください。</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArrayAttribute.#ctor">
+      <summary>
+        <see cref="T:System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArrayAttribute" /> クラスの新しいインスタンスを初期化します。 </summary>
+    </member>
+  </members>
+</doc>

@@ -1,0 +1,184 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<doc>
+  <assembly>
+    <name>System.Runtime.InteropServices.WindowsRuntime</name>
+  </assembly>
+  <members>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.DefaultInterfaceAttribute">
+      <summary>Указывает интерфейс по умолчанию для управляемого класса Среда выполнения Windows.</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.DefaultInterfaceAttribute.#ctor(System.Type)">
+      <summary>Инициализирует новый экземпляр класса <see cref="T:System.Runtime.InteropServices.WindowsRuntime.DefaultInterfaceAttribute" />. </summary>
+      <param name="defaultInterface">Тип интерфейса, определенный как интерфейс по умолчанию для класса, к которому применяется атрибут. </param>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.DefaultInterfaceAttribute.DefaultInterface">
+      <summary>Получает тип интерфейса по умолчанию. </summary>
+      <returns>Тип интерфейса по умолчанию. </returns>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken">
+      <summary>токен, который возвращается, когда добавляется обработчик событий к событию Среда выполнения Windows.Токен используется для удаления обработчика события из события через некоторое время.</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken.Equals(System.Object)">
+      <summary>Возвращает значение, показывающее, равен ли текущий объект указанному объекту. </summary>
+      <returns>Значение true, если текущий объект равен <paramref name="obj" />; в противном случае — значение false.</returns>
+      <param name="obj">Сравниваемый объект.</param>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken.GetHashCode">
+      <summary>Возвращает хэш-код для данного экземпляра. </summary>
+      <returns>Хэш-код данного экземпляра. </returns>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken.op_Equality(System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken,System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken)">
+      <summary>Указывает, равны ли два экземпляра <see cref="T:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken" />. </summary>
+      <returns>true, если два объекта равны; в противном случае false. </returns>
+      <param name="left">Первый экземпляр для сравнения. </param>
+      <param name="right">Второй экземпляр для сравнения. </param>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken.op_Inequality(System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken,System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken)">
+      <summary>Показывает, являются ли два экземпляра <see cref="T:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken" />неравными.</summary>
+      <returns>Значение true если два экземпляра не равны; в противном случае — значение false. </returns>
+      <param name="left">Первый экземпляр для сравнения. </param>
+      <param name="right">Второй экземпляр для сравнения. </param>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1">
+      <summary>Содержит сопоставления между делегатами и токенами событий для поддержки реализации события Среда выполнения Windows в управляемом коде.</summary>
+      <typeparam name="T">Тип делегата обработчика событий для конкретного события. </typeparam>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.#ctor">
+      <summary>Инициализирует новый экземпляр класса <see cref="T:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1" />. </summary>
+      <exception cref="T:System.InvalidOperationException">Элемент <paramref name="T" /> не является типом делегата. </exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.AddEventHandler(`0)">
+      <summary>Добавляет указанный обработчик событий к таблице и к списку вызова и возвращает токен, который может использоваться для удаления обработчика событий. </summary>
+      <returns>Токен, который может быть использован для удаления обработчика событий из списка вызова и таблицы. </returns>
+      <param name="handler">Добавляемый обработчик событий. </param>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.GetOrCreateEventRegistrationTokenTable(System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable{`0}@)">
+      <summary>Возвращает указанную таблицу токена регистрации события, если это не null; в противном случае возвращает новую таблицу токена регистрации события. </summary>
+      <returns>Таблица токена регистрации события, указанная объектом <paramref name="refEventTable" />, если его значение отлично от null; в противном случае — новая таблица токена регистрации события. </returns>
+      <param name="refEventTable">Таблица токенов регистрации события, передаваемая по ссылке. </param>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.InvocationList">
+      <summary>Получает или задает делегат типа <paramref name="T" />, список вызовов которого включает все делегаты обработчика событий, которые были добавлены, и которые еще не были удалены.Вызов данного делегата вызывает все обработчики событий.</summary>
+      <returns>Делегат типа <paramref name="T" />, представляющий все делегаты обработчика событий, которые в настоящее время зарегистрированы для события. </returns>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.RemoveEventHandler(System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken)">
+      <summary>Удаляет обработчик событий, связанный с заданным токеном из таблицы и списка вызовов. </summary>
+      <param name="token">Токен, который был возвращен при добавлении обработчика события. </param>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.RemoveEventHandler(`0)">
+      <summary>Удаляет указанный делегат обработчика событий из таблицы и списка вызовов. </summary>
+      <param name="handler">Удаляемый обработчик событий. </param>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.IActivationFactory">
+      <summary>Позволяет активировать классы за счет Среда выполнения Windows. </summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.IActivationFactory.ActivateInstance">
+      <summary>Возвращает новый экземпляр класса Среда выполнения Windows, созданный интерфейсом <see cref="T:System.Runtime.InteropServices.WindowsRuntime.IActivationFactory" />. </summary>
+      <returns>Новый экземпляр класса Среда выполнения Windows. </returns>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute">
+      <summary>Указывает версию целевого типа, который сначала был реализован в указанном интерфейсе.</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.#ctor(System.Type,System.Byte,System.Byte,System.Byte,System.Byte)">
+      <summary>Инициализирует новый экземпляр класса <see cref="T:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute" /> с указанием интерфейса, реализуемого целевым типом, и версии, в которой этот интерфейс был первоначально реализован. </summary>
+      <param name="interfaceType">Интерфейс, который сначала был реализован в указанной версии целевого типа. </param>
+      <param name="majorVersion">Основной номер версии целевого типа, в котором в первый раз реализован тип <paramref name="interfaceType" />.</param>
+      <param name="minorVersion">Дополнительный номер версии целевого типа, в котором в первый раз реализован тип <paramref name="interfaceType" />.</param>
+      <param name="buildVersion">Компонент сборки версии целевого типа, в котором в первый раз реализован тип <paramref name="interfaceType" />.</param>
+      <param name="revisionVersion">Номер редакции версии целевого типа, в котором в первый раз реализован тип <paramref name="interfaceType" />.</param>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.BuildVersion">
+      <summary>Получает компонент построения версии целевого типа, который первым реализовал интерфейс. </summary>
+      <returns>Компонент построения версии.</returns>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.InterfaceType">
+      <summary>Получает тип интерфейса, реализуемого целевым типом. </summary>
+      <returns>Тип интерфейса. </returns>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.MajorVersion">
+      <summary>Получает основной компонент версии целевого типа, который первым реализовал интерфейс. </summary>
+      <returns>Основной компонент версии.</returns>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.MinorVersion">
+      <summary>Получает дополнительный компонент версии целевого типа, который первым реализовал интерфейс. </summary>
+      <returns>Дополнительный компонент версии. </returns>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.RevisionVersion">
+      <summary>Получает компонент-редакцию версии целевого типа, который первым реализовал интерфейс. </summary>
+      <returns>Номер редакции версии.</returns>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArrayAttribute">
+      <summary>При применении к параметру массива в компоненте Среда выполнения Windows указывает, что содержимое массива, передаваемое этому параметру, используется только для ввода.Вызывающий объект ожидает, что массив не изменится вызовом.Важные сведения о вызывающих объектах, написанных с помощью управляемого кода, см. в разделе "Примечания".</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArrayAttribute.#ctor">
+      <summary>Инициализирует новый экземпляр класса <see cref="T:System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArrayAttribute" />. </summary>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.ReturnValueNameAttribute">
+      <summary>Указывает имя возвращаемого значения метода в компоненте Среда выполнения Windows.</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.ReturnValueNameAttribute.#ctor(System.String)">
+      <summary>Инициализирует новый экземпляр класса <see cref="T:System.Runtime.InteropServices.WindowsRuntime.ReturnValueNameAttribute" /> и указывает имя возвращаемого значения.</summary>
+      <param name="name">Имя возвращаемого значения. </param>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.ReturnValueNameAttribute.Name">
+      <summary>Получает имя, указанное для возвращаемого значения метода в компоненте Среда выполнения Windows.</summary>
+      <returns>Имя возвращаемого значения метода. </returns>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal">
+      <summary>Предоставляет вспомогательные методы для маршалинга данных между .NET Framework и Среда выполнения Windows.</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.AddEventHandler``1(System.Func{``0,System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken},System.Action{System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken},``0)">
+      <summary>Добавляет указанный обработчик событий к событию Среда выполнения Windows.</summary>
+      <param name="addMethod">Делегат, представляющий метод, который добавляет обработчики событий к событию Среда выполнения Windows. </param>
+      <param name="removeMethod">Делегат, представляющий метод, который удаляет обработчики событий из события Среда выполнения Windows. </param>
+      <param name="handler">Делегат, который представляет добавляемый обработчик событий. </param>
+      <typeparam name="T">Тип делегата, который представляет обработчик событий. </typeparam>
+      <exception cref="T:System.ArgumentNullException">Параметр <paramref name="addMethod" /> имеет значение null. – или –Параметр <paramref name="removeMethod" /> имеет значение null.</exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.FreeHString(System.IntPtr)">
+      <summary>Освобождает конкретного Среда выполнения WindowsHSTRING. </summary>
+      <param name="ptr">Адрес высвобождаемого объекта HSTRING.</param>
+      <exception cref="T:System.PlatformNotSupportedException">Среда выполнения Windows не поддерживается в текущей версии операционной системы. </exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.GetActivationFactory(System.Type)">
+      <summary>Возвращает объект, который реализует интерфейс фабрики активации для указанного типа Среда выполнения Windows. </summary>
+      <returns>Объект, реализующий интерфейс фабрики активации. </returns>
+      <param name="type">Тип Среда выполнения Windows, для которого требуется получить интерфейс фабрики активации. </param>
+      <exception cref="T:System.ArgumentException">
+        <paramref name="type" /> не представляет тип Среда выполнения Windows (то есть, принадлежащий к самому Среда выполнения Windows или определенный в компоненте Среда выполнения Windows). – или –Объект, определенный для параметра <paramref name="type" />, не предоставлен системой типов среды CLR. </exception>
+      <exception cref="T:System.ArgumentNullException">Параметр <paramref name="type" /> имеет значение null. </exception>
+      <exception cref="T:System.TypeLoadException">Заданный класс Среда выполнения Windows не был должным образом зарегистрирован.Например, файл .winmd найден, но Среда выполнения Windows не удалось найти реализацию.</exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.PtrToStringHString(System.IntPtr)">
+      <summary>Возвращает строку, содержащую копию управляемая указанного Среда выполнения WindowsHSTRING. </summary>
+      <returns>Управляемая строка, содержащая копию HSTRING, если <paramref name="ptr" /> не <see cref="F:System.IntPtr.Zero" />; в противном случае – значение <see cref="F:System.String.Empty" />. </returns>
+      <param name="ptr">Неуправляемый указатель на HSTRING для копирования. </param>
+      <exception cref="T:System.PlatformNotSupportedException">Среда выполнения Windows не поддерживается в текущей версии операционной системы. </exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.RemoveAllEventHandlers(System.Action{System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken})">
+      <summary>Удаляет все обработчики событий, которые могут быть удалены с помощью указанного метода. </summary>
+      <param name="removeMethod">Делегат, представляющий метод, который удаляет обработчики событий из события Среда выполнения Windows. </param>
+      <exception cref="T:System.ArgumentNullException">Параметр <paramref name="removeMethod" /> имеет значение null. </exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.RemoveEventHandler``1(System.Action{System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken},``0)">
+      <summary>Удаляет указанный обработчик событий из события Среда выполнения Windows. </summary>
+      <param name="removeMethod">Делегат, представляющий метод, который удаляет обработчики событий из события Среда выполнения Windows. </param>
+      <param name="handler">Удаляемый обработчик событий. </param>
+      <typeparam name="T">Тип делегата, который представляет обработчик событий. </typeparam>
+      <exception cref="T:System.ArgumentNullException">Параметр <paramref name="removeMethod" /> имеет значение null. </exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.StringToHString(System.String)">
+      <summary>Выделяет Среда выполнения WindowsHSTRING и копирует, управляемая строка на него. </summary>
+      <returns>Неуправляемый указатель на новый HSTRING или <see cref="F:System.IntPtr.Zero" />, если <paramref name="s" /> имеет значение <see cref="F:System.String.Empty" />. </returns>
+      <param name="s">Управляемая строка для копирования. </param>
+      <exception cref="T:System.PlatformNotSupportedException">Среда выполнения Windows не поддерживается в текущей версии операционной системы. </exception>
+      <exception cref="T:System.ArgumentNullException">Параметр <paramref name="s" /> имеет значение null. </exception>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArrayAttribute">
+      <summary>При применении к параметру массива в компоненте Среда выполнения Windows указывает, что содержимое массива, передаваемое этому параметру, используется только для вывода.Вызывающая сторона не гарантирует, что содержимое инициализируются, и вызванный метод не должен считывать содержимое.Важные сведения о вызывающих объектах, написанных с помощью управляемого кода, см. в разделе "Примечания".</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArrayAttribute.#ctor">
+      <summary>Инициализирует новый экземпляр класса <see cref="T:System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArrayAttribute" />. </summary>
+    </member>
+  </members>
+</doc>

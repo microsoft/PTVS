@@ -16,33 +16,33 @@
 
 namespace TestUtilities.UI
 {
-    public class RadioButton : AutomationWrapper
-    {
-        public string Name { get; set; }
+	public class RadioButton : AutomationWrapper
+	{
+		public string Name { get; set; }
 
-        public RadioButton(AutomationElement element)
-            : base(element)
-        {
-            Name = (string)Element.GetCurrentPropertyValue(AutomationElement.NameProperty);
-        }
+		public RadioButton(AutomationElement element)
+			: base(element)
+		{
+			Name = (string)Element.GetCurrentPropertyValue(AutomationElement.NameProperty);
+		}
 
-        public void SetSelected()
-        {
-            Assert.IsTrue((bool)Element.GetCurrentPropertyValue(AutomationElement.IsSelectionItemPatternAvailableProperty), "Element is not a radio button");
-            var pattern = (SelectionItemPattern)Element.GetCurrentPattern(SelectionItemPattern.Pattern);
-            pattern.Select();
+		public void SetSelected()
+		{
+			Assert.IsTrue((bool)Element.GetCurrentPropertyValue(AutomationElement.IsSelectionItemPatternAvailableProperty), "Element is not a radio button");
+			var pattern = (SelectionItemPattern)Element.GetCurrentPattern(SelectionItemPattern.Pattern);
+			pattern.Select();
 
-            Assert.IsTrue(pattern.Current.IsSelected);
-        }
+			Assert.IsTrue(pattern.Current.IsSelected);
+		}
 
-        public bool IsSelected
-        {
-            get
-            {
-                Assert.IsTrue((bool)Element.GetCurrentPropertyValue(AutomationElement.IsSelectionItemPatternAvailableProperty), "Element is not a radio button");
-                var pattern = (SelectionItemPattern)Element.GetCurrentPattern(SelectionItemPattern.Pattern);
-                return pattern.Current.IsSelected;
-            }
-        }
-    }
+		public bool IsSelected
+		{
+			get
+			{
+				Assert.IsTrue((bool)Element.GetCurrentPropertyValue(AutomationElement.IsSelectionItemPatternAvailableProperty), "Element is not a radio button");
+				var pattern = (SelectionItemPattern)Element.GetCurrentPattern(SelectionItemPattern.Pattern);
+				return pattern.Current.IsSelected;
+			}
+		}
+	}
 }

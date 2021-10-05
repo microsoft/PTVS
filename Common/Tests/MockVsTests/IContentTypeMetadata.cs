@@ -16,8 +16,8 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-    public interface IContentTypeMetadata
-    {
-        IEnumerable<string> ContentTypes { get; }
-    }
+	public interface IContentTypeMetadata
+	{
+		IEnumerable<string> ContentTypes { get; }
+	}
 }

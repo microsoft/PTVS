@@ -16,79 +16,79 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-    [Export(typeof(ICompletionBroker))]
-    class MockCompletionBroker : ICompletionBroker
-    {
-        internal readonly IEnumerable<Lazy<ICompletionSourceProvider, IContentTypeMetadata>> _completionProviders;
-        internal readonly IIntellisenseSessionStackMapService _stackMap;
+	[Export(typeof(ICompletionBroker))]
+	class MockCompletionBroker : ICompletionBroker
+	{
+		internal readonly IEnumerable<Lazy<ICompletionSourceProvider, IContentTypeMetadata>> _completionProviders;
+		internal readonly IIntellisenseSessionStackMapService _stackMap;
 
-        [ImportingConstructor]
-        public MockCompletionBroker(IIntellisenseSessionStackMapService stackMap, [ImportMany] IEnumerable<Lazy<ICompletionSourceProvider, IContentTypeMetadata>> completionProviders)
-        {
-            _stackMap = stackMap;
-            _completionProviders = completionProviders;
-        }
+		[ImportingConstructor]
+		public MockCompletionBroker(IIntellisenseSessionStackMapService stackMap, [ImportMany] IEnumerable<Lazy<ICompletionSourceProvider, IContentTypeMetadata>> completionProviders)
+		{
+			_stackMap = stackMap;
+			_completionProviders = completionProviders;
+		}
 
-        public ICompletionSession CreateCompletionSession(ITextView textView, ITrackingPoint triggerPoint, bool trackCaret)
-        {
-            return new MockCompletionSession(this, textView, triggerPoint);
-        }
+		public ICompletionSession CreateCompletionSession(ITextView textView, ITrackingPoint triggerPoint, bool trackCaret)
+		{
+			return new MockCompletionSession(this, textView, triggerPoint);
+		}
 
-        public void DismissAllSessions(ITextView textView)
-        {
-            foreach (var session in _stackMap.GetStackForTextView(textView).Sessions)
-            {
-                if (session is ICompletionSession)
-                {
-                    session.Dismiss();
-                }
-            }
-        }
+		public void DismissAllSessions(ITextView textView)
+		{
+			foreach (var session in _stackMap.GetStackForTextView(textView).Sessions)
+			{
+				if (session is ICompletionSession)
+				{
+					session.Dismiss();
+				}
+			}
+		}
 
-        public ReadOnlyCollection<ICompletionSession> GetSessions(ITextView textView)
-        {
-            List<ICompletionSession> res = new List<ICompletionSession>();
-            foreach (var session in _stackMap.GetStackForTextView(textView).Sessions)
-            {
-                if (session is ICompletionSession)
-                {
-                    res.Add(session as ICompletionSession);
-                }
-            }
-            return new ReadOnlyCollection<ICompletionSession>(res);
-        }
+		public ReadOnlyCollection<ICompletionSession> GetSessions(ITextView textView)
+		{
+			List<ICompletionSession> res = new List<ICompletionSession>();
+			foreach (var session in _stackMap.GetStackForTextView(textView).Sessions)
+			{
+				if (session is ICompletionSession)
+				{
+					res.Add(session as ICompletionSession);
+				}
+			}
+			return new ReadOnlyCollection<ICompletionSession>(res);
+		}
 
-        public bool IsCompletionActive(ITextView textView)
-        {
-            foreach (var session in _stackMap.GetStackForTextView(textView).Sessions)
-            {
-                if (session is ICompletionSession)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
+		public bool IsCompletionActive(ITextView textView)
+		{
+			foreach (var session in _stackMap.GetStackForTextView(textView).Sessions)
+			{
+				if (session is ICompletionSession)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
 
-        public ICompletionSession TriggerCompletion(ITextView textView, ITrackingPoint triggerPoint, bool trackCaret)
-        {
-            var session = CreateCompletionSession(textView, triggerPoint, trackCaret);
+		public ICompletionSession TriggerCompletion(ITextView textView, ITrackingPoint triggerPoint, bool trackCaret)
+		{
+			var session = CreateCompletionSession(textView, triggerPoint, trackCaret);
 
-            session.Start();
+			session.Start();
 
-            return session;
-        }
+			return session;
+		}
 
-        public ICompletionSession TriggerCompletion(ITextView textView)
-        {
-            return TriggerCompletion(
-                textView,
-                textView.TextBuffer.CurrentSnapshot.CreateTrackingPoint(
-                    textView.Caret.Position.BufferPosition.Position,
-                    PointTrackingMode.Negative
-                ),
-                true
-            );
-        }
-    }
+		public ICompletionSession TriggerCompletion(ITextView textView)
+		{
+			return TriggerCompletion(
+				textView,
+				textView.TextBuffer.CurrentSnapshot.CreateTrackingPoint(
+					textView.Caret.Position.BufferPosition.Position,
+					PointTrackingMode.Negative
+				),
+				true
+			);
+		}
+	}
 }

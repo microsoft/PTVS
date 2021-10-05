@@ -16,36 +16,36 @@
 
 namespace TestUtilities
 {
-    public static class VisualStudioPath
-    {
-        private static Lazy<string> RootLazy { get; } = new Lazy<string>(GetVsRoot);
-        private static Lazy<string> CommonExtensionsLazy { get; } = new Lazy<string>(() => Root == null ? null : Path.Combine(Root, @"CommonExtensions\"));
-        private static Lazy<string> PrivateAssembliesLazy { get; } = new Lazy<string>(() => Root == null ? null : Path.Combine(Root, @"PrivateAssemblies\"));
-        private static Lazy<string> PublicAssembliesLazy { get; } = new Lazy<string>(() => Root == null ? null : Path.Combine(Root, @"PublicAssemblies\"));
+	public static class VisualStudioPath
+	{
+		private static Lazy<string> RootLazy { get; } = new Lazy<string>(GetVsRoot);
+		private static Lazy<string> CommonExtensionsLazy { get; } = new Lazy<string>(() => Root == null ? null : Path.Combine(Root, @"CommonExtensions\"));
+		private static Lazy<string> PrivateAssembliesLazy { get; } = new Lazy<string>(() => Root == null ? null : Path.Combine(Root, @"PrivateAssemblies\"));
+		private static Lazy<string> PublicAssembliesLazy { get; } = new Lazy<string>(() => Root == null ? null : Path.Combine(Root, @"PublicAssemblies\"));
 
-        public static string Root => RootLazy.Value;
-        public static string CommonExtensions => CommonExtensionsLazy.Value;
-        public static string PrivateAssemblies => PrivateAssembliesLazy.Value;
-        public static string PublicAssemblies => PublicAssembliesLazy.Value;
+		public static string Root => RootLazy.Value;
+		public static string CommonExtensions => CommonExtensionsLazy.Value;
+		public static string PrivateAssemblies => PrivateAssembliesLazy.Value;
+		public static string PublicAssemblies => PublicAssembliesLazy.Value;
 
-        private static string GetVsRoot()
-        {
-            try
-            {
-                var configuration = (ISetupConfiguration2)new SetupConfiguration();
-                var current = (ISetupInstance2)configuration.GetInstanceForCurrentProcess();
-                var path = current.ResolvePath(current.GetProductPath());
-                return Path.GetDirectoryName(path);
-            }
-            catch (COMException)
-            {
-                var path = Environment.GetEnvironmentVariable($"VisualStudio_IDE_{AssemblyVersionInfo.VSVersion}");
-                if (string.IsNullOrEmpty(path))
-                {
-                    path = Environment.GetEnvironmentVariable("VisualStudio_IDE");
-                }
-                return path;
-            }
-        }
-    }
+		private static string GetVsRoot()
+		{
+			try
+			{
+				var configuration = (ISetupConfiguration2)new SetupConfiguration();
+				var current = (ISetupInstance2)configuration.GetInstanceForCurrentProcess();
+				var path = current.ResolvePath(current.GetProductPath());
+				return Path.GetDirectoryName(path);
+			}
+			catch (COMException)
+			{
+				var path = Environment.GetEnvironmentVariable($"VisualStudio_IDE_{AssemblyVersionInfo.VSVersion}");
+				if (string.IsNullOrEmpty(path))
+				{
+					path = Environment.GetEnvironmentVariable("VisualStudio_IDE");
+				}
+				return path;
+			}
+		}
+	}
 }

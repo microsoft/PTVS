@@ -17,23 +17,23 @@
 namespace Microsoft.PythonTools.Debugger
 {
 
-    /// <summary>
-    /// How variables can be presented through the IDE.
-    /// 
-    /// Group means variables of this type are grouped under their own collapsable element.
-    /// Hide means variables of this type are not shown.
-    /// Inline means variables of this type are expanded into a single flat level.
-    /// </summary>
-    [JsonConverter(typeof(StringEnumConverter))]
-    public enum PresentationMode
-    {
-        [EnumMember(Value = "group")]
-        Group,
+	/// <summary>
+	/// How variables can be presented through the IDE.
+	/// 
+	/// Group means variables of this type are grouped under their own collapsable element.
+	/// Hide means variables of this type are not shown.
+	/// Inline means variables of this type are expanded into a single flat level.
+	/// </summary>
+	[JsonConverter(typeof(StringEnumConverter))]
+	public enum PresentationMode
+	{
+		[EnumMember(Value = "group")]
+		Group,
 
-        [EnumMember(Value = "hide")]
-        Hide,
+		[EnumMember(Value = "hide")]
+		Hide,
 
-        [EnumMember(Value = "inline")]
-        Inline,
-    }
+		[EnumMember(Value = "inline")]
+		Inline,
+	}
 }

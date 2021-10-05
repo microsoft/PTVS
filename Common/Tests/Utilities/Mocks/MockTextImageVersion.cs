@@ -16,33 +16,33 @@
 
 namespace TestUtilities.Mocks
 {
-    public class MockTextImageVersion : ITextImageVersion
-    {
-        private readonly ITextVersion _source;
+	public class MockTextImageVersion : ITextImageVersion
+	{
+		private readonly ITextVersion _source;
 
-        public MockTextImageVersion(ITextVersion source)
-        {
-            _source = source;
-        }
+		public MockTextImageVersion(ITextVersion source)
+		{
+			_source = source;
+		}
 
-        public ITextImageVersion Next => (_source.Next != null) ? (ITextImageVersion)(new MockTextImageVersion(_source.Next)) : null;
+		public ITextImageVersion Next => (_source.Next != null) ? (ITextImageVersion)(new MockTextImageVersion(_source.Next)) : null;
 
-        public int Length => _source.Length;
+		public int Length => _source.Length;
 
-        public INormalizedTextChangeCollection Changes => _source.Changes;
+		public INormalizedTextChangeCollection Changes => _source.Changes;
 
-        public int VersionNumber => _source.VersionNumber;
+		public int VersionNumber => _source.VersionNumber;
 
-        public object Identifier => _source.TextBuffer;
+		public object Identifier => _source.TextBuffer;
 
-        public int TrackTo(VersionedPosition other, PointTrackingMode mode)
-        {
-            throw new NotSupportedException();
-        }
+		public int TrackTo(VersionedPosition other, PointTrackingMode mode)
+		{
+			throw new NotSupportedException();
+		}
 
-        public Span TrackTo(VersionedSpan span, SpanTrackingMode mode)
-        {
-            throw new NotSupportedException();
-        }
-    }
+		public Span TrackTo(VersionedSpan span, SpanTrackingMode mode)
+		{
+			throw new NotSupportedException();
+		}
+	}
 }

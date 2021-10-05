@@ -16,82 +16,82 @@
 
 namespace PythonToolsUITestsRunner
 {
-    [TestClass]
-    public class TestExplorerTests
-    {
-        #region UI test boilerplate
-        public VsTestInvoker _vs => new VsTestInvoker(
-            VsTestContext.Instance,
-            // Remote container (DLL) name
-            "Microsoft.PythonTools.Tests.PythonToolsUITests",
-            // Remote class name
-            $"PythonToolsUITests.{GetType().Name}"
-        );
+	[TestClass]
+	public class TestExplorerTests
+	{
+		#region UI test boilerplate
+		public VsTestInvoker _vs => new VsTestInvoker(
+			VsTestContext.Instance,
+			// Remote container (DLL) name
+			"Microsoft.PythonTools.Tests.PythonToolsUITests",
+			// Remote class name
+			$"PythonToolsUITests.{GetType().Name}"
+		);
 
-        public TestContext TestContext { get; set; }
+		public TestContext TestContext { get; set; }
 
-        [TestInitialize]
-        public void TestInitialize() => VsTestContext.Instance.TestInitialize(TestContext.DeploymentDirectory);
-        [TestCleanup]
-        public void TestCleanup() => VsTestContext.Instance.TestCleanup();
-        [ClassCleanup]
-        public static void ClassCleanup() => VsTestContext.Instance.Dispose();
-        #endregion
+		[TestInitialize]
+		public void TestInitialize() => VsTestContext.Instance.TestInitialize(TestContext.DeploymentDirectory);
+		[TestCleanup]
+		public void TestCleanup() => VsTestContext.Instance.TestCleanup();
+		[ClassCleanup]
+		public static void ClassCleanup() => VsTestContext.Instance.Dispose();
+		#endregion
 
-        [TestMethod, Priority(UITestPriority.P0)]
-        [TestCategory("Installed")]
-        public void RunAllUnittestProject()
-        {
-            _vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.RunAllUnittestProject));
-        }
+		[TestMethod, Priority(UITestPriority.P0)]
+		[TestCategory("Installed")]
+		public void RunAllUnittestProject()
+		{
+			_vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.RunAllUnittestProject));
+		}
 
-        [TestMethod, Priority(UITestPriority.P0)]
-        [TestCategory("Installed")]
-        public void RunAllUnittestWorkspace()
-        {
-            _vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.RunAllUnittestWorkspace));
-        }
+		[TestMethod, Priority(UITestPriority.P0)]
+		[TestCategory("Installed")]
+		public void RunAllUnittestWorkspace()
+		{
+			_vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.RunAllUnittestWorkspace));
+		}
 
-        [TestMethod, Priority(UITestPriority.P0)]
-        [TestCategory("Installed")]
-        public void RunAllPytestProject()
-        {
-            _vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.RunAllPytestProject));
-        }
+		[TestMethod, Priority(UITestPriority.P0)]
+		[TestCategory("Installed")]
+		public void RunAllPytestProject()
+		{
+			_vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.RunAllPytestProject));
+		}
 
-        [TestMethod, Priority(UITestPriority.P0)]
-        [TestCategory("Installed")]
-        public void RunAllPytestWorkspace()
-        {
-            _vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.RunAllPytestWorkspace));
-        }
+		[TestMethod, Priority(UITestPriority.P0)]
+		[TestCategory("Installed")]
+		public void RunAllPytestWorkspace()
+		{
+			_vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.RunAllPytestWorkspace));
+		}
 
-        [TestMethod, Priority(UITestPriority.P0)]
-        [TestCategory("Installed")]
-        public void DebugPytestProject()
-        {
-            _vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.DebugPytestProject));
-        }
+		[TestMethod, Priority(UITestPriority.P0)]
+		[TestCategory("Installed")]
+		public void DebugPytestProject()
+		{
+			_vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.DebugPytestProject));
+		}
 
-        [TestMethod, Priority(UITestPriority.P0)]
-        [TestCategory("Installed")]
-        public void DebugPytestWorkspace()
-        {
-            _vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.DebugPytestWorkspace));
-        }
+		[TestMethod, Priority(UITestPriority.P0)]
+		[TestCategory("Installed")]
+		public void DebugPytestWorkspace()
+		{
+			_vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.DebugPytestWorkspace));
+		}
 
-        [TestMethod, Priority(UITestPriority.P0)]
-        [TestCategory("Installed")]
-        public void DebugUnittestProject()
-        {
-            _vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.DebugUnittestProject));
-        }
+		[TestMethod, Priority(UITestPriority.P0)]
+		[TestCategory("Installed")]
+		public void DebugUnittestProject()
+		{
+			_vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.DebugUnittestProject));
+		}
 
-        [TestMethod, Priority(UITestPriority.P0)]
-        [TestCategory("Installed")]
-        public void DebugUnittestWorkspace()
-        {
-            _vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.DebugUnittestWorkspace));
-        }
-    }
+		[TestMethod, Priority(UITestPriority.P0)]
+		[TestCategory("Installed")]
+		public void DebugUnittestWorkspace()
+		{
+			_vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.DebugUnittestWorkspace));
+		}
+	}
 }

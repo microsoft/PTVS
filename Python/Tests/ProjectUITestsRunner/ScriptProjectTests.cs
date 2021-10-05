@@ -16,51 +16,51 @@
 
 namespace ProjectUITestsRunner
 {
-    [TestClass]
-    public class ScriptProjectTests
-    {
-        #region UI test boilerplate
-        public VsTestInvoker _vs => new VsTestInvoker(
-            VsTestContext.Instance,
-            // Remote container (DLL) name
-            "Microsoft.PythonTools.Tests.ProjectUITests",
-            // Remote class name
-            $"ProjectUITests.{GetType().Name}"
-        );
+	[TestClass]
+	public class ScriptProjectTests
+	{
+		#region UI test boilerplate
+		public VsTestInvoker _vs => new VsTestInvoker(
+			VsTestContext.Instance,
+			// Remote container (DLL) name
+			"Microsoft.PythonTools.Tests.ProjectUITests",
+			// Remote class name
+			$"ProjectUITests.{GetType().Name}"
+		);
 
-        public TestContext TestContext { get; set; }
+		public TestContext TestContext { get; set; }
 
-        [TestInitialize]
-        public void TestInitialize() => VsTestContext.Instance.TestInitialize(TestContext.DeploymentDirectory);
-        [TestCleanup]
-        public void TestCleanup() => VsTestContext.Instance.TestCleanup();
-        [ClassCleanup]
-        public static void ClassCleanup() => VsTestContext.Instance.Dispose();
-        #endregion
+		[TestInitialize]
+		public void TestInitialize() => VsTestContext.Instance.TestInitialize(TestContext.DeploymentDirectory);
+		[TestCleanup]
+		public void TestCleanup() => VsTestContext.Instance.TestCleanup();
+		[ClassCleanup]
+		public static void ClassCleanup() => VsTestContext.Instance.Dispose();
+		#endregion
 
-        [TestMethod, Priority(UITestPriority.P0)]
-        [TestCategory("Installed")]
-        public void RunWithoutStartupFile()
-        {
-            _vs.RunTest(nameof(ProjectUITests.ScriptProjectTests.RunWithoutStartupFile));
-        }
+		[TestMethod, Priority(UITestPriority.P0)]
+		[TestCategory("Installed")]
+		public void RunWithoutStartupFile()
+		{
+			_vs.RunTest(nameof(ProjectUITests.ScriptProjectTests.RunWithoutStartupFile));
+		}
 
-        /// <summary>
-        /// Renaming the folder containing the startup script should update the startup script
-        /// https://nodejstools.codeplex.com/workitem/476
-        /// </summary>
-        [TestMethod, Priority(UITestPriority.P0)]
-        [TestCategory("Installed")]
-        public void RenameStartupFileFolder()
-        {
-            _vs.RunTest(nameof(ProjectUITests.ScriptProjectTests.RenameStartupFileFolder));
-        }
+		/// <summary>
+		/// Renaming the folder containing the startup script should update the startup script
+		/// https://nodejstools.codeplex.com/workitem/476
+		/// </summary>
+		[TestMethod, Priority(UITestPriority.P0)]
+		[TestCategory("Installed")]
+		public void RenameStartupFileFolder()
+		{
+			_vs.RunTest(nameof(ProjectUITests.ScriptProjectTests.RenameStartupFileFolder));
+		}
 
-        [TestMethod, Priority(UITestPriority.P0)]
-        [TestCategory("Installed")]
-        public void RenameStartupFile()
-        {
-            _vs.RunTest(nameof(ProjectUITests.ScriptProjectTests.RenameStartupFile));
-        }
-    }
+		[TestMethod, Priority(UITestPriority.P0)]
+		[TestCategory("Installed")]
+		public void RenameStartupFile()
+		{
+			_vs.RunTest(nameof(ProjectUITests.ScriptProjectTests.RenameStartupFile));
+		}
+	}
 }

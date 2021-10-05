@@ -16,8 +16,8 @@
 
 namespace Microsoft.PythonTools.EnvironmentsList
 {
-    public interface IEnvironmentViewExtensionProvider
-    {
-        IEnvironmentViewExtension CreateExtension(EnvironmentView view);
-    }
+	public interface IEnvironmentViewExtensionProvider
+	{
+		IEnvironmentViewExtension CreateExtension(EnvironmentView view);
+	}
 }

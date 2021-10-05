@@ -16,25 +16,25 @@
 
 namespace TestRunnerInterop
 {
-    class TestFailedException : Exception
-    {
-        private readonly string _innerType;
-        private readonly string _stackTrace;
+	class TestFailedException : Exception
+	{
+		private readonly string _innerType;
+		private readonly string _stackTrace;
 
-        public TestFailedException(string innerType, string message, string stackTrace)
-        {
-            _innerType = innerType;
-            Message = $"{_innerType.Substring(_innerType.LastIndexOf('.') + 1)}: {message}";
-            _stackTrace = stackTrace;
-        }
+		public TestFailedException(string innerType, string message, string stackTrace)
+		{
+			_innerType = innerType;
+			Message = $"{_innerType.Substring(_innerType.LastIndexOf('.') + 1)}: {message}";
+			_stackTrace = stackTrace;
+		}
 
-        public override string ToString()
-        {
-            return base.ToString().Replace(GetType().FullName, _innerType);
-        }
+		public override string ToString()
+		{
+			return base.ToString().Replace(GetType().FullName, _innerType);
+		}
 
-        public override string Message { get; }
+		public override string Message { get; }
 
-        public override string StackTrace => _stackTrace ?? base.StackTrace;
-    }
+		public override string StackTrace => _stackTrace ?? base.StackTrace;
+	}
 }

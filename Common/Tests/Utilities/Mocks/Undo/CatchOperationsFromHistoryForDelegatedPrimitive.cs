@@ -16,29 +16,29 @@
 
 namespace TestUtilities.Mocks
 {
-    /// <summary>
-    /// This class is to make it easy to catch new undo/redo operations while a delegated primitive
-    /// is in progress--it is called from DelegatedUndoPrimitive.Undo and .Redo with the IDispose
-    /// using pattern to set up the history to send operations our way.
-    /// </summary>
-    internal sealed class CatchOperationsFromHistoryForDelegatedPrimitive : IDisposable
-    {
-        private readonly MockTextUndoHistory _history;
-        private readonly MockTextUndoPrimitive _primitive;
+	/// <summary>
+	/// This class is to make it easy to catch new undo/redo operations while a delegated primitive
+	/// is in progress--it is called from DelegatedUndoPrimitive.Undo and .Redo with the IDispose
+	/// using pattern to set up the history to send operations our way.
+	/// </summary>
+	internal sealed class CatchOperationsFromHistoryForDelegatedPrimitive : IDisposable
+	{
+		private readonly MockTextUndoHistory _history;
+		private readonly MockTextUndoPrimitive _primitive;
 
-        public CatchOperationsFromHistoryForDelegatedPrimitive(MockTextUndoHistory history, MockTextUndoPrimitive primitive, DelegatedUndoPrimitiveState state)
-        {
-            _history = history;
-            _primitive = primitive;
+		public CatchOperationsFromHistoryForDelegatedPrimitive(MockTextUndoHistory history, MockTextUndoPrimitive primitive, DelegatedUndoPrimitiveState state)
+		{
+			_history = history;
+			_primitive = primitive;
 
-            primitive.State = state;
-            history.ForwardToUndoOperation(primitive);
-        }
+			primitive.State = state;
+			history.ForwardToUndoOperation(primitive);
+		}
 
-        public void Dispose()
-        {
-            _history.EndForwardToUndoOperation(_primitive);
-            _primitive.State = DelegatedUndoPrimitiveState.Inactive;
-        }
-    }
+		public void Dispose()
+		{
+			_history.EndForwardToUndoOperation(_primitive);
+			_primitive.State = DelegatedUndoPrimitiveState.Inactive;
+		}
+	}
 }

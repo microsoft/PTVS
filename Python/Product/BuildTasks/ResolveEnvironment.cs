@@ -20,136 +20,136 @@ using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.BuildTasks
 {
-    /// <summary>
-    /// Resolves a project's active environment from the contents of the project
-    /// file.
-    /// </summary>
-    public sealed class ResolveEnvironment : ITask
-    {
-        private readonly string _projectPath;
-        internal readonly TaskLoggingHelper _log;
+	/// <summary>
+	/// Resolves a project's active environment from the contents of the project
+	/// file.
+	/// </summary>
+	public sealed class ResolveEnvironment : ITask
+	{
+		private readonly string _projectPath;
+		internal readonly TaskLoggingHelper _log;
 
-        internal ResolveEnvironment(string projectPath, IBuildEngine buildEngine)
-        {
-            BuildEngine = buildEngine;
-            _projectPath = projectPath;
-            _log = new TaskLoggingHelper(this);
-        }
-
-#if !BUILDTASKS_CORE
-        class CatalogLog : ICatalogLog
-        {
-            private readonly TaskLoggingHelper _helper;
-            public CatalogLog(TaskLoggingHelper helper)
-            {
-                _helper = helper;
-            }
-
-            public void Log(string msg)
-            {
-                _helper.LogWarning(msg);
-            }
-        }
-#endif
-
-        /// <summary>
-        /// The interpreter ID to resolve.
-        /// </summary>
-        public string InterpreterId { get; set; }
-
-        [Output]
-        public string PrefixPath { get; private set; }
-
-        [Output]
-        public string ProjectRelativePrefixPath { get; private set; }
-
-        [Output]
-        public string InterpreterPath { get; private set; }
-
-        [Output]
-        public string WindowsInterpreterPath { get; private set; }
-
-        [Output]
-        public string Architecture { get; private set; }
-
-        [Output]
-        public string PathEnvironmentVariable { get; private set; }
-
-        [Output]
-        public string Description { get; private set; }
-
-        [Output]
-        public string MajorVersion { get; private set; }
-
-        [Output]
-        public string MinorVersion { get; private set; }
-
-        internal string[] SearchPaths { get; private set; }
-
-        public bool Execute()
-        {
-            string id = InterpreterId;
-
-            ProjectCollection collection = null;
-            Project project = null;
+		internal ResolveEnvironment(string projectPath, IBuildEngine buildEngine)
+		{
+			BuildEngine = buildEngine;
+			_projectPath = projectPath;
+			_log = new TaskLoggingHelper(this);
+		}
 
 #if !BUILDTASKS_CORE
-            var exports = GetExportProvider();
-            if (exports == null)
-            {
-                _log.LogError("Unable to obtain interpreter service.");
-                return false;
-            }
+		class CatalogLog : ICatalogLog
+		{
+			private readonly TaskLoggingHelper _helper;
+			public CatalogLog(TaskLoggingHelper helper)
+			{
+				_helper = helper;
+			}
+
+			public void Log(string msg)
+			{
+				_helper.LogWarning(msg);
+			}
+		}
 #endif
 
-            try
-            {
-                try
-                {
-                    project = ProjectCollection.GlobalProjectCollection.GetLoadedProjects(_projectPath).Single();
-                }
-                catch (InvalidOperationException)
-                {
-                    // Could not get exactly one project matching the path.
-                }
+		/// <summary>
+		/// The interpreter ID to resolve.
+		/// </summary>
+		public string InterpreterId { get; set; }
 
-                if (project == null)
-                {
-                    collection = new ProjectCollection();
-                    project = collection.LoadProject(_projectPath);
-                }
+		[Output]
+		public string PrefixPath { get; private set; }
 
-                if (id == null)
-                {
-                    id = project.GetPropertyValue("InterpreterId");
-                    if (String.IsNullOrWhiteSpace(id))
-                    {
+		[Output]
+		public string ProjectRelativePrefixPath { get; private set; }
+
+		[Output]
+		public string InterpreterPath { get; private set; }
+
+		[Output]
+		public string WindowsInterpreterPath { get; private set; }
+
+		[Output]
+		public string Architecture { get; private set; }
+
+		[Output]
+		public string PathEnvironmentVariable { get; private set; }
+
+		[Output]
+		public string Description { get; private set; }
+
+		[Output]
+		public string MajorVersion { get; private set; }
+
+		[Output]
+		public string MinorVersion { get; private set; }
+
+		internal string[] SearchPaths { get; private set; }
+
+		public bool Execute()
+		{
+			string id = InterpreterId;
+
+			ProjectCollection collection = null;
+			Project project = null;
+
 #if !BUILDTASKS_CORE
-                        var options = exports.GetExportedValueOrDefault<IInterpreterOptionsService>();
-                        if (options != null)
-                        {
-                            id = options.DefaultInterpreterId;
-                        }
+			var exports = GetExportProvider();
+			if (exports == null)
+			{
+				_log.LogError("Unable to obtain interpreter service.");
+				return false;
+			}
 #endif
-                    }
-                }
 
-                var projectHome = PathUtils.GetAbsoluteDirectoryPath(
-                    project.DirectoryPath,
-                    project.GetPropertyValue("ProjectHome")
-                );
+			try
+			{
+				try
+				{
+					project = ProjectCollection.GlobalProjectCollection.GetLoadedProjects(_projectPath).Single();
+				}
+				catch (InvalidOperationException)
+				{
+					// Could not get exactly one project matching the path.
+				}
 
-                var searchPath = project.GetPropertyValue("SearchPath");
-                if (!string.IsNullOrEmpty(searchPath))
-                {
-                    SearchPaths = searchPath.Split(';')
-                        .Select(p => PathUtils.GetAbsoluteFilePath(projectHome, p))
-                        .ToArray();
-                }
-                else
-                {
-                    SearchPaths = new string[0];
-                }
+				if (project == null)
+				{
+					collection = new ProjectCollection();
+					project = collection.LoadProject(_projectPath);
+				}
+
+				if (id == null)
+				{
+					id = project.GetPropertyValue("InterpreterId");
+					if (String.IsNullOrWhiteSpace(id))
+					{
+#if !BUILDTASKS_CORE
+						var options = exports.GetExportedValueOrDefault<IInterpreterOptionsService>();
+						if (options != null)
+						{
+							id = options.DefaultInterpreterId;
+						}
+#endif
+					}
+				}
+
+				var projectHome = PathUtils.GetAbsoluteDirectoryPath(
+					project.DirectoryPath,
+					project.GetPropertyValue("ProjectHome")
+				);
+
+				var searchPath = project.GetPropertyValue("SearchPath");
+				if (!string.IsNullOrEmpty(searchPath))
+				{
+					SearchPaths = searchPath.Split(';')
+						.Select(p => PathUtils.GetAbsoluteFilePath(projectHome, p))
+						.ToArray();
+				}
+				else
+				{
+					SearchPaths = new string[0];
+				}
 
 #if BUILDTASKS_CORE
                 ProjectItem item = null;
@@ -206,103 +206,103 @@ namespace Microsoft.PythonTools.BuildTasks
                     return true;
                 }
 #else
-                // MsBuildProjectContextProvider isn't available in-proc, instead we rely upon the
-                // already loaded VsProjectContextProvider which is loaded in proc and already
-                // aware of the projects loaded in Solution Explorer.
-                var projectContext = exports.GetExportedValueOrDefault<MsBuildProjectContextProvider>();
-                if (projectContext != null)
-                {
-                    projectContext.AddContext(project);
-                }
-                try
-                {
-                    var config = exports.GetExportedValue<IInterpreterRegistryService>().FindConfiguration(id);
+				// MsBuildProjectContextProvider isn't available in-proc, instead we rely upon the
+				// already loaded VsProjectContextProvider which is loaded in proc and already
+				// aware of the projects loaded in Solution Explorer.
+				var projectContext = exports.GetExportedValueOrDefault<MsBuildProjectContextProvider>();
+				if (projectContext != null)
+				{
+					projectContext.AddContext(project);
+				}
+				try
+				{
+					var config = exports.GetExportedValue<IInterpreterRegistryService>().FindConfiguration(id);
 
-                    if (config != null)
-                    {
-                        UpdateResultFromConfiguration(config, projectHome);
-                        return true;
-                    }
-                }
-                finally
-                {
-                    if (projectContext != null)
-                    {
-                        projectContext.RemoveContext(project);
-                    }
-                }
+					if (config != null)
+					{
+						UpdateResultFromConfiguration(config, projectHome);
+						return true;
+					}
+				}
+				finally
+				{
+					if (projectContext != null)
+					{
+						projectContext.RemoveContext(project);
+					}
+				}
 #endif
 
-                if (!string.IsNullOrEmpty(id))
-                {
-                    _log.LogError(
-                        "The environment '{0}' is not available. Check your project configuration and try again.",
-                        id
-                    );
-                    return false;
-                }
-            }
-            catch (Exception ex)
-            {
-                _log.LogErrorFromException(ex);
-            }
-            finally
-            {
-                if (collection != null)
-                {
-                    collection.UnloadAllProjects();
-                    collection.Dispose();
-                }
-            }
+				if (!string.IsNullOrEmpty(id))
+				{
+					_log.LogError(
+						"The environment '{0}' is not available. Check your project configuration and try again.",
+						id
+					);
+					return false;
+				}
+			}
+			catch (Exception ex)
+			{
+				_log.LogErrorFromException(ex);
+			}
+			finally
+			{
+				if (collection != null)
+				{
+					collection.UnloadAllProjects();
+					collection.Dispose();
+				}
+			}
 
-            _log.LogError("Unable to resolve environment");
-            return false;
-        }
+			_log.LogError("Unable to resolve environment");
+			return false;
+		}
 
-        public IBuildEngine BuildEngine { get; set; }
-        public ITaskHost HostObject { get; set; }
+		public IBuildEngine BuildEngine { get; set; }
+		public ITaskHost HostObject { get; set; }
 
-        private void UpdateResultFromConfiguration(InterpreterConfiguration config, string projectHome)
-        {
-            PrefixPath = PathUtils.EnsureEndSeparator(config.GetPrefixPath());
-            if (PathUtils.IsSubpathOf(projectHome, PrefixPath))
-            {
-                ProjectRelativePrefixPath = PathUtils.GetRelativeDirectoryPath(projectHome, PrefixPath);
-            }
-            else
-            {
-                ProjectRelativePrefixPath = string.Empty;
-            }
-            InterpreterPath = config.InterpreterPath;
-            WindowsInterpreterPath = config.GetWindowsInterpreterPath();
-            Architecture = config.Architecture.ToString("X");
-            PathEnvironmentVariable = config.PathEnvironmentVariable;
-            Description = config.Description;
-            MajorVersion = config.Version.Major.ToString();
-            MinorVersion = config.Version.Minor.ToString();
-        }
+		private void UpdateResultFromConfiguration(InterpreterConfiguration config, string projectHome)
+		{
+			PrefixPath = PathUtils.EnsureEndSeparator(config.GetPrefixPath());
+			if (PathUtils.IsSubpathOf(projectHome, PrefixPath))
+			{
+				ProjectRelativePrefixPath = PathUtils.GetRelativeDirectoryPath(projectHome, PrefixPath);
+			}
+			else
+			{
+				ProjectRelativePrefixPath = string.Empty;
+			}
+			InterpreterPath = config.InterpreterPath;
+			WindowsInterpreterPath = config.GetWindowsInterpreterPath();
+			Architecture = config.Architecture.ToString("X");
+			PathEnvironmentVariable = config.PathEnvironmentVariable;
+			Description = config.Description;
+			MajorVersion = config.Version.Major.ToString();
+			MinorVersion = config.Version.Minor.ToString();
+		}
 
 #if !BUILDTASKS_CORE
-        private ExportProvider GetExportProvider()
-        {
-            return InterpreterCatalog.CreateContainer(
-                new CatalogLog(_log),
-                typeof(MsBuildProjectContextProvider),
-                typeof(IInterpreterRegistryService),
-                typeof(IInterpreterOptionsService)
-            );
-        }
+		private ExportProvider GetExportProvider()
+		{
+			return InterpreterCatalog.CreateContainer(
+				new CatalogLog(_log),
+				typeof(MsBuildProjectContextProvider),
+				typeof(IInterpreterRegistryService),
+				typeof(IInterpreterOptionsService)
+			);
+		}
 #endif
-    }
+	}
 
-    /// <summary>
-    /// Constructs ResolveEnvironment task objects.
-    /// </summary>
-    public sealed class ResolveEnvironmentFactory : TaskFactory<ResolveEnvironment>
-    {
-        public override ITask CreateTask(IBuildEngine taskFactoryLoggingHost)
-        {
-            return new ResolveEnvironment(Properties["ProjectPath"], taskFactoryLoggingHost);
-        }
-    }
+	/// <summary>
+	/// Constructs ResolveEnvironment task objects.
+	/// </summary>
+	public sealed class ResolveEnvironmentFactory : TaskFactory<ResolveEnvironment>
+	{
+		public override ITask CreateTask(IBuildEngine taskFactoryLoggingHost)
+		{
+			return new ResolveEnvironment(Properties["ProjectPath"], taskFactoryLoggingHost);
+		}
+	}
 }

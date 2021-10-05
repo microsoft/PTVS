@@ -16,56 +16,56 @@
 
 namespace TestAdapterTests
 {
-    [TestClass]
-    public class ProjectInfoTests
-    {
-        /// <summary>
-        /// Recreate collection was modified while iterating exception
-        /// System.InvalidOperationException: Collection was modified; enumeration operation may not execute.
-        /// Test shouldn't throw
-        /// </summary>
-        /// <returns></returns>
-        [TestMethod, Priority(0)]
-        public async Task TestBuildingAndClearingProjectMapConcurrently()
-        {
-            ITestContainerDiscoverer dummyDiscoverer = null;
-            var projectMap = new ConcurrentDictionary<string, ProjectInfo>();
-            var projectName = "dummyName";
-            PythonProject dummyProject = new MockPythonProject("dummyHome", projectName);
+	[TestClass]
+	public class ProjectInfoTests
+	{
+		/// <summary>
+		/// Recreate collection was modified while iterating exception
+		/// System.InvalidOperationException: Collection was modified; enumeration operation may not execute.
+		/// Test shouldn't throw
+		/// </summary>
+		/// <returns></returns>
+		[TestMethod, Priority(0)]
+		public async Task TestBuildingAndClearingProjectMapConcurrently()
+		{
+			ITestContainerDiscoverer dummyDiscoverer = null;
+			var projectMap = new ConcurrentDictionary<string, ProjectInfo>();
+			var projectName = "dummyName";
+			PythonProject dummyProject = new MockPythonProject("dummyHome", projectName);
 
-            //Simulate rebuid workspace
-            projectMap[projectName] = new ProjectInfo(dummyProject);
+			//Simulate rebuid workspace
+			projectMap[projectName] = new ProjectInfo(dummyProject);
 
-            var rebuildTasks = Enumerable.Range(1, 10)
-                .Select(i => Task.Run(async
-                    () =>
-                {
-                    projectMap.Clear();
-                    projectMap[projectName] = new ProjectInfo(dummyProject);
-                    foreach (int j in Enumerable.Range(1, 1000))
-                    {
-                        projectMap[projectName].AddTestContainer(dummyDiscoverer, j.ToString() + ".py");
-                    }
+			var rebuildTasks = Enumerable.Range(1, 10)
+				.Select(i => Task.Run(async
+					() =>
+				{
+					projectMap.Clear();
+					projectMap[projectName] = new ProjectInfo(dummyProject);
+					foreach (int j in Enumerable.Range(1, 1000))
+					{
+						projectMap[projectName].AddTestContainer(dummyDiscoverer, j.ToString() + ".py");
+					}
 
-                    await Task.Delay(100);
-                }
-                )
-            );
+					await Task.Delay(100);
+				}
+				)
+			);
 
-            //Simulate Get TestContainers
-            var iterateTasks = Enumerable.Range(1, 100)
-                .Select(i => Task.Run(async
-                    () =>
-                {
-                    var items = projectMap.Values.SelectMany(p => p.GetAllContainers()).ToList();
-                    await Task.Delay(10);
-                }
-                )
-            );
+			//Simulate Get TestContainers
+			var iterateTasks = Enumerable.Range(1, 100)
+				.Select(i => Task.Run(async
+					() =>
+				{
+					var items = projectMap.Values.SelectMany(p => p.GetAllContainers()).ToList();
+					await Task.Delay(10);
+				}
+				)
+			);
 
-            await Task.WhenAll(rebuildTasks.Concat(iterateTasks));
+			await Task.WhenAll(rebuildTasks.Concat(iterateTasks));
 
-            Assert.AreEqual(1000, projectMap[projectName].GetAllContainers().Count());
-        }
-    }
+			Assert.AreEqual(1000, projectMap[projectName].GetAllContainers().Count());
+		}
+	}
 }

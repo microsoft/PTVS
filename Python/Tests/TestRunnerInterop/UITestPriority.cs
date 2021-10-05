@@ -16,14 +16,14 @@
 
 namespace TestRunnerInterop
 {
-    public static class UITestPriority
-    {
-        public const int P0 = 0;    // Most stable tests. Should always pass. 
-        public const int P1 = 1;
-        public const int P2 = 20;
-        public const int P3 = 30;
+	public static class UITestPriority
+	{
+		public const int P0 = 0;    // Most stable tests. Should always pass. 
+		public const int P1 = 1;
+		public const int P2 = 20;
+		public const int P3 = 30;
 
-        public const int P0_FAILING_UI_TEST = 12;
-        public const int P2_FAILING_UI_TEST = 22;
-    }
+		public const int P0_FAILING_UI_TEST = 12;
+		public const int P2_FAILING_UI_TEST = 22;
+	}
 }

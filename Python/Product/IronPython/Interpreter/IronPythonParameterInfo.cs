@@ -16,114 +16,114 @@
 
 namespace Microsoft.IronPythonTools.Interpreter
 {
-    class IronPythonParameterInfo : IParameterInfo
-    {
-        private readonly IronPythonInterpreter _interpreter;
-        private RemoteInterpreterProxy _remote;
-        private readonly ObjectIdentityHandle _parameterInfo;
-        private string _name;
-        private ParameterKind _paramKind;
-        private IPythonType[] _paramType;
-        private string _defaultValue;
-        private static readonly string _noDefaultValue = "<No Default Value>";  // sentinel value to mark when an object doesn't have a default value
+	class IronPythonParameterInfo : IParameterInfo
+	{
+		private readonly IronPythonInterpreter _interpreter;
+		private RemoteInterpreterProxy _remote;
+		private readonly ObjectIdentityHandle _parameterInfo;
+		private string _name;
+		private ParameterKind _paramKind;
+		private IPythonType[] _paramType;
+		private string _defaultValue;
+		private static readonly string _noDefaultValue = "<No Default Value>";  // sentinel value to mark when an object doesn't have a default value
 
-        public IronPythonParameterInfo(IronPythonInterpreter interpreter, ObjectIdentityHandle parameterInfo)
-        {
-            _interpreter = interpreter;
-            _interpreter.UnloadingDomain += Interpreter_UnloadingDomain;
-            _remote = _interpreter.Remote;
-            _parameterInfo = parameterInfo;
-        }
+		public IronPythonParameterInfo(IronPythonInterpreter interpreter, ObjectIdentityHandle parameterInfo)
+		{
+			_interpreter = interpreter;
+			_interpreter.UnloadingDomain += Interpreter_UnloadingDomain;
+			_remote = _interpreter.Remote;
+			_parameterInfo = parameterInfo;
+		}
 
-        private void Interpreter_UnloadingDomain(object sender, EventArgs e)
-        {
-            _remote = null;
-            _interpreter.UnloadingDomain -= Interpreter_UnloadingDomain;
-        }
+		private void Interpreter_UnloadingDomain(object sender, EventArgs e)
+		{
+			_remote = null;
+			_interpreter.UnloadingDomain -= Interpreter_UnloadingDomain;
+		}
 
-        #region IParameterInfo Members
+		#region IParameterInfo Members
 
-        public IList<IPythonType> ParameterTypes
-        {
-            get
-            {
-                if (_paramType == null)
-                {
-                    var ri = _remote;
-                    if (ri != null)
-                    {
-                        _paramType = new[] { _interpreter.GetTypeFromType(ri.GetParameterPythonType(_parameterInfo)) };
-                    }
-                }
-                return _paramType;
-            }
-        }
+		public IList<IPythonType> ParameterTypes
+		{
+			get
+			{
+				if (_paramType == null)
+				{
+					var ri = _remote;
+					if (ri != null)
+					{
+						_paramType = new[] { _interpreter.GetTypeFromType(ri.GetParameterPythonType(_parameterInfo)) };
+					}
+				}
+				return _paramType;
+			}
+		}
 
-        // FIXME
-        public string Documentation
-        {
-            get { return ""; }
-        }
+		// FIXME
+		public string Documentation
+		{
+			get { return ""; }
+		}
 
-        public string Name
-        {
-            get
-            {
-                if (_name == null)
-                {
-                    var ri = _remote;
-                    _name = ri != null ? ri.GetParameterName(_parameterInfo) : string.Empty;
-                }
-                return _name;
-            }
-        }
+		public string Name
+		{
+			get
+			{
+				if (_name == null)
+				{
+					var ri = _remote;
+					_name = ri != null ? ri.GetParameterName(_parameterInfo) : string.Empty;
+				}
+				return _name;
+			}
+		}
 
-        public bool IsParamArray
-        {
-            get
-            {
-                if (_paramKind == ParameterKind.Unknown)
-                {
-                    var ri = _remote;
-                    _paramKind = ri != null ? ri.GetParameterKind(_parameterInfo) : ParameterKind.Unknown;
-                }
-                return _paramKind == ParameterKind.List;
-            }
-        }
+		public bool IsParamArray
+		{
+			get
+			{
+				if (_paramKind == ParameterKind.Unknown)
+				{
+					var ri = _remote;
+					_paramKind = ri != null ? ri.GetParameterKind(_parameterInfo) : ParameterKind.Unknown;
+				}
+				return _paramKind == ParameterKind.List;
+			}
+		}
 
-        public bool IsKeywordDict
-        {
-            get
-            {
-                if (_paramKind == ParameterKind.Unknown)
-                {
-                    var ri = _remote;
-                    _paramKind = ri != null ? ri.GetParameterKind(_parameterInfo) : ParameterKind.Unknown;
-                }
-                return _paramKind == ParameterKind.Dictionary;
-            }
-        }
+		public bool IsKeywordDict
+		{
+			get
+			{
+				if (_paramKind == ParameterKind.Unknown)
+				{
+					var ri = _remote;
+					_paramKind = ri != null ? ri.GetParameterKind(_parameterInfo) : ParameterKind.Unknown;
+				}
+				return _paramKind == ParameterKind.Dictionary;
+			}
+		}
 
-        public string DefaultValue
-        {
-            get
-            {
-                if (_defaultValue == null)
-                {
-                    var ri = _remote;
-                    _defaultValue = (ri != null ? ri.GetParameterDefaultValue(_parameterInfo) : null) ?? _noDefaultValue;
-                }
+		public string DefaultValue
+		{
+			get
+			{
+				if (_defaultValue == null)
+				{
+					var ri = _remote;
+					_defaultValue = (ri != null ? ri.GetParameterDefaultValue(_parameterInfo) : null) ?? _noDefaultValue;
+				}
 
-                if (Object.ReferenceEquals(_defaultValue, _noDefaultValue))
-                {
-                    return null;
-                }
+				if (Object.ReferenceEquals(_defaultValue, _noDefaultValue))
+				{
+					return null;
+				}
 
-                return _noDefaultValue;
-            }
-        }
+				return _noDefaultValue;
+			}
+		}
 
 
-        #endregion
-    }
+		#endregion
+	}
 }

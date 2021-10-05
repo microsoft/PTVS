@@ -16,26 +16,26 @@
 
 namespace Microsoft.PythonTools.Debugger
 {
-    enum OutputChannel
-    {
-        Debug,
-        StdOut,
-        StdErr,
-    }
+	enum OutputChannel
+	{
+		Debug,
+		StdOut,
+		StdErr,
+	}
 
-    sealed class OutputEventArgs : EventArgs
-    {
-        public OutputEventArgs(PythonThread thread, string output, OutputChannel channel)
-        {
-            Thread = thread;
-            Output = output;
-            Channel = channel;
-        }
+	sealed class OutputEventArgs : EventArgs
+	{
+		public OutputEventArgs(PythonThread thread, string output, OutputChannel channel)
+		{
+			Thread = thread;
+			Output = output;
+			Channel = channel;
+		}
 
-        public PythonThread Thread { get; }
+		public PythonThread Thread { get; }
 
-        public string Output { get; }
+		public string Output { get; }
 
-        public OutputChannel Channel { get; }
-    }
+		public OutputChannel Channel { get; }
+	}
 }

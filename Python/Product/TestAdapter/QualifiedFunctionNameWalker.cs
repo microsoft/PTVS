@@ -16,89 +16,89 @@
 
 namespace Microsoft.PythonTools.Analysis
 {
-    /// <summary>
-    /// Computes the fully qualified function name, including name of the enclosing class for methods,
-    /// and, recursively, names of any outer functions.
-    /// </summary>
-    /// <example>
-    /// Given this code:
-    /// <code>
-    /// class A:
-    ///   def b(self):
-    ///     def c():
-    ///       class D:
-    ///         def e(self):
-    ///           pass
-    /// </code>
-    /// And with the current statement being <c>pass</c>, the qualified name is "D.e in c in A.b".
-    /// </example>
-    class QualifiedFunctionNameWalker : PythonWalker
-    {
-        private readonly PythonAst _ast;
-        private readonly int _lineNumber;
-        private readonly List<string> _names = new List<string>();
-        private readonly string _expectedFuncName;
+	/// <summary>
+	/// Computes the fully qualified function name, including name of the enclosing class for methods,
+	/// and, recursively, names of any outer functions.
+	/// </summary>
+	/// <example>
+	/// Given this code:
+	/// <code>
+	/// class A:
+	///   def b(self):
+	///     def c():
+	///       class D:
+	///         def e(self):
+	///           pass
+	/// </code>
+	/// And with the current statement being <c>pass</c>, the qualified name is "D.e in c in A.b".
+	/// </example>
+	class QualifiedFunctionNameWalker : PythonWalker
+	{
+		private readonly PythonAst _ast;
+		private readonly int _lineNumber;
+		private readonly List<string> _names = new List<string>();
+		private readonly string _expectedFuncName;
 
-        public QualifiedFunctionNameWalker(PythonAst ast, int lineNumber, string expectedFuncName)
-        {
-            _ast = ast;
-            _lineNumber = lineNumber;
-            _expectedFuncName = expectedFuncName;
-        }
+		public QualifiedFunctionNameWalker(PythonAst ast, int lineNumber, string expectedFuncName)
+		{
+			_ast = ast;
+			_lineNumber = lineNumber;
+			_expectedFuncName = expectedFuncName;
+		}
 
-        public IEnumerable<string> Name => _names.AsEnumerable().Reverse();
+		public IEnumerable<string> Name => _names.AsEnumerable().Reverse();
 
-        public static string GetDisplayName(int lineNo, string functionName, PythonAst ast, Func<string, string, string> nameAggregator)
-        {
-            var walker = new QualifiedFunctionNameWalker(ast, lineNo, functionName);
-            try
-            {
-                ast.Walk(walker);
-            }
-            catch (InvalidDataException)
-            {
-                // Walker ran into a mismatch between expected function name and AST, so we cannot
-                // rely on AST to construct an accurate qualified name. Just return what we have.
-                return functionName;
-            }
+		public static string GetDisplayName(int lineNo, string functionName, PythonAst ast, Func<string, string, string> nameAggregator)
+		{
+			var walker = new QualifiedFunctionNameWalker(ast, lineNo, functionName);
+			try
+			{
+				ast.Walk(walker);
+			}
+			catch (InvalidDataException)
+			{
+				// Walker ran into a mismatch between expected function name and AST, so we cannot
+				// rely on AST to construct an accurate qualified name. Just return what we have.
+				return functionName;
+			}
 
-            var names = walker.Name;
-            if (names.Any())
-            {
-                string qualName = names.Aggregate(nameAggregator);
-                if (!string.IsNullOrEmpty(qualName))
-                {
-                    return qualName;
-                }
-            }
+			var names = walker.Name;
+			if (names.Any())
+			{
+				string qualName = names.Aggregate(nameAggregator);
+				if (!string.IsNullOrEmpty(qualName))
+				{
+					return qualName;
+				}
+			}
 
-            return functionName;
-        }
+			return functionName;
+		}
 
-        public override void PostWalk(FunctionDefinition node)
-        {
-            int start = node.GetStart(_ast).Line;
-            int end = node.Body.GetEnd(_ast).Line + 1;
-            if (_lineNumber < start || _lineNumber >= end)
-            {
-                return;
-            }
+		public override void PostWalk(FunctionDefinition node)
+		{
+			int start = node.GetStart(_ast).Line;
+			int end = node.Body.GetEnd(_ast).Line + 1;
+			if (_lineNumber < start || _lineNumber >= end)
+			{
+				return;
+			}
 
-            string funcName = node.Name;
-            if (_names.Count == 0 && funcName != _expectedFuncName)
-            {
-                // The innermost function name must match the one that we've got from the code object.
-                // If it doesn't, the source code that we're parsing is out of sync with the running program,
-                // and cannot be used to compute the fully qualified name.
-                throw new InvalidDataException();
-            }
+			string funcName = node.Name;
+			if (_names.Count == 0 && funcName != _expectedFuncName)
+			{
+				// The innermost function name must match the one that we've got from the code object.
+				// If it doesn't, the source code that we're parsing is out of sync with the running program,
+				// and cannot be used to compute the fully qualified name.
+				throw new InvalidDataException();
+			}
 
-            for (var classDef = node.Parent as ClassDefinition; classDef != null; classDef = classDef.Parent as ClassDefinition)
-            {
-                funcName = classDef.Name + "." + funcName;
-            }
+			for (var classDef = node.Parent as ClassDefinition; classDef != null; classDef = classDef.Parent as ClassDefinition)
+			{
+				funcName = classDef.Name + "." + funcName;
+			}
 
-            _names.Add(funcName);
-        }
-    }
+			_names.Add(funcName);
+		}
+	}
 }

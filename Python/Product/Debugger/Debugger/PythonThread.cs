@@ -16,80 +16,80 @@
 
 namespace Microsoft.PythonTools.Debugger
 {
-    class PythonThread
-    {
-        private readonly long _identity;
-        private readonly PythonProcess _process;
-        private readonly bool _isWorkerThread;
-        private string _name;
-        private IList<PythonStackFrame> _frames;
+	class PythonThread
+	{
+		private readonly long _identity;
+		private readonly PythonProcess _process;
+		private readonly bool _isWorkerThread;
+		private string _name;
+		private IList<PythonStackFrame> _frames;
 
-        internal PythonThread(PythonProcess process, long identity, bool isWorkerThread)
-        {
-            _process = process;
-            _identity = identity;
-            _isWorkerThread = isWorkerThread;
-            _name = "";
-        }
+		internal PythonThread(PythonProcess process, long identity, bool isWorkerThread)
+		{
+			_process = process;
+			_identity = identity;
+			_isWorkerThread = isWorkerThread;
+			_name = "";
+		}
 
-        public Task StepIntoAsync(CancellationToken ct)
-        {
-            return _process.SendStepIntoAsync(_identity, ct);
-        }
+		public Task StepIntoAsync(CancellationToken ct)
+		{
+			return _process.SendStepIntoAsync(_identity, ct);
+		}
 
-        public Task StepOverAsync(CancellationToken ct)
-        {
-            return _process.SendStepOverAsync(_identity, ct);
-        }
+		public Task StepOverAsync(CancellationToken ct)
+		{
+			return _process.SendStepOverAsync(_identity, ct);
+		}
 
-        public Task StepOutAsync(CancellationToken ct)
-        {
-            return _process.SendStepOutAsync(_identity, ct);
-        }
+		public Task StepOutAsync(CancellationToken ct)
+		{
+			return _process.SendStepOutAsync(_identity, ct);
+		}
 
-        public Task ResumeAsync(CancellationToken ct)
-        {
-            return _process.SendResumeThreadAsync(_identity, ct);
-        }
+		public Task ResumeAsync(CancellationToken ct)
+		{
+			return _process.SendResumeThreadAsync(_identity, ct);
+		}
 
-        public Task AutoResumeAsync(CancellationToken ct)
-        {
-            return _process.AutoResumeThread(_identity, ct);
-        }
+		public Task AutoResumeAsync(CancellationToken ct)
+		{
+			return _process.AutoResumeThread(_identity, ct);
+		}
 
-        internal Task ClearSteppingStateAsync(CancellationToken ct)
-        {
-            return _process.SendClearSteppingAsync(_identity, ct);
-        }
+		internal Task ClearSteppingStateAsync(CancellationToken ct)
+		{
+			return _process.SendClearSteppingAsync(_identity, ct);
+		}
 
-        public IList<PythonStackFrame> Frames
-        {
-            get
-            {
-                return _frames;
-            }
-            set
-            {
-                _frames = value;
-            }
-        }
+		public IList<PythonStackFrame> Frames
+		{
+			get
+			{
+				return _frames;
+			}
+			set
+			{
+				_frames = value;
+			}
+		}
 
-        public string Name
-        {
-            get
-            {
-                return _name;
-            }
-            set
-            {
-                _name = value;
-            }
-        }
+		public string Name
+		{
+			get
+			{
+				return _name;
+			}
+			set
+			{
+				_name = value;
+			}
+		}
 
-        public bool IsWorkerThread => _isWorkerThread;
+		public bool IsWorkerThread => _isWorkerThread;
 
-        public PythonProcess Process => _process;
+		public PythonProcess Process => _process;
 
-        internal long Id => _identity;
-    }
+		internal long Id => _identity;
+	}
 }

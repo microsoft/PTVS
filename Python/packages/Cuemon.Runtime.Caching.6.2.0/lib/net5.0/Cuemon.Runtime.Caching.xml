@@ -1,0 +1,571 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Cuemon.Runtime.Caching</name>
+    </assembly>
+    <members>
+        <member name="T:Cuemon.Runtime.Caching.CacheEntry">
+            <summary>
+            Represents an individual cache entry in the cache.
+            </summary>
+        </member>
+        <member name="F:Cuemon.Runtime.Caching.CacheEntry.NoScope">
+            <summary>
+            Represents a cache with a global scope, eg. no namespace.
+            </summary>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.CacheEntry.#ctor(System.String,System.Object,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/> class.
+            </summary>
+            <param name="key">The unique identifier of the cache.</param>
+            <param name="value">The stored value of the cache.</param>
+            <param name="ns">The optional namespace that provides a scope to the cache.</param>
+            <exception cref="T:System.ArgumentNullException">
+            <paramref name="key"/> cannot be null.
+            </exception>
+        </member>
+        <member name="E:Cuemon.Runtime.Caching.CacheEntry.Expired">
+            <summary>
+            Occurs when a <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/> object with an associated <see cref="T:Cuemon.Runtime.Dependency"/> has expired.
+            </summary>
+        </member>
+        <member name="P:Cuemon.Runtime.Caching.CacheEntry.Key">
+            <summary>
+            Gets the unique identifier of this <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/>.
+            </summary>
+            <value>The unique identifier of this <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/>.</value>
+        </member>
+        <member name="P:Cuemon.Runtime.Caching.CacheEntry.Value">
+            <summary>
+            Gets the stored value of this <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/>.
+            </summary>
+            <value>The stored value of this <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/>.</value>
+        </member>
+        <member name="P:Cuemon.Runtime.Caching.CacheEntry.Namespace">
+            <summary>
+            Gets the optional namespace that provides a scope to this <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/>.
+            </summary>
+            <value>The optional namespace that provides a scope to this <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/>.</value>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.CacheEntry.ToString">
+            <summary>
+            Returns a <see cref="T:System.String" /> that represents this instance.
+            </summary>
+            <returns>A <see cref="T:System.String" /> that represents this instance.</returns>
+        </member>
+        <member name="P:Cuemon.Runtime.Caching.CacheEntry.Invalidation">
+            <summary>
+            Gets the cache invalidation of this <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/>.
+            </summary>
+            <value>The cache invalidation of this <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/>.</value>
+        </member>
+        <member name="P:Cuemon.Runtime.Caching.CacheEntry.Inserted">
+            <summary>
+            Gets the UTC date time value from when this <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/> was inserted.
+            </summary>
+            <value>The UTC date time value from when this <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/> was inserted.</value>
+        </member>
+        <member name="P:Cuemon.Runtime.Caching.CacheEntry.Accessed">
+            <summary>
+            Gets the UTC date time value from when this <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/> was last accessed.
+            </summary>
+            <value>The UTC date time value from when this <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/> was last accessed.</value>
+        </member>
+        <member name="P:Cuemon.Runtime.Caching.CacheEntry.CanExpire">
+            <summary>
+            Gets a value indicating whether this <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/> can expire.
+            </summary>
+            <value>
+            	<c>true</c> if this <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/> can expire; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.CacheEntry.HasExpired(System.DateTime)">
+            <summary>
+            Determines whether the specified time resolves this <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/> as expired.
+            </summary>
+            <param name="time">The date and time to evaluate against.</param>
+            <returns>
+            	<c>true</c> if the specified time resolves this <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/> as expired; otherwise, <c>false</c>.
+            </returns>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.CacheEntry.OnExpiredRaised(Cuemon.Runtime.Caching.CacheEntryEventArgs)">
+            <summary>
+            Raises the <see cref="E:Cuemon.Runtime.Caching.CacheEntry.Expired"/> event.
+            </summary>
+            <param name="e">The <see cref="T:Cuemon.Runtime.Caching.CacheEntryEventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="T:Cuemon.Runtime.Caching.CacheEntryEventArgs">
+            <summary>
+            Provides data for cache related operations. This class cannot be inherited.
+            </summary>
+        </member>
+        <member name="T:Cuemon.Runtime.Caching.CacheInvalidation">
+            <summary>
+            Represents a set of eviction and expiration details for a specific cache entry.
+            </summary>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.CacheInvalidation.#ctor(System.DateTime)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Cuemon.Runtime.Caching.CacheInvalidation"/> class.
+            </summary>
+            <param name="absoluteExpiration">The absolute expiration date time value from when the cached value becomes invalid and is removed from the cache.</param>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.CacheInvalidation.#ctor(System.Collections.Generic.IEnumerable{Cuemon.Runtime.IDependency})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Cuemon.Runtime.Caching.CacheInvalidation"/> class.
+            </summary>
+            <param name="dependencies">A sequence of <see cref="T:Cuemon.Runtime.IDependency"/> implementations that monitors changes in the state of the data which a cache entry depends on. If a state change is registered, the cached value becomes invalid and is removed from the cache.</param>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.CacheInvalidation.#ctor(System.TimeSpan)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Cuemon.Runtime.Caching.CacheInvalidation"/> class.
+            </summary>
+            <param name="slidingExpiration">The sliding expiration time from when the cached value becomes invalid and is removed from the cache.</param>
+        </member>
+        <member name="P:Cuemon.Runtime.Caching.CacheInvalidation.Dependencies">
+            <summary>
+            Gets a sequence of objects implementing the <see cref="T:Cuemon.Runtime.IDependency"/> interface assigned to a <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/>.
+            </summary>
+            <value>A sequence of objects implementing the <see cref="T:Cuemon.Runtime.IDependency"/> interface assigned to a <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/>.</value>
+        </member>
+        <member name="P:Cuemon.Runtime.Caching.CacheInvalidation.AbsoluteExpiration">
+            <summary>
+            Gets the UTC absolute expiration date time value of a <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/>.
+            </summary>
+            <value>The UTC absolute expiration date time value of a <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/>.</value>
+        </member>
+        <member name="P:Cuemon.Runtime.Caching.CacheInvalidation.SlidingExpiration">
+            <summary>
+            Gets the sliding expiration time of a <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/>.
+            </summary>
+            <value>The sliding expiration time of a <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/>.</value>
+        </member>
+        <member name="P:Cuemon.Runtime.Caching.CacheInvalidation.UseAbsoluteExpiration">
+            <summary>
+            Gets a value indicating whether a <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/> should use <see cref="P:Cuemon.Runtime.Caching.CacheInvalidation.AbsoluteExpiration"/> property for cache invalidation.
+            </summary>
+            <value>
+            	<c>true</c> if a <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/> should use <see cref="P:Cuemon.Runtime.Caching.CacheInvalidation.AbsoluteExpiration"/> property for cache invalidation; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="P:Cuemon.Runtime.Caching.CacheInvalidation.UseSlidingExpiration">
+            <summary>
+            Gets a value indicating whether a <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/> should use <see cref="P:Cuemon.Runtime.Caching.CacheInvalidation.SlidingExpiration"/> property for cache invalidation.
+            </summary>
+            <value>
+            	<c>true</c> if a <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/> should use <see cref="P:Cuemon.Runtime.Caching.CacheInvalidation.SlidingExpiration"/> property for cache invalidation; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="P:Cuemon.Runtime.Caching.CacheInvalidation.UseDependency">
+            <summary>
+            Gets a value indicating whether this <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/> is relying on an <see cref="T:Cuemon.Runtime.IDependency"/> implementation for cache invalidation.
+            </summary>
+            <value><c>true</c> if a <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/> is relying on an <see cref="T:Cuemon.Runtime.IDependency"/> implementation for cache invalidation; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="T:Cuemon.Runtime.Caching.CachingManager">
+            <summary>
+            Provides access to caching in an application.
+            </summary>
+        </member>
+        <member name="P:Cuemon.Runtime.Caching.CachingManager.Cache">
+            <summary>
+            Gets a singleton instance of <see cref="T:Cuemon.Runtime.Caching.SlimMemoryCache"/> that is an in-memory cache for an application.
+            </summary>
+            <value>A singleton instance of <see cref="T:Cuemon.Runtime.Caching.SlimMemoryCache"/> that is an in-memory cache for an application.</value>
+        </member>
+        <member name="T:Cuemon.Runtime.Caching.ICacheEnumerable`1">
+            <summary>
+            An interface that is used to provide cache implementations for an application.
+            </summary>
+            <typeparam name="TKey">The type of the key in the cache.</typeparam>
+        </member>
+        <member name="P:Cuemon.Runtime.Caching.ICacheEnumerable`1.Item(System.String,System.String)">
+            <summary>
+            Gets or sets a value in the cache by using the default indexer property for an instance of the <see cref="T:Cuemon.Runtime.Caching.SlimMemoryCache"/> class.
+            </summary>
+            <param name="key">The unique identifier for the cache value to get or set.</param>
+            <param name="ns">The optional named group associated with the cache value.</param>
+            <returns>The value in the cache for the specified <paramref name="key"/>, if the entry exists; otherwise, <c>null</c>.</returns>
+        </member>
+        <member name="P:Cuemon.Runtime.Caching.ICacheEnumerable`1.KeyProvider">
+            <summary>
+            Gets the function delegate that is responsible for providing a unique identifier for the cache entry.
+            </summary>
+            <value>The function delegate that is responsible for providing a unique identifier for the cache entry.</value>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.ICacheEnumerable`1.Add(Cuemon.Runtime.Caching.CacheEntry,Cuemon.Runtime.Caching.CacheInvalidation)">
+            <summary>
+            Inserts a cache entry into the cache as a <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/> instance, and adds details about how the entry should be evicted.
+            </summary>
+            <param name="entry">The object representing the cached value for a cache entry.</param>
+            <param name="invalidation">The object that contains expiration details for a specific cache entry.</param>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.ICacheEnumerable`1.Contains(System.String,System.String)">
+            <summary>
+            Determines whether a cache entry exists in the cache.
+            </summary>
+            <param name="key">The unique identifier for the cache entry.</param>
+            <param name="ns">The optional namespace that provides a scope to the cache.</param>
+            <returns><c>true</c> if the cache contains a cache entry whose key matches <paramref name="key"/>; otherwise, <c>false</c>.</returns>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.ICacheEnumerable`1.Count(System.String)">
+            <summary>
+            Gets the number of entries associated with the <paramref name="ns"/> contained in the cache.
+            </summary>
+            <param name="ns">The optional namespace that provides a scope to the cache.</param>
+            <returns>The number of entries contained in the cache.</returns>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.ICacheEnumerable`1.RemoveAll(System.String)">
+            <summary>
+            Removes all entries associated with the <paramref name="ns"/> contained in the cache.
+            </summary>
+            <param name="ns">The optional namespace that provides a scope to the cache.</param>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.ICacheEnumerable`1.Get(System.String,System.String)">
+            <summary>
+            Returns an entry from the cache.
+            </summary>
+            <param name="key">The unique identifier for the cache entry.</param>
+            <param name="ns">The optional namespace that provides a scope to the cache.</param>
+            <returns>A reference to the value in the cache container that is identified by <paramref name="key"/>, if the entry exists; otherwise, <c>null</c>.</returns>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.ICacheEnumerable`1.GetCacheEntry(System.String,System.String)">
+            <summary>
+            Returns an entry from the cache as a <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/> instance.
+            </summary>
+            <param name="key">The unique identifier for the cache entry.</param>
+            <param name="ns">The optional namespace that provides a scope to the cache.</param>
+            <returns>A reference to the <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/> that is identified by <paramref name="key"/>, if the entry exists; otherwise, <c>null</c>.</returns>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.ICacheEnumerable`1.Remove(System.String,System.String)">
+            <summary>
+            Removes a cache entry from the cache.
+            </summary>
+            <param name="key">The unique identifier for the cache entry.</param>
+            <param name="ns">The optional namespace that provides a scope to the cache.</param>
+            <returns>If the entry is found in the cache, a reference to the value in the cache container of the removed cache entry; otherwise, <c>null</c>.</returns>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.ICacheEnumerable`1.Set(System.String,System.Object,Cuemon.Runtime.Caching.CacheInvalidation,System.String)">
+            <summary>
+            Inserts a cache entry into the cache.
+            </summary>
+            <param name="key">The unique identifier of the cache.</param>
+            <param name="value">The stored value of the cache.</param>
+            <param name="invalidation">The object that contains expiration details for a specific cache entry.</param>
+            <param name="ns">The optional namespace that provides a scope to the cache.</param>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.ICacheEnumerable`1.TryGetCacheEntry(System.String,Cuemon.Runtime.Caching.CacheEntry@)">
+            <summary>
+            Attempts to get the <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/> associated with the specified <paramref name="key"/> from the cache.
+            </summary>
+            <param name="key">The unique identifier for the cache entry.</param>
+            <param name="cacheEntry">When this method returns, contains the cache entry associated with the specified <paramref name="key"/>, or <c>null</c> if the operation failed.</param>
+            <returns><c>true</c> if the <paramref name="cacheEntry"/> was found in the cache; otherwise, <c>false</c>.</returns>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.ICacheEnumerable`1.TryGetCacheEntry(System.String,System.String,Cuemon.Runtime.Caching.CacheEntry@)">
+            <summary>
+            Attempts to get the <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/> associated with the specified <paramref name="key"/> and <paramref name="ns"/> from the cache.
+            </summary>
+            <param name="key">The unique identifier for the cache entry.</param>
+            <param name="ns">The optional namespace that provides a scope to the cache.</param>
+            <param name="cacheEntry">When this method returns, contains the cache entry associated with the specified <paramref name="key"/> and <paramref name="ns"/>, or <c>null</c> if the operation failed.</param>
+            <returns><c>true</c> if the <paramref name="cacheEntry"/> was found in the cache; otherwise, <c>false</c>.</returns>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.ICacheEnumerable`1.TryGet(System.String,System.Object@)">
+            <summary>
+            Attempts to get the value associated with the specified <paramref name="key"/> from the cache.
+            </summary>
+            <param name="key">The unique identifier for the cache entry.</param>
+            <param name="value">When this method returns, contains the value associated with the specified <paramref name="key"/>, or <c>null</c> if the operation failed.</param>
+            <returns><c>true</c> if the <paramref name="value"/> was found in the cache; otherwise, <c>false</c>.</returns>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.ICacheEnumerable`1.TryGet(System.String,System.String,System.Object@)">
+            <summary>
+            Attempts to get the value associated with the specified <paramref name="key"/> and <paramref name="ns"/> from the cache.
+            </summary>
+            <param name="key">The unique identifier for the cache entry.</param>
+            <param name="ns">The optional namespace that provides a scope to the cache.</param>
+            <param name="value">When this method returns, contains the value associated with the specified <paramref name="key"/> and <paramref name="ns"/>, or <c>null</c> if the operation failed.</param>
+            <returns><c>true</c> if the <paramref name="value"/> was found in the cache; otherwise, <c>false</c>.</returns>
+        </member>
+        <member name="T:Cuemon.Runtime.Caching.SlimMemoryCache">
+            <summary>
+            Represents the type that implements an in-memory cache for an application.
+            </summary>
+            <seealso cref="T:Cuemon.Disposable" />
+            <seealso cref="T:Cuemon.Runtime.Caching.ICacheEnumerable`1" />
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.SlimMemoryCache.#ctor(System.Action{Cuemon.Runtime.Caching.SlimMemoryCacheOptions})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Cuemon.Runtime.Caching.SlimMemoryCache"/> class.
+            </summary>
+            <param name="setup">The <see cref="T:Cuemon.Runtime.Caching.SlimMemoryCacheOptions"/> which may be configured.</param>
+        </member>
+        <member name="P:Cuemon.Runtime.Caching.SlimMemoryCache.Item(System.String,System.String)">
+            <summary>
+            Gets or sets a value in the cache by using the default indexer property for an instance of the <see cref="T:Cuemon.Runtime.Caching.SlimMemoryCache"/> class.
+            </summary>
+            <param name="key">The unique identifier for the cache value to get or set.</param>
+            <param name="ns">The optional namespace that provides a scope to the cache.</param>
+            <returns>The value in the cache for the specified <paramref name="key"/>, if the entry exists; otherwise, <c>null</c>.</returns>
+        </member>
+        <member name="P:Cuemon.Runtime.Caching.SlimMemoryCache.KeyProvider">
+            <summary>
+            Gets the function delegate that is responsible for providing a unique identifier for the cache entry.
+            </summary>
+            <value>The function delegate that is responsible for providing a unique identifier for the cache entry.</value>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.SlimMemoryCache.Add(System.String,System.Object,System.DateTime,System.String)">
+            <summary>
+            Inserts a cache entry into the cache and adds details about how the entry should be evicted.
+            </summary>
+            <param name="key">The unique identifier of the cache.</param>
+            <param name="value">The stored value of the cache.</param>
+            <param name="absoluteExpiration">The absolute expiration date time value from when the cached <paramref name="value"/> becomes invalid and is removed from the cache.</param>
+            <param name="ns">The optional namespace that provides a scope to the cache.</param>
+            <returns><c>true</c> if insertion succeeded; otherwise, <c>false</c> when there is already an entry in the cache with the same key.</returns>
+            <exception cref="T:System.ArgumentNullException">
+            <paramref name="key"/> cannot be null.
+            </exception>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.SlimMemoryCache.Add(System.String,System.Object,Cuemon.Runtime.IDependency,System.String)">
+            <summary>
+            Inserts a cache entry into the cache and adds details about how the entry should be evicted.
+            </summary>
+            <param name="key">The unique identifier of the cache.</param>
+            <param name="value">The stored value of the cache.</param>
+            <param name="dependency">An <see cref="T:Cuemon.Runtime.IDependency"/> implementations that monitors changes in the state of the data which a cache entry depends on. If a state change is registered, the cached <paramref name="value"/> becomes invalid and is removed from the cache.</param>
+            <param name="ns">The optional namespace that provides a scope to the cache.</param>
+            <returns><c>true</c> if insertion succeeded; otherwise, <c>false</c> when there is already an entry in the cache with the same key.</returns>
+            <exception cref="T:System.ArgumentNullException">
+            <paramref name="key"/> cannot be null.
+            </exception>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.SlimMemoryCache.Add(System.String,System.Object,System.Collections.Generic.IEnumerable{Cuemon.Runtime.IDependency},System.String)">
+            <summary>
+            Inserts a cache entry into the cache and adds details about how the entry should be evicted.
+            </summary>
+            <param name="key">The unique identifier of the cache.</param>
+            <param name="value">The stored value of the cache.</param>
+            <param name="dependencies">A sequence of <see cref="T:Cuemon.Runtime.IDependency"/> implementations that monitors changes in the state of the data which a cache entry depends on. If a state change is registered, the cached <paramref name="value"/> becomes invalid and is removed from the cache.</param>
+            <param name="ns">The optional namespace that provides a scope to the cache.</param>
+            <returns><c>true</c> if insertion succeeded; otherwise, <c>false</c> when there is already an entry in the cache with the same key.</returns>
+            <exception cref="T:System.ArgumentNullException">
+            <paramref name="key"/> cannot be null.
+            </exception>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.SlimMemoryCache.Add(System.String,System.Object,System.TimeSpan,System.String)">
+            <summary>
+            Inserts a cache entry into the cache and adds details about how the entry should be evicted.
+            </summary>
+            <param name="key">The unique identifier of the cache.</param>
+            <param name="value">The stored value of the cache.</param>
+            <param name="slidingExpiration">The sliding expiration time from when the cached <paramref name="value"/> becomes invalid and is removed from the cache.</param>
+            <param name="ns">The optional namespace that provides a scope to the cache.</param>
+            <returns><c>true</c> if insertion succeeded; otherwise, <c>false</c> when there is already an entry in the cache with the same key.</returns>
+            <exception cref="T:System.ArgumentNullException">
+            <paramref name="key"/> cannot be null.
+            </exception>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.SlimMemoryCache.Add(Cuemon.Runtime.Caching.CacheEntry,Cuemon.Runtime.Caching.CacheInvalidation)">
+            <summary>
+            Inserts a cache entry into the cache and adds details about how the entry should be evicted.
+            </summary>
+            <param name="entry">The object representing the cached value for a cache entry.</param>
+            <param name="invalidation">The object that contains expiration details for a specific cache entry.</param>
+            <returns><c>true</c> if insertion succeeded; otherwise, <c>false</c> when there is already an entry in the cache with the same key.</returns>
+            <exception cref="T:System.ArgumentNullException">
+            <paramref name="entry"/> cannot be null -or-
+            <paramref name="invalidation"/> cannot be null.
+            </exception>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.SlimMemoryCache.Contains(System.String,System.String)">
+            <summary>
+            Determines whether a cache entry exists in the cache.
+            </summary>
+            <param name="key">The unique identifier for the cache entry.</param>
+            <param name="ns">The optional namespace that provides a scope to the cache.</param>
+            <returns><c>true</c> if the cache contains a cache entry whose key matches <paramref name="key"/>; otherwise, <c>false</c>.</returns>
+            <exception cref="T:System.ArgumentNullException">
+            <paramref name="key"/> cannot be null.
+            </exception>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.SlimMemoryCache.Count(System.String)">
+            <summary>
+            Gets the number of entries associated with the <paramref name="ns"/> contained in the cache.
+            </summary>
+            <param name="ns">The optional namespace that provides a scope to the cache.</param>
+            <returns>The number of entries contained in the cache.</returns>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.SlimMemoryCache.RemoveAll(System.String)">
+            <summary>
+            Removes all entries associated with the <paramref name="ns"/> contained in the cache.
+            </summary>
+            <param name="ns">The optional namespace that provides a scope to the cache.</param>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.SlimMemoryCache.Get(System.String,System.String)">
+            <summary>
+            Returns an entry from the cache.
+            </summary>
+            <param name="key">The unique identifier for the cache entry.</param>
+            <param name="ns">The optional namespace that provides a scope to the cache.</param>
+            <returns>A reference to the value in the cache container that is identified by <paramref name="key"/>, if the entry exists; otherwise, <c>null</c>.</returns>
+            <exception cref="T:System.ArgumentNullException">
+            <paramref name="key"/> cannot be null.
+            </exception>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.SlimMemoryCache.GetCacheEntry(System.String,System.String)">
+            <summary>
+            Returns an entry from the cache as a <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/> instance.
+            </summary>
+            <param name="key">The unique identifier for the cache entry.</param>
+            <param name="ns">The optional namespace that provides a scope to the cache.</param>
+            <returns>A reference to the <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/> that is identified by <paramref name="key"/>, if the entry exists; otherwise, <c>null</c>.</returns>
+            <exception cref="T:System.ArgumentNullException">
+            <paramref name="key"/> cannot be null.
+            </exception>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.SlimMemoryCache.Remove(System.String,System.String)">
+            <summary>
+            Removes a cache entry from the cache.
+            </summary>
+            <param name="key">The unique identifier for the cache entry.</param>
+            <param name="ns">The optional namespace that provides a scope to the cache.</param>
+            <returns>If the entry is found in the cache, a reference to the value in the cache container of the removed cache entry; otherwise, <c>null</c>.</returns>
+            <exception cref="T:System.ArgumentNullException">
+            <paramref name="key"/> cannot be null.
+            </exception>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.SlimMemoryCache.Set(System.String,System.Object,Cuemon.Runtime.Caching.CacheInvalidation,System.String)">
+            <summary>
+            Inserts a cache entry into the cache.
+            </summary>
+            <param name="key">The unique identifier of the cache.</param>
+            <param name="value">The stored value of the cache.</param>
+            <param name="invalidation">The object that contains expiration details for a specific cache entry.</param>
+            <param name="ns">The optional namespace that provides a scope to the cache.</param>
+            <exception cref="T:System.ArgumentNullException">
+            <paramref name="key"/> cannot be null -or-
+            <paramref name="invalidation"/> cannot be null.
+            </exception>
+            <remarks>The <see cref="M:Cuemon.Runtime.Caching.SlimMemoryCache.Set(System.String,System.Object,Cuemon.Runtime.Caching.CacheInvalidation,System.String)"/> method always puts a cache value in the cache, regardless whether an entry already exists with the same key. If the specified entry does not exist in the cache, a new cache entry is inserted. If the specified entry exists, its value is updated.</remarks>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.SlimMemoryCache.TryGetCacheEntry(System.String,Cuemon.Runtime.Caching.CacheEntry@)">
+            <summary>
+            Attempts to get the <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/> associated with the specified <paramref name="key"/> from the cache.
+            </summary>
+            <param name="key">The unique identifier for the cache entry.</param>
+            <param name="cacheEntry">When this method returns, contains the cache entry associated with the specified <paramref name="key"/>, or <c>null</c> if the operation failed.</param>
+            <returns><c>true</c> if the <paramref name="cacheEntry"/> was found in the cache; otherwise, <c>false</c>.</returns>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.SlimMemoryCache.TryGetCacheEntry(System.String,System.String,Cuemon.Runtime.Caching.CacheEntry@)">
+            <summary>
+            Attempts to get the <see cref="T:Cuemon.Runtime.Caching.CacheEntry"/> associated with the specified <paramref name="key"/> and <paramref name="ns"/> from the cache.
+            </summary>
+            <param name="key">The unique identifier for the cache entry.</param>
+            <param name="ns">The optional namespace that provides a scope to the cache.</param>
+            <param name="cacheEntry">When this method returns, contains the cache entry associated with the specified <paramref name="key"/> and <paramref name="ns"/>, or <c>null</c> if the operation failed.</param>
+            <returns><c>true</c> if the <paramref name="cacheEntry"/> was found in the cache; otherwise, <c>false</c>.</returns>
+            <exception cref="T:System.ArgumentNullException">
+            <paramref name="key"/> cannot be null.
+            </exception>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.SlimMemoryCache.TryGet(System.String,System.Object@)">
+            <summary>
+            Attempts to get the value associated with the specified <paramref name="key"/> from the cache.
+            </summary>
+            <param name="key">The unique identifier for the cache entry.</param>
+            <param name="value">When this method returns, contains the value associated with the specified <paramref name="key"/>, or <c>null</c> if the operation failed.</param>
+            <returns><c>true</c> if the <paramref name="value"/> was found in the cache; otherwise, <c>false</c>.</returns>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.SlimMemoryCache.TryGet(System.String,System.String,System.Object@)">
+            <summary>
+            Attempts to get the value associated with the specified <paramref name="key"/> and <paramref name="ns"/> from the cache.
+            </summary>
+            <param name="key">The unique identifier for the cache entry.</param>
+            <param name="ns">The optional namespace that provides a scope to the cache.</param>
+            <param name="value">When this method returns, contains the value associated with the specified <paramref name="key"/> and <paramref name="ns"/>, or <c>null</c> if the operation failed.</param>
+            <returns><c>true</c> if the <paramref name="value"/> was found in the cache; otherwise, <c>false</c>.</returns>
+            <exception cref="T:System.ArgumentNullException">
+            <paramref name="key"/> cannot be null.
+            </exception>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.SlimMemoryCache.OnDisposeManagedResources">
+            <summary>
+            Called when this object is being disposed by either <see cref="M:Cuemon.Disposable.Dispose" /> or <see cref="M:Cuemon.Disposable.Dispose(System.Boolean)" /> having <c>disposing</c> set to <c>true</c> and <see cref="P:Cuemon.Disposable.Disposed" /> is <c>false</c>.
+            </summary>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.SlimMemoryCache.GetEnumerator">
+            <summary>
+            Returns an enumerator that iterates through the collection.
+            </summary>
+            <returns>An enumerator that can be used to iterate through the collection.</returns>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.SlimMemoryCache.System#Collections#IEnumerable#GetEnumerator">
+            <summary>
+            Returns an enumerator that iterates through a collection.
+            </summary>
+            <returns>An <see cref="T:System.Collections.IEnumerator"></see> object that can be used to iterate through the collection.</returns>
+        </member>
+        <member name="T:Cuemon.Runtime.Caching.SlimMemoryCacheOptions">
+            <summary>
+            Configuration options for <see cref="T:Cuemon.Runtime.Caching.SlimMemoryCache"/>.
+            </summary>
+        </member>
+        <member name="M:Cuemon.Runtime.Caching.SlimMemoryCacheOptions.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Cuemon.Runtime.Caching.SlimMemoryCacheOptions"/> class.
+            </summary>
+            <remarks>
+            The following table shows the initial property values for an instance of <see cref="T:Cuemon.Runtime.Caching.SlimMemoryCacheOptions"/>.
+            <list type="table">
+                <listheader>
+                    <term>Property</term>
+                    <description>Initial Value</description>
+                </listheader>
+                <item>
+                    <term><see cref="P:Cuemon.Runtime.Caching.SlimMemoryCacheOptions.EnableCleanup"/></term>
+                    <description><c>true</c></description>
+                </item>
+                <item>
+                    <term><see cref="P:Cuemon.Runtime.Caching.SlimMemoryCacheOptions.FirstSweep"/></term>
+                    <description>After 30 seconds</description>
+                </item>
+                <item>
+                    <term><see cref="P:Cuemon.Runtime.Caching.SlimMemoryCacheOptions.SucceedingSweep"/></term>
+                    <description>Every 2 minutes</description>
+                </item>
+                <item>
+                    <term><see cref="P:Cuemon.Runtime.Caching.SlimMemoryCacheOptions.KeyProvider"/></term>
+                    <description><c>(key, ns) => Generate.HashCode64(ns == Cache.NoScope ? key.ToUpperInvariant() : $"{key}^{nameof(SlimMemoryCache)}^{ns}".ToUpperInvariant());</c></description>
+                </item>
+            </list>
+            </remarks>
+        </member>
+        <member name="P:Cuemon.Runtime.Caching.SlimMemoryCacheOptions.EnableCleanup">
+            <summary>
+            Gets or sets a value indicating whether a periodic sweep clean-up is done on the cache.
+            </summary>
+            <value><c>true</c> if a periodic sweep clean-up is done on the cache; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="P:Cuemon.Runtime.Caching.SlimMemoryCacheOptions.FirstSweep">
+            <summary>
+            Gets or sets the <see cref="T:System.TimeSpan"/> that specifies the amount of time to wait before the initial first sweep clean-up.
+            </summary>
+            <value>The <see cref="T:System.TimeSpan"/> that specifies the amount of time to wait before the initial first sweep clean-up.</value>
+        </member>
+        <member name="P:Cuemon.Runtime.Caching.SlimMemoryCacheOptions.SucceedingSweep">
+            <summary>
+            Gets or sets the <see cref="T:System.TimeSpan"/> that specifies the interval for every succeeding sweep clean-up after the initial <see cref="P:Cuemon.Runtime.Caching.SlimMemoryCacheOptions.FirstSweep"/>.
+            </summary>
+            <value>The <see cref="T:System.TimeSpan"/> that specifies the interval for every succeeding sweep clean-up.</value>
+        </member>
+        <member name="P:Cuemon.Runtime.Caching.SlimMemoryCacheOptions.KeyProvider">
+            <summary>
+            Gets or sets the function delegate that is responsible for providing a unique identifier for a cache entry.
+            </summary>
+            <value>The function delegate that is responsible for providing a unique identifier for a cache entry.</value>
+        </member>
+    </members>
+</doc>

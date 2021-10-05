@@ -16,83 +16,83 @@
 
 namespace PythonToolsTests
 {
-    [TestClass]
-    public class CondaInterpreterFactoryTests
-    {
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context)
-        {
-            AssertListener.Initialize();
-        }
+	[TestClass]
+	public class CondaInterpreterFactoryTests
+	{
+		[ClassInitialize]
+		public static void DoDeployment(TestContext context)
+		{
+			AssertListener.Initialize();
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1)]
-        public void CondaWatchEnvironmentsTxtWithoutCondafolder()
-        {
-            // We start with no .conda folder
-            var userProfileFolder = TestData.GetTempPath();
-            string condaFolder = Path.Combine(userProfileFolder, ".conda");
+		[TestMethod, Priority(UnitTestPriority.P1)]
+		public void CondaWatchEnvironmentsTxtWithoutCondafolder()
+		{
+			// We start with no .conda folder
+			var userProfileFolder = TestData.GetTempPath();
+			string condaFolder = Path.Combine(userProfileFolder, ".conda");
 
-            // We create .conda folder and environments.txt
-            Action triggerDiscovery = () =>
-            {
-                Directory.CreateDirectory(condaFolder);
-                File.WriteAllText(Path.Combine(condaFolder, "environments.txt"), string.Empty);
-            };
+			// We create .conda folder and environments.txt
+			Action triggerDiscovery = () =>
+			{
+				Directory.CreateDirectory(condaFolder);
+				File.WriteAllText(Path.Combine(condaFolder, "environments.txt"), string.Empty);
+			};
 
-            TestTriggerDiscovery(userProfileFolder, triggerDiscovery);
-        }
+			TestTriggerDiscovery(userProfileFolder, triggerDiscovery);
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1)]
-        public void CondaWatchEnvironmentsTxtWithCondafolder()
-        {
-            // We start with a .conda folder but no environments.txt
-            var userProfileFolder = TestData.GetTempPath();
-            string condaFolder = Path.Combine(userProfileFolder, ".conda");
-            Directory.CreateDirectory(condaFolder);
+		[TestMethod, Priority(UnitTestPriority.P1)]
+		public void CondaWatchEnvironmentsTxtWithCondafolder()
+		{
+			// We start with a .conda folder but no environments.txt
+			var userProfileFolder = TestData.GetTempPath();
+			string condaFolder = Path.Combine(userProfileFolder, ".conda");
+			Directory.CreateDirectory(condaFolder);
 
-            // We create environments.txt
-            Action triggerDiscovery = () =>
-            {
-                File.WriteAllText(Path.Combine(condaFolder, "environments.txt"), string.Empty);
-            };
+			// We create environments.txt
+			Action triggerDiscovery = () =>
+			{
+				File.WriteAllText(Path.Combine(condaFolder, "environments.txt"), string.Empty);
+			};
 
-            TestTriggerDiscovery(userProfileFolder, triggerDiscovery);
-        }
+			TestTriggerDiscovery(userProfileFolder, triggerDiscovery);
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P0)]
-        public void CondaWatchEnvironmentsTxtWithCondafolderAndEnvTxt()
-        {
-            // We start with a .conda folder and environments.txt
-            var userProfileFolder = TestData.GetTempPath();
-            string condaFolder = Path.Combine(userProfileFolder, ".conda");
-            Directory.CreateDirectory(condaFolder);
-            File.WriteAllText(Path.Combine(condaFolder, "environments.txt"), string.Empty);
+		[TestMethod, Priority(UnitTestPriority.P0)]
+		public void CondaWatchEnvironmentsTxtWithCondafolderAndEnvTxt()
+		{
+			// We start with a .conda folder and environments.txt
+			var userProfileFolder = TestData.GetTempPath();
+			string condaFolder = Path.Combine(userProfileFolder, ".conda");
+			Directory.CreateDirectory(condaFolder);
+			File.WriteAllText(Path.Combine(condaFolder, "environments.txt"), string.Empty);
 
-            // We modify environments.txt
-            Action triggerDiscovery = () =>
-            {
-                File.WriteAllText(Path.Combine(condaFolder, "environments.txt"), string.Empty);
-            };
+			// We modify environments.txt
+			Action triggerDiscovery = () =>
+			{
+				File.WriteAllText(Path.Combine(condaFolder, "environments.txt"), string.Empty);
+			};
 
-            TestTriggerDiscovery(userProfileFolder, triggerDiscovery);
-        }
+			TestTriggerDiscovery(userProfileFolder, triggerDiscovery);
+		}
 
-        private static void TestTriggerDiscovery(string userProfileFolder, Action triggerDiscovery)
-        {
-            using (var evt = new AutoResetEvent(false))
-            using (var globalProvider = new CPythonInterpreterFactoryProvider(null, false))
-            using (var condaProvider = new CondaEnvironmentFactoryProvider(globalProvider, null, new JoinableTaskFactory(new JoinableTaskContext()), true, userProfileFolder))
-            {
-                // This initializes the provider, discovers the initial set
-                // of factories and starts watching the filesystem.
-                var configs = condaProvider.GetInterpreterConfigurations();
-                condaProvider.DiscoveryStarted += (sender, e) =>
-                {
-                    evt.Set();
-                };
-                triggerDiscovery();
-                Assert.IsTrue(evt.WaitOne(5000), "Failed to trigger discovery.");
-            }
-        }
-    }
+		private static void TestTriggerDiscovery(string userProfileFolder, Action triggerDiscovery)
+		{
+			using (var evt = new AutoResetEvent(false))
+			using (var globalProvider = new CPythonInterpreterFactoryProvider(null, false))
+			using (var condaProvider = new CondaEnvironmentFactoryProvider(globalProvider, null, new JoinableTaskFactory(new JoinableTaskContext()), true, userProfileFolder))
+			{
+				// This initializes the provider, discovers the initial set
+				// of factories and starts watching the filesystem.
+				var configs = condaProvider.GetInterpreterConfigurations();
+				condaProvider.DiscoveryStarted += (sender, e) =>
+				{
+					evt.Set();
+				};
+				triggerDiscovery();
+				Assert.IsTrue(evt.WaitOne(5000), "Failed to trigger discovery.");
+			}
+		}
+	}
 }

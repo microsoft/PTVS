@@ -16,15 +16,15 @@
 
 namespace TestUtilities
 {
-    public interface IAddExistingItem : IDisposable
-    {
-        void OK();
-        void Add();
-        void AddLink();
-        string FileName
-        {
-            get;
-            set;
-        }
-    }
+	public interface IAddExistingItem : IDisposable
+	{
+		void OK();
+		void Add();
+		void AddLink();
+		string FileName
+		{
+			get;
+			set;
+		}
+	}
 }

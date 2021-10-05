@@ -16,20 +16,20 @@
 
 namespace Microsoft.PythonTools.Workspace
 {
-    [ExportLaunchDebugTarget(
-        ProviderType,
-        new[] { ".pyproj" }
-    )]
-    class PyprojLaunchDebugTargetProvider : ILaunchDebugTargetProvider
-    {
-        private const string ProviderType = "F2B8B667-3D13-4E51-B067-00C188D0EB7E";
+	[ExportLaunchDebugTarget(
+		ProviderType,
+		new[] { ".pyproj" }
+	)]
+	class PyprojLaunchDebugTargetProvider : ILaunchDebugTargetProvider
+	{
+		private const string ProviderType = "F2B8B667-3D13-4E51-B067-00C188D0EB7E";
 
-        public const string LaunchTypeName = "pyproj";
+		public const string LaunchTypeName = "pyproj";
 
-        // Set by the workspace, not by our users
-        internal const string ProjectKey = "target";
+		// Set by the workspace, not by our users
+		internal const string ProjectKey = "target";
 
-        public const string JsonSchema = @"{
+		public const string JsonSchema = @"{
   ""definitions"": {
     ""pyproj"": {
       ""type"": ""object"",
@@ -50,39 +50,39 @@ namespace Microsoft.PythonTools.Workspace
     ""configuration"": ""#/definitions/pyprojFile""
 }";
 
-        public void LaunchDebugTarget(IWorkspace workspace, IServiceProvider serviceProvider, DebugLaunchActionContext debugLaunchActionContext)
-        {
-            var settings = debugLaunchActionContext.LaunchConfiguration;
-            var moniker = settings.GetValue(ProjectKey, string.Empty);
-            if (string.IsNullOrEmpty(moniker))
-            {
-                throw new InvalidOperationException();
-            }
+		public void LaunchDebugTarget(IWorkspace workspace, IServiceProvider serviceProvider, DebugLaunchActionContext debugLaunchActionContext)
+		{
+			var settings = debugLaunchActionContext.LaunchConfiguration;
+			var moniker = settings.GetValue(ProjectKey, string.Empty);
+			if (string.IsNullOrEmpty(moniker))
+			{
+				throw new InvalidOperationException();
+			}
 
-            var solution = serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
-            var solution4 = solution as IVsSolution4;
-            var debugger = serviceProvider.GetShellDebugger();
+			var solution = serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
+			var solution4 = solution as IVsSolution4;
+			var debugger = serviceProvider.GetShellDebugger();
 
-            if (solution == null || solution4 == null)
-            {
-                throw new InvalidOperationException();
-            }
+			if (solution == null || solution4 == null)
+			{
+				throw new InvalidOperationException();
+			}
 
-            solution4.EnsureSolutionIsLoaded(0);
-            var proj = solution.EnumerateLoadedPythonProjects()
-                .FirstOrDefault(p => string.Equals(p.GetMkDocument(), moniker, StringComparison.OrdinalIgnoreCase));
+			solution4.EnsureSolutionIsLoaded(0);
+			var proj = solution.EnumerateLoadedPythonProjects()
+				.FirstOrDefault(p => string.Equals(p.GetMkDocument(), moniker, StringComparison.OrdinalIgnoreCase));
 
-            if (proj == null)
-            {
-                throw new InvalidOperationException();
-            }
+			if (proj == null)
+			{
+				throw new InvalidOperationException();
+			}
 
-            ErrorHandler.ThrowOnFailure(proj.GetLauncher().LaunchProject(true));
-        }
+			ErrorHandler.ThrowOnFailure(proj.GetLauncher().LaunchProject(true));
+		}
 
-        public bool SupportsContext(IWorkspace workspace, string filePath)
-        {
-            throw new NotImplementedException();
-        }
-    }
+		public bool SupportsContext(IWorkspace workspace, string filePath)
+		{
+			throw new NotImplementedException();
+		}
+	}
 }

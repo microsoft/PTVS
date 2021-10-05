@@ -16,121 +16,121 @@
 
 namespace TestUtilities.UI
 {
-    public class AutomationDialog : AutomationWrapper, IDisposable
-    {
-        private bool _isDisposed;
+	public class AutomationDialog : AutomationWrapper, IDisposable
+	{
+		private bool _isDisposed;
 
-        public VisualStudioApp App { get; private set; }
-        public TimeSpan DefaultTimeout { get; set; }
+		public VisualStudioApp App { get; private set; }
+		public TimeSpan DefaultTimeout { get; set; }
 
-        public AutomationDialog(VisualStudioApp app, AutomationElement element)
-            : base(element)
-        {
-            App = app;
-            DefaultTimeout = TimeSpan.FromSeconds(10.0);
-        }
+		public AutomationDialog(VisualStudioApp app, AutomationElement element)
+			: base(element)
+		{
+			App = app;
+			DefaultTimeout = TimeSpan.FromSeconds(10.0);
+		}
 
-        public static AutomationDialog FromDte(VisualStudioApp app, string commandName, string commandArgs = "")
-        {
-            return new AutomationDialog(
-                app,
-                AutomationElement.FromHandle(app.OpenDialogWithDteExecuteCommand(commandName, commandArgs))
-            );
-        }
+		public static AutomationDialog FromDte(VisualStudioApp app, string commandName, string commandArgs = "")
+		{
+			return new AutomationDialog(
+				app,
+				AutomationElement.FromHandle(app.OpenDialogWithDteExecuteCommand(commandName, commandArgs))
+			);
+		}
 
-        public static AutomationDialog WaitForDialog(VisualStudioApp app)
-        {
-            return new AutomationDialog(app, AutomationElement.FromHandle(app.WaitForDialog()));
-        }
+		public static AutomationDialog WaitForDialog(VisualStudioApp app)
+		{
+			return new AutomationDialog(app, AutomationElement.FromHandle(app.WaitForDialog()));
+		}
 
-        #region IDisposable Members
+		#region IDisposable Members
 
-        ~AutomationDialog()
-        {
-            Dispose(false);
-        }
+		~AutomationDialog()
+		{
+			Dispose(false);
+		}
 
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_isDisposed)
-            {
-                if (disposing)
-                {
-                    try
-                    {
-                        Element.GetWindowPattern().Close();
-                    }
-                    catch (InvalidOperationException)
-                    {
-                    }
-                    catch (ElementNotAvailableException)
-                    {
-                    }
-                }
-                _isDisposed = true;
-            }
-        }
+		protected virtual void Dispose(bool disposing)
+		{
+			if (!_isDisposed)
+			{
+				if (disposing)
+				{
+					try
+					{
+						Element.GetWindowPattern().Close();
+					}
+					catch (InvalidOperationException)
+					{
+					}
+					catch (ElementNotAvailableException)
+					{
+					}
+				}
+				_isDisposed = true;
+			}
+		}
 
-        public void Dispose()
-        {
-            this.Dispose(true);
-            GC.SuppressFinalize(this);
-        }
+		public void Dispose()
+		{
+			this.Dispose(true);
+			GC.SuppressFinalize(this);
+		}
 
-        #endregion
+		#endregion
 
-        public bool ClickButtonAndClose(string buttonName, bool nameIsAutomationId = false)
-        {
-            WaitForInputIdle();
-            if (nameIsAutomationId)
-            {
-                return WaitForClosed(DefaultTimeout, () => ClickButtonByAutomationId(buttonName));
-            }
-            else if (buttonName == "Cancel")
-            {
-                return WaitForClosed(DefaultTimeout, () =>
-                {
-                    var btn = Element.FindFirst(TreeScope.Descendants, new AndCondition(
-                        new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Button),
-                        new OrCondition(
-                            new PropertyCondition(AutomationElement.NameProperty, "Cancel"),
-                            new PropertyCondition(AutomationElement.NameProperty, "Close")
-                        )
-                    ));
-                    CheckNullElement(btn);
-                    Invoke(btn);
-                });
-            }
-            else
-            {
-                if (buttonName == "Ok")
-                {
-                    // Need a case-sensitive match, even with the IgnoreCase flags
-                    buttonName = "OK";
-                }
-                return WaitForClosed(DefaultTimeout, () => ClickButtonByName(buttonName));
-            }
-        }
+		public bool ClickButtonAndClose(string buttonName, bool nameIsAutomationId = false)
+		{
+			WaitForInputIdle();
+			if (nameIsAutomationId)
+			{
+				return WaitForClosed(DefaultTimeout, () => ClickButtonByAutomationId(buttonName));
+			}
+			else if (buttonName == "Cancel")
+			{
+				return WaitForClosed(DefaultTimeout, () =>
+				{
+					var btn = Element.FindFirst(TreeScope.Descendants, new AndCondition(
+						new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Button),
+						new OrCondition(
+							new PropertyCondition(AutomationElement.NameProperty, "Cancel"),
+							new PropertyCondition(AutomationElement.NameProperty, "Close")
+						)
+					));
+					CheckNullElement(btn);
+					Invoke(btn);
+				});
+			}
+			else
+			{
+				if (buttonName == "Ok")
+				{
+					// Need a case-sensitive match, even with the IgnoreCase flags
+					buttonName = "OK";
+				}
+				return WaitForClosed(DefaultTimeout, () => ClickButtonByName(buttonName));
+			}
+		}
 
-        public virtual void OK()
-        {
-            ClickButtonAndClose("OK");
-        }
+		public virtual void OK()
+		{
+			ClickButtonAndClose("OK");
+		}
 
-        public virtual void Cancel()
-        {
-            ClickButtonAndClose("Cancel");
-        }
+		public virtual void Cancel()
+		{
+			ClickButtonAndClose("Cancel");
+		}
 
-        public virtual string Text
-        {
-            get
-            {
-                string label = string.Join(Environment.NewLine,
-                    FindAllByControlType(ControlType.Text).Cast<AutomationElement>().Select(a => a.Current.Name ?? "")
-                );
-                return label ?? "";
-            }
-        }
-    }
+		public virtual string Text
+		{
+			get
+			{
+				string label = string.Join(Environment.NewLine,
+					FindAllByControlType(ControlType.Text).Cast<AutomationElement>().Select(a => a.Current.Name ?? "")
+				);
+				return label ?? "";
+			}
+		}
+	}
 }

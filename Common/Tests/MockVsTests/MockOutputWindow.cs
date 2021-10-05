@@ -16,38 +16,36 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-    class MockOutputWindow : IVsOutputWindow
-    {
-        private static Dictionary<Guid, MockOutputWindowPane> _panes = new Dictionary<Guid, MockOutputWindowPane>() {
-            {VSConstants.OutputWindowPaneGuid.GeneralPane_guid, new MockOutputWindowPane("General") }
-        };
+	class MockOutputWindow : IVsOutputWindow
+	{
+		private static Dictionary<Guid, MockOutputWindowPane> _panes = new Dictionary<Guid, MockOutputWindowPane>() {
+			{VSConstants.OutputWindowPaneGuid.GeneralPane_guid, new MockOutputWindowPane("General") }
+		};
 
-        public int CreatePane(ref Guid rguidPane, string pszPaneName, int fInitVisible, int fClearWithSolution)
-        {
-            MockOutputWindowPane pane;
-            if (_panes.TryGetValue(rguidPane, out pane))
-            {
-                _panes[rguidPane] = new MockOutputWindowPane(pszPaneName);
-            }
-            return VSConstants.S_OK;
-        }
+		public int CreatePane(ref Guid rguidPane, string pszPaneName, int fInitVisible, int fClearWithSolution)
+		{
+			if (_panes.TryGetValue(rguidPane, out MockOutputWindowPane pane))
+			{
+				_panes[rguidPane] = new MockOutputWindowPane(pszPaneName);
+			}
+			return VSConstants.S_OK;
+		}
 
-        public int DeletePane(ref Guid rguidPane)
-        {
-            _panes.Remove(rguidPane);
-            return VSConstants.S_OK;
-        }
+		public int DeletePane(ref Guid rguidPane)
+		{
+			_panes.Remove(rguidPane);
+			return VSConstants.S_OK;
+		}
 
-        public int GetPane(ref Guid rguidPane, out IVsOutputWindowPane ppPane)
-        {
-            MockOutputWindowPane pane;
-            if (_panes.TryGetValue(rguidPane, out pane))
-            {
-                ppPane = pane;
-                return VSConstants.S_OK;
-            }
-            ppPane = null;
-            return VSConstants.E_FAIL;
-        }
-    }
+		public int GetPane(ref Guid rguidPane, out IVsOutputWindowPane ppPane)
+		{
+			if (_panes.TryGetValue(rguidPane, out MockOutputWindowPane pane))
+			{
+				ppPane = pane;
+				return VSConstants.S_OK;
+			}
+			ppPane = null;
+			return VSConstants.E_FAIL;
+		}
+	}
 }

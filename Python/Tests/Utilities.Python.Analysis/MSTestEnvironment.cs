@@ -19,15 +19,15 @@ using Common = Microsoft.PythonTools.Infrastructure;
 
 namespace TestUtilities.Python
 {
-    public sealed class MSTestEnvironment : TestEnvironmentImpl, Common.ITestEnvironment, Analysis.ITestEnvironment
-    {
-        public static TestEnvironmentImpl Initialize()
-        {
-            var instance = new MSTestEnvironment();
-            Instance = instance;
-            Analysis.TestEnvironment.Current = instance;
-            Common.TestEnvironment.Current = instance;
-            return instance;
-        }
-    }
+	public sealed class MSTestEnvironment : TestEnvironmentImpl, Common.ITestEnvironment, Analysis.ITestEnvironment
+	{
+		public static TestEnvironmentImpl Initialize()
+		{
+			var instance = new MSTestEnvironment();
+			Instance = instance;
+			Analysis.TestEnvironment.Current = instance;
+			Common.TestEnvironment.Current = instance;
+			return instance;
+		}
+	}
 }

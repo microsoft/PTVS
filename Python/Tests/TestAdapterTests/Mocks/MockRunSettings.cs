@@ -16,26 +16,20 @@
 
 namespace TestAdapterTests.Mocks
 {
-    class MockRunSettings : IRunSettings
-    {
-        private readonly string _xml;
+	class MockRunSettings : IRunSettings
+	{
+		private readonly string _xml;
 
-        public MockRunSettings(string xml)
-        {
-            _xml = xml;
-        }
+		public MockRunSettings(string xml)
+		{
+			_xml = xml;
+		}
 
-        public string SettingsXml
-        {
-            get
-            {
-                return _xml;
-            }
-        }
+		public string SettingsXml => _xml;
 
-        public ISettingsProvider GetSettings(string settingsName)
-        {
-            throw new NotImplementedException();
-        }
-    }
+		public ISettingsProvider GetSettings(string settingsName)
+		{
+			throw new NotImplementedException();
+		}
+	}
 }

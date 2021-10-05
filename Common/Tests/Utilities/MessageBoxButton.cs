@@ -17,22 +17,22 @@
 
 namespace TestUtilities
 {
-    // http://msdn.microsoft.com/en-us/library/ms645505(VS.85).aspx
-    public enum MessageBoxButton
-    {
-        /// <summary>
-        /// A meta-value used to indicate that the "normal" close behavior should be used.
-        /// </summary>
-        Close = 0,
+	// http://msdn.microsoft.com/en-us/library/ms645505(VS.85).aspx
+	public enum MessageBoxButton
+	{
+		/// <summary>
+		/// A meta-value used to indicate that the "normal" close behavior should be used.
+		/// </summary>
+		Close = 0,
 
-        Abort = 3,
-        Cancel = 2,
-        Continue = 11,
-        Ignore = 5,
-        No = 7,
-        Ok = 1,
-        Retry = 4,
-        TryAgain = 10,
-        Yes = 6
-    }
+		Abort = 3,
+		Cancel = 2,
+		Continue = 11,
+		Ignore = 5,
+		No = 7,
+		Ok = 1,
+		Retry = 4,
+		TryAgain = 10,
+		Yes = 6
+	}
 }

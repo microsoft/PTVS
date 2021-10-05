@@ -16,7 +16,7 @@
 
 namespace TestUtilities
 {
-    public sealed class PerfMethodAttribute : Attribute
-    {
-    }
+	public sealed class PerfMethodAttribute : Attribute
+	{
+	}
 }

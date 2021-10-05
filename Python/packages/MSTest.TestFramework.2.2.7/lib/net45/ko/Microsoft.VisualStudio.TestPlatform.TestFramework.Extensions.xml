@@ -1,0 +1,1097 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions</name>
+    </assembly>
+    <members>
+        <member name="T:Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute">
+            <summary>
+            테스트 배포별 배포 항목(파일 또는 디렉터리)을 지정하는 데 사용됩니다.
+            테스트 클래스 또는 테스트 메서드에서 지정할 수 있습니다.
+            둘 이상의 항목을 지정하기 위한 여러 특성 인스턴스를 가질 수 있습니다.
+            항목 경로는 절대 또는 상대 경로일 수 있으며, 상대 경로인 경우 RunConfig.RelativePathRoot가 기준입니다.
+            </summary>
+            <example>
+            [DeploymentItem("file1.xml")]
+            [DeploymentItem("file2.xml", "DataFiles")]
+            [DeploymentItem("bin\Debug")]
+            </example>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute.#ctor(System.String)">
+            <summary>
+            <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute"/> 클래스의 새 인스턴스를 초기화합니다.
+            </summary>
+            <param name="path">배포할 파일 또는 디렉터리. 경로는 빌드 출력 디렉터리에 대해 상대적입니다. 배포된 테스트 어셈블리와 동일한 디렉터리에 항목이 복사됩니다.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute.#ctor(System.String,System.String)">
+            <summary>
+            <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute"/> 클래스의 새 인스턴스를 초기화합니다.
+            </summary>
+            <param name="path">배포할 파일 또는 디렉터리에 대한 상대 또는 절대 경로. 경로는 빌드 출력 디렉터리에 대해 상대적입니다. 배포된 테스트 어셈블리와 동일한 디렉터리에 항목이 복사됩니다.</param>
+            <param name="outputDirectory">항목을 복사할 디렉터리의 경로. 배포 디렉터리에 대한 절대 경로 또는 상대 경로일 수 있습니다.<paramref name="path"/>에 의해 식별되는 모든 파일 및 디렉터리는 이 디렉터리에 복사됩니다.</param>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute.Path">
+            <summary>
+            복사할 소스 파일 또는 폴더의 경로를 가져옵니다.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute.OutputDirectory">
+            <summary>
+            항목을 복사할 디렉터리의 경로를 가져옵니다.
+            </summary>
+        </member>
+        <member name="T:Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames">
+            <summary>
+            섹션, 속성, 특성의 이름에 대한 리터럴을 포함합니다.
+            </summary>
+        </member>
+        <member name="F:Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.SectionName">
+            <summary>
+            구성 섹션 이름입니다.
+            </summary>
+        </member>
+        <member name="F:Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.Beta2SectionName">
+            <summary>
+            Beta2의 구성 섹션 이름입니다. 호환성을 위해 남겨둡니다.
+            </summary>
+        </member>
+        <member name="F:Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.DataSourcesSectionName">
+            <summary>
+            데이터 소스의 섹션 이름입니다.
+            </summary>
+        </member>
+        <member name="F:Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.NameAttributeName">
+            <summary>
+            'Name'의 특성 이름
+            </summary>
+        </member>
+        <member name="F:Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.ConnectionStringAttributeName">
+            <summary>
+            'ConnectionString'의 특성 이름
+            </summary>
+        </member>
+        <member name="F:Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.DataAccessMethodAttributeName">
+            <summary>
+             'DataAccessMethod'의 특성 이름
+            </summary>
+        </member>
+        <member name="F:Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.DataTableAttributeName">
+            <summary>
+            'DataTable'의 특성 이름
+            </summary>
+        </member>
+        <member name="T:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement">
+            <summary>
+            데이터 소스 요소입니다.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement.Name">
+            <summary>
+            이 구성의 이름을 가져오거나 설정합니다.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement.ConnectionString">
+            <summary>
+            .config 파일에서 &lt;connectionStrings&gt; 섹션의 ConnectionStringSettings 요소를 가져오거나 설정합니다.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement.DataTableName">
+            <summary>
+            데이터 테이블의 이름을 가져오거나 설정합니다.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement.DataAccessMethod">
+            <summary>
+            데이터 액세스의 형식을 가져오거나 설정합니다.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement.Key">
+            <summary>
+             키 이름을 가져옵니다.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement.Properties">
+            <summary>
+            구성 속성을 가져옵니다.
+            </summary>
+        </member>
+        <member name="T:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection">
+            <summary>
+            데이터 소스 요소 컬렉션입니다.
+            </summary>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection.#ctor">
+            <summary>
+            <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection"/> 클래스의 새 인스턴스를 초기화합니다.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection.Item(System.String)">
+            <summary>
+            지정한 키와 함께 구성 요소를 반환합니다.
+            </summary>
+            <param name="name">반환할 요소의 키입니다.</param>
+            <returns>지정한 키가 있는 System.Configuration.ConfigurationElement입니다. 그렇지 않은 경우 null입니다.</returns>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection.Item(System.Int32)">
+            <summary>
+            지정한 인덱스 위치에서 구성 요소를 가져옵니다.
+            </summary>
+            <param name="index">반환할 System.Configuration.ConfigurationElement의 인덱스 위치입니다.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection.Add(Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement)">
+            <summary>
+            구성 요소 컬렉션에 구성 요소를 추가합니다.
+            </summary>
+            <param name="element">추가할 System.Configuration.ConfigurationElement입니다.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection.Remove(Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement)">
+            <summary>
+            컬렉션에서 System.Configuration.ConfigurationElement를 제거합니다.
+            </summary>
+            <param name="element"><see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement"/> .</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection.Remove(System.String)">
+            <summary>
+            컬렉션에서 System.Configuration.ConfigurationElement를 제거합니다.
+            </summary>
+            <param name="name">제거할 System.Configuration.ConfigurationElement의 키입니다.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection.Clear">
+            <summary>
+            컬렉션에서 모든 구성 요소 개체를 제거합니다.
+            </summary>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection.CreateNewElement">
+            <summary>
+            새 <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement"/>을(를) 만듭니다.
+            </summary>
+            <returns>새 <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement"/>.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection.GetElementKey(System.Configuration.ConfigurationElement)">
+            <summary>
+            지정한 구성 요소의 요소 키를 가져옵니다.
+            </summary>
+            <param name="element">키를 반환할 System.Configuration.ConfigurationElement입니다.</param>
+            <returns>지정한 System.Configuration.ConfigurationElement의 키로 작동하는 System.Object입니다.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection.BaseAdd(System.Configuration.ConfigurationElement)">
+            <summary>
+            구성 요소 컬렉션에 구성 요소를 추가합니다.
+            </summary>
+            <param name="element">추가할 System.Configuration.ConfigurationElement입니다.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection.BaseAdd(System.Int32,System.Configuration.ConfigurationElement)">
+            <summary>
+            구성 요소 컬렉션에 구성 요소를 추가합니다.
+            </summary>
+            <param name="index">지정한 System.Configuration.ConfigurationElement를 추가할 인덱스 위치입니다.</param>
+            <param name="element">추가할 System.Configuration.ConfigurationElement입니다.</param>
+        </member>
+        <member name="T:Microsoft.VisualStudio.TestTools.UnitTesting.TestConfiguration">
+            <summary>
+            테스트에 대한 구성 설정을 지원합니다.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestConfiguration.ConfigurationSection">
+            <summary>
+            테스트에 대한 구성 섹션을 가져옵니다.
+            </summary>
+        </member>
+        <member name="T:Microsoft.VisualStudio.TestTools.UnitTesting.TestConfigurationSection">
+            <summary>
+            테스트에 대한 구성 섹션입니다.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestConfigurationSection.DataSources">
+            <summary>
+            이 구성 섹션의 데이터 소스를 가져옵니다.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestConfigurationSection.Properties">
+            <summary>
+            속성의 컬렉션을 가져옵니다.
+            </summary>
+            <returns>
+            <see cref="T:System.Configuration.ConfigurationPropertyCollection"/> 요소의 속성입니다.
+            </returns>
+        </member>
+        <member name="T:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject">
+            <summary>
+            이 클래스는 시스템에 있는 public이 아닌 라이브 내부 개체를 나타냅니다.
+            </summary>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.#ctor(System.Object,System.String)">
+            <summary>
+            private 클래스의 이미 존재하는 개체를 포함하는 <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject"/> 클래스의
+            새 인스턴스를 초기화합니다.
+            </summary>
+            <param name="obj"> 전용 멤버에 도달하기 위한 시작 지점 역할을 하는 개체</param>
+            <param name="memberToAccess">m_X.m_Y.m_Z 형식으로 검색할 개체를 가리키는 마침표(.)를 사용하는 역참조 문자열</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.#ctor(System.String,System.String,System.Object[])">
+            <summary>
+            지정된 형식을 래핑하는 <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject"/> 클래스의 새 인스턴스를
+            초기화합니다.
+            </summary>
+            <param name="assemblyName">어셈블리의 이름</param>
+            <param name="typeName">정규화된 이름</param>
+            <param name="args">생성자에 전달할 인수</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.#ctor(System.String,System.String,System.Type[],System.Object[])">
+            <summary>
+            지정된 형식을 래핑하는 <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject"/> 클래스의 새 인스턴스를
+            초기화합니다.
+            </summary>
+            <param name="assemblyName">어셈블리의 이름</param>
+            <param name="typeName">정규화된 이름</param>
+            <param name="parameterTypes">다음의 배열: <see cref="T:System.Type"/> 가져올 생성자에 대한 매개 변수의 수, 순서 및 형식을 나타내는 개체</param>
+            <param name="args">생성자에 전달할 인수</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.#ctor(System.Type,System.Object[])">
+            <summary>
+            지정된 형식을 래핑하는 <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject"/> 클래스의 새 인스턴스를
+            초기화합니다.
+            </summary>
+            <param name="type">만들 개체의 형식</param>
+            <param name="args">생성자에 전달할 인수</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.#ctor(System.Type,System.Type[],System.Object[])">
+            <summary>
+            지정된 형식을 래핑하는 <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject"/> 클래스의 새 인스턴스를
+            초기화합니다.
+            </summary>
+            <param name="type">만들 개체의 형식</param>
+            <param name="parameterTypes">다음의 배열: <see cref="T:System.Type"/> 가져올 생성자에 대한 매개 변수의 수, 순서 및 형식을 나타내는 개체</param>
+            <param name="args">생성자에 전달할 인수</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.#ctor(System.Object)">
+            <summary>
+            지정된 개체를 래핑하는 <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject"/> 클래스의 새 인스턴스를
+            초기화합니다.
+            </summary>
+            <param name="obj">래핑할 개체</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.#ctor(System.Object,Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType)">
+            <summary>
+            지정된 개체를 래핑하는 <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject"/> 클래스의 새 인스턴스를
+            초기화합니다.
+            </summary>
+            <param name="obj">래핑할 개체</param>
+            <param name="type">PrivateType 개체</param>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Target">
+            <summary>
+            대상을 가져오거나 설정합니다.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.RealType">
+            <summary>
+            기본 개체의 형식을 가져옵니다.
+            </summary>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetHashCode">
+            <summary>
+            은(는) 대상 개체의 해시 코드를 반환합니다.
+            </summary>
+            <returns>대상 개체의 해시 코드를 나타내는 INT</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Equals(System.Object)">
+            <summary>
+            같음
+            </summary>
+            <param name="obj">비교할 개체</param>
+            <returns>개체가 같은 경우 true를 반환합니다.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(System.String,System.Object[])">
+            <summary>
+            지정된 메서드를 호출합니다.
+            </summary>
+            <param name="name">메서드의 이름</param>
+            <param name="args">호출할 멤버에 전달하기 위한 인수.</param>
+            <returns>메서드 호출의 결과</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(System.String,System.Type[],System.Object[])">
+            <summary>
+            지정된 메서드를 호출합니다.
+            </summary>
+            <param name="name">메서드의 이름</param>
+            <param name="parameterTypes">다음의 배열: <see cref="T:System.Type"/> 메서드가 가져올 매개 변수의 수, 순서 및 형식을 나타내는 개체.</param>
+            <param name="args">호출할 멤버에 전달하기 위한 인수.</param>
+            <returns>메서드 호출의 결과</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(System.String,System.Type[],System.Object[],System.Type[])">
+            <summary>
+            지정된 메서드를 호출합니다.
+            </summary>
+            <param name="name">메서드의 이름</param>
+            <param name="parameterTypes">다음의 배열: <see cref="T:System.Type"/> 메서드가 가져올 매개 변수의 수, 순서 및 형식을 나타내는 개체.</param>
+            <param name="args">호출할 멤버에 전달하기 위한 인수.</param>
+            <param name="typeArguments">제네릭 인수의 형식에 해당하는 형식의 배열.</param>
+            <returns>메서드 호출의 결과</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(System.String,System.Object[],System.Globalization.CultureInfo)">
+            <summary>
+            지정된 메서드를 호출합니다.
+            </summary>
+            <param name="name">메서드의 이름</param>
+            <param name="args">호출할 멤버에 전달하기 위한 인수.</param>
+            <param name="culture">문화권 정보</param>
+            <returns>메서드 호출의 결과</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(System.String,System.Type[],System.Object[],System.Globalization.CultureInfo)">
+            <summary>
+            지정된 메서드를 호출합니다.
+            </summary>
+            <param name="name">메서드의 이름</param>
+            <param name="parameterTypes">다음의 배열: <see cref="T:System.Type"/> 메서드가 가져올 매개 변수의 수, 순서 및 형식을 나타내는 개체.</param>
+            <param name="args">호출할 멤버에 전달하기 위한 인수.</param>
+            <param name="culture">문화권 정보</param>
+            <returns>메서드 호출의 결과</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(System.String,System.Reflection.BindingFlags,System.Object[])">
+            <summary>
+            지정된 메서드를 호출합니다.
+            </summary>
+            <param name="name">메서드의 이름</param>
+            <param name="bindingFlags">하나 이상의 배열 인덱스로 <see cref="T:System.Reflection.BindingFlags"/> 검색 수행 방법을 지정.</param>
+            <param name="args">호출할 멤버에 전달하기 위한 인수.</param>
+            <returns>메서드 호출의 결과</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(System.String,System.Reflection.BindingFlags,System.Type[],System.Object[])">
+            <summary>
+            지정된 메서드를 호출합니다.
+            </summary>
+            <param name="name">메서드의 이름</param>
+            <param name="bindingFlags">하나 이상의 배열 인덱스로 <see cref="T:System.Reflection.BindingFlags"/> 검색 수행 방법을 지정.</param>
+            <param name="parameterTypes">다음의 배열: <see cref="T:System.Type"/> 메서드가 가져올 매개 변수의 수, 순서 및 형식을 나타내는 개체.</param>
+            <param name="args">호출할 멤버에 전달하기 위한 인수.</param>
+            <returns>메서드 호출의 결과</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(System.String,System.Reflection.BindingFlags,System.Object[],System.Globalization.CultureInfo)">
+            <summary>
+            지정된 메서드를 호출합니다.
+            </summary>
+            <param name="name">메서드의 이름</param>
+            <param name="bindingFlags">하나 이상의 배열 인덱스로 <see cref="T:System.Reflection.BindingFlags"/> 검색 수행 방법을 지정.</param>
+            <param name="args">호출할 멤버에 전달하기 위한 인수.</param>
+            <param name="culture">문화권 정보</param>
+            <returns>메서드 호출의 결과</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(System.String,System.Reflection.BindingFlags,System.Type[],System.Object[],System.Globalization.CultureInfo)">
+            <summary>
+            지정된 메서드를 호출합니다.
+            </summary>
+            <param name="name">메서드의 이름</param>
+            <param name="bindingFlags">하나 이상의 배열 인덱스로 <see cref="T:System.Reflection.BindingFlags"/> 검색 수행 방법을 지정.</param>
+            <param name="parameterTypes">다음의 배열: <see cref="T:System.Type"/> 메서드가 가져올 매개 변수의 수, 순서 및 형식을 나타내는 개체.</param>
+            <param name="args">호출할 멤버에 전달하기 위한 인수.</param>
+            <param name="culture">문화권 정보</param>
+            <returns>메서드 호출의 결과</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(System.String,System.Reflection.BindingFlags,System.Type[],System.Object[],System.Globalization.CultureInfo,System.Type[])">
+            <summary>
+            지정된 메서드를 호출합니다.
+            </summary>
+            <param name="name">메서드의 이름</param>
+            <param name="bindingFlags">하나 이상의 배열 인덱스로 <see cref="T:System.Reflection.BindingFlags"/> 검색 수행 방법을 지정.</param>
+            <param name="parameterTypes">다음의 배열: <see cref="T:System.Type"/> 메서드가 가져올 매개 변수의 수, 순서 및 형식을 나타내는 개체.</param>
+            <param name="args">호출할 멤버에 전달하기 위한 인수.</param>
+            <param name="culture">문화권 정보</param>
+            <param name="typeArguments">제네릭 인수의 형식에 해당하는 형식의 배열.</param>
+            <returns>메서드 호출의 결과</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetArrayElement(System.String,System.Int32[])">
+            <summary>
+            각 차원에 대한 첨자 배열을 사용하여 배열 요소를 가져옵니다
+            </summary>
+            <param name="name">멤버의 이름</param>
+            <param name="indices">구성된 비트마스크</param>
+            <returns>요소의 배열입니다.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetArrayElement(System.String,System.Object,System.Int32[])">
+            <summary>
+            각 차원에 대해 첨자의 배열을 사용하여 배열 요소를 설정합니다.
+            </summary>
+            <param name="name">멤버의 이름</param>
+            <param name="value">설정할 값</param>
+            <param name="indices">구성된 비트마스크</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetArrayElement(System.String,System.Reflection.BindingFlags,System.Int32[])">
+            <summary>
+            각 차원에 대한 첨자 배열을 사용하여 배열 요소를 가져옵니다
+            </summary>
+            <param name="name">멤버의 이름</param>
+            <param name="bindingFlags">하나 이상의 배열 인덱스로 <see cref="T:System.Reflection.BindingFlags"/> 검색 수행 방법을 지정.</param>
+            <param name="indices">구성된 비트마스크</param>
+            <returns>요소의 배열입니다.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetArrayElement(System.String,System.Reflection.BindingFlags,System.Object,System.Int32[])">
+            <summary>
+            각 차원에 대해 첨자의 배열을 사용하여 배열 요소를 설정합니다.
+            </summary>
+            <param name="name">멤버의 이름</param>
+            <param name="bindingFlags">하나 이상의 배열 인덱스로 <see cref="T:System.Reflection.BindingFlags"/> 검색 수행 방법을 지정.</param>
+            <param name="value">설정할 값</param>
+            <param name="indices">구성된 비트마스크</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetField(System.String)">
+            <summary>
+            필드를 가져옵니다.
+            </summary>
+            <param name="name">필드의 이름</param>
+            <returns>필드입니다.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetField(System.String,System.Object)">
+            <summary>
+            필드를 설정합니다.
+            </summary>
+            <param name="name">필드의 이름</param>
+            <param name="value">설정할 값</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetField(System.String,System.Reflection.BindingFlags)">
+            <summary>
+            필드를 가져옵니다.
+            </summary>
+            <param name="name">필드의 이름</param>
+            <param name="bindingFlags">하나 이상의 배열 인덱스로 <see cref="T:System.Reflection.BindingFlags"/> 검색 수행 방법을 지정.</param>
+            <returns>필드입니다.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetField(System.String,System.Reflection.BindingFlags,System.Object)">
+            <summary>
+            필드를 설정합니다.
+            </summary>
+            <param name="name">필드의 이름</param>
+            <param name="bindingFlags">하나 이상의 배열 인덱스로 <see cref="T:System.Reflection.BindingFlags"/> 검색 수행 방법을 지정.</param>
+            <param name="value">설정할 값</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetFieldOrProperty(System.String)">
+            <summary>
+            필드 또는 속성을 가져옵니다.
+            </summary>
+            <param name="name">필드 또는 속성의 이름</param>
+            <returns>필드 또는 속성입니다.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetFieldOrProperty(System.String,System.Object)">
+            <summary>
+            필드 또는 속성을 설정합니다.
+            </summary>
+            <param name="name">필드 또는 속성의 이름</param>
+            <param name="value">설정할 값</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetFieldOrProperty(System.String,System.Reflection.BindingFlags)">
+            <summary>
+            필드 또는 속성을 가져옵니다.
+            </summary>
+            <param name="name">필드 또는 속성의 이름</param>
+            <param name="bindingFlags">하나 이상의 배열 인덱스로 <see cref="T:System.Reflection.BindingFlags"/> 검색 수행 방법을 지정.</param>
+            <returns>필드 또는 속성입니다.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetFieldOrProperty(System.String,System.Reflection.BindingFlags,System.Object)">
+            <summary>
+            필드 또는 속성을 설정합니다.
+            </summary>
+            <param name="name">필드 또는 속성의 이름</param>
+            <param name="bindingFlags">하나 이상의 배열 인덱스로 <see cref="T:System.Reflection.BindingFlags"/> 검색 수행 방법을 지정.</param>
+            <param name="value">설정할 값</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetProperty(System.String,System.Object[])">
+            <summary>
+            속성을 가져옵니다
+            </summary>
+            <param name="name">속성의 이름</param>
+            <param name="args">호출할 멤버에 전달하기 위한 인수.</param>
+            <returns>속성입니다.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetProperty(System.String,System.Type[],System.Object[])">
+            <summary>
+            속성을 가져옵니다
+            </summary>
+            <param name="name">속성의 이름</param>
+            <param name="parameterTypes">다음의 배열: <see cref="T:System.Type"/> 인덱싱된 속성에 대한 매개 변수의 수, 순서 및 형식을 나타내는 개체.</param>
+            <param name="args">호출할 멤버에 전달하기 위한 인수.</param>
+            <returns>속성입니다.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetProperty(System.String,System.Object,System.Object[])">
+            <summary>
+            속성을 설정합니다.
+            </summary>
+            <param name="name">속성의 이름</param>
+            <param name="value">설정할 값</param>
+            <param name="args">호출할 멤버에 전달하기 위한 인수.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetProperty(System.String,System.Type[],System.Object,System.Object[])">
+            <summary>
+            속성을 설정합니다.
+            </summary>
+            <param name="name">속성의 이름</param>
+            <param name="parameterTypes">다음의 배열: <see cref="T:System.Type"/> 인덱싱된 속성에 대한 매개 변수의 수, 순서 및 형식을 나타내는 개체.</param>
+            <param name="value">설정할 값</param>
+            <param name="args">호출할 멤버에 전달하기 위한 인수.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetProperty(System.String,System.Reflection.BindingFlags,System.Object[])">
+            <summary>
+            속성을 가져옵니다
+            </summary>
+            <param name="name">속성의 이름</param>
+            <param name="bindingFlags">하나 이상의 배열 인덱스로 <see cref="T:System.Reflection.BindingFlags"/> 검색 수행 방법을 지정.</param>
+            <param name="args">호출할 멤버에 전달하기 위한 인수.</param>
+            <returns>속성입니다.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetProperty(System.String,System.Reflection.BindingFlags,System.Type[],System.Object[])">
+            <summary>
+            속성을 가져옵니다
+            </summary>
+            <param name="name">속성의 이름</param>
+            <param name="bindingFlags">하나 이상의 배열 인덱스로 <see cref="T:System.Reflection.BindingFlags"/> 검색 수행 방법을 지정.</param>
+            <param name="parameterTypes">다음의 배열: <see cref="T:System.Type"/> 인덱싱된 속성에 대한 매개 변수의 수, 순서 및 형식을 나타내는 개체.</param>
+            <param name="args">호출할 멤버에 전달하기 위한 인수.</param>
+            <returns>속성입니다.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetProperty(System.String,System.Reflection.BindingFlags,System.Object,System.Object[])">
+            <summary>
+            속성을 설정합니다.
+            </summary>
+            <param name="name">속성의 이름</param>
+            <param name="bindingFlags">하나 이상의 배열 인덱스로 <see cref="T:System.Reflection.BindingFlags"/> 검색 수행 방법을 지정.</param>
+            <param name="value">설정할 값</param>
+            <param name="args">호출할 멤버에 전달하기 위한 인수.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetProperty(System.String,System.Reflection.BindingFlags,System.Object,System.Type[],System.Object[])">
+            <summary>
+            속성을 설정합니다.
+            </summary>
+            <param name="name">속성의 이름</param>
+            <param name="bindingFlags">하나 이상의 배열 인덱스로 <see cref="T:System.Reflection.BindingFlags"/> 검색 수행 방법을 지정.</param>
+            <param name="value">설정할 값</param>
+            <param name="parameterTypes">다음의 배열: <see cref="T:System.Type"/> 인덱싱된 속성에 대한 매개 변수의 수, 순서 및 형식을 나타내는 개체.</param>
+            <param name="args">호출할 멤버에 전달하기 위한 인수.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.ValidateAccessString(System.String)">
+            <summary>
+            액세스 문자열의 유효성을 검사합니다.
+            </summary>
+            <param name="access"> 액세스 문자열</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.InvokeHelper(System.String,System.Reflection.BindingFlags,System.Object[],System.Globalization.CultureInfo)">
+            <summary>
+            멤버를 호출합니다.
+            </summary>
+            <param name="name">멤버의 이름</param>
+            <param name="bindingFlags">추가 특성</param>
+            <param name="args">호출에 대한 인수</param>
+            <param name="culture">문화권</param>
+            <returns>호출의 결과</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetGenericMethodFromCache(System.String,System.Type[],System.Type[],System.Reflection.BindingFlags,System.Reflection.ParameterModifier[])">
+            <summary>
+            현재 private 형식에서 가장 적절한 제네릭 메서드 시그니처를 추출합니다.
+            </summary>
+            <param name="methodName">서명 캐시를 검색할 메서드의 이름.</param>
+            <param name="parameterTypes">검색할 매개 변수의 형식에 해당하는 형식의 배열.</param>
+            <param name="typeArguments">제네릭 인수의 형식에 해당하는 형식의 배열.</param>
+            <param name="bindingFlags"><see cref="T:System.Reflection.BindingFlags"/> 메서드 서명을 추가로 필터링.</param>
+            <param name="modifiers">매개 변수에 대한 한정자입니다.</param>
+            <returns>methodinfo 인스턴스입니다.</returns>
+        </member>
+        <member name="T:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType">
+            <summary>
+            이 클래스는 전용 접근자 기능에 대한 private 클래스를 나타냅니다.
+            </summary>
+        </member>
+        <member name="F:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.BindToEveryThing">
+            <summary>
+            모든 것에 바인딩됩니다.
+            </summary>
+        </member>
+        <member name="F:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.type">
+            <summary>
+            래핑된 형식입니다.
+            </summary>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.#ctor(System.String,System.String)">
+            <summary>
+            private 형식을 포함하는 <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType"/> 클래스의 새 인스턴스를 초기화합니다.
+            </summary>
+            <param name="assemblyName">어셈블리 이름</param>
+            <param name="typeName">다음의 정규화된 이름: </param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.#ctor(System.Type)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType"/> class that contains
+            the private type from the type object
+            </summary>
+            <param name="type">만들어야 할 래핑된 형식.</param>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.ReferencedType">
+            <summary>
+            참조된 형식을 가져옵니다.
+            </summary>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.InvokeStatic(System.String,System.Object[])">
+            <summary>
+            정적 멤버를 호출합니다.
+            </summary>
+            <param name="name">InvokeHelper에 대한 멤버의 이름</param>
+            <param name="args">호출에 대한 인수</param>
+            <returns>호출의 결과</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.InvokeStatic(System.String,System.Type[],System.Object[])">
+            <summary>
+            정적 멤버를 호출합니다.
+            </summary>
+            <param name="name">InvokeHelper에 대한 멤버의 이름</param>
+            <param name="parameterTypes">다음의 배열: <see cref="T:System.Type"/> 호출할 메서드에 대한 매개 변수의 수, 순서 및 형식을 나타내는 개체</param>
+            <param name="args">호출에 대한 인수</param>
+            <returns>호출의 결과</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.InvokeStatic(System.String,System.Type[],System.Object[],System.Type[])">
+            <summary>
+            정적 멤버를 호출합니다.
+            </summary>
+            <param name="name">InvokeHelper에 대한 멤버의 이름</param>
+            <param name="parameterTypes">다음의 배열: <see cref="T:System.Type"/> 호출할 메서드에 대한 매개 변수의 수, 순서 및 형식을 나타내는 개체</param>
+            <param name="args">호출에 대한 인수</param>
+            <param name="typeArguments">제네릭 인수의 형식에 해당하는 형식의 배열.</param>
+            <returns>호출의 결과</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.InvokeStatic(System.String,System.Object[],System.Globalization.CultureInfo)">
+            <summary>
+            정적 메서드를 호출합니다.
+            </summary>
+            <param name="name">멤버의 이름</param>
+            <param name="args">호출에 대한 인수</param>
+            <param name="culture">문화권</param>
+            <returns>호출의 결과</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.InvokeStatic(System.String,System.Type[],System.Object[],System.Globalization.CultureInfo)">
+            <summary>
+            정적 메서드를 호출합니다.
+            </summary>
+            <param name="name">멤버의 이름</param>
+            <param name="parameterTypes">다음의 배열: <see cref="T:System.Type"/> 호출할 메서드에 대한 매개 변수의 수, 순서 및 형식을 나타내는 개체</param>
+            <param name="args">호출에 대한 인수</param>
+            <param name="culture">문화권 정보</param>
+            <returns>호출의 결과</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.InvokeStatic(System.String,System.Reflection.BindingFlags,System.Object[])">
+            <summary>
+            정적 메서드를 호출합니다.
+            </summary>
+            <param name="name">멤버의 이름</param>
+            <param name="bindingFlags">추가 호출 특성</param>
+            <param name="args">호출에 대한 인수</param>
+            <returns>호출의 결과</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.InvokeStatic(System.String,System.Reflection.BindingFlags,System.Type[],System.Object[])">
+            <summary>
+            정적 메서드를 호출합니다.
+            </summary>
+            <param name="name">멤버의 이름</param>
+            <param name="bindingFlags">추가 호출 특성</param>
+            <param name="parameterTypes">다음의 배열: <see cref="T:System.Type"/> 호출할 메서드에 대한 매개 변수의 수, 순서 및 형식을 나타내는 개체</param>
+            <param name="args">호출에 대한 인수</param>
+            <returns>호출의 결과</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.InvokeStatic(System.String,System.Reflection.BindingFlags,System.Object[],System.Globalization.CultureInfo)">
+            <summary>
+            정적 메서드를 호출합니다.
+            </summary>
+            <param name="name">멤버의 이름</param>
+            <param name="bindingFlags">추가 호출 특성</param>
+            <param name="args">호출에 대한 인수</param>
+            <param name="culture">문화권</param>
+            <returns>호출의 결과</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.InvokeStatic(System.String,System.Reflection.BindingFlags,System.Type[],System.Object[],System.Globalization.CultureInfo)">
+            <summary>
+            정적 메서드를 호출합니다.
+            </summary>
+            <param name="name">멤버의 이름</param>
+            <param name="bindingFlags">추가 호출 특성</param>
+            /// <param name="parameterTypes">다음의 배열: <see cref="T:System.Type"/> 호출할 메서드에 대한 매개 변수의 수, 순서 및 형식을 나타내는 개체</param>
+            <param name="args">호출에 대한 인수</param>
+            <param name="culture">문화권</param>
+            <returns>호출의 결과</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.InvokeStatic(System.String,System.Reflection.BindingFlags,System.Type[],System.Object[],System.Globalization.CultureInfo,System.Type[])">
+            <summary>
+            정적 메서드를 호출합니다.
+            </summary>
+            <param name="name">멤버의 이름</param>
+            <param name="bindingFlags">추가 호출 특성</param>
+            /// <param name="parameterTypes">다음의 배열: <see cref="T:System.Type"/> 호출할 메서드에 대한 매개 변수의 수, 순서 및 형식을 나타내는 개체</param>
+            <param name="args">호출에 대한 인수</param>
+            <param name="culture">문화권</param>
+            <param name="typeArguments">제네릭 인수의 형식에 해당하는 형식의 배열.</param>
+            <returns>호출의 결과</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.GetStaticArrayElement(System.String,System.Int32[])">
+            <summary>
+            정적 배열의 요소를 가져옵니다.
+            </summary>
+            <param name="name">배열의 이름</param>
+            <param name="indices">
+            가져올 요소의 위치를 지정하는 인덱스를 나타내는 32비트 정수의 1차원 배열입니다.
+            예를 들어 a[10][11]에 액세스하려면 인덱스는 {10,11}이 됩니다.
+            </param>
+            <returns>지정된 위치의 요소</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.SetStaticArrayElement(System.String,System.Object,System.Int32[])">
+            <summary>
+            정적 배열의 멤버를 설정합니다.
+            </summary>
+            <param name="name">배열의 이름</param>
+            <param name="value">설정할 값</param>
+            <param name="indices">
+            설정할 요소의 위치를 지정하는 인덱스를 나타내는 32비트 정수의 1차원 배열입니다.
+            예를 들어 a[10][11]에 액세스하려면 배열은 {10,11}이 됩니다.
+            </param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.GetStaticArrayElement(System.String,System.Reflection.BindingFlags,System.Int32[])">
+            <summary>
+            정적 배열의 요소를 가져옵니다.
+            </summary>
+            <param name="name">배열의 이름</param>
+            <param name="bindingFlags">추가 InvokeHelper 특성</param>
+            <param name="indices">
+            가져올 요소의 위치를 지정하는 인덱스를 나타내는 32비트 정수의 1차원 배열입니다.
+            예를 들어 a[10][11]에 액세스하려면 배열은 {10,11}이 됩니다.
+            </param>
+            <returns>지정된 위치의 요소</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.SetStaticArrayElement(System.String,System.Reflection.BindingFlags,System.Object,System.Int32[])">
+            <summary>
+            정적 배열의 멤버를 설정합니다.
+            </summary>
+            <param name="name">배열의 이름</param>
+            <param name="bindingFlags">추가 InvokeHelper 특성</param>
+            <param name="value">설정할 값</param>
+            <param name="indices">
+            설정할 요소의 위치를 지정하는 인덱스를 나타내는 32비트 정수의 1차원 배열입니다.
+            예를 들어 a[10][11]에 액세스하려면 배열은 {10,11}이 됩니다.
+            </param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.GetStaticField(System.String)">
+            <summary>
+            정적 필드를 가져옵니다.
+            </summary>
+            <param name="name">필드의 이름</param>
+            <returns>정적 필드입니다.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.SetStaticField(System.String,System.Object)">
+            <summary>
+            정적 필드를 설정합니다.
+            </summary>
+            <param name="name">필드의 이름</param>
+            <param name="value">호출에 대한 인수</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.GetStaticField(System.String,System.Reflection.BindingFlags)">
+            <summary>
+            지정된 InvokeHelper 특성을 사용하여 정적 필드를 가져옵니다.
+            </summary>
+            <param name="name">필드의 이름</param>
+            <param name="bindingFlags">추가 호출 특성</param>
+            <returns>정적 필드입니다.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.SetStaticField(System.String,System.Reflection.BindingFlags,System.Object)">
+            <summary>
+            바인딩 특성을 사용하여 정적 필드를 설정합니다.
+            </summary>
+            <param name="name">필드의 이름</param>
+            <param name="bindingFlags">추가 InvokeHelper 특성</param>
+            <param name="value">호출에 대한 인수</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.GetStaticFieldOrProperty(System.String)">
+            <summary>
+            정적 필드 또는 속성을 가져옵니다.
+            </summary>
+            <param name="name">필드 또는 속성의 이름</param>
+            <returns>정적 필드 또는 속성입니다.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.SetStaticFieldOrProperty(System.String,System.Object)">
+            <summary>
+            정적 필드 또는 속성을 설정합니다.
+            </summary>
+            <param name="name">필드 또는 속성의 이름</param>
+            <param name="value">필드나 속성에 대해 설정할 값</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.GetStaticFieldOrProperty(System.String,System.Reflection.BindingFlags)">
+            <summary>
+            지정된 InvokeHelper 특성을 사용하여 정적 필드 또는 속성을 가져옵니다.
+            </summary>
+            <param name="name">필드 또는 속성의 이름</param>
+            <param name="bindingFlags">추가 호출 특성</param>
+            <returns>정적 필드 또는 속성입니다.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.SetStaticFieldOrProperty(System.String,System.Reflection.BindingFlags,System.Object)">
+            <summary>
+            바인딩 특성을 사용하여 정적 필드 또는 속성을 설정합니다.
+            </summary>
+            <param name="name">필드 또는 속성의 이름</param>
+            <param name="bindingFlags">추가 호출 특성</param>
+            <param name="value">필드나 속성에 대해 설정할 값</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.GetStaticProperty(System.String,System.Object[])">
+            <summary>
+            정적 속성을 가져옵니다.
+            </summary>
+            <param name="name">필드 또는 속성의 이름</param>
+            <param name="args">호출에 대한 인수</param>
+            <returns>정적 속성입니다.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.SetStaticProperty(System.String,System.Object,System.Object[])">
+            <summary>
+            정적 속성을 설정합니다.
+            </summary>
+            <param name="name">속성의 이름</param>
+            <param name="value">필드나 속성에 대해 설정할 값</param>
+            <param name="args">호출할 멤버에 전달하기 위한 인수.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.SetStaticProperty(System.String,System.Object,System.Type[],System.Object[])">
+            <summary>
+            정적 속성을 설정합니다.
+            </summary>
+            <param name="name">속성의 이름</param>
+            <param name="value">필드나 속성에 대해 설정할 값</param>
+            <param name="parameterTypes">다음의 배열: <see cref="T:System.Type"/> 인덱싱된 속성에 대한 매개 변수의 수, 순서 및 형식을 나타내는 개체.</param>
+            <param name="args">호출할 멤버에 전달하기 위한 인수.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.GetStaticProperty(System.String,System.Reflection.BindingFlags,System.Object[])">
+            <summary>
+            정적 속성을 가져옵니다.
+            </summary>
+            <param name="name">속성의 이름</param>
+            <param name="bindingFlags">추가 호출 특성.</param>
+            <param name="args">호출할 멤버에 전달하기 위한 인수.</param>
+            <returns>정적 속성입니다.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.GetStaticProperty(System.String,System.Reflection.BindingFlags,System.Type[],System.Object[])">
+            <summary>
+            정적 속성을 가져옵니다.
+            </summary>
+            <param name="name">속성의 이름</param>
+            <param name="bindingFlags">추가 호출 특성.</param>
+            <param name="parameterTypes">다음의 배열: <see cref="T:System.Type"/> 인덱싱된 속성에 대한 매개 변수의 수, 순서 및 형식을 나타내는 개체.</param>
+            <param name="args">호출할 멤버에 전달하기 위한 인수.</param>
+            <returns>정적 속성입니다.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.SetStaticProperty(System.String,System.Reflection.BindingFlags,System.Object,System.Object[])">
+            <summary>
+            정적 속성을 설정합니다.
+            </summary>
+            <param name="name">속성의 이름</param>
+            <param name="bindingFlags">추가 호출 특성.</param>
+            <param name="value">필드나 속성에 대해 설정할 값</param>
+            <param name="args">인덱싱된 속성을 위한 선택적인 인덱스 값. 인덱싱된 속성의 인덱스는 0부터 시작합니다. 인덱싱되지 않은 속성에 대해서는 이 값이 null이어야 합니다. </param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.SetStaticProperty(System.String,System.Reflection.BindingFlags,System.Object,System.Type[],System.Object[])">
+            <summary>
+            정적 속성을 설정합니다.
+            </summary>
+            <param name="name">속성의 이름</param>
+            <param name="bindingFlags">추가 호출 특성.</param>
+            <param name="value">필드나 속성에 대해 설정할 값</param>
+            <param name="parameterTypes">다음의 배열: <see cref="T:System.Type"/> 인덱싱된 속성에 대한 매개 변수의 수, 순서 및 형식을 나타내는 개체.</param>
+            <param name="args">호출할 멤버에 전달하기 위한 인수.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.InvokeHelperStatic(System.String,System.Reflection.BindingFlags,System.Object[],System.Globalization.CultureInfo)">
+            <summary>
+            정적 메서드를 호출합니다.
+            </summary>
+            <param name="name">멤버의 이름</param>
+            <param name="bindingFlags">추가 호출 특성</param>
+            <param name="args">호출에 대한 인수</param>
+            <param name="culture">문화권</param>
+            <returns>호출의 결과</returns>
+        </member>
+        <member name="T:Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper">
+            <summary>
+            제네릭 메서드에 대한 메서드 시그니처 검색을 제공합니다.
+            </summary>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper.CompareMethodSigAndName(System.Reflection.MethodBase,System.Reflection.MethodBase)">
+            <summary>
+            이 두 메서드의 메서드 시그니처를 비교합니다.
+            </summary>
+            <param name="m1">Method1</param>
+            <param name="m2">Method2</param>
+            <returns>비슷한 경우 True입니다.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper.GetHierarchyDepth(System.Type)">
+            <summary>
+            제공된 형식의 기본 형식에서 계층 구조 수준을 가져옵니다.
+            </summary>
+            <param name="t">형식입니다.</param>
+            <returns>깊이입니다.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper.FindMostDerivedNewSlotMeth(System.Reflection.MethodBase[],System.Int32)">
+            <summary>
+            제공된 정보를 사용하여 가장 많이 파생된 형식을 찾습니다.
+            </summary>
+            <param name="match">후보 일치 항목입니다.</param>
+            <param name="cMatches">일치 항목 수입니다.</param>
+            <returns>가장 많이 파생된 메서드입니다.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper.SelectMethod(System.Reflection.BindingFlags,System.Reflection.MethodBase[],System.Type[],System.Reflection.ParameterModifier[])">
+            <summary>
+            기본 기준과 일치하는 메서드의 집합을 고려하여 형식 배열을 기반으로
+            메서드를 선택하세요. 기준과 일치하는 메서드가 없으면 이 메서드는
+            Null을 반환합니다.
+            </summary>
+            <param name="bindingAttr">바인딩 사양입니다.</param>
+            <param name="match">후보 일치 항목</param>
+            <param name="types">형식</param>
+            <param name="modifiers">매개 변수 한정자입니다.</param>
+            <returns>일치하는 메서드입니다. 일치 항목이 없는 경우 null입니다.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper.FindMostSpecificMethod(System.Reflection.MethodBase,System.Int32[],System.Type,System.Reflection.MethodBase,System.Int32[],System.Type,System.Type[],System.Object[])">
+            <summary>
+            제공된 두 메서드에서 가장 한정적인 메서드를 찾습니다.
+            </summary>
+            <param name="m1">메서드 1</param>
+            <param name="paramOrder1">메서드 1에 대한 매개 변수 순서</param>
+            <param name="paramArrayType1">매개 변수 배열 형식입니다.</param>
+            <param name="m2">메서드 2</param>
+            <param name="paramOrder2">메서드 2에 대한 매개 변수 순서</param>
+            <param name="paramArrayType2">&gt;매개 변수 배열 형식입니다.</param>
+            <param name="types">검색할 형식입니다.</param>
+            <param name="args">Args.</param>
+            <returns>일치를 나타내는 int입니다.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper.FindMostSpecific(System.Reflection.ParameterInfo[],System.Int32[],System.Type,System.Reflection.ParameterInfo[],System.Int32[],System.Type,System.Type[],System.Object[])">
+            <summary>
+            제공된 두 메서드에서 가장 한정적인 메서드를 찾습니다.
+            </summary>
+            <param name="p1">메서드 1</param>
+            <param name="paramOrder1">메서드 1에 대한 매개 변수 순서</param>
+            <param name="paramArrayType1">매개 변수 배열 형식입니다.</param>
+            <param name="p2">메서드 2</param>
+            <param name="paramOrder2">메서드 2에 대한 매개 변수 순서</param>
+            <param name="paramArrayType2">&gt;매개 변수 배열 형식입니다.</param>
+            <param name="types">검색할 형식입니다.</param>
+            <param name="args">Args.</param>
+            <returns>일치를 나타내는 int입니다.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper.FindMostSpecificType(System.Type,System.Type,System.Type)">
+            <summary>
+            제공된 두 형식 중 가장 한정적인 형식을 찾습니다.
+            </summary>
+            <param name="c1">형식 1</param>
+            <param name="c2">형식 2</param>
+            <param name="t">정의하는 형식</param>
+            <returns>일치를 나타내는 int입니다.</returns>
+        </member>
+        <member name="T:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext">
+            <summary>
+            단위 테스트에 제공되는 정보를 저장하는 데 사용됩니다.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.Properties">
+            <summary>
+            테스트에 대한 테스트 속성을 가져옵니다.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DataRow">
+            <summary>
+            테스트가 데이터 기반 테스트에 사용될 때 현재 데이터 행을 가져옵니다.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DataConnection">
+            <summary>
+            테스트가 데이터 기반 테스트에 사용될 때 현재 데이터 연결 행을 가져옵니다.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunDirectory">
+            <summary>
+            배포된 파일 및 결과 파일이 저장되는, 테스트 실행에 대한 기본 디렉터리를 가져옵니다.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DeploymentDirectory">
+            <summary>
+            테스트 실행을 위해 배포되는 파일의 디렉터리를 가져옵니다. 일반적으로 <see cref="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunDirectory"/>의 하위 디렉터리입니다.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.ResultsDirectory">
+            <summary>
+            테스트 실행의 결과에 대한 기본 디렉터리를 가져옵니다. 일반적으로 <see cref="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunDirectory"/>의 하위 디렉터리입니다.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunResultsDirectory">
+            <summary>
+            테스트 실행 결과 파일의 디렉터리를 가져옵니다. 일반적으로 <see cref="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.ResultsDirectory"/>의 하위 디렉터리입니다.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestResultsDirectory">
+            <summary>
+            테스트 결과 파일의 디렉터리를 가져옵니다.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestDir">
+            <summary>
+            배포된 파일 및 결과 파일이 저장되는, 테스트 실행에 대한 기본 디렉터리를 가져옵니다.
+            <see cref="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunDirectory"/>과(와) 같습니다. 해당 속성을 대신 사용하세요.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestDeploymentDir">
+            <summary>
+            테스트 실행에 대해 배포되는 파일의 디렉터리를 가져옵니다. 일반적으로 <see cref="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunDirectory"/>의 하위 디렉터리입니다.
+            <see cref="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DeploymentDirectory"/>과(와) 같습니다. 해당 속성을 대신 사용하세요.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestLogsDir">
+            <summary>
+            테스트 실행 결과 파일의 디렉터리를 가져옵니다. 일반적으로 <see cref="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.ResultsDirectory"/>의 하위 디렉터리입니다.
+            <see cref="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunResultsDirectory"/>과(와) 같습니다. 테스트 실행 결과 파일의 해당 속성 또는 테스트 관련 결과 파일의
+            <see cref="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestResultsDirectory"/>을(를) 대신 사용하세요.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.FullyQualifiedTestClassName">
+            <summary>
+            현재 실행 중인 테스트 메서드를 포함하는 클래스의 정규화된 이름을 가져옵니다.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestName">
+            <summary>
+            현재 실행 중인 테스트 메서드의 이름을 가져옵니다.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.CurrentTestOutcome">
+            <summary>
+            현재 테스트 결과를 가져옵니다.
+            </summary>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.WriteLine(System.String)">
+            <summary>
+            테스트 실행 중에 추적 메시지를 쓰는 데 사용됩니다.
+            </summary>
+            <param name="message">형식이 지정된 메시지 문자열</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.WriteLine(System.String,System.Object[])">
+            <summary>
+            테스트 실행 중에 추적 메시지를 쓰는 데 사용됩니다.
+            </summary>
+            <param name="format">서식 문자열</param>
+            <param name="args">인수</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.AddResultFile(System.String)">
+            <summary>
+            TestResult.ResultFileNames의 목록에 파일 이름을 추가합니다.
+            </summary>
+            <param name="fileName">
+            파일 이름.
+            </param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.BeginTimer(System.String)">
+            <summary>
+            지정된 이름으로 타이머를 시작합니다.
+            </summary>
+            <param name="timerName"> 타이머의 이름입니다.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.EndTimer(System.String)">
+            <summary>
+            지정된 이름의 타이머를 종료합니다.
+            </summary>
+            <param name="timerName"> 타이머의 이름입니다.</param>
+        </member>
+    </members>
+</doc>

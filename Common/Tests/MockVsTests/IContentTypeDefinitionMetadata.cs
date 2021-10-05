@@ -16,11 +16,11 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-    public interface IContentTypeDefinitionMetadata
-    {
-        string Name { get; }
+	public interface IContentTypeDefinitionMetadata
+	{
+		string Name { get; }
 
-        [System.ComponentModel.DefaultValue(null)]
-        IEnumerable<string> BaseDefinition { get; }
-    }
+		[System.ComponentModel.DefaultValue(null)]
+		IEnumerable<string> BaseDefinition { get; }
+	}
 }

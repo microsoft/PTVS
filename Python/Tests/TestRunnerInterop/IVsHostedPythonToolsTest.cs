@@ -16,11 +16,11 @@
 
 namespace TestRunnerInterop
 {
-    [ComImport]
-    [Guid("4FD36F27-2E38-4C77-9A67-7E5D88EFDDB9")]
-    public interface IVsHostedPythonToolsTest
-    {
-        IVsHostedPythonToolsTestResult Execute(string name, object[] arguments);
-        void Dispose();
-    }
+	[ComImport]
+	[Guid("4FD36F27-2E38-4C77-9A67-7E5D88EFDDB9")]
+	public interface IVsHostedPythonToolsTest
+	{
+		IVsHostedPythonToolsTestResult Execute(string name, object[] arguments);
+		void Dispose();
+	}
 }

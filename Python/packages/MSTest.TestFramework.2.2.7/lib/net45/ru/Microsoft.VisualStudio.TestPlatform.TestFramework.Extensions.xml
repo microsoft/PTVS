@@ -1,0 +1,1097 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions</name>
+    </assembly>
+    <members>
+        <member name="T:Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute">
+            <summary>
+            Используется для указания элемента развертывания (файл или каталог) для развертывания каждого теста.
+            Может указываться для тестового класса или метода теста.
+            Чтобы указать несколько элементов, можно использовать несколько экземпляров атрибута.
+            Путь к элементу может быть абсолютным или относительным, в последнем случае он указывается по отношению к RunConfig.RelativePathRoot.
+            </summary>
+            <example>
+            [DeploymentItem("file1.xml")]
+            [DeploymentItem("file2.xml", "DataFiles")]
+            [DeploymentItem("bin\Debug")]
+            </example>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute.#ctor(System.String)">
+            <summary>
+            Инициализирует новый экземпляр класса <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute"/>.
+            </summary>
+            <param name="path">Файл или каталог для развертывания. Этот путь задается относительно выходного каталога сборки. Элемент будет скопирован в тот же каталог, что и развернутые сборки теста.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute.#ctor(System.String,System.String)">
+            <summary>
+            Инициализирует новый экземпляр класса <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute"/> 
+            </summary>
+            <param name="path">Относительный или абсолютный путь к файлу или каталогу для развертывания. Этот путь задается относительно выходного каталога сборки. Элемент будет скопирован в тот же каталог, что и развернутые сборки теста.</param>
+            <param name="outputDirectory">Путь к каталогу, в который должны быть скопированы элементы. Он может быть абсолютным или относительным (по отношению к каталогу развертывания). Все файлы и каталоги, обозначенные при помощи <paramref name="path"/> будет скопировано в этот каталог.</param>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute.Path">
+            <summary>
+            Получает путь к копируемым исходному файлу или папке.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute.OutputDirectory">
+            <summary>
+            Получает путь к каталогу, в который копируется элемент.
+            </summary>
+        </member>
+        <member name="T:Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames">
+            <summary>
+            Содержит литералы для имен разделов, свойств и атрибутов.
+            </summary>
+        </member>
+        <member name="F:Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.SectionName">
+            <summary>
+            Имя раздела конфигурации.
+            </summary>
+        </member>
+        <member name="F:Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.Beta2SectionName">
+            <summary>
+            Имя раздела конфигурации для Beta2. Оставлено для совместимости.
+            </summary>
+        </member>
+        <member name="F:Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.DataSourcesSectionName">
+            <summary>
+            Имя раздела для источника данных.
+            </summary>
+        </member>
+        <member name="F:Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.NameAttributeName">
+            <summary>
+            Имя атрибута для "Name"
+            </summary>
+        </member>
+        <member name="F:Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.ConnectionStringAttributeName">
+            <summary>
+            Имя атрибута для "ConnectionString"
+            </summary>
+        </member>
+        <member name="F:Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.DataAccessMethodAttributeName">
+            <summary>
+            Имя атрибута для "DataAccessMethod"
+            </summary>
+        </member>
+        <member name="F:Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.DataTableAttributeName">
+            <summary>
+            Имя атрибута для "DataTable"
+            </summary>
+        </member>
+        <member name="T:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement">
+            <summary>
+            Элемент источника данных.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement.Name">
+            <summary>
+            Возвращает или задает имя этой конфигурации.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement.ConnectionString">
+            <summary>
+            Возвращает или задает элемент ConnectionStringSettings в разделе &lt;connectionStrings&gt; файла .config.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement.DataTableName">
+            <summary>
+            Возвращает или задает имя таблицы данных.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement.DataAccessMethod">
+            <summary>
+            Возвращает или задает тип доступа к данным.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement.Key">
+            <summary>
+            Возвращает имя ключа.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement.Properties">
+            <summary>
+            Получает свойства конфигурации.
+            </summary>
+        </member>
+        <member name="T:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection">
+            <summary>
+            Коллекция элементов источника данных.
+            </summary>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection.#ctor">
+            <summary>
+            Инициализирует новый экземпляр класса <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection"/> .
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection.Item(System.String)">
+            <summary>
+            Возвращает элемент конфигурации с указанным ключом.
+            </summary>
+            <param name="name">Ключ возвращаемого элемента.</param>
+            <returns>System.Configuration.ConfigurationElement с указанным ключом; в противном случае — NULL.</returns>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection.Item(System.Int32)">
+            <summary>
+            Получает элемент конфигурации по указанному индексу.
+            </summary>
+            <param name="index">Индекс возвращаемого элемента System.Configuration.ConfigurationElement.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection.Add(Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement)">
+            <summary>
+            Добавляет элемент конфигурации в коллекцию элементов конфигурации.
+            </summary>
+            <param name="element">Добавляемый элемент System.Configuration.ConfigurationElement.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection.Remove(Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement)">
+            <summary>
+            Удаляет System.Configuration.ConfigurationElement из коллекции.
+            </summary>
+            <param name="element"> <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement"/> .</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection.Remove(System.String)">
+            <summary>
+            Удаляет System.Configuration.ConfigurationElement из коллекции.
+            </summary>
+            <param name="name">Ключ удаляемого элемента System.Configuration.ConfigurationElement.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection.Clear">
+            <summary>
+            Удаляет все объекты элементов конфигурации из коллекции.
+            </summary>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection.CreateNewElement">
+            <summary>
+            Создает новый <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement"/>.
+            </summary>
+            <returns>Новый <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement"/>.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection.GetElementKey(System.Configuration.ConfigurationElement)">
+            <summary>
+            Получает ключ элемента для указанного элемента конфигурации.
+            </summary>
+            <param name="element">Элемент System.Configuration.ConfigurationElement, для которого возвращается ключ.</param>
+            <returns>Объект System.Object, действующий как ключ для указанного элемента System.Configuration.ConfigurationElement.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection.BaseAdd(System.Configuration.ConfigurationElement)">
+            <summary>
+            Добавляет элемент конфигурации в коллекцию элементов конфигурации.
+            </summary>
+            <param name="element">Добавляемый элемент System.Configuration.ConfigurationElement.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection.BaseAdd(System.Int32,System.Configuration.ConfigurationElement)">
+            <summary>
+            Добавляет элемент конфигурации в коллекцию элементов конфигурации.
+            </summary>
+            <param name="index">Индекс, по которому следует добавить указанный элемент System.Configuration.ConfigurationElement.</param>
+            <param name="element">Добавляемый элемент System.Configuration.ConfigurationElement.</param>
+        </member>
+        <member name="T:Microsoft.VisualStudio.TestTools.UnitTesting.TestConfiguration">
+            <summary>
+            Поддержка параметров конфигурации для тестов.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestConfiguration.ConfigurationSection">
+            <summary>
+            Получает раздел конфигурации для тестов.
+            </summary>
+        </member>
+        <member name="T:Microsoft.VisualStudio.TestTools.UnitTesting.TestConfigurationSection">
+            <summary>
+            Раздел конфигурации для тестов.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestConfigurationSection.DataSources">
+            <summary>
+            Возвращает источники данных для этого раздела конфигурации.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestConfigurationSection.Properties">
+            <summary>
+            Получает коллекцию свойств.
+            </summary>
+            <returns>
+             <see cref="T:System.Configuration.ConfigurationPropertyCollection"/> свойств для элемента.
+            </returns>
+        </member>
+        <member name="T:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject">
+            <summary>
+            Этот класс представляет существующий закрытый внутренний объект в системе
+            </summary>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.#ctor(System.Object,System.String)">
+            <summary>
+            Инициализирует новый экземпляр класса <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject"/> , содержащий
+            уже существующий объект закрытого типа
+            </summary>
+            <param name="obj"> объект, который служит начальной точкой для доступа к закрытым элементам.</param>
+            <param name="memberToAccess">Строка разыменования, в которой получаемый объект обозначается точкой, например m_X.m_Y.m_Z</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.#ctor(System.String,System.String,System.Object[])">
+            <summary>
+            Инициализирует новый экземпляр класса <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject"/>, который заключает в оболочку
+            указанный тип.
+            </summary>
+            <param name="assemblyName">Имя сборки</param>
+            <param name="typeName">полное имя</param>
+            <param name="args">Аргументы, передаваемые в конструктор</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.#ctor(System.String,System.String,System.Type[],System.Object[])">
+            <summary>
+            Инициализирует новый экземпляр класса <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject"/>, который заключает в оболочку
+            указанный тип.
+            </summary>
+            <param name="assemblyName">Имя сборки</param>
+            <param name="typeName">полное имя</param>
+            <param name="parameterTypes">Массив <see cref="T:System.Type"/> объектов, представляющих число, порядок и тип параметров, получаемых конструктором</param>
+            <param name="args">Аргументы, передаваемые в конструктор</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.#ctor(System.Type,System.Object[])">
+            <summary>
+            Инициализирует новый экземпляр класса <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject"/>, который заключает в оболочку
+            указанный тип.
+            </summary>
+            <param name="type">тип создаваемого объекта</param>
+            <param name="args">Аргументы, передаваемые в конструктор</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.#ctor(System.Type,System.Type[],System.Object[])">
+            <summary>
+            Инициализирует новый экземпляр класса <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject"/>, который заключает в оболочку
+            указанный тип.
+            </summary>
+            <param name="type">тип создаваемого объекта</param>
+            <param name="parameterTypes">Массив <see cref="T:System.Type"/> объектов, представляющих число, порядок и тип параметров, получаемых конструктором</param>
+            <param name="args">Аргументы, передаваемые в конструктор</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.#ctor(System.Object)">
+            <summary>
+            Инициализирует новый экземпляр класса <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject"/>, который заключает в оболочку
+            заданный объект.
+            </summary>
+            <param name="obj">упаковываемый объект</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.#ctor(System.Object,Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType)">
+            <summary>
+            Инициализирует новый экземпляр класса <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject"/>, который заключает в оболочку
+            заданный объект.
+            </summary>
+            <param name="obj">упаковываемый объект</param>
+            <param name="type">Объект PrivateType</param>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Target">
+            <summary>
+            Возвращает или задает целевой объект
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.RealType">
+            <summary>
+            Возвращает тип базового объекта
+            </summary>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetHashCode">
+            <summary>
+            возвращает хэш-код целевого объекта
+            </summary>
+            <returns>целочисленное значение, представляющее хэш-код целевого объекта</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Equals(System.Object)">
+            <summary>
+            Равенство
+            </summary>
+            <param name="obj">Объект, с которым будет выполняться сравнение</param>
+            <returns>возвращает true, если объекты равны.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(System.String,System.Object[])">
+            <summary>
+            Вызывает указанный метод
+            </summary>
+            <param name="name">Имя метода</param>
+            <param name="args">Аргументы, передаваемые в элемент для вызова.</param>
+            <returns>Результат вызова метода</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(System.String,System.Type[],System.Object[])">
+            <summary>
+            Вызывает указанный метод
+            </summary>
+            <param name="name">Имя метода</param>
+            <param name="parameterTypes">Массив <see cref="T:System.Type"/> объектов, представляющих число, порядок и тип параметров, получаемых методом.</param>
+            <param name="args">Аргументы, передаваемые в элемент для вызова.</param>
+            <returns>Результат вызова метода</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(System.String,System.Type[],System.Object[],System.Type[])">
+            <summary>
+            Вызывает указанный метод
+            </summary>
+            <param name="name">Имя метода</param>
+            <param name="parameterTypes">Массив <see cref="T:System.Type"/> объектов, представляющих число, порядок и тип параметров, получаемых методом.</param>
+            <param name="args">Аргументы, передаваемые в элемент для вызова.</param>
+            <param name="typeArguments">Массив типов, соответствующих типам универсальных аргументов.</param>
+            <returns>Результат вызова метода</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(System.String,System.Object[],System.Globalization.CultureInfo)">
+            <summary>
+            Вызывает указанный метод
+            </summary>
+            <param name="name">Имя метода</param>
+            <param name="args">Аргументы, передаваемые в элемент для вызова.</param>
+            <param name="culture">Информация о языке и региональных параметрах</param>
+            <returns>Результат вызова метода</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(System.String,System.Type[],System.Object[],System.Globalization.CultureInfo)">
+            <summary>
+            Вызывает указанный метод
+            </summary>
+            <param name="name">Имя метода</param>
+            <param name="parameterTypes">Массив <see cref="T:System.Type"/> объектов, представляющих число, порядок и тип параметров, получаемых методом.</param>
+            <param name="args">Аргументы, передаваемые в элемент для вызова.</param>
+            <param name="culture">Информация о языке и региональных параметрах</param>
+            <returns>Результат вызова метода</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(System.String,System.Reflection.BindingFlags,System.Object[])">
+            <summary>
+            Вызывает указанный метод
+            </summary>
+            <param name="name">Имя метода</param>
+            <param name="bindingFlags">Битовая маска, состоящая из одного или нескольких объектов <see cref="T:System.Reflection.BindingFlags"/> которые определяют, как выполняется поиск.</param>
+            <param name="args">Аргументы, передаваемые в элемент для вызова.</param>
+            <returns>Результат вызова метода</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(System.String,System.Reflection.BindingFlags,System.Type[],System.Object[])">
+            <summary>
+            Вызывает указанный метод
+            </summary>
+            <param name="name">Имя метода</param>
+            <param name="bindingFlags">Битовая маска, состоящая из одного или нескольких объектов <see cref="T:System.Reflection.BindingFlags"/> которые определяют, как выполняется поиск.</param>
+            <param name="parameterTypes">Массив <see cref="T:System.Type"/> объектов, представляющих число, порядок и тип параметров, получаемых методом.</param>
+            <param name="args">Аргументы, передаваемые в элемент для вызова.</param>
+            <returns>Результат вызова метода</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(System.String,System.Reflection.BindingFlags,System.Object[],System.Globalization.CultureInfo)">
+            <summary>
+            Вызывает указанный метод
+            </summary>
+            <param name="name">Имя метода</param>
+            <param name="bindingFlags">Битовая маска, состоящая из одного или нескольких объектов <see cref="T:System.Reflection.BindingFlags"/> которые определяют, как выполняется поиск.</param>
+            <param name="args">Аргументы, передаваемые в элемент для вызова.</param>
+            <param name="culture">Информация о языке и региональных параметрах</param>
+            <returns>Результат вызова метода</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(System.String,System.Reflection.BindingFlags,System.Type[],System.Object[],System.Globalization.CultureInfo)">
+            <summary>
+            Вызывает указанный метод
+            </summary>
+            <param name="name">Имя метода</param>
+            <param name="bindingFlags">Битовая маска, состоящая из одного или нескольких объектов <see cref="T:System.Reflection.BindingFlags"/> которые определяют, как выполняется поиск.</param>
+            <param name="parameterTypes">Массив <see cref="T:System.Type"/> объектов, представляющих число, порядок и тип параметров, получаемых методом.</param>
+            <param name="args">Аргументы, передаваемые в элемент для вызова.</param>
+            <param name="culture">Информация о языке и региональных параметрах</param>
+            <returns>Результат вызова метода</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(System.String,System.Reflection.BindingFlags,System.Type[],System.Object[],System.Globalization.CultureInfo,System.Type[])">
+            <summary>
+            Вызывает указанный метод
+            </summary>
+            <param name="name">Имя метода</param>
+            <param name="bindingFlags">Битовая маска, состоящая из одного или нескольких объектов <see cref="T:System.Reflection.BindingFlags"/> которые определяют, как выполняется поиск.</param>
+            <param name="parameterTypes">Массив <see cref="T:System.Type"/> объектов, представляющих число, порядок и тип параметров, получаемых методом.</param>
+            <param name="args">Аргументы, передаваемые в элемент для вызова.</param>
+            <param name="culture">Информация о языке и региональных параметрах</param>
+            <param name="typeArguments">Массив типов, соответствующих типам универсальных аргументов.</param>
+            <returns>Результат вызова метода</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetArrayElement(System.String,System.Int32[])">
+            <summary>
+            Возвращает элемент массива с использованием массива нижних индексов для каждого измерения
+            </summary>
+            <param name="name">Имя члена</param>
+            <param name="indices">индексы массива</param>
+            <returns>Массив элементов.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetArrayElement(System.String,System.Object,System.Int32[])">
+            <summary>
+            Задает элемент массива с использованием массива нижних индексов для каждого измерения
+            </summary>
+            <param name="name">Имя члена</param>
+            <param name="value">Задаваемое значение</param>
+            <param name="indices">индексы массива</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetArrayElement(System.String,System.Reflection.BindingFlags,System.Int32[])">
+            <summary>
+            Возвращает элемент массива с использованием массива нижних индексов для каждого измерения
+            </summary>
+            <param name="name">Имя члена</param>
+            <param name="bindingFlags">Битовая маска, состоящая из одного или нескольких объектов <see cref="T:System.Reflection.BindingFlags"/> которые определяют, как выполняется поиск.</param>
+            <param name="indices">индексы массива</param>
+            <returns>Массив элементов.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetArrayElement(System.String,System.Reflection.BindingFlags,System.Object,System.Int32[])">
+            <summary>
+            Задает элемент массива с использованием массива нижних индексов для каждого измерения
+            </summary>
+            <param name="name">Имя члена</param>
+            <param name="bindingFlags">Битовая маска, состоящая из одного или нескольких объектов <see cref="T:System.Reflection.BindingFlags"/> которые определяют, как выполняется поиск.</param>
+            <param name="value">Задаваемое значение</param>
+            <param name="indices">индексы массива</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetField(System.String)">
+            <summary>
+            Получить поле
+            </summary>
+            <param name="name">Имя поля</param>
+            <returns>Поле.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetField(System.String,System.Object)">
+            <summary>
+            Присваивает значение полю
+            </summary>
+            <param name="name">Имя поля</param>
+            <param name="value">задаваемое значение</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetField(System.String,System.Reflection.BindingFlags)">
+            <summary>
+            Получает поле
+            </summary>
+            <param name="name">Имя поля</param>
+            <param name="bindingFlags">Битовая маска, состоящая из одного или нескольких объектов <see cref="T:System.Reflection.BindingFlags"/> которые определяют, как выполняется поиск.</param>
+            <returns>Поле.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetField(System.String,System.Reflection.BindingFlags,System.Object)">
+            <summary>
+            Присваивает значение полю
+            </summary>
+            <param name="name">Имя поля</param>
+            <param name="bindingFlags">Битовая маска, состоящая из одного или нескольких объектов <see cref="T:System.Reflection.BindingFlags"/> которые определяют, как выполняется поиск.</param>
+            <param name="value">задаваемое значение</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetFieldOrProperty(System.String)">
+            <summary>
+            Получает поле или свойство
+            </summary>
+            <param name="name">Имя поля или свойства</param>
+            <returns>Поле или свойство.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetFieldOrProperty(System.String,System.Object)">
+            <summary>
+            Присваивает значение полю или свойству
+            </summary>
+            <param name="name">Имя поля или свойства</param>
+            <param name="value">задаваемое значение</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetFieldOrProperty(System.String,System.Reflection.BindingFlags)">
+            <summary>
+            Получает поле или свойство
+            </summary>
+            <param name="name">Имя поля или свойства</param>
+            <param name="bindingFlags">Битовая маска, состоящая из одного или нескольких объектов <see cref="T:System.Reflection.BindingFlags"/> которые определяют, как выполняется поиск.</param>
+            <returns>Поле или свойство.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetFieldOrProperty(System.String,System.Reflection.BindingFlags,System.Object)">
+            <summary>
+            Присваивает значение полю или свойству
+            </summary>
+            <param name="name">Имя поля или свойства</param>
+            <param name="bindingFlags">Битовая маска, состоящая из одного или нескольких объектов <see cref="T:System.Reflection.BindingFlags"/> которые определяют, как выполняется поиск.</param>
+            <param name="value">задаваемое значение</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetProperty(System.String,System.Object[])">
+            <summary>
+            Получает свойство
+            </summary>
+            <param name="name">Имя свойства</param>
+            <param name="args">Аргументы, передаваемые в элемент для вызова.</param>
+            <returns>Свойство.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetProperty(System.String,System.Type[],System.Object[])">
+            <summary>
+            Получает свойство
+            </summary>
+            <param name="name">Имя свойства</param>
+            <param name="parameterTypes">Массив <see cref="T:System.Type"/> объектов, представляющих число, порядок и тип параметров для проиндексированного свойства.</param>
+            <param name="args">Аргументы, передаваемые в элемент для вызова.</param>
+            <returns>Свойство.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetProperty(System.String,System.Object,System.Object[])">
+            <summary>
+            Задать свойство
+            </summary>
+            <param name="name">Имя свойства</param>
+            <param name="value">задаваемое значение</param>
+            <param name="args">Аргументы, передаваемые в элемент для вызова.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetProperty(System.String,System.Type[],System.Object,System.Object[])">
+            <summary>
+            Задать свойство
+            </summary>
+            <param name="name">Имя свойства</param>
+            <param name="parameterTypes">Массив <see cref="T:System.Type"/> объектов, представляющих число, порядок и тип параметров для проиндексированного свойства.</param>
+            <param name="value">задаваемое значение</param>
+            <param name="args">Аргументы, передаваемые в элемент для вызова.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetProperty(System.String,System.Reflection.BindingFlags,System.Object[])">
+            <summary>
+            Получает свойство
+            </summary>
+            <param name="name">Имя свойства</param>
+            <param name="bindingFlags">Битовая маска, состоящая из одного или нескольких объектов <see cref="T:System.Reflection.BindingFlags"/> которые определяют, как выполняется поиск.</param>
+            <param name="args">Аргументы, передаваемые в элемент для вызова.</param>
+            <returns>Свойство.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetProperty(System.String,System.Reflection.BindingFlags,System.Type[],System.Object[])">
+            <summary>
+            Получает свойство
+            </summary>
+            <param name="name">Имя свойства</param>
+            <param name="bindingFlags">Битовая маска, состоящая из одного или нескольких объектов <see cref="T:System.Reflection.BindingFlags"/> которые определяют, как выполняется поиск.</param>
+            <param name="parameterTypes">Массив <see cref="T:System.Type"/> объектов, представляющих число, порядок и тип параметров для проиндексированного свойства.</param>
+            <param name="args">Аргументы, передаваемые в элемент для вызова.</param>
+            <returns>Свойство.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetProperty(System.String,System.Reflection.BindingFlags,System.Object,System.Object[])">
+            <summary>
+            Присваивает значение свойству
+            </summary>
+            <param name="name">Имя свойства</param>
+            <param name="bindingFlags">Битовая маска, состоящая из одного или нескольких объектов <see cref="T:System.Reflection.BindingFlags"/> которые определяют, как выполняется поиск.</param>
+            <param name="value">задаваемое значение</param>
+            <param name="args">Аргументы, передаваемые в элемент для вызова.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetProperty(System.String,System.Reflection.BindingFlags,System.Object,System.Type[],System.Object[])">
+            <summary>
+            Присваивает значение свойству
+            </summary>
+            <param name="name">Имя свойства</param>
+            <param name="bindingFlags">Битовая маска, состоящая из одного или нескольких объектов <see cref="T:System.Reflection.BindingFlags"/> которые определяют, как выполняется поиск.</param>
+            <param name="value">задаваемое значение</param>
+            <param name="parameterTypes">Массив <see cref="T:System.Type"/> объектов, представляющих число, порядок и тип параметров для проиндексированного свойства.</param>
+            <param name="args">Аргументы, передаваемые в элемент для вызова.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.ValidateAccessString(System.String)">
+            <summary>
+            Проверка строки доступа
+            </summary>
+            <param name="access"> строка доступа</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.InvokeHelper(System.String,System.Reflection.BindingFlags,System.Object[],System.Globalization.CultureInfo)">
+            <summary>
+            Вызывает элемент
+            </summary>
+            <param name="name">Имя члена</param>
+            <param name="bindingFlags">Дополнительные атрибуты</param>
+            <param name="args">Аргумент для вызова</param>
+            <param name="culture">Язык и региональные параметры</param>
+            <returns>Результат вызова</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetGenericMethodFromCache(System.String,System.Type[],System.Type[],System.Reflection.BindingFlags,System.Reflection.ParameterModifier[])">
+            <summary>
+            Извлекает наиболее подходящую сигнатуру универсального метода из текущего закрытого типа.
+            </summary>
+            <param name="methodName">Имя метода, в котором будет искаться кэш сигнатуры.</param>
+            <param name="parameterTypes">Массив типов, соответствующих типам параметров, в которых будет осуществляться поиск.</param>
+            <param name="typeArguments">Массив типов, соответствующих типам универсальных аргументов.</param>
+            <param name="bindingFlags"><see cref="T:System.Reflection.BindingFlags"/> для дальнейшей фильтрации сигнатур методов.</param>
+            <param name="modifiers">Модификаторы для параметров.</param>
+            <returns>Экземпляр methodinfo.</returns>
+        </member>
+        <member name="T:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType">
+            <summary>
+            Этот класс представляет закрытый класс для функции закрытого метода доступа.
+            </summary>
+        </member>
+        <member name="F:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.BindToEveryThing">
+            <summary>
+            Привязывается ко всему
+            </summary>
+        </member>
+        <member name="F:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.type">
+            <summary>
+            Упакованный тип.
+            </summary>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.#ctor(System.String,System.String)">
+            <summary>
+            Инициализирует новый экземпляр класса <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType"/> , содержащий закрытый тип.
+            </summary>
+            <param name="assemblyName">Имя сборки</param>
+            <param name="typeName">полное имя </param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.#ctor(System.Type)">
+            <summary>
+            Инициализирует новый экземпляр класса <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType"/> , содержащий
+            закрытый тип из объекта типа
+            </summary>
+            <param name="type">Упакованный создаваемый тип.</param>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.ReferencedType">
+            <summary>
+            Получает тип, на который была сделана ссылка
+            </summary>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.InvokeStatic(System.String,System.Object[])">
+            <summary>
+            Вызывает статический элемент
+            </summary>
+            <param name="name">Имя элемента InvokeHelper</param>
+            <param name="args">Аргументы для вызова</param>
+            <returns>Результат вызова</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.InvokeStatic(System.String,System.Type[],System.Object[])">
+            <summary>
+            Вызывает статический элемент
+            </summary>
+            <param name="name">Имя элемента InvokeHelper</param>
+            <param name="parameterTypes">Массив <see cref="T:System.Type"/> объектов, представляющих число, порядок и тип параметров для вызываемого метода</param>
+            <param name="args">Аргументы для вызова</param>
+            <returns>Результат вызова</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.InvokeStatic(System.String,System.Type[],System.Object[],System.Type[])">
+            <summary>
+            Вызывает статический элемент
+            </summary>
+            <param name="name">Имя элемента InvokeHelper</param>
+            <param name="parameterTypes">Массив <see cref="T:System.Type"/> объектов, представляющих число, порядок и тип параметров для вызываемого метода</param>
+            <param name="args">Аргументы для вызова</param>
+            <param name="typeArguments">Массив типов, соответствующих типам универсальных аргументов.</param>
+            <returns>Результат вызова</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.InvokeStatic(System.String,System.Object[],System.Globalization.CultureInfo)">
+            <summary>
+            Вызывает статический метод
+            </summary>
+            <param name="name">Имя члена</param>
+            <param name="args">Аргументы для вызова</param>
+            <param name="culture">Язык и региональные параметры</param>
+            <returns>Результат вызова</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.InvokeStatic(System.String,System.Type[],System.Object[],System.Globalization.CultureInfo)">
+            <summary>
+            Вызывает статический метод
+            </summary>
+            <param name="name">Имя члена</param>
+            <param name="parameterTypes">Массив <see cref="T:System.Type"/> объектов, представляющих число, порядок и тип параметров для вызываемого метода</param>
+            <param name="args">Аргументы для вызова</param>
+            <param name="culture">Информация о языке и региональных параметрах</param>
+            <returns>Результат вызова</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.InvokeStatic(System.String,System.Reflection.BindingFlags,System.Object[])">
+            <summary>
+            Вызывает статический метод
+            </summary>
+            <param name="name">Имя члена</param>
+            <param name="bindingFlags">Дополнительные атрибуты вызова</param>
+            <param name="args">Аргументы для вызова</param>
+            <returns>Результат вызова</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.InvokeStatic(System.String,System.Reflection.BindingFlags,System.Type[],System.Object[])">
+            <summary>
+            Вызывает статический метод
+            </summary>
+            <param name="name">Имя члена</param>
+            <param name="bindingFlags">Дополнительные атрибуты вызова</param>
+            <param name="parameterTypes">Массив <see cref="T:System.Type"/> объектов, представляющих число, порядок и тип параметров для вызываемого метода</param>
+            <param name="args">Аргументы для вызова</param>
+            <returns>Результат вызова</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.InvokeStatic(System.String,System.Reflection.BindingFlags,System.Object[],System.Globalization.CultureInfo)">
+            <summary>
+            Вызывает статический метод
+            </summary>
+            <param name="name">Имя элемента</param>
+            <param name="bindingFlags">Дополнительные атрибуты вызова</param>
+            <param name="args">Аргументы для вызова</param>
+            <param name="culture">Язык и региональные параметры</param>
+            <returns>Результат вызова</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.InvokeStatic(System.String,System.Reflection.BindingFlags,System.Type[],System.Object[],System.Globalization.CultureInfo)">
+            <summary>
+            Вызывает статический метод
+            </summary>
+            <param name="name">Имя элемента</param>
+            <param name="bindingFlags">Дополнительные атрибуты вызова</param>
+            /// <param name="parameterTypes">Массив <see cref="T:System.Type"/> объектов, представляющих число, порядок и тип параметров для вызываемого метода</param>
+            <param name="args">Аргументы для вызова</param>
+            <param name="culture">Язык и региональные параметры</param>
+            <returns>Результат вызова</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.InvokeStatic(System.String,System.Reflection.BindingFlags,System.Type[],System.Object[],System.Globalization.CultureInfo,System.Type[])">
+            <summary>
+            Вызывает статический метод
+            </summary>
+            <param name="name">Имя элемента</param>
+            <param name="bindingFlags">Дополнительные атрибуты вызова</param>
+            /// <param name="parameterTypes">Массив <see cref="T:System.Type"/> объектов, представляющих число, порядок и тип параметров для вызываемого метода</param>
+            <param name="args">Аргументы для вызова</param>
+            <param name="culture">Язык и региональные параметры</param>
+            <param name="typeArguments">Массив типов, соответствующих типам универсальных аргументов.</param>
+            <returns>Результат вызова</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.GetStaticArrayElement(System.String,System.Int32[])">
+            <summary>
+            Получает элемент в статическом массиве
+            </summary>
+            <param name="name">Имя массива</param>
+            <param name="indices">
+            Одномерный массив 32-разрядных целых чисел, которые являются индексами, указывающими
+            положение получаемого элемента. Например, чтобы получить доступ к a[10][11], нужны индексы {10,11}
+            </param>
+            <returns>элемент в указанном расположении</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.SetStaticArrayElement(System.String,System.Object,System.Int32[])">
+            <summary>
+            Присваивает значение элементу статического массива
+            </summary>
+            <param name="name">Имя массива</param>
+            <param name="value">задаваемое значение</param>
+            <param name="indices">
+            Одномерный массив 32-разрядных целых чисел, которые представляют индексы, указывающие
+            положение задаваемого элемента. Например, чтобы получить доступ к a[10][11], нужен массив {10,11}
+            </param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.GetStaticArrayElement(System.String,System.Reflection.BindingFlags,System.Int32[])">
+            <summary>
+            Получает элемент в статическом массиве
+            </summary>
+            <param name="name">Имя массива</param>
+            <param name="bindingFlags">Дополнительные атрибуты InvokeHelper</param>
+            <param name="indices">
+            Одномерный массив 32-разрядных целых чисел, которые представляют индексы, указывающие
+            положение получаемого элемента. Например, чтобы получить доступ к a[10][11], нужен массив {10,11}
+            </param>
+            <returns>элемент в указанном расположении</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.SetStaticArrayElement(System.String,System.Reflection.BindingFlags,System.Object,System.Int32[])">
+            <summary>
+            Присваивает значение элементу статического массива
+            </summary>
+            <param name="name">Имя массива</param>
+            <param name="bindingFlags">Дополнительные атрибуты InvokeHelper</param>
+            <param name="value">задаваемое значение</param>
+            <param name="indices">
+            Одномерный массив 32-разрядных целых чисел, которые представляют индексы, указывающие
+            положение задаваемого элемента. Например, чтобы получить доступ к a[10][11], нужен массив {10,11}
+            </param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.GetStaticField(System.String)">
+            <summary>
+            Получает статическое поле
+            </summary>
+            <param name="name">Имя поля</param>
+            <returns>Статическое поле.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.SetStaticField(System.String,System.Object)">
+            <summary>
+            Присваивает значение статическому полю
+            </summary>
+            <param name="name">Имя поля</param>
+            <param name="value">Аргумент для вызова</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.GetStaticField(System.String,System.Reflection.BindingFlags)">
+            <summary>
+            Получает статическое поле с использованием указанных атрибутов InvokeHelper
+            </summary>
+            <param name="name">Имя поля</param>
+            <param name="bindingFlags">Дополнительные атрибуты вызова</param>
+            <returns>Статическое поле.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.SetStaticField(System.String,System.Reflection.BindingFlags,System.Object)">
+            <summary>
+            Присваивает значение статическому полю при помощи атрибутов привязки
+            </summary>
+            <param name="name">Имя поля</param>
+            <param name="bindingFlags">Дополнительные атрибуты InvokeHelper</param>
+            <param name="value">Аргумент для вызова</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.GetStaticFieldOrProperty(System.String)">
+            <summary>
+            Получает статическое поле или свойство
+            </summary>
+            <param name="name">Имя поля или свойства</param>
+            <returns>Статическое поле или свойство.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.SetStaticFieldOrProperty(System.String,System.Object)">
+            <summary>
+            Присваивает значение статическому полю или свойству
+            </summary>
+            <param name="name">Имя поля или свойства</param>
+            <param name="value">Значение, присваиваемое полю или свойству</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.GetStaticFieldOrProperty(System.String,System.Reflection.BindingFlags)">
+            <summary>
+            Получает статическое поле или свойство с использованием указанных атрибутов InvokeHelper
+            </summary>
+            <param name="name">Имя поля или свойства</param>
+            <param name="bindingFlags">Дополнительные атрибуты вызова</param>
+            <returns>Статическое поле или свойство.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.SetStaticFieldOrProperty(System.String,System.Reflection.BindingFlags,System.Object)">
+            <summary>
+            Присваивает значение статическому полю или свойству при помощи атрибутов привязки
+            </summary>
+            <param name="name">Имя поля или свойства</param>
+            <param name="bindingFlags">Дополнительные атрибуты вызова</param>
+            <param name="value">Значение, присваиваемое полю или свойству</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.GetStaticProperty(System.String,System.Object[])">
+            <summary>
+            Получает статическое свойство
+            </summary>
+            <param name="name">Имя поля или свойства</param>
+            <param name="args">Аргументы для вызова</param>
+            <returns>Статическое свойство.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.SetStaticProperty(System.String,System.Object,System.Object[])">
+            <summary>
+            Присваивает значение статическому свойству
+            </summary>
+            <param name="name">Имя свойства</param>
+            <param name="value">Значение, присваиваемое полю или свойству</param>
+            <param name="args">Аргументы, передаваемые в элемент для вызова.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.SetStaticProperty(System.String,System.Object,System.Type[],System.Object[])">
+            <summary>
+            Присваивает значение статическому свойству
+            </summary>
+            <param name="name">Имя свойства</param>
+            <param name="value">Значение, присваиваемое полю или свойству</param>
+            <param name="parameterTypes">Массив <see cref="T:System.Type"/> объектов, представляющих число, порядок и тип параметров для проиндексированного свойства.</param>
+            <param name="args">Аргументы, передаваемые в элемент для вызова.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.GetStaticProperty(System.String,System.Reflection.BindingFlags,System.Object[])">
+            <summary>
+            Получает статическое свойство
+            </summary>
+            <param name="name">Имя свойства</param>
+            <param name="bindingFlags">Дополнительные атрибуты вызова.</param>
+            <param name="args">Аргументы, передаваемые в элемент для вызова.</param>
+            <returns>Статическое свойство.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.GetStaticProperty(System.String,System.Reflection.BindingFlags,System.Type[],System.Object[])">
+            <summary>
+            Получает статическое свойство
+            </summary>
+            <param name="name">Имя свойства</param>
+            <param name="bindingFlags">Дополнительные атрибуты вызова.</param>
+            <param name="parameterTypes">Массив <see cref="T:System.Type"/> объектов, представляющих число, порядок и тип параметров для проиндексированного свойства.</param>
+            <param name="args">Аргументы, передаваемые в элемент для вызова.</param>
+            <returns>Статическое свойство.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.SetStaticProperty(System.String,System.Reflection.BindingFlags,System.Object,System.Object[])">
+            <summary>
+            Присваивает значение статическому свойству
+            </summary>
+            <param name="name">Имя свойства</param>
+            <param name="bindingFlags">Дополнительные атрибуты вызова.</param>
+            <param name="value">Значение, присваиваемое полю или свойству</param>
+            <param name="args">Необязательные значения индекса для индексируемых свойств. Индексы для индексируемых свойств отсчитываются от нуля. Для неиндексируемых свойств это значение должно быть равно NULL. </param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.SetStaticProperty(System.String,System.Reflection.BindingFlags,System.Object,System.Type[],System.Object[])">
+            <summary>
+            Присваивает значение статическому свойству
+            </summary>
+            <param name="name">Имя свойства</param>
+            <param name="bindingFlags">Дополнительные атрибуты вызова.</param>
+            <param name="value">Значение, присваиваемое полю или свойству</param>
+            <param name="parameterTypes">Массив <see cref="T:System.Type"/> объектов, представляющих число, порядок и тип параметров для проиндексированного свойства.</param>
+            <param name="args">Аргументы, передаваемые в элемент для вызова.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.InvokeHelperStatic(System.String,System.Reflection.BindingFlags,System.Object[],System.Globalization.CultureInfo)">
+            <summary>
+            Вызывает статический метод
+            </summary>
+            <param name="name">Имя элемента</param>
+            <param name="bindingFlags">Дополнительные атрибуты вызова</param>
+            <param name="args">Аргументы для вызова</param>
+            <param name="culture">Язык и региональные параметры</param>
+            <returns>Результат вызова</returns>
+        </member>
+        <member name="T:Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper">
+            <summary>
+            Предоставляет обнаружение сигнатуры методов для универсальных методов.
+            </summary>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper.CompareMethodSigAndName(System.Reflection.MethodBase,System.Reflection.MethodBase)">
+            <summary>
+            Сравнивает сигнатуры двух этих методов.
+            </summary>
+            <param name="m1">Method1</param>
+            <param name="m2">Method2</param>
+            <returns>Значение true, если они одинаковые.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper.GetHierarchyDepth(System.Type)">
+            <summary>
+            Получает значение глубины иерархии из базового типа предоставленного типа.
+            </summary>
+            <param name="t">Тип.</param>
+            <returns>Глубина.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper.FindMostDerivedNewSlotMeth(System.Reflection.MethodBase[],System.Int32)">
+            <summary>
+            Находит самый производный тип с указанной информацией.
+            </summary>
+            <param name="match">Потенциальные совпадения.</param>
+            <param name="cMatches">Число совпадений.</param>
+            <returns>Самый производный метод.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper.SelectMethod(System.Reflection.BindingFlags,System.Reflection.MethodBase[],System.Type[],System.Reflection.ParameterModifier[])">
+            <summary>
+            Выбор метода на основе массива типов с учетом набора методов, соответствующих базовым условиям.
+            Если методов, соответствующих условиям, нет,
+            метод должен возвращать NULL.
+            </summary>
+            <param name="bindingAttr">Спецификация привязки.</param>
+            <param name="match">Потенциальные совпадения</param>
+            <param name="types">Типы</param>
+            <param name="modifiers">Модификаторы параметров.</param>
+            <returns>Метод сопоставления. Значение NULL при отсутствии совпадений.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper.FindMostSpecificMethod(System.Reflection.MethodBase,System.Int32[],System.Type,System.Reflection.MethodBase,System.Int32[],System.Type,System.Type[],System.Object[])">
+            <summary>
+            Находит наиболее точный метод из двух предоставленных.
+            </summary>
+            <param name="m1">Метод 1</param>
+            <param name="paramOrder1">Порядок параметров для метода 1</param>
+            <param name="paramArrayType1">Тип массива параметров.</param>
+            <param name="m2">Метод 2</param>
+            <param name="paramOrder2">Порядок параметров для метода 2</param>
+            <param name="paramArrayType2">&gt;Тип массива параметров.</param>
+            <param name="types">Типы для поиска.</param>
+            <param name="args">Аргументы</param>
+            <returns>Значение int, представляющее совпадение.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper.FindMostSpecific(System.Reflection.ParameterInfo[],System.Int32[],System.Type,System.Reflection.ParameterInfo[],System.Int32[],System.Type,System.Type[],System.Object[])">
+            <summary>
+            Находит наиболее точный метод из двух предоставленных.
+            </summary>
+            <param name="p1">Метод 1</param>
+            <param name="paramOrder1">Порядок параметров для метода 1</param>
+            <param name="paramArrayType1">Тип массива параметров.</param>
+            <param name="p2">Метод 2</param>
+            <param name="paramOrder2">Порядок параметров для метода 2</param>
+            <param name="paramArrayType2">&gt;Тип массива параметров.</param>
+            <param name="types">Типы для поиска.</param>
+            <param name="args">Аргументы</param>
+            <returns>Значение int, представляющее совпадение.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper.FindMostSpecificType(System.Type,System.Type,System.Type)">
+            <summary>
+            Находит наиболее конкретный тип из двух предоставленных.
+            </summary>
+            <param name="c1">Тип 1</param>
+            <param name="c2">Тип 2</param>
+            <param name="t">Определяющий тип</param>
+            <returns>Значение int, представляющее совпадение.</returns>
+        </member>
+        <member name="T:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext">
+            <summary>
+            Используется для хранения данных, предоставляемых модульным тестам.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.Properties">
+            <summary>
+            Получает свойства теста.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DataRow">
+            <summary>
+            Возвращает текущую строку данных, когда тест используется для тестирования, управляемого данными.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DataConnection">
+            <summary>
+            Возвращает текущую строку подключения к данным, когда тест используется для тестирования, управляемого данными.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunDirectory">
+            <summary>
+            Возвращает базовый каталог для тестового запуска, в котором хранятся развернутые файлы и файлы результатов.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DeploymentDirectory">
+            <summary>
+            Получает каталог для файлов, развернутых для тестового запуска. Обычно это подкаталог <see cref="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunDirectory"/>.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.ResultsDirectory">
+            <summary>
+            Получает базовый каталог для результатов тестового запуска. Обычно это подкаталог <see cref="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunDirectory"/>.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunResultsDirectory">
+            <summary>
+            Получает каталог для файлов результата теста. Обычно это подкаталог <see cref="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.ResultsDirectory"/>.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestResultsDirectory">
+            <summary>
+            Возвращает каталог для файлов результатов теста.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestDir">
+            <summary>
+            Получает базовый каталог для тестового запуска, в котором хранятся развернутые файлы и файлы результатов.
+            То же, что и  <see cref="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunDirectory"/>. Следует использовать это свойство.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestDeploymentDir">
+            <summary>
+            Получает каталог для файлов, развернутых для тестового запуска. Обычто это подкаталог <see cref="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunDirectory"/>.
+            То же, что и <see cref="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DeploymentDirectory"/>. Следует использовать это свойство.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestLogsDir">
+            <summary>
+            Получает каталог для файлов результата тестового запуска. Обычно это подкаталог <see cref="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.ResultsDirectory"/>.
+            То же, что и <see cref="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunResultsDirectory"/>. Используйте это свойство для файлов результата тестового запуска или
+            <see cref="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestResultsDirectory"/> для файлов результата определенного теста.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.FullyQualifiedTestClassName">
+            <summary>
+            Возвращает полное имя класса, содержащего используемый сейчас метод теста
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestName">
+            <summary>
+            Возвращает имя метода теста, выполняемого в данный момент
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.CurrentTestOutcome">
+            <summary>
+            Получает текущий результат теста.
+            </summary>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.WriteLine(System.String)">
+            <summary>
+            Используется для записи сообщений трассировки во время теста
+            </summary>
+            <param name="message">отформатированная строка сообщения</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.WriteLine(System.String,System.Object[])">
+            <summary>
+            Используется для записи сообщений трассировки во время теста
+            </summary>
+            <param name="format">строка формата</param>
+            <param name="args">аргументы</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.AddResultFile(System.String)">
+            <summary>
+            Добавляет имя файла в список TestResult.ResultFileNames
+            </summary>
+            <param name="fileName">
+            Имя файла.
+            </param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.BeginTimer(System.String)">
+            <summary>
+            Запускает таймер с указанным именем
+            </summary>
+            <param name="timerName"> Имя таймера.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.EndTimer(System.String)">
+            <summary>
+            Останавливает таймер с указанным именем
+            </summary>
+            <param name="timerName"> Имя таймера.</param>
+        </member>
+    </members>
+</doc>

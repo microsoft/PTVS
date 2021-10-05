@@ -16,11 +16,11 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-    [Export(typeof(IVsFolderWorkspaceService))]
-    class MockVsFolderWorkspaceService : IVsFolderWorkspaceService
-    {
-        public IWorkspace CurrentWorkspace => null;
+	[Export(typeof(IVsFolderWorkspaceService))]
+	class MockVsFolderWorkspaceService : IVsFolderWorkspaceService
+	{
+		public IWorkspace CurrentWorkspace => null;
 
-        public AsyncEvent<EventArgs> OnActiveWorkspaceChanged { get; set; }
-    }
+		public AsyncEvent<EventArgs> OnActiveWorkspaceChanged { get; set; }
+	}
 }

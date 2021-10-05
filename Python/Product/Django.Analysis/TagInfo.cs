@@ -17,16 +17,16 @@
 namespace Microsoft.PythonTools.Django.Analysis
 {
 
-    class TagInfo
-    {
-        public readonly string Documentation;
-        public readonly IPythonProjectEntry Entry;
-        public TagInfo(string doc, IPythonProjectEntry entry)
-        {
-            Documentation = doc;
-            Entry = entry;
-        }
+	class TagInfo
+	{
+		public readonly string Documentation;
+		public readonly IPythonProjectEntry Entry;
+		public TagInfo(string doc, IPythonProjectEntry entry)
+		{
+			Documentation = doc;
+			Entry = entry;
+		}
 
-    }
+	}
 
 }

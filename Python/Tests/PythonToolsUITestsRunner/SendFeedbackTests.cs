@@ -16,34 +16,34 @@
 
 namespace PythonToolsUITestsRunner
 {
-    [TestClass]
-    public class SendFeedbackTests
-    {
-        #region UI test boilerplate
-        public VsTestInvoker _vs => new VsTestInvoker(
-            VsTestContext.Instance,
-            // Remote container (DLL) name
-            "Microsoft.PythonTools.Tests.PythonToolsUITests",
-            // Remote class name
-            $"PythonToolsUITests.{GetType().Name}"
-        );
+	[TestClass]
+	public class SendFeedbackTests
+	{
+		#region UI test boilerplate
+		public VsTestInvoker _vs => new VsTestInvoker(
+			VsTestContext.Instance,
+			// Remote container (DLL) name
+			"Microsoft.PythonTools.Tests.PythonToolsUITests",
+			// Remote class name
+			$"PythonToolsUITests.{GetType().Name}"
+		);
 
-        public TestContext TestContext { get; set; }
+		public TestContext TestContext { get; set; }
 
-        [TestInitialize]
-        public void TestInitialize() => VsTestContext.Instance.TestInitialize(TestContext.DeploymentDirectory);
-        [TestCleanup]
-        public void TestCleanup() => VsTestContext.Instance.TestCleanup();
-        [ClassCleanup]
-        public static void ClassCleanup() => VsTestContext.Instance.Dispose();
-        #endregion
+		[TestInitialize]
+		public void TestInitialize() => VsTestContext.Instance.TestInitialize(TestContext.DeploymentDirectory);
+		[TestCleanup]
+		public void TestCleanup() => VsTestContext.Instance.TestCleanup();
+		[ClassCleanup]
+		public static void ClassCleanup() => VsTestContext.Instance.Dispose();
+		#endregion
 
-        // Note: Report a problem feature requires the user to be signed in to VS
-        [TestMethod, Priority(UITestPriority.P2)]
-        [TestCategory("Installed")]
-        public void ReportAProblemDiagnostics()
-        {
-            _vs.RunTest(nameof(PythonToolsUITests.SendFeedbackTests.ReportAProblemDiagnostics));
-        }
-    }
+		// Note: Report a problem feature requires the user to be signed in to VS
+		[TestMethod, Priority(UITestPriority.P2)]
+		[TestCategory("Installed")]
+		public void ReportAProblemDiagnostics()
+		{
+			_vs.RunTest(nameof(PythonToolsUITests.SendFeedbackTests.ReportAProblemDiagnostics));
+		}
+	}
 }

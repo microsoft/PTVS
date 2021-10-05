@@ -16,66 +16,64 @@
 
 namespace Microsoft.PythonTools.Django.Analysis
 {
-    class TemplateVariables
-    {
-        private readonly Dictionary<string, Dictionary<IPythonProjectEntry, ValuesAndVersion>> _values = new Dictionary<string, Dictionary<IPythonProjectEntry, ValuesAndVersion>>();
+	class TemplateVariables
+	{
+		private readonly Dictionary<string, Dictionary<IPythonProjectEntry, ValuesAndVersion>> _values = new Dictionary<string, Dictionary<IPythonProjectEntry, ValuesAndVersion>>();
 
-        public void UpdateVariable(string name, AnalysisUnit unit, IEnumerable<AnalysisValue> values)
-        {
-            Dictionary<IPythonProjectEntry, ValuesAndVersion> entryMappedValues;
-            if (!_values.TryGetValue(name, out entryMappedValues))
-            {
-                _values[name] = entryMappedValues = new Dictionary<IPythonProjectEntry, ValuesAndVersion>();
-            }
+		public void UpdateVariable(string name, AnalysisUnit unit, IEnumerable<AnalysisValue> values)
+		{
+			if (!_values.TryGetValue(name, out Dictionary<IPythonProjectEntry, ValuesAndVersion> entryMappedValues))
+			{
+				_values[name] = entryMappedValues = new Dictionary<IPythonProjectEntry, ValuesAndVersion>();
+			}
 
-            foreach (var value in values)
-            {
-                var module = value.DeclaringModule ?? unit.ProjectEntry;
-                ValuesAndVersion valsAndVersion;
-                if (!entryMappedValues.TryGetValue(module, out valsAndVersion) || valsAndVersion.DeclaringVersion != module.AnalysisVersion)
-                {
-                    entryMappedValues[module] = valsAndVersion = new ValuesAndVersion(module.AnalysisVersion);
-                }
+			foreach (var value in values)
+			{
+				var module = value.DeclaringModule ?? unit.ProjectEntry;
+				if (!entryMappedValues.TryGetValue(module, out ValuesAndVersion valsAndVersion) || valsAndVersion.DeclaringVersion != module.AnalysisVersion)
+				{
+					entryMappedValues[module] = valsAndVersion = new ValuesAndVersion(module.AnalysisVersion);
+				}
 
-                valsAndVersion.Values.Add(value);
-            }
-        }
+				valsAndVersion.Values.Add(value);
+			}
+		}
 
-        struct ValuesAndVersion
-        {
-            public readonly int DeclaringVersion;
-            public readonly HashSet<AnalysisValue> Values;
+		struct ValuesAndVersion
+		{
+			public readonly int DeclaringVersion;
+			public readonly HashSet<AnalysisValue> Values;
 
-            public ValuesAndVersion(int declaringVersion)
-            {
-                DeclaringVersion = declaringVersion;
-                Values = new HashSet<AnalysisValue>();
-            }
-        }
+			public ValuesAndVersion(int declaringVersion)
+			{
+				DeclaringVersion = declaringVersion;
+				Values = new HashSet<AnalysisValue>();
+			}
+		}
 
-        internal Dictionary<string, HashSet<AnalysisValue>> GetAllValues()
-        {
-            var res = new Dictionary<string, HashSet<AnalysisValue>>();
+		internal Dictionary<string, HashSet<AnalysisValue>> GetAllValues()
+		{
+			var res = new Dictionary<string, HashSet<AnalysisValue>>();
 
-            foreach (var nameAndValues in _values)
-            {
-                HashSet<AnalysisValue> curValues = new HashSet<AnalysisValue>();
-                res[nameAndValues.Key] = curValues;
+			foreach (var nameAndValues in _values)
+			{
+				HashSet<AnalysisValue> curValues = new HashSet<AnalysisValue>();
+				res[nameAndValues.Key] = curValues;
 
-                foreach (var projectAndValues in nameAndValues.Value)
-                {
-                    foreach (var analysisValue in projectAndValues.Value.Values)
-                    {
-                        if (analysisValue.DeclaringModule == null ||
-                            analysisValue.DeclaringModule.AnalysisVersion == projectAndValues.Value.DeclaringVersion)
-                        {
-                            curValues.Add(analysisValue);
-                        }
-                    }
-                }
-            }
-            return res;
-        }
-    }
+				foreach (var projectAndValues in nameAndValues.Value)
+				{
+					foreach (var analysisValue in projectAndValues.Value.Values)
+					{
+						if (analysisValue.DeclaringModule == null ||
+							analysisValue.DeclaringModule.AnalysisVersion == projectAndValues.Value.DeclaringVersion)
+						{
+							curValues.Add(analysisValue);
+						}
+					}
+				}
+			}
+			return res;
+		}
+	}
 
 }

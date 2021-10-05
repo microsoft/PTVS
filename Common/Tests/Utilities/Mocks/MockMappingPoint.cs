@@ -16,50 +16,50 @@
 
 namespace TestUtilities.Mocks
 {
-    public class MockMappingPoint : IMappingPoint
-    {
-        private readonly ITrackingPoint _trackingPoint;
+	public class MockMappingPoint : IMappingPoint
+	{
+		private readonly ITrackingPoint _trackingPoint;
 
-        public MockMappingPoint(ITrackingPoint trackingPoint)
-        {
-            _trackingPoint = trackingPoint;
-        }
+		public MockMappingPoint(ITrackingPoint trackingPoint)
+		{
+			_trackingPoint = trackingPoint;
+		}
 
-        public ITextBuffer AnchorBuffer
-        {
-            get { throw new NotImplementedException(); }
-        }
+		public ITextBuffer AnchorBuffer
+		{
+			get { throw new NotImplementedException(); }
+		}
 
-        public IBufferGraph BufferGraph
-        {
-            get { throw new NotImplementedException(); }
-        }
+		public IBufferGraph BufferGraph
+		{
+			get { throw new NotImplementedException(); }
+		}
 
-        public SnapshotPoint? GetInsertionPoint(Predicate<ITextBuffer> match)
-        {
-            throw new NotImplementedException();
-        }
+		public SnapshotPoint? GetInsertionPoint(Predicate<ITextBuffer> match)
+		{
+			throw new NotImplementedException();
+		}
 
-        public SnapshotPoint? GetPoint(Predicate<ITextBuffer> match, PositionAffinity affinity)
-        {
-            throw new NotImplementedException();
-        }
+		public SnapshotPoint? GetPoint(Predicate<ITextBuffer> match, PositionAffinity affinity)
+		{
+			throw new NotImplementedException();
+		}
 
-        public SnapshotPoint? GetPoint(ITextSnapshot targetSnapshot, PositionAffinity affinity)
-        {
-            try
-            {
-                return _trackingPoint.GetPoint(targetSnapshot);
-            }
-            catch (ArgumentException)
-            {
-                return null;
-            }
-        }
+		public SnapshotPoint? GetPoint(ITextSnapshot targetSnapshot, PositionAffinity affinity)
+		{
+			try
+			{
+				return _trackingPoint.GetPoint(targetSnapshot);
+			}
+			catch (ArgumentException)
+			{
+				return null;
+			}
+		}
 
-        public SnapshotPoint? GetPoint(ITextBuffer targetBuffer, PositionAffinity affinity)
-        {
-            return GetPoint(targetBuffer.CurrentSnapshot, affinity);
-        }
-    }
+		public SnapshotPoint? GetPoint(ITextBuffer targetBuffer, PositionAffinity affinity)
+		{
+			return GetPoint(targetBuffer.CurrentSnapshot, affinity);
+		}
+	}
 }

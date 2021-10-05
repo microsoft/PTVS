@@ -16,39 +16,39 @@
 
 namespace TestUtilities
 {
-    public interface IEditor
-    {
-        IIntellisenseSession TopSession
-        {
-            get;
-        }
-        string Text
-        {
-            get;
-        }
-        void Type(string text);
+	public interface IEditor
+	{
+		IIntellisenseSession TopSession
+		{
+			get;
+		}
+		string Text
+		{
+			get;
+		}
+		void Type(string text);
 
-        void Invoke(Action action);
+		void Invoke(Action action);
 
-        void MoveCaret(int line, int column);
-        void SetFocus();
+		void MoveCaret(int line, int column);
+		void SetFocus();
 
-        IWpfTextView TextView
-        {
-            get;
-        }
+		IWpfTextView TextView
+		{
+			get;
+		}
 
-        IClassifier Classifier
-        {
-            get;
-        }
+		IClassifier Classifier
+		{
+			get;
+		}
 
-        void WaitForText(string text);
-        void Select(int line, int column, int length);
+		void WaitForText(string text);
+		void Select(int line, int column, int length);
 
-        SessionHolder<T> WaitForSession<T>() where T : IIntellisenseSession;
-        SessionHolder<T> WaitForSession<T>(bool assertIfNoSession) where T : IIntellisenseSession;
+		SessionHolder<T> WaitForSession<T>() where T : IIntellisenseSession;
+		SessionHolder<T> WaitForSession<T>(bool assertIfNoSession) where T : IIntellisenseSession;
 
-        void AssertNoIntellisenseSession();
-    }
+		void AssertNoIntellisenseSession();
+	}
 }

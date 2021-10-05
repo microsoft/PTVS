@@ -16,82 +16,82 @@
 
 namespace PythonToolsUITestsRunner
 {
-    [TestClass]
-    public class ProjectHomeTests
-    {
-        #region UI test boilerplate
-        public VsTestInvoker _vs => new VsTestInvoker(
-            VsTestContext.Instance,
-            // Remote container (DLL) name
-            "Microsoft.PythonTools.Tests.PythonToolsUITests",
-            // Remote class name
-            $"PythonToolsUITests.{GetType().Name}"
-        );
+	[TestClass]
+	public class ProjectHomeTests
+	{
+		#region UI test boilerplate
+		public VsTestInvoker _vs => new VsTestInvoker(
+			VsTestContext.Instance,
+			// Remote container (DLL) name
+			"Microsoft.PythonTools.Tests.PythonToolsUITests",
+			// Remote class name
+			$"PythonToolsUITests.{GetType().Name}"
+		);
 
-        public TestContext TestContext { get; set; }
+		public TestContext TestContext { get; set; }
 
-        [TestInitialize]
-        public void TestInitialize() => VsTestContext.Instance.TestInitialize(TestContext.DeploymentDirectory);
-        [TestCleanup]
-        public void TestCleanup() => VsTestContext.Instance.TestCleanup();
-        [ClassCleanup]
-        public static void ClassCleanup() => VsTestContext.Instance.Dispose();
-        #endregion
+		[TestInitialize]
+		public void TestInitialize() => VsTestContext.Instance.TestInitialize(TestContext.DeploymentDirectory);
+		[TestCleanup]
+		public void TestCleanup() => VsTestContext.Instance.TestCleanup();
+		[ClassCleanup]
+		public static void ClassCleanup() => VsTestContext.Instance.Dispose();
+		#endregion
 
-        [TestMethod, Priority(UITestPriority.P0)]
-        [TestCategory("Installed")]
-        public void LoadRelativeProjects()
-        {
-            _vs.RunTest(nameof(PythonToolsUITests.ProjectHomeTests.LoadRelativeProjects));
-        }
+		[TestMethod, Priority(UITestPriority.P0)]
+		[TestCategory("Installed")]
+		public void LoadRelativeProjects()
+		{
+			_vs.RunTest(nameof(PythonToolsUITests.ProjectHomeTests.LoadRelativeProjects));
+		}
 
-        [TestMethod, Priority(UITestPriority.P0)]
-        [TestCategory("Installed")]
-        public void AddDeleteItem()
-        {
-            _vs.RunTest(nameof(PythonToolsUITests.ProjectHomeTests.AddDeleteItem));
-        }
+		[TestMethod, Priority(UITestPriority.P0)]
+		[TestCategory("Installed")]
+		public void AddDeleteItem()
+		{
+			_vs.RunTest(nameof(PythonToolsUITests.ProjectHomeTests.AddDeleteItem));
+		}
 
-        [TestMethod, Priority(UITestPriority.P0)]
-        [TestCategory("Installed")]
-        public void AddDeleteItem2()
-        {
-            _vs.RunTest(nameof(PythonToolsUITests.ProjectHomeTests.AddDeleteItem2));
-        }
+		[TestMethod, Priority(UITestPriority.P0)]
+		[TestCategory("Installed")]
+		public void AddDeleteItem2()
+		{
+			_vs.RunTest(nameof(PythonToolsUITests.ProjectHomeTests.AddDeleteItem2));
+		}
 
-        [TestMethod, Priority(UITestPriority.P0)]
-        [TestCategory("Installed")]
-        public void AddDeleteFolder()
-        {
-            _vs.RunTest(nameof(PythonToolsUITests.ProjectHomeTests.AddDeleteFolder));
-        }
+		[TestMethod, Priority(UITestPriority.P0)]
+		[TestCategory("Installed")]
+		public void AddDeleteFolder()
+		{
+			_vs.RunTest(nameof(PythonToolsUITests.ProjectHomeTests.AddDeleteFolder));
+		}
 
-        [TestMethod, Priority(UITestPriority.P0)]
-        [TestCategory("Installed")]
-        public void AddDeleteSubfolder()
-        {
-            _vs.RunTest(nameof(PythonToolsUITests.ProjectHomeTests.AddDeleteSubfolder));
-        }
+		[TestMethod, Priority(UITestPriority.P0)]
+		[TestCategory("Installed")]
+		public void AddDeleteSubfolder()
+		{
+			_vs.RunTest(nameof(PythonToolsUITests.ProjectHomeTests.AddDeleteSubfolder));
+		}
 
-        [TestMethod, Priority(UITestPriority.P0)]
-        [TestCategory("Installed")]
-        public void SaveProjectAndCheckProjectHome()
-        {
-            _vs.RunTest(nameof(PythonToolsUITests.ProjectHomeTests.SaveProjectAndCheckProjectHome));
-        }
+		[TestMethod, Priority(UITestPriority.P0)]
+		[TestCategory("Installed")]
+		public void SaveProjectAndCheckProjectHome()
+		{
+			_vs.RunTest(nameof(PythonToolsUITests.ProjectHomeTests.SaveProjectAndCheckProjectHome));
+		}
 
-        [TestMethod, Priority(UITestPriority.P2)]
-        [TestCategory("Installed")]
-        public void DragDropRelocatedTest()
-        {
-            _vs.RunTest(nameof(PythonToolsUITests.ProjectHomeTests.DragDropRelocatedTest));
-        }
+		[TestMethod, Priority(UITestPriority.P2)]
+		[TestCategory("Installed")]
+		public void DragDropRelocatedTest()
+		{
+			_vs.RunTest(nameof(PythonToolsUITests.ProjectHomeTests.DragDropRelocatedTest));
+		}
 
-        [TestMethod, Priority(UITestPriority.P0)]
-        [TestCategory("Installed")]
-        public void CutPasteRelocatedTest()
-        {
-            _vs.RunTest(nameof(PythonToolsUITests.ProjectHomeTests.CutPasteRelocatedTest));
-        }
-    }
+		[TestMethod, Priority(UITestPriority.P0)]
+		[TestCategory("Installed")]
+		public void CutPasteRelocatedTest()
+		{
+			_vs.RunTest(nameof(PythonToolsUITests.ProjectHomeTests.CutPasteRelocatedTest));
+		}
+	}
 }

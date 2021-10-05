@@ -18,29 +18,29 @@ using AnalysisTests;
 
 namespace PythonToolsTests
 {
-    using AP = AnalysisProtocol;
+	using AP = AnalysisProtocol;
 
-    [TestClass]
-    public class ExtractMethodTests
-    {
-        private static readonly string ErrorReturn = Strings.ExtractMethodSelectionContainsReturn;
-        private static readonly string ErrorYield = Strings.ExtractMethodContainsYieldExpression;
-        private static readonly string ErrorContinue = Strings.ExtractMethodSelectionContainsContinueButNotEnclosingLoop;
-        private static readonly string ErrorBreak = Strings.ExtractMethodSelectionContainsBreakButNotEnclosingLoop;
-        private static readonly string ErrorReturnWithOutputs = Strings.ExtractMethodAssignsVariablesAndReturns;
-        private static readonly string ErrorImportStar = Strings.ExtractMethodContainsFromImportStar;
-        private static readonly string ErrorExtractFromClass = Strings.ExtractMethodStatementsFromClassDefinition;
+	[TestClass]
+	public class ExtractMethodTests
+	{
+		private static readonly string ErrorReturn = Strings.ExtractMethodSelectionContainsReturn;
+		private static readonly string ErrorYield = Strings.ExtractMethodContainsYieldExpression;
+		private static readonly string ErrorContinue = Strings.ExtractMethodSelectionContainsContinueButNotEnclosingLoop;
+		private static readonly string ErrorBreak = Strings.ExtractMethodSelectionContainsBreakButNotEnclosingLoop;
+		private static readonly string ErrorReturnWithOutputs = Strings.ExtractMethodAssignsVariablesAndReturns;
+		private static readonly string ErrorImportStar = Strings.ExtractMethodContainsFromImportStar;
+		private static readonly string ErrorExtractFromClass = Strings.ExtractMethodStatementsFromClassDefinition;
 
-        [TestInitialize]
-        public void TestInitialize() => TestEnvironmentImpl.TestInitialize(60);
+		[TestInitialize]
+		public void TestInitialize() => TestEnvironmentImpl.TestInitialize(60);
 
-        [TestCleanup]
-        public void TestCleanup() => TestEnvironmentImpl.TestCleanup();
+		[TestCleanup]
+		public void TestCleanup() => TestEnvironmentImpl.TestCleanup();
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public async Task TestGlobalNonLocalVars()
-        {
-            await SuccessTest("ABC = 42",
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public async Task TestGlobalNonLocalVars()
+		{
+			await SuccessTest("ABC = 42",
 @"def f():
     ABC = 42
     def f():
@@ -60,7 +60,7 @@ def f():
         print(ABC)
     return f");
 
-            await SuccessTest("ABC = 42",
+			await SuccessTest("ABC = 42",
 @"def f():
     ABC = 42
     def f():
@@ -76,7 +76,7 @@ def f():
         print(ABC)
     return f");
 
-            await SuccessTest("ABC = 42",
+			await SuccessTest("ABC = 42",
 @"def f():
     global ABC
     ABC = 42",
@@ -88,12 +88,12 @@ def f():
     global ABC
     ABC = g()");
 
-        }
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public async Task TestDefinitions()
-        {
-            await SuccessTest("x = .. = h()",
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public async Task TestDefinitions()
+		{
+			await SuccessTest("x = .. = h()",
 @"def f():
     def g():
         return 42
@@ -116,7 +116,7 @@ def f():
     g(g, h)
 ");
 
-            await SuccessTest("x = .. = h()",
+			await SuccessTest("x = .. = h()",
 @"def f():
     class g():
         pass
@@ -139,7 +139,7 @@ def f():
     g(g, h)
 ");
 
-            await SuccessTest("@ .. pass",
+			await SuccessTest("@ .. pass",
 @"@property
 def f(): pass",
 @"def g():
@@ -148,12 +148,12 @@ def f(): pass",
     return f
 
 f = g()");
-        }
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public async Task TestLeadingComment()
-        {
-            await SuccessTest("x = 41",
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public async Task TestLeadingComment()
+		{
+			await SuccessTest("x = 41",
 @"# fob
 x = 41",
 @"# fob
@@ -162,12 +162,12 @@ def g():
     return x
 
 x = g()");
-        }
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public async Task AssignInIfStatementReadAfter()
-        {
-            await ExtractMethodTest(@"class C:
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public async Task AssignInIfStatementReadAfter()
+		{
+			await ExtractMethodTest(@"class C:
     def fob(self):
         if False: # fob
             oar = player = Player()
@@ -187,7 +187,7 @@ x = g()");
  ), scopeName: "C");
 
 
-            await ExtractMethodTest(@"class C:
+			await ExtractMethodTest(@"class C:
     def fob(self):
         if False: 
             oar = player = Player()
@@ -206,7 +206,7 @@ x = g()");
 "
  ), scopeName: "C");
 
-            await ExtractMethodTest(@"class C:
+			await ExtractMethodTest(@"class C:
     def fob(self):
         if False: 
             oar = player = Player()
@@ -227,12 +227,12 @@ x = g()");
 ), scopeName: "C");
 
 
-        }
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public async Task ExtractMethodIndexExpr()
-        {
-            await ExtractMethodTest(@"class C:
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public async Task ExtractMethodIndexExpr()
+		{
+			await ExtractMethodTest(@"class C:
     def process_kinect_event(self, e):
         for skeleton in e.skeletons:
             fob[skeleton.dwTrackingID] = Player()
@@ -246,13 +246,13 @@ x = g()");
             self.g(skeleton)
 "
  ), scopeName: "C");
-        }
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public async Task TestExtractLambda()
-        {
-            // lambda is present in the code
-            await ExtractMethodTest(
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public async Task TestExtractLambda()
+		{
+			// lambda is present in the code
+			await ExtractMethodTest(
 @"def f():
     pass
 
@@ -267,8 +267,8 @@ def f():
 def x():
     abc = lambda x: 42"));
 
-            // lambda is being extracted
-            await ExtractMethodTest(
+			// lambda is being extracted
+			await ExtractMethodTest(
 @"def f():
     abc = lambda x: 42", "lambda x: 42", TestResult.Success(
 @"def g():
@@ -276,50 +276,50 @@ def x():
 
 def f():
     abc = g()"));
-        }
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public async Task TestExtractGenerator()
-        {
-            var code = @"def f(imp = imp):
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public async Task TestExtractGenerator()
+		{
+			var code = @"def f(imp = imp):
     yield 42";
 
-            await ExtractMethodTest(
+			await ExtractMethodTest(
 code, () => new Span(code.IndexOf("= imp") + 2, 3), TestResult.Success(
 @"def g():
     return imp
 
 def f(imp = g()):
     yield 42"));
-        }
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public async Task TestExtractDefaultValue()
-        {
-            var code = @"def f(imp = imp):
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public async Task TestExtractDefaultValue()
+		{
+			var code = @"def f(imp = imp):
     pass";
 
-            await ExtractMethodTest(
+			await ExtractMethodTest(
 code, () => new Span(code.IndexOf("= imp") + 2, 3), TestResult.Success(
 @"def g():
     return imp
 
 def f(imp = g()):
     pass"));
-        }
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public async Task TestFromImportStar()
-        {
-            await ExtractMethodTest(
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public async Task TestFromImportStar()
+		{
+			await ExtractMethodTest(
 @"def f():
     from sys import *", "from sys import *", TestResult.Error(ErrorImportStar));
-        }
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public async Task TestExtractDefiniteAssignmentAfter()
-        {
-            await SuccessTest("x = 42",
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public async Task TestExtractDefiniteAssignmentAfter()
+		{
+			await SuccessTest("x = 42",
 @"def f():
     x = 42
 
@@ -333,12 +333,12 @@ def f():
 
     for x, y in []:
         print x, y");
-        }
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public async Task TestExtractDefiniteAssignmentAfterStmtList()
-        {
-            await SuccessTest("x = 42",
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public async Task TestExtractDefiniteAssignmentAfterStmtList()
+		{
+			await SuccessTest("x = 42",
 @"def f():
     x = 42; x = 100
 
@@ -352,15 +352,15 @@ def f():
 
     for x, y in []:
         print x, y");
-        }
+		}
 
 
 
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public async Task TestExtractDefiniteAssignmentAfterStmtListRead()
-        {
-            await SuccessTest("x = 100",
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public async Task TestExtractDefiniteAssignmentAfterStmtListRead()
+		{
+			await SuccessTest("x = 100",
 @"def f():
     x = 100; x
 
@@ -375,158 +375,158 @@ def f():
 
     for x, y in []:
         print (x, y)");
-        }
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        [TestCategory("10s")]
-        public async Task TestAllNodes()
-        {
-            var prefixes = new string[] { " # fob\r\n", "" };
-            var suffixes = new string[] { " # oar", "" };
-            foreach (var suffix in suffixes)
-            {
-                foreach (var prefix in prefixes)
-                {
-                    foreach (var testCase in TestExpressions.Expressions)
-                    {
-                        if (testCase.StartsWith("yield"))
-                        {
-                            // not currently supported
-                            continue;
-                        }
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		[TestCategory("10s")]
+		public async Task TestAllNodes()
+		{
+			var prefixes = new string[] { " # fob\r\n", "" };
+			var suffixes = new string[] { " # oar", "" };
+			foreach (var suffix in suffixes)
+			{
+				foreach (var prefix in prefixes)
+				{
+					foreach (var testCase in TestExpressions.Expressions)
+					{
+						if (testCase.StartsWith("yield"))
+						{
+							// not currently supported
+							continue;
+						}
 
-                        var text = prefix + testCase + suffix;
-                        string expected = String.Format("{1}def g():\r\n    return {0}\r\n\r\ng(){2}", testCase, prefix, suffix);
-                        await SuccessTest(new Span(prefix.Length, testCase.Length), text, expected);
-                    }
-                }
-            }
+						var text = prefix + testCase + suffix;
+						string expected = String.Format("{1}def g():\r\n    return {0}\r\n\r\ng(){2}", testCase, prefix, suffix);
+						await SuccessTest(new Span(prefix.Length, testCase.Length), text, expected);
+					}
+				}
+			}
 
-            var bannedStmts = new[] { "break", "continue", "return abc" };
-            var allStmts = TestExpressions.Statements2x
-                    .Except(bannedStmts)
-                    .Select(text => new { Text = text, Version = PythonLanguageVersion.V27 })
-                    .Concat(
-                        TestExpressions.Statements3x
-                            .Select(text => new { Text = text, Version = PythonLanguageVersion.V33 }));
+			var bannedStmts = new[] { "break", "continue", "return abc" };
+			var allStmts = TestExpressions.Statements2x
+					.Except(bannedStmts)
+					.Select(text => new { Text = text, Version = PythonLanguageVersion.V27 })
+					.Concat(
+						TestExpressions.Statements3x
+							.Select(text => new { Text = text, Version = PythonLanguageVersion.V33 }));
 
-            foreach (var suffix in suffixes)
-            {
-                foreach (var prefix in prefixes)
-                {
-                    foreach (var stmtTest in allStmts)
-                    {
-                        var text = prefix + stmtTest.Text + suffix;
-                        var assignments = GetAssignments(text, stmtTest.Version);
-                        string expected;
-                        if (assignments.Length > 0 && stmtTest.Text != "del x")
-                        {
-                            expected = String.Format(
-                                "{1}def g():\r\n{0}\r\n    return {3}\r\n\r\n{3} = g(){2}",
-                                TestExpressions.IndentCode(stmtTest.Text, "    "),
-                                prefix,
-                                suffix,
-                                String.Join(", ", assignments)
-                            );
-                        }
-                        else
-                        {
-                            expected = String.Format(
-                                "{1}def g():\r\n{0}\r\n\r\ng(){2}",
-                                TestExpressions.IndentCode(stmtTest.Text, "    "),
-                                prefix,
-                                suffix
-                            );
-                        }
+			foreach (var suffix in suffixes)
+			{
+				foreach (var prefix in prefixes)
+				{
+					foreach (var stmtTest in allStmts)
+					{
+						var text = prefix + stmtTest.Text + suffix;
+						var assignments = GetAssignments(text, stmtTest.Version);
+						string expected;
+						if (assignments.Length > 0 && stmtTest.Text != "del x")
+						{
+							expected = String.Format(
+								"{1}def g():\r\n{0}\r\n    return {3}\r\n\r\n{3} = g(){2}",
+								TestExpressions.IndentCode(stmtTest.Text, "    "),
+								prefix,
+								suffix,
+								String.Join(", ", assignments)
+							);
+						}
+						else
+						{
+							expected = String.Format(
+								"{1}def g():\r\n{0}\r\n\r\ng(){2}",
+								TestExpressions.IndentCode(stmtTest.Text, "    "),
+								prefix,
+								suffix
+							);
+						}
 
-                        await SuccessTest(new Span(prefix.Length, stmtTest.Text.Length), text, expected, null, stmtTest.Version.ToVersion());
-                    }
-                }
-            }
-        }
+						await SuccessTest(new Span(prefix.Length, stmtTest.Text.Length), text, expected, null, stmtTest.Version.ToVersion());
+					}
+				}
+			}
+		}
 
-        private string[] GetAssignments(string testCase, PythonLanguageVersion version)
-        {
-            var ast = Parser.CreateParser(new StringReader(testCase), version).ParseFile();
-            var walker = new TestAssignmentWalker();
-            ast.Walk(walker);
-            return walker._names.ToArray();
-        }
+		private string[] GetAssignments(string testCase, PythonLanguageVersion version)
+		{
+			var ast = Parser.CreateParser(new StringReader(testCase), version).ParseFile();
+			var walker = new TestAssignmentWalker();
+			ast.Walk(walker);
+			return walker._names.ToArray();
+		}
 
-        class TestAssignmentWalker : AssignmentWalker
-        {
-            private readonly NameWalker _walker;
-            internal readonly List<string> _names = new List<string>();
+		class TestAssignmentWalker : AssignmentWalker
+		{
+			private readonly NameWalker _walker;
+			internal readonly List<string> _names = new List<string>();
 
-            public TestAssignmentWalker()
-            {
-                _walker = new NameWalker(this);
-            }
+			public TestAssignmentWalker()
+			{
+				_walker = new NameWalker(this);
+			}
 
-            public override AssignedNameWalker Define
-            {
-                get { return _walker; }
-            }
+			public override AssignedNameWalker Define
+			{
+				get { return _walker; }
+			}
 
-            class NameWalker : AssignedNameWalker
-            {
-                private readonly TestAssignmentWalker _outer;
-                public NameWalker(TestAssignmentWalker outer)
-                {
-                    _outer = outer;
-                }
+			class NameWalker : AssignedNameWalker
+			{
+				private readonly TestAssignmentWalker _outer;
+				public NameWalker(TestAssignmentWalker outer)
+				{
+					_outer = outer;
+				}
 
-                public override bool Walk(NameExpression node)
-                {
-                    _outer._names.Add(node.Name);
-                    return true;
-                }
-            }
+				public override bool Walk(NameExpression node)
+				{
+					_outer._names.Add(node.Name);
+					return true;
+				}
+			}
 
-            public override bool Walk(FunctionDefinition node)
-            {
-                _names.Add(node.Name);
-                return base.Walk(node);
-            }
+			public override bool Walk(FunctionDefinition node)
+			{
+				_names.Add(node.Name);
+				return base.Walk(node);
+			}
 
-            public override bool Walk(ClassDefinition node)
-            {
-                _names.Add(node.Name);
-                return base.Walk(node);
-            }
+			public override bool Walk(ClassDefinition node)
+			{
+				_names.Add(node.Name);
+				return base.Walk(node);
+			}
 
-            public override bool Walk(ImportStatement node)
-            {
-                var vars = node.Variables;
-                for (int i = 0; i < vars.Length; i++)
-                {
-                    if (vars[i] != null)
-                    {
-                        _names.Add(vars[i].Name);
-                    }
-                }
-                return base.Walk(node);
-            }
+			public override bool Walk(ImportStatement node)
+			{
+				var vars = node.Variables;
+				for (int i = 0; i < vars.Length; i++)
+				{
+					if (vars[i] != null)
+					{
+						_names.Add(vars[i].Name);
+					}
+				}
+				return base.Walk(node);
+			}
 
-            public override bool Walk(FromImportStatement node)
-            {
-                var vars = node.Variables;
-                for (int i = 0; i < vars.Length; i++)
-                {
-                    if (vars[i] != null)
-                    {
-                        _names.Add(vars[i].Name);
-                    }
-                }
+			public override bool Walk(FromImportStatement node)
+			{
+				var vars = node.Variables;
+				for (int i = 0; i < vars.Length; i++)
+				{
+					if (vars[i] != null)
+					{
+						_names.Add(vars[i].Name);
+					}
+				}
 
-                return base.Walk(node);
-            }
-        }
+				return base.Walk(node);
+			}
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public async Task TestExtractDefiniteAssignmentAfterStmtListMultipleAssign()
-        {
-            await SuccessTest("x = 100; x = 200",
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public async Task TestExtractDefiniteAssignmentAfterStmtListMultipleAssign()
+		{
+			await SuccessTest("x = 100; x = 200",
 @"def f():
     x = 100; x = 200; x
     
@@ -541,23 +541,23 @@ def f():
     
     for x, y in []:
         print (x, y)");
-        }
+		}
 
 
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public async Task TestExtractFromClass()
-        {
-            await ExtractMethodTest(
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public async Task TestExtractFromClass()
+		{
+			await ExtractMethodTest(
 @"class C:
     abc = 42
     oar = 100", "abc .. 100", TestResult.Error(ErrorExtractFromClass));
-        }
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public async Task TestExtractSuiteWhiteSpace()
-        {
-            await SuccessTest("x .. 200",
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public async Task TestExtractSuiteWhiteSpace()
+		{
+			await SuccessTest("x .. 200",
 @"def f():
 
 
@@ -572,7 +572,7 @@ def f():
 
     g()");
 
-            await SuccessTest("x .. 200",
+			await SuccessTest("x .. 200",
 @"def f():
     a = 300
 
@@ -586,15 +586,15 @@ def f():
     a = 300
 
     g()");
-        }
+		}
 
-        /// <summary>
-        /// Test cases that verify we correctly identify when not all paths contain return statements.
-        /// </summary>
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public async Task TestNotAllCodePathsReturn()
-        {
-            await TestMissingReturn("for i .. 23", @"def f(x):
+		/// <summary>
+		/// Test cases that verify we correctly identify when not all paths contain return statements.
+		/// </summary>
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public async Task TestNotAllCodePathsReturn()
+		{
+			await TestMissingReturn("for i .. 23", @"def f(x):
     for i in xrange(100):
         break
         return 42
@@ -603,14 +603,14 @@ def f():
 ");
 
 
-            await TestMissingReturn("if x .. Exception()", @"def f(x):
+			await TestMissingReturn("if x .. Exception()", @"def f(x):
     if x:
         return 42
     elif x:
         raise Exception()
 ");
 
-            await TestMissingReturn("if x .. 200", @"def f(x):
+			await TestMissingReturn("if x .. 200", @"def f(x):
     if x:
         def abc():
              return 42
@@ -620,14 +620,14 @@ def f():
         return 200
 ");
 
-            await TestMissingReturn("if x .. 100", @"def f(x):
+			await TestMissingReturn("if x .. 100", @"def f(x):
     if x:
         return 42
     elif x:
         return 100
 ");
 
-            await TestMissingReturn("if x .. pass", @"def f(x):
+			await TestMissingReturn("if x .. pass", @"def f(x):
     if x:
         return 42
     elif x:
@@ -636,7 +636,7 @@ def f():
         pass
 ");
 
-            await TestMissingReturn("if True .. pass", @"def f():
+			await TestMissingReturn("if True .. pass", @"def f():
     abc = 100
     if True:
         return 100
@@ -644,18 +644,18 @@ def f():
         pass
     print('hello')");
 
-            await TestMissingReturn("if x .. aaa",
+			await TestMissingReturn("if x .. aaa",
 @"class C:
     def f(self):
         if x == 0:
             return aaa");
-        }
+		}
 
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public async Task TestReturnWithOutputVars()
-        {
-            await TestReturnWithOutputs("if x .. 100", @"def f(x):
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public async Task TestReturnWithOutputVars()
+		{
+			await TestReturnWithOutputs("if x .. 100", @"def f(x):
     if x:
         x = 200
         return 42
@@ -663,47 +663,47 @@ def f():
         return 100
     print(x)
 ");
-        }
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public async Task TestCannotRefactorYield()
-        {
-            await TestBadYield("yield 42", @"def f(x):
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public async Task TestCannotRefactorYield()
+		{
+			await TestBadYield("yield 42", @"def f(x):
     yield 42
 ");
 
-            await TestBadYield("yield 42", @"def f(x):
+			await TestBadYield("yield 42", @"def f(x):
     for i in xrange(100):
         yield 42
 ");
-        }
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public async Task TestContinueWithoutLoop()
-        {
-            await TestBadContinue("continue", @"def f(x):
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public async Task TestContinueWithoutLoop()
+		{
+			await TestBadContinue("continue", @"def f(x):
     for i in xrange(100):
         continue
 ");
-        }
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public async Task TestBreakWithoutLoop()
-        {
-            await TestBadBreak("break", @"def f(x):
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public async Task TestBreakWithoutLoop()
+		{
+			await TestBadBreak("break", @"def f(x):
     for i in xrange(100):
         break
 ");
-        }
+		}
 
-        /// <summary>
-        /// Test cases which make sure we have the right ranges for each statement when doing extract method
-        /// and that we don't mess up the code before/after the statement.
-        /// </summary>
-        [TestMethod, Priority(UnitTestPriority.P2_FAILING)] // https://github.com/Microsoft/PTVS/issues/4088
-        public async Task StatementTests()
-        {
-            await SuccessTest("b",
+		/// <summary>
+		/// Test cases which make sure we have the right ranges for each statement when doing extract method
+		/// and that we don't mess up the code before/after the statement.
+		/// </summary>
+		[TestMethod, Priority(UnitTestPriority.P2_FAILING)] // https://github.com/Microsoft/PTVS/issues/4088
+		public async Task StatementTests()
+		{
+			await SuccessTest("b",
 @"def f():
     return (a or
             b or 
@@ -716,7 +716,7 @@ def f():
             g() or 
             c)");
 
-            await SuccessTest("assert False",
+			await SuccessTest("assert False",
 @"x = 1
 
 assert False
@@ -732,7 +732,7 @@ g()
 x = 2");
 
 
-            await SuccessTest("x += 2",
+			await SuccessTest("x += 2",
 @"x = 1
 
 x += 2
@@ -747,7 +747,7 @@ g()
 
 x = 2");
 
-            await SuccessTest("x = 100",
+			await SuccessTest("x = 100",
 @"x = 1
 
 x = 100
@@ -762,7 +762,7 @@ g()
 
 x = 2");
 
-            await SuccessTest("class C: pass",
+			await SuccessTest("class C: pass",
 @"x = 1
 
 class C: pass
@@ -778,7 +778,7 @@ C = g()
 
 x = 2");
 
-            await SuccessTest("del fob",
+			await SuccessTest("del fob",
 @"x = 1
 
 del fob
@@ -793,7 +793,7 @@ g()
 
 x = 2");
 
-            await SuccessTest("pass",
+			await SuccessTest("pass",
 @"x = 1
 
 pass
@@ -808,7 +808,7 @@ g()
 
 x = 2");
 
-            await SuccessTest("def f(): pass",
+			await SuccessTest("def f(): pass",
 @"x = 1
 
 def f(): pass
@@ -825,7 +825,7 @@ f = g()
 x = 2");
 
 
-            await SuccessTest("for .. pass",
+			await SuccessTest("for .. pass",
 @"x = 1
 
 for i in xrange(100):
@@ -843,7 +843,7 @@ i = g()
 
 x = 2");
 
-            await SuccessTest("if True: .. pass",
+			await SuccessTest("if True: .. pass",
 @"x = 1
 
 if True:
@@ -860,7 +860,7 @@ g()
 
 x = 2");
 
-            await SuccessTest("if True: .. pass",
+			await SuccessTest("if True: .. pass",
 @"x = 1
 
 if True:
@@ -881,7 +881,7 @@ g()
 
 x = 2");
 
-            await SuccessTest("if True: .. pass",
+			await SuccessTest("if True: .. pass",
 @"x = 1
 
 if True:
@@ -902,7 +902,7 @@ g()
 
 x = 2");
 
-            await SuccessTest("import sys",
+			await SuccessTest("import sys",
 @"x = 1
 
 import sys
@@ -918,7 +918,7 @@ sys = g()
 
 x = 2");
 
-            await SuccessTest("print 42",
+			await SuccessTest("print 42",
 @"x = 1
 
 print 42
@@ -934,7 +934,7 @@ g()
 x = 2");
 
 
-            await SuccessTest("raise Exception()",
+			await SuccessTest("raise Exception()",
 @"x = 1
 
 raise Exception()
@@ -949,7 +949,7 @@ g()
 
 x = 2");
 
-            await SuccessTest("return 100",
+			await SuccessTest("return 100",
 @"x = 1
 
 return 100
@@ -964,7 +964,7 @@ return g()
 
 x = 2");
 
-            await SuccessTest("try: .. pass",
+			await SuccessTest("try: .. pass",
 @"x = 1
 
 try:
@@ -985,7 +985,7 @@ g()
 
 x = 2");
 
-            await SuccessTest("try: .. pass",
+			await SuccessTest("try: .. pass",
 @"x = 1
 
 try:
@@ -1006,7 +1006,7 @@ g()
 
 x = 2");
 
-            await SuccessTest("try: .. pass",
+			await SuccessTest("try: .. pass",
 @"x = 1
 
 try:
@@ -1031,7 +1031,7 @@ g()
 
 x = 2");
 
-            await SuccessTest("while .. pass",
+			await SuccessTest("while .. pass",
 @"x = 1
 
 while True:
@@ -1048,7 +1048,7 @@ g()
 
 x = 2");
 
-            await SuccessTest("while .. pass",
+			await SuccessTest("while .. pass",
 @"x = 1
 
 while True:
@@ -1069,7 +1069,7 @@ g()
 
 x = 2");
 
-            await SuccessTest("with .. pass",
+			await SuccessTest("with .. pass",
 @"x = 1
 
 with abc:
@@ -1086,7 +1086,7 @@ g()
 
 x = 2");
 
-            await SuccessTest("with .. pass",
+			await SuccessTest("with .. pass",
 @"x = 1
 
 with abc as fob:
@@ -1103,7 +1103,7 @@ g()
 
 x = 2");
 
-            await SuccessTest("with .. (name)",
+			await SuccessTest("with .. (name)",
 @"def f():
     name = 'hello'
     with open('Fob', 'rb') as f:
@@ -1118,7 +1118,7 @@ def f():
     g(name)
 ");
 
-            await SuccessTest("x .. Oar()",
+			await SuccessTest("x .. Oar()",
 @"class C:
     def f():
         if True:
@@ -1138,12 +1138,12 @@ class C:
         else:
             pass
         g()");
-        }
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public async Task ClassTests()
-        {
-            await SuccessTest("x = fob",
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public async Task ClassTests()
+		{
+			await SuccessTest("x = fob",
 @"class C(object):
     '''Doc string'''
 
@@ -1162,7 +1162,7 @@ class C:
         print(x)", scopeName: "C");
 
 
-            await SuccessTest("print(self.abc)",
+			await SuccessTest("print(self.abc)",
 @"class C:
     def f(self):
         print(self.abc)",
@@ -1173,7 +1173,7 @@ class C:
     def f(self):
         self.g()", scopeName: "C");
 
-            await SuccessTest("print(self.abc, aaa)",
+			await SuccessTest("print(self.abc, aaa)",
 @"class C:
     def f(self):
         aaa = 42
@@ -1186,7 +1186,7 @@ class C:
         aaa = 42
         self.g(aaa)", scopeName: "C");
 
-            await SuccessTest("aaa = 42",
+			await SuccessTest("aaa = 42",
 @"class C:
     def f(self):
         aaa = 42",
@@ -1197,7 +1197,7 @@ class C:
     def f(self):
         self.g()", scopeName: "C");
 
-            await SuccessTest("aaa = 42",
+			await SuccessTest("aaa = 42",
 @"class C:
     @staticmethod
     def f():
@@ -1211,7 +1211,7 @@ class C:
     def f():
         C.g()", scopeName: "C");
 
-            await SuccessTest("aaa = 42",
+			await SuccessTest("aaa = 42",
 @"class C:
     @classmethod
     def f(cls):
@@ -1225,7 +1225,7 @@ class C:
     def f(cls):
         cls.g()", scopeName: "C");
 
-            await SuccessTest("aaa = 42",
+			await SuccessTest("aaa = 42",
 @"class C:
     def f(weird):
         aaa = 42",
@@ -1236,7 +1236,7 @@ class C:
     def f(weird):
         weird.g()", scopeName: "C");
 
-            await SuccessTest("print('hello')",
+			await SuccessTest("print('hello')",
 @"class C:
     class D:
         def f(self):
@@ -1249,44 +1249,44 @@ class C:
         def f(self):
             self.g()", scopeName: "D");
 
-        }
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public async Task TestComprehensions()
-        {
-            await SuccessTest("i % 2 == 0", @"def f():
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public async Task TestComprehensions()
+		{
+			await SuccessTest("i % 2 == 0", @"def f():
     x = [i for i in range(100) if i % 2 == 0]", @"def g(i):
     return i % 2 == 0
 
 def f():
     x = [i for i in range(100) if g(i)]");
 
-            await SuccessTest("i % 2 == 0", @"def f():
+			await SuccessTest("i % 2 == 0", @"def f():
     x = (i for i in range(100) if i % 2 == 0)", @"def g(i):
     return i % 2 == 0
 
 def f():
     x = (i for i in range(100) if g(i))");
 
-            await SuccessTest("i % 2 == 0", @"def f():
+			await SuccessTest("i % 2 == 0", @"def f():
     x = {i for i in range(100) if i % 2 == 0}", @"def g(i):
     return i % 2 == 0
 
 def f():
     x = {i for i in range(100) if g(i)}", version: new Version(3, 2));
 
-            await SuccessTest("(k+v) % 2 == 0", @"def f():
+			await SuccessTest("(k+v) % 2 == 0", @"def f():
     x = {k:v for k,v in range(100) if (k+v) % 2 == 0}", @"def g(k, v):
     return (k+v) % 2 == 0
 
 def f():
     x = {k:v for k,v in range(100) if g(k, v)}", version: new Version(3, 2));
-        }
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public async Task SuccessfulTests()
-        {
-            await SuccessTest("x .. 100",
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public async Task SuccessfulTests()
+		{
+			await SuccessTest("x .. 100",
 @"def f():
     z = 200
     x = z
@@ -1304,7 +1304,7 @@ def f():
     x, y = g(z)
     print(x, y)");
 
-            await SuccessTest("x .. 100",
+			await SuccessTest("x .. 100",
 @"def f():
     x = 42
     y = 100
@@ -1318,7 +1318,7 @@ def f():
     x, y = g()
     print(x, y)");
 
-            await SuccessTest("42",
+			await SuccessTest("42",
 @"def f():
     x = 42",
 @"def g():
@@ -1327,7 +1327,7 @@ def f():
 def f():
     x = g()");
 
-            await SuccessTest("oar;baz",
+			await SuccessTest("oar;baz",
 @"def f():
     fob;oar;baz;quox",
 @"def g():
@@ -1336,7 +1336,7 @@ def f():
 def f():
     fob;g();quox");
 
-            await SuccessTest("x() .. = 100",
+			await SuccessTest("x() .. = 100",
 @"x = 42
 while True:
     x()
@@ -1351,7 +1351,7 @@ while True:
     x = g(x)", parameters: new[] { "x" });
 
 
-            await SuccessTest("x = 2 .. x)",
+			await SuccessTest("x = 2 .. x)",
 @"def f():
     x = 1
     x = 2
@@ -1364,7 +1364,7 @@ def f():
     x = 1
     g()");
 
-            await SuccessTest("for i in .. return 42",
+			await SuccessTest("for i in .. return 42",
 @"def f():
     for i in xrange(100):
         break
@@ -1377,7 +1377,7 @@ def f():
 def f():
     g()");
 
-            await SuccessTest("if x .. 100",
+			await SuccessTest("if x .. 100",
 @"def f(x):
     if x:
         return 42
@@ -1390,7 +1390,7 @@ def f():
 def f(x):
     return g(x)");
 
-            await SuccessTest("if x .. 200",
+			await SuccessTest("if x .. 200",
 @"def f(x):
     if x:
         return 42
@@ -1409,7 +1409,7 @@ def f(x):
 def f(x):
     return g(x)");
 
-            await SuccessTest("if x .. 200",
+			await SuccessTest("if x .. 200",
 @"def f(x):
     if x:
         return 42
@@ -1428,7 +1428,7 @@ def f(x):
 def f(x):
     return g(x)");
 
-            await SuccessTest("if x .. Exception()",
+			await SuccessTest("if x .. Exception()",
 @"def f(x):
     if x:
         return 42
@@ -1443,7 +1443,7 @@ def f(x):
 def f(x):
     return g(x)");
 
-            await SuccessTest("print(x)",
+			await SuccessTest("print(x)",
 @"def f():
     x = 1
     print(x)",
@@ -1454,7 +1454,7 @@ def f():
     x = 1
     g(x)");
 
-            await SuccessTest("x = 2 .. x)",
+			await SuccessTest("x = 2 .. x)",
 @"def f():
     x = 1
     x = 2
@@ -1467,7 +1467,7 @@ def f():
     x = 1
     g()");
 
-            await SuccessTest("class C: pass",
+			await SuccessTest("class C: pass",
 @"def f():
     class C: pass
     print C",
@@ -1479,7 +1479,7 @@ def f():
     C = g()
     print C");
 
-            await SuccessTest("def x(): pass",
+			await SuccessTest("def x(): pass",
 @"def f():
     def x(): pass
     print x",
@@ -1491,7 +1491,7 @@ def f():
     x = g()
     print x");
 
-            await SuccessTest("import sys",
+			await SuccessTest("import sys",
 @"def f():
     import sys
     print sys",
@@ -1503,7 +1503,7 @@ def f():
     sys = g()
     print sys");
 
-            await SuccessTest("import sys as oar",
+			await SuccessTest("import sys as oar",
 @"def f():
     import sys as oar
     print oar",
@@ -1515,7 +1515,7 @@ def f():
     oar = g()
     print oar");
 
-            await SuccessTest("from sys import oar",
+			await SuccessTest("from sys import oar",
 @"def f():
     from sys import oar
     print oar",
@@ -1527,7 +1527,7 @@ def f():
     oar = g()
     print oar");
 
-            await SuccessTest("from sys import oar as baz",
+			await SuccessTest("from sys import oar as baz",
 @"def f():
     from sys import oar as baz
     print baz",
@@ -1540,7 +1540,7 @@ def f():
     print baz");
 
 
-            await SuccessTest("return 42",
+			await SuccessTest("return 42",
 @"def f():
     return 42",
 @"def g():
@@ -1549,7 +1549,7 @@ def f():
 def f():
     return g()");
 
-            await SuccessTest("return x",
+			await SuccessTest("return x",
 @"def f():
     x = 42
     return x",
@@ -1560,7 +1560,7 @@ def f():
     x = 42
     return g(x)");
 
-            await SuccessTest("x = .. = 100",
+			await SuccessTest("x = .. = 100",
 @"def f():
     x = 42
     y = 100
@@ -1574,7 +1574,7 @@ def f():
     x, y = g()
     return x, y");
 
-            await SuccessTest("x()",
+			await SuccessTest("x()",
 @"x = 42
 while True:
     x()
@@ -1586,9 +1586,9 @@ def g(x):
 while True:
     g(x)
     x = 100",
-            parameters: new[] { "x" });
+			parameters: new[] { "x" });
 
-            await SuccessTest("x()",
+			await SuccessTest("x()",
 @"x = 42
 while True:
     x()
@@ -1601,7 +1601,7 @@ while True:
     g()
     x = 100");
 
-            await SuccessTest("x = 42",
+			await SuccessTest("x = 42",
 @"x = 42
 print(x)",
 @"def g():
@@ -1611,7 +1611,7 @@ print(x)",
 x = g()
 print(x)");
 
-            await SuccessTest("l = .. return r",
+			await SuccessTest("l = .. return r",
 @"def f():
     r = None
     l = fob()
@@ -1628,7 +1628,7 @@ def f():
     r = None
     return g(r)");
 
-            await SuccessTest("42",
+			await SuccessTest("42",
 @"def f(x):
     return (42)",
 @"def g():
@@ -1636,15 +1636,15 @@ def f():
 
 def f(x):
     return (g())");
-        }
+		}
 
-        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public async Task ExtractAsyncFunction()
-        {
-            // Ensure extracted bodies that use await generate async functions
+		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
+		public async Task ExtractAsyncFunction()
+		{
+			// Ensure extracted bodies that use await generate async functions
 
-            var V35 = new Version(3, 5);
-            await SuccessTest("x",
+			var V35 = new Version(3, 5);
+			await SuccessTest("x",
 @"async def f():
     return await x",
 @"def g():
@@ -1653,7 +1653,7 @@ def f(x):
 async def f():
     return await g()", version: V35);
 
-            await SuccessTest("await x",
+			await SuccessTest("await x",
 @"async def f():
     return await x",
 @"async def g():
@@ -1661,200 +1661,200 @@ async def f():
 
 async def f():
     return await g()", version: V35);
-        }
+		}
 
-        private Task SuccessTest(Span extract, string input, string result, string scopeName = null, Version version = null, string[] parameters = null)
-        {
-            return ExtractMethodTest(input, extract, TestResult.Success(result), scopeName: scopeName, version: version, parameters: parameters);
-        }
+		private Task SuccessTest(Span extract, string input, string result, string scopeName = null, Version version = null, string[] parameters = null)
+		{
+			return ExtractMethodTest(input, extract, TestResult.Success(result), scopeName: scopeName, version: version, parameters: parameters);
+		}
 
-        private Task SuccessTest(string extract, string input, string result, string scopeName = null, Version version = null, string[] parameters = null)
-        {
-            return ExtractMethodTest(input, extract, TestResult.Success(result), scopeName: scopeName, version: version, parameters: parameters);
-        }
+		private Task SuccessTest(string extract, string input, string result, string scopeName = null, Version version = null, string[] parameters = null)
+		{
+			return ExtractMethodTest(input, extract, TestResult.Success(result), scopeName: scopeName, version: version, parameters: parameters);
+		}
 
 
-        class TestResult
-        {
-            public readonly bool IsError;
-            public readonly string Text;
+		class TestResult
+		{
+			public readonly bool IsError;
+			public readonly string Text;
 
-            public static TestResult Error(string message)
-            {
-                return new TestResult(message, true);
-            }
+			public static TestResult Error(string message)
+			{
+				return new TestResult(message, true);
+			}
 
-            public static TestResult Success(string code)
-            {
-                return new TestResult(code, false);
-            }
+			public static TestResult Success(string code)
+			{
+				return new TestResult(code, false);
+			}
 
-            public TestResult(string text, bool isError)
-            {
-                Text = text;
-                IsError = isError;
-            }
-        }
+			public TestResult(string text, bool isError)
+			{
+				Text = text;
+				IsError = isError;
+			}
+		}
 
-        private Task TestMissingReturn(string extract, string input)
-        {
-            return ExtractMethodTest(input, extract, TestResult.Error(ErrorReturn));
-        }
+		private Task TestMissingReturn(string extract, string input)
+		{
+			return ExtractMethodTest(input, extract, TestResult.Error(ErrorReturn));
+		}
 
-        private Task TestReturnWithOutputs(string extract, string input)
-        {
-            return ExtractMethodTest(input, extract, TestResult.Error(ErrorReturnWithOutputs));
-        }
+		private Task TestReturnWithOutputs(string extract, string input)
+		{
+			return ExtractMethodTest(input, extract, TestResult.Error(ErrorReturnWithOutputs));
+		}
 
-        private Task TestBadYield(string extract, string input)
-        {
-            return ExtractMethodTest(input, extract, TestResult.Error(ErrorYield));
-        }
+		private Task TestBadYield(string extract, string input)
+		{
+			return ExtractMethodTest(input, extract, TestResult.Error(ErrorYield));
+		}
 
-        private Task TestBadContinue(string extract, string input)
-        {
-            return ExtractMethodTest(input, extract, TestResult.Error(ErrorContinue));
-        }
+		private Task TestBadContinue(string extract, string input)
+		{
+			return ExtractMethodTest(input, extract, TestResult.Error(ErrorContinue));
+		}
 
-        private Task TestBadBreak(string extract, string input)
-        {
-            return ExtractMethodTest(input, extract, TestResult.Error(ErrorBreak));
-        }
+		private Task TestBadBreak(string extract, string input)
+		{
+			return ExtractMethodTest(input, extract, TestResult.Error(ErrorBreak));
+		}
 
-        private Task ExtractMethodTest(string input, object extract, TestResult expected, string scopeName = null, string targetName = "g", Version version = null, params string[] parameters)
-        {
-            Func<Span> textRange = () => GetSelectionSpan(input, extract);
-            return ExtractMethodTest(input, textRange, expected, scopeName, targetName, version, parameters);
-        }
+		private Task ExtractMethodTest(string input, object extract, TestResult expected, string scopeName = null, string targetName = "g", Version version = null, params string[] parameters)
+		{
+			Func<Span> textRange = () => GetSelectionSpan(input, extract);
+			return ExtractMethodTest(input, textRange, expected, scopeName, targetName, version, parameters);
+		}
 
-        internal static Span GetSelectionSpan(string input, object extract)
-        {
-            string exStr = extract as string;
-            if (exStr != null)
-            {
-                if (exStr.IndexOf(" .. ") != -1)
-                {
-                    var pieces = exStr.Split(new[] { " .. " }, 2, StringSplitOptions.None);
-                    int start = input.IndexOf(pieces[0]);
-                    int end = input.IndexOf(pieces[1], start) + pieces[1].Length;
-                    return Span.FromBounds(start, end);
-                }
-                else
-                {
-                    int start = input.IndexOf(exStr);
-                    int length = exStr.Length;
-                    return new Span(start, length);
-                }
-            }
-            return (Span)extract;
-        }
+		internal static Span GetSelectionSpan(string input, object extract)
+		{
+			string exStr = extract as string;
+			if (exStr != null)
+			{
+				if (exStr.IndexOf(" .. ") != -1)
+				{
+					var pieces = exStr.Split(new[] { " .. " }, 2, StringSplitOptions.None);
+					int start = input.IndexOf(pieces[0]);
+					int end = input.IndexOf(pieces[1], start) + pieces[1].Length;
+					return Span.FromBounds(start, end);
+				}
+				else
+				{
+					int start = input.IndexOf(exStr);
+					int length = exStr.Length;
+					return new Span(start, length);
+				}
+			}
+			return (Span)extract;
+		}
 
-        private async Task ExtractMethodTest(string input, Func<Span> extract, TestResult expected, string scopeName = null, string targetName = "g", Version version = null, params string[] parameters)
-        {
-            var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version ?? new Version(2, 7));
+		private async Task ExtractMethodTest(string input, Func<Span> extract, TestResult expected, string scopeName = null, string targetName = "g", Version version = null, params string[] parameters)
+		{
+			var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version ?? new Version(2, 7));
 
-            var editorTestToolset = new EditorTestToolset().WithPythonToolsService();
-            var services = editorTestToolset.GetPythonEditorServices();
-            using (var analyzer = await VsProjectAnalyzer.CreateForTestsAsync(services, fact))
-            {
-                var analysisStartedTask = EventTaskSources.VsProjectAnalyzer.AnalysisStarted.Create(analyzer);
-                var buffer = editorTestToolset.CreatePythonTextBuffer(input, Path.Combine(TestData.GetTempPath(), "fob.py"), analyzer);
-                var view = editorTestToolset.CreateTextView(buffer);
-                await analysisStartedTask;
+			var editorTestToolset = new EditorTestToolset().WithPythonToolsService();
+			var services = editorTestToolset.GetPythonEditorServices();
+			using (var analyzer = await VsProjectAnalyzer.CreateForTestsAsync(services, fact))
+			{
+				var analysisStartedTask = EventTaskSources.VsProjectAnalyzer.AnalysisStarted.Create(analyzer);
+				var buffer = editorTestToolset.CreatePythonTextBuffer(input, Path.Combine(TestData.GetTempPath(), "fob.py"), analyzer);
+				var view = editorTestToolset.CreateTextView(buffer);
+				await analysisStartedTask;
 
-                var bi = services.GetBufferInfo(buffer);
-                bi.ParseImmediately = true;
-                var entry = await analyzer.AnalyzeFileAsync(bi.DocumentUri, bi.Filename);
-                Assert.AreEqual(entry, bi.TrySetAnalysisEntry(entry, null));
-                var bp = entry.GetOrCreateBufferParser(services);
-                bp.AddBuffer(buffer);
-                await bp.EnsureCodeSyncedAsync(bi.Buffer, true);
+				var bi = services.GetBufferInfo(buffer);
+				bi.ParseImmediately = true;
+				var entry = await analyzer.AnalyzeFileAsync(bi.DocumentUri, bi.Filename);
+				Assert.AreEqual(entry, bi.TrySetAnalysisEntry(entry, null));
+				var bp = entry.GetOrCreateBufferParser(services);
+				bp.AddBuffer(buffer);
+				await bp.EnsureCodeSyncedAsync(bi.Buffer, true);
 
-                var extractInput = new ExtractMethodTestInput(true, scopeName, targetName, parameters ?? new string[0]);
-                await editorTestToolset.UIThread.InvokeTask(() =>
-                {
-                    view.Selection.Select(new SnapshotSpan(view.TextBuffer.CurrentSnapshot, extract()), false);
-                    return new Microsoft.PythonTools.Refactoring.MethodExtractor(services, view).ExtractMethod(extractInput);
-                });
+				var extractInput = new ExtractMethodTestInput(true, scopeName, targetName, parameters ?? new string[0]);
+				await editorTestToolset.UIThread.InvokeTask(() =>
+				{
+					view.Selection.Select(new SnapshotSpan(view.TextBuffer.CurrentSnapshot, extract()), false);
+					return new Microsoft.PythonTools.Refactoring.MethodExtractor(services, view).ExtractMethod(extractInput);
+				});
 
-                if (expected.IsError)
-                {
-                    Assert.AreEqual(expected.Text, extractInput.FailureReason);
-                    Assert.AreEqual(input, view.TextBuffer.CurrentSnapshot.GetText());
-                }
-                else
-                {
-                    Assert.AreEqual(null, extractInput.FailureReason);
-                    Assert.AreEqual(expected.Text, view.TextBuffer.CurrentSnapshot.GetText());
-                }
-            }
-        }
+				if (expected.IsError)
+				{
+					Assert.AreEqual(expected.Text, extractInput.FailureReason);
+					Assert.AreEqual(input, view.TextBuffer.CurrentSnapshot.GetText());
+				}
+				else
+				{
+					Assert.AreEqual(null, extractInput.FailureReason);
+					Assert.AreEqual(expected.Text, view.TextBuffer.CurrentSnapshot.GetText());
+				}
+			}
+		}
 
-        class ExtractMethodTestInput : IExtractMethodInput
-        {
-            private readonly bool _shouldExpand;
-            private readonly string _scopeName, _targetName;
-            private readonly string[] _parameters;
-            private string _failureReason;
+		class ExtractMethodTestInput : IExtractMethodInput
+		{
+			private readonly bool _shouldExpand;
+			private readonly string _scopeName, _targetName;
+			private readonly string[] _parameters;
+			private string _failureReason;
 
-            public ExtractMethodTestInput(bool shouldExpand, string scopeName, string targetName, string[] parameters)
-            {
-                _shouldExpand = shouldExpand;
-                _scopeName = scopeName;
-                _parameters = parameters;
-                _targetName = targetName;
-            }
+			public ExtractMethodTestInput(bool shouldExpand, string scopeName, string targetName, string[] parameters)
+			{
+				_shouldExpand = shouldExpand;
+				_scopeName = scopeName;
+				_parameters = parameters;
+				_targetName = targetName;
+			}
 
-            public bool ShouldExpandSelection()
-            {
-                return _shouldExpand;
-            }
+			public bool ShouldExpandSelection()
+			{
+				return _shouldExpand;
+			}
 
-            public ExtractMethodRequest GetExtractionInfo(ExtractedMethodCreator previewer)
-            {
-                AP.ScopeInfo scope = null;
-                if (_scopeName == null)
-                {
-                    scope = previewer.LastExtraction.scopes[0];
-                }
-                else
-                {
-                    foreach (var foundScope in previewer.LastExtraction.scopes)
-                    {
-                        if (foundScope.name == _scopeName)
-                        {
-                            scope = foundScope;
-                            break;
-                        }
-                    }
-                }
+			public ExtractMethodRequest GetExtractionInfo(ExtractedMethodCreator previewer)
+			{
+				AP.ScopeInfo scope = null;
+				if (_scopeName == null)
+				{
+					scope = previewer.LastExtraction.scopes[0];
+				}
+				else
+				{
+					foreach (var foundScope in previewer.LastExtraction.scopes)
+					{
+						if (foundScope.name == _scopeName)
+						{
+							scope = foundScope;
+							break;
+						}
+					}
+				}
 
-                Assert.AreNotEqual(null, scope);
-                var requestView = new ExtractMethodRequestView(PythonToolsTestUtilities.CreateMockServiceProvider(), previewer);
-                requestView.TargetScope = requestView.TargetScopes.Single(s => s.Scope == scope);
-                requestView.Name = _targetName;
-                foreach (var cv in requestView.ClosureVariables)
-                {
-                    cv.IsClosure = !_parameters.Contains(cv.Name);
-                }
-                Assert.IsTrue(requestView.IsValid);
-                var request = requestView.GetRequest();
-                Assert.IsNotNull(request);
-                return request;
-            }
+				Assert.AreNotEqual(null, scope);
+				var requestView = new ExtractMethodRequestView(PythonToolsTestUtilities.CreateMockServiceProvider(), previewer);
+				requestView.TargetScope = requestView.TargetScopes.Single(s => s.Scope == scope);
+				requestView.Name = _targetName;
+				foreach (var cv in requestView.ClosureVariables)
+				{
+					cv.IsClosure = !_parameters.Contains(cv.Name);
+				}
+				Assert.IsTrue(requestView.IsValid);
+				var request = requestView.GetRequest();
+				Assert.IsNotNull(request);
+				return request;
+			}
 
-            public void CannotExtract(string reason)
-            {
-                _failureReason = reason;
-            }
+			public void CannotExtract(string reason)
+			{
+				_failureReason = reason;
+			}
 
-            public string FailureReason
-            {
-                get
-                {
-                    return _failureReason;
-                }
-            }
-        }
-    }
+			public string FailureReason
+			{
+				get
+				{
+					return _failureReason;
+				}
+			}
+		}
+	}
 }

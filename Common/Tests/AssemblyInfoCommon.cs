@@ -16,16 +16,16 @@
 
 class AssemblyVersionInfo
 {
-    // This version string (and the comments for StableVersion and Version)
-    // should be updated manually between major releases.
-    // Servicing branches should retain the value
-    public const string ReleaseVersion = "1.0";
-    // This version string (and the comment for StableVersion) should be
-    // updated manually between minor releases.
-    // Servicing branches should retain the value
-    public const string MinorVersion = "0";
+	// This version string (and the comments for StableVersion and Version)
+	// should be updated manually between major releases.
+	// Servicing branches should retain the value
+	public const string ReleaseVersion = "1.0";
+	// This version string (and the comment for StableVersion) should be
+	// updated manually between minor releases.
+	// Servicing branches should retain the value
+	public const string MinorVersion = "0";
 
-    public const string BuildNumber = "0.00";
+	public const string BuildNumber = "0.00";
 
 #if DEV10
     public const string VSMajorVersion = "10";
@@ -49,11 +49,11 @@ class AssemblyVersionInfo
 #error Unrecognized VS Version.
 #endif
 
-    public const string VSVersion = VSMajorVersion + ".0";
+	public const string VSVersion = VSMajorVersion + ".0";
 
-    // Defaults to "1.0.0.(2010|2012|2013|2015)"
-    public const string StableVersion = ReleaseVersion + "." + MinorVersion + "." + VSVersionSuffix;
+	// Defaults to "1.0.0.(2010|2012|2013|2015)"
+	public const string StableVersion = ReleaseVersion + "." + MinorVersion + "." + VSVersionSuffix;
 
-    // Defaults to "1.0.0.00"
-    public const string Version = ReleaseVersion + "." + BuildNumber;
+	// Defaults to "1.0.0.00"
+	public const string Version = ReleaseVersion + "." + BuildNumber;
 }

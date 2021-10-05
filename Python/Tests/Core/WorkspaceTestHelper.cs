@@ -16,458 +16,458 @@
 
 namespace PythonToolsTests
 {
-    internal class WorkspaceTestHelper
-    {
-        public const string PythonNoId = null;
-        public const string Python27Id = "Global|PythonCore|2.7";
-        public const string Python36Id = "Global|PythonCore|3.6";
-        public const string Python37Id = "Global|PythonCore|3.7";
-        public const string PythonUnavailableId = "Global|PythonCore|2.8";
-
-        private static InterpreterConfiguration Python27Config = new InterpreterConfiguration(Python27Id, "Mock 2.7");
-        private static InterpreterConfiguration Python36Config = new InterpreterConfiguration(Python36Id, "Mock 3.6");
-        private static InterpreterConfiguration Python37Config = new InterpreterConfiguration(Python37Id, "Mock 3.7");
-
-        public static IPythonInterpreterFactory Python27Factory = new MockPythonInterpreterFactory(Python27Config);
-        public static IPythonInterpreterFactory Python36Factory = new MockPythonInterpreterFactory(Python36Config);
-        public static IPythonInterpreterFactory Python37Factory = new MockPythonInterpreterFactory(Python37Config);
-
-        public static IPythonInterpreterFactory DefaultFactory = Python36Factory;
-
-        public static IEnumerable<IPythonInterpreterFactory> AllFactories = new[] {
-            Python27Factory,
-            Python36Factory,
-            Python37Factory,
-        };
-
-        public static MockWorkspace CreateMockWorkspace(string workspaceFolder, string interpreterSetting)
-        {
-            var aggregatedSettings = new MockWorkspaceSettings(
-                new Dictionary<string, string> { { "Interpreter", interpreterSetting } }
-            );
-            var settingsManager = new MockWorkspaceSettingsManager(aggregatedSettings);
-            return new MockWorkspace(workspaceFolder, settingsManager);
-        }
-
-        public static string CreateWorkspaceFolder()
-        {
-            var workspaceFolder = TestData.GetTempPath();
-            Directory.CreateDirectory(workspaceFolder);
-            File.WriteAllText(Path.Combine(workspaceFolder, "app.py"), string.Empty);
-            return workspaceFolder;
-        }
-
-        public class MockOptionsService : IInterpreterOptionsService
-        {
-            public MockOptionsService(IPythonInterpreterFactory factory)
-            {
-                DefaultInterpreter = factory;
-            }
-
-            public IPythonInterpreterFactory DefaultInterpreter { get; set; }
-
-            public string DefaultInterpreterId { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-            public event EventHandler DefaultInterpreterChanged;
-
-            public string AddConfigurableInterpreter(string name, InterpreterConfiguration config)
-            {
-                throw new NotImplementedException();
-            }
-
-            public IEnumerable<IPackageManager> GetPackageManagers(IPythonInterpreterFactory factory)
-            {
-                throw new NotImplementedException();
-            }
-
-            public bool IsConfigurable(string id)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void RemoveConfigurableInterpreter(string id)
-            {
-                throw new NotImplementedException();
-            }
-
-            internal void SimulateChangeDefaultInterpreter(IPythonInterpreterFactory factory)
-            {
-                DefaultInterpreter = factory;
-                DefaultInterpreterChanged?.Invoke(this, EventArgs.Empty);
-            }
-        }
-
-        public class MockRegistryService : IInterpreterRegistryService
-        {
-            public MockRegistryService(IEnumerable<IPythonInterpreterFactory> interpreters)
-            {
-                Interpreters = interpreters ?? Enumerable.Empty<IPythonInterpreterFactory>();
-
-            }
-
-            public IEnumerable<IPythonInterpreterFactory> Interpreters { get; private set; }
-
-            public IEnumerable<InterpreterConfiguration> Configurations
-            {
-                get
-                {
-                    return Interpreters.Select(x => x.Configuration);
-                }
-            }
-
-            public IEnumerable<IPythonInterpreterFactory> InterpretersOrDefault => throw new NotImplementedException();
-
-            public IPythonInterpreterFactory NoInterpretersValue => throw new NotImplementedException();
-
-            public event EventHandler InterpretersChanged;
-
-            public void BeginSuppressInterpretersChangedEvent()
-            {
-                throw new NotImplementedException();
-            }
-
-            public void EndSuppressInterpretersChangedEvent()
-            {
-                throw new NotImplementedException();
-            }
-
-            public InterpreterConfiguration FindConfiguration(string id)
-            {
-                throw new NotImplementedException();
-            }
-
-            public IPythonInterpreterFactory FindInterpreter(string id)
-            {
-                return Interpreters.SingleOrDefault(f => f.Configuration.Id == id);
-            }
-
-            public object GetProperty(string id, string propName)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void GetSerializationInfo(IPythonInterpreterFactory factory, out string assembly, out string typeName, out Dictionary<string, object> properties)
-            {
-                throw new NotImplementedException();
-            }
-
-            internal void SimulateChangeInterpreters(IEnumerable<IPythonInterpreterFactory> interpreters)
-            {
-                Interpreters = interpreters ?? Enumerable.Empty<IPythonInterpreterFactory>();
-                InterpretersChanged?.Invoke(this, EventArgs.Empty);
-            }
-        }
-
-        public class MockWorkspaceService : IVsFolderWorkspaceService
-        {
-            public MockWorkspaceService(IWorkspace workspace)
-            {
-                CurrentWorkspace = workspace;
-            }
-
-            public IWorkspace CurrentWorkspace { get; private set; }
-
-            public AsyncEvent<EventArgs> OnActiveWorkspaceChanged { get; set; }
-
-            public void SimulateChangeWorkspace(IWorkspace workspace)
-            {
-                CurrentWorkspace = workspace;
-                OnActiveWorkspaceChanged?.InvokeAsync(this, EventArgs.Empty).DoNotWait();
-            }
-        }
-
-        public class MockWorkspace : IWorkspace
-        {
-            public MockWorkspace(string location)
-            {
-                Location = location;
-                SettingsManager = new MockWorkspaceSettingsManager();
-            }
-
-            public MockWorkspace(string location, MockWorkspaceSettingsManager settingsManager)
-            {
-                Location = location;
-                SettingsManager = settingsManager;
-            }
-
-            internal MockWorkspaceSettingsManager SettingsManager { get; }
-
-            public string Location { get; private set; }
-
-            public JoinableTaskFactory JTF => throw new NotImplementedException();
-
-            public Task DisposeAsync()
-            {
-                throw new NotImplementedException();
-            }
-
-            public Task<IReadOnlyList<IGrouping<Lazy<IFileContextActionProvider, IFileContextActionProviderMetadata>, IFileContextAction>>> GetActionsForContextsAsync(string filePath, IEnumerable<FileContext> fileContexts, CancellationToken cancellationToken = default(CancellationToken))
-            {
-                throw new NotImplementedException();
-            }
-
-            public Task<IReadOnlyCollection<string>> GetDirectoriesAsync(string subPath, bool recursive, CancellationToken cancellationToken = default(CancellationToken))
-            {
-                throw new NotImplementedException();
-            }
-
-            public Task<IReadOnlyList<IGrouping<Lazy<IFileContextActionProvider, IFileContextActionProviderMetadata>, IFileContextAction>>> GetFileContextActionsAsync(string path, IEnumerable<Guid> fileContextTypes, CancellationToken cancellationToken = default(CancellationToken))
-            {
-                throw new NotImplementedException();
-            }
-
-            public Task<IReadOnlyList<IGrouping<Lazy<IFileContextActionProvider, IFileContextActionProviderMetadata>, IFileContextAction>>> GetFileContextActionsAsync<T>(string path, T context, IEnumerable<Guid> fileContextTypes, CancellationToken cancellationToken = default(CancellationToken))
-            {
-                throw new NotImplementedException();
-            }
-
-            public Task<IReadOnlyList<IGrouping<Lazy<IFileContextProvider, IFileContextProviderMetadata>, FileContext>>> GetFileContextsAsync(string path, IEnumerable<Guid> fileContextTypes, CancellationToken cancellationToken = default(CancellationToken))
-            {
-                throw new NotImplementedException();
-            }
-
-            public Task<IReadOnlyList<IGrouping<Lazy<IFileContextProvider, IFileContextProviderMetadata>, FileContext>>> GetFileContextsAsync<T>(string path, T context, IEnumerable<Guid> fileContextTypes, CancellationToken cancellationToken = default(CancellationToken))
-            {
-                throw new NotImplementedException();
-            }
-
-            public Task<IReadOnlyList<Tuple<Lazy<ILanguageServiceProvider, ILanguageServiceProviderMetadata>, IReadOnlyCollection<FileContext>>>> GetFileContextsForLanguageServicesAsync(string filePath, CancellationToken cancellationToken = default(CancellationToken))
-            {
-                throw new NotImplementedException();
-            }
-
-            public Task<IReadOnlyCollection<string>> GetFilesAsync(string subPath, bool recursive, CancellationToken cancellationToken = default(CancellationToken))
-            {
-                throw new NotImplementedException();
-            }
-
-            public object GetService(Type serviceType)
-            {
-                if (serviceType == typeof(IWorkspaceSettingsManager))
-                {
-                    return SettingsManager;
-                }
-
-                throw new NotImplementedException();
-            }
-
-            public Task<object> GetServiceAsync(Type serviceType)
-            {
-                if (serviceType == typeof(IWorkspaceSettingsManager))
-                {
-                    return Task.FromResult<object>(SettingsManager);
-                }
-
-                throw new NotImplementedException();
-            }
-
-            public string MakeRelative(string path)
-            {
-                return PathUtils.GetRelativeFilePath(Location, path);
-            }
-
-            public string MakeRooted(string subPath)
-            {
-                return PathUtils.GetAbsoluteFilePath(Location, subPath);
-            }
-        }
-
-        public class MockWorkspaceSettingsManager : IWorkspaceSettingsManager
-        {
-            private IWorkspaceSettings _aggregatedSettings;
-
-            public MockWorkspaceSettingsManager()
-            {
-                _aggregatedSettings = new MockWorkspaceSettings();
-            }
-
-            public MockWorkspaceSettingsManager(IWorkspaceSettings aggregatedSettings)
-            {
-                _aggregatedSettings = aggregatedSettings;
-            }
-
-            public AsyncEvent<WorkspaceSettingsChangedEventArgs> OnWorkspaceSettingsChanged { get; set; }
-
-            public IWorkspaceSettings GetAggregatedSettings(string type, string scopePath = null)
-            {
-                return _aggregatedSettings;
-            }
-
-            public Task<IWorkspaceSettingsPersistance> GetPersistanceAsync(bool autoCommit)
-            {
-                throw new NotImplementedException();
-            }
-
-            public IWorkspaceSettingsSource GetSettings(string settingsFile)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void SimulateChangeSettings(IWorkspaceSettings settings)
-            {
-                _aggregatedSettings = settings;
-                OnWorkspaceSettingsChanged.InvokeAsync(this, new WorkspaceSettingsChangedEventArgs(string.Empty, string.Empty)).DoNotWait();
-            }
-        }
-
-        public class MockWorkspaceSettings : IWorkspaceSettings
-        {
-            private readonly Dictionary<string, string> _keyValuePairs;
-
-            public MockWorkspaceSettings()
-            {
-                _keyValuePairs = new Dictionary<string, string>();
-            }
-
-            public MockWorkspaceSettings(Dictionary<string, string> keyValuePairs)
-            {
-                _keyValuePairs = keyValuePairs;
-            }
-
-            public string ScopePath => throw new NotImplementedException();
-
-            public IWorkspaceSettings Parent => null;
-
-            public IEnumerable<string> GetKeys() => _keyValuePairs.Keys;
-
-            public WorkspaceSettingsResult GetProperty<T>(string key, out T value, out IWorkspaceSettings originator, T defaultValue = default(T))
-            {
-                value = defaultValue;
-                originator = this;
-
-                if (typeof(T) != typeof(string))
-                {
-                    return WorkspaceSettingsResult.Error;
-                }
-
-                if (_keyValuePairs.TryGetValue(key, out string v))
-                {
-                    value = (T)(object)v;
-                }
-
-                return WorkspaceSettingsResult.Success;
-            }
-
-            public WorkspaceSettingsResult GetProperty<T>(string key, out T value, T defaultValue = default(T))
-            {
-                return GetProperty(key, out value, out _, defaultValue);
-            }
-        }
-
-        public class MockWorkspaceContextProvider : IPythonWorkspaceContextProvider
-        {
-            public MockWorkspaceContextProvider(IPythonWorkspaceContext workspaceContext)
-            {
-                Workspace = workspaceContext;
-            }
-
-            public void SimulateChangeWorkspace(IPythonWorkspaceContext context)
-            {
-                WorkspaceClosing?.Invoke(this, new PythonWorkspaceContextEventArgs(Workspace));
-                WorkspaceClosed?.Invoke(this, new PythonWorkspaceContextEventArgs(Workspace));
-                Workspace = context;
-                WorkspaceOpening?.Invoke(this, new PythonWorkspaceContextEventArgs(Workspace));
-                WorkspaceInitialized?.Invoke(this, new PythonWorkspaceContextEventArgs(Workspace));
-            }
-
-            public IPythonWorkspaceContext Workspace { get; private set; }
-
-            public event EventHandler<PythonWorkspaceContextEventArgs> WorkspaceInitialized;
-            public event EventHandler<PythonWorkspaceContextEventArgs> WorkspaceOpening;
-            public event EventHandler<PythonWorkspaceContextEventArgs> WorkspaceClosing;
-            public event EventHandler<PythonWorkspaceContextEventArgs> WorkspaceClosed;
-        }
-
-        public class MockWorkspaceContext : IPythonWorkspaceContext
-        {
-            private readonly WorkspaceTestHelper.MockWorkspace _workspace;
-            private string _interpreterSetting;
-
-            public MockWorkspaceContext(WorkspaceTestHelper.MockWorkspace workspace, string interpreterSetting = null)
-            {
-                _workspace = workspace;
-                _interpreterSetting = interpreterSetting;
-            }
-
-            public string WorkspaceName => throw new NotImplementedException();
-
-            public string Location => _workspace.Location;
-
-            public IPythonInterpreterFactory CurrentFactory => throw new NotImplementedException();
-
-            public bool IsCurrentFactoryDefault => throw new NotImplementedException();
+	internal class WorkspaceTestHelper
+	{
+		public const string PythonNoId = null;
+		public const string Python27Id = "Global|PythonCore|2.7";
+		public const string Python36Id = "Global|PythonCore|3.6";
+		public const string Python37Id = "Global|PythonCore|3.7";
+		public const string PythonUnavailableId = "Global|PythonCore|2.8";
+
+		private static InterpreterConfiguration Python27Config = new InterpreterConfiguration(Python27Id, "Mock 2.7");
+		private static InterpreterConfiguration Python36Config = new InterpreterConfiguration(Python36Id, "Mock 3.6");
+		private static InterpreterConfiguration Python37Config = new InterpreterConfiguration(Python37Id, "Mock 3.7");
+
+		public static IPythonInterpreterFactory Python27Factory = new MockPythonInterpreterFactory(Python27Config);
+		public static IPythonInterpreterFactory Python36Factory = new MockPythonInterpreterFactory(Python36Config);
+		public static IPythonInterpreterFactory Python37Factory = new MockPythonInterpreterFactory(Python37Config);
+
+		public static IPythonInterpreterFactory DefaultFactory = Python36Factory;
+
+		public static IEnumerable<IPythonInterpreterFactory> AllFactories = new[] {
+			Python27Factory,
+			Python36Factory,
+			Python37Factory,
+		};
+
+		public static MockWorkspace CreateMockWorkspace(string workspaceFolder, string interpreterSetting)
+		{
+			var aggregatedSettings = new MockWorkspaceSettings(
+				new Dictionary<string, string> { { "Interpreter", interpreterSetting } }
+			);
+			var settingsManager = new MockWorkspaceSettingsManager(aggregatedSettings);
+			return new MockWorkspace(workspaceFolder, settingsManager);
+		}
+
+		public static string CreateWorkspaceFolder()
+		{
+			var workspaceFolder = TestData.GetTempPath();
+			Directory.CreateDirectory(workspaceFolder);
+			File.WriteAllText(Path.Combine(workspaceFolder, "app.py"), string.Empty);
+			return workspaceFolder;
+		}
+
+		public class MockOptionsService : IInterpreterOptionsService
+		{
+			public MockOptionsService(IPythonInterpreterFactory factory)
+			{
+				DefaultInterpreter = factory;
+			}
+
+			public IPythonInterpreterFactory DefaultInterpreter { get; set; }
+
+			public string DefaultInterpreterId { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+			public event EventHandler DefaultInterpreterChanged;
+
+			public string AddConfigurableInterpreter(string name, InterpreterConfiguration config)
+			{
+				throw new NotImplementedException();
+			}
+
+			public IEnumerable<IPackageManager> GetPackageManagers(IPythonInterpreterFactory factory)
+			{
+				throw new NotImplementedException();
+			}
+
+			public bool IsConfigurable(string id)
+			{
+				throw new NotImplementedException();
+			}
+
+			public void RemoveConfigurableInterpreter(string id)
+			{
+				throw new NotImplementedException();
+			}
+
+			internal void SimulateChangeDefaultInterpreter(IPythonInterpreterFactory factory)
+			{
+				DefaultInterpreter = factory;
+				DefaultInterpreterChanged?.Invoke(this, EventArgs.Empty);
+			}
+		}
+
+		public class MockRegistryService : IInterpreterRegistryService
+		{
+			public MockRegistryService(IEnumerable<IPythonInterpreterFactory> interpreters)
+			{
+				Interpreters = interpreters ?? Enumerable.Empty<IPythonInterpreterFactory>();
+
+			}
+
+			public IEnumerable<IPythonInterpreterFactory> Interpreters { get; private set; }
+
+			public IEnumerable<InterpreterConfiguration> Configurations
+			{
+				get
+				{
+					return Interpreters.Select(x => x.Configuration);
+				}
+			}
+
+			public IEnumerable<IPythonInterpreterFactory> InterpretersOrDefault => throw new NotImplementedException();
+
+			public IPythonInterpreterFactory NoInterpretersValue => throw new NotImplementedException();
+
+			public event EventHandler InterpretersChanged;
+
+			public void BeginSuppressInterpretersChangedEvent()
+			{
+				throw new NotImplementedException();
+			}
+
+			public void EndSuppressInterpretersChangedEvent()
+			{
+				throw new NotImplementedException();
+			}
+
+			public InterpreterConfiguration FindConfiguration(string id)
+			{
+				throw new NotImplementedException();
+			}
+
+			public IPythonInterpreterFactory FindInterpreter(string id)
+			{
+				return Interpreters.SingleOrDefault(f => f.Configuration.Id == id);
+			}
+
+			public object GetProperty(string id, string propName)
+			{
+				throw new NotImplementedException();
+			}
+
+			public void GetSerializationInfo(IPythonInterpreterFactory factory, out string assembly, out string typeName, out Dictionary<string, object> properties)
+			{
+				throw new NotImplementedException();
+			}
+
+			internal void SimulateChangeInterpreters(IEnumerable<IPythonInterpreterFactory> interpreters)
+			{
+				Interpreters = interpreters ?? Enumerable.Empty<IPythonInterpreterFactory>();
+				InterpretersChanged?.Invoke(this, EventArgs.Empty);
+			}
+		}
+
+		public class MockWorkspaceService : IVsFolderWorkspaceService
+		{
+			public MockWorkspaceService(IWorkspace workspace)
+			{
+				CurrentWorkspace = workspace;
+			}
+
+			public IWorkspace CurrentWorkspace { get; private set; }
+
+			public AsyncEvent<EventArgs> OnActiveWorkspaceChanged { get; set; }
+
+			public void SimulateChangeWorkspace(IWorkspace workspace)
+			{
+				CurrentWorkspace = workspace;
+				OnActiveWorkspaceChanged?.InvokeAsync(this, EventArgs.Empty).DoNotWait();
+			}
+		}
+
+		public class MockWorkspace : IWorkspace
+		{
+			public MockWorkspace(string location)
+			{
+				Location = location;
+				SettingsManager = new MockWorkspaceSettingsManager();
+			}
+
+			public MockWorkspace(string location, MockWorkspaceSettingsManager settingsManager)
+			{
+				Location = location;
+				SettingsManager = settingsManager;
+			}
+
+			internal MockWorkspaceSettingsManager SettingsManager { get; }
+
+			public string Location { get; private set; }
+
+			public JoinableTaskFactory JTF => throw new NotImplementedException();
+
+			public Task DisposeAsync()
+			{
+				throw new NotImplementedException();
+			}
+
+			public Task<IReadOnlyList<IGrouping<Lazy<IFileContextActionProvider, IFileContextActionProviderMetadata>, IFileContextAction>>> GetActionsForContextsAsync(string filePath, IEnumerable<FileContext> fileContexts, CancellationToken cancellationToken = default(CancellationToken))
+			{
+				throw new NotImplementedException();
+			}
+
+			public Task<IReadOnlyCollection<string>> GetDirectoriesAsync(string subPath, bool recursive, CancellationToken cancellationToken = default(CancellationToken))
+			{
+				throw new NotImplementedException();
+			}
+
+			public Task<IReadOnlyList<IGrouping<Lazy<IFileContextActionProvider, IFileContextActionProviderMetadata>, IFileContextAction>>> GetFileContextActionsAsync(string path, IEnumerable<Guid> fileContextTypes, CancellationToken cancellationToken = default(CancellationToken))
+			{
+				throw new NotImplementedException();
+			}
+
+			public Task<IReadOnlyList<IGrouping<Lazy<IFileContextActionProvider, IFileContextActionProviderMetadata>, IFileContextAction>>> GetFileContextActionsAsync<T>(string path, T context, IEnumerable<Guid> fileContextTypes, CancellationToken cancellationToken = default(CancellationToken))
+			{
+				throw new NotImplementedException();
+			}
+
+			public Task<IReadOnlyList<IGrouping<Lazy<IFileContextProvider, IFileContextProviderMetadata>, FileContext>>> GetFileContextsAsync(string path, IEnumerable<Guid> fileContextTypes, CancellationToken cancellationToken = default(CancellationToken))
+			{
+				throw new NotImplementedException();
+			}
+
+			public Task<IReadOnlyList<IGrouping<Lazy<IFileContextProvider, IFileContextProviderMetadata>, FileContext>>> GetFileContextsAsync<T>(string path, T context, IEnumerable<Guid> fileContextTypes, CancellationToken cancellationToken = default(CancellationToken))
+			{
+				throw new NotImplementedException();
+			}
+
+			public Task<IReadOnlyList<Tuple<Lazy<ILanguageServiceProvider, ILanguageServiceProviderMetadata>, IReadOnlyCollection<FileContext>>>> GetFileContextsForLanguageServicesAsync(string filePath, CancellationToken cancellationToken = default(CancellationToken))
+			{
+				throw new NotImplementedException();
+			}
+
+			public Task<IReadOnlyCollection<string>> GetFilesAsync(string subPath, bool recursive, CancellationToken cancellationToken = default(CancellationToken))
+			{
+				throw new NotImplementedException();
+			}
+
+			public object GetService(Type serviceType)
+			{
+				if (serviceType == typeof(IWorkspaceSettingsManager))
+				{
+					return SettingsManager;
+				}
+
+				throw new NotImplementedException();
+			}
+
+			public Task<object> GetServiceAsync(Type serviceType)
+			{
+				if (serviceType == typeof(IWorkspaceSettingsManager))
+				{
+					return Task.FromResult<object>(SettingsManager);
+				}
+
+				throw new NotImplementedException();
+			}
+
+			public string MakeRelative(string path)
+			{
+				return PathUtils.GetRelativeFilePath(Location, path);
+			}
+
+			public string MakeRooted(string subPath)
+			{
+				return PathUtils.GetAbsoluteFilePath(Location, subPath);
+			}
+		}
+
+		public class MockWorkspaceSettingsManager : IWorkspaceSettingsManager
+		{
+			private IWorkspaceSettings _aggregatedSettings;
+
+			public MockWorkspaceSettingsManager()
+			{
+				_aggregatedSettings = new MockWorkspaceSettings();
+			}
+
+			public MockWorkspaceSettingsManager(IWorkspaceSettings aggregatedSettings)
+			{
+				_aggregatedSettings = aggregatedSettings;
+			}
+
+			public AsyncEvent<WorkspaceSettingsChangedEventArgs> OnWorkspaceSettingsChanged { get; set; }
+
+			public IWorkspaceSettings GetAggregatedSettings(string type, string scopePath = null)
+			{
+				return _aggregatedSettings;
+			}
+
+			public Task<IWorkspaceSettingsPersistance> GetPersistanceAsync(bool autoCommit)
+			{
+				throw new NotImplementedException();
+			}
+
+			public IWorkspaceSettingsSource GetSettings(string settingsFile)
+			{
+				throw new NotImplementedException();
+			}
+
+			public void SimulateChangeSettings(IWorkspaceSettings settings)
+			{
+				_aggregatedSettings = settings;
+				OnWorkspaceSettingsChanged.InvokeAsync(this, new WorkspaceSettingsChangedEventArgs(string.Empty, string.Empty)).DoNotWait();
+			}
+		}
+
+		public class MockWorkspaceSettings : IWorkspaceSettings
+		{
+			private readonly Dictionary<string, string> _keyValuePairs;
+
+			public MockWorkspaceSettings()
+			{
+				_keyValuePairs = new Dictionary<string, string>();
+			}
+
+			public MockWorkspaceSettings(Dictionary<string, string> keyValuePairs)
+			{
+				_keyValuePairs = keyValuePairs;
+			}
+
+			public string ScopePath => throw new NotImplementedException();
+
+			public IWorkspaceSettings Parent => null;
+
+			public IEnumerable<string> GetKeys() => _keyValuePairs.Keys;
+
+			public WorkspaceSettingsResult GetProperty<T>(string key, out T value, out IWorkspaceSettings originator, T defaultValue = default(T))
+			{
+				value = defaultValue;
+				originator = this;
+
+				if (typeof(T) != typeof(string))
+				{
+					return WorkspaceSettingsResult.Error;
+				}
+
+				if (_keyValuePairs.TryGetValue(key, out string v))
+				{
+					value = (T)(object)v;
+				}
+
+				return WorkspaceSettingsResult.Success;
+			}
+
+			public WorkspaceSettingsResult GetProperty<T>(string key, out T value, T defaultValue = default(T))
+			{
+				return GetProperty(key, out value, out _, defaultValue);
+			}
+		}
+
+		public class MockWorkspaceContextProvider : IPythonWorkspaceContextProvider
+		{
+			public MockWorkspaceContextProvider(IPythonWorkspaceContext workspaceContext)
+			{
+				Workspace = workspaceContext;
+			}
+
+			public void SimulateChangeWorkspace(IPythonWorkspaceContext context)
+			{
+				WorkspaceClosing?.Invoke(this, new PythonWorkspaceContextEventArgs(Workspace));
+				WorkspaceClosed?.Invoke(this, new PythonWorkspaceContextEventArgs(Workspace));
+				Workspace = context;
+				WorkspaceOpening?.Invoke(this, new PythonWorkspaceContextEventArgs(Workspace));
+				WorkspaceInitialized?.Invoke(this, new PythonWorkspaceContextEventArgs(Workspace));
+			}
+
+			public IPythonWorkspaceContext Workspace { get; private set; }
+
+			public event EventHandler<PythonWorkspaceContextEventArgs> WorkspaceInitialized;
+			public event EventHandler<PythonWorkspaceContextEventArgs> WorkspaceOpening;
+			public event EventHandler<PythonWorkspaceContextEventArgs> WorkspaceClosing;
+			public event EventHandler<PythonWorkspaceContextEventArgs> WorkspaceClosed;
+		}
+
+		public class MockWorkspaceContext : IPythonWorkspaceContext
+		{
+			private readonly WorkspaceTestHelper.MockWorkspace _workspace;
+			private string _interpreterSetting;
+
+			public MockWorkspaceContext(WorkspaceTestHelper.MockWorkspace workspace, string interpreterSetting = null)
+			{
+				_workspace = workspace;
+				_interpreterSetting = interpreterSetting;
+			}
+
+			public string WorkspaceName => throw new NotImplementedException();
+
+			public string Location => _workspace.Location;
+
+			public IPythonInterpreterFactory CurrentFactory => throw new NotImplementedException();
+
+			public bool IsCurrentFactoryDefault => throw new NotImplementedException();
 
 #pragma warning disable CS0067
-            public event EventHandler InterpreterSettingChanged;
-            public event EventHandler SearchPathsSettingChanged;
-            public event EventHandler ActiveInterpreterChanged;
-            public event EventHandler TestSettingChanged;
+			public event EventHandler InterpreterSettingChanged;
+			public event EventHandler SearchPathsSettingChanged;
+			public event EventHandler ActiveInterpreterChanged;
+			public event EventHandler TestSettingChanged;
 #pragma warning restore CS0067
 
-            public void Dispose()
-            {
-            }
+			public void Dispose()
+			{
+			}
 
-            public void SimulateChangeInterpreterSetting(string setting)
-            {
-                _interpreterSetting = setting;
-                InterpreterSettingChanged?.Invoke(this, EventArgs.Empty);
-            }
-            public IEnumerable<string> GetAbsoluteSearchPaths()
-            {
-                throw new NotImplementedException();
-            }
+			public void SimulateChangeInterpreterSetting(string setting)
+			{
+				_interpreterSetting = setting;
+				InterpreterSettingChanged?.Invoke(this, EventArgs.Empty);
+			}
+			public IEnumerable<string> GetAbsoluteSearchPaths()
+			{
+				throw new NotImplementedException();
+			}
 
-            public string GetEnvironmentYmlPath()
-            {
-                throw new NotImplementedException();
-            }
+			public string GetEnvironmentYmlPath()
+			{
+				throw new NotImplementedException();
+			}
 
-            public string GetRequirementsTxtPath()
-            {
-                throw new NotImplementedException();
-            }
+			public string GetRequirementsTxtPath()
+			{
+				throw new NotImplementedException();
+			}
 
-            public string MakeRooted(string path) => PathUtils.GetAbsoluteFilePath(Location, path);
+			public string MakeRooted(string path) => PathUtils.GetAbsoluteFilePath(Location, path);
 
-            public string ReadInterpreterSetting() => _interpreterSetting;
+			public string ReadInterpreterSetting() => _interpreterSetting;
 
-            public Task SetInterpreterAsync(string interpreter)
-            {
-                throw new NotImplementedException();
-            }
+			public Task SetInterpreterAsync(string interpreter)
+			{
+				throw new NotImplementedException();
+			}
 
-            public Task SetInterpreterFactoryAsync(IPythonInterpreterFactory factory)
-            {
-                throw new NotImplementedException();
-            }
+			public Task SetInterpreterFactoryAsync(IPythonInterpreterFactory factory)
+			{
+				throw new NotImplementedException();
+			}
 
-            public void AddActionOnClose(object key, Action<object> action)
-            {
-                throw new NotImplementedException();
-            }
+			public void AddActionOnClose(object key, Action<object> action)
+			{
+				throw new NotImplementedException();
+			}
 
-            public string GetStringProperty(string propertyName)
-            {
-                throw new NotImplementedException();
-            }
+			public string GetStringProperty(string propertyName)
+			{
+				throw new NotImplementedException();
+			}
 
-            public bool? GetBoolProperty(string propertyName)
-            {
-                throw new NotImplementedException();
-            }
+			public bool? GetBoolProperty(string propertyName)
+			{
+				throw new NotImplementedException();
+			}
 
-            public Task SetPropertyAsync(string propertyName, string propertyVal)
-            {
-                throw new NotImplementedException();
-            }
+			public Task SetPropertyAsync(string propertyName, string propertyVal)
+			{
+				throw new NotImplementedException();
+			}
 
-            public Task SetPropertyAsync(string propertyName, bool? propertyVal)
-            {
-                throw new NotImplementedException();
-            }
+			public Task SetPropertyAsync(string propertyName, bool? propertyVal)
+			{
+				throw new NotImplementedException();
+			}
 
-            public IEnumerable<string> EnumerateUserFiles(Predicate<string> predicate) => throw new NotImplementedException();
-        }
-    }
+			public IEnumerable<string> EnumerateUserFiles(Predicate<string> predicate) => throw new NotImplementedException();
+		}
+	}
 }

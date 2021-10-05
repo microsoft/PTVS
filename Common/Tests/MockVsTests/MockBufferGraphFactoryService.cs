@@ -16,12 +16,12 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-    [Export(typeof(IBufferGraphFactoryService))]
-    class MockBufferGraphFactoryService : IBufferGraphFactoryService
-    {
-        public IBufferGraph CreateBufferGraph(VisualStudio.Text.ITextBuffer textBuffer)
-        {
-            throw new NotImplementedException();
-        }
-    }
+	[Export(typeof(IBufferGraphFactoryService))]
+	class MockBufferGraphFactoryService : IBufferGraphFactoryService
+	{
+		public IBufferGraph CreateBufferGraph(VisualStudio.Text.ITextBuffer textBuffer)
+		{
+			throw new NotImplementedException();
+		}
+	}
 }

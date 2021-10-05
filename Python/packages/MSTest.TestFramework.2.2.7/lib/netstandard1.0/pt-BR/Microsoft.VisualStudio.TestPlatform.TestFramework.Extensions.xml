@@ -1,0 +1,93 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions</name>
+    </assembly>
+    <members>
+        <member name="T:Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute">
+            <summary>
+            Usado para especificar o item de implantação (arquivo ou diretório) para implantação por teste.
+            Pode ser especificado em classe de teste ou em método de teste.
+            Pode ter várias instâncias do atributo para especificar mais de um item.
+            O caminho do item pode ser absoluto ou relativo. Se relativo, é relativo a RunConfig.RelativePathRoot.
+            </summary>
+            <example>
+            [DeploymentItem("file1.xml")]
+            [DeploymentItem("file2.xml", "DataFiles")]
+            [DeploymentItem("bin\Debug")]
+            </example>
+            <remarks>
+            DeploymentItemAttribute is currently not supported in .Net Core. This is just a placehodler for support in the future.
+            </remarks>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute.#ctor(System.String)">
+            <summary>
+             Inicializa uma nova instância da classe <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute"/>.
+            </summary>
+            <param name="path">O arquivo ou o diretório a ser implantado. O caminho é relativo ao diretório de saída do build. O item será copiado para o mesmo diretório que o dos assemblies de teste implantados.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute.#ctor(System.String,System.String)">
+            <summary>
+             Inicializa uma nova instância da classe <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute"/>
+            </summary>
+            <param name="path">O caminho relativo ou absoluto ao arquivo ou ao diretório a ser implantado. O caminho é relativo ao diretório de saída do build. O item será copiado para o mesmo diretório que o dos assemblies de teste implantados.</param>
+            <param name="outputDirectory">O caminho do diretório para o qual os itens deverão ser copiados. Ele pode ser absoluto ou relativo ao diretório de implantação. Todos os arquivos e diretórios identificados por <paramref name="path"/> serão copiados para esse diretório.</param>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute.Path">
+            <summary>
+            Obtém o caminho da pasta ou do arquivo de origem a ser copiado.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute.OutputDirectory">
+            <summary>
+            Obtém o caminho do diretório para o qual o item é copiado.
+            </summary>
+        </member>
+        <member name="T:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext">
+            <summary>
+            Classe TestContext. Essa classe deve ser totalmente abstrata e não conter nenhum
+            membro. O adaptador implementará os membros. Os usuários na estrutura devem
+            acessá-la somente por meio de uma interface bem definida.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.Properties">
+            <summary>
+            Obtém as propriedades de teste para um teste.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.FullyQualifiedTestClassName">
+            <summary>
+            Obtém o Nome totalmente qualificado da classe contendo o método de teste executado no momento
+            </summary>
+            <remarks>
+            This property can be useful in attributes derived from ExpectedExceptionBaseAttribute.
+            Those attributes have access to the test context, and provide messages that are included
+            in the test results. Users can benefit from messages that include the fully-qualified
+            class name in addition to the name of the test method currently being executed.
+            </remarks>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestName">
+            <summary>
+            Obtém o Nome do método de teste executado no momento
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.CurrentTestOutcome">
+            <summary>
+            Obtém o resultado do teste atual.
+            </summary>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.WriteLine(System.String)">
+            <summary>
+            Used to write trace messages while the test is running
+            </summary>
+            <param name="message">formatted message string</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.WriteLine(System.String,System.Object[])">
+            <summary>
+            Used to write trace messages while the test is running
+            </summary>
+            <param name="format">format string</param>
+            <param name="args">the arguments</param>
+        </member>
+    </members>
+</doc>

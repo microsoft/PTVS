@@ -16,17 +16,17 @@
 
 namespace TestAdapterTests.Mocks
 {
-    class MockTestCaseDiscoverySink : ITestCaseDiscoverySink
-    {
-        public readonly List<TestCase> Tests = new List<TestCase>();
+	class MockTestCaseDiscoverySink : ITestCaseDiscoverySink
+	{
+		public readonly List<TestCase> Tests = new List<TestCase>();
 
-        #region ITestCaseDiscoverySink Members
+		#region ITestCaseDiscoverySink Members
 
-        public void SendTestCase(TestCase discoveredTest)
-        {
-            this.Tests.Add(discoveredTest);
-        }
+		public void SendTestCase(TestCase discoveredTest)
+		{
+			this.Tests.Add(discoveredTest);
+		}
 
-        #endregion
-    }
+		#endregion
+	}
 }

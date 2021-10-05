@@ -16,97 +16,97 @@
 
 namespace Microsoft.IronPythonTools.Interpreter
 {
-    internal class IronPythonResolver
-    {
-        private readonly string _installDir;
+	internal class IronPythonResolver
+	{
+		private readonly string _installDir;
 
-        public IronPythonResolver(string installDir)
-        {
-            _installDir = installDir;
-        }
+		public IronPythonResolver(string installDir)
+		{
+			_installDir = installDir;
+		}
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2001")]
-        public Assembly domain_AssemblyResolve(object sender, ResolveEventArgs args)
-        {
-            var asmName = new AssemblyName(args.Name);
-            var asmPath = Path.Combine(_installDir, asmName.Name + ".dll");
-            if (File.Exists(asmPath))
-            {
-                return Assembly.LoadFile(asmPath);
-            }
-            return null;
-        }
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2001")]
+		public Assembly domain_AssemblyResolve(object sender, ResolveEventArgs args)
+		{
+			var asmName = new AssemblyName(args.Name);
+			var asmPath = Path.Combine(_installDir, asmName.Name + ".dll");
+			if (File.Exists(asmPath))
+			{
+				return Assembly.LoadFile(asmPath);
+			}
+			return null;
+		}
 
-        internal static void Initialize(string[] args)
-        {
-            if (args.Length > 0 && Directory.Exists(args[0]))
-            {
-                var resolver = new IronPythonResolver(args[0]);
-                AppDomain.CurrentDomain.AssemblyResolve += resolver.domain_AssemblyResolve;
-            }
-        }
+		internal static void Initialize(string[] args)
+		{
+			if (args.Length > 0 && Directory.Exists(args[0]))
+			{
+				var resolver = new IronPythonResolver(args[0]);
+				AppDomain.CurrentDomain.AssemblyResolve += resolver.domain_AssemblyResolve;
+			}
+		}
 
-        internal static string GetPythonInstallDir()
-        {
-            // IronPython 2.7.7 and earlier use 32-bit registry
-            var installPath = ReadInstallPathFromRegistry(RegistryView.Registry32);
-            if (!string.IsNullOrEmpty(installPath))
-            {
-                return installPath;
-            }
+		internal static string GetPythonInstallDir()
+		{
+			// IronPython 2.7.7 and earlier use 32-bit registry
+			var installPath = ReadInstallPathFromRegistry(RegistryView.Registry32);
+			if (!string.IsNullOrEmpty(installPath))
+			{
+				return installPath;
+			}
 
-            // IronPython 2.7.8 and later use 64-bit registry
-            installPath = ReadInstallPathFromRegistry(RegistryView.Registry64);
-            if (!string.IsNullOrEmpty(installPath))
-            {
-                return installPath;
-            }
+			// IronPython 2.7.8 and later use 64-bit registry
+			installPath = ReadInstallPathFromRegistry(RegistryView.Registry64);
+			if (!string.IsNullOrEmpty(installPath))
+			{
+				return installPath;
+			}
 
-            var paths = Environment.GetEnvironmentVariable("PATH");
-            if (paths != null)
-            {
-                foreach (string dir in paths.Split(Path.PathSeparator))
-                {
-                    try
-                    {
-                        if (IronPythonExistsIn(dir))
-                        {
-                            return dir;
-                        }
-                    }
-                    catch
-                    {
-                        // ignore
-                    }
-                }
-            }
+			var paths = Environment.GetEnvironmentVariable("PATH");
+			if (paths != null)
+			{
+				foreach (string dir in paths.Split(Path.PathSeparator))
+				{
+					try
+					{
+						if (IronPythonExistsIn(dir))
+						{
+							return dir;
+						}
+					}
+					catch
+					{
+						// ignore
+					}
+				}
+			}
 
-            return null;
-        }
+			return null;
+		}
 
-        private static string ReadInstallPathFromRegistry(RegistryView view)
-        {
-            try
-            {
-                using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, view))
-                using (var pathKey = baseKey.OpenSubKey("SOFTWARE\\IronPython\\2.7\\InstallPath"))
-                {
-                    return pathKey?.GetValue("") as string;
-                }
-            }
-            catch (ArgumentException)
-            {
-            }
-            catch (UnauthorizedAccessException)
-            {
-            }
+		private static string ReadInstallPathFromRegistry(RegistryView view)
+		{
+			try
+			{
+				using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, view))
+				using (var pathKey = baseKey.OpenSubKey("SOFTWARE\\IronPython\\2.7\\InstallPath"))
+				{
+					return pathKey?.GetValue("") as string;
+				}
+			}
+			catch (ArgumentException)
+			{
+			}
+			catch (UnauthorizedAccessException)
+			{
+			}
 
-            return null;
-        }
+			return null;
+		}
 
-        private static bool IronPythonExistsIn(string/*!*/ dir)
-        {
-            return File.Exists(Path.Combine(dir, "ipy.exe"));
-        }
-    }
+		private static bool IronPythonExistsIn(string/*!*/ dir)
+		{
+			return File.Exists(Path.Combine(dir, "ipy.exe"));
+		}
+	}
 }

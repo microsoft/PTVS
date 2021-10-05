@@ -16,10 +16,10 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-    /// <summary>
-    /// An empty exported class to allow product code to determine
-    /// whether it is running in mock tests or not.
-    /// </summary>
-    [Export("Microsoft.VisualStudioTools.MockVsTests.IsMockVs")]
-    public sealed class IsMockVs { }
+	/// <summary>
+	/// An empty exported class to allow product code to determine
+	/// whether it is running in mock tests or not.
+	/// </summary>
+	[Export("Microsoft.VisualStudioTools.MockVsTests.IsMockVs")]
+	public sealed class IsMockVs { }
 }

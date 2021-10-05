@@ -1,0 +1,190 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<doc>
+  <assembly>
+    <name>System.Runtime.InteropServices.WindowsRuntime</name>
+  </assembly>
+  <members>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.DefaultInterfaceAttribute">
+      <summary>Gibt die Standardschnittstelle einer verwalteten Windows-Runtime-Klasse an.</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.DefaultInterfaceAttribute.#ctor(System.Type)">
+      <summary>Initialisiert eine neue Instanz der <see cref="T:System.Runtime.InteropServices.WindowsRuntime.DefaultInterfaceAttribute" />-Klasse. </summary>
+      <param name="defaultInterface">Der Schnittstellentyp, der als Standardschnittstelle für die Klasse angegeben wird, auf die das Attribut angewendet wird. </param>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.DefaultInterfaceAttribute.DefaultInterface">
+      <summary>Ruft den Typ der Standardschnittstelle ab. </summary>
+      <returns>Der Typ der Standardschnittstelle. </returns>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken">
+      <summary>Ein Token, das zurückgegeben wird, wenn ein Ereignishandler einem Windows-Runtime-Ereignis hinzugefügt wird.Das Token wird verwendet, um den Ereignishandler zu einem späteren Zeitpunkt aus dem Ereignis zu entfernen.</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken.Equals(System.Object)">
+      <summary>Gibt einen Wert zurück, der angibt, ob das aktuelle -Objekt einem angegebenen Objekt gleicht. </summary>
+      <returns>true, wenn das aktuelle Objekt <paramref name="obj" /> entspricht, andernfalls false.</returns>
+      <param name="obj">Das zu vergleichende Objekt.</param>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken.GetHashCode">
+      <summary>Gibt den Hashcode für diese Instanz zurück. </summary>
+      <returns>Der Hashcode für diese Instanz. </returns>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken.op_Equality(System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken,System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken)">
+      <summary>Gibt an, ob zwei <see cref="T:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken" />-Instanzen gleich sind. </summary>
+      <returns>true, wenn die beiden Objekte gleich sind, andernfalls false. </returns>
+      <param name="left">Die erste zu vergleichende Instanz. </param>
+      <param name="right">Die zweite zu vergleichende Instanz. </param>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken.op_Inequality(System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken,System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken)">
+      <summary>Gibt an, ob zwei <see cref="T:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken" />-Instanzen ungleich sind.</summary>
+      <returns>true, wenn die beiden Instanzen ungleich sind, andernfalls false. </returns>
+      <param name="left">Die erste zu vergleichende Instanz. </param>
+      <param name="right">Die zweite zu vergleichende Instanz. </param>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1">
+      <summary>Speichert Zuordnungen zwischen Delegaten und Ereignistoken, um die Implementierung eines Windows-Runtime-Ereignisses in verwaltetem Code zu unterstützen.</summary>
+      <typeparam name="T">Der Typ des Ereignishandlerdelegaten für ein bestimmtes Ereignis. </typeparam>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.#ctor">
+      <summary>Initialisiert eine neue Instanz der <see cref="T:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1" />-Klasse. </summary>
+      <exception cref="T:System.InvalidOperationException">
+        <paramref name="T" /> ist kein Delegattyp. </exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.AddEventHandler(`0)">
+      <summary>Fügt den angegebenen Ereignishandler der Tabelle und der Aufrufliste hinzu und gibt ein Token zurück, das verwendet werden kann, um den Ereignishandler zu entfernen. </summary>
+      <returns>Ein Token, das verwendet werden kann, um den Ereignishandler aus der Tabelle bzw. aus der Aufrufliste zu entfernen. </returns>
+      <param name="handler">Der hinzuzufügende Ereignishandler. </param>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.GetOrCreateEventRegistrationTokenTable(System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable{`0}@)">
+      <summary>Gibt die angegebene Ereignisregistrierungs-Tokentabelle zurück, wenn sie keine null ist; andernfalls wird eine neue Ereignisregistrierungs-Tokentabelle zurückgegeben. </summary>
+      <returns>Die Ereignisregistrierungstoken-Tabelle, die durch <paramref name="refEventTable" /> angegeben ist, wenn sie nicht null ist; andernfalls eine neue Ereignisregistrierungstoken-Tabelle. </returns>
+      <param name="refEventTable">Eine Ereignisregistrierungstoken-Tabelle, als Verweis übergeben. </param>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.InvocationList">
+      <summary>Ruft einen Delegaten ab oder legt diesen fest, der vom Typ <paramref name="T" /> ist und dessen Aufrufliste alle Ereignishandlerdelegaten enthält, die hinzugefügt wurden und die noch nicht entfernt wurden.Durch das Aufrufen dieses Delegaten werden alle Ereignishandler aufgerufen.</summary>
+      <returns>Ein Delegat vom Typ <paramref name="T" />, der alle Ereignishandlerdelegaten darstellt, die aktuell für ein Ereignis registriert sind. </returns>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.RemoveEventHandler(System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken)">
+      <summary>Entfernt den Ereignishandler, der dem angegebenen Token aus der Tabelle und der Aufrufliste zugeordnet ist. </summary>
+      <param name="token">Das Token, das zurückgegeben wurde, als der Ereignishandler hinzugefügt wurde. </param>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.RemoveEventHandler(`0)">
+      <summary>Entfernt den angegebenen Ereignishandlerdelegaten aus der Tabelle und der Aufrufliste. </summary>
+      <param name="handler">Der Ereignishandler, der entfernt werden soll. </param>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.IActivationFactory">
+      <summary>Aktiviert Klassen, die von Windows-Runtime aktiviert werden sollen. </summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.IActivationFactory.ActivateInstance">
+      <summary>Gibt eine neue Instanz der Windows-Runtime-Klasse zurück, die von der <see cref="T:System.Runtime.InteropServices.WindowsRuntime.IActivationFactory" />-Schnittstelle erstellt wird. </summary>
+      <returns>Eine neue Instanz der Windows-Runtime-Klasse. </returns>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute">
+      <summary>Gibt die Version des Zieltyps an, der die angegebene Schnittstelle zuerst implementiert hat.</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.#ctor(System.Type,System.Byte,System.Byte,System.Byte,System.Byte)">
+      <summary>Initialisiert eine neue Instanz der <see cref="T:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute" />-Klasse und gibt die Schnittstelle an, die der Zieltyp implementiert, und die Version, in der diese Schnittstelle zuerst implementiert wurde. </summary>
+      <param name="interfaceType">Die Schnittstelle, die zuerst in der angegebenen Version des Zieltyps implementiert wurde. </param>
+      <param name="majorVersion">Die Hauptkomponente der Version des Zieltyps, die <paramref name="interfaceType" /> erstmals implementiert hat.</param>
+      <param name="minorVersion">Die kleinste Komponente der Version des Zieltyps, die <paramref name="interfaceType" /> erstmals implementiert hat.</param>
+      <param name="buildVersion">Die Buildkomponente der Version des Zieltyps, die <paramref name="interfaceType" /> erstmals implementiert hat.</param>
+      <param name="revisionVersion">Die Revisionskomponente der Version des Zieltyps, der <paramref name="interfaceType" /> erstmals implementiert hat.</param>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.BuildVersion">
+      <summary>Ruft die Build-Komponente der Version des Zieltyps ab, der zuerst die Schnittstelle implementierte. </summary>
+      <returns>Die Buildkomponente der Version.</returns>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.InterfaceType">
+      <summary>Ruft den Typ der Schnittstelle ab, die der Zieltyp implementiert. </summary>
+      <returns>Der Schnittstellentyp </returns>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.MajorVersion">
+      <summary>Ruft die Hauptkomponente der Version des Zieltyps ab, der zuerst die Schnittstelle implementierte. </summary>
+      <returns>Die Hauptkomponente der Version.</returns>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.MinorVersion">
+      <summary>Ruft die Nebenkomponente der Version des Zieltyps ab, der zuerst die Schnittstelle implementierte. </summary>
+      <returns>Die Nebenkomponente der Version. </returns>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.RevisionVersion">
+      <summary>Ruft die Revisionskomponente der Version des Zieltyps ab, der zuerst die Schnittstelle implementierte. </summary>
+      <returns>Die Revisionskomponente der Version.</returns>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArrayAttribute">
+      <summary>Bei Anwendung auf einen Arrayparameter in einer Windows-Runtime-Komponente wird dadurch angegeben, dass der Inhalt des Arrays, das an diesen Parameter übergeben wird, nur für die Eingabe verwendet wird.Der Aufrufer erwartet, dass das Array durch den Aufruf unverändert bleibt.Weitere Informationen finden Sie in den Hinweisen mit wichtigen Informationen zu Aufrufern, die mithilfe von verwaltetem Code geschrieben sind.</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArrayAttribute.#ctor">
+      <summary>Initialisiert eine neue Instanz der<see cref="T:System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArrayAttribute" />-Klasse. </summary>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.ReturnValueNameAttribute">
+      <summary>Bezeichnet den Namen und den Rückgabewert einer Methode in einer Windows-Runtime-Komponente.</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.ReturnValueNameAttribute.#ctor(System.String)">
+      <summary>Initialisiert eine neue Instanz der <see cref="T:System.Runtime.InteropServices.WindowsRuntime.ReturnValueNameAttribute" />-Klasse und gibt den Namen des Rückgabewerts an.</summary>
+      <param name="name">Der Name des Rückgabewerts. </param>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.ReturnValueNameAttribute.Name">
+      <summary>Ruft den Namen ab, der für den Rückgabewert einer Methode in einer Windows-Runtime-Komponente angegeben wurde.</summary>
+      <returns>Der Name des Rückgabewerts der Methode. </returns>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal">
+      <summary>Stellt Hilfsmethoden für das Marshalling von Daten zwischen .NET Framework und Windows-Runtime bereit.</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.AddEventHandler``1(System.Func{``0,System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken},System.Action{System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken},``0)">
+      <summary>Fügt den angegebenen Ereignishandler einem Windows-Runtime-Ereignis hinzu.</summary>
+      <param name="addMethod">Ein Delegat, der die Methode darstellt, mit der Ereignishandler dem Windows-Runtime-Ereignis hinzugefügt wird. </param>
+      <param name="removeMethod">Ein Delegat, der die Methode darstellt, mit der Ereignishandler aus dem Windows-Runtime-Ereignis entfernt wird. </param>
+      <param name="handler">Ein Delegat, der den hinzugefügten Ereignishandler darstellt. </param>
+      <typeparam name="T">Der Typ des Delegaten, der den Ereignishandler darstellt. </typeparam>
+      <exception cref="T:System.ArgumentNullException">
+        <paramref name="addMethod" /> ist null. - oder -<paramref name="removeMethod" /> ist null.</exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.FreeHString(System.IntPtr)">
+      <summary>Gibt das angegebene Windows-Runtime HSTRING frei. </summary>
+      <param name="ptr">Die Adresse des freizugebenden HSTRING.</param>
+      <exception cref="T:System.PlatformNotSupportedException">Windows-Runtime wird in der aktuellen Betriebssystemversion nicht unterstützt. </exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.GetActivationFactory(System.Type)">
+      <summary>Gibt ein Objekt zurück, das die Schnittstelle der Aktivierungsfactory für den angegebenen Windows-Runtime-Typ implementiert. </summary>
+      <returns>Ein Objekt, das die Aktivierungsfactory-Schnittstelle implementiert. </returns>
+      <param name="type">Der Windows-Runtime-Typ, für den die Aktivierungsfactoryoberfläche abgerufen werden soll. </param>
+      <exception cref="T:System.ArgumentException">
+        <paramref name="type" /> stellt keinen Windows-Runtime-Typ dar (also der zum Windows-Runtime selbst gehört oder in einer Windows-Runtime-Komponente definiert ist). - oder -Das Objekt, das für <paramref name="type" /> angegeben wurde, wurde nicht vom Common Language Runtime-Typsystem bereitgestellt. </exception>
+      <exception cref="T:System.ArgumentNullException">
+        <paramref name="type" /> ist null. </exception>
+      <exception cref="T:System.TypeLoadException">Die angegebene Windows-Runtime-Klasse ist nicht ordnungsgemäß registriert.Zum Beispiel wurde die .winmd-Datei gefunden, aber Windows-Runtime konnte die Implementierung nicht finden.</exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.PtrToStringHString(System.IntPtr)">
+      <summary>Gibt eine verwaltete Zeichenfolge zurück, die eine Kopie des angegebenen Windows-Runtime HSTRING enthält. </summary>
+      <returns>Eine verwaltete Zeichenfolge, die eine Kopie des HSTRING enthält, wenn <paramref name="ptr" /> nicht <see cref="F:System.IntPtr.Zero" /> ist; andernfalls <see cref="F:System.String.Empty" />. </returns>
+      <param name="ptr">Ein nicht verwalteter Zeiger auf HSTRING, der kopiert werden soll. </param>
+      <exception cref="T:System.PlatformNotSupportedException">Windows-Runtime wird in der aktuellen Betriebssystemversion nicht unterstützt. </exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.RemoveAllEventHandlers(System.Action{System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken})">
+      <summary>Entfernt alle Ereignishandler, die entfernt werden können, indem die angegebene Methode verwendet wird. </summary>
+      <param name="removeMethod">Ein Delegat, der die Methode darstellt, mit der Ereignishandler aus dem Windows-Runtime-Ereignis entfernt wird. </param>
+      <exception cref="T:System.ArgumentNullException">
+        <paramref name="removeMethod" /> ist null. </exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.RemoveEventHandler``1(System.Action{System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken},``0)">
+      <summary>Entfernt den angegebenen Routingereignishandler aus diesem Windows-Runtime-Ereignis. </summary>
+      <param name="removeMethod">Ein Delegat, der die Methode darstellt, mit der Ereignishandler aus dem Windows-Runtime-Ereignis entfernt wird. </param>
+      <param name="handler">Der Ereignishandler, der entfernt werden soll. </param>
+      <typeparam name="T">Der Typ des Delegaten, der den Ereignishandler darstellt. </typeparam>
+      <exception cref="T:System.ArgumentNullException">
+        <paramref name="removeMethod" /> ist null. </exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.StringToHString(System.String)">
+      <summary>Ordnet einen Windows-Runtime HSTRING zu und kopiert die angegebene verwaltete Zeichenfolge an. </summary>
+      <returns>Ein nicht verwalteter Zeiger auf den neuen HSTRING oder <see cref="F:System.IntPtr.Zero" />, wenn <paramref name="s" /> gleich <see cref="F:System.String.Empty" /> ist. </returns>
+      <param name="s">Die verwaltete Zeichenfolge. </param>
+      <exception cref="T:System.PlatformNotSupportedException">Windows-Runtime wird in der aktuellen Betriebssystemversion nicht unterstützt. </exception>
+      <exception cref="T:System.ArgumentNullException">
+        <paramref name="s" /> ist null. </exception>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArrayAttribute">
+      <summary>Bei Anwendung auf einen Arrayparameter in einer Windows-Runtime-Komponente wird dadurch angegeben, dass der Inhalt eines Arrays, das an diesen Parameter übergeben wird, nur für die Ausgabe verwendet wird.Der Aufrufer gewährleistet nicht, dass der Inhalt initialisiert wird, und die aufgerufene Methode soll den Inhalt nicht lesen.Weitere Informationen finden Sie in den Hinweisen mit wichtigen Informationen zu Aufrufern, die mithilfe von verwaltetem Code geschrieben sind.</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArrayAttribute.#ctor">
+      <summary>Initialisiert eine neue Instanz der<see cref="T:System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArrayAttribute" />-Klasse. </summary>
+    </member>
+  </members>
+</doc>

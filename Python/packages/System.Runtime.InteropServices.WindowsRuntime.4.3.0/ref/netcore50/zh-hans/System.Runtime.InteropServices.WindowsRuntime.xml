@@ -1,0 +1,190 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<doc>
+  <assembly>
+    <name>System.Runtime.InteropServices.WindowsRuntime</name>
+  </assembly>
+  <members>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.DefaultInterfaceAttribute">
+      <summary>指定托管 Windows 运行时 类的默认接口。</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.DefaultInterfaceAttribute.#ctor(System.Type)">
+      <summary>初始化 <see cref="T:System.Runtime.InteropServices.WindowsRuntime.DefaultInterfaceAttribute" /> 类的新实例。</summary>
+      <param name="defaultInterface">用于应用特性的类的指定的默认接口的接口类型。</param>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.DefaultInterfaceAttribute.DefaultInterface">
+      <summary>获取默认接口的类型。</summary>
+      <returns>默认接口的类型。</returns>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken">
+      <summary>在将事件处理程序添加到 Windows 运行时 事件中时，返回的标志。该标记用于从该事件后移除事件处理程序。</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken.Equals(System.Object)">
+      <summary>返回一个值，该值指示当前的对象是否与指定对象相等。</summary>
+      <returns>如果当前对象与 <paramref name="obj" /> 相同，则为 true；否则为 false。</returns>
+      <param name="obj">要比较的对象。</param>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken.GetHashCode">
+      <summary>返回此实例的哈希代码。</summary>
+      <returns>此实例的哈希代码。</returns>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken.op_Equality(System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken,System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken)">
+      <summary>指示两个 <see cref="T:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken" /> 实例是否相等。</summary>
+      <returns>如果两个对象相等，则为 true；否则为 false。</returns>
+      <param name="left">要比较的第一个实例。</param>
+      <param name="right">要比较的第二个实例。</param>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken.op_Inequality(System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken,System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken)">
+      <summary>指示两个 <see cref="T:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken" /> 实例是否不相等。</summary>
+      <returns>如果这两个实例不相等，则为 true；否则为 false。</returns>
+      <param name="left">要比较的第一个实例。</param>
+      <param name="right">要比较的第二个实例。</param>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1">
+      <summary>储存在委托和事件象征之间的影射，托管代码中支持 Windows 运行时 事件的实现。</summary>
+      <typeparam name="T">一个特殊事件的事件处理程序委托的类型。</typeparam>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.#ctor">
+      <summary>初始化 <see cref="T:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1" /> 类的新实例。</summary>
+      <exception cref="T:System.InvalidOperationException">
+        <paramref name="T" /> 不是委托类型。</exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.AddEventHandler(`0)">
+      <summary>添加指定的事件处理程序到该表和调用列表，并返回可用于移除该事件处理程序的标志。</summary>
+      <returns>可用于将事件处理程序从表和调用列表中移除的标志。</returns>
+      <param name="handler">要添加的事件处理程序。</param>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.GetOrCreateEventRegistrationTokenTable(System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable{`0}@)">
+      <summary>如果不是 null 则返回指定的事件注册标记表；否则返回新的事件注册标记表。</summary>
+      <returns>如果不为 null，则是由 <paramref name="refEventTable" />指定的事件注册标记表；否则为新的事件注册标记表。</returns>
+      <param name="refEventTable">事件注册标记表，由引用传递。</param>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.InvocationList">
+      <summary>获取或设置类型 <paramref name="T" /> 的委托，它的调用列表包括所有已被添加而尚未删除的事件处理程序委托。调用委托调用所有的事件处理程序。</summary>
+      <returns>表示所有当前注册事件的事件处理程序的类型 <paramref name="T" /> 的委托。</returns>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.RemoveEventHandler(System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken)">
+      <summary>移除事件处理程序，其与表中和调用表中指定标记关联。</summary>
+      <param name="token">添加了事件处理程序，返回标记。</param>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.RemoveEventHandler(`0)">
+      <summary>从表格和调用列表移除指定的事件处理程序委托。</summary>
+      <param name="handler">要移除的事件处理程序。</param>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.IActivationFactory">
+      <summary>使类被 Windows 运行时 激活。</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.IActivationFactory.ActivateInstance">
+      <summary>返回 Windows 运行时 类的新实例，该实例由 <see cref="T:System.Runtime.InteropServices.WindowsRuntime.IActivationFactory" /> 接口创建。</summary>
+      <returns>Windows 运行时 类的该新实例。</returns>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute">
+      <summary>指定首次实现指定接口的目标类型版本。</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.#ctor(System.Type,System.Byte,System.Byte,System.Byte,System.Byte)">
+      <summary>初始化 <see cref="T:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute" /> 类的新实例，该实例指定目标类型实现的接口和第一个接口实现的版本。</summary>
+      <param name="interfaceType">在指定目标类型版本中首次实现的接口。</param>
+      <param name="majorVersion">首次实现的 <paramref name="interfaceType" /> 的目标类型的版本的主要组件。</param>
+      <param name="minorVersion">首次实现 <paramref name="interfaceType" /> 的目标类型的版本的次要组件。</param>
+      <param name="buildVersion">首次实现 <paramref name="interfaceType" /> 的目标类型的版本的生成组件。</param>
+      <param name="revisionVersion">首次实现 <paramref name="interfaceType" /> 的目标类型的版本的修订组件。</param>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.BuildVersion">
+      <summary>获取首次实现接口的目标类型版本的生成组件。</summary>
+      <returns>版本的生成组件。</returns>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.InterfaceType">
+      <summary>获取目标类型实现的接口的类型。</summary>
+      <returns>接口的类型。</returns>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.MajorVersion">
+      <summary>获取首次实现该接口的目标类型的主版本号。</summary>
+      <returns>版本的主要组件。</returns>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.MinorVersion">
+      <summary>获取首次实现该接口的目标类型的次版本号。</summary>
+      <returns>版本的次要部分。</returns>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.RevisionVersion">
+      <summary>获取首次实现该接口的目标类型的修订本号。</summary>
+      <returns>版本的版本组件。</returns>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArrayAttribute">
+      <summary>当应用于 Windows 运行时 元素的数组参数，指定传递给该参数数组的内容只用于输入。调用方期望此数组不因调用而更改。有关使用托管代码写入的调用方的重要信息，请参见“备注”一节。</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArrayAttribute.#ctor">
+      <summary>初始化 <see cref="T:System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArrayAttribute" /> 类的新实例。 </summary>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.ReturnValueNameAttribute">
+      <summary>指定 Windows 运行时 元素指定方法的返回值的名称。</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.ReturnValueNameAttribute.#ctor(System.String)">
+      <summary>初始化 <see cref="T:System.Runtime.InteropServices.WindowsRuntime.ReturnValueNameAttribute" /> 类的新实例，并指定返回值的名称。</summary>
+      <param name="name">返回值的名称。</param>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.ReturnValueNameAttribute.Name">
+      <summary>获取 Windows 运行时 组件中为方法返回值指定的名称。</summary>
+      <returns>方法的返回值的名称。</returns>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal">
+      <summary>为整理 .NET Framework 和 Windows 运行时 之间的数据提供帮助程序方法。</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.AddEventHandler``1(System.Func{``0,System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken},System.Action{System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken},``0)">
+      <summary>添加指定的事件处理程序到 Windows 运行时 事件。</summary>
+      <param name="addMethod">表示向 Windows 运行时 事件添加事件处理程序的方法的委托。</param>
+      <param name="removeMethod">表示从 Windows 运行时 事件中移除事件处理程序的方法的委托。</param>
+      <param name="handler">表示添加的事件处理程序的委托。</param>
+      <typeparam name="T">代表事件处理程序委托的类型。</typeparam>
+      <exception cref="T:System.ArgumentNullException">
+        <paramref name="addMethod" /> 为 null。- 或 -<paramref name="removeMethod" /> 为 null。</exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.FreeHString(System.IntPtr)">
+      <summary>释放指定的 Windows 运行时 HSTRING。</summary>
+      <param name="ptr">要释放的 HSTRING 的地址。</param>
+      <exception cref="T:System.PlatformNotSupportedException">操作系统的当前版本不支持 Windows 运行时。</exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.GetActivationFactory(System.Type)">
+      <summary>返回指定的 Windows 运行时 类型实现工厂接口激活的对象。</summary>
+      <returns>一个对象，实现激活工厂接口。</returns>
+      <param name="type">获取激活接口的对象的 Windows 运行时 类型。</param>
+      <exception cref="T:System.ArgumentException">
+        <paramref name="type" /> 不表示 Windows 运行时 类型（即属于 Windows 运行时 或定义在 Windows 运行时 组件中）。- 或 -公共语言执行类型系统没有提供用于 <paramref name="type" /> 的指定的该对象。</exception>
+      <exception cref="T:System.ArgumentNullException">
+        <paramref name="type" /> 为 null。</exception>
+      <exception cref="T:System.TypeLoadException">指定的 Windows 运行时 类没有正确注册。例如，.winmd 文件被定位，但 Windows 运行时 定位实现失败。</exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.PtrToStringHString(System.IntPtr)">
+      <summary>返回包含指定 Windows 运行时 HSTRING 副本的托管字符串.</summary>
+      <returns>如果 <paramref name="ptr" /> 不是 <see cref="F:System.IntPtr.Zero" />，则托管字符串包含 HSTRING 副本；否则为 <see cref="F:System.String.Empty" />。</returns>
+      <param name="ptr">复制的 HSTRING 非托管指针。</param>
+      <exception cref="T:System.PlatformNotSupportedException">操作系统的当前版本不支持 Windows 运行时。</exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.RemoveAllEventHandlers(System.Action{System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken})">
+      <summary>移除所有事件处理程序，它们都可使用指定方法移除。</summary>
+      <param name="removeMethod">表示从 Windows 运行时 事件中移除事件处理程序的方法的委托。</param>
+      <exception cref="T:System.ArgumentNullException">
+        <paramref name="removeMethod" /> 为 null。</exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.RemoveEventHandler``1(System.Action{System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken},``0)">
+      <summary>从 Windows 运行时 事件中移除指定事件处理程序。</summary>
+      <param name="removeMethod">表示从 Windows 运行时 事件中移除事件处理程序的方法的委托。</param>
+      <param name="handler">要移除的事件处理程序。</param>
+      <typeparam name="T">代表事件处理程序委托的类型。</typeparam>
+      <exception cref="T:System.ArgumentNullException">
+        <paramref name="removeMethod" /> 为 null。</exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.StringToHString(System.String)">
+      <summary>分配 Windows 运行时 HSTRING 并为其复制指定的托管字符串。</summary>
+      <returns>复制的新 HSTRING 的非托管指针，或者 <see cref="F:System.IntPtr.Zero" /> 如果 <paramref name="s" /> 是 <see cref="F:System.String.Empty" />。</returns>
+      <param name="s">要复制的托管字符串。</param>
+      <exception cref="T:System.PlatformNotSupportedException">操作系统的当前版本不支持 Windows 运行时。</exception>
+      <exception cref="T:System.ArgumentNullException">
+        <paramref name="s" /> 为 null。</exception>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArrayAttribute">
+      <summary>当应用于 Windows 运行时 元素的数组参数，指定传递给该参数数组的内容只用于输出。调用方不保证对内容进行了初始化，因此，所调用的方法不应读取内容。有关使用托管代码写入的调用方的重要信息，请参见“备注”一节。</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArrayAttribute.#ctor">
+      <summary>初始化 <see cref="T:System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArrayAttribute" /> 类的新实例。 </summary>
+    </member>
+  </members>
+</doc>

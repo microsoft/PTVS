@@ -16,62 +16,62 @@
 
 namespace TestUtilities.Python
 {
-    public class MockPythonInterpreterFactory : IPythonInterpreterFactory, ICustomInterpreterSerialization, IDisposable
-    {
-        internal bool? _success;
-        public Dictionary<string, object> _properties;
+	public class MockPythonInterpreterFactory : IPythonInterpreterFactory, ICustomInterpreterSerialization, IDisposable
+	{
+		internal bool? _success;
+		public Dictionary<string, object> _properties;
 
-        public MockPythonInterpreterFactory(
-            InterpreterConfiguration config,
-            bool withStatusUpdater = false
-        )
-        {
-            Configuration = config;
-        }
+		public MockPythonInterpreterFactory(
+			InterpreterConfiguration config,
+			bool withStatusUpdater = false
+		)
+		{
+			Configuration = config;
+		}
 
-        private MockPythonInterpreterFactory(Dictionary<string, object> properties)
-        {
-            Configuration = InterpreterConfiguration.FromDictionary(properties);
-        }
+		private MockPythonInterpreterFactory(Dictionary<string, object> properties)
+		{
+			Configuration = InterpreterConfiguration.FromDictionary(properties);
+		}
 
-        public void Dispose()
-        {
-        }
+		public void Dispose()
+		{
+		}
 
-        public InterpreterConfiguration Configuration { get; }
+		public InterpreterConfiguration Configuration { get; }
 
-        public IPythonInterpreter CreateInterpreter()
-        {
-            return new MockPythonInterpreter(this);
-        }
+		public IPythonInterpreter CreateInterpreter()
+		{
+			return new MockPythonInterpreter(this);
+		}
 
-        public Dictionary<string, object> Properties
-        {
-            get
-            {
-                if (_properties == null)
-                {
-                    _properties = new Dictionary<string, object>();
-                }
-                return _properties;
-            }
-        }
+		public Dictionary<string, object> Properties
+		{
+			get
+			{
+				if (_properties == null)
+				{
+					_properties = new Dictionary<string, object>();
+				}
+				return _properties;
+			}
+		}
 
-        public object GetProperty(string propName)
-        {
-            object value = null;
-            _properties?.TryGetValue(propName, out value);
-            return value;
-        }
+		public object GetProperty(string propName)
+		{
+			object value = null;
+			_properties?.TryGetValue(propName, out value);
+			return value;
+		}
 
-        bool ICustomInterpreterSerialization.GetSerializationInfo(out string assembly, out string typeName, out Dictionary<string, object> properties)
-        {
-            assembly = GetType().Assembly.Location;
-            typeName = GetType().FullName;
-            properties = Configuration.ToDictionary();
-            return true;
-        }
+		bool ICustomInterpreterSerialization.GetSerializationInfo(out string assembly, out string typeName, out Dictionary<string, object> properties)
+		{
+			assembly = GetType().Assembly.Location;
+			typeName = GetType().FullName;
+			properties = Configuration.ToDictionary();
+			return true;
+		}
 
-        public void NotifyImportNamesChanged() { }
-    }
+		public void NotifyImportNamesChanged() { }
+	}
 }

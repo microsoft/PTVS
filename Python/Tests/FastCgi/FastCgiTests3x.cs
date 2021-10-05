@@ -16,23 +16,23 @@
 
 namespace FastCgiTests
 {
-    [TestClass]
-    public class FastCgiTests3x : FastCgiTests2x
-    {
-        [ClassInitialize]
-        public static new void DoDeployment(TestContext context)
-        {
-            AssertListener.Initialize();
-        }
+	[TestClass]
+	public class FastCgiTests3x : FastCgiTests2x
+	{
+		[ClassInitialize]
+		public static new void DoDeployment(TestContext context)
+		{
+			AssertListener.Initialize();
+		}
 
-        public override PythonVersion PythonVersion
-        {
-            get
-            {
-                return PythonPaths.Python37_x64 ?? PythonPaths.Python37 ??
-                       PythonPaths.Python36_x64 ?? PythonPaths.Python36 ??
-                       PythonPaths.Python35_x64 ?? PythonPaths.Python35;
-            }
-        }
-    }
+		public override PythonVersion PythonVersion
+		{
+			get
+			{
+				return PythonPaths.Python37_x64 ?? PythonPaths.Python37 ??
+					   PythonPaths.Python36_x64 ?? PythonPaths.Python36 ??
+					   PythonPaths.Python35_x64 ?? PythonPaths.Python35;
+			}
+		}
+	}
 }

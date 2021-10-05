@@ -1,0 +1,191 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<doc>
+  <assembly>
+    <name>System.Runtime.InteropServices.WindowsRuntime</name>
+  </assembly>
+  <members>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.DefaultInterfaceAttribute">
+      <summary>指定受管理 Windows 執行階段類別的預設介面。</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.DefaultInterfaceAttribute.#ctor(System.Type)">
+      <summary>初始化 <see cref="T:System.Runtime.InteropServices.WindowsRuntime.DefaultInterfaceAttribute" /> 類別的新執行個體。</summary>
+      <param name="defaultInterface">介面型別，該介面型別會指定為套用屬性之類別的預設介面。</param>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.DefaultInterfaceAttribute.DefaultInterface">
+      <summary>取得預設介面的型別。</summary>
+      <returns>預設介面的型別。</returns>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken">
+      <summary>當事件處理常式加入至 Windows 執行階段 事件時所傳回的權杖。此語彙基元稍後會用來從事件移除事件處理常式。</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken.Equals(System.Object)">
+      <summary>傳回值，這個值表示目前的物件是否等於指定的物件。</summary>
+      <returns>如果目前物件等於 <paramref name="obj" />，則為 true，否則為 false。</returns>
+      <param name="obj">要比較的物件。</param>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken.GetHashCode">
+      <summary>傳回這個執行個體的雜湊碼。</summary>
+      <returns>這個執行個體的雜湊碼。</returns>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken.op_Equality(System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken,System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken)">
+      <summary>指示兩個 <see cref="T:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken" /> 執行個體是否相等。</summary>
+      <returns>如果兩個物件相等則為 true，否則為 false。</returns>
+      <param name="left">要比較的第一個執行個體。</param>
+      <param name="right">要比較的第二個執行個體。</param>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken.op_Inequality(System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken,System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken)">
+      <summary>指示兩個 <see cref="T:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken" /> 執行個體是否不相等。</summary>
+      <returns>如果兩個執行個體不相等，則為 true，否則為 false。</returns>
+      <param name="left">要比較的第一個執行個體。</param>
+      <param name="right">要比較的第二個執行個體。</param>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1">
+      <summary>儲存委派和事件語彙基元之間的對應，以支援在受管理程式碼中實作 Windows 執行階段 事件。</summary>
+      <typeparam name="T">特定事件之事件處理常式委派的型別。</typeparam>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.#ctor">
+      <summary>初始化 <see cref="T:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1" /> 類別的新執行個體。</summary>
+      <exception cref="T:System.InvalidOperationException">
+        <paramref name="T" /> 不是委派型別。</exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.AddEventHandler(`0)">
+      <summary>將指定的事件處理常式加入至資料表和引動過程清單，並傳回可用來移除事件處理常式的權杖。</summary>
+      <returns>可用來從資料表及引動過程清單中移除事件處理常式的權杖。</returns>
+      <param name="handler">要加入的事件處理常式。</param>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.GetOrCreateEventRegistrationTokenTable(System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable{`0}@)">
+      <summary>傳回指定的事件註冊語彙基元表 (若不是 null)；否則傳迴新的事件註冊語彙基元表。</summary>
+      <returns>
+        <paramref name="refEventTable" />所指定的事件註冊語彙基元表格（如果它不是null）； 否則為新的事件註冊語彙基元表格。</returns>
+      <param name="refEventTable">事件註冊語彙基元資料表，以傳址方式傳遞。</param>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.InvocationList">
+      <summary>取得或設定 <paramref name="T" /> 型別的委派，其引動過程清單包含已加入且尚未移除的所有事件處理常式委派。叫用此委派會叫用所有事件處理常式。</summary>
+      <returns>型別為 <paramref name="T" /> 的委派，表示目前已註冊用於事件的所有事件處理常式委派。</returns>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.RemoveEventHandler(System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken)">
+      <summary>從表格及引動過程清單中移除與指定語彙基元相關的事件處理常式。</summary>
+      <param name="token">已加入事件處理常式時所傳回的語彙基元。</param>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.RemoveEventHandler(`0)">
+      <summary>從資料表和引動過程清單中移除指定的事件處理常式委派。</summary>
+      <param name="handler">要移除的事件處理常式。</param>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.IActivationFactory">
+      <summary>可讓類別由 Windows 執行階段 來啟用。</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.IActivationFactory.ActivateInstance">
+      <summary>傳回 Windows 執行階段 類別的新執行個體，此執行個體是由 <see cref="T:System.Runtime.InteropServices.WindowsRuntime.IActivationFactory" /> 介面所建立的。</summary>
+      <returns>Windows 執行階段 類別的新執行個體。</returns>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute">
+      <summary>指定第一個實作指定介面的目標型別的版本。</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.#ctor(System.Type,System.Byte,System.Byte,System.Byte,System.Byte)">
+      <summary>指定目標型別所實作的介面以及第一次實作的介面版本，初始化 <see cref="T:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute" /> 類別的新執行個體。</summary>
+      <param name="interfaceType">第一次在指定版本的目標型別中實作的介面。</param>
+      <param name="majorVersion">第一次實作 <paramref name="interfaceType" /> 之目標型別版本的主要元件。</param>
+      <param name="minorVersion">第一次實作 <paramref name="interfaceType" /> 之目標型別版本的次要元件。</param>
+      <param name="buildVersion">第一次實作 <paramref name="interfaceType" /> 之目標型別版本的 build 元件。</param>
+      <param name="revisionVersion">第一次實作 <paramref name="interfaceType" /> 之目標型別版本的修訂元件。</param>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.BuildVersion">
+      <summary>取得第一次實作介面之目標型別版本的組建元件。</summary>
+      <returns>版本的 build 元件。</returns>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.InterfaceType">
+      <summary>取得目標型別所實作的介面型別。</summary>
+      <returns>介面的型別。</returns>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.MajorVersion">
+      <summary>取得第一次實作介面之目標型別版本的主要元件。</summary>
+      <returns>版本的主要元件。</returns>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.MinorVersion">
+      <summary>取得第一次實作介面之目標型別版本的次要元件。</summary>
+      <returns>版本的次要元件。</returns>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.RevisionVersion">
+      <summary>取得第一次實作介面之目標型別版本的修訂元件。</summary>
+      <returns>版本的修訂元件。</returns>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArrayAttribute">
+      <summary>當套用至 Windows 執行階段 元件中的陣列參數時，會指定傳遞至該參數之陣列的內容只能用於輸入。呼叫端必須確保呼叫不會變更陣列。如需使用 Managed 程式碼撰寫的呼叫端的重要資訊，請參閱＜備註＞一節。</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArrayAttribute.#ctor">
+      <summary>初始化 <see cref="T:System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArrayAttribute" /> 類別的新執行個體。 </summary>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.ReturnValueNameAttribute">
+      <summary>指定 Windows 執行階段 元件中方法的傳回值名稱。</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.ReturnValueNameAttribute.#ctor(System.String)">
+      <summary>初始化 <see cref="T:System.Runtime.InteropServices.WindowsRuntime.ReturnValueNameAttribute" /> 類別的新執行個體，並且指定傳回值的名稱。</summary>
+      <param name="name">傳回值的名稱。</param>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.ReturnValueNameAttribute.Name">
+      <summary>取得名稱，指定 Windows 執行階段 元件中方法的傳回值。</summary>
+      <returns>方法之傳回值的名稱。</returns>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal">
+      <summary>提供協助程式方法來封送處理 .NET Framework 和 Windows 執行階段 之間的資料。</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.AddEventHandler``1(System.Func{``0,System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken},System.Action{System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken},``0)">
+      <summary>將指定的事件處理常式加入至 Windows 執行階段 事件。</summary>
+      <param name="addMethod">表示將事件處理常式加入至 Windows 執行階段 事件之方法的委派。</param>
+      <param name="removeMethod">示將事件處理常式從 Windows 執行階段 事件中移除之方法的委派。</param>
+      <param name="handler">代表新增之事件處理常式的委派。</param>
+      <typeparam name="T">代表事件處理常式之委派的型別。</typeparam>
+      <exception cref="T:System.ArgumentNullException">
+        <paramref name="addMethod" /> 為 null。-或-<paramref name="removeMethod" /> 為 null。</exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.FreeHString(System.IntPtr)">
+      <summary>釋放指定的 Windows 執行階段 HSTRING。</summary>
+      <param name="ptr">要釋出的 HSTRING 的位址。</param>
+      <exception cref="T:System.PlatformNotSupportedException">目前版本的作業系統不支援 Windows 執行階段。</exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.GetActivationFactory(System.Type)">
+      <summary>傳回物件，它會實作指定 Windows 執行階段型別的啟用 Facctory 介面。</summary>
+      <returns>實作啟用 Factory 介面的物件。</returns>
+      <param name="type">要為其取得啟用 factory 介面的 Windows 執行階段 型別。</param>
+      <exception cref="T:System.ArgumentException">
+        <paramref name="type" /> 不代表 Windows 執行階段 型別 (也就是屬於 Windows 執行階段 本身或已定義在 Windows 執行階段 元件中)。-或-Common Language Runtime 型別系統未提供針對<paramref name="type" />指定的物件。</exception>
+      <exception cref="T:System.ArgumentNullException">
+        <paramref name="type" /> 為 null。</exception>
+      <exception cref="T:System.TypeLoadException">指定的 Windows 執行階段 類別未正確註冊。例如，找到了 .winmd 檔案，但是 Windows 執行階段 找不到實作。</exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.PtrToStringHString(System.IntPtr)">
+      <summary>傳回受管理的字串，其中包含指定 Windows 執行階段 HSTRING 的複本。</summary>
+      <returns>如果 <paramref name="ptr" /> 不是 <see cref="F:System.IntPtr.Zero" /> 則為包含 HSTRING 之複本的 Managed 字串，否則為 <see cref="F:System.String.Empty" />。</returns>
+      <param name="ptr">要複製之 HSTRING 的 Unmanaged 指標。</param>
+      <exception cref="T:System.PlatformNotSupportedException">目前版本的作業系統不支援 Windows 執行階段。</exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.RemoveAllEventHandlers(System.Action{System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken})">
+      <summary>移除所有可使用指定方法移除的事件處理常式。</summary>
+      <param name="removeMethod">示將事件處理常式從 Windows 執行階段 事件中移除之方法的委派。</param>
+      <exception cref="T:System.ArgumentNullException">
+        <paramref name="removeMethod" /> 為 null。</exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.RemoveEventHandler``1(System.Action{System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken},``0)">
+      <summary>從 Windows 執行階段 事件中移除指定的事件處理常式。</summary>
+      <param name="removeMethod">示將事件處理常式從 Windows 執行階段 事件中移除之方法的委派。</param>
+      <param name="handler">已移除的事件處理常式。</param>
+      <typeparam name="T">代表事件處理常式之委派的型別。</typeparam>
+      <exception cref="T:System.ArgumentNullException">
+        <paramref name="removeMethod" /> 為 null。</exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.StringToHString(System.String)">
+      <summary>配置 Windows 執行階段 HSTRING，並將指定的 Managed 字串複製給它。</summary>
+      <returns>新的 HSTRING 的 Unmanaged 指標，如果 <paramref name="s" /> 是 <see cref="F:System.String.Empty" />，則為 <see cref="F:System.IntPtr.Zero" />。</returns>
+      <param name="s">要複製的 Managed 字串。</param>
+      <exception cref="T:System.PlatformNotSupportedException">目前版本的作業系統不支援 Windows 執行階段。</exception>
+      <exception cref="T:System.ArgumentNullException">
+        <paramref name="s" /> 為 null。</exception>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArrayAttribute">
+      <summary>當套用至 Windows 執行階段 元件中的陣列參數時，會指定傳遞至該參數之陣列的內容只能用於輸出。呼叫端不保證內容都已初始化，且所呼叫的方法應該不會讀取內容。如需使用 Managed 程式碼撰寫的呼叫端的重要資訊，請參閱＜備註＞一節。</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArrayAttribute.#ctor">
+      <summary>初始化 <see cref="T:System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArrayAttribute" /> 類別的新執行個體。 </summary>
+    </member>
+  </members>
+</doc>

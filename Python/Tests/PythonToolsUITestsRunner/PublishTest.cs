@@ -16,48 +16,48 @@
 
 namespace PythonToolsUITestsRunner
 {
-    [TestClass]
-    public class PublishTest
-    {
-        #region UI test boilerplate
-        public VsTestInvoker _vs => new VsTestInvoker(
-            VsTestContext.Instance,
-            // Remote container (DLL) name
-            "Microsoft.PythonTools.Tests.PythonToolsUITests",
-            // Remote class name
-            $"PythonToolsUITests.{GetType().Name}"
-        );
+	[TestClass]
+	public class PublishTest
+	{
+		#region UI test boilerplate
+		public VsTestInvoker _vs => new VsTestInvoker(
+			VsTestContext.Instance,
+			// Remote container (DLL) name
+			"Microsoft.PythonTools.Tests.PythonToolsUITests",
+			// Remote class name
+			$"PythonToolsUITests.{GetType().Name}"
+		);
 
-        public TestContext TestContext { get; set; }
+		public TestContext TestContext { get; set; }
 
-        [TestInitialize]
-        public void TestInitialize() => VsTestContext.Instance.TestInitialize(TestContext.DeploymentDirectory);
-        [TestCleanup]
-        public void TestCleanup() => VsTestContext.Instance.TestCleanup();
-        [ClassCleanup]
-        public static void ClassCleanup() => VsTestContext.Instance.Dispose();
-        #endregion
+		[TestInitialize]
+		public void TestInitialize() => VsTestContext.Instance.TestInitialize(TestContext.DeploymentDirectory);
+		[TestCleanup]
+		public void TestCleanup() => VsTestContext.Instance.TestCleanup();
+		[ClassCleanup]
+		public static void ClassCleanup() => VsTestContext.Instance.Dispose();
+		#endregion
 
-        [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
-        [TestCategory("Installed")]
-        public void TestPublishFiles()
-        {
-            _vs.RunTest(nameof(PythonToolsUITests.PublishTest.TestPublishFiles));
-        }
+		[TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
+		[TestCategory("Installed")]
+		public void TestPublishFiles()
+		{
+			_vs.RunTest(nameof(PythonToolsUITests.PublishTest.TestPublishFiles));
+		}
 
-        [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
-        [TestCategory("Installed")]
-        public void TestPublishReadOnlyFiles()
-        {
-            _vs.RunTest(nameof(PythonToolsUITests.PublishTest.TestPublishReadOnlyFiles));
-        }
+		[TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
+		[TestCategory("Installed")]
+		public void TestPublishReadOnlyFiles()
+		{
+			_vs.RunTest(nameof(PythonToolsUITests.PublishTest.TestPublishReadOnlyFiles));
+		}
 
-        [TestMethod, Priority(UITestPriority.P0)]
-        [TestCategory("Installed")]
-        public void TestPublishVirtualEnvironment()
-        {
-            _vs.RunTest(nameof(PythonToolsUITests.PublishTest.TestPublishVirtualEnvironment));
-        }
+		[TestMethod, Priority(UITestPriority.P0)]
+		[TestCategory("Installed")]
+		public void TestPublishVirtualEnvironment()
+		{
+			_vs.RunTest(nameof(PythonToolsUITests.PublishTest.TestPublishVirtualEnvironment));
+		}
 
-    }
+	}
 }

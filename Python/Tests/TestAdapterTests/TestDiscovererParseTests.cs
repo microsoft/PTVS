@@ -16,65 +16,65 @@
 
 namespace TestAdapterTests
 {
-    [TestClass]
-    public class TestDiscovererParseTests
-    {
-        [TestMethod]
-        [ExpectedException(typeof(ArgumentNullException))]
-        public void PytestShouldThrowNullResults()
-        {
-            var discoverer = new PytestTestDiscoverer();
-            var testcases = discoverer.ParseDiscoveryResults(null, projectHome: "dummypath");
-            testcases.Any();
-        }
+	[TestClass]
+	public class TestDiscovererParseTests
+	{
+		[TestMethod]
+		[ExpectedException(typeof(ArgumentNullException))]
+		public void PytestShouldThrowNullResults()
+		{
+			var discoverer = new PytestTestDiscoverer();
+			var testcases = discoverer.ParseDiscoveryResults(null, projectHome: "dummypath");
+			testcases.Any();
+		}
 
-        [TestMethod]
-        public void PytestShouldHandleEmptyListResults()
-        {
-            var discoverer = new PytestTestDiscoverer();
-            var results = new List<PytestDiscoveryResults>();
-            var testcases = discoverer.ParseDiscoveryResults(results, projectHome: "dummypath");
+		[TestMethod]
+		public void PytestShouldHandleEmptyListResults()
+		{
+			var discoverer = new PytestTestDiscoverer();
+			var results = new List<PytestDiscoveryResults>();
+			var testcases = discoverer.ParseDiscoveryResults(results, projectHome: "dummypath");
 
-            Assert.IsFalse(testcases.Any());
-        }
+			Assert.IsFalse(testcases.Any());
+		}
 
-        [TestMethod]
-        public void PytestShouldHandleEmptyResults()
-        {
-            var discoverer = new PytestTestDiscoverer();
-            var results = new List<PytestDiscoveryResults>() { new PytestDiscoveryResults() };
-            var testcases = discoverer.ParseDiscoveryResults(results, projectHome: "dummypath");
+		[TestMethod]
+		public void PytestShouldHandleEmptyResults()
+		{
+			var discoverer = new PytestTestDiscoverer();
+			var results = new List<PytestDiscoveryResults>() { new PytestDiscoveryResults() };
+			var testcases = discoverer.ParseDiscoveryResults(results, projectHome: "dummypath");
 
-            Assert.IsFalse(testcases.Any());
-        }
+			Assert.IsFalse(testcases.Any());
+		}
 
-        [TestMethod]
-        [ExpectedException(typeof(ArgumentNullException))]
-        public void UnnitShouldThrowNullResults()
-        {
-            var discoverer = new UnittestTestDiscoverer();
-            var testcases = discoverer.ParseDiscoveryResults(null, projectHome: "dummypath");
-            testcases.Any();
-        }
+		[TestMethod]
+		[ExpectedException(typeof(ArgumentNullException))]
+		public void UnnitShouldThrowNullResults()
+		{
+			var discoverer = new UnittestTestDiscoverer();
+			var testcases = discoverer.ParseDiscoveryResults(null, projectHome: "dummypath");
+			testcases.Any();
+		}
 
-        [TestMethod]
-        public void UnittestShouldHandleEmptyListResults()
-        {
-            var discoverer = new UnittestTestDiscoverer();
-            var results = new List<UnittestDiscoveryResults>();
-            var testcases = discoverer.ParseDiscoveryResults(results, projectHome: "dummypath");
+		[TestMethod]
+		public void UnittestShouldHandleEmptyListResults()
+		{
+			var discoverer = new UnittestTestDiscoverer();
+			var results = new List<UnittestDiscoveryResults>();
+			var testcases = discoverer.ParseDiscoveryResults(results, projectHome: "dummypath");
 
-            Assert.IsFalse(testcases.Any());
-        }
+			Assert.IsFalse(testcases.Any());
+		}
 
-        [TestMethod]
-        public void UnittestShouldHandleEmptyResults()
-        {
-            var discoverer = new UnittestTestDiscoverer();
-            var results = new List<UnittestDiscoveryResults>() { new UnittestDiscoveryResults() };
-            var testcases = discoverer.ParseDiscoveryResults(results, projectHome: "dummypath");
+		[TestMethod]
+		public void UnittestShouldHandleEmptyResults()
+		{
+			var discoverer = new UnittestTestDiscoverer();
+			var results = new List<UnittestDiscoveryResults>() { new UnittestDiscoveryResults() };
+			var testcases = discoverer.ParseDiscoveryResults(results, projectHome: "dummypath");
 
-            Assert.IsFalse(testcases.Any());
-        }
-    }
+			Assert.IsFalse(testcases.Any());
+		}
+	}
 }

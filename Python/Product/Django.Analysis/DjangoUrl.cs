@@ -16,73 +16,73 @@
 
 namespace Microsoft.PythonTools.Django.Analysis
 {
-    class DjangoUrl
-    {
-        public readonly string Name;
-        public string FullName
-        {
-            get
-            {
-                return Name;
-            }
-        }
-        private readonly string _urlRegex;
-        private static readonly Regex _regexGroupMatchingRegex = new Regex(@"\(.*?\)");
-        public IList<DjangoUrlParameter> Parameters = new List<DjangoUrlParameter>();
+	class DjangoUrl
+	{
+		public readonly string Name;
+		public string FullName
+		{
+			get
+			{
+				return Name;
+			}
+		}
+		private readonly string _urlRegex;
+		private static readonly Regex _regexGroupMatchingRegex = new Regex(@"\(.*?\)");
+		public IList<DjangoUrlParameter> Parameters = new List<DjangoUrlParameter>();
 
-        public IEnumerable<DjangoUrlParameter> NamedParameters
-        {
-            get
-            {
-                return Parameters.Where(p => p.IsNamed);
-            }
-        }
+		public IEnumerable<DjangoUrlParameter> NamedParameters
+		{
+			get
+			{
+				return Parameters.Where(p => p.IsNamed);
+			}
+		}
 
-        public DjangoUrl() { }
+		public DjangoUrl() { }
 
-        public DjangoUrl(string urlName, string urlRegex)
-        {
-            Name = urlName ?? throw new ArgumentNullException(nameof(urlName));
-            _urlRegex = urlRegex ?? throw new ArgumentNullException(nameof(urlRegex));
+		public DjangoUrl(string urlName, string urlRegex)
+		{
+			Name = urlName ?? throw new ArgumentNullException(nameof(urlName));
+			_urlRegex = urlRegex ?? throw new ArgumentNullException(nameof(urlRegex));
 
-            ParseUrlRegex();
-        }
+			ParseUrlRegex();
+		}
 
-        private void ParseUrlRegex()
-        {
-            MatchCollection matches = _regexGroupMatchingRegex.Matches(_urlRegex);
+		private void ParseUrlRegex()
+		{
+			MatchCollection matches = _regexGroupMatchingRegex.Matches(_urlRegex);
 
-            foreach (Match m in matches)
-            {
-                foreach (Group grp in m.Groups)
-                {
-                    Parameters.Add(new DjangoUrlParameter(grp.Value));
-                }
-            }
-        }
-    }
+			foreach (Match m in matches)
+			{
+				foreach (Group grp in m.Groups)
+				{
+					Parameters.Add(new DjangoUrlParameter(grp.Value));
+				}
+			}
+		}
+	}
 
-    class DjangoUrlParameter
-    {
-        private static readonly Regex _namedParameterRegex = new Regex(@"\?P<(.*)>");
+	class DjangoUrlParameter
+	{
+		private static readonly Regex _namedParameterRegex = new Regex(@"\?P<(.*)>");
 
-        public readonly string RegexValue;
-        public readonly string Name;
-        public readonly bool IsNamed;
+		public readonly string RegexValue;
+		public readonly string Name;
+		public readonly bool IsNamed;
 
-        public DjangoUrlParameter() { }
+		public DjangoUrlParameter() { }
 
-        public DjangoUrlParameter(string parameterRegex)
-        {
-            Name = parameterRegex;
-            RegexValue = parameterRegex.TrimStart('(').TrimEnd(')');
+		public DjangoUrlParameter(string parameterRegex)
+		{
+			Name = parameterRegex;
+			RegexValue = parameterRegex.TrimStart('(').TrimEnd(')');
 
-            Match m = _namedParameterRegex.Match(RegexValue);
-            IsNamed = m.Success && m.Groups.Count == 2;
-            if (IsNamed)
-            {
-                Name = m.Groups[1].Value;
-            }
-        }
-    }
+			Match m = _namedParameterRegex.Match(RegexValue);
+			IsNamed = m.Success && m.Groups.Count == 2;
+			if (IsNamed)
+			{
+				Name = m.Groups[1].Value;
+			}
+		}
+	}
 }

@@ -16,10 +16,10 @@
 
 namespace TestUtilities.UI
 {
-    public enum ExceptionButton
-    {
-        Break,
-        Continue
-    }
+	public enum ExceptionButton
+	{
+		Break,
+		Continue
+	}
 
 }

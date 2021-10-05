@@ -16,68 +16,68 @@
 
 namespace PythonToolsUITestsRunner
 {
-    [TestClass]
-    public class FormattingUITests
-    {
-        #region UI test boilerplate
-        public VsTestInvoker _vs => new VsTestInvoker(
-            VsTestContext.Instance,
-            // Remote container (DLL) name
-            "Microsoft.PythonTools.Tests.PythonToolsUITests",
-            // Remote class name
-            $"PythonToolsUITests.{GetType().Name}"
-        );
+	[TestClass]
+	public class FormattingUITests
+	{
+		#region UI test boilerplate
+		public VsTestInvoker _vs => new VsTestInvoker(
+			VsTestContext.Instance,
+			// Remote container (DLL) name
+			"Microsoft.PythonTools.Tests.PythonToolsUITests",
+			// Remote class name
+			$"PythonToolsUITests.{GetType().Name}"
+		);
 
-        public TestContext TestContext { get; set; }
+		public TestContext TestContext { get; set; }
 
-        [TestInitialize]
-        public void TestInitialize() => VsTestContext.Instance.TestInitialize(TestContext.DeploymentDirectory);
-        [TestCleanup]
-        public void TestCleanup() => VsTestContext.Instance.TestCleanup();
-        [ClassCleanup]
-        public static void ClassCleanup() => VsTestContext.Instance.Dispose();
-        #endregion
+		[TestInitialize]
+		public void TestInitialize() => VsTestContext.Instance.TestInitialize(TestContext.DeploymentDirectory);
+		[TestCleanup]
+		public void TestCleanup() => VsTestContext.Instance.TestCleanup();
+		[ClassCleanup]
+		public static void ClassCleanup() => VsTestContext.Instance.Dispose();
+		#endregion
 
-        [TestMethod, Priority(UITestPriority.P2)]
-        [TestCategory("Installed")]
-        public void ToggleableOptionTest()
-        {
-            _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.ToggleableOptionTest));
-        }
+		[TestMethod, Priority(UITestPriority.P2)]
+		[TestCategory("Installed")]
+		public void ToggleableOptionTest()
+		{
+			_vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.ToggleableOptionTest));
+		}
 
-        [TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
-        [TestCategory("Installed")]
-        public void FormatDocument()
-        {
-            _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatDocument));
-        }
+		[TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
+		[TestCategory("Installed")]
+		public void FormatDocument()
+		{
+			_vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatDocument));
+		}
 
-        [TestMethod, Priority(UITestPriority.P0)]
-        [TestCategory("Installed")]
-        public void FormatAsyncDocument()
-        {
-            _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatAsyncDocument));
-        }
+		[TestMethod, Priority(UITestPriority.P0)]
+		[TestCategory("Installed")]
+		public void FormatAsyncDocument()
+		{
+			_vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatAsyncDocument));
+		}
 
-        [TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
-        [TestCategory("Installed")]
-        public void FormatSelection()
-        {
-            _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatSelection));
-        }
+		[TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
+		[TestCategory("Installed")]
+		public void FormatSelection()
+		{
+			_vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatSelection));
+		}
 
-        [TestMethod, Priority(UITestPriority.P0)]
-        [TestCategory("Installed")]
-        public void FormatSelectionNoSelection()
-        {
-            _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatSelectionNoSelection));
-        }
+		[TestMethod, Priority(UITestPriority.P0)]
+		[TestCategory("Installed")]
+		public void FormatSelectionNoSelection()
+		{
+			_vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatSelectionNoSelection));
+		}
 
-        [TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
-        [TestCategory("Installed")]
-        public void FormatReduceLines()
-        {
-            _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatReduceLines));
-        }
-    }
+		[TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
+		[TestCategory("Installed")]
+		public void FormatReduceLines()
+		{
+			_vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatReduceLines));
+		}
+	}
 }

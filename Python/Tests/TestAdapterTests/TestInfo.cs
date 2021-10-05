@@ -16,54 +16,54 @@
 
 namespace TestAdapterTests
 {
-    class TestInfo
-    {
-        public TestInfo(
-            string displayName,
-            string fullyQualifiedName,
-            string filePath,
-            int lineNumber,
-            TestOutcome? outcome = null,
-            TimeSpan? minDuration = null,
-            string containedErrorMessage = null,
-            string[] containedStdOut = null,
-            StackFrame[] stackFrames = null,
-            string pytestXmlClassName = null,
-            string pytestExecPathSuffix = null)
-        {
-            DisplayName = displayName;
-            FullyQualifiedName = fullyQualifiedName;
-            FilePath = filePath;
-            LineNumber = lineNumber;
-            Outcome = outcome ?? TestOutcome.None;
-            MinDuration = minDuration ?? TimeSpan.Zero;
-            ContainedErrorMessage = containedErrorMessage;
-            ContainedStdOut = containedStdOut;
-            StackFrames = stackFrames;
-            PytestXmlClassName = pytestXmlClassName;
-            PytestExecPathSuffix = pytestExecPathSuffix;
-        }
+	class TestInfo
+	{
+		public TestInfo(
+			string displayName,
+			string fullyQualifiedName,
+			string filePath,
+			int lineNumber,
+			TestOutcome? outcome = null,
+			TimeSpan? minDuration = null,
+			string containedErrorMessage = null,
+			string[] containedStdOut = null,
+			StackFrame[] stackFrames = null,
+			string pytestXmlClassName = null,
+			string pytestExecPathSuffix = null)
+		{
+			DisplayName = displayName;
+			FullyQualifiedName = fullyQualifiedName;
+			FilePath = filePath;
+			LineNumber = lineNumber;
+			Outcome = outcome ?? TestOutcome.None;
+			MinDuration = minDuration ?? TimeSpan.Zero;
+			ContainedErrorMessage = containedErrorMessage;
+			ContainedStdOut = containedStdOut;
+			StackFrames = stackFrames;
+			PytestXmlClassName = pytestXmlClassName;
+			PytestExecPathSuffix = pytestExecPathSuffix;
+		}
 
-        public string DisplayName { get; }
+		public string DisplayName { get; }
 
-        public string FullyQualifiedName { get; }
+		public string FullyQualifiedName { get; }
 
-        public string FilePath { get; }
+		public string FilePath { get; }
 
-        public int LineNumber { get; }
+		public int LineNumber { get; }
 
-        public TestOutcome Outcome { get; }
+		public TestOutcome Outcome { get; }
 
-        public TimeSpan MinDuration { get; }
+		public TimeSpan MinDuration { get; }
 
-        public string ContainedErrorMessage { get; }
+		public string ContainedErrorMessage { get; }
 
-        public string[] ContainedStdOut { get; }
+		public string[] ContainedStdOut { get; }
 
-        public StackFrame[] StackFrames { get; }
+		public StackFrame[] StackFrames { get; }
 
-        public string PytestXmlClassName { get; }
+		public string PytestXmlClassName { get; }
 
-        public string PytestExecPathSuffix { get; }
-    }
+		public string PytestExecPathSuffix { get; }
+	}
 }

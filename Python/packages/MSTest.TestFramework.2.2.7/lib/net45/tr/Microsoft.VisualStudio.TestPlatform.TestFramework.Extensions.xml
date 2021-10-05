@@ -1,0 +1,1097 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions</name>
+    </assembly>
+    <members>
+        <member name="T:Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute">
+            <summary>
+            Test başına dağıtım için dağıtım öğesi (dosya veya dizin) belirtmek üzere kullanılır.
+            Test sınıfında veya test metodunda belirtilebilir.
+            Birden fazla öğe belirtmek için özniteliğin birden fazla örneğini içerebilir.
+            Öğe yolu mutlak veya göreli olabilir; göreli ise RunConfig.RelativePathRoot ile görelidir.
+            </summary>
+            <example>
+            [DeploymentItem("file1.xml")]
+            [DeploymentItem("file2.xml", "DataFiles")]
+            [DeploymentItem("bin\Debug")]
+            </example>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute.#ctor(System.String)">
+            <summary>
+            <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute"/> sınıfının yeni bir örneğini başlatır.
+            </summary>
+            <param name="path">Dağıtılacak dosya veya dizin. Yol, derleme çıktı dizinine göredir. Öğe, dağıtılan test bütünleştirilmiş kodlarıyla aynı dizine kopyalanır.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute.#ctor(System.String,System.String)">
+            <summary>
+            <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute"/> sınıfının yeni bir örneğini başlatır
+            </summary>
+            <param name="path">Dağıtılacak dosya veya dizinin göreli ya da mutlak yolu. Yol, derleme çıktı dizinine göredir. Öğe, dağıtılan test bütünleştirilmiş kodlarıyla aynı dizine kopyalanır.</param>
+            <param name="outputDirectory">Öğelerin kopyalanacağı dizinin yolu. Dağıtım dizinine göre mutlak veya göreli olabilir. Tüm dosyalar ve dizinler şuna göre tanımlanır: <paramref name="path"/> bu dizine kopyalanacak.</param>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute.Path">
+            <summary>
+            Kopyalanacak kaynak dosya veya klasörün yolunu alır.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.DeploymentItemAttribute.OutputDirectory">
+            <summary>
+            Öğenin kopyalandığı dizinin yolunu alır.
+            </summary>
+        </member>
+        <member name="T:Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames">
+            <summary>
+            Bölüm, özellik ve özniteliklerin adlarına ait sabit değerleri içerir.
+            </summary>
+        </member>
+        <member name="F:Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.SectionName">
+            <summary>
+            Yapılandırma bölümünün adı.
+            </summary>
+        </member>
+        <member name="F:Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.Beta2SectionName">
+            <summary>
+            Beta2 için yapılandırma bölümü adı. Uyumluluk için kullanımda tutuluyor.
+            </summary>
+        </member>
+        <member name="F:Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.DataSourcesSectionName">
+            <summary>
+            Veri kaynağının bölüm adı.
+            </summary>
+        </member>
+        <member name="F:Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.NameAttributeName">
+            <summary>
+            'Name' için öznitelik adı
+            </summary>
+        </member>
+        <member name="F:Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.ConnectionStringAttributeName">
+            <summary>
+            'ConnectionString' için öznitelik adı
+            </summary>
+        </member>
+        <member name="F:Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.DataAccessMethodAttributeName">
+            <summary>
+            'DataAccessMethod' için öznitelik adı
+            </summary>
+        </member>
+        <member name="F:Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.DataTableAttributeName">
+            <summary>
+            'DataTable' için öznitelik adı
+            </summary>
+        </member>
+        <member name="T:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement">
+            <summary>
+            Veri Kaynağı öğesi.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement.Name">
+            <summary>
+            Bu yapılandırmanın adını alır veya ayarlar.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement.ConnectionString">
+            <summary>
+            .config dosyasındaki &lt;connectionStrings&gt; bölümünde bulunan ConnectionStringSettings öğesini alır veya ayarlar.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement.DataTableName">
+            <summary>
+            Veri tablosunun adını alır veya ayarlar.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement.DataAccessMethod">
+            <summary>
+            Veri erişiminin türünü alır veya ayarlar.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement.Key">
+            <summary>
+            Anahtarın adını alır.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement.Properties">
+            <summary>
+            Yapılandırma özelliklerini alır.
+            </summary>
+        </member>
+        <member name="T:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection">
+            <summary>
+            Veri kaynağı öğe koleksiyonu.
+            </summary>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection.#ctor">
+            <summary>
+            <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection"/> sınıfının yeni bir örneğini başlatır.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection.Item(System.String)">
+            <summary>
+            Belirtilen anahtara sahip yapılandırma öğesini döndürür.
+            </summary>
+            <param name="name">Döndürülecek öğenin anahtarı.</param>
+            <returns>Belirtilen anahtar ile System.Configuration.ConfigurationElement; aksi takdirde, null.</returns>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection.Item(System.Int32)">
+            <summary>
+            Belirtilen dizin konumundaki yapılandırma öğesini alır.
+            </summary>
+            <param name="index">Döndürülecek System.Configuration.ConfigurationElement öğesinin dizin konumu.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection.Add(Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement)">
+            <summary>
+            Yapılandırma öğesi koleksiyonuna bir yapılandırma öğesi ekler.
+            </summary>
+            <param name="element">Eklenecek System.Configuration.ConfigurationElement öğesi.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection.Remove(Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement)">
+            <summary>
+            Bir System.Configuration.ConfigurationElement öğesini koleksiyondan kaldırır.
+            </summary>
+            <param name="element"><see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement"/> .</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection.Remove(System.String)">
+            <summary>
+            Bir System.Configuration.ConfigurationElement öğesini koleksiyondan kaldırır.
+            </summary>
+            <param name="name">Kaldırılacak System.Configuration.ConfigurationElement anahtarı.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection.Clear">
+            <summary>
+            Tüm yapılandırma öğesi nesnelerini koleksiyondan kaldırır.
+            </summary>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection.CreateNewElement">
+            <summary>
+            Yeni bir <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement"/> oluşturur.
+            </summary>
+            <returns>Yeni bir <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement"/>.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection.GetElementKey(System.Configuration.ConfigurationElement)">
+            <summary>
+            Belirtilen yapılandırma öğesi için öğe anahtarını alır.
+            </summary>
+            <param name="element">Anahtarı döndürülecek System.Configuration.ConfigurationElement.</param>
+            <returns>Belirtilen System.Configuration.ConfigurationElement için anahtar görevi gören bir System.Object.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection.BaseAdd(System.Configuration.ConfigurationElement)">
+            <summary>
+            Yapılandırma öğesi koleksiyonuna bir yapılandırma öğesi ekler.
+            </summary>
+            <param name="element">Eklenecek System.Configuration.ConfigurationElement öğesi.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElementCollection.BaseAdd(System.Int32,System.Configuration.ConfigurationElement)">
+            <summary>
+            Yapılandırma öğesi koleksiyonuna bir yapılandırma öğesi ekler.
+            </summary>
+            <param name="index">Belirtilen System.Configuration.ConfigurationElement öğesinin ekleneceği dizin konumu.</param>
+            <param name="element">Eklenecek System.Configuration.ConfigurationElement öğesi.</param>
+        </member>
+        <member name="T:Microsoft.VisualStudio.TestTools.UnitTesting.TestConfiguration">
+            <summary>
+            Testler için yapılandırma ayarları desteği.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestConfiguration.ConfigurationSection">
+            <summary>
+            Testler için yapılandırma bölümünü alır.
+            </summary>
+        </member>
+        <member name="T:Microsoft.VisualStudio.TestTools.UnitTesting.TestConfigurationSection">
+            <summary>
+            Testler için yapılandırma bölümü.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestConfigurationSection.DataSources">
+            <summary>
+            Bu yapılandırma bölümünün veri kaynaklarını alır.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestConfigurationSection.Properties">
+            <summary>
+            Özellik koleksiyonunu alır.
+            </summary>
+            <returns>
+            Bir <see cref="T:System.Configuration.ConfigurationPropertyCollection"/> koleksiyonu.
+            </returns>
+        </member>
+        <member name="T:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject">
+            <summary>
+            Bu sınıf, sistemde çalışan, genel OLMAYAN İÇ nesneyi temsil eder
+            </summary>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.#ctor(System.Object,System.String)">
+            <summary>
+            <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject"/> sınıfının, özel sınıfın zaten mevcut olan nesnesini
+            içeren yeni bir örneğini başlatır
+            </summary>
+            <param name="obj"> özel üyelere ulaşmak için başlangıç noktası olarak hizmet veren nesne</param>
+            <param name="memberToAccess">Alınacak nesneyi . ile gösteren, başvuru kaldırma dizesi. Örnek: m_X.m_Y.m_Z</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.#ctor(System.String,System.String,System.Object[])">
+            <summary>
+            <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject"/> sınıfının, belirtilen türü sarmalayan yeni bir örneğini
+            başlatır.
+            </summary>
+            <param name="assemblyName">Bütünleştirilmiş kodun adı</param>
+            <param name="typeName">tam adı</param>
+            <param name="args">Oluşturucuya geçirilecek bağımsız değişken</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.#ctor(System.String,System.String,System.Type[],System.Object[])">
+            <summary>
+            <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject"/> sınıfının, belirtilen türü sarmalayan yeni bir örneğini
+            başlatır.
+            </summary>
+            <param name="assemblyName">Bütünleştirilmiş kodun adı</param>
+            <param name="typeName">tam adı</param>
+            <param name="parameterTypes">Bir dizi <see cref="T:System.Type"/> alınacak oluşturucuya ait parametrelerin sayısını, sırasını ve türünü temsil eden nesneler</param>
+            <param name="args">Oluşturucuya geçirilecek bağımsız değişken</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.#ctor(System.Type,System.Object[])">
+            <summary>
+            <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject"/> sınıfının, belirtilen türü sarmalayan yeni bir örneğini
+            başlatır.
+            </summary>
+            <param name="type">oluşturulacak nesnenin türü</param>
+            <param name="args">Oluşturucuya geçirilecek bağımsız değişken</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.#ctor(System.Type,System.Type[],System.Object[])">
+            <summary>
+            <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject"/> sınıfının, belirtilen türü sarmalayan yeni bir örneğini
+            başlatır.
+            </summary>
+            <param name="type">oluşturulacak nesnenin türü</param>
+            <param name="parameterTypes">Bir dizi <see cref="T:System.Type"/> alınacak oluşturucuya ait parametrelerin sayısını, sırasını ve türünü temsil eden nesneler</param>
+            <param name="args">Oluşturucuya geçirilecek bağımsız değişken</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.#ctor(System.Object)">
+            <summary>
+            <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject"/> sınıfının, belirtilen nesneyi sarmalayan yeni bir
+            örneğini başlatır.
+            </summary>
+            <param name="obj">kaydırılacak nesne</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.#ctor(System.Object,Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType)">
+            <summary>
+            <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject"/> sınıfının, belirtilen nesneyi sarmalayan yeni bir
+            örneğini başlatır.
+            </summary>
+            <param name="obj">kaydırılacak nesne</param>
+            <param name="type">PrivateType nesnesi</param>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Target">
+            <summary>
+            Hedefi alır veya ayarlar
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.RealType">
+            <summary>
+            Temel alınan nesnenin türünü alır
+            </summary>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetHashCode">
+            <summary>
+            hedef nesnenin karma kodunu döndürür
+            </summary>
+            <returns>hedef nesnenin karma kodunu temsil eden tamsayı</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Equals(System.Object)">
+            <summary>
+            Eşittir
+            </summary>
+            <param name="obj">Karşılaştırma yapılacak nesneler</param>
+            <returns>nesneler eşit ise true döndürür.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(System.String,System.Object[])">
+            <summary>
+            Belirtilen metodu çağırır
+            </summary>
+            <param name="name">Metodun adı</param>
+            <param name="args">Çağrılacak üyeye geçirilecek bağımsız değişkenler.</param>
+            <returns>Yöntem çağrısı sonucu</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(System.String,System.Type[],System.Object[])">
+            <summary>
+            Belirtilen metodu çağırır
+            </summary>
+            <param name="name">Metodun adı</param>
+            <param name="parameterTypes">Bir dizi <see cref="T:System.Type"/> alınacak yönteme ait parametrelerin sayısını, sırasını ve türünü temsil eden nesneler.</param>
+            <param name="args">Çağrılacak üyeye geçirilecek bağımsız değişkenler.</param>
+            <returns>Yöntem çağrısı sonucu</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(System.String,System.Type[],System.Object[],System.Type[])">
+            <summary>
+            Belirtilen metodu çağırır
+            </summary>
+            <param name="name">Metodun adı</param>
+            <param name="parameterTypes">Bir dizi <see cref="T:System.Type"/> alınacak yönteme ait parametrelerin sayısını, sırasını ve türünü temsil eden nesneler.</param>
+            <param name="args">Çağrılacak üyeye geçirilecek bağımsız değişkenler.</param>
+            <param name="typeArguments">Genel bağımsız değişkenlerin türlerine karşılık gelen bir tür dizisi.</param>
+            <returns>Yöntem çağrısı sonucu</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(System.String,System.Object[],System.Globalization.CultureInfo)">
+            <summary>
+            Belirtilen metodu çağırır
+            </summary>
+            <param name="name">Metodun adı</param>
+            <param name="args">Çağrılacak üyeye geçirilecek bağımsız değişkenler.</param>
+            <param name="culture">Kültür bilgisi</param>
+            <returns>Yöntem çağrısı sonucu</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(System.String,System.Type[],System.Object[],System.Globalization.CultureInfo)">
+            <summary>
+            Belirtilen metodu çağırır
+            </summary>
+            <param name="name">Metodun adı</param>
+            <param name="parameterTypes">Bir dizi <see cref="T:System.Type"/> alınacak yönteme ait parametrelerin sayısını, sırasını ve türünü temsil eden nesneler.</param>
+            <param name="args">Çağrılacak üyeye geçirilecek bağımsız değişkenler.</param>
+            <param name="culture">Kültür bilgisi</param>
+            <returns>Yöntem çağrısı sonucu</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(System.String,System.Reflection.BindingFlags,System.Object[])">
+            <summary>
+            Belirtilen metodu çağırır
+            </summary>
+            <param name="name">Metodun adı</param>
+            <param name="bindingFlags">Bir veya daha fazla içeren bit maskesi <see cref="T:System.Reflection.BindingFlags"/> aramanın nasıl yürütüldüğünü belirtir.</param>
+            <param name="args">Çağrılacak üyeye geçirilecek bağımsız değişkenler.</param>
+            <returns>Yöntem çağrısı sonucu</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(System.String,System.Reflection.BindingFlags,System.Type[],System.Object[])">
+            <summary>
+            Belirtilen metodu çağırır
+            </summary>
+            <param name="name">Metodun adı</param>
+            <param name="bindingFlags">Bir veya daha fazla içeren bit maskesi <see cref="T:System.Reflection.BindingFlags"/> aramanın nasıl yürütüldüğünü belirtir.</param>
+            <param name="parameterTypes">Bir dizi <see cref="T:System.Type"/> alınacak yönteme ait parametrelerin sayısını, sırasını ve türünü temsil eden nesneler.</param>
+            <param name="args">Çağrılacak üyeye geçirilecek bağımsız değişkenler.</param>
+            <returns>Yöntem çağrısı sonucu</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(System.String,System.Reflection.BindingFlags,System.Object[],System.Globalization.CultureInfo)">
+            <summary>
+            Belirtilen metodu çağırır
+            </summary>
+            <param name="name">Metodun adı</param>
+            <param name="bindingFlags">Bir veya daha fazla içeren bit maskesi <see cref="T:System.Reflection.BindingFlags"/> aramanın nasıl yürütüldüğünü belirtir.</param>
+            <param name="args">Çağrılacak üyeye geçirilecek bağımsız değişkenler.</param>
+            <param name="culture">Kültür bilgisi</param>
+            <returns>Yöntem çağrısı sonucu</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(System.String,System.Reflection.BindingFlags,System.Type[],System.Object[],System.Globalization.CultureInfo)">
+            <summary>
+            Belirtilen metodu çağırır
+            </summary>
+            <param name="name">Metodun adı</param>
+            <param name="bindingFlags">Bir veya daha fazla içeren bit maskesi <see cref="T:System.Reflection.BindingFlags"/> aramanın nasıl yürütüldüğünü belirtir.</param>
+            <param name="parameterTypes">Bir dizi <see cref="T:System.Type"/> alınacak yönteme ait parametrelerin sayısını, sırasını ve türünü temsil eden nesneler.</param>
+            <param name="args">Çağrılacak üyeye geçirilecek bağımsız değişkenler.</param>
+            <param name="culture">Kültür bilgisi</param>
+            <returns>Yöntem çağrısı sonucu</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.Invoke(System.String,System.Reflection.BindingFlags,System.Type[],System.Object[],System.Globalization.CultureInfo,System.Type[])">
+            <summary>
+            Belirtilen metodu çağırır
+            </summary>
+            <param name="name">Yöntem adı</param>
+            <param name="bindingFlags">Bir veya daha fazla içeren bit maskesi <see cref="T:System.Reflection.BindingFlags"/> aramanın nasıl yürütüldüğünü belirtir.</param>
+            <param name="parameterTypes">Bir dizi <see cref="T:System.Type"/> alınacak yönteme ait parametrelerin sayısını, sırasını ve türünü temsil eden nesneler.</param>
+            <param name="args">Çağrılacak üyeye geçirilecek bağımsız değişkenler.</param>
+            <param name="culture">Kültür bilgisi</param>
+            <param name="typeArguments">Genel bağımsız değişkenlerin türlerine karşılık gelen bir tür dizisi.</param>
+            <returns>Yöntem çağrısı sonucu</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetArrayElement(System.String,System.Int32[])">
+            <summary>
+            Her boyut için alt simge dizisini kullanarak dizi öğesini alır
+            </summary>
+            <param name="name">Üyenin adı</param>
+            <param name="indices">dizi dizinleri</param>
+            <returns>Öğe dizisi.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetArrayElement(System.String,System.Object,System.Int32[])">
+            <summary>
+            Her boyut için alt simge dizisi kullanarak dizi öğesini ayarlar
+            </summary>
+            <param name="name">Üyenin adı</param>
+            <param name="value">Ayarlanacak değer</param>
+            <param name="indices">dizi dizinleri</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetArrayElement(System.String,System.Reflection.BindingFlags,System.Int32[])">
+            <summary>
+            Her boyut için alt simge dizisini kullanarak dizi öğesini alır
+            </summary>
+            <param name="name">Üyenin adı</param>
+            <param name="bindingFlags">Bir veya daha fazla içeren bit maskesi <see cref="T:System.Reflection.BindingFlags"/> aramanın nasıl yürütüldüğünü belirtir.</param>
+            <param name="indices">dizi dizinleri</param>
+            <returns>Öğe dizisi.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetArrayElement(System.String,System.Reflection.BindingFlags,System.Object,System.Int32[])">
+            <summary>
+            Her boyut için alt simge dizisi kullanarak dizi öğesini ayarlar
+            </summary>
+            <param name="name">Üyenin adı</param>
+            <param name="bindingFlags">Bir veya daha fazla içeren bit maskesi <see cref="T:System.Reflection.BindingFlags"/> aramanın nasıl yürütüldüğünü belirtir.</param>
+            <param name="value">Ayarlanacak değer</param>
+            <param name="indices">dizi dizinleri</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetField(System.String)">
+            <summary>
+            Alanı alır
+            </summary>
+            <param name="name">Alanın adı</param>
+            <returns>Alan.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetField(System.String,System.Object)">
+            <summary>
+            Alanı ayarlar
+            </summary>
+            <param name="name">Alanın adı</param>
+            <param name="value">ayarlanacak değer</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetField(System.String,System.Reflection.BindingFlags)">
+            <summary>
+            Alanı alır
+            </summary>
+            <param name="name">Alanın adı</param>
+            <param name="bindingFlags">Bir veya daha fazla içeren bit maskesi <see cref="T:System.Reflection.BindingFlags"/> aramanın nasıl yürütüldüğünü belirtir.</param>
+            <returns>Alan.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetField(System.String,System.Reflection.BindingFlags,System.Object)">
+            <summary>
+            Alanı ayarlar
+            </summary>
+            <param name="name">Alanın adı</param>
+            <param name="bindingFlags">Bir veya daha fazla içeren bit maskesi <see cref="T:System.Reflection.BindingFlags"/> aramanın nasıl yürütüldüğünü belirtir.</param>
+            <param name="value">ayarlanacak değer</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetFieldOrProperty(System.String)">
+            <summary>
+            Alanı veya özelliği alır
+            </summary>
+            <param name="name">Alan veya özelliğin adı</param>
+            <returns>Alan veya özellik.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetFieldOrProperty(System.String,System.Object)">
+            <summary>
+            Alanı veya özelliği ayarlar
+            </summary>
+            <param name="name">Alan veya özelliğin adı</param>
+            <param name="value">ayarlanacak değer</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetFieldOrProperty(System.String,System.Reflection.BindingFlags)">
+            <summary>
+            Alanı veya özelliği alır
+            </summary>
+            <param name="name">Alan veya özelliğin adı</param>
+            <param name="bindingFlags">Bir veya daha fazla içeren bit maskesi <see cref="T:System.Reflection.BindingFlags"/> aramanın nasıl yürütüldüğünü belirtir.</param>
+            <returns>Alan veya özellik.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetFieldOrProperty(System.String,System.Reflection.BindingFlags,System.Object)">
+            <summary>
+            Alanı veya özelliği ayarlar
+            </summary>
+            <param name="name">Alan veya özelliğin adı</param>
+            <param name="bindingFlags">Bir veya daha fazla içeren bit maskesi <see cref="T:System.Reflection.BindingFlags"/> aramanın nasıl yürütüldüğünü belirtir.</param>
+            <param name="value">ayarlanacak değer</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetProperty(System.String,System.Object[])">
+            <summary>
+            Özelliği alır
+            </summary>
+            <param name="name">Özellik adı</param>
+            <param name="args">Çağrılacak üyeye geçirilecek bağımsız değişkenler.</param>
+            <returns>Özellik.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetProperty(System.String,System.Type[],System.Object[])">
+            <summary>
+            Özelliği alır
+            </summary>
+            <param name="name">Özellik adı</param>
+            <param name="parameterTypes">Bir dizi <see cref="T:System.Type"/> dizini oluşturulmuş özelliğe ait parametrelerin sayısını, sırasını ve türünü temsil eden nesneler.</param>
+            <param name="args">Çağrılacak üyeye geçirilecek bağımsız değişkenler.</param>
+            <returns>Özellik.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetProperty(System.String,System.Object,System.Object[])">
+            <summary>
+            Özelliği ayarlar
+            </summary>
+            <param name="name">Özellik adı</param>
+            <param name="value">ayarlanacak değer</param>
+            <param name="args">Çağrılacak üyeye geçirilecek bağımsız değişkenler.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetProperty(System.String,System.Type[],System.Object,System.Object[])">
+            <summary>
+            Özelliği ayarlar
+            </summary>
+            <param name="name">Özellik adı</param>
+            <param name="parameterTypes">Bir dizi <see cref="T:System.Type"/> dizini oluşturulmuş özelliğe ait parametrelerin sayısını, sırasını ve türünü temsil eden nesneler.</param>
+            <param name="value">ayarlanacak değer</param>
+            <param name="args">Çağrılacak üyeye geçirilecek bağımsız değişkenler.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetProperty(System.String,System.Reflection.BindingFlags,System.Object[])">
+            <summary>
+            Özelliği alır
+            </summary>
+            <param name="name">Özelliğin adı</param>
+            <param name="bindingFlags">Bir veya daha fazla içeren bit maskesi <see cref="T:System.Reflection.BindingFlags"/> aramanın nasıl yürütüldüğünü belirtir.</param>
+            <param name="args">Çağrılacak üyeye geçirilecek bağımsız değişkenler.</param>
+            <returns>Özellik.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetProperty(System.String,System.Reflection.BindingFlags,System.Type[],System.Object[])">
+            <summary>
+            Özelliği alır
+            </summary>
+            <param name="name">Özelliğin adı</param>
+            <param name="bindingFlags">Bir veya daha fazla içeren bit maskesi <see cref="T:System.Reflection.BindingFlags"/> aramanın nasıl yürütüldüğünü belirtir.</param>
+            <param name="parameterTypes">Bir dizi <see cref="T:System.Type"/> dizini oluşturulmuş özelliğe ait parametrelerin sayısını, sırasını ve türünü temsil eden nesneler.</param>
+            <param name="args">Çağrılacak üyeye geçirilecek bağımsız değişkenler.</param>
+            <returns>Özellik.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetProperty(System.String,System.Reflection.BindingFlags,System.Object,System.Object[])">
+            <summary>
+            Özelliği ayarlar
+            </summary>
+            <param name="name">Özellik adı</param>
+            <param name="bindingFlags">Bir veya daha fazla içeren bit maskesi <see cref="T:System.Reflection.BindingFlags"/> aramanın nasıl yürütüldüğünü belirtir.</param>
+            <param name="value">ayarlanacak değer</param>
+            <param name="args">Çağrılacak üyeye geçirilecek bağımsız değişkenler.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.SetProperty(System.String,System.Reflection.BindingFlags,System.Object,System.Type[],System.Object[])">
+            <summary>
+            Özelliği ayarlar
+            </summary>
+            <param name="name">Özellik adı</param>
+            <param name="bindingFlags">Bir veya daha fazla içeren bit maskesi <see cref="T:System.Reflection.BindingFlags"/> aramanın nasıl yürütüldüğünü belirtir.</param>
+            <param name="value">ayarlanacak değer</param>
+            <param name="parameterTypes">Bir dizi <see cref="T:System.Type"/> dizini oluşturulmuş özelliğe ait parametrelerin sayısını, sırasını ve türünü temsil eden nesneler.</param>
+            <param name="args">Çağrılacak üyeye geçirilecek bağımsız değişkenler.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.ValidateAccessString(System.String)">
+            <summary>
+            Erişim dizesini doğrular
+            </summary>
+            <param name="access"> erişim dizesi</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.InvokeHelper(System.String,System.Reflection.BindingFlags,System.Object[],System.Globalization.CultureInfo)">
+            <summary>
+            Üyeyi çağırır
+            </summary>
+            <param name="name">Üyenin adı</param>
+            <param name="bindingFlags">Ek öznitelikler</param>
+            <param name="args">Çağrı bağımsız değişkenleri</param>
+            <param name="culture">Kültür</param>
+            <returns>Çağrı sonucu</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateObject.GetGenericMethodFromCache(System.String,System.Type[],System.Type[],System.Reflection.BindingFlags,System.Reflection.ParameterModifier[])">
+            <summary>
+            Geçerli özel türden en uygun genel metot imzasını ayıklar.
+            </summary>
+            <param name="methodName">İmza önbelleğinin aranacağı yöntemin adı.</param>
+            <param name="parameterTypes">İçinde arama yapılacak parametrelerin türlerine karşılık gelen bir tür dizisi.</param>
+            <param name="typeArguments">Genel bağımsız değişkenlerin türlerine karşılık gelen bir tür dizisi.</param>
+            <param name="bindingFlags"><see cref="T:System.Reflection.BindingFlags"/> yöntem imzalarını daha fazla filtrelemek için.</param>
+            <param name="modifiers">Parametreler için değiştiriciler.</param>
+            <returns>Bir methodinfo örneği.</returns>
+        </member>
+        <member name="T:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType">
+            <summary>
+            Bu sınıf, Özel Erişimci işlevselliği için özel bir sınıfı temsil eder.
+            </summary>
+        </member>
+        <member name="F:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.BindToEveryThing">
+            <summary>
+            Her şeye bağlar
+            </summary>
+        </member>
+        <member name="F:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.type">
+            <summary>
+            Sarmalanan tür.
+            </summary>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.#ctor(System.String,System.String)">
+            <summary>
+            <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType"/> sınıfının, özel türü içeren yeni bir örneğini başlatır.
+            </summary>
+            <param name="assemblyName">Bütünleştirilmiş kod adı</param>
+            <param name="typeName">şunun tam adı: </param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.#ctor(System.Type)">
+            <summary>
+            <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType"/> sınıfının, tür nesnesindeki özel türü içeren yeni bir
+            örneğini başlatır
+            </summary>
+            <param name="type">Oluşturulacak kaydırılmış Tür.</param>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.ReferencedType">
+            <summary>
+            Başvurulan türü alır
+            </summary>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.InvokeStatic(System.String,System.Object[])">
+            <summary>
+            Statik üyeyi çağırır
+            </summary>
+            <param name="name">InvokeHelper üyesinin adı</param>
+            <param name="args">Çağrı bağımsız değişkenleri</param>
+            <returns>Çağrı sonucu</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.InvokeStatic(System.String,System.Type[],System.Object[])">
+            <summary>
+            Statik üyeyi çağırır
+            </summary>
+            <param name="name">InvokeHelper üyesinin adı</param>
+            <param name="parameterTypes">Bir dizi <see cref="T:System.Type"/> çağrılacak yönteme ait parametrelerin sayısını, sırasını ve türünü temsil eden nesneler</param>
+            <param name="args">Çağrı bağımsız değişkenleri</param>
+            <returns>Çağrı sonucu</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.InvokeStatic(System.String,System.Type[],System.Object[],System.Type[])">
+            <summary>
+            Statik üyeyi çağırır
+            </summary>
+            <param name="name">InvokeHelper üyesinin adı</param>
+            <param name="parameterTypes">Bir dizi <see cref="T:System.Type"/> çağrılacak yönteme ait parametrelerin sayısını, sırasını ve türünü temsil eden nesneler</param>
+            <param name="args">Çağrı bağımsız değişkenleri</param>
+            <param name="typeArguments">Genel bağımsız değişkenlerin türlerine karşılık gelen bir tür dizisi.</param>
+            <returns>Çağrı sonucu</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.InvokeStatic(System.String,System.Object[],System.Globalization.CultureInfo)">
+            <summary>
+            Statik metodu çağırır
+            </summary>
+            <param name="name">Üyenin adı</param>
+            <param name="args">Çağrı bağımsız değişkenleri</param>
+            <param name="culture">Kültür</param>
+            <returns>Çağrı sonucu</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.InvokeStatic(System.String,System.Type[],System.Object[],System.Globalization.CultureInfo)">
+            <summary>
+            Statik metodu çağırır
+            </summary>
+            <param name="name">Üyenin adı</param>
+            <param name="parameterTypes">Bir dizi <see cref="T:System.Type"/> çağrılacak yönteme ait parametrelerin sayısını, sırasını ve türünü temsil eden nesneler</param>
+            <param name="args">Çağrı bağımsız değişkenleri</param>
+            <param name="culture">Kültür bilgisi</param>
+            <returns>Çağrı sonucu</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.InvokeStatic(System.String,System.Reflection.BindingFlags,System.Object[])">
+            <summary>
+            Statik metodu çağırır
+            </summary>
+            <param name="name">Üyenin adı</param>
+            <param name="bindingFlags">Ek çağrı öznitelikleri</param>
+            <param name="args">Çağrı bağımsız değişkenleri</param>
+            <returns>Çağrı sonucu</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.InvokeStatic(System.String,System.Reflection.BindingFlags,System.Type[],System.Object[])">
+            <summary>
+            Statik metodu çağırır
+            </summary>
+            <param name="name">Üyenin adı</param>
+            <param name="bindingFlags">Ek çağrı öznitelikleri</param>
+            <param name="parameterTypes">Bir dizi <see cref="T:System.Type"/> çağrılacak yönteme ait parametrelerin sayısını, sırasını ve türünü temsil eden nesneler</param>
+            <param name="args">Çağrı bağımsız değişkenleri</param>
+            <returns>Çağrı sonucu</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.InvokeStatic(System.String,System.Reflection.BindingFlags,System.Object[],System.Globalization.CultureInfo)">
+            <summary>
+            Statik metodu çağırır
+            </summary>
+            <param name="name">Üyenin adı</param>
+            <param name="bindingFlags">Ek çağrı öznitelikleri</param>
+            <param name="args">Çağrı bağımsız değişkenleri</param>
+            <param name="culture">Kültür</param>
+            <returns>Çağrı sonucu</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.InvokeStatic(System.String,System.Reflection.BindingFlags,System.Type[],System.Object[],System.Globalization.CultureInfo)">
+            <summary>
+            Statik metodu çağırır
+            </summary>
+            <param name="name">Üyenin adı</param>
+            <param name="bindingFlags">Ek çağrı öznitelikleri</param>
+            /// <param name="parameterTypes">Bir dizi <see cref="T:System.Type"/> çağrılacak yönteme ait parametrelerin sayısını, sırasını ve türünü temsil eden nesneler</param>
+            <param name="args">Çağrı bağımsız değişkenleri</param>
+            <param name="culture">Kültür</param>
+            <returns>Çağrı sonucu</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.InvokeStatic(System.String,System.Reflection.BindingFlags,System.Type[],System.Object[],System.Globalization.CultureInfo,System.Type[])">
+            <summary>
+            Statik metodu çağırır
+            </summary>
+            <param name="name">Üyenin adı</param>
+            <param name="bindingFlags">Ek çağrı öznitelikleri</param>
+            /// <param name="parameterTypes">Bir dizi <see cref="T:System.Type"/> çağrılacak yönteme ait parametrelerin sayısını, sırasını ve türünü temsil eden nesneler</param>
+            <param name="args">Çağrı bağımsız değişkenleri</param>
+            <param name="culture">Kültür</param>
+            <param name="typeArguments">Genel bağımsız değişkenlerin türlerine karşılık gelen bir tür dizisi.</param>
+            <returns>Çağrı sonucu</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.GetStaticArrayElement(System.String,System.Int32[])">
+            <summary>
+            Statik dizideki öğeyi alır
+            </summary>
+            <param name="name">Dizinin adı</param>
+            <param name="indices">
+            Alınacak öğenin konumunu belirten dizinleri temsil eden tek boyutlu bir 32 bit
+            tamsayı dizisi. Örneğin, a[10][11] öğesine erişmek için dizinler {10,11} olur
+            </param>
+            <returns>belirtilen konumdaki öğe</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.SetStaticArrayElement(System.String,System.Object,System.Int32[])">
+            <summary>
+            Statik dizinin üyesini ayarlar
+            </summary>
+            <param name="name">Dizinin adı</param>
+            <param name="value">ayarlanacak değer</param>
+            <param name="indices">
+            Ayarlanacak öğenin konumunu belirten dizinleri temsil eden tek boyutlu bir 32 bit
+            tamsayı dizisi. Örneğin, a[10][11] öğesine erişmek için dizi {10,11} olur
+            </param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.GetStaticArrayElement(System.String,System.Reflection.BindingFlags,System.Int32[])">
+            <summary>
+            Statik dizideki öğeyi alır
+            </summary>
+            <param name="name">Dizinin adı</param>
+            <param name="bindingFlags">Ek InvokeHelper öznitelikleri</param>
+            <param name="indices">
+            Alınacak öğenin konumunu belirten dizinleri temsil eden tek boyutlu bir 32 bit
+            tamsayı dizisi. Örneğin, a[10][11] öğesine erişmek için dizi {10,11} olur
+            </param>
+            <returns>belirtilen konumdaki öğe</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.SetStaticArrayElement(System.String,System.Reflection.BindingFlags,System.Object,System.Int32[])">
+            <summary>
+            Statik dizinin üyesini ayarlar
+            </summary>
+            <param name="name">Dizinin adı</param>
+            <param name="bindingFlags">Ek InvokeHelper öznitelikleri</param>
+            <param name="value">ayarlanacak değer</param>
+            <param name="indices">
+            Ayarlanacak öğenin konumunu belirten dizinleri temsil eden tek boyutlu bir 32 bit
+            tamsayı dizisi. Örneğin, a[10][11] öğesine erişmek için dizi {10,11} olur
+            </param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.GetStaticField(System.String)">
+            <summary>
+            Statik alanı alır
+            </summary>
+            <param name="name">Alanın adı</param>
+            <returns>Statik alan.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.SetStaticField(System.String,System.Object)">
+            <summary>
+            Statik alanı ayarlar
+            </summary>
+            <param name="name">Alanın adı</param>
+            <param name="value">Çağrı bağımsız değişkeni</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.GetStaticField(System.String,System.Reflection.BindingFlags)">
+            <summary>
+            Belirtilen InvokeHelper özniteliklerini kullanarak statik alanı alır
+            </summary>
+            <param name="name">Alanın adı</param>
+            <param name="bindingFlags">Ek çağrı öznitelikleri</param>
+            <returns>Statik alan.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.SetStaticField(System.String,System.Reflection.BindingFlags,System.Object)">
+            <summary>
+            Bağlama özniteliklerini kullanarak statik alanı ayarlar
+            </summary>
+            <param name="name">Alanın adı</param>
+            <param name="bindingFlags">Ek InvokeHelper öznitelikleri</param>
+            <param name="value">Çağrı bağımsız değişkeni</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.GetStaticFieldOrProperty(System.String)">
+            <summary>
+            Statik alanı veya özelliği alır
+            </summary>
+            <param name="name">Alan veya özelliğin adı</param>
+            <returns>Statik alan veya özellik.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.SetStaticFieldOrProperty(System.String,System.Object)">
+            <summary>
+            Statik alanı veya özelliği ayarlar
+            </summary>
+            <param name="name">Alan veya özelliğin adı</param>
+            <param name="value">Alan veya özelliğe ayarlanacak değer</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.GetStaticFieldOrProperty(System.String,System.Reflection.BindingFlags)">
+            <summary>
+            Belirtilen InvokeHelper özniteliklerini kullanarak statik alanı veya özelliği alır
+            </summary>
+            <param name="name">Alan veya özelliğin adı</param>
+            <param name="bindingFlags">Ek çağrı öznitelikleri</param>
+            <returns>Statik alan veya özellik.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.SetStaticFieldOrProperty(System.String,System.Reflection.BindingFlags,System.Object)">
+            <summary>
+            Bağlama özniteliklerini kullanarak statik alanı veya özelliği ayarlar
+            </summary>
+            <param name="name">Alan veya özelliğin adı</param>
+            <param name="bindingFlags">Ek çağrı öznitelikleri</param>
+            <param name="value">Alan veya özelliğe ayarlanacak değer</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.GetStaticProperty(System.String,System.Object[])">
+            <summary>
+            Statik özelliği alır
+            </summary>
+            <param name="name">Alan veya özelliğin adı</param>
+            <param name="args">Çağrı bağımsız değişkenleri</param>
+            <returns>Statik özellik.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.SetStaticProperty(System.String,System.Object,System.Object[])">
+            <summary>
+            Statik özelliği ayarlar
+            </summary>
+            <param name="name">Özellik adı</param>
+            <param name="value">Alan veya özelliğe ayarlanacak değer</param>
+            <param name="args">Çağrılacak üyeye geçirilecek bağımsız değişkenler.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.SetStaticProperty(System.String,System.Object,System.Type[],System.Object[])">
+            <summary>
+            Statik özelliği ayarlar
+            </summary>
+            <param name="name">Özellik adı</param>
+            <param name="value">Alan veya özelliğe ayarlanacak değer</param>
+            <param name="parameterTypes">Bir dizi <see cref="T:System.Type"/> dizini oluşturulmuş özelliğe ait parametrelerin sayısını, sırasını ve türünü temsil eden nesneler.</param>
+            <param name="args">Çağrılacak üyeye geçirilecek bağımsız değişkenler.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.GetStaticProperty(System.String,System.Reflection.BindingFlags,System.Object[])">
+            <summary>
+            Statik özelliği alır
+            </summary>
+            <param name="name">Özellik adı</param>
+            <param name="bindingFlags">Ek çağrı öznitelikleri.</param>
+            <param name="args">Çağrılacak üyeye geçirilecek bağımsız değişkenler.</param>
+            <returns>Statik özellik.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.GetStaticProperty(System.String,System.Reflection.BindingFlags,System.Type[],System.Object[])">
+            <summary>
+            Statik özelliği alır
+            </summary>
+            <param name="name">Özellik adı</param>
+            <param name="bindingFlags">Ek çağrı öznitelikleri.</param>
+            <param name="parameterTypes">Bir dizi <see cref="T:System.Type"/> dizini oluşturulmuş özelliğe ait parametrelerin sayısını, sırasını ve türünü temsil eden nesneler.</param>
+            <param name="args">Çağrılacak üyeye geçirilecek bağımsız değişkenler.</param>
+            <returns>Statik özellik.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.SetStaticProperty(System.String,System.Reflection.BindingFlags,System.Object,System.Object[])">
+            <summary>
+            Statik özelliği ayarlar
+            </summary>
+            <param name="name">Özellik adı</param>
+            <param name="bindingFlags">Ek çağrı öznitelikleri.</param>
+            <param name="value">Alan veya özelliğe ayarlanacak değer</param>
+            <param name="args">Dizini oluşturulmuş özellikler için isteğe bağlı dizin değerleri. Dizini oluşturulmuş özelliklerin dizinleri sıfır tabanlıdır. Bu değer, dizini oluşturulmamış özellikler için null olmalıdır. </param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.SetStaticProperty(System.String,System.Reflection.BindingFlags,System.Object,System.Type[],System.Object[])">
+            <summary>
+            Statik özelliği ayarlar
+            </summary>
+            <param name="name">Özellik adı</param>
+            <param name="bindingFlags">Ek çağrı öznitelikleri.</param>
+            <param name="value">Alan veya özelliğe ayarlanacak değer</param>
+            <param name="parameterTypes">Bir dizi <see cref="T:System.Type"/> dizini oluşturulmuş özelliğe ait parametrelerin sayısını, sırasını ve türünü temsil eden nesneler.</param>
+            <param name="args">Çağrılacak üyeye geçirilecek bağımsız değişkenler.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.PrivateType.InvokeHelperStatic(System.String,System.Reflection.BindingFlags,System.Object[],System.Globalization.CultureInfo)">
+            <summary>
+            Statik metodu çağırır
+            </summary>
+            <param name="name">Üyenin adı</param>
+            <param name="bindingFlags">Ek çağrı öznitelikleri</param>
+            <param name="args">Çağrı bağımsız değişkenleri</param>
+            <param name="culture">Kültür</param>
+            <returns>Çağrı sonucu</returns>
+        </member>
+        <member name="T:Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper">
+            <summary>
+            Genel metotlar için metot imzası bulmayı sağlar.
+            </summary>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper.CompareMethodSigAndName(System.Reflection.MethodBase,System.Reflection.MethodBase)">
+            <summary>
+            Bu iki metodun metot imzalarını karşılaştırır.
+            </summary>
+            <param name="m1">Method1</param>
+            <param name="m2">Method2</param>
+            <returns>Benzer olduklarında true.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper.GetHierarchyDepth(System.Type)">
+            <summary>
+            Sağlanan türün temel türünden hiyerarşi derinliğini alır.
+            </summary>
+            <param name="t">Tür.</param>
+            <returns>Derinlik.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper.FindMostDerivedNewSlotMeth(System.Reflection.MethodBase[],System.Int32)">
+            <summary>
+            Sağlanan bilgilerle en çok türetilen türü bulur.
+            </summary>
+            <param name="match">Aday eşleşmeleri.</param>
+            <param name="cMatches">Eşleşme sayısı.</param>
+            <returns>En çok türetilen metot.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper.SelectMethod(System.Reflection.BindingFlags,System.Reflection.MethodBase[],System.Type[],System.Reflection.ParameterModifier[])">
+            <summary>
+            Temel ölçütlerle eşleşen bir metot kümesini göz önünde bulundurarak
+            bir tür dizisini temel alan bir metot seçin. Hiçbir metot ölçütlerle eşleşmezse bu metot
+            null döndürmelidir.
+            </summary>
+            <param name="bindingAttr">Bağlama belirtimi.</param>
+            <param name="match">Aday eşleşmeleri</param>
+            <param name="types">Türler</param>
+            <param name="modifiers">Parametre değiştiriciler.</param>
+            <returns>Eşleştirme metodu. Eşleşen yoksa null.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper.FindMostSpecificMethod(System.Reflection.MethodBase,System.Int32[],System.Type,System.Reflection.MethodBase,System.Int32[],System.Type,System.Type[],System.Object[])">
+            <summary>
+            Sağlanan iki metot arasından en belirli olanını bulur.
+            </summary>
+            <param name="m1">Metot 1</param>
+            <param name="paramOrder1">Metot 1 için parametre sırası</param>
+            <param name="paramArrayType1">Parametre dizi türü.</param>
+            <param name="m2">Metot 2</param>
+            <param name="paramOrder2">Metot 2 için parametre sırası</param>
+            <param name="paramArrayType2">&gt;Parametre dizi türü.</param>
+            <param name="types">İçinde aramanın yapılacağı türler.</param>
+            <param name="args">Bağımsız Değişkenler</param>
+            <returns>Eşleşmeyi temsil eden bir int.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper.FindMostSpecific(System.Reflection.ParameterInfo[],System.Int32[],System.Type,System.Reflection.ParameterInfo[],System.Int32[],System.Type,System.Type[],System.Object[])">
+            <summary>
+            Sağlanan iki metot arasından en belirli olanını bulur.
+            </summary>
+            <param name="p1">Metot 1</param>
+            <param name="paramOrder1">Metot 1 için parametre sırası</param>
+            <param name="paramArrayType1">Parametre dizi türü.</param>
+            <param name="p2">Metot 2</param>
+            <param name="paramOrder2">Metot 2 için parametre sırası</param>
+            <param name="paramArrayType2">&gt;Parametre dizi türü.</param>
+            <param name="types">İçinde aramanın yapılacağı türler.</param>
+            <param name="args">Bağımsız Değişkenler</param>
+            <returns>Eşleşmeyi temsil eden bir int.</returns>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper.FindMostSpecificType(System.Type,System.Type,System.Type)">
+            <summary>
+            Sağlanan iki tür arasından en belirli olanını bulur.
+            </summary>
+            <param name="c1">Tür 1</param>
+            <param name="c2">Tür 2</param>
+            <param name="t">Tanımlama türü</param>
+            <returns>Eşleşmeyi temsil eden bir int.</returns>
+        </member>
+        <member name="T:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext">
+            <summary>
+            Birim testlerinde sağlanan bilgileri depolamak için kullanılır.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.Properties">
+            <summary>
+            Bir testin test özelliklerini alır.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DataRow">
+            <summary>
+            Test, veri tabanlı test için kullanıldığında geçerli veri satırını alır.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DataConnection">
+            <summary>
+            Test, veri tabanlı test için kullanıldığında geçerli veri bağlantısı satırını alır.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunDirectory">
+            <summary>
+            Test çalıştırması için, dağıtılan dosyaların ve sonuç dosyalarının depolandığı temel dizini alır.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DeploymentDirectory">
+            <summary>
+            Test çalıştırması için dağıtılan dosyaların dizinini alır. Genellikle <see cref="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunDirectory"/> dizininin bir alt dizinidir.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.ResultsDirectory">
+            <summary>
+            Test çalıştırmasından sonuçlar için temel dizini alır. Genellikle <see cref="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunDirectory"/> dizininin bir alt dizinidir.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunResultsDirectory">
+            <summary>
+            Test çalıştırması sonuç dosyalarının dizinini alır. Genellikle <see cref="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.ResultsDirectory"/> dizininin bir alt dizinidir.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestResultsDirectory">
+            <summary>
+            Test sonucu dosyalarının dizinini alır.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestDir">
+            <summary>
+            Test çalıştırması için dağıtılan dosyaların ve sonuç dosyalarının depolandığı temel dizini alır.
+            <see cref="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunDirectory"/> ile aynıdır. Bunun yerine bu özelliği kullanın.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestDeploymentDir">
+            <summary>
+            Test çalıştırması için dağıtılan dosyaların dizinini alır. Genellikle <see cref="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunDirectory"/> dizininin bir alt dizinidir.
+            <see cref="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DeploymentDirectory"/> ile aynıdır. Bunun yerine bu özelliği kullanın.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestLogsDir">
+            <summary>
+            Test çalıştırması sonuç dosyalarının dizini alır. Genellikle <see cref="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.ResultsDirectory"/> dizininin bir alt dizinidir.
+            <see cref="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunResultsDirectory"/> ile aynıdır. Test çalıştırması sonuç dosyaları için bu özelliği veya
+            teste özgü sonuç dosyaları için <see cref="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestResultsDirectory"/> kullanın.
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.FullyQualifiedTestClassName">
+            <summary>
+            Şu anda yürütülen test metodunu içeren sınıfın tam adını alır
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestName">
+            <summary>
+            Yürütülmekte olan test metodunun adını alır
+            </summary>
+        </member>
+        <member name="P:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.CurrentTestOutcome">
+            <summary>
+            Geçerli test sonucunu alır.
+            </summary>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.WriteLine(System.String)">
+            <summary>
+            Test çalışırken izleme iletileri yazmak için kullanılır
+            </summary>
+            <param name="message">biçimlendirilmiş ileti dizesi</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.WriteLine(System.String,System.Object[])">
+            <summary>
+            Test çalışırken izleme iletileri yazmak için kullanılır
+            </summary>
+            <param name="format">biçim dizesi</param>
+            <param name="args">bağımsız değişkenler</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.AddResultFile(System.String)">
+            <summary>
+            TestResult.ResultFileNames içindeki listeye bir dosya adı ekler
+            </summary>
+            <param name="fileName">
+            Dosya Adı.
+            </param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.BeginTimer(System.String)">
+            <summary>
+            Belirtilen ada sahip bir zamanlayıcı başlatır
+            </summary>
+            <param name="timerName"> Zamanlayıcının adı.</param>
+        </member>
+        <member name="M:Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.EndTimer(System.String)">
+            <summary>
+            Belirtilen ada sahip zamanlayıcıyı sonlandırır
+            </summary>
+            <param name="timerName"> Zamanlayıcının adı.</param>
+        </member>
+    </members>
+</doc>

@@ -16,62 +16,62 @@
 
 namespace Microsoft.IronPythonTools.Interpreter
 {
-    class IronPythonNewClsParameterInfo : IParameterInfo
-    {
-        private readonly IronPythonType _declaringType;
+	class IronPythonNewClsParameterInfo : IParameterInfo
+	{
+		private readonly IronPythonType _declaringType;
 
-        public IronPythonNewClsParameterInfo(IronPythonType declaringType)
-        {
-            _declaringType = declaringType;
-        }
+		public IronPythonNewClsParameterInfo(IronPythonType declaringType)
+		{
+			_declaringType = declaringType;
+		}
 
-        #region IParameterInfo Members
+		#region IParameterInfo Members
 
-        public IList<IPythonType> ParameterTypes
-        {
-            get
-            {
-                return new[] { _declaringType };
-            }
-        }
+		public IList<IPythonType> ParameterTypes
+		{
+			get
+			{
+				return new[] { _declaringType };
+			}
+		}
 
-        public string Documentation
-        {
-            get { return ""; }
-        }
+		public string Documentation
+		{
+			get { return ""; }
+		}
 
-        public string Name
-        {
-            get
-            {
-                return "cls";
-            }
-        }
+		public string Name
+		{
+			get
+			{
+				return "cls";
+			}
+		}
 
-        public bool IsParamArray
-        {
-            get
-            {
-                return false;
-            }
-        }
+		public bool IsParamArray
+		{
+			get
+			{
+				return false;
+			}
+		}
 
-        public bool IsKeywordDict
-        {
-            get
-            {
-                return false;
-            }
-        }
+		public bool IsKeywordDict
+		{
+			get
+			{
+				return false;
+			}
+		}
 
-        public string DefaultValue
-        {
-            get
-            {
-                return null;
-            }
-        }
+		public string DefaultValue
+		{
+			get
+			{
+				return null;
+			}
+		}
 
-        #endregion
-    }
+		#endregion
+	}
 }

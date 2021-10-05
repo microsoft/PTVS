@@ -47,41 +47,41 @@ using System.Xaml;
 
 namespace Microsoft.VisualStudioTools.Wpf
 {
-    [ContentProperty("Lambda")]
-    public class LambdaExtension : MarkupExtension
-    {
-        public string Lambda { get; set; }
+	[ContentProperty("Lambda")]
+	public class LambdaExtension : MarkupExtension
+	{
+		public string Lambda { get; set; }
 
-        public LambdaExtension()
-        {
-        }
+		public LambdaExtension()
+		{
+		}
 
-        public LambdaExtension(string lambda)
-        {
-            Lambda = lambda;
-        }
+		public LambdaExtension(string lambda)
+		{
+			Lambda = lambda;
+		}
 
-        public override object ProvideValue(IServiceProvider serviceProvider)
-        {
-            if (Lambda == null)
-            {
-                throw new InvalidOperationException("Lambda not specified");
-            }
+		public override object ProvideValue(IServiceProvider serviceProvider)
+		{
+			if (Lambda == null)
+			{
+				throw new InvalidOperationException("Lambda not specified");
+			}
 
-            var rootProvider = (IRootObjectProvider)serviceProvider.GetService(typeof(IRootObjectProvider));
-            var root = rootProvider.RootObject;
-            if (root == null)
-            {
-                throw new InvalidOperationException("Cannot locate root object - service provider did not provide IRootObjectProvider");
-            }
+			var rootProvider = (IRootObjectProvider)serviceProvider.GetService(typeof(IRootObjectProvider));
+			var root = rootProvider.RootObject;
+			if (root == null)
+			{
+				throw new InvalidOperationException("Cannot locate root object - service provider did not provide IRootObjectProvider");
+			}
 
-            var provider = root as ILambdaConverterProvider;
-            if (provider == null)
-            {
-                throw new InvalidOperationException("Root object does not implement ILambdaConverterProvider - code generator not run");
-            }
+			var provider = root as ILambdaConverterProvider;
+			if (provider == null)
+			{
+				throw new InvalidOperationException("Root object does not implement ILambdaConverterProvider - code generator not run");
+			}
 
-            return provider.GetConverterForLambda(Lambda);
-        }
-    }
+			return provider.GetConverterForLambda(Lambda);
+		}
+	}
 }

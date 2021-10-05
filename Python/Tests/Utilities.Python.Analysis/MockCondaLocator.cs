@@ -16,13 +16,13 @@
 
 namespace TestUtilities.Python
 {
-    public class MockCondaLocator : ICondaLocator
-    {
-        public MockCondaLocator(string condaExecutablePath)
-        {
-            CondaExecutablePath = condaExecutablePath;
-        }
+	public class MockCondaLocator : ICondaLocator
+	{
+		public MockCondaLocator(string condaExecutablePath)
+		{
+			CondaExecutablePath = condaExecutablePath;
+		}
 
-        public string CondaExecutablePath { get; }
-    }
+		public string CondaExecutablePath { get; }
+	}
 }

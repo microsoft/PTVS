@@ -1,0 +1,190 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<doc>
+  <assembly>
+    <name>System.Runtime.InteropServices.WindowsRuntime</name>
+  </assembly>
+  <members>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.DefaultInterfaceAttribute">
+      <summary>Spécifie l'interface par défaut d'une classe Windows Runtime managée.</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.DefaultInterfaceAttribute.#ctor(System.Type)">
+      <summary>Initialise une nouvelle instance de la classe <see cref="T:System.Runtime.InteropServices.WindowsRuntime.DefaultInterfaceAttribute" />. </summary>
+      <param name="defaultInterface">Type d'interface spécifié en tant qu'interface par défaut pour la classe à laquelle l'attribut est appliqué. </param>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.DefaultInterfaceAttribute.DefaultInterface">
+      <summary>Obtient le type de l'interface par défaut. </summary>
+      <returns>Type de l'interface par défaut. </returns>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken">
+      <summary>Jeton qui est retourné lorsqu'un gestionnaire d'événement est ajouté à un événement de Windows Runtime.Le jeton permet de supprimer le gestionnaire d'événements de l'événement ultérieurement.</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken.Equals(System.Object)">
+      <summary>Retourne une valeur qui indique si l'objet actif est égal à l'objet spécifié. </summary>
+      <returns>true si l'objet actif est égal au paramètre <paramref name="obj" /> ; sinon false.</returns>
+      <param name="obj">Objet à comparer.</param>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken.GetHashCode">
+      <summary>Retourne le code de hachage de cette instance. </summary>
+      <returns>Code de hachage pour cette instance. </returns>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken.op_Equality(System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken,System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken)">
+      <summary>Indique si deux instances de <see cref="T:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken" /> sont égales. </summary>
+      <returns>true si les deux objets sont égaux ; sinon false. </returns>
+      <param name="left">Première instance à comparer. </param>
+      <param name="right">Deuxième instance à comparer. </param>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken.op_Inequality(System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken,System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken)">
+      <summary>Indique si deux instances de <see cref="T:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken" /> ne sont pas égales.</summary>
+      <returns>true si les deux instances ne sont pas égales ; sinon false. </returns>
+      <param name="left">Première instance à comparer. </param>
+      <param name="right">Deuxième instance à comparer. </param>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1">
+      <summary>Stocke les mappages entre les délégués et les jetons d'événement, pour prendre en charge l'implémentation d'un événement Windows Runtime en code managé.</summary>
+      <typeparam name="T">Type de délégué du gestionnaire d'événements d'un événement particulier. </typeparam>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.#ctor">
+      <summary>Initialise une nouvelle instance de la classe <see cref="T:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1" />. </summary>
+      <exception cref="T:System.InvalidOperationException">
+        <paramref name="T" /> n'est pas un type délégué. </exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.AddEventHandler(`0)">
+      <summary>Ajoute le gestionnaire d'événements spécifié à la table et à la liste d'appels, et retourne un jeton qui peut être utilisé pour supprimer le gestionnaire d'événements. </summary>
+      <returns>Jeton qui peut être utilisé pour supprimer le gestionnaire d'événement de la table et de la liste d'appels. </returns>
+      <param name="handler">Gestionnaire d'événements à ajouter. </param>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.GetOrCreateEventRegistrationTokenTable(System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable{`0}@)">
+      <summary>Retourne le tableau de jetons d'inscription d'événement spécifié, si ce n'est pas null ; sinon, retourne un nouveau tableau de jetons d'inscription d'événement. </summary>
+      <returns>Tableau de jetons d'inscription d'événement spécifié par <paramref name="refEventTable" />, s'il n'a pas la valeur null ; sinon, nouveau tableau de jetons d'inscription d'événement. </returns>
+      <param name="refEventTable">Table de jetons d'inscription d'événement, passé par référence. </param>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.InvocationList">
+      <summary>Obtient ou définit un délégué de type <paramref name="T" /> dont la liste d'appel inclut tous les délégués de gestionnaire d'événements qui ont été ajoutés, et qui n'ont pas encore été supprimés.L'appel à ce délégué appelle tous les gestionnaires d'événements.</summary>
+      <returns>Délégué de type <paramref name="T" /> qui représente tous les délégués de gestionnaire d'événements qui sont actuellement enregistrés pour un événement. </returns>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.RemoveEventHandler(System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken)">
+      <summary>Supprime le gestionnaire d'événements associé au jeton spécifié de la table et de la liste d'appels. </summary>
+      <param name="token">Jeton qui a été retourné lorsque le gestionnaire d'événements a été ajouté. </param>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.EventRegistrationTokenTable`1.RemoveEventHandler(`0)">
+      <summary>Supprime le délégué de gestionnaire d'événements spécifié de la table et de la liste d'appels. </summary>
+      <param name="handler">Gestionnaire d'événements à supprimer. </param>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.IActivationFactory">
+      <summary>Permet aux classes d'être activées par Windows Runtime. </summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.IActivationFactory.ActivateInstance">
+      <summary>Retourne une nouvelle instance de la classe Windows Runtime créée par l'interface <see cref="T:System.Runtime.InteropServices.WindowsRuntime.IActivationFactory" />. </summary>
+      <returns>Nouvelle instance de la classe Windows Runtime. </returns>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute">
+      <summary>Spécifie la version du type cible implémentée en premier dans l'interface spécifiée.</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.#ctor(System.Type,System.Byte,System.Byte,System.Byte,System.Byte)">
+      <summary>Initialise une nouvelle instance de la classe <see cref="T:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute" />, en spécifiant l'interface que le type cible implémente et la version dans laquelle cette interface a été implémentée la première fois. </summary>
+      <param name="interfaceType">Interface implémentée en premier dans la version spécifiée du type cible. </param>
+      <param name="majorVersion">Composant principal de la version du type cible qui a implémenté <paramref name="interfaceType" /> en premier.</param>
+      <param name="minorVersion">Composant secondaire de la version du type cible qui a implémenté <paramref name="interfaceType" /> en premier.</param>
+      <param name="buildVersion">Composant build de la version du type cible qui a implémenté <paramref name="interfaceType" /> en premier.</param>
+      <param name="revisionVersion">Composant de révision de la version du type cible qui a implémenté <paramref name="interfaceType" /> en premier.</param>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.BuildVersion">
+      <summary>Obtient le composant de génération de la version du type de cible qui a implémenté l'interface en premier. </summary>
+      <returns>Composant build de la version.</returns>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.InterfaceType">
+      <summary>Obtient le type de l'interface que le type cible implémente. </summary>
+      <returns>Type de l'interface. </returns>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.MajorVersion">
+      <summary>Obtient le composant principal de la version du type de cible qui a implémenté l'interface en premier. </summary>
+      <returns>Composant principal de la version.</returns>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.MinorVersion">
+      <summary>Obtient le composant secondaire de la version du type de cible qui a implémenté l'interface en premier. </summary>
+      <returns>Composant secondaire de la version. </returns>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.InterfaceImplementedInVersionAttribute.RevisionVersion">
+      <summary>Obtient le composant de révision de la version du type de cible qui a implémenté l'interface en premier. </summary>
+      <returns>Composant de révision de la version.</returns>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArrayAttribute">
+      <summary>Lorsqu'il est appliqué à un paramètre de tableau dans un composant Windows Runtime, spécifie que le contenu du tableau passé à ce paramètre est utilisé uniquement pour l'entrée.L'appelant s'attend à ce que le tableau ne soit pas affecté par l'appel.Consultez la section Notes pour obtenir des informations importantes sur les appelants écrits en code managé.</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArrayAttribute.#ctor">
+      <summary>Initialise une nouvelle instance de la classe <see cref="T:System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArrayAttribute" />. </summary>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.ReturnValueNameAttribute">
+      <summary>Spécifie le nom de la valeur de retour d'une méthode dans un composant Windows Runtime.</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.ReturnValueNameAttribute.#ctor(System.String)">
+      <summary>Initialise une nouvelle instance de la classe <see cref="T:System.Runtime.InteropServices.WindowsRuntime.ReturnValueNameAttribute" /> et spécifie le nom de la valeur de retour.</summary>
+      <param name="name">Nom de la valeur de retour. </param>
+    </member>
+    <member name="P:System.Runtime.InteropServices.WindowsRuntime.ReturnValueNameAttribute.Name">
+      <summary>Obtient le nom spécifié pour la valeur de retour d'une méthode dans un composant Windows Runtime.</summary>
+      <returns>Nom de la valeur de retour de la méthode. </returns>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal">
+      <summary>Fournit des méthodes d'assistance pour marshaler les données entre le.NET Framework et Windows Runtime.</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.AddEventHandler``1(System.Func{``0,System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken},System.Action{System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken},``0)">
+      <summary>Ajoute le gestionnaire d'événements spécifié à un événement de Windows Runtime .</summary>
+      <param name="addMethod">Délégué qui représente la méthode qui ajoute des gestionnaires d'événements à l'événement Windows Runtime. </param>
+      <param name="removeMethod">Délégué qui représente la méthode qui supprime des gestionnaires d'événements de l'événement Windows Runtime. </param>
+      <param name="handler">Délégué représentant le gestionnaire d'événements ajouté. </param>
+      <typeparam name="T">Type du délégué qui représente le gestionnaire d'événements. </typeparam>
+      <exception cref="T:System.ArgumentNullException">
+        <paramref name="addMethod" /> a la valeur null. ou<paramref name="removeMethod" /> a la valeur null.</exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.FreeHString(System.IntPtr)">
+      <summary>Libère le Windows Runtime spécifié HSTRING. </summary>
+      <param name="ptr">Adresse du HSTRING à libérer.</param>
+      <exception cref="T:System.PlatformNotSupportedException">Windows Runtime n'est pas pris en charge sur la version actuelle du système d'exploitation. </exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.GetActivationFactory(System.Type)">
+      <summary>Retourne un objet qui implémente l'interface de fabrique d'activation pour le type Windows Runtime spécifié. </summary>
+      <returns>Objet qui implémente l'interface de fabrique d'activation. </returns>
+      <param name="type">Type Windows Runtime pour lequel obtenir l'interface de fabrique d'activation. </param>
+      <exception cref="T:System.ArgumentException">
+        <paramref name="type" /> ne représente pas un type Windows Runtime (autrement dit, appartenant à Windows Runtime ou défini dans un composant Windows Runtime). ouL'objet spécifié pour <paramref name="type" /> n'a pas été fourni par le système de type du common langage runtime. </exception>
+      <exception cref="T:System.ArgumentNullException">
+        <paramref name="type" /> a la valeur null. </exception>
+      <exception cref="T:System.TypeLoadException">Le Windows Runtime spécifié n'est pas correctement enregistré.Par exemple, le fichier .winmd a été localisé, mais Windows Runtime n'a pas localisé l'implémentation.</exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.PtrToStringHString(System.IntPtr)">
+      <summary>Retourne une chaîne managée qui contient une copie du HSTRING Windows Runtime spécifié. </summary>
+      <returns>Chaîne managée qui contient une copie de HSTRING si <paramref name="ptr" /> n'est pas <see cref="F:System.IntPtr.Zero" /> ; sinon, <see cref="F:System.String.Empty" />. </returns>
+      <param name="ptr">Un pointeur non managé vers HSTRING à copier. </param>
+      <exception cref="T:System.PlatformNotSupportedException">Windows Runtime n'est pas pris en charge sur la version actuelle du système d'exploitation. </exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.RemoveAllEventHandlers(System.Action{System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken})">
+      <summary>Supprime tous les gestionnaires d'événements qui peuvent être supprimés à l'aide de la méthode spécifiée. </summary>
+      <param name="removeMethod">Délégué qui représente la méthode qui supprime des gestionnaires d'événements de l'événement Windows Runtime. </param>
+      <exception cref="T:System.ArgumentNullException">
+        <paramref name="removeMethod" /> a la valeur null. </exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.RemoveEventHandler``1(System.Action{System.Runtime.InteropServices.WindowsRuntime.EventRegistrationToken},``0)">
+      <summary>Supprime le gestionnaire d'événements spécifié d'un événement Windows Runtime. </summary>
+      <param name="removeMethod">Délégué qui représente la méthode qui supprime des gestionnaires d'événements de l'événement Windows Runtime. </param>
+      <param name="handler">Gestionnaire d'événements supprimé. </param>
+      <typeparam name="T">Type du délégué qui représente le gestionnaire d'événements. </typeparam>
+      <exception cref="T:System.ArgumentNullException">
+        <paramref name="removeMethod" /> a la valeur null. </exception>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeMarshal.StringToHString(System.String)">
+      <summary>Alloue Windows Runtime HSTRING et y copie la chaîne managée spécifiée. </summary>
+      <returns>Un pointeur non managé vers la nouvelle HSTRING ou <see cref="F:System.IntPtr.Zero" /> si <paramref name="s" /> est <see cref="F:System.String.Empty" />. </returns>
+      <param name="s">Chaîne à copier managée. </param>
+      <exception cref="T:System.PlatformNotSupportedException">Windows Runtime n'est pas pris en charge sur la version actuelle du système d'exploitation. </exception>
+      <exception cref="T:System.ArgumentNullException">
+        <paramref name="s" /> a la valeur null. </exception>
+    </member>
+    <member name="T:System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArrayAttribute">
+      <summary>Lorsqu'il est appliqué à un paramètre de tableau dans un composant Windows Runtime, spécifie que le contenu d'un tableau passé à ce paramètre est utilisé uniquement pour la sortie.L'appelant ne garantit pas que le contenu est initialisé, et la méthode appelée ne doit pas lire le contenu.Consultez la section Notes pour obtenir des informations importantes sur les appelants écrits en code managé.</summary>
+    </member>
+    <member name="M:System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArrayAttribute.#ctor">
+      <summary>Initialise une nouvelle instance de la classe <see cref="T:System.Runtime.InteropServices.WindowsRuntime.WriteOnlyArrayAttribute" />. </summary>
+    </member>
+  </members>
+</doc>

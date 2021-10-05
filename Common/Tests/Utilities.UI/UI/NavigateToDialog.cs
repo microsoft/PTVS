@@ -16,34 +16,34 @@
 
 namespace TestUtilities.UI
 {
-    public class NavigateToDialog : AutomationWrapper, IDisposable
-    {
-        public NavigateToDialog(IntPtr hwnd)
-            : base(AutomationElement.FromHandle(hwnd))
-        {
-        }
+	public class NavigateToDialog : AutomationWrapper, IDisposable
+	{
+		public NavigateToDialog(IntPtr hwnd)
+			: base(AutomationElement.FromHandle(hwnd))
+		{
+		}
 
-        public NavigateToDialog(AutomationElement element)
-            : base(element)
-        {
-        }
+		public NavigateToDialog(AutomationElement element)
+			: base(element)
+		{
+		}
 
-        public void Dispose()
-        {
-            Close();
-        }
+		public void Dispose()
+		{
+			Close();
+		}
 
-        public void GoToSelection()
-        {
+		public void GoToSelection()
+		{
 #if DEV12_OR_LATER
             ClickButtonByAutomationId("PART_SearchButton");
 #else
-            ClickButtonByAutomationId("okButton");
+			ClickButtonByAutomationId("okButton");
 #endif
-        }
+		}
 
-        public void Close()
-        {
+		public void Close()
+		{
 #if DEV12_OR_LATER
             try {
                 GetSearchBox().SetFocus();
@@ -53,41 +53,41 @@ namespace TestUtilities.UI
             }
             Keyboard.PressAndRelease(System.Windows.Input.Key.Escape);
 #else
-            ClickButtonByAutomationId("cancelButton");
+			ClickButtonByAutomationId("cancelButton");
 #endif
-        }
+		}
 
-        public string SearchTerm
-        {
-            get
-            {
-                var term = (ValuePattern)GetSearchBox().GetCurrentPattern(ValuePattern.Pattern);
-                return term.Current.Value;
-            }
-            set
-            {
-                var term = (ValuePattern)GetSearchBox().GetCurrentPattern(ValuePattern.Pattern);
-                term.SetValue(string.Empty);
-                GetSearchBox().SetFocus();
-                Keyboard.Type(value);
-            }
-        }
+		public string SearchTerm
+		{
+			get
+			{
+				var term = (ValuePattern)GetSearchBox().GetCurrentPattern(ValuePattern.Pattern);
+				return term.Current.Value;
+			}
+			set
+			{
+				var term = (ValuePattern)GetSearchBox().GetCurrentPattern(ValuePattern.Pattern);
+				term.SetValue(string.Empty);
+				GetSearchBox().SetFocus();
+				Keyboard.Type(value);
+			}
+		}
 
-        internal AutomationElement GetSearchBox()
-        {
+		internal AutomationElement GetSearchBox()
+		{
 #if DEV12_OR_LATER
             return Element.FindFirst(TreeScope.Descendants, new AndCondition(
                 new PropertyCondition(AutomationElement.AutomationIdProperty, "PART_SearchBox"),
                 new PropertyCondition(AutomationElement.ClassNameProperty, "TextBox")
             ));
 #else
-            return Element.FindFirst(TreeScope.Descendants,
-                new PropertyCondition(AutomationElement.AutomationIdProperty, "searchTerms")
-            ).FindFirst(TreeScope.Descendants,
-                new PropertyCondition(AutomationElement.ClassNameProperty, "Edit")
-            );
+			return Element.FindFirst(TreeScope.Descendants,
+				new PropertyCondition(AutomationElement.AutomationIdProperty, "searchTerms")
+			).FindFirst(TreeScope.Descendants,
+				new PropertyCondition(AutomationElement.ClassNameProperty, "Edit")
+			);
 #endif
-        }
+		}
 
 #if DEV12_OR_LATER
         private AutomationElement GetResultsList() {
@@ -111,23 +111,23 @@ namespace TestUtilities.UI
             return 0;
         }
 #else
-        private GridPattern GetResultsList()
-        {
-            return (GridPattern)Element.FindFirst(TreeScope.Descendants,
-                new PropertyCondition(AutomationElement.AutomationIdProperty, "results")
-            ).GetCurrentPattern(GridPattern.Pattern);
-        }
+		private GridPattern GetResultsList()
+		{
+			return (GridPattern)Element.FindFirst(TreeScope.Descendants,
+				new PropertyCondition(AutomationElement.AutomationIdProperty, "results")
+			).GetCurrentPattern(GridPattern.Pattern);
+		}
 
-        internal int WaitForNumberOfResults(int results)
-        {
-            var list = GetResultsList();
+		internal int WaitForNumberOfResults(int results)
+		{
+			var list = GetResultsList();
 
-            for (int count = 10; count > 0 && list.Current.RowCount < results; --count)
-            {
-                Thread.Sleep(1000);
-            }
-            return list.Current.RowCount;
-        }
+			for (int count = 10; count > 0 && list.Current.RowCount < results; --count)
+			{
+				Thread.Sleep(1000);
+			}
+			return list.Current.RowCount;
+		}
 #endif
-    }
+	}
 }
