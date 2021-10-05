@@ -223,12 +223,17 @@
     <Compile Include="RemoteComponent.cs" />
     <Compile Include="SourceLocation.cs" />
     <Compile Include="ReprBuilder.cs" />
+    <AdditionalFiles Include="..\..\..\..\openai-python\DependencyValidation2\DependencyValidation1.layerdiagram">
+      <Link>DependencyValidation1.layerdiagram</Link>
+      <Visible>False</Visible>
+    </AdditionalFiles>
     <None Include="LocalStackWalkingComponent.vsdconfigxml">
       <SubType>Designer</SubType>
     </None>
     <None Include="LocalComponent.vsdconfigxml">
       <SubType>Designer</SubType>
     </None>
+    <None Include="packages.config" />
     <None Include="RemoteComponent.vsdconfigxml">
       <SubType>Designer</SubType>
     </None>
@@ -252,6 +257,10 @@
   <Import Project="..\ProjectAfter.settings" />
   <ItemGroup>
     <VsdConfigXmlTransformed Include="@(VsdConfigXml->'$(IntermediateOutputPath)\%(Filename)%(Extension)')" />
+  </ItemGroup>
+  <ItemGroup>
+    <Analyzer Include="..\..\packages\Microsoft.DependencyValidation.Analyzers.0.11.0\analyzers\dotnet\cs\Microsoft.DependencyValidation.Analyzers.resources.dll" />
+    <Analyzer Include="..\..\packages\Microsoft.DependencyValidation.Analyzers.0.11.0\analyzers\dotnet\Microsoft.DependencyValidation.Analyzers.dll" />
   </ItemGroup>
   <PropertyGroup>
     <VsdConfigOutput>$(IntermediateOutputPath)\DkmDebugger.vsdconfig</VsdConfigOutput>

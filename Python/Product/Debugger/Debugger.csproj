@@ -234,6 +234,19 @@
     <Compile Include="DebugPyVersion.cs" />
     <Compile Include="VsPackageMessage.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <AdditionalFiles Include="..\..\..\..\openai-python\DependencyValidation2\DependencyValidation1.layerdiagram">
+      <Link>DependencyValidation1.layerdiagram</Link>
+      <Visible>False</Visible>
+    </AdditionalFiles>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Analyzer Include="..\..\packages\Microsoft.DependencyValidation.Analyzers.0.11.0\analyzers\dotnet\cs\Microsoft.DependencyValidation.Analyzers.resources.dll" />
+    <Analyzer Include="..\..\packages\Microsoft.DependencyValidation.Analyzers.0.11.0\analyzers\dotnet\Microsoft.DependencyValidation.Analyzers.dll" />
+  </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
   <Target Name="_IncludeDebugPy" BeforeTargets="AssignTargetPaths;GetVSIXSourceItems">
     <ItemGroup>

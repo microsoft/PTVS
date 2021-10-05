@@ -312,6 +312,19 @@
     <Compile Include="TestMethod.cs" />
     <Compile Include="WpfProxy.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <AdditionalFiles Include="..\..\..\..\openai-python\DependencyValidation2\DependencyValidation1.layerdiagram">
+      <Link>DependencyValidation1.layerdiagram</Link>
+      <Visible>False</Visible>
+    </AdditionalFiles>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Analyzer Include="..\..\..\Python\packages\Microsoft.DependencyValidation.Analyzers.0.11.0\analyzers\dotnet\cs\Microsoft.DependencyValidation.Analyzers.resources.dll" />
+    <Analyzer Include="..\..\..\Python\packages\Microsoft.DependencyValidation.Analyzers.0.11.0\analyzers\dotnet\Microsoft.DependencyValidation.Analyzers.dll" />
+  </ItemGroup>
   <Target Name="BeforeCompile">
     <Exec Command="taskkill /f /im QTAgent32.exe" IgnoreExitCode="true" ContinueOnError="true" IgnoreStandardErrorWarningFormat="true" />
   </Target>
