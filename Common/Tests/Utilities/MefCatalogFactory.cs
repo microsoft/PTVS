@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using TestUtilities.Mocks;
+
 using ComposablePartDefinition = Microsoft.VisualStudio.Composition.ComposablePartDefinition;
 using MefV1 = System.ComponentModel.Composition;
 

@@ -15,7 +15,9 @@
 // permissions and limitations under the License.
 
 extern alias pt;
+
 using TestAdapterTests.Mocks;
+
 using PythonConstants = pt::Microsoft.PythonTools.PythonConstants;
 
 namespace TestAdapterTests

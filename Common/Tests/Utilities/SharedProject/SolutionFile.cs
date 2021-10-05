@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using Microsoft.VisualStudioTools;
+
 using MSBuild = Microsoft.Build.Evaluation;
 
 namespace TestUtilities.SharedProject
