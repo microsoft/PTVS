@@ -16,7 +16,7 @@
 
 namespace TestUtilities.UI
 {
-	class Menu : AutomationWrapper
+	internal class Menu : AutomationWrapper
 	{
 		public Menu(AutomationElement element)
 			: base(element)

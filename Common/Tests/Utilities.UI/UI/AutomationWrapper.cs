@@ -29,13 +29,7 @@ namespace TestUtilities.UI
 		/// <summary>
 		/// Provides access to the underlying AutomationElement used for accessing the visual studio app.
 		/// </summary>
-		public AutomationElement Element
-		{
-			get
-			{
-				return _element;
-			}
-		}
+		public AutomationElement Element => _element;
 
 		/// <summary>
 		/// Clicks the child button with the specified automation ID.
@@ -439,7 +433,9 @@ namespace TestUtilities.UI
 			for (int i = 0; i < timeout; i += 100)
 			{
 				if (condition(obj))
+				{
 					return;
+				}
 
 				Thread.Sleep(100);
 			}

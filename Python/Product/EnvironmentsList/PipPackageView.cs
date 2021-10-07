@@ -30,7 +30,10 @@ namespace Microsoft.PythonTools.EnvironmentsList
 			_isInstalled = isInstalled;
 		}
 
-		public override string ToString() => DisplayName;
+		public override string ToString()
+		{
+			return DisplayName;
+		}
 
 		private async void TriggerUpdate()
 		{

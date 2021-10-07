@@ -17,7 +17,7 @@
 namespace Microsoft.PythonTools.Debugger.DebugEngine
 {
 	// This class implements IDebugThread2 which represents a thread running in a program.
-	class AD7Thread : IDisposable, IDebugThread2, IDebugThread100
+	internal class AD7Thread : IDisposable, IDebugThread2, IDebugThread100
 	{
 		private readonly AD7Engine _engine;
 		private readonly PythonThread _debuggedThread;
@@ -86,7 +86,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 
 			int numStackFrames = stackFrames.Count;
 
-			var frameInfoArray = new FRAMEINFO[numStackFrames];
+			FRAMEINFO[] frameInfoArray = new FRAMEINFO[numStackFrames];
 
 			for (int i = 0; i < numStackFrames; i++)
 			{
@@ -173,8 +173,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 		// Sets the next statement to the given stack frame and code context.
 		int IDebugThread2.SetNextStatement(IDebugStackFrame2 stackFrame, IDebugCodeContext2 codeContext)
 		{
-			var frame = (AD7StackFrame)stackFrame;
-			var context = (AD7MemoryAddress)codeContext;
+			AD7StackFrame frame = (AD7StackFrame)stackFrame;
+			AD7MemoryAddress context = (AD7MemoryAddress)codeContext;
 
 			if (TaskHelpers.RunSynchronouslyOnUIThread(ct => frame.StackFrame.SetLineNumber((int)context.LineNumber + 1, ct)))
 			{
@@ -307,7 +307,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 			return hRes;
 		}
 
-		enum enum_THREADCATEGORY
+		private enum enum_THREADCATEGORY
 		{
 			THREADCATEGORY_Worker = 0,
 			THREADCATEGORY_UI = (THREADCATEGORY_Worker + 1),

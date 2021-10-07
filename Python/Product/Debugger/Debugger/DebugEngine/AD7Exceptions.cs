@@ -16,7 +16,7 @@
 
 namespace Microsoft.PythonTools.Debugger.DebugEngine
 {
-	sealed class AD7DebugExceptionEvent : AD7StoppingEvent, IDebugExceptionEvent150, IDebugExceptionEvent2
+	internal sealed class AD7DebugExceptionEvent : AD7StoppingEvent, IDebugExceptionEvent150, IDebugExceptionEvent2
 	{
 		public const string IID = "51A94113-8788-4A54-AE15-08B74FF922D0";
 		private readonly AD7Engine _engine;
@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 
 		int IDebugExceptionEvent150.GetException(EXCEPTION_INFO150[] pExceptionInfo)
 		{
-			var info = new EXCEPTION_INFO[1];
+			EXCEPTION_INFO[] info = new EXCEPTION_INFO[1];
 			int hr = ((IDebugExceptionEvent2)this).GetException(info);
 			if (hr != VSConstants.S_OK)
 			{
@@ -108,7 +108,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 		#endregion
 	}
 
-	sealed class AD7DebugExceptionDetails : IDebugExceptionDetails
+	internal sealed class AD7DebugExceptionDetails : IDebugExceptionDetails
 	{
 		private readonly PythonException _exception;
 

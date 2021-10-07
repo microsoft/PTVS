@@ -206,7 +206,7 @@ f()",
 		{
 			var python = PythonPaths.Python27_x64 ?? PythonPaths.Python27;
 			python.AssertInstalled();
-			var provider = new SimpleFactoryProvider(python.InterpreterPath, python.InterpreterPath);
+			SimpleFactoryProvider provider = new SimpleFactoryProvider(python.InterpreterPath, python.InterpreterPath);
 			var eval = new PythonInteractiveEvaluator(PythonToolsTestUtilities.CreateMockServiceProvider())
 			{
 				Configuration = new LaunchConfiguration(python.Configuration)
@@ -215,7 +215,7 @@ f()",
 			return eval;
 		}
 
-		class SimpleFactoryProvider : IPythonInterpreterFactoryProvider
+		private class SimpleFactoryProvider : IPythonInterpreterFactoryProvider
 		{
 			private readonly string _pythonExe;
 			private readonly string _pythonWinExe;
@@ -258,7 +258,10 @@ f()",
 					.FirstOrDefault();
 			}
 
-			public object GetProperty(string id, string propName) => null;
+			public object GetProperty(string id, string propName)
+			{
+				return null;
+			}
 
 			public event EventHandler InterpreterFactoriesChanged { add { } remove { } }
 		}
@@ -311,7 +314,7 @@ f()",
 				}
 				else
 				{
-					foreach (var line in expectedOutput)
+					foreach (global::System.String line in expectedOutput)
 					{
 						Assert.IsTrue(output.Contains(line), string.Format("'{0}' does not contain '{1}'", output, line));
 					}

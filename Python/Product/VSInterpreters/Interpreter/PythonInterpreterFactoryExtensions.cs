@@ -120,10 +120,14 @@ namespace Microsoft.PythonTools.Interpreter
 		}
 
 		public static string GetPrefixPath(this InterpreterConfiguration config)
-			=> config != null ? ((VisualStudioInterpreterConfiguration)config).PrefixPath : null;
+		{
+			return config != null ? ((VisualStudioInterpreterConfiguration)config).PrefixPath : null;
+		}
 
 		public static string GetWindowsInterpreterPath(this InterpreterConfiguration config)
-			=> config != null ? ((VisualStudioInterpreterConfiguration)config).WindowsInterpreterPath : null;
+		{
+			return config != null ? ((VisualStudioInterpreterConfiguration)config).WindowsInterpreterPath : null;
+		}
 
 		/// <summary>
 		/// Returns <c>true</c> if the factory can ever be the default

@@ -2462,7 +2462,7 @@ def g(a, b, c):
 			Assert.AreEqual(isValidPython3Identifier, ExtractMethodRequestView.IsValidPythonIdentifier(identifier, PythonLanguageVersion.V30));
 		}
 
-		class FileInput
+		private class FileInput
 		{
 			public readonly string Input, Output, Filename;
 
@@ -2516,7 +2516,7 @@ def g(a, b, c):
 			OneRefactorTest(altNewName, caretText, moreInputs, version, preview, null, expectedSelectedText: expectedSelectedText);
 		}
 
-		class ExpectedPreviewItem
+		private class ExpectedPreviewItem
 		{
 			public readonly string Name;
 			public readonly ExpectedPreviewItem[] Children;
@@ -2543,7 +2543,7 @@ def g(a, b, c):
 				var views = new List<PythonEditor>();
 				try
 				{
-					var mainView = new PythonEditor(inputs[0].Input, version.ToLanguageVersion(), _vs, filename: inputs[0].Filename, inProcAnalyzer: true);
+					PythonEditor mainView = new PythonEditor(inputs[0].Input, version.ToLanguageVersion(), _vs, filename: inputs[0].Filename, inProcAnalyzer: true);
 					var analyzer = mainView.Analyzer;
 
 					views.Add(mainView);
@@ -2552,7 +2552,7 @@ def g(a, b, c):
 					};
 					foreach (var i in inputs.Skip(1))
 					{
-						var editor = new PythonEditor(i.Input, version.ToLanguageVersion(), _vs, mainView.Factory, analyzer, i.Filename);
+						PythonEditor editor = new PythonEditor(i.Input, version.ToLanguageVersion(), _vs, mainView.Factory, analyzer, i.Filename);
 						views.Add(editor);
 						bufferTable[editor.BufferInfo.Filename] = editor.CurrentSnapshot.TextBuffer;
 					}
@@ -2566,8 +2566,8 @@ def g(a, b, c):
 					}
 
 
-					var extractInput = new RenameVariableTestInput(expectedSelectedText ?? caretText, newName, bufferTable, preview);
-					var previewChangesService = new TestPreviewChanges(expected);
+					RenameVariableTestInput extractInput = new RenameVariableTestInput(expectedSelectedText ?? caretText, newName, bufferTable, preview);
+					TestPreviewChanges previewChangesService = new TestPreviewChanges(expected);
 
 					var uiThread = _vs.ServiceProvider.GetUIThread();
 					uiThread.InvokeTask(async () =>
@@ -2600,7 +2600,7 @@ def g(a, b, c):
 			}
 		}
 
-		class RenameVariableTestInput : IRenameVariableInput
+		private class RenameVariableTestInput : IRenameVariableInput
 		{
 			private readonly string _originalName, _name;
 			private readonly bool _preview, _searchInStrings, _searchInComments;
@@ -2629,11 +2629,13 @@ def g(a, b, c):
 			{
 				Assert.IsTrue(_originalName.StartsWith(originalName) || originalName.StartsWith("__") && _originalName.EndsWith(originalName), $"Selected text {originalName} did not match {_originalName}");
 
-				var requestView = new RenameVariableRequestView(originalName, languageVersion);
-				requestView.Name = _name;
-				requestView.PreviewChanges = _preview;
-				requestView.SearchInComments = _searchInComments;
-				requestView.SearchInStrings = _searchInStrings;
+				var requestView = new RenameVariableRequestView(originalName, languageVersion)
+				{
+					Name = _name,
+					PreviewChanges = _preview,
+					SearchInComments = _searchInComments,
+					SearchInStrings = _searchInStrings
+				};
 				Assert.IsTrue(requestView.IsValid);
 				var request = requestView.GetRequest();
 				Assert.IsNotNull(request);
@@ -2676,7 +2678,7 @@ def g(a, b, c):
 			}
 		}
 
-		class TestPreviewChanges : IVsPreviewChangesService
+		private class TestPreviewChanges : IVsPreviewChangesService
 		{
 			public bool Previewed = false;
 			private readonly ExpectedPreviewItem[] _expected;

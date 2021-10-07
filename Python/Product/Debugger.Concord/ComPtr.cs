@@ -30,13 +30,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			_obj = obj;
 		}
 
-		public T Object
-		{
-			get
-			{
-				return _obj;
-			}
-		}
+		public T Object => _obj;
 
 		public void Dispose()
 		{
@@ -49,7 +43,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 		public ComPtr<T> Detach()
 		{
-			var result = this;
+			ComPtr<T> result = this;
 			_obj = null;
 			return result;
 		}

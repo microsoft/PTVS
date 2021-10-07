@@ -20,10 +20,16 @@ namespace PythonToolsTests
 	public class ProcessOutputTests
 	{
 		[TestInitialize]
-		public void TestInitialize() => TestEnvironmentImpl.TestInitialize();
+		public void TestInitialize()
+		{
+			TestEnvironmentImpl.TestInitialize();
+		}
 
 		[TestCleanup]
-		public void TestCleanup() => TestEnvironmentImpl.TestCleanup();
+		public void TestCleanup()
+		{
+			TestEnvironmentImpl.TestCleanup();
+		}
 
 		[TestMethod, Priority(UnitTestPriority.P1)]
 		public void ArgumentQuoting()

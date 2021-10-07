@@ -41,7 +41,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 		public void OnBeginStepIn(DkmThread thread)
 		{
-			var frameInfo = new RemoteComponent.GetCurrentFrameInfoRequest { ThreadId = thread.UniqueId }.SendLower(thread.Process);
+			RemoteComponent.GetCurrentFrameInfoResponse frameInfo = new RemoteComponent.GetCurrentFrameInfoRequest { ThreadId = thread.UniqueId }.SendLower(thread.Process);
 
 			var workList = DkmWorkList.Create(null);
 			var topFrame = thread.GetTopStackFrame();
@@ -128,7 +128,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 					return;
 				}
 
-				var loc = new SourceLocation(customAddr.AdditionalData, thread.Process);
+				SourceLocation loc = new SourceLocation(customAddr.AdditionalData, thread.Process);
 				nativeAddr = loc.NativeAddress;
 				if (nativeAddr == null)
 				{

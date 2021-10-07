@@ -36,10 +36,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			InitializeStruct(this, out _fields);
 		}
 
-		public PointerProxy<ArrayProxy<ByteProxy>> ob_bytes
-		{
-			get { return GetFieldProxy(_fields.ob_bytes); }
-		}
+		public PointerProxy<ArrayProxy<ByteProxy>> ob_bytes => GetFieldProxy(_fields.ob_bytes);
 
 		protected abstract ArrayProxy<ByteProxy> GetDataProxy();
 
@@ -51,7 +48,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 				return new byte[0];
 			}
 
-			var buf = new byte[size];
+			global::System.Byte[] buf = new byte[size];
 			Process.ReadMemory(GetDataProxy().Address, DkmReadMemoryFlags.None, buf);
 			return buf;
 		}
@@ -126,10 +123,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			CheckPyType<PyByteArrayObject34>();
 		}
 
-		public PointerProxy<ArrayProxy<ByteProxy>> ob_start
-		{
-			get { return GetFieldProxy(_fields.ob_start); }
-		}
+		public PointerProxy<ArrayProxy<ByteProxy>> ob_start => GetFieldProxy(_fields.ob_start);
 
 		protected override ArrayProxy<ByteProxy> GetDataProxy()
 		{

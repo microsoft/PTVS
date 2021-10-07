@@ -17,7 +17,7 @@
 namespace PythonToolsMockTests
 {
 	[Export(typeof(IIntellisenseSessionStackMapService))]
-	class MockIntellisenseSessionStackMapService : IIntellisenseSessionStackMapService
+	internal class MockIntellisenseSessionStackMapService : IIntellisenseSessionStackMapService
 	{
 		public IIntellisenseSessionStack GetStackForTextView(ITextView textView)
 		{

@@ -20,10 +20,10 @@
 namespace Microsoft.PythonTools.Debugger.DebugEngine
 {
 	#region Base Class
-	class AD7Enum<T, I> where I : class
+	internal class AD7Enum<T, I> where I : class
 	{
-		readonly T[] m_data;
-		uint m_position;
+		private readonly T[] m_data;
+		private uint m_position;
 
 		public AD7Enum(T[] data)
 		{
@@ -96,7 +96,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 	}
 	#endregion Base Class
 
-	class AD7FrameInfoEnum : AD7Enum<FRAMEINFO, IEnumDebugFrameInfo2>, IEnumDebugFrameInfo2
+	internal class AD7FrameInfoEnum : AD7Enum<FRAMEINFO, IEnumDebugFrameInfo2>, IEnumDebugFrameInfo2
 	{
 		public AD7FrameInfoEnum(FRAMEINFO[] data)
 			: base(data)
@@ -109,7 +109,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 		}
 	}
 
-	class AD7PropertyInfoEnum : AD7Enum<DEBUG_PROPERTY_INFO, IEnumDebugPropertyInfo2>, IEnumDebugPropertyInfo2
+	internal class AD7PropertyInfoEnum : AD7Enum<DEBUG_PROPERTY_INFO, IEnumDebugPropertyInfo2>, IEnumDebugPropertyInfo2
 	{
 		public AD7PropertyInfoEnum(DEBUG_PROPERTY_INFO[] data)
 			: base(data)
@@ -117,7 +117,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 		}
 	}
 
-	class AD7ThreadEnum : AD7Enum<IDebugThread2, IEnumDebugThreads2>, IEnumDebugThreads2
+	internal class AD7ThreadEnum : AD7Enum<IDebugThread2, IEnumDebugThreads2>, IEnumDebugThreads2
 	{
 		public AD7ThreadEnum(IDebugThread2[] threads)
 			: base(threads)
@@ -131,7 +131,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 		}
 	}
 
-	class AD7ModuleEnum : AD7Enum<IDebugModule2, IEnumDebugModules2>, IEnumDebugModules2
+	internal class AD7ModuleEnum : AD7Enum<IDebugModule2, IEnumDebugModules2>, IEnumDebugModules2
 	{
 		public AD7ModuleEnum(IDebugModule2[] modules)
 			: base(modules)
@@ -145,7 +145,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 		}
 	}
 
-	class AD7PropertyEnum : AD7Enum<DEBUG_PROPERTY_INFO, IEnumDebugPropertyInfo2>, IEnumDebugPropertyInfo2
+	internal class AD7PropertyEnum : AD7Enum<DEBUG_PROPERTY_INFO, IEnumDebugPropertyInfo2>, IEnumDebugPropertyInfo2
 	{
 		public AD7PropertyEnum(DEBUG_PROPERTY_INFO[] properties)
 			: base(properties)
@@ -154,7 +154,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 		}
 	}
 
-	class AD7CodeContextEnum : AD7Enum<IDebugCodeContext2, IEnumDebugCodeContexts2>, IEnumDebugCodeContexts2
+	internal class AD7CodeContextEnum : AD7Enum<IDebugCodeContext2, IEnumDebugCodeContexts2>, IEnumDebugCodeContexts2
 	{
 		public AD7CodeContextEnum(IDebugCodeContext2[] codeContexts)
 			: base(codeContexts)
@@ -168,7 +168,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 		}
 	}
 
-	class AD7BoundBreakpointsEnum : AD7Enum<IDebugBoundBreakpoint2, IEnumDebugBoundBreakpoints2>, IEnumDebugBoundBreakpoints2
+	internal class AD7BoundBreakpointsEnum : AD7Enum<IDebugBoundBreakpoint2, IEnumDebugBoundBreakpoints2>, IEnumDebugBoundBreakpoints2
 	{
 		public AD7BoundBreakpointsEnum(IDebugBoundBreakpoint2[] breakpoints)
 			: base(breakpoints)
@@ -182,7 +182,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 		}
 	}
 
-	class AD7DebugPortsEnum : AD7Enum<IDebugPort2, IEnumDebugPorts2>, IEnumDebugPorts2
+	internal class AD7DebugPortsEnum : AD7Enum<IDebugPort2, IEnumDebugPorts2>, IEnumDebugPorts2
 	{
 		public AD7DebugPortsEnum(IDebugPort2[] ports)
 			: base(ports)

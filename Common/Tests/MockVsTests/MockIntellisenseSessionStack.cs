@@ -16,7 +16,7 @@
 
 namespace PythonToolsMockTests
 {
-	class MockIntellisenseSessionStack : IIntellisenseSessionStack
+	internal class MockIntellisenseSessionStack : IIntellisenseSessionStack
 	{
 		private readonly ObservableCollection<IIntellisenseSession> _stack = new ObservableCollection<IIntellisenseSession>();
 
@@ -51,7 +51,7 @@ namespace PythonToolsMockTests
 			_stack.Add(session);
 		}
 
-		void session_Dismissed(object sender, EventArgs e)
+		private void session_Dismissed(object sender, EventArgs e)
 		{
 			var session = (IIntellisenseSession)sender;
 			if (session == TopSession)
@@ -65,13 +65,7 @@ namespace PythonToolsMockTests
 			}
 		}
 
-		public ReadOnlyObservableCollection<IIntellisenseSession> Sessions
-		{
-			get
-			{
-				return new ReadOnlyObservableCollection<IIntellisenseSession>(_stack);
-			}
-		}
+		public ReadOnlyObservableCollection<IIntellisenseSession> Sessions => new ReadOnlyObservableCollection<IIntellisenseSession>(_stack);
 
 		public IIntellisenseSession TopSession
 		{

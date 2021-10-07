@@ -16,7 +16,7 @@
 
 namespace Microsoft.IronPythonTools.Interpreter
 {
-	class IronPythonExtensionProperty : PythonObject, IBuiltinProperty
+	internal class IronPythonExtensionProperty : PythonObject, IBuiltinProperty
 	{
 		private IPythonType _propertyType;
 
@@ -33,39 +33,27 @@ namespace Microsoft.IronPythonTools.Interpreter
 			{
 				if (_propertyType == null)
 				{
-					var ri = RemoteInterpreter;
+					RemoteInterpreterProxy ri = RemoteInterpreter;
 					_propertyType = ri != null ? Interpreter.GetTypeFromType(ri.GetExtensionPropertyType(Value)) : null;
 				}
 				return _propertyType;
 			}
 		}
 
-		public bool IsStatic
-		{
-			get
-			{
-				return false;
-			}
-		}
+		public bool IsStatic => false;
 
 		public string Documentation
 		{
 			get
 			{
-				var ri = RemoteInterpreter;
+				RemoteInterpreterProxy ri = RemoteInterpreter;
 				return ri != null ? ri.GetExtensionPropertyDocumentation(Value) : string.Empty;
 			}
 		}
 
-		public string Description
-		{
-			get { return Documentation; }
-		}
+		public string Description => Documentation;
 
-		public override PythonMemberType MemberType
-		{
-			get { return PythonMemberType.Property; }
-		}
+		public override PythonMemberType MemberType => PythonMemberType.Property;
 
 		#endregion
 	}

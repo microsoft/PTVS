@@ -82,7 +82,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 		}
 
 		[StructLayout(LayoutKind.Explicit, Size = 16)]
-		struct VARIANT
+		private struct VARIANT
 		{
 			[FieldOffset(0)]
 			public ushort vt;

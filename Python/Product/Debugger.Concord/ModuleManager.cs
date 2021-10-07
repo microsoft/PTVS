@@ -91,13 +91,13 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 				foreach (var moduleEntry in modules.ReadElements())
 				{
-					var module = moduleEntry.Value.TryRead() as PyModuleObject;
+					PyModuleObject module = moduleEntry.Value.TryRead() as PyModuleObject;
 					if (module == null)
 					{
 						continue;
 					}
 
-					var md_dict = module.md_dict.TryRead();
+					PyDictObject md_dict = module.md_dict.TryRead();
 					if (md_dict == null)
 					{
 						continue;
@@ -136,7 +136,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			var resultSpan = new DkmTextSpan(textSpan.StartLine, textSpan.StartLine, 0, 0);
 			symbolLocation = new[] { DkmSourcePosition.Create(sourceFileId, resultSpan) };
 
-			var location = new SourceLocation(resolvedDocument.DocumentName, textSpan.StartLine);
+			SourceLocation location = new SourceLocation(resolvedDocument.DocumentName, textSpan.StartLine);
 			var encodedLocation = location.Encode();
 			return new[] { DkmCustomInstructionSymbol.Create(resolvedDocument.Module, Guids.PythonRuntimeTypeGuid, encodedLocation, 0, encodedLocation) };
 		}
@@ -144,7 +144,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 		public static DkmSourcePosition GetSourcePosition(DkmInstructionSymbol instruction, DkmSourcePositionFlags flags, DkmInspectionSession inspectionSession, out bool startOfLine)
 		{
 			var insSym = instruction as DkmCustomInstructionSymbol;
-			var loc = new SourceLocation(insSym.AdditionalData);
+			SourceLocation loc = new SourceLocation(insSym.AdditionalData);
 			startOfLine = true;
 			return DkmSourcePosition.Create(DkmSourceFileId.Create(loc.FileName, null, null, null), new DkmTextSpan(loc.LineNumber, loc.LineNumber, 0, 0));
 		}
@@ -154,10 +154,10 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			public static void PyCode_New(DkmThread thread, ulong frameBase, ulong vframe, ulong returnAddress)
 			{
 				var process = thread.Process;
-				var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
+				CppExpressionEvaluator cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
 				var filenamePtr = cppEval.EvaluateUInt64("filename");
-				var filenameObj = PyObject.FromAddress(process, filenamePtr) as IPyBaseStringObject;
+				IPyBaseStringObject filenameObj = PyObject.FromAddress(process, filenamePtr) as IPyBaseStringObject;
 				if (filenameObj == null)
 				{
 					return;
@@ -179,7 +179,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			public static void PyCode_NewEmpty(DkmThread thread, ulong frameBase, ulong vframe, ulong returnAddress)
 			{
 				var process = thread.Process;
-				var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
+				CppExpressionEvaluator cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
 				ulong filenamePtr = cppEval.EvaluateUInt64("filename");
 				if (filenamePtr == 0)

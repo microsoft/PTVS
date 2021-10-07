@@ -16,7 +16,7 @@
 
 namespace TestUtilities.UI
 {
-	class CredentialsDialog : AutomationDialog
+	internal class CredentialsDialog : AutomationDialog
 	{
 		public CredentialsDialog(VisualStudioApp app, AutomationElement element)
 			: base(app, element)
@@ -33,26 +33,14 @@ namespace TestUtilities.UI
 
 		public string UserName
 		{
-			get
-			{
-				return GetUsernameEditBox().GetValuePattern().Current.Value;
-			}
-			set
-			{
-				GetUsernameEditBox().GetValuePattern().SetValue(value);
-			}
+			get => GetUsernameEditBox().GetValuePattern().Current.Value;
+			set => GetUsernameEditBox().GetValuePattern().SetValue(value);
 		}
 
 		public string Password
 		{
-			get
-			{
-				return GetPasswordEditBox().GetValuePattern().Current.Value;
-			}
-			set
-			{
-				GetPasswordEditBox().GetValuePattern().SetValue(value);
-			}
+			get => GetPasswordEditBox().GetValuePattern().Current.Value;
+			set => GetPasswordEditBox().GetValuePattern().SetValue(value);
 		}
 
 		private AutomationElement GetUsernameEditBox()

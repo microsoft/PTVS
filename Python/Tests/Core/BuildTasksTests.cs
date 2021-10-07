@@ -44,7 +44,7 @@ namespace PythonToolsTests
 			proj.AddImport(TestData.GetPath("Microsoft.PythonTools.targets"));
 
 			var target = proj.AddTarget("TestOutput");
-			foreach (var variable in new[] { "ProjectHome", "QualifiedProjectHome", "StartupFile", "StartupPath", "Expected" })
+			foreach (global::System.String variable in new[] { "ProjectHome", "QualifiedProjectHome", "StartupFile", "StartupPath", "Expected" })
 			{
 				var task = target.AddTask("Message");
 				task.SetParameter("Importance", "high");
@@ -127,7 +127,7 @@ namespace PythonToolsTests
 				proj.Save();
 				proj.ReevaluateIfNecessary();
 
-				var log = new StringLogger(LoggerVerbosity.Minimal);
+				StringLogger log = new StringLogger(LoggerVerbosity.Minimal);
 				Assert.IsTrue(proj.Build("CheckCode", new ILogger[] { new ConsoleLogger(LoggerVerbosity.Detailed), log }));
 
 				Console.WriteLine();
@@ -144,7 +144,7 @@ namespace PythonToolsTests
 			}
 		}
 
-		class StringLogger : Microsoft.Build.Logging.ConsoleLogger
+		private class StringLogger : Microsoft.Build.Logging.ConsoleLogger
 		{
 			public readonly List<string> Lines = new List<string>();
 

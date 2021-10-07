@@ -67,7 +67,9 @@ namespace TestUtilities.Python
 		public event EventHandler ModuleNamesChanged;
 
 		public Task<IPythonModule> ImportModuleAsync(string name, CancellationToken token)
-			=> Task.FromResult(ImportModule(name));
+		{
+			return Task.FromResult(ImportModule(name));
+		}
 
 		public IPythonModule ImportModule(string name)
 		{

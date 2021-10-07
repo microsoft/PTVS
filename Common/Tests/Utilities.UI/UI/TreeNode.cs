@@ -65,13 +65,7 @@ namespace TestUtilities.UI
 			Element.GetSelectionItemPattern().RemoveFromSelection();
 		}
 
-		public string Value
-		{
-			get
-			{
-				return this.Element.Current.Name.ToString();
-			}
-		}
+		public string Value => Element.Current.Name.ToString();
 
 		public bool IsExpanded
 		{
@@ -104,19 +98,13 @@ namespace TestUtilities.UI
 			}
 		}
 
-		public List<TreeNode> Nodes
-		{
-			get
-			{
-				return Element.FindAll(
+		public List<TreeNode> Nodes => Element.FindAll(
 					TreeScope.Children,
 					new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.TreeItem)
 				)
 					.OfType<AutomationElement>()
 					.Select(e => new TreeNode(e))
 					.ToList();
-			}
-		}
 
 		public void ExpandCollapse()
 		{

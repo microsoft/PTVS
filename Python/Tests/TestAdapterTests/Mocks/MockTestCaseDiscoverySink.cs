@@ -16,7 +16,7 @@
 
 namespace TestAdapterTests.Mocks
 {
-	class MockTestCaseDiscoverySink : ITestCaseDiscoverySink
+	internal class MockTestCaseDiscoverySink : ITestCaseDiscoverySink
 	{
 		public readonly List<TestCase> Tests = new List<TestCase>();
 
@@ -24,7 +24,7 @@ namespace TestAdapterTests.Mocks
 
 		public void SendTestCase(TestCase discoveredTest)
 		{
-			this.Tests.Add(discoveredTest);
+			Tests.Add(discoveredTest);
 		}
 
 		#endregion

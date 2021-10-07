@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Analysis
 	/// </code>
 	/// And with the current statement being <c>pass</c>, the qualified name is "D.e in c in A.b".
 	/// </example>
-	class QualifiedFunctionNameWalker : PythonWalker
+	internal class QualifiedFunctionNameWalker : PythonWalker
 	{
 		private readonly PythonAst _ast;
 		private readonly int _lineNumber;
@@ -50,7 +50,7 @@ namespace Microsoft.PythonTools.Analysis
 
 		public static string GetDisplayName(int lineNo, string functionName, PythonAst ast, Func<string, string, string> nameAggregator)
 		{
-			var walker = new QualifiedFunctionNameWalker(ast, lineNo, functionName);
+			QualifiedFunctionNameWalker walker = new QualifiedFunctionNameWalker(ast, lineNo, functionName);
 			try
 			{
 				ast.Walk(walker);

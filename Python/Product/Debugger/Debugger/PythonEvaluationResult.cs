@@ -16,7 +16,7 @@
 
 namespace Microsoft.PythonTools.Debugger
 {
-	enum PythonEvaluationResultReprKind
+	internal enum PythonEvaluationResultReprKind
 	{
 		Normal,
 		Raw,
@@ -24,7 +24,7 @@ namespace Microsoft.PythonTools.Debugger
 	}
 
 	[Flags]
-	enum PythonEvaluationResultFlags
+	internal enum PythonEvaluationResultFlags
 	{
 		None = 0,
 		Expandable = 1,
@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Debugger
 	/// <summary>
 	/// Represents the result of an evaluation of an expression against a given stack frame.
 	/// </summary>
-	class PythonEvaluationResult
+	internal class PythonEvaluationResult
 	{
 		private readonly string _objRepr, _hexRepr, _typeName, _expression, _childName, _exceptionText;
 		private readonly PythonStackFrame _frame;
@@ -72,21 +72,12 @@ namespace Microsoft.PythonTools.Debugger
 			_exceptionText = exceptionText;
 		}
 
-		public PythonEvaluationResultFlags Flags
-		{
-			get { return _flags; }
-		}
+		public PythonEvaluationResultFlags Flags => _flags;
 
 		/// <summary>
 		/// Returns true if this object is expandable.  
 		/// </summary>
-		public bool IsExpandable
-		{
-			get
-			{
-				return _flags.HasFlag(PythonEvaluationResultFlags.Expandable);
-			}
-		}
+		public bool IsExpandable => _flags.HasFlag(PythonEvaluationResultFlags.Expandable);
 
 		/// <summary>
 		/// Gets the list of children which this object contains.  The children can be either
@@ -111,89 +102,44 @@ namespace Microsoft.PythonTools.Debugger
 		/// Gets the string representation of this evaluation, or <c>null</c> if repr was not requested or the evaluation
 		/// failed with an exception.
 		/// </summary>
-		public string StringRepr
-		{
-			get
-			{
-				return _objRepr;
-			}
-		}
+		public string StringRepr => _objRepr;
 
 		/// <summary>
 		/// Gets the string representation of this evaluation in hexadecimal or null if the hex value was not computable.
 		/// </summary>
-		public string HexRepr
-		{
-			get
-			{
-				return _hexRepr;
-			}
-		}
+		public string HexRepr => _hexRepr;
 
 		/// <summary>
 		/// Gets the type name of the result of this evaluation or null if an exception was thrown.
 		/// </summary>
-		public string TypeName
-		{
-			get
-			{
-				return _typeName;
-			}
-		}
+		public string TypeName => _typeName;
 
 		/// <summary>
 		/// Gets the length of the evaluated value as reported by <c>len()</c>, or <c>0</c> if evaluation failed with an exception.
 		/// </summary>
-		public long Length
-		{
-			get { return _length; }
-		}
+		public long Length => _length;
 
 		/// <summary>
 		/// Gets the text of the exception which was thrown when evaluating this expression, or null
 		/// if no exception was thrown.
 		/// </summary>
-		public string ExceptionText
-		{
-			get
-			{
-				return _exceptionText;
-			}
-		}
+		public string ExceptionText => _exceptionText;
 
 		/// <summary>
 		/// Gets the expression which was evaluated to return this object.
 		/// </summary>
-		public string Expression
-		{
-			get
-			{
-				return _expression;
-			}
-		}
+		public string Expression => _expression;
 
 		/// <summary>
 		/// If this evaluation result represents a child of another expression (e.g. an object attribute or a collection element),
 		/// the short name of that child that uniquely identifies it relative to the parent; for example: "attr", "[123]", "len()". 
 		/// If this is not a child of another expression, <c>null</c>.
 		/// </summary>
-		public string ChildName
-		{
-			get
-			{
-				return _childName;
-			}
-		}
+		public string ChildName => _childName;
 
 		/// <summary>
 		/// Returns the stack frame in which this expression was evaluated.
 		/// </summary>
-		public PythonStackFrame Frame
-		{
-			get
-			{
-				return _frame;
-			}
-		}
+		public PythonStackFrame Frame => _frame;
 	}
 }

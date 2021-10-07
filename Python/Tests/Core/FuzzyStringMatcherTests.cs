@@ -21,7 +21,7 @@ namespace PythonToolsTests
 	[TestClass]
 	public class FuzzyStringMatcherTests
 	{
-		static List<string> Data = new List<string> {
+		private static List<string> Data = new List<string> {
 			"hello",
 			"hello_world",
 			"helloWorld",
@@ -33,9 +33,9 @@ namespace PythonToolsTests
 
 		private class Comparer : IComparer<string>
 		{
-			readonly Dictionary<string, int> _cache;
-			readonly string _pattern;
-			readonly FuzzyStringMatcher _outer;
+			private readonly Dictionary<string, int> _cache;
+			private readonly string _pattern;
+			private readonly FuzzyStringMatcher _outer;
 
 			public Comparer(string pattern, FuzzyStringMatcher outer)
 			{
@@ -60,7 +60,7 @@ namespace PythonToolsTests
 			}
 		}
 
-		void TestSortOrderInternal(string pattern, FuzzyStringMatcher comparer, IEnumerable<string> data, string[] expected)
+		private void TestSortOrderInternal(string pattern, FuzzyStringMatcher comparer, IEnumerable<string> data, string[] expected)
 		{
 			var sorted = data.Where(s => comparer.IsCandidateMatch(s, pattern))
 				.Select((s, i) => new { S = s, I = i })
@@ -79,21 +79,21 @@ namespace PythonToolsTests
 			}
 		}
 
-		void TestSortOrder(string pattern, FuzzyStringMatcher comparer, params string[] expected)
+		private void TestSortOrder(string pattern, FuzzyStringMatcher comparer, params string[] expected)
 		{
 			TestSortOrderInternal(pattern, comparer, Data, expected);
 		}
 
-		void TestSortOrder(string pattern, FuzzyStringMatcher comparer, IEnumerable<string> data, params string[] expected)
+		private void TestSortOrder(string pattern, FuzzyStringMatcher comparer, IEnumerable<string> data, params string[] expected)
 		{
 			TestSortOrderInternal(pattern, comparer, data, expected);
 		}
 
-		string GetBestMatch(string pattern, FuzzyStringMatcher comparer, params string[] options)
+		private string GetBestMatch(string pattern, FuzzyStringMatcher comparer, params string[] options)
 		{
 			string best = null;
 			int bestValue = 0;
-			foreach (var opt in options)
+			foreach (global::System.String opt in options)
 			{
 				int value = comparer.GetSortKey(opt, pattern);
 				Console.WriteLine("GetSortKey(\"{0}\", \"{1}\") = {2}", opt, pattern, value);

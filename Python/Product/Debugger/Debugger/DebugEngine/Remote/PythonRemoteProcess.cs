@@ -61,7 +61,7 @@ namespace Microsoft.PythonTools.Debugger.Remote
 		/// </summary>
 		public static async Task<DebugConnection> ConnectAsync(Uri uri, bool warnAboutAuthenticationErrors, TextWriter debugLog, CancellationToken ct)
 		{
-			var transport = DebuggerTransportFactory.Get(uri);
+			IDebuggerTransport transport = DebuggerTransportFactory.Get(uri);
 			if (transport == null)
 			{
 				throw new ConnectionException(ConnErrorMessages.RemoteInvalidUri);
@@ -95,7 +95,7 @@ namespace Microsoft.PythonTools.Debugger.Remote
 				}
 			} while (stream == null);
 
-			var debugConn = new DebugConnection(stream, debugLog);
+			DebugConnection debugConn = new DebugConnection(stream, debugLog);
 			bool connected = false;
 			try
 			{
@@ -219,7 +219,7 @@ namespace Microsoft.PythonTools.Debugger.Remote
 					langVer = PythonLanguageVersion.None;
 				}
 
-				var process = new PythonRemoteProcess(response.processId, uri, langVer, debugLog);
+				PythonRemoteProcess process = new PythonRemoteProcess(response.processId, uri, langVer, debugLog);
 				process.Connect(debugConn);
 				debugConn = null;
 				return process;

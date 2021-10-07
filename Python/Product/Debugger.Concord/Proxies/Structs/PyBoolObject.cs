@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 
 		public static PyBoolObject27 Create(DkmProcess process, bool value)
 		{
-			var values = process.GetOrCreateDataItem(() => new ValuesHolder(process));
+			T values = process.GetOrCreateDataItem(() => new ValuesHolder(process));
 			return value ? values.True : values.False;
 		}
 
@@ -86,13 +86,13 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 
 		public static PyBoolObject33 Create(DkmProcess process, bool value)
 		{
-			var values = process.GetOrCreateDataItem(() => new ValuesHolder(process));
+			T values = process.GetOrCreateDataItem(() => new ValuesHolder(process));
 			return value ? values.True : values.False;
 		}
 
 		public bool ToBoolean()
 		{
-			var values = Process.GetOrCreateDataItem(() => new ValuesHolder(Process));
+			T values = Process.GetOrCreateDataItem(() => new ValuesHolder(Process));
 			if (this == values.False)
 			{
 				return false;

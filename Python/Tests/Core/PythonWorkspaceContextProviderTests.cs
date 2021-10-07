@@ -29,10 +29,10 @@ namespace PythonToolsTests
 		public void AlreadyOpenedWorkspace()
 		{
 			var workspaceFolder = WorkspaceTestHelper.CreateWorkspaceFolder();
-			var workspace = WorkspaceTestHelper.CreateMockWorkspace(workspaceFolder, WorkspaceTestHelper.PythonNoId);
-			var workspaceService = new WorkspaceTestHelper.MockWorkspaceService(workspace);
-			var optionsService = new WorkspaceTestHelper.MockOptionsService(WorkspaceTestHelper.DefaultFactory);
-			var registryService = new WorkspaceTestHelper.MockRegistryService(WorkspaceTestHelper.AllFactories);
+			WorkspaceTestHelper.MockWorkspace workspace = WorkspaceTestHelper.CreateMockWorkspace(workspaceFolder, WorkspaceTestHelper.PythonNoId);
+			WorkspaceTestHelper.MockWorkspaceService workspaceService = new WorkspaceTestHelper.MockWorkspaceService(workspace);
+			WorkspaceTestHelper.MockOptionsService optionsService = new WorkspaceTestHelper.MockOptionsService(WorkspaceTestHelper.DefaultFactory);
+			WorkspaceTestHelper.MockRegistryService registryService = new WorkspaceTestHelper.MockRegistryService(WorkspaceTestHelper.AllFactories);
 			var provider = new PythonWorkspaceContextProvider(
 				workspaceService,
 				new Lazy<IInterpreterOptionsService>(() => optionsService),
@@ -48,10 +48,10 @@ namespace PythonToolsTests
 		public void LoadWorkspace()
 		{
 			var workspaceFolder = WorkspaceTestHelper.CreateWorkspaceFolder();
-			var workspace = WorkspaceTestHelper.CreateMockWorkspace(workspaceFolder, WorkspaceTestHelper.PythonNoId);
-			var workspaceService = new WorkspaceTestHelper.MockWorkspaceService(null);
-			var optionsService = new WorkspaceTestHelper.MockOptionsService(WorkspaceTestHelper.DefaultFactory);
-			var registryService = new WorkspaceTestHelper.MockRegistryService(WorkspaceTestHelper.AllFactories);
+			WorkspaceTestHelper.MockWorkspace workspace = WorkspaceTestHelper.CreateMockWorkspace(workspaceFolder, WorkspaceTestHelper.PythonNoId);
+			WorkspaceTestHelper.MockWorkspaceService workspaceService = new WorkspaceTestHelper.MockWorkspaceService(null);
+			WorkspaceTestHelper.MockOptionsService optionsService = new WorkspaceTestHelper.MockOptionsService(WorkspaceTestHelper.DefaultFactory);
+			WorkspaceTestHelper.MockRegistryService registryService = new WorkspaceTestHelper.MockRegistryService(WorkspaceTestHelper.AllFactories);
 			var provider = new PythonWorkspaceContextProvider(
 				workspaceService,
 				new Lazy<IInterpreterOptionsService>(() => optionsService),
@@ -87,10 +87,10 @@ namespace PythonToolsTests
 		public void CloseWorkspace()
 		{
 			var workspaceFolder = WorkspaceTestHelper.CreateWorkspaceFolder();
-			var workspace = WorkspaceTestHelper.CreateMockWorkspace(workspaceFolder, WorkspaceTestHelper.PythonNoId);
-			var workspaceService = new WorkspaceTestHelper.MockWorkspaceService(workspace);
-			var optionsService = new WorkspaceTestHelper.MockOptionsService(WorkspaceTestHelper.DefaultFactory);
-			var registryService = new WorkspaceTestHelper.MockRegistryService(WorkspaceTestHelper.AllFactories);
+			WorkspaceTestHelper.MockWorkspace workspace = WorkspaceTestHelper.CreateMockWorkspace(workspaceFolder, WorkspaceTestHelper.PythonNoId);
+			WorkspaceTestHelper.MockWorkspaceService workspaceService = new WorkspaceTestHelper.MockWorkspaceService(workspace);
+			WorkspaceTestHelper.MockOptionsService optionsService = new WorkspaceTestHelper.MockOptionsService(WorkspaceTestHelper.DefaultFactory);
+			WorkspaceTestHelper.MockRegistryService registryService = new WorkspaceTestHelper.MockRegistryService(WorkspaceTestHelper.AllFactories);
 			var provider = new PythonWorkspaceContextProvider(
 				workspaceService,
 				new Lazy<IInterpreterOptionsService>(() => optionsService),
@@ -127,11 +127,11 @@ namespace PythonToolsTests
 		{
 			var workspaceFolder1 = WorkspaceTestHelper.CreateWorkspaceFolder();
 			var workspaceFolder2 = WorkspaceTestHelper.CreateWorkspaceFolder();
-			var workspace1 = WorkspaceTestHelper.CreateMockWorkspace(workspaceFolder1, WorkspaceTestHelper.Python27Id);
-			var workspace2 = WorkspaceTestHelper.CreateMockWorkspace(workspaceFolder2, WorkspaceTestHelper.Python37Id);
-			var workspaceService = new WorkspaceTestHelper.MockWorkspaceService(workspace1);
-			var optionsService = new WorkspaceTestHelper.MockOptionsService(WorkspaceTestHelper.DefaultFactory);
-			var registryService = new WorkspaceTestHelper.MockRegistryService(WorkspaceTestHelper.AllFactories);
+			WorkspaceTestHelper.MockWorkspace workspace1 = WorkspaceTestHelper.CreateMockWorkspace(workspaceFolder1, WorkspaceTestHelper.Python27Id);
+			WorkspaceTestHelper.MockWorkspace workspace2 = WorkspaceTestHelper.CreateMockWorkspace(workspaceFolder2, WorkspaceTestHelper.Python37Id);
+			WorkspaceTestHelper.MockWorkspaceService workspaceService = new WorkspaceTestHelper.MockWorkspaceService(workspace1);
+			WorkspaceTestHelper.MockOptionsService optionsService = new WorkspaceTestHelper.MockOptionsService(WorkspaceTestHelper.DefaultFactory);
+			WorkspaceTestHelper.MockRegistryService registryService = new WorkspaceTestHelper.MockRegistryService(WorkspaceTestHelper.AllFactories);
 			var provider = new PythonWorkspaceContextProvider(
 				workspaceService,
 				new Lazy<IInterpreterOptionsService>(() => optionsService),

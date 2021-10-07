@@ -32,10 +32,10 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			public void new_threadstate(DkmThread thread, ulong frameBase, ulong vframe, ulong returnAddress)
 			{
 				var process = thread.Process;
-				var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
+				CppExpressionEvaluator cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
 				// Addressing this local by name does not work for release builds, so read the return value directly from the register instead.
-				var tstate = PyThreadState.TryCreate(process, cppEval.EvaluateReturnValueUInt64());
+				PyThreadState tstate = PyThreadState.TryCreate(process, cppEval.EvaluateReturnValueUInt64());
 				if (tstate == null)
 				{
 					return;
@@ -47,9 +47,9 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			public void PyInterpreterState_New(DkmThread thread, ulong frameBase, ulong vframe, ulong returnAddress)
 			{
 				var process = thread.Process;
-				var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
+				CppExpressionEvaluator cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
-				var istate = PyInterpreterState.TryCreate(process, cppEval.EvaluateReturnValueUInt64());
+				PyInterpreterState istate = PyInterpreterState.TryCreate(process, cppEval.EvaluateReturnValueUInt64());
 				if (istate == null)
 				{
 					return;
@@ -64,7 +64,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			// This step-in gate is not marked [StepInGate] because it doesn't live in pythonXX.dll, and so we register it manually.
 			public void _call_function_pointer(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters)
 			{
-				var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
+				CppExpressionEvaluator cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 				ulong pProc = cppEval.EvaluateUInt64(useRegisters ? "@rdx" : "pProc");
 				_owner.OnPotentialRuntimeExit(thread, pProc);
 			}
@@ -73,7 +73,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			public void call_function(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters)
 			{
 				var process = thread.Process;
-				var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
+				CppExpressionEvaluator cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
 				int oparg = cppEval.EvaluateInt32(useRegisters ? "@rdx" : "oparg");
 
@@ -85,7 +85,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 					"*((*(PyObject***){0}) - {1} - 1)",
 					useRegisters ? "@rcx" : "pp_stack",
 					n);
-				var obj = PyObject.FromAddress(process, func);
+				PyObject obj = PyObject.FromAddress(process, func);
 				ulong ml_meth = cppEval.EvaluateUInt64(
 					"((PyObject*){0})->ob_type == &PyCFunction_Type ? ((PyCFunctionObject*){0})->m_ml->ml_meth : 0",
 					func);
@@ -97,7 +97,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			public void PyCFunction_Call(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters)
 			{
 				var process = thread.Process;
-				var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
+				CppExpressionEvaluator cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
 				ulong ml_meth = cppEval.EvaluateUInt64(
 					"((PyObject*){0})->ob_type == &PyCFunction_Type ? ((PyCFunctionObject*){0})->m_ml->ml_meth : 0",
@@ -109,7 +109,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			public void getset_get(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters)
 			{
 				var process = thread.Process;
-				var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
+				CppExpressionEvaluator cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
 				string descrVar = useRegisters ? "((PyGetSetDescrObject*)@rcx)" : "descr";
 
@@ -121,7 +121,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			public void getset_set(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters)
 			{
 				var process = thread.Process;
-				var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
+				CppExpressionEvaluator cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
 				string descrVar = useRegisters ? "((PyGetSetDescrObject*)@rcx)" : "descr";
 
@@ -133,7 +133,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			public void type_call(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters)
 			{
 				var process = thread.Process;
-				var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
+				CppExpressionEvaluator cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
 				string typeVar = useRegisters ? "((PyTypeObject*)@rcx)" : "type";
 
@@ -148,7 +148,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			public void PyType_GenericNew(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters)
 			{
 				var process = thread.Process;
-				var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
+				CppExpressionEvaluator cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
 				string typeVar = useRegisters ? "((PyTypeObject*)@rcx)" : "type";
 
@@ -160,7 +160,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			public void PyObject_Print(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters)
 			{
 				var process = thread.Process;
-				var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
+				CppExpressionEvaluator cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
 				string opVar = useRegisters ? "((PyObject*)@rcx)" : "op";
 
@@ -172,7 +172,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			public void PyObject_GetAttrString(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters)
 			{
 				var process = thread.Process;
-				var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
+				CppExpressionEvaluator cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
 				string vVar = useRegisters ? "((PyObject*)@rcx)" : "v";
 
@@ -184,7 +184,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			public void PyObject_SetAttrString(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters)
 			{
 				var process = thread.Process;
-				var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
+				CppExpressionEvaluator cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
 				string vVar = useRegisters ? "((PyObject*)@rcx)" : "v";
 
@@ -196,7 +196,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			public void PyObject_GetAttr(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters)
 			{
 				var process = thread.Process;
-				var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
+				CppExpressionEvaluator cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
 				string vVar = useRegisters ? "((PyObject*)@rcx)" : "v";
 
@@ -211,7 +211,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			public void PyObject_SetAttr(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters)
 			{
 				var process = thread.Process;
-				var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
+				CppExpressionEvaluator cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
 				string vVar = useRegisters ? "((PyObject*)@rcx)" : "v";
 
@@ -226,7 +226,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			public void PyObject_Repr(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters)
 			{
 				var process = thread.Process;
-				var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
+				CppExpressionEvaluator cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
 				string vVar = useRegisters ? "((PyObject*)@rcx)" : "v";
 
@@ -238,7 +238,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			public void PyObject_Hash(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters)
 			{
 				var process = thread.Process;
-				var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
+				CppExpressionEvaluator cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
 				string vVar = useRegisters ? "((PyObject*)@rcx)" : "v";
 
@@ -250,7 +250,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			public void PyObject_Call(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters)
 			{
 				var process = thread.Process;
-				var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
+				CppExpressionEvaluator cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
 				string funcVar = useRegisters ? "((PyObject*)@rcx)" : "func";
 
@@ -262,7 +262,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			public void PyObject_Str(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters)
 			{
 				var process = thread.Process;
-				var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
+				CppExpressionEvaluator cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
 				string vVar = useRegisters ? "((PyObject*)@rcx)" : "v";
 
@@ -274,7 +274,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			public void do_cmp(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters)
 			{
 				var process = thread.Process;
-				var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
+				CppExpressionEvaluator cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
 				string vVar = useRegisters ? "((PyObject*)@rcx)" : "v";
 				string wVar = useRegisters ? "((PyObject*)@rdx)" : "w";
@@ -296,7 +296,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			public void PyObject_RichCompare(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters)
 			{
 				var process = thread.Process;
-				var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
+				CppExpressionEvaluator cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
 				string vVar = useRegisters ? "((PyObject*)@rcx)" : "v";
 				string wVar = useRegisters ? "((PyObject*)@rdx)" : "w";
@@ -318,7 +318,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			public void do_richcompare(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters)
 			{
 				var process = thread.Process;
-				var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
+				CppExpressionEvaluator cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
 				string vVar = useRegisters ? "((PyObject*)@rcx)" : "v";
 				string wVar = useRegisters ? "((PyObject*)@rdx)" : "w";
@@ -334,7 +334,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			public void PyObject_GetIter(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters)
 			{
 				var process = thread.Process;
-				var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
+				CppExpressionEvaluator cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
 				string oVar = useRegisters ? "((PyObject*)@rcx)" : "o";
 
@@ -346,7 +346,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			public void PyIter_Next(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters)
 			{
 				var process = thread.Process;
-				var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
+				CppExpressionEvaluator cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
 				string iterVar = useRegisters ? "((PyObject*)@rcx)" : "iter";
 
@@ -358,7 +358,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			public void builtin_next(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters)
 			{
 				var process = thread.Process;
-				var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
+				CppExpressionEvaluator cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
 				string argsVar = useRegisters ? "((PyTupleObject*)@rdx)" : "((PyTupleObject*)args)";
 

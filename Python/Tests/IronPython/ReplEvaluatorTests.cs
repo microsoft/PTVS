@@ -24,13 +24,7 @@ namespace IronPythonTests
 			AssertListener.Initialize();
 		}
 
-		protected virtual PythonVersion PythonVersion
-		{
-			get
-			{
-				return PythonPaths.IronPython27;
-			}
-		}
+		protected virtual PythonVersion PythonVersion => PythonPaths.IronPython27;
 
 		private PythonInteractiveEvaluator Evaluator
 		{
@@ -156,7 +150,7 @@ namespace IronPythonTests
 					names = replEval.GetMemberNames("t");
 				}
 				Assert.IsNotNull(names, "GetMemberNames call timed out");
-				foreach (var name in names)
+				foreach (CompletionResult name in names)
 				{
 					Debug.WriteLine(name.Name);
 				}
@@ -206,7 +200,7 @@ namespace IronPythonTests
 			{
 				var replWindow = new MockReplWindow(replEval);
 				replEval._Initialize(replWindow).Wait();
-				var code = new[] {
+				global::System.String[] code = new[] {
 					"import threading",
 					"def sayHello():\r\n    pass",
 					"t1 = threading.Thread(target=sayHello)",
@@ -214,7 +208,7 @@ namespace IronPythonTests
 					"t2 = threading.Thread(target=sayHello)",
 					"t2.start()"
 				};
-				foreach (var line in code)
+				foreach (global::System.String line in code)
 				{
 					var execute = replEval.ExecuteText(line);
 					execute.Wait();
@@ -234,13 +228,7 @@ namespace IronPythonTests
 	[TestClass]
 	public class IronPythonx64ReplEvaluatorTests : IronPythonReplEvaluatorTests
 	{
-		protected override PythonVersion PythonVersion
-		{
-			get
-			{
-				return PythonPaths.IronPython27_x64;
-			}
-		}
+		protected override PythonVersion PythonVersion => PythonPaths.IronPython27_x64;
 	}
 }
 

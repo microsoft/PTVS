@@ -25,7 +25,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 	/// across sources and compare incorrectly.
 	/// </summary>
 	[Serializable]
-	struct ObjectIdentityHandle : IEquatable<ObjectIdentityHandle>
+	internal struct ObjectIdentityHandle : IEquatable<ObjectIdentityHandle>
 	{
 		private readonly int _identity;
 
@@ -34,27 +34,15 @@ namespace Microsoft.IronPythonTools.Interpreter
 			_identity = identity;
 		}
 
-		public bool IsNull
-		{
-			get
-			{
-				return _identity == 0;
-			}
-		}
+		public bool IsNull => _identity == 0;
 
-		public int Id
-		{
-			get
-			{
-				return _identity;
-			}
-		}
+		public int Id => _identity;
 
 		public override bool Equals(object obj)
 		{
 			if (obj is ObjectIdentityHandle)
 			{
-				return this.Equals((ObjectIdentityHandle)obj);
+				return Equals((ObjectIdentityHandle)obj);
 			}
 			return false;
 		}

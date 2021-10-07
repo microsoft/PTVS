@@ -16,7 +16,7 @@
 
 namespace TestUtilities.UI
 {
-	class ProjectPropertiesWindow : AutomationWrapper
+	internal class ProjectPropertiesWindow : AutomationWrapper
 	{
 		public ProjectPropertiesWindow(IntPtr element)
 			: base(AutomationElement.FromHandle(element))

@@ -26,7 +26,7 @@ namespace TestUtilities
 
 		private static TestMainThreadService Create()
 		{
-			var mainThreadService = new TestMainThreadService();
+			TestMainThreadService mainThreadService = new TestMainThreadService();
 			var initialized = new ManualResetEventSlim();
 
 			AppDomain.CurrentDomain.DomainUnload += mainThreadService.Destroy;
@@ -69,12 +69,15 @@ namespace TestUtilities
 				throw new InvalidOperationException("AsyncLocal<TestMainThread> reentrancy");
 			}
 
-			var testMainThread = new TestMainThread(this, RemoveTestMainThread);
+			TestMainThread testMainThread = new TestMainThread(this, RemoveTestMainThread);
 			_testMainThread.Value = testMainThread;
 			return testMainThread;
 		}
 
-		private void RemoveTestMainThread() => _testMainThread.Value = null;
+		private void RemoveTestMainThread()
+		{
+			_testMainThread.Value = null;
+		}
 
 		public void Invoke(Action action)
 		{
@@ -190,11 +193,13 @@ namespace TestUtilities
 		}
 
 		private static ExceptionDispatchInfo CallSafe(Action action)
-			=> CallSafe<object>(() =>
-			{
-				action();
-				return null;
-			}).Exception;
+		{
+			return CallSafe<object>(() =>
+						{
+							action();
+							return null;
+						}).Exception;
+		}
 
 		private static CallSafeResult<T> CallSafe<T>(Func<T> func)
 		{

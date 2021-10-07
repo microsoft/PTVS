@@ -16,7 +16,7 @@
 
 namespace Microsoft.IronPythonTools.Interpreter
 {
-	class IronPythonEvent : PythonObject, IPythonEvent
+	internal class IronPythonEvent : PythonObject, IPythonEvent
 	{
 		private IPythonType _eventHandlerType;
 		private IList<IPythonType> _parameterTypes;
@@ -28,10 +28,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 
 		#region IPythonEvent Members
 
-		public override PythonMemberType MemberType
-		{
-			get { return PythonMemberType.Event; }
-		}
+		public override PythonMemberType MemberType => PythonMemberType.Event;
 
 		public IPythonType EventHandlerType
 		{
@@ -39,7 +36,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 			{
 				if (_eventHandlerType == null)
 				{
-					var ri = RemoteInterpreter;
+					RemoteInterpreterProxy ri = RemoteInterpreter;
 					_eventHandlerType = ri != null ? Interpreter.GetTypeFromType(ri.GetEventPythonType(Value)) : null;
 				}
 				return _eventHandlerType;
@@ -50,10 +47,10 @@ namespace Microsoft.IronPythonTools.Interpreter
 		{
 			if (_parameterTypes == null)
 			{
-				var ri = RemoteInterpreter;
-				var types = ri != null ? ri.GetEventParameterPythonTypes(Value) : new ObjectIdentityHandle[0];
+				RemoteInterpreterProxy ri = RemoteInterpreter;
+				ObjectIdentityHandle[] types = ri != null ? ri.GetEventParameterPythonTypes(Value) : new ObjectIdentityHandle[0];
 
-				var paramTypes = new IPythonType[types.Length];
+				IPythonType[] paramTypes = new IPythonType[types.Length];
 				for (int i = 0; i < paramTypes.Length; i++)
 				{
 					paramTypes[i] = Interpreter.GetTypeFromType(types[i]);
@@ -68,7 +65,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 		{
 			get
 			{
-				var ri = RemoteInterpreter;
+				RemoteInterpreterProxy ri = RemoteInterpreter;
 				return ri != null ? ri.GetEventDocumentation(Value) : string.Empty;
 			}
 		}

@@ -16,11 +16,11 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-	class MockUIHierWinClipboardHelper : IVsUIHierWinClipboardHelper
+	internal class MockUIHierWinClipboardHelper : IVsUIHierWinClipboardHelper
 	{
 		private readonly Dictionary<uint, IVsUIHierWinClipboardHelperEvents> _sinks = new Dictionary<uint, IVsUIHierWinClipboardHelperEvents>();
 		private uint _sinkCount;
-		bool _wasCut = false;
+		private bool _wasCut = false;
 
 		public int AdviseClipboardHelperEvents(IVsUIHierWinClipboardHelperEvents pSink, out uint pdwCookie)
 		{

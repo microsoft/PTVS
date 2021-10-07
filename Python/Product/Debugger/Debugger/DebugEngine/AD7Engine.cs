@@ -228,21 +228,9 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 			return engines;
 		}
 
-		internal PythonProcess Process
-		{
-			get
-			{
-				return _process;
-			}
-		}
+		internal PythonProcess Process => _process;
 
-		internal BreakpointManager BreakpointManager
-		{
-			get
-			{
-				return _breakpointManager;
-			}
-		}
+		internal BreakpointManager BreakpointManager => _breakpointManager;
 
 		/// <summary>
 		/// Map a generic 64-bit thread ID to a 32-bit thread ID usable in VS. If necessary (i.e. if the ID does not fit into 32 bits,
@@ -352,12 +340,12 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 				}
 
 				// Check if we're attaching remotely using the Python remote debugging transport
-				var remoteProgram = program as PythonRemoteDebugProgram;
+				PythonRemoteDebugProgram remoteProgram = program as PythonRemoteDebugProgram;
 				try
 				{
 					if (remoteProgram != null)
 					{
-						var remotePort = remoteProgram.DebugProcess.DebugPort;
+						PythonRemoteDebugPort remotePort = remoteProgram.DebugProcess.DebugPort;
 
 						var uriBuilder = new UriBuilder(remotePort.Uri);
 						string query = uriBuilder.Query ?? "";
@@ -455,7 +443,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 
 		private bool ProcessExited()
 		{
-			var process = _process;
+			PythonProcess process = _process;
 			if (process != null)
 			{
 				return process.HasExited;
@@ -550,7 +538,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 
 			if (eventObject is AD7ProgramDestroyEvent)
 			{
-				var debuggedProcess = _process;
+				PythonProcess debuggedProcess = _process;
 
 				_events = null;
 				_process = null;
@@ -859,9 +847,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 
 			AttachEvents(_process);
 
-			AD_PROCESS_ID adProcessId = new AD_PROCESS_ID();
-			adProcessId.ProcessIdType = (uint)enum_AD_PROCESS_ID.AD_PROCESS_ID_SYSTEM;
-			adProcessId.dwProcessId = (uint)_process.Id;
+			AD_PROCESS_ID adProcessId = new AD_PROCESS_ID
+			{
+				ProcessIdType = (uint)enum_AD_PROCESS_ID.AD_PROCESS_ID_SYSTEM,
+				dwProcessId = (uint)_process.Id
+			};
 
 			EngineUtils.RequireOk(port.GetProcess(adProcessId, out process));
 			Debug.WriteLine("PythonEngine LaunchSuspended returning S_OK");
@@ -903,7 +893,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 		// this entire codepath, including the bits in DefaultPythonLauncher and in CustomDebuggerEventHandler, to use that.
 		private void ParseOptions(string options)
 		{
-			foreach (var optionSetting in SplitOptions(options))
+			foreach (global::System.String optionSetting in SplitOptions(options))
 			{
 				var setting = optionSetting.Split(new[] { '=' }, 2);
 				if (setting.Length == 2)
@@ -1344,7 +1334,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 				return VSConstants.E_NOTIMPL;
 			}
 
-			var thread = ((AD7Thread)pThread).GetDebuggedThread();
+			PythonThread thread = ((AD7Thread)pThread).GetDebuggedThread();
 			switch (sk)
 			{
 				case enum_STEPKIND.STEP_INTO:
@@ -1524,7 +1514,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 		private void OnThreadCreated(object sender, ThreadEventArgs e)
 		{
 			Debug.WriteLine("Thread created:  " + e.Thread.Id);
-			var newThread = new AD7Thread(this, e.Thread);
+			AD7Thread newThread = new AD7Thread(this, e.Thread);
 			_threads.Add(e.Thread, newThread);
 
 			lock (_syncLock)
@@ -1627,7 +1617,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 
 		private void OnBreakpointHit(object sender, BreakpointHitEventArgs e)
 		{
-			var boundBreakpoints = new[] { _breakpointManager.GetBreakpoint(e.Breakpoint) };
+			AD7BoundBreakpoint[] boundBreakpoints = new[] { _breakpointManager.GetBreakpoint(e.Breakpoint) };
 
 			// An engine that supports more advanced breakpoint features such as hit counts, conditions and filters
 			// should notify each bound breakpoint that it has been hit and evaluate conditions here.
@@ -1642,7 +1632,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 
 		private void OnBreakpointBindSucceeded(object sender, BreakpointEventArgs e)
 		{
-			var boundBreakpoint = _breakpointManager.GetBreakpoint(e.Breakpoint);
+			AD7BoundBreakpoint boundBreakpoint = _breakpointManager.GetBreakpoint(e.Breakpoint);
 			((IDebugBoundBreakpoint2)boundBreakpoint).GetPendingBreakpoint(out IDebugPendingBreakpoint2 pendingBreakpoint);
 
 			Send(
@@ -1717,7 +1707,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 
 			if (curFrame.Kind == FrameKind.Django)
 			{
-				var djangoFrame = (DjangoStackFrame)curFrame;
+				DjangoStackFrame djangoFrame = (DjangoStackFrame)curFrame;
 
 				return new AD7DocumentContext(djangoFrame.SourceFile,
 					new TEXT_POSITION() { dwLine = (uint)djangoFrame.SourceLine, dwColumn = 0 },
@@ -1743,7 +1733,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 				AD7Engine target = (AD7Engine)engine.Target;
 				if (target != null)
 				{
-					var pythonProcess = target.Process as PythonRemoteProcess;
+					PythonRemoteProcess pythonProcess = target.Process as PythonRemoteProcess;
 					if (pythonProcess != null)
 					{
 						if (process2.Transport.ID == PythonRemoteDebugPortSupplier.PortSupplierId)

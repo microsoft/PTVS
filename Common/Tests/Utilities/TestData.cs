@@ -54,7 +54,7 @@ namespace TestUtilities
 			path = GetRootDir();
 			if (Directory.Exists(path))
 			{
-				foreach (var landmark in new[] {
+				foreach (global::System.String landmark in new[] {
 					"TestData",
 					@"Python\Tests\TestData"
 				})
@@ -79,7 +79,7 @@ namespace TestUtilities
 		public static string GetPath(params string[] paths)
 		{
 			var res = Root;
-			foreach (var p in paths)
+			foreach (global::System.String p in paths)
 			{
 				res = CommonUtils.GetAbsoluteFilePath(res, p);
 			}

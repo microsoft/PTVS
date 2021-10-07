@@ -16,7 +16,7 @@
 
 namespace CookiecutterTests
 {
-	class MockProjectSystemClient : IProjectSystemClient
+	internal class MockProjectSystemClient : IProjectSystemClient
 	{
 		public List<Tuple<ProjectLocation, CreateFilesOperationResult>> Added { get; } = new List<Tuple<ProjectLocation, CreateFilesOperationResult>>();
 

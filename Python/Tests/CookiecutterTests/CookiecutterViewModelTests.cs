@@ -71,9 +71,11 @@ namespace CookiecutterTests
 				_gitHubTemplateSource,
 				null,
 				_projectSystemClient
-			);
-			_vm.UserConfigFilePath = UserConfigFilePath;
-			_vm.OutputFolderPath = outputProjectFolder;
+			)
+			{
+				UserConfigFilePath = UserConfigFilePath,
+				OutputFolderPath = outputProjectFolder
+			};
 		}
 
 		[TestMethod]
@@ -185,7 +187,7 @@ namespace CookiecutterTests
 			_vm.ProjectName = "TestProjectName";
 			_vm.InitializeContextItems(contextWithValueSourcesOpenFolder);
 
-			var expected = new ContextItemViewModel[] {
+			ContextItemViewModel[] expected = new ContextItemViewModel[] {
 				new ContextItemViewModel() { Name="is_new_item", Selector=Selectors.String, Val="n" },
 				new ContextItemViewModel() { Name="is_new_project", Selector=Selectors.String, Val="y" },
 				new ContextItemViewModel() { Name="is_from_project_wizard", Selector=Selectors.String, Val="y" },
@@ -207,7 +209,7 @@ namespace CookiecutterTests
 			_vm.ProjectName = "TestProjectName";
 			_vm.InitializeContextItems(contextWithValueSourcesOpenProject);
 
-			var expected = new ContextItemViewModel[] {
+			ContextItemViewModel[] expected = new ContextItemViewModel[] {
 				new ContextItemViewModel() { Name="is_new_item", Selector=Selectors.String, Val="n" },
 				new ContextItemViewModel() { Name="is_new_project", Selector=Selectors.String, Val="y" },
 				new ContextItemViewModel() { Name="is_from_project_wizard", Selector=Selectors.String, Val="y" },
@@ -229,7 +231,7 @@ namespace CookiecutterTests
 			_vm.ProjectName = null;
 			_vm.InitializeContextItems(contextWithValueSourcesOpenProject);
 
-			var expected = new ContextItemViewModel[] {
+			ContextItemViewModel[] expected = new ContextItemViewModel[] {
 				new ContextItemViewModel() { Name="is_new_item", Selector=Selectors.String, Val="n" },
 				new ContextItemViewModel() { Name="is_new_project", Selector=Selectors.String, Val="y" },
 				new ContextItemViewModel() { Name="is_from_project_wizard", Selector=Selectors.String, Val="n" },
@@ -255,7 +257,7 @@ namespace CookiecutterTests
 			_vm.ProjectName = null;
 			_vm.InitializeContextItems(contextWithValueSourcesOpenProject);
 
-			var expected = new ContextItemViewModel[] {
+			ContextItemViewModel[] expected = new ContextItemViewModel[] {
 				new ContextItemViewModel() { Name="is_new_item", Selector=Selectors.String, Val="y" },
 				new ContextItemViewModel() { Name="is_new_project", Selector=Selectors.String, Val="n" },
 				new ContextItemViewModel() { Name="is_from_project_wizard", Selector=Selectors.String, Val="n" },

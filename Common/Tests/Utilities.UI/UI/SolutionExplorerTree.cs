@@ -110,7 +110,7 @@ namespace TestUtilities.UI
 				project.DTE.Solution.Projects.Count,
 				project.DTE.Solution.Projects.Count == 1 ? "" : "s"
 			);
-			var item = WaitForItem(slnName, project.Name).AsWrapper();
+			AutomationWrapper item = WaitForItem(slnName, project.Name).AsWrapper();
 			Assert.IsNotNull(item);
 			item.Select();
 		}

@@ -16,7 +16,7 @@
 
 namespace Microsoft.IronPythonTools.Interpreter
 {
-	class RemoteInterpreterProxy : MarshalByRefObject
+	internal class RemoteInterpreterProxy : MarshalByRefObject
 	{
 		private readonly RemoteInterpreter _remoteInterpreter;
 
@@ -416,7 +416,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 		}
 	}
 
-	class MyAppDomainManager : AppDomainManager
+	internal class MyAppDomainManager : AppDomainManager
 	{
 		public override void InitializeNewDomain(AppDomainSetup appDomainInfo)
 		{
@@ -425,7 +425,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 			base.InitializeNewDomain(appDomainInfo);
 		}
 
-		Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+		private Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
 		{
 			Debug.WriteLine("AssemblyResolve");
 			return null;

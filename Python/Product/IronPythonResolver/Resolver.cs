@@ -41,7 +41,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 		{
 			if (args.Length > 0 && Directory.Exists(args[0]))
 			{
-				var resolver = new IronPythonResolver(args[0]);
+				IronPythonResolver resolver = new IronPythonResolver(args[0]);
 				AppDomain.CurrentDomain.AssemblyResolve += resolver.domain_AssemblyResolve;
 			}
 		}

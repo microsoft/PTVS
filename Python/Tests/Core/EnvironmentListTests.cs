@@ -77,7 +77,7 @@ namespace PythonToolsUITests
 			));
 
 			using (var wpf = new WpfProxy())
-			using (var list = new EnvironmentListProxy(wpf))
+			using (EnvironmentListProxy list = new EnvironmentListProxy(wpf))
 			{
 				list.InitializeEnvironments(mockService, mockService);
 				var environments = list.Environments;
@@ -111,7 +111,7 @@ namespace PythonToolsUITests
 			mockService.AddProvider(new MockPythonInterpreterFactoryProvider("Test Provider 1", fact1, fact2, fact2));
 
 			using (var wpf = new WpfProxy())
-			using (var list = new EnvironmentListProxy(wpf))
+			using (EnvironmentListProxy list = new EnvironmentListProxy(wpf))
 			{
 				list.InitializeEnvironments(mockService, mockService);
 				var environments = list.Environments;
@@ -251,7 +251,7 @@ namespace PythonToolsUITests
 			);
 
 			using (var wpf = new WpfProxy())
-			using (var list = new EnvironmentListProxy(wpf))
+			using (EnvironmentListProxy list = new EnvironmentListProxy(wpf))
 			{
 				var container = CreateCompositionContainer();
 				var service = container.GetExportedValue<IInterpreterOptionsService>();
@@ -325,7 +325,7 @@ namespace PythonToolsUITests
 		public void FactoryWithInvalidPath()
 		{
 			using (var wpf = new WpfProxy())
-			using (var list = new EnvironmentListProxy(wpf))
+			using (EnvironmentListProxy list = new EnvironmentListProxy(wpf))
 			{
 				var service = new MockInterpreterOptionsService();
 				var provider = new MockPythonInterpreterFactoryProvider("Test Provider");
@@ -363,7 +363,7 @@ namespace PythonToolsUITests
 		public void FactoryWithValidPath()
 		{
 			using (var wpf = new WpfProxy())
-			using (var list = new EnvironmentListProxy(wpf))
+			using (EnvironmentListProxy list = new EnvironmentListProxy(wpf))
 			{
 				var service = new MockInterpreterOptionsService();
 				var provider = new MockPythonInterpreterFactoryProvider("Test Provider");
@@ -387,7 +387,7 @@ namespace PythonToolsUITests
 		public void InstalledFactories()
 		{
 			using (var wpf = new WpfProxy())
-			using (var list = new EnvironmentListProxy(wpf))
+			using (EnvironmentListProxy list = new EnvironmentListProxy(wpf))
 			{
 				var container = CreateCompositionContainer();
 				var service = container.GetExportedValue<IInterpreterOptionsService>();
@@ -421,7 +421,7 @@ namespace PythonToolsUITests
 		public void AddUpdateRemoveConfigurableFactory()
 		{
 			using (var wpf = new WpfProxy())
-			using (var list = new EnvironmentListProxy(wpf))
+			using (EnvironmentListProxy list = new EnvironmentListProxy(wpf))
 			{
 				var container = CreateCompositionContainer();
 				var service = container.GetExportedValue<IInterpreterOptionsService>();
@@ -518,20 +518,22 @@ namespace PythonToolsUITests
 				serviceProvider,
 				new ProjectView[0],
 				null
-			);
+			)
+			{
 
-			// The view updates the value of some fields when certain fields change
-			// so the order of initialization here is significant.
-			confView.SelectedInterpreter = AddExistingEnvironmentView.CustomInterpreter;
-			confView.IsCustomInterpreter = true;
-			confView.PrefixPath = @"C:\Test";
-			confView.InterpreterPath = @"C:\Test\python.exe";
-			confView.WindowsInterpreterPath = @"C:\Test\pythonw.exe";
-			confView.VersionName = "3.5";
-			confView.ArchitectureName = "32-bit";
-			confView.PathEnvironmentVariable = "PYTHONPATH";
-			confView.Description = "Test Environment";
-			confView.RegisterCustomEnv = true;
+				// The view updates the value of some fields when certain fields change
+				// so the order of initialization here is significant.
+				SelectedInterpreter = AddExistingEnvironmentView.CustomInterpreter,
+				IsCustomInterpreter = true,
+				PrefixPath = @"C:\Test",
+				InterpreterPath = @"C:\Test\python.exe",
+				WindowsInterpreterPath = @"C:\Test\pythonw.exe",
+				VersionName = "3.5",
+				ArchitectureName = "32-bit",
+				PathEnvironmentVariable = "PYTHONPATH",
+				Description = "Test Environment",
+				RegisterCustomEnv = true
+			};
 
 			await confView.ApplyAsync();
 
@@ -546,7 +548,7 @@ namespace PythonToolsUITests
 		public async Task AddUpdateRemoveConfigurableFactoryThroughUI()
 		{
 			using (var wpf = new WpfProxy())
-			using (var list = new EnvironmentListProxy(wpf))
+			using (EnvironmentListProxy list = new EnvironmentListProxy(wpf))
 			{
 				string newId = null;
 				var container = CreateCompositionContainer();
@@ -617,7 +619,7 @@ namespace PythonToolsUITests
 			var interpreters = container.GetExportedValue<IInterpreterRegistryService>();
 			using (var defaultChanged = new AutoResetEvent(false))
 			using (var wpf = new WpfProxy())
-			using (var list = new EnvironmentListProxy(wpf))
+			using (EnvironmentListProxy list = new EnvironmentListProxy(wpf))
 			{
 				service.DefaultInterpreterChanged += (s, e) => { defaultChanged.SetIfNotDisposed(); };
 				list.InitializeEnvironments(interpreters, service);
@@ -711,7 +713,7 @@ namespace PythonToolsUITests
 			var service = await MakeEmptyCondaEnvAsync(PythonLanguageVersion.V37);
 
 			using (var wpf = new WpfProxy())
-			using (var list = new EnvironmentListProxy(wpf))
+			using (EnvironmentListProxy list = new EnvironmentListProxy(wpf))
 			{
 				list.CreatePipExtension = true;
 				list.InitializeEnvironments(service, service);
@@ -733,7 +735,7 @@ namespace PythonToolsUITests
 		public async Task SaveLoadCache()
 		{
 			var cachePath = Path.Combine(TestData.GetTempPath(), "pip.cache");
-			using (var cache = new TestPipPackageCache(cachePath))
+			using (TestPipPackageCache cache = new TestPipPackageCache(cachePath))
 			{
 				AssertUtil.ContainsExactly(await cache.TestGetAllPackageNamesAsync());
 
@@ -748,7 +750,7 @@ namespace PythonToolsUITests
 				await cache.TestWriteCacheToDiskAsync();
 			}
 
-			using (var cache = new TestPipPackageCache(cachePath))
+			using (TestPipPackageCache cache = new TestPipPackageCache(cachePath))
 			{
 				AssertUtil.ContainsExactly(await cache.TestGetAllPackageNamesAsync());
 
@@ -809,7 +811,7 @@ namespace PythonToolsUITests
 			mockService.AddProvider(new MockPythonInterpreterFactoryProvider("Test Provider", noInfo, vendor, supportUrl, bothInfo));
 
 			using (var wpf = new WpfProxy())
-			using (var list = new EnvironmentListProxy(wpf))
+			using (EnvironmentListProxy list = new EnvironmentListProxy(wpf))
 			{
 				list.InitializeEnvironments(mockService, mockService);
 				var environments = list.Environments;
@@ -1104,7 +1106,7 @@ namespace PythonToolsUITests
 		private static async Task CheckPipExtensionAsync(MockInterpreterOptionsService service)
 		{
 			using (var wpf = new WpfProxy())
-			using (var list = new EnvironmentListProxy(wpf))
+			using (EnvironmentListProxy list = new EnvironmentListProxy(wpf))
 			{
 				list.CreatePipExtension = true;
 				list.InitializeEnvironments(service, service);
@@ -1140,7 +1142,7 @@ namespace PythonToolsUITests
 			AssertUtil.DoesntContain(packages.Select(pv => pv.Name), packageName);
 		}
 
-		sealed class EnvironmentListProxy : IDisposable
+		private sealed class EnvironmentListProxy : IDisposable
 		{
 			private readonly WpfProxy _proxy;
 			private readonly ToolWindow _window;
@@ -1156,10 +1158,7 @@ namespace PythonToolsUITests
 			{
 			}
 
-			public ToolWindow Window
-			{
-				get { return _window; }
-			}
+			public ToolWindow Window => _window;
 
 			private void Window_ViewCreated(object sender, EnvironmentViewEventArgs e)
 			{
@@ -1189,23 +1188,11 @@ namespace PythonToolsUITests
 				_proxy.Invoke(() => Window.InitializeEnvironments(interpreters, options, synchronous: true));
 			}
 
-			public IInterpreterOptionsService Service
-			{
-				get
-				{
-					return _proxy.Invoke(() => Window.OptionsService);
-				}
-			}
+			public IInterpreterOptionsService Service => _proxy.Invoke(() => Window.OptionsService);
 
-			public List<EnvironmentView> Environments
-			{
-				get
-				{
-					return _proxy.Invoke(() =>
-						Window._environments.ToList()
+			public List<EnvironmentView> Environments => _proxy.Invoke(() =>
+																			   Window._environments.ToList()
 					);
-				}
-			}
 
 			public bool CanExecute(RoutedCommand command, object parameter)
 			{
@@ -1243,7 +1230,7 @@ namespace PythonToolsUITests
 
 			public T GetExtensionOrAssert<T>(EnvironmentView view) where T : IEnvironmentViewExtension
 			{
-				var ext = GetExtensionOrDefault<T>(view);
+				T ext = GetExtensionOrDefault<T>(view);
 				Assert.IsNotNull(ext, "Unable to get " + typeof(T).Name);
 				return ext;
 			}
@@ -1257,7 +1244,7 @@ namespace PythonToolsUITests
 			}
 		}
 
-		static CompositionContainer CreateCompositionContainer(bool defaultProviders = true)
+		private static CompositionContainer CreateCompositionContainer(bool defaultProviders = true)
 		{
 			var sp = new MockServiceProvider();
 			sp.Services[typeof(SVsActivityLog).GUID] = new MockActivityLog();
@@ -1267,7 +1254,7 @@ namespace PythonToolsUITests
 			return InterpreterCatalog.CreateContainer(typeof(IInterpreterRegistryService), typeof(IInterpreterOptionsService));
 		}
 
-		sealed class AssertInterpretersChanged : IDisposable
+		private sealed class AssertInterpretersChanged : IDisposable
 		{
 			private readonly ManualResetEvent _evt;
 			private readonly IInterpreterRegistryService _service;
@@ -1298,7 +1285,7 @@ namespace PythonToolsUITests
 		#endregion
 	}
 
-	class TestPipPackageCache : PipPackageCache
+	internal class TestPipPackageCache : PipPackageCache
 	{
 		public TestPipPackageCache(string cachePath = null) : base(
 			null, null,

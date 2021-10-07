@@ -16,7 +16,7 @@
 
 namespace TestAdapterTests.Mocks
 {
-	class MockTestExecutionRecorder : IFrameworkHandle
+	internal class MockTestExecutionRecorder : IFrameworkHandle
 	{
 		public readonly List<TestResult> Results = new List<TestResult>();
 		public readonly List<string> Messages = new List<string>();
@@ -24,10 +24,7 @@ namespace TestAdapterTests.Mocks
 
 		public bool EnableShutdownAfterTestRun
 		{
-			get
-			{
-				return false;
-			}
+			get => false;
 			set
 			{
 			}
@@ -40,7 +37,7 @@ namespace TestAdapterTests.Mocks
 
 		public void RecordResult(TestResult result)
 		{
-			this.Results.Add(result);
+			Results.Add(result);
 		}
 
 		public void RecordAttachments(IList<AttachmentSet> attachmentSets)

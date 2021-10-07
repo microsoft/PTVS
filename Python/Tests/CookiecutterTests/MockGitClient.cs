@@ -16,7 +16,7 @@
 
 namespace CookiecutterTests
 {
-	class MockGitClient : IGitClient
+	internal class MockGitClient : IGitClient
 	{
 		public Task<string> CloneAsync(Redirector redirector, string repoUrl, string targetParentFolderPath)
 		{

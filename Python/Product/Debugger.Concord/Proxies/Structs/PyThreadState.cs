@@ -60,58 +60,42 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			return new PyThreadState(process, address);
 		}
 
-		public PointerProxy<PyThreadState> next
+		public PointerProxy<PyThreadState> next => GetFieldProxy(_fields.next);
+
+		public PointerProxy<PyFrameObject> frame => GetFieldProxy(_fields.frame);
+
+		public Int32Proxy use_tracing => GetFieldProxy(_fields.use_tracing);
+
+		public PointerProxy c_tracefunc => GetFieldProxy(_fields.c_tracefunc);
+
+		public PointerProxy<PyObject> curexc_type => GetFieldProxy(_fields.curexc_type);
+
+		public PointerProxy<PyObject> curexc_value => GetFieldProxy(_fields.curexc_value);
+
+		public PointerProxy<PyObject> curexc_traceback => GetFieldProxy(_fields.curexc_traceback);
+
+		public PointerProxy<PyObject> exc_type(PythonLanguageVersion version)
 		{
-			get { return GetFieldProxy(_fields.next); }
+			return version < PythonLanguageVersion.V37
+? GetFieldProxy(_fields.exc_type)
+: GetFieldProxy(_fields.exc_state).exc_type;
 		}
 
-		public PointerProxy<PyFrameObject> frame
+		public PointerProxy<PyObject> exc_value(PythonLanguageVersion version)
 		{
-			get { return GetFieldProxy(_fields.frame); }
+			return version < PythonLanguageVersion.V37
+? GetFieldProxy(_fields.exc_value)
+: GetFieldProxy(_fields.exc_state).exc_value;
 		}
 
-		public Int32Proxy use_tracing
+		public PointerProxy<PyObject> exc_traceback(PythonLanguageVersion version)
 		{
-			get { return GetFieldProxy(_fields.use_tracing); }
+			return version < PythonLanguageVersion.V37
+? GetFieldProxy(_fields.exc_traceback)
+: GetFieldProxy(_fields.exc_state).exc_traceback;
 		}
 
-		public PointerProxy c_tracefunc
-		{
-			get { return GetFieldProxy(_fields.c_tracefunc); }
-		}
-
-		public PointerProxy<PyObject> curexc_type
-		{
-			get { return GetFieldProxy(_fields.curexc_type); }
-		}
-
-		public PointerProxy<PyObject> curexc_value
-		{
-			get { return GetFieldProxy(_fields.curexc_value); }
-		}
-
-		public PointerProxy<PyObject> curexc_traceback
-		{
-			get { return GetFieldProxy(_fields.curexc_traceback); }
-		}
-
-		public PointerProxy<PyObject> exc_type(PythonLanguageVersion version) => version < PythonLanguageVersion.V37
-			? GetFieldProxy(_fields.exc_type)
-			: GetFieldProxy(_fields.exc_state).exc_type;
-
-		public PointerProxy<PyObject> exc_value(PythonLanguageVersion version) => version < PythonLanguageVersion.V37
-			? GetFieldProxy(_fields.exc_value)
-			: GetFieldProxy(_fields.exc_state).exc_value;
-
-		public PointerProxy<PyObject> exc_traceback(PythonLanguageVersion version) => version < PythonLanguageVersion.V37
-			? GetFieldProxy(_fields.exc_traceback)
-			: GetFieldProxy(_fields.exc_state).exc_traceback;
-
-
-		public Int32Proxy thread_id
-		{
-			get { return GetFieldProxy(_fields.thread_id); }
-		}
+		public Int32Proxy thread_id => GetFieldProxy(_fields.thread_id);
 
 		public static IEnumerable<PyThreadState> GetThreadStates(DkmProcess process)
 		{
@@ -122,7 +106,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 	}
 
 	[StructProxy(MinVersion = PythonLanguageVersion.V37, StructName = "_PyErr_StackItem")]
-	class PyErr_StackItem : StructProxy
+	internal class PyErr_StackItem : StructProxy
 	{
 		private class Fields
 		{

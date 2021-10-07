@@ -16,7 +16,7 @@
 
 namespace Microsoft.PythonTools.Django.Analysis
 {
-	class TemplateVariables
+	internal class TemplateVariables
 	{
 		private readonly Dictionary<string, Dictionary<IPythonProjectEntry, ValuesAndVersion>> _values = new Dictionary<string, Dictionary<IPythonProjectEntry, ValuesAndVersion>>();
 
@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Django.Analysis
 			}
 		}
 
-		struct ValuesAndVersion
+		private struct ValuesAndVersion
 		{
 			public readonly int DeclaringVersion;
 			public readonly HashSet<AnalysisValue> Values;

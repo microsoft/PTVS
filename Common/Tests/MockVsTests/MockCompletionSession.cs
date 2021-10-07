@@ -16,7 +16,7 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-	class MockCompletionSession : ICompletionSession
+	internal class MockCompletionSession : ICompletionSession
 	{
 		private readonly MockCompletionBroker _broker;
 		private readonly ObservableCollection<CompletionSet> _sets;
@@ -32,7 +32,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			CompletionSets = new ReadOnlyObservableCollection<CompletionSet>(_sets);
 		}
 
-		void sets_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+		private void sets_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
 		{
 			if (e.Action != NotifyCollectionChangedAction.Add)
 			{
@@ -77,7 +77,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			}
 
 			// Now that we're through, see if there's a better match out there.
-			this.Match();
+			Match();
 		}
 
 		public bool IsStarted { get; private set; }
@@ -129,10 +129,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			return true;
 		}
 
-		public IIntellisensePresenter Presenter
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public IIntellisensePresenter Presenter => throw new NotImplementedException();
 
 		public event EventHandler PresenterChanged
 		{

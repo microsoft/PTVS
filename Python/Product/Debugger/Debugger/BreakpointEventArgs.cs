@@ -16,7 +16,7 @@
 
 namespace Microsoft.PythonTools.Debugger
 {
-	class BreakpointEventArgs : EventArgs
+	internal class BreakpointEventArgs : EventArgs
 	{
 		private readonly PythonBreakpoint _breakpoint;
 
@@ -25,12 +25,6 @@ namespace Microsoft.PythonTools.Debugger
 			_breakpoint = breakpoint;
 		}
 
-		public PythonBreakpoint Breakpoint
-		{
-			get
-			{
-				return _breakpoint;
-			}
-		}
+		public PythonBreakpoint Breakpoint => _breakpoint;
 	}
 }

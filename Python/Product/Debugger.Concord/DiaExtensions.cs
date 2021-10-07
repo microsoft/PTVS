@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			using (ComPtr.Create(enumSymbols))
 			{
 				int n = enumSymbols.count;
-				var result = new ComPtr<IDiaSymbol>[n];
+				ComPtr<IDiaSymbol>[] result = new ComPtr<IDiaSymbol>[n];
 				try
 				{
 					for (int i = 0; i < n; ++i)
@@ -50,7 +50,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 				}
 				catch
 				{
-					foreach (var item in result)
+					foreach (ComPtr<IDiaSymbol> item in result)
 					{
 						item.Dispose();
 					}
@@ -62,7 +62,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 		public static ComPtr<IDiaSymbol> GetSymbol(this IDiaSymbol symbol, SymTagEnum symTag, string name, Predicate<IDiaSymbol> filter = null)
 		{
-			var result = new ComPtr<IDiaSymbol>();
+			ComPtr<IDiaSymbol> result = new ComPtr<IDiaSymbol>();
 
 			symbol.findChildren(symTag, name, 1, out IDiaEnumSymbols enumSymbols);
 			using (ComPtr.Create(enumSymbols))
@@ -78,7 +78,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 				{
 					for (int i = 0; i < n; ++i)
 					{
-						using (var item = ComPtr.Create(enumSymbols.Item((uint)i)))
+						using (ComPtr<T> item = ComPtr.Create(enumSymbols.Item((uint)i)))
 						{
 							if (filter == null || filter(item.Object))
 							{
@@ -121,7 +121,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			{
 				if (enumSymbols.count > 0)
 				{
-					using (var item = ComPtr.Create(enumSymbols.Item(0)))
+					using (ComPtr<T> item = ComPtr.Create(enumSymbols.Item(0)))
 					{
 						return ComPtr.Create(item.Object.type);
 					}
@@ -134,7 +134,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 		public static long GetFieldOffset(this IDiaSymbol structSym, string name)
 		{
-			using (var fieldSym = structSym.GetSymbol(SymTagEnum.SymTagData, name))
+			using (ComPtr<IDiaSymbol> fieldSym = structSym.GetSymbol(SymTagEnum.SymTagData, name))
 			{
 				return fieldSym.Object.offset;
 			}
@@ -142,7 +142,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 		public static DkmNativeInstructionAddress GetFunctionAddress(this IDiaSymbol moduleSym, string name, DkmNativeModuleInstance moduleInstance)
 		{
-			using (var funSym = moduleSym.GetSymbol(SymTagEnum.SymTagFunction, name))
+			using (ComPtr<IDiaSymbol> funSym = moduleSym.GetSymbol(SymTagEnum.SymTagFunction, name))
 			{
 				return DkmNativeInstructionAddress.Create(moduleInstance.Process.GetNativeRuntimeInstance(), moduleInstance, funSym.Object.relativeVirtualAddress, null);
 			}

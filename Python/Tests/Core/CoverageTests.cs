@@ -332,7 +332,7 @@ namespace PythonToolsTests
 
 				try
 				{
-					foreach (var test in expected)
+					foreach (ModuleCoverage test in expected)
 					{
 						test.Validate(covInfo);
 					}
@@ -364,7 +364,7 @@ namespace PythonToolsTests
 			}
 		}
 
-		class Call
+		private class Call
 		{
 			public readonly string Header;
 			public readonly Call[] Children;
@@ -570,12 +570,12 @@ namespace PythonToolsTests
 			return new StatsCoverage(blocksCovered, blocksNotCovered, linesCovered, linesNotCovered);
 		}
 
-		abstract class ExpectedCoverage
+		private abstract class ExpectedCoverage
 		{
 			internal abstract void Validate(CoverageMapper mapper, CoverageScope parentScope);
 		}
 
-		class ModuleCoverage
+		private class ModuleCoverage
 		{
 			private readonly ExpectedCoverage[] _expected;
 			private readonly string _name;
@@ -592,7 +592,7 @@ namespace PythonToolsTests
 				{
 					if (keyValue.Value.ModuleName == _name)
 					{
-						foreach (var expected in _expected)
+						foreach (ExpectedCoverage expected in _expected)
 						{
 							expected.Validate(
 								keyValue.Value,
@@ -606,7 +606,7 @@ namespace PythonToolsTests
 			}
 		}
 
-		class ClassCoverage : ExpectedCoverage
+		private class ClassCoverage : ExpectedCoverage
 		{
 			private readonly ExpectedCoverage[] _expected;
 			private readonly string _name;
@@ -623,7 +623,7 @@ namespace PythonToolsTests
 				{
 					if (CoverageExporter.GetQualifiedName(scope.Statement) == _name)
 					{
-						foreach (var expected in _expected)
+						foreach (ExpectedCoverage expected in _expected)
 						{
 							expected.Validate(mapper, scope);
 						}
@@ -636,7 +636,7 @@ namespace PythonToolsTests
 
 		}
 
-		class GlobalCoverage : ExpectedCoverage
+		private class GlobalCoverage : ExpectedCoverage
 		{
 			private readonly ExpectedCoverage[] _expected;
 
@@ -647,14 +647,14 @@ namespace PythonToolsTests
 
 			internal override void Validate(CoverageMapper mapper, CoverageScope parentScope)
 			{
-				foreach (var expected in _expected)
+				foreach (ExpectedCoverage expected in _expected)
 				{
 					expected.Validate(mapper, parentScope);
 				}
 			}
 		}
 
-		class FunctionCoverage : ExpectedCoverage
+		private class FunctionCoverage : ExpectedCoverage
 		{
 			private readonly ExpectedCoverage[] _expected;
 			private readonly string _name;
@@ -681,7 +681,7 @@ namespace PythonToolsTests
 					{
 						if (CoverageExporter.GetQualifiedFunctionName(scope.Statement) == _name)
 						{
-							foreach (var expected in _expected)
+							foreach (ExpectedCoverage expected in _expected)
 							{
 								expected.Validate(mapper, scope);
 							}
@@ -699,7 +699,7 @@ namespace PythonToolsTests
 			}
 		}
 
-		class LineCoverage : ExpectedCoverage
+		private class LineCoverage : ExpectedCoverage
 		{
 			private readonly int _endColumn;
 			private readonly int _lineNo;
@@ -725,7 +725,7 @@ namespace PythonToolsTests
 			}
 		}
 
-		class StatsCoverage : ExpectedCoverage
+		private class StatsCoverage : ExpectedCoverage
 		{
 			private readonly int BlocksCovered, BlocksNotCovered, LinesCovered, LinesNotCovered;
 

@@ -73,7 +73,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 
 			if (bitsInDigit == 15)
 			{
-				for (var digitPtr = new UInt16Proxy(process, result.ob_digit.Address); absValue != 0; digitPtr = digitPtr.GetAdjacentProxy(1))
+				for (UInt16Proxy digitPtr = new UInt16Proxy(process, result.ob_digit.Address); absValue != 0; digitPtr = digitPtr.GetAdjacentProxy(1))
 				{
 					digitPtr.Write((ushort)(absValue % (1 << bitsInDigit)));
 					absValue >>= bitsInDigit;
@@ -81,7 +81,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			}
 			else
 			{
-				for (var digitPtr = new UInt32Proxy(process, result.ob_digit.Address); absValue != 0; digitPtr = digitPtr.GetAdjacentProxy(1))
+				for (UInt32Proxy digitPtr = new UInt32Proxy(process, result.ob_digit.Address); absValue != 0; digitPtr = digitPtr.GetAdjacentProxy(1))
 				{
 					digitPtr.Write((uint)(absValue % (1 << bitsInDigit)));
 					absValue >>= bitsInDigit;
@@ -91,10 +91,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			return result;
 		}
 
-		private ByteProxy ob_digit
-		{
-			get { return GetFieldProxy(_fields.ob_digit); }
-		}
+		private ByteProxy ob_digit => GetFieldProxy(_fields.ob_digit);
 
 		public BigInteger ToBigInteger()
 		{
@@ -111,7 +108,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			var result = new BigInteger(0);
 			if (bitsInDigit == 15)
 			{
-				var digitPtr = new UInt16Proxy(Process, ob_digit.Address).GetAdjacentProxy(count);
+				UInt16Proxy digitPtr = new UInt16Proxy(Process, ob_digit.Address).GetAdjacentProxy(count);
 				for (long i = 0; i != count; ++i)
 				{
 					digitPtr = digitPtr.GetAdjacentProxy(-1);
@@ -121,7 +118,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			}
 			else
 			{
-				var digitPtr = new UInt32Proxy(Process, ob_digit.Address).GetAdjacentProxy(count);
+				UInt32Proxy digitPtr = new UInt32Proxy(Process, ob_digit.Address).GetAdjacentProxy(count);
 				for (long i = 0; i != count; ++i)
 				{
 					digitPtr = digitPtr.GetAdjacentProxy(-1);

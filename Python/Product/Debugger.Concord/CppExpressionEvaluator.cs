@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 					throw new ArgumentException();
 				}
 
-				var loc = new SourceLocation(customAddr.AdditionalData, _process);
+				SourceLocation loc = new SourceLocation(customAddr.AdditionalData, _process);
 				if (loc.NativeAddress == null)
 				{
 					throw new ArgumentException();
@@ -154,7 +154,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 	}
 
 	[Serializable]
-	sealed class CppEvaluationException : Exception
+	internal sealed class CppEvaluationException : Exception
 	{
 		public DkmEvaluationResult EvaluationResult { get; set; }
 

@@ -102,9 +102,6 @@ namespace TestUtilities.Mocks
 			}
 		}
 
-		public IEnumerable<EditorOptionDefinition> SupportedOptions
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public IEnumerable<EditorOptionDefinition> SupportedOptions => throw new NotImplementedException();
 	}
 }

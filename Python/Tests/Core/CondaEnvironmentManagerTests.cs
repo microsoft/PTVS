@@ -54,7 +54,7 @@ namespace PythonToolsUITests
 		public async Task CreateEnvironmentByPath()
 		{
 			var mgr = CreateEnvironmentManager();
-			var ui = new MockCondaEnvironmentManagerUI();
+			MockCondaEnvironmentManagerUI ui = new MockCondaEnvironmentManagerUI();
 
 			var envPath = Path.Combine(TestData.GetTempPath(), "newenv");
 			bool result = await mgr.CreateAsync(envPath, Python27Packages, ui, CancellationToken.None);
@@ -70,7 +70,7 @@ namespace PythonToolsUITests
 		public async Task CreateEnvironmentByPathNonExistingPackage()
 		{
 			var mgr = CreateEnvironmentManager();
-			var ui = new MockCondaEnvironmentManagerUI();
+			MockCondaEnvironmentManagerUI ui = new MockCondaEnvironmentManagerUI();
 
 			var envPath = Path.Combine(TestData.GetTempPath(), "newenvunk");
 			bool result = await mgr.CreateAsync(envPath, NonExistingPackages, ui, CancellationToken.None);
@@ -91,7 +91,7 @@ namespace PythonToolsUITests
 		public async Task CreateEnvironmentByName()
 		{
 			var mgr = CreateEnvironmentManager();
-			var ui = new MockCondaEnvironmentManagerUI();
+			MockCondaEnvironmentManagerUI ui = new MockCondaEnvironmentManagerUI();
 
 			var envName = await GetUnusedEnvironmentNameAsync(mgr);
 			bool result = await mgr.CreateAsync(envName, Python27Packages, ui, CancellationToken.None);
@@ -109,7 +109,7 @@ namespace PythonToolsUITests
 		public async Task CreateEnvironmentByNameRelativePath()
 		{
 			var mgr = CreateEnvironmentManager();
-			var ui = new MockCondaEnvironmentManagerUI();
+			MockCondaEnvironmentManagerUI ui = new MockCondaEnvironmentManagerUI();
 
 			// Relative path passed to conda.exe using -n (by name) argument.
 			// It's created in a subfolder of the usual default location.
@@ -130,7 +130,7 @@ namespace PythonToolsUITests
 		public async Task CreateEnvironmentByNameInvalidChars()
 		{
 			var mgr = CreateEnvironmentManager();
-			var ui = new MockCondaEnvironmentManagerUI();
+			MockCondaEnvironmentManagerUI ui = new MockCondaEnvironmentManagerUI();
 
 			var envName = "<invalid*name>";
 			bool result = await mgr.CreateAsync(envName, Python27Packages, ui, CancellationToken.None);
@@ -145,7 +145,7 @@ namespace PythonToolsUITests
 		public async Task CreateEnvironmentByPathFromEnvironmentFileCondaOnly()
 		{
 			var mgr = CreateEnvironmentManager();
-			var ui = new MockCondaEnvironmentManagerUI();
+			MockCondaEnvironmentManagerUI ui = new MockCondaEnvironmentManagerUI();
 
 			// cookies conda package
 			var envPath = Path.Combine(TestData.GetTempPath(), "conda-only");
@@ -162,7 +162,7 @@ namespace PythonToolsUITests
 		public async Task CreateEnvironmentByPathFromEnvironmentFileCondaAndPip()
 		{
 			var mgr = CreateEnvironmentManager();
-			var ui = new MockCondaEnvironmentManagerUI();
+			MockCondaEnvironmentManagerUI ui = new MockCondaEnvironmentManagerUI();
 
 			// python 3.7 conda package, flask conda package and flask_testing pip package
 			var envPath = Path.Combine(TestData.GetTempPath(), "conda-and-pip");
@@ -179,7 +179,7 @@ namespace PythonToolsUITests
 		public async Task CreateEnvironmentByPathFromEnvironmentFileNonExisting()
 		{
 			var mgr = CreateEnvironmentManager();
-			var ui = new MockCondaEnvironmentManagerUI();
+			MockCondaEnvironmentManagerUI ui = new MockCondaEnvironmentManagerUI();
 
 			var envPath = Path.Combine(TestData.GetTempPath(), "testenv");
 			var envFilePath = TestData.GetPath("TestData", "CondaEnvironments", "non-existing.yml");
@@ -195,7 +195,7 @@ namespace PythonToolsUITests
 		public async Task CreateEnvironmentByPathFromExistingEnvironment()
 		{
 			var mgr = CreateEnvironmentManager();
-			var ui = new MockCondaEnvironmentManagerUI();
+			MockCondaEnvironmentManagerUI ui = new MockCondaEnvironmentManagerUI();
 
 			var sourceEnvPath = await CreatePython27AndFlask012EnvAsync(mgr, ui, "envsrc");
 			var envPath = Path.Combine(TestData.GetTempPath(), "envdst");
@@ -210,7 +210,7 @@ namespace PythonToolsUITests
 		public async Task ExportEnvironmentFile()
 		{
 			var mgr = CreateEnvironmentManager();
-			var ui = new MockCondaEnvironmentManagerUI();
+			MockCondaEnvironmentManagerUI ui = new MockCondaEnvironmentManagerUI();
 
 			var envPath = await CreatePython27AndFlask012EnvAsync(mgr, ui, "envtoexport");
 			var destinationPath = Path.Combine(TestData.GetTempPath(), "exported.yml");
@@ -231,7 +231,7 @@ namespace PythonToolsUITests
 		public async Task ExportExplicitSpecificationFile()
 		{
 			var mgr = CreateEnvironmentManager();
-			var ui = new MockCondaEnvironmentManagerUI();
+			MockCondaEnvironmentManagerUI ui = new MockCondaEnvironmentManagerUI();
 
 			var envPath = await CreatePython27AndFlask012EnvAsync(mgr, ui, "envtoexport");
 			var destinationPath = Path.Combine(TestData.GetTempPath(), "exported.txt");
@@ -252,7 +252,7 @@ namespace PythonToolsUITests
 		public async Task DeleteEnvironment()
 		{
 			var mgr = CreateEnvironmentManager();
-			var ui = new MockCondaEnvironmentManagerUI();
+			MockCondaEnvironmentManagerUI ui = new MockCondaEnvironmentManagerUI();
 
 			var envPath = await CreatePython27AndFlask012EnvAsync(mgr, ui, "envtodelete");
 			var result = await mgr.DeleteAsync(envPath, ui, CancellationToken.None);
@@ -266,7 +266,7 @@ namespace PythonToolsUITests
 		public async Task DeleteEnvironmentNonExisting()
 		{
 			var mgr = CreateEnvironmentManager();
-			var ui = new MockCondaEnvironmentManagerUI();
+			MockCondaEnvironmentManagerUI ui = new MockCondaEnvironmentManagerUI();
 
 			var envPath = Path.Combine(TestData.GetTempPath(), "test");
 			var result = await mgr.DeleteAsync(envPath, ui, CancellationToken.None);
@@ -291,7 +291,7 @@ namespace PythonToolsUITests
 
 		private static void AssertCondaMetaFiles(string expectedEnvPath, params string[] fileFilters)
 		{
-			foreach (var fileFilter in fileFilters)
+			foreach (global::System.String fileFilter in fileFilters)
 			{
 				Assert.IsTrue(Directory.EnumerateFiles(Path.Combine(expectedEnvPath, "conda-meta"), fileFilter).Any(), $"{fileFilter} not found.");
 			}
@@ -302,7 +302,7 @@ namespace PythonToolsUITests
 			Assert.IsTrue(File.Exists(Path.Combine(envPath, "Lib", "site-packages", fileRelativePath)), $"{fileRelativePath} not found.");
 		}
 
-		private async static Task<string> EnqueueEnvironmentDeletionAsync(CondaEnvironmentManager mgr, string envName)
+		private static async Task<string> EnqueueEnvironmentDeletionAsync(CondaEnvironmentManager mgr, string envName)
 		{
 			var envPath = await GetEnvironmentPathAsync(mgr, envName);
 			if (envPath != null)
@@ -316,13 +316,13 @@ namespace PythonToolsUITests
 			return envPath;
 		}
 
-		private async static Task<string> GetEnvironmentPathAsync(CondaEnvironmentManager mgr, string envName)
+		private static async Task<string> GetEnvironmentPathAsync(CondaEnvironmentManager mgr, string envName)
 		{
 			var info = await CondaEnvironmentFactoryProvider.ExecuteCondaInfoAsync(mgr.CondaPath);
 			return info.EnvironmentFolders.SingleOrDefault(absPath => string.Compare(PathUtils.GetFileOrDirectoryName(absPath), envName, StringComparison.OrdinalIgnoreCase) == 0);
 		}
 
-		private async static Task<string> GetUnusedEnvironmentNameAsync(CondaEnvironmentManager mgr)
+		private static async Task<string> GetUnusedEnvironmentNameAsync(CondaEnvironmentManager mgr)
 		{
 			// Avoid names already used by any of the existing environments.
 			var info = await CondaEnvironmentFactoryProvider.ExecuteCondaInfoAsync(mgr.CondaPath);
@@ -352,7 +352,7 @@ namespace PythonToolsUITests
 			return CondaEnvironmentManager.Create(condaPath);
 		}
 
-		class MockCondaEnvironmentManagerUI : ICondaEnvironmentManagerUI
+		private class MockCondaEnvironmentManagerUI : ICondaEnvironmentManagerUI
 		{
 			public readonly List<string> ErrorText = new List<string>();
 			public readonly List<string> OperationFinished = new List<string>();

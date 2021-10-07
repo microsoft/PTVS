@@ -16,7 +16,7 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-	class MockMessageBox : MockDialog
+	internal class MockMessageBox : MockDialog
 	{
 		public readonly string Text;
 

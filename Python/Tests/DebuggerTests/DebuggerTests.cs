@@ -27,13 +27,7 @@ namespace DebuggerTests
 			}
 		}
 
-		internal override PythonVersion Version
-		{
-			get
-			{
-				throw new NotImplementedException("Do not invoke tests on base class");
-			}
-		}
+		internal override PythonVersion Version => throw new NotImplementedException("Do not invoke tests on base class");
 
 
 		//[TestMethod, Priority(UnitTestPriority.P3)]
@@ -42,13 +36,7 @@ namespace DebuggerTests
 		//    Assert.Fail("TODO: Thread creation tests w/ both thread.start_new_thread and threading module.");
 		//}
 
-		private string InfRepr
-		{
-			get
-			{
-				return Version.Version > PythonLanguageVersion.V25 ? "inf" : "1.#INF";
-			}
-		}
+		private string InfRepr => Version.Version > PythonLanguageVersion.V25 ? "inf" : "1.#INF";
 
 		#region Enum Children Tests
 
@@ -204,13 +192,7 @@ namespace DebuggerTests
 			await ChildTestAsync("GeneratorTest.py", 6, "a", 0, children.ToArray());
 		}
 
-		public virtual string EnumChildrenTestName
-		{
-			get
-			{
-				return "EnumChildTest.py";
-			}
-		}
+		public virtual string EnumChildrenTestName => "EnumChildTest.py";
 
 		private async Task ChildTestAsync(string filename, int lineNo, string text, params ChildInfo[] children)
 		{
@@ -221,7 +203,7 @@ namespace DebuggerTests
 		{
 			var debugger = new PythonDebugger();
 			PythonThread thread = null;
-			var processRunInfo = CreateProcess(debugger, DebuggerTestPath + filename, async (newproc, newthread) =>
+			PythonProcessRunInfo processRunInfo = CreateProcess(debugger, DebuggerTestPath + filename, async (newproc, newthread) =>
 			{
 				var breakPoint = newproc.AddBreakpoint(filename, lineNo);
 				await breakPoint.AddAsync(default(CancellationToken));
@@ -282,7 +264,7 @@ namespace DebuggerTests
 
 					for (int i = 0; i < children.Length; i++)
 					{
-						var curChild = children[i];
+						ChildInfo curChild = children[i];
 						Console.WriteLine("Finding: <{0}> (Repr: <{1}>)", curChild.ChildText, curChild.Repr ?? "(null)");
 
 						bool foundChild = false;
@@ -334,7 +316,7 @@ namespace DebuggerTests
 				(Version.Version.Is3x() || (curChild.HexRepr == null || curChild.HexRepr == curReceived.HexRepr));// __hex__ no longer used in 3.x, http://mail.python.org/pipermail/python-list/2009-September/1218287.html
 		}
 
-		class ChildInfo
+		private class ChildInfo
 		{
 			public readonly string ChildText;
 			public readonly string Expression; // if null, compute automatically from parent expression and ChildText
@@ -365,7 +347,7 @@ namespace DebuggerTests
 
 			var debugger = new PythonDebugger();
 			PythonThread thread = null;
-			var processRunInfo =
+			PythonProcessRunInfo processRunInfo =
 				CreateProcess(
 					debugger,
 					Path.Combine(DebuggerTestPath, "SetNextLine.py"),
@@ -458,7 +440,7 @@ namespace DebuggerTests
 			var debugger = new PythonDebugger();
 
 			PythonThread thread = null;
-			var processRunInfo = CreateProcess(debugger, DebuggerTestPath + "BreakAllTest.py", (newproc, newthread) =>
+			PythonProcessRunInfo processRunInfo = CreateProcess(debugger, DebuggerTestPath + "BreakAllTest.py", (newproc, newthread) =>
 			{
 				thread = newthread;
 				return Task.CompletedTask;
@@ -504,7 +486,7 @@ namespace DebuggerTests
 			var debugger = new PythonDebugger();
 
 			PythonThread thread = null;
-			var processRunInfo = CreateProcess(debugger, DebuggerTestPath + "InfiniteThreads.py", (newproc, newthread) =>
+			PythonProcessRunInfo processRunInfo = CreateProcess(debugger, DebuggerTestPath + "InfiniteThreads.py", (newproc, newthread) =>
 			{
 				thread = newthread;
 				return Task.CompletedTask;
@@ -611,7 +593,7 @@ namespace DebuggerTests
 		{
 			var debugger = new PythonDebugger();
 			PythonThread thread = null;
-			var processRunInfo = CreateProcess(debugger, DebuggerTestPath + filename, async (newproc, newthread) =>
+			PythonProcessRunInfo processRunInfo = CreateProcess(debugger, DebuggerTestPath + filename, async (newproc, newthread) =>
 			{
 				var breakPoint = newproc.AddBreakpoint(filename, lineNo);
 				await breakPoint.AddAsync(TimeoutToken());
@@ -708,15 +690,9 @@ namespace DebuggerTests
 			}
 		}
 
-		protected virtual string UnassignedLocalRepr
-		{
-			get { return "<undefined>"; }
-		}
+		protected virtual string UnassignedLocalRepr => "<undefined>";
 
-		protected virtual string UnassignedLocalType
-		{
-			get { return null; }
-		}
+		protected virtual string UnassignedLocalType => null;
 
 		[TestMethod, Priority(UnitTestPriority.P1)]
 		[TestCategory("10s")]
@@ -746,7 +722,7 @@ namespace DebuggerTests
 		[TestCategory("10s")]
 		public async Task LocalGlobalsTest()
 		{
-			var test = new LocalsTest(this, "LocalGlobalsTest.py", 3);
+			LocalsTest test = new LocalsTest(this, "LocalGlobalsTest.py", 3);
 			await test.RunAsync();
 
 			test.LineNo = 4;
@@ -769,7 +745,7 @@ namespace DebuggerTests
 		[TestMethod, Priority(UnitTestPriority.P1)]
 		public virtual async Task LocalClosureVarsTest()
 		{
-			var test = new LocalsTest(this, "LocalClosureVarsTest.py", 4)
+			LocalsTest test = new LocalsTest(this, "LocalClosureVarsTest.py", 4)
 			{
 				Locals = { "x", "y" },
 				Params = { "z" }
@@ -787,7 +763,7 @@ namespace DebuggerTests
 		[TestMethod, Priority(UnitTestPriority.P1)]
 		public virtual async Task LocalBuiltinUsageTest()
 		{
-			var test = new LocalsTest(this, "LocalBuiltinUsageTest.py", 4)
+			LocalsTest test = new LocalsTest(this, "LocalBuiltinUsageTest.py", 4)
 			{
 				Params = { "start", "end" },
 				Locals = { "i" }
@@ -803,7 +779,7 @@ namespace DebuggerTests
 		[TestMethod, Priority(UnitTestPriority.P1)]
 		public async Task GlobalsTest()
 		{
-			var test = new LocalsTest(this, "GlobalsTest.py", 4)
+			LocalsTest test = new LocalsTest(this, "GlobalsTest.py", 4)
 			{
 				Locals = { "x", "y", "__file__", "__name__", "__builtins__", "__doc__" }
 			};
@@ -832,7 +808,7 @@ namespace DebuggerTests
 		[TestMethod, Priority(UnitTestPriority.P1)]
 		public async Task LocalBooleanTest()
 		{
-			var test = new LocalsTest(this, "LocalBooleanTest.py", 2)
+			LocalsTest test = new LocalsTest(this, "LocalBooleanTest.py", 2)
 			{
 				Params = {
 					{ "x", "bool", "True" },
@@ -858,7 +834,7 @@ namespace DebuggerTests
 
 			PythonThread thread = null;
 			AutoResetEvent loaded = new AutoResetEvent(false);
-			var processRunInfo =
+			PythonProcessRunInfo processRunInfo =
 				CreateProcess(
 					debugger,
 					filename,
@@ -1146,7 +1122,7 @@ namespace DebuggerTests
 			var debugger = new PythonDebugger();
 
 			string fullPath = Path.Combine(DebuggerTestPath, "StepStdLib.py");
-			foreach (var steppingStdLib in new[] { false, true })
+			foreach (global::System.Boolean steppingStdLib in new[] { false, true })
 			{
 				var process = debugger.CreateProcess(
 					Version.Version,
@@ -1232,7 +1208,7 @@ namespace DebuggerTests
 			var debugger = new PythonDebugger();
 
 			PythonThread thread = null;
-			var processRunInfo = CreateProcess(debugger, DebuggerTestPath + "SteppingTest.py", (newproc, newthread) =>
+			PythonProcessRunInfo processRunInfo = CreateProcess(debugger, DebuggerTestPath + "SteppingTest.py", (newproc, newthread) =>
 			{
 				thread = newthread;
 				return Task.CompletedTask;
@@ -1271,7 +1247,7 @@ namespace DebuggerTests
 
 			var debugger = new PythonDebugger();
 			string fn = Path.Combine(DebuggerTestPath, "StepBreakBreak.py");
-			var processRunInfo = CreateProcess(debugger, fn, async (newproc, newthread) =>
+			PythonProcessRunInfo processRunInfo = CreateProcess(debugger, fn, async (newproc, newthread) =>
 			{
 				PythonBreakpoint breakPoint = newproc.AddBreakpointByFileExtension(2, fn);
 				await breakPoint.AddAsync(TimeoutToken());
@@ -1390,7 +1366,7 @@ namespace DebuggerTests
 			var debugger = new PythonDebugger();
 			string filename = Path.Combine(DebuggerTestPath, "ThreadJoin.py");
 			PythonThread mainThread = null;
-			var processRunInfo = CreateProcess(debugger, filename, async (newproc, newthread) =>
+			PythonProcessRunInfo processRunInfo = CreateProcess(debugger, filename, async (newproc, newthread) =>
 			{
 				mainThread = newthread;
 				var bp = newproc.AddBreakpoint(filename, 5);
@@ -1508,7 +1484,7 @@ namespace DebuggerTests
 			var debugger = new PythonDebugger();
 			PythonThread thread = null;
 			PythonBreakpoint bp = null;
-			var processRunInfo = CreateProcess(debugger, filename, async (newproc, newthread) =>
+			PythonProcessRunInfo processRunInfo = CreateProcess(debugger, filename, async (newproc, newthread) =>
 			{
 				thread = newthread;
 				bp = newproc.AddBreakpoint(filename, line);
@@ -1745,7 +1721,7 @@ namespace DebuggerTests
 
 			PythonThread thread = null;
 			PythonBreakpoint breakPoint = null;
-			var processRunInfo = CreateProcess(debugger, DebuggerTestPath + "BreakpointTest.py", async (newproc, newthread) =>
+			PythonProcessRunInfo processRunInfo = CreateProcess(debugger, DebuggerTestPath + "BreakpointTest.py", async (newproc, newthread) =>
 			{
 				breakPoint = newproc.AddBreakpoint("doesnotexist.py", 1);
 				await breakPoint.AddAsync(TimeoutToken());
@@ -1773,7 +1749,7 @@ namespace DebuggerTests
 		[TestMethod, Priority(UnitTestPriority.P1)]
 		public async Task TestCallStackFunctionNames()
 		{
-			var expectedNames = new[] {
+			global::System.String[] expectedNames = new[] {
 				"InnerClass.InnermostClass.innermost_method in nested_function in OuterClass.outer_method",
 				"nested_function in OuterClass.outer_method",
 				"OuterClass.outer_method",
@@ -1798,7 +1774,7 @@ namespace DebuggerTests
 
 		#region Exception Tests
 
-		class ExceptionInfo
+		private class ExceptionInfo
 		{
 			public readonly string TypeName;
 			public readonly int LineNumber;
@@ -1810,7 +1786,7 @@ namespace DebuggerTests
 			}
 		}
 
-		class ExceptionHandlerInfo
+		private class ExceptionHandlerInfo
 		{
 			public readonly int FirstLine;
 			public readonly int LastLine;
@@ -1836,13 +1812,7 @@ namespace DebuggerTests
 			}
 		}
 
-		public virtual string ComplexExceptions
-		{
-			get
-			{
-				return "ComplexExceptions.py";
-			}
-		}
+		public virtual string ComplexExceptions => "ComplexExceptions.py";
 
 		[TestMethod, Priority(UnitTestPriority.P1)]
 		[TestCategory("10s"), TestCategory("60s")]
@@ -2022,7 +1992,7 @@ namespace DebuggerTests
 			Console.WriteLine("Testing {0}", filename);
 
 			bool loaded = false;
-			var processRunInfo = CreateProcess(debugger, filename, async (processObj, threadObj) =>
+			PythonProcessRunInfo processRunInfo = CreateProcess(debugger, filename, async (processObj, threadObj) =>
 			{
 				loaded = true;
 				await processObj.SetExceptionInfoAsync(
@@ -2174,7 +2144,7 @@ namespace DebuggerTests
 
 		private void TestGetHandledExceptionRanges(PythonDebugger debugger, string filename, params ExceptionHandlerInfo[] expected)
 		{
-			var processRunInfo = CreateProcess(debugger, filename);
+			PythonProcessRunInfo processRunInfo = CreateProcess(debugger, filename);
 			var process = processRunInfo.Process;
 
 			var actual = process.GetHandledExceptionRanges(filename)
@@ -2210,7 +2180,7 @@ namespace DebuggerTests
 
 		private async Task TestModuleLoadAsync(PythonDebugger debugger, string filename, params string[] expectedModulesLoaded)
 		{
-			var processRunInfo = CreateProcess(debugger, filename);
+			PythonProcessRunInfo processRunInfo = CreateProcess(debugger, filename);
 			var process = processRunInfo.Process;
 
 			List<string> receivedFilenames = new List<string>();
@@ -2285,7 +2255,7 @@ namespace DebuggerTests
 
 		private async Task TestExitCodeAsync(PythonDebugger debugger, string filename, int expectedExitCode, string interpreterOptions = null, string pythonExe = null)
 		{
-			var processRunInfo = CreateProcess(debugger, filename, interpreterOptions: interpreterOptions, pythonExe: pythonExe);
+			PythonProcessRunInfo processRunInfo = CreateProcess(debugger, filename, interpreterOptions: interpreterOptions, pythonExe: pythonExe);
 			var process = processRunInfo.Process;
 
 			// Collect these values and assert on them on the main thread
@@ -2343,8 +2313,10 @@ namespace DebuggerTests
 			string fullPath = Path.GetFullPath(filename);
 			string dir = cwd ?? Path.GetFullPath(Path.GetDirectoryName(filename));
 
-			PythonProcessRunInfo processRunInfo = new PythonProcessRunInfo();
-			processRunInfo.Process = debugger.CreateProcess(Version.Version, pythonExe ?? Version.InterpreterPath, "\"" + fullPath + "\"", dir, "", interpreterOptions, debugOptions, DebugLog);
+			PythonProcessRunInfo processRunInfo = new PythonProcessRunInfo
+			{
+				Process = debugger.CreateProcess(Version.Version, pythonExe ?? Version.InterpreterPath, "\"" + fullPath + "\"", dir, "", interpreterOptions, debugOptions, DebugLog)
+			};
 			processRunInfo.Process.ProcessLoaded += async (sender, args) =>
 			{
 				try
@@ -2397,7 +2369,7 @@ namespace DebuggerTests
 			var debugger = new PythonDebugger();
 			var expectedOutput = new Queue<string>(new[] { "stdout", "stderr" });
 
-			var processRunInfo = CreateProcess(debugger, Path.Combine(DebuggerTestPath, "Output.py"), (processObj, threadObj) =>
+			PythonProcessRunInfo processRunInfo = CreateProcess(debugger, Path.Combine(DebuggerTestPath, "Output.py"), (processObj, threadObj) =>
 			{
 				processObj.DebuggerOutput += (sender, e) =>
 				{
@@ -2434,7 +2406,7 @@ namespace DebuggerTests
 				var debugger = new PythonDebugger();
 
 				bool gotOutput = false;
-				var process = CreateProcess(debugger, Path.Combine(DebuggerTestPath, "StdoutBuffer3x.py"), (processObj, threadObj) =>
+				PythonProcessRunInfo process = CreateProcess(debugger, Path.Combine(DebuggerTestPath, "StdoutBuffer3x.py"), (processObj, threadObj) =>
 				{
 					processObj.DebuggerOutput += (sender, args) =>
 					{
@@ -2463,7 +2435,7 @@ namespace DebuggerTests
 			var expectedOutput = "Provide A: fob\n";
 			string actualOutput = string.Empty;
 
-			var processRunInfo = CreateProcess(debugger, Path.Combine(DebuggerTestPath, "InputFunction.py"), (processObj, threadObj) =>
+			PythonProcessRunInfo processRunInfo = CreateProcess(debugger, Path.Combine(DebuggerTestPath, "InputFunction.py"), (processObj, threadObj) =>
 			{
 				processObj.DebuggerOutput += (sender, args) =>
 				{
@@ -2501,143 +2473,71 @@ namespace DebuggerTests
 
 	public abstract class DebuggerTests3x : DebuggerTests
 	{
-		public override string EnumChildrenTestName
-		{
-			get
-			{
-				return "EnumChildTestV3.py";
-			}
-		}
-		public override string ComplexExceptions
-		{
-			get
-			{
-				return "ComplexExceptionsV3.py";
-			}
-		}
+		public override string EnumChildrenTestName => "EnumChildTestV3.py";
+		public override string ComplexExceptions => "ComplexExceptionsV3.py";
 	}
 
 	[TestClass]
 	public class DebuggerTests35 : DebuggerTests3x
 	{
-		internal override PythonVersion Version
-		{
-			get
-			{
-				return PythonPaths.Python35;
-			}
-		}
+		internal override PythonVersion Version => PythonPaths.Python35;
 	}
 
 	[TestClass]
 	public class DebuggerTests35_x64 : DebuggerTests35
 	{
-		internal override PythonVersion Version
-		{
-			get
-			{
-				return PythonPaths.Python35_x64;
-			}
-		}
+		internal override PythonVersion Version => PythonPaths.Python35_x64;
 	}
 
 	[TestClass]
 	public class DebuggerTests36 : DebuggerTests3x
 	{
-		internal override PythonVersion Version
-		{
-			get
-			{
-				return PythonPaths.Python36;
-			}
-		}
+		internal override PythonVersion Version => PythonPaths.Python36;
 	}
 
 	[TestClass]
 	public class DebuggerTests36_x64 : DebuggerTests36
 	{
-		internal override PythonVersion Version
-		{
-			get
-			{
-				return PythonPaths.Python36_x64;
-			}
-		}
+		internal override PythonVersion Version => PythonPaths.Python36_x64;
 	}
 
 	[TestClass]
 	public class DebuggerTests37 : DebuggerTests3x
 	{
-		internal override PythonVersion Version
-		{
-			get
-			{
-				return PythonPaths.Python37;
-			}
-		}
+		internal override PythonVersion Version => PythonPaths.Python37;
 	}
 
 	[TestClass]
 	public class DebuggerTests37_x64 : DebuggerTests37
 	{
-		internal override PythonVersion Version
-		{
-			get
-			{
-				return PythonPaths.Python37_x64;
-			}
-		}
+		internal override PythonVersion Version => PythonPaths.Python37_x64;
 	}
 
 	[TestClass]
 	public class DebuggerTests27 : DebuggerTests
 	{
-		internal override PythonVersion Version
-		{
-			get
-			{
-				return PythonPaths.Python27;
-			}
-		}
+		internal override PythonVersion Version => PythonPaths.Python27;
 	}
 
 	[TestClass]
 	public class DebuggerTests27_x64 : DebuggerTests
 	{
-		internal override PythonVersion Version
-		{
-			get
-			{
-				return PythonPaths.Python27_x64;
-			}
-		}
+		internal override PythonVersion Version => PythonPaths.Python27_x64;
 	}
 
 	[TestClass]
 	public class DebuggerTestsIpy27 : DebuggerTests
 	{
-		internal override PythonVersion Version
-		{
-			get
-			{
-				return PythonPaths.IronPython27 ?? PythonPaths.IronPython27_x64;
-			}
-		}
+		internal override PythonVersion Version => PythonPaths.IronPython27 ?? PythonPaths.IronPython27_x64;
 
-		protected override string UnassignedLocalRepr
-		{
-			get { return "None"; }
-		}
+		protected override string UnassignedLocalRepr => "None";
 
-		protected override string UnassignedLocalType
-		{
-			get { return "NoneType"; }
-		}
+		protected override string UnassignedLocalType => "NoneType";
 
 		// IronPython doesn't expose closure variables in frame.f_locals
 		public override async Task LocalClosureVarsTest()
 		{
-			var test = new LocalsTest(this, "LocalClosureVarsTest.py", 4)
+			LocalsTest test = new LocalsTest(this, "LocalClosureVarsTest.py", 4)
 			{
 				Params = { "z" }
 			};
@@ -2651,7 +2551,7 @@ namespace DebuggerTests
 		// IronPython exposes some builtin elements in co_names not in __builtins__
 		public override async Task LocalBuiltinUsageTest()
 		{
-			var test = new LocalsTest(this, "LocalBuiltinUsageTest.py", 4)
+			LocalsTest test = new LocalsTest(this, "LocalBuiltinUsageTest.py", 4)
 			{
 				Params = { "start", "end" },
 				Locals = { "i", "foreach_enumerator" }

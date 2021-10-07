@@ -33,9 +33,6 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			CheckPyType<PyBaseExceptionObject>();
 		}
 
-		public PointerProxy<PyObject> args
-		{
-			get { return GetFieldProxy(_fields.args); }
-		}
+		public PointerProxy<PyObject> args => GetFieldProxy(_fields.args);
 	}
 }

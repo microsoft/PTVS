@@ -108,7 +108,7 @@ namespace FactoryProviderSuccess {
 		{
 			var path = FactoryProviderTypeLoadErrorPath;
 
-			var catalogLog = new MockLogger();
+			MockLogger catalogLog = new MockLogger();
 			var container = InterpreterCatalog.CreateContainer(
 				catalogLog,
 				typeof(IInterpreterOptionsService).Assembly.Location,
@@ -136,7 +136,7 @@ namespace FactoryProviderSuccess {
 		[TestMethod, Priority(UnitTestPriority.P1)]
 		public void ProviderLoadLog_FileNotFound()
 		{
-			var catalogLog = new MockLogger();
+			MockLogger catalogLog = new MockLogger();
 
 			var path = Path.ChangeExtension(Path.GetTempFileName(), "dll");
 			File.Delete(path);
@@ -179,7 +179,7 @@ namespace FactoryProviderSuccess {
 				using (var dest = new FileStream(path, FileMode.Create, FileAccess.Write))
 				{
 					var rnd = new Random();
-					var buffer = new byte[4096];
+					global::System.Byte[] buffer = new byte[4096];
 					int read = src.Read(buffer, 0, buffer.Length);
 					while (read > 0)
 					{
@@ -201,7 +201,7 @@ namespace FactoryProviderSuccess {
 		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
 		public void ProviderLoadLog_CorruptImage()
 		{
-			var catalogLog = new MockLogger();
+			MockLogger catalogLog = new MockLogger();
 
 			var path = Path.ChangeExtension(Path.GetTempFileName(), "dll");
 			File.Delete(path);
@@ -270,7 +270,7 @@ namespace FactoryProviderTypeLoadException {
 		{
 			var path = FactoryProviderTypeLoadErrorPath;
 
-			var catalogLog = new MockLogger();
+			MockLogger catalogLog = new MockLogger();
 			var container = InterpreterCatalog.CreateContainer(
 				catalogLog,
 				FactoryProviderTypeLoadErrorPath,
@@ -305,7 +305,7 @@ namespace FactoryProviderTypeLoadException {
 		{
 			var path = FactoryProviderTypeLoadErrorPath;
 
-			var catalogLog = new MockLogger();
+			MockLogger catalogLog = new MockLogger();
 			var container = InterpreterCatalog.CreateContainer(
 				catalogLog,
 				FactoryProviderTypeLoadErrorPath,
@@ -364,7 +364,7 @@ namespace FactoryProviderTypeLoadException {
 	[Export(typeof(IInterpreterLog))]
 	[Export(typeof(MockLogger))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
-	class MockLogger : ICatalogLog, IInterpreterLog
+	internal class MockLogger : ICatalogLog, IInterpreterLog
 	{
 		public readonly List<string> AllItems = new List<string>();
 

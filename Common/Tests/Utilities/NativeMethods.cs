@@ -288,11 +288,13 @@ namespace TestUtilities
 		/// <param name="dir"></param>
 		public static void RecursivelyDeleteDirectory(string dir, bool silent = false)
 		{
-			SHFILEOPSTRUCT fileOp = new SHFILEOPSTRUCT();
-			fileOp.pFrom = dir + '\0';  // pFrom must be double null terminated
-			fileOp.wFunc = FO_Func.FO_DELETE;
-			fileOp.fFlags = FILEOP_FLAGS_ENUM.FOF_NOCONFIRMATION |
-				FILEOP_FLAGS_ENUM.FOF_NOERRORUI;
+			SHFILEOPSTRUCT fileOp = new SHFILEOPSTRUCT
+			{
+				pFrom = dir + '\0',  // pFrom must be double null terminated
+				wFunc = FO_Func.FO_DELETE,
+				fFlags = FILEOP_FLAGS_ENUM.FOF_NOCONFIRMATION |
+				FILEOP_FLAGS_ENUM.FOF_NOERRORUI
+			};
 			if (silent)
 			{
 				fileOp.fFlags |= FILEOP_FLAGS_ENUM.FOF_SILENT;
@@ -305,11 +307,11 @@ namespace TestUtilities
 		}
 
 		[DllImport("shell32.dll", CharSet = CharSet.Unicode)]
-		static extern int SHFileOperation([In, Out] ref SHFILEOPSTRUCT lpFileOp);
+		private static extern int SHFileOperation([In, Out] ref SHFILEOPSTRUCT lpFileOp);
 
 
 		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode, Pack = 2)]
-		struct SHFILEOPSTRUCT
+		private struct SHFILEOPSTRUCT
 		{
 			public IntPtr hwnd;
 			public FO_Func wFunc;

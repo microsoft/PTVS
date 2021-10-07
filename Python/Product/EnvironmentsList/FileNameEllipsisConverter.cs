@@ -17,7 +17,7 @@
 namespace Microsoft.PythonTools.EnvironmentsList
 {
 	[ValueConversion(typeof(string), typeof(string))]
-	sealed class FileNameEllipsisConverter : IValueConverter
+	internal sealed class FileNameEllipsisConverter : IValueConverter
 	{
 		private static readonly char[] PathSeparators = new[] {
 			Path.DirectorySeparatorChar,

@@ -18,7 +18,7 @@ using Microsoft.PythonTools.Debugger.DebugEngine;
 
 namespace Microsoft.PythonTools.Debugger
 {
-	enum FrameKind
+	internal enum FrameKind
 	{
 		None,
 		Python,

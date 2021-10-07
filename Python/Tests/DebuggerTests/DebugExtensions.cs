@@ -16,7 +16,7 @@
 
 namespace DebuggerTests
 {
-	static class DebugExtensions
+	internal static class DebugExtensions
 	{
 		internal static PythonProcess DebugProcess(this PythonDebugger debugger, PythonVersion version, string filename, TextWriter debugLog, Func<PythonProcess, PythonThread, Task> onLoaded = null, bool resumeOnProcessLoaded = true, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput, string cwd = null, string arguments = "")
 		{

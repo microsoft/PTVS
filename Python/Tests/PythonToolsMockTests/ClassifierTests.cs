@@ -31,7 +31,7 @@ namespace PythonToolsMockTests
 			var code = string.Join(Environment.NewLine, PythonKeywords.All(PythonLanguageVersion.V27));
 			code += "\r\nTrue\r\nFalse";
 
-			using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27))
+			using (ClassifierHelper helper = new ClassifierHelper(code, PythonLanguageVersion.V27))
 			{
 				foreach (var span in helper.AstClassifierSpans)
 				{
@@ -58,7 +58,7 @@ namespace PythonToolsMockTests
 		{
 			var code = string.Join(Environment.NewLine, PythonKeywords.All(PythonLanguageVersion.V33));
 
-			using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V33))
+			using (ClassifierHelper helper = new ClassifierHelper(code, PythonLanguageVersion.V33))
 			{
 				foreach (var span in helper.AstClassifierSpans)
 				{
@@ -91,7 +91,7 @@ os.path = ntpath
 abc = 123
 abc = True
 ";
-			using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27))
+			using (ClassifierHelper helper = new ClassifierHelper(code, PythonLanguageVersion.V27))
 			{
 				helper.CheckAstClassifierSpans("ki ki ki i.i=i i=n i=b");
 				helper.CheckAnalysisClassifierSpans("m<abc>m<os>m<ntpath>m<os>m<path>m<ntpath>m<abc>m<abc>");
@@ -118,7 +118,7 @@ x
 os
 name_not_in_os
 ";
-			using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27))
+			using (ClassifierHelper helper = new ClassifierHelper(code, PythonLanguageVersion.V27))
 			{
 				helper.CheckAstClassifierSpans("kiki kiki kikiki i i i i");
 				helper.CheckAnalysisClassifierSpans("m<abc>m<x>m<os>m<datetime>c<datetime>c<DATETIME>m<x>");
@@ -136,7 +136,7 @@ MyClassAlias = MyClass
 mca = MyClassAlias()
 MyClassType = type(mc)
 ";
-			using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27))
+			using (ClassifierHelper helper = new ClassifierHelper(code, PythonLanguageVersion.V27))
 			{
 				helper.CheckAstClassifierSpans("ki(i): k i=i() i=i i=i() i=i(i)");
 				helper.CheckAnalysisClassifierSpans("c<MyClass>c<object>cc<MyClassAlias>ccc<MyClassType>c<type>");
@@ -155,7 +155,7 @@ f(a, b, c)
 a = b
 b = c
 ";
-			using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27))
+			using (ClassifierHelper helper = new ClassifierHelper(code, PythonLanguageVersion.V27))
 			{
 				helper.CheckAstClassifierSpans("ki(i,i,i): i=i i=i ki i(i,i,i) i=i i=i");
 				helper.CheckAnalysisClassifierSpans("f<f>ppppppppf<f>");
@@ -171,7 +171,7 @@ class B: pass
 def f(a = A, b : B):
     pass
 ";
-			using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27))
+			using (ClassifierHelper helper = new ClassifierHelper(code, PythonLanguageVersion.V27))
 			{
 				helper.CheckAstClassifierSpans("ki:k ki:k ki(i=i,i:i): k");
 				helper.CheckAnalysisClassifierSpans("c<A>c<B>f<f>pc<A>pc<B>");
@@ -186,7 +186,7 @@ def f(a = A, b : B):
 b ''' + c + 'x' + '''d
 
 e'''";
-			using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27))
+			using (ClassifierHelper helper = new ClassifierHelper(code, PythonLanguageVersion.V27))
 			{
 				helper.CheckAstClassifierSpans("i=sss+i+s+sss");
 			}
@@ -197,12 +197,12 @@ e'''";
 		{
 			var code = "True False";
 
-			using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27))
+			using (ClassifierHelper helper = new ClassifierHelper(code, PythonLanguageVersion.V27))
 			{
 				helper.CheckAstClassifierSpans("b<True> b<False>");
 			}
 
-			using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V35))
+			using (ClassifierHelper helper = new ClassifierHelper(code, PythonLanguageVersion.V35))
 			{
 				helper.CheckAstClassifierSpans("k<True> k<False>");
 			}
@@ -230,7 +230,7 @@ async def f():
     pass
 ";
 
-			using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V36))
+			using (ClassifierHelper helper = new ClassifierHelper(code, PythonLanguageVersion.V36))
 			{
 				helper.CheckAstClassifierSpans("ii i+i iki:k ikiki:k iki(): ii iki:k ikiki:k ki: " +
 					"iki(i): (iikiki) @iiki():k");
@@ -249,7 +249,7 @@ def f() -> int:
     pass
 ";
 
-			using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V35))
+			using (ClassifierHelper helper = new ClassifierHelper(code, PythonLanguageVersion.V35))
 			{
 				helper.CheckAnalysisClassifierSpans("f<f>c<int>");
 			}
@@ -262,7 +262,7 @@ def f() -> int:
     '''doc string'''
     '''not a doc string'''
 ";
-			using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V35))
+			using (ClassifierHelper helper = new ClassifierHelper(code, PythonLanguageVersion.V35))
 			{
 				helper.CheckAstClassifierSpans("ki():ss");
 				helper.CheckAnalysisClassifierSpans("f<f>d<'''doc string'''>");
@@ -284,7 +284,7 @@ R.split('pattern', 'str')
 R.sub('pattern', 'str')
 R.subn('pattern', 'str')
 ";
-			using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V35))
+			using (ClassifierHelper helper = new ClassifierHelper(code, PythonLanguageVersion.V35))
 			{
 				helper.CheckAstClassifierSpans("kiki " + string.Join(" ", Enumerable.Repeat("i.i(s,s)", 10)));
 				helper.CheckAnalysisClassifierSpans("m<re>m<R> " + string.Join(" ", Enumerable.Repeat("m<R>fr", 10)));
@@ -324,29 +324,11 @@ R.subn('pattern', 'str')
 				_view.Dispose();
 			}
 
-			public ITextView TextView
-			{
-				get
-				{
-					return _view.View.TextView;
-				}
-			}
+			public ITextView TextView => _view.View.TextView;
 
-			public ITextBuffer TextBuffer
-			{
-				get
-				{
-					return _view.View.TextView.TextBuffer;
-				}
-			}
+			public ITextBuffer TextBuffer => _view.View.TextView.TextBuffer;
 
-			public IClassifier AstClassifier
-			{
-				get
-				{
-					return _provider1.GetClassifier(TextBuffer);
-				}
-			}
+			public IClassifier AstClassifier => _provider1.GetClassifier(TextBuffer);
 
 			public IEnumerable<ClassificationSpan> AstClassifierSpans
 			{
@@ -359,13 +341,7 @@ R.subn('pattern', 'str')
 				}
 			}
 
-			public IClassifier AnalysisClassifier
-			{
-				get
-				{
-					return _provider2.GetClassifier(TextBuffer);
-				}
-			}
+			public IClassifier AnalysisClassifier => _provider2.GetClassifier(TextBuffer);
 
 			public IEnumerable<ClassificationSpan> AnalysisClassifierSpans
 			{

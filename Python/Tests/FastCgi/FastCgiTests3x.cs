@@ -25,14 +25,8 @@ namespace FastCgiTests
 			AssertListener.Initialize();
 		}
 
-		public override PythonVersion PythonVersion
-		{
-			get
-			{
-				return PythonPaths.Python37_x64 ?? PythonPaths.Python37 ??
+		public override PythonVersion PythonVersion => PythonPaths.Python37_x64 ?? PythonPaths.Python37 ??
 					   PythonPaths.Python36_x64 ?? PythonPaths.Python36 ??
 					   PythonPaths.Python35_x64 ?? PythonPaths.Python35;
-			}
-		}
 	}
 }

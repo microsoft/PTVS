@@ -123,7 +123,10 @@ namespace TestUtilities.Mocks
 		/// </summary>
 		public TextUndoHistoryState State => _state;
 
-		public ITextUndoTransaction CreateInvisibleTransaction(string description) => CreateTransaction(description);
+		public ITextUndoTransaction CreateInvisibleTransaction(string description)
+		{
+			return CreateTransaction(description);
+		}
 
 		/// <summary>
 		/// Creates a new transaction, nests it in the previously current transaction, and marks it current.
@@ -148,7 +151,7 @@ namespace TestUtilities.Mocks
 			{
 				foreach (var textUndoTransaction in _redoStack)
 				{
-					var redoTransaction = (MockTextUndoTransaction)textUndoTransaction;
+					MockTextUndoTransaction redoTransaction = (MockTextUndoTransaction)textUndoTransaction;
 					redoTransaction.Invalidate();
 				}
 
@@ -188,7 +191,7 @@ namespace TestUtilities.Mocks
 
 			TextUndoHistoryState originalState = _state;
 			_state = TextUndoHistoryState.Undoing;
-			using (new AutoEnclose(delegate { this._state = originalState; }))
+			using (new AutoEnclose(delegate { _state = originalState; }))
 			{
 				while (count > 0)
 				{
@@ -219,7 +222,7 @@ namespace TestUtilities.Mocks
 		{
 			TextUndoHistoryState originalState = _state;
 			_state = TextUndoHistoryState.Undoing;
-			using (new AutoEnclose(delegate { this._state = originalState; }))
+			using (new AutoEnclose(delegate { _state = originalState; }))
 			{
 				if (_undoStack.Contains(transaction))
 				{
@@ -264,7 +267,7 @@ namespace TestUtilities.Mocks
 
 			TextUndoHistoryState originalState = _state;
 			_state = TextUndoHistoryState.Redoing;
-			using (new AutoEnclose(delegate { this._state = originalState; }))
+			using (new AutoEnclose(delegate { _state = originalState; }))
 			{
 				while (count > 0)
 				{
@@ -295,7 +298,7 @@ namespace TestUtilities.Mocks
 		{
 			TextUndoHistoryState originalState = _state;
 			_state = TextUndoHistoryState.Redoing;
-			using (new AutoEnclose(delegate { this._state = originalState; }))
+			using (new AutoEnclose(delegate { _state = originalState; }))
 			{
 				if (_redoStack.Contains(transaction))
 				{

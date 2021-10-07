@@ -16,7 +16,7 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-	class MockVsTextManager : IVsTextManager, IVsTextManager2, IVsExpansionManager, IConnectionPointContainer
+	internal class MockVsTextManager : IVsTextManager, IVsTextManager2, IVsExpansionManager, IConnectionPointContainer
 	{
 		private readonly MockVs _vs;
 		private Dictionary<Guid, LANGPREFERENCES2> _langPrefs = new Dictionary<Guid, LANGPREFERENCES2>();
@@ -159,7 +159,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 				throw new NotImplementedException();
 			}
 
-			foreach (var langPrefs in pLangPrefs)
+			foreach (LANGPREFERENCES2 langPrefs in pLangPrefs)
 			{
 				_langPrefs[langPrefs.guidLang] = langPrefs;
 			}
@@ -368,7 +368,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			{
 				throw new NotImplementedException();
 			}
-			foreach (var langPrefs in pLangPrefs)
+			foreach (LANGPREFERENCES langPrefs in pLangPrefs)
 			{
 				_langPrefs[langPrefs.guidLang] = FromLangPrefs(langPrefs);
 			}
@@ -422,7 +422,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			ppCP = _ppCP;
 		}
 
-		class ConnectionPoint : IConnectionPoint
+		private class ConnectionPoint : IConnectionPoint
 		{
 			private readonly List<object> _sinks = new List<object>();
 

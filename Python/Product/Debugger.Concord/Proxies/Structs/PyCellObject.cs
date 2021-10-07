@@ -32,16 +32,13 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			CheckPyType<PyCellObject>();
 		}
 
-		public PointerProxy<PyObject> ob_ref
-		{
-			get { return GetFieldProxy(_fields.ob_ref); }
-		}
+		public PointerProxy<PyObject> ob_ref => GetFieldProxy(_fields.ob_ref);
 
 		public override void Repr(ReprBuilder builder)
 		{
 			builder.AppendFormat("<cell at {0:PTR}: ", Address);
 
-			var obj = ob_ref.TryRead();
+			PyObject obj = ob_ref.TryRead();
 			if (obj != null)
 			{
 				builder.AppendFormat("{0} object at {1:PTR}>", obj.ob_type.Read().tp_name.Read().ToString(), obj.Address);

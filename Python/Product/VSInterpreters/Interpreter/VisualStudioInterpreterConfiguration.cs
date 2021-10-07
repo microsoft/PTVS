@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools.Interpreter
 				}
 			}
 
-			var configuration = new VisualStudioInterpreterConfiguration(id, description, prefixPath, interpreterPath, windowsInterpreterPath, pathEnvironmentVariable, architecture, version, uiMode);
+			VisualStudioInterpreterConfiguration configuration = new VisualStudioInterpreterConfiguration(id, description, prefixPath, interpreterPath, windowsInterpreterPath, pathEnvironmentVariable, architecture, version, uiMode);
 
 			if (properties.TryGetValue(nameof(InterpreterConfiguration.SearchPaths), out object o))
 			{
@@ -83,7 +83,9 @@ namespace Microsoft.PythonTools.Interpreter
 		}
 
 		private static string Read(Dictionary<string, object> d, string k)
-			=> d.TryGetValue(k, out var o) ? o as string : null;
+		{
+			return d.TryGetValue(k, out var o) ? o as string : null;
+		}
 
 		public VisualStudioInterpreterConfiguration(
 			string id,

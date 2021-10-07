@@ -16,7 +16,7 @@
 
 namespace Microsoft.IronPythonTools.Interpreter
 {
-	class IronPythonBuiltinMethodDescriptor : PythonObject, IPythonMethodDescriptor
+	internal class IronPythonBuiltinMethodDescriptor : PythonObject, IPythonMethodDescriptor
 	{
 		private IPythonFunction _function;
 
@@ -33,10 +33,10 @@ namespace Microsoft.IronPythonTools.Interpreter
 			{
 				if (_function == null)
 				{
-					var ri = RemoteInterpreter;
+					RemoteInterpreterProxy ri = RemoteInterpreter;
 					if (ri != null)
 					{
-						var func = ri.GetBuiltinMethodDescriptorTemplate(Value);
+						ObjectIdentityHandle func = ri.GetBuiltinMethodDescriptorTemplate(Value);
 
 						_function = (IPythonFunction)Interpreter.MakeObject(func);
 					}
@@ -45,22 +45,13 @@ namespace Microsoft.IronPythonTools.Interpreter
 			}
 		}
 
-		public bool IsBound
-		{
-			get
-			{
-				return false;
-			}
-		}
+		public bool IsBound => false;
 
 		#endregion
 
 		#region IMember Members
 
-		public override PythonMemberType MemberType
-		{
-			get { return PythonMemberType.Method; }
-		}
+		public override PythonMemberType MemberType => PythonMemberType.Method;
 
 		#endregion
 	}

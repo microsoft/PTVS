@@ -20,7 +20,7 @@ namespace TestAdapterTests
 {
 	public abstract partial class TestExecutorTests
 	{
-		class CoverageInfo
+		private class CoverageInfo
 		{
 			public CoverageInfo(string fileName, int[] coveredLines)
 			{

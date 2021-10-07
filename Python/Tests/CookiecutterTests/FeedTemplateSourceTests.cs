@@ -53,7 +53,7 @@ namespace CookiecutterTests
 			Assert.IsNull(result.ContinuationToken);
 			Assert.AreEqual(6, result.Templates.Count);
 
-			var expected = new Template[] {
+			Template[] expected = new Template[] {
 				new Template() {
 					RemoteUrl = "https://github.com/brettcannon/python-azure-web-app-cookiecutter",
 					Name = "brettcannon/python-azure-web-app-cookiecutter",
@@ -121,7 +121,7 @@ namespace CookiecutterTests
 			Assert.IsNotNull(result.Templates.SingleOrDefault(t => t.Name == "sloria/cookiecutter-flask"));
 		}
 
-		class TemplateComparer : IComparer
+		private class TemplateComparer : IComparer
 		{
 			public int Compare(object x, object y)
 			{

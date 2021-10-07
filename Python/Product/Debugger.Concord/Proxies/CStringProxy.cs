@@ -35,15 +35,9 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies
 			Address = address;
 		}
 
-		public long ObjectSize
-		{
-			get { return ReadBytes().Length; }
-		}
+		public long ObjectSize => ReadBytes().Length;
 
-		private Encoding Encoding
-		{
-			get
-			{
+		private Encoding Encoding =>
 				// Python 3.x consistently treats char* strings (T_STRING, tp_name etc) as UTF-8, so that's what we do here as well.
 				//
 				// In Python 2.x, the story is complicated, since char* is just mapped to non-Unicode Python strings, without any
@@ -59,9 +53,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies
 				// string to the user using ReplBuilder, we will use \x## escapes for the higher 128 chars, which will result in a
 				// properly round-tripped, encoding-agnostic, and therefore guaranteed correct - if not always the most readable -
 				// representation of the string.
-				return (Process.GetPythonRuntimeInfo().LanguageVersion <= PythonLanguageVersion.V27) ? _latin1 : Encoding.UTF8;
-			}
-		}
+				(Process.GetPythonRuntimeInfo().LanguageVersion <= PythonLanguageVersion.V27) ? _latin1 : Encoding.UTF8;
 
 		public unsafe byte[] ReadBytes()
 		{

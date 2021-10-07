@@ -24,8 +24,8 @@ namespace TestUtilities
 		private readonly Action<Task> _afterTaskCompleted;
 		private readonly TaskCompletionSource<Exception> _tcs;
 		private readonly ConcurrentDictionary<Task, StackFrame[]> _stackTraces;
-		private int _count;
-		private bool _isTestCompleted;
+		private readonly int _count;
+		private readonly bool _isTestCompleted;
 
 		public TaskObserver(int secondsTimeout)
 		{

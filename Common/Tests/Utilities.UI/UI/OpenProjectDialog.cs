@@ -16,7 +16,7 @@
 
 namespace TestUtilities.UI
 {
-	class OpenProjectDialog : AutomationWrapper
+	internal class OpenProjectDialog : AutomationWrapper
 	{
 		public OpenProjectDialog(IntPtr hwnd)
 			: base(AutomationElement.FromHandle(hwnd))

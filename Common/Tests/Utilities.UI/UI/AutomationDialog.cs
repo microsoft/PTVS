@@ -73,7 +73,7 @@ namespace TestUtilities.UI
 
 		public void Dispose()
 		{
-			this.Dispose(true);
+			Dispose(true);
 			GC.SuppressFinalize(this);
 		}
 

@@ -36,10 +36,25 @@ namespace TestUtilities
 			_exportsModule = _exportsAssembly.DefineDynamicModule("MefExportsModule");
 		}
 
-		public static Type GetExportType<T>() where T : new() => GetExportType(() => new T());
-		public static Type GetExportType<T>(Func<T> factory) => CreateType<T, Func<T>>().SetFactory(factory);
-		public static Type GetExportType<T, TResult>(Func<T, TResult> factory) => CreateType<TResult, Func<T, TResult>>().SetFactory(factory);
-		public static Type GetExportType<T1, T2, TResult>(Func<T1, T2, TResult> factory) => CreateType<TResult, Func<T1, T2, TResult>>().SetFactory(factory);
+		public static Type GetExportType<T>() where T : new()
+		{
+			return GetExportType(() => new T());
+		}
+
+		public static Type GetExportType<T>(Func<T> factory)
+		{
+			return CreateType<T, Func<T>>().SetFactory(factory);
+		}
+
+		public static Type GetExportType<T, TResult>(Func<T, TResult> factory)
+		{
+			return CreateType<TResult, Func<T, TResult>>().SetFactory(factory);
+		}
+
+		public static Type GetExportType<T1, T2, TResult>(Func<T1, T2, TResult> factory)
+		{
+			return CreateType<TResult, Func<T1, T2, TResult>>().SetFactory(factory);
+		}
 
 		private static Type SetFactory<TFactory>(this Type type, TFactory factory)
 		{

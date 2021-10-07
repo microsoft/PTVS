@@ -19,7 +19,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 	// This class represents a succesfully parsed expression to the debugger. 
 	// It is returned as a result of a successful call to IDebugExpressionContext2.ParseText
 	// It allows the debugger to obtain the values of an expression in the debuggee. 
-	class UncalculatedAD7Expression : IDebugExpression2
+	internal class UncalculatedAD7Expression : IDebugExpression2
 	{
 		private readonly AD7StackFrame _frame;
 		private readonly string _expression;

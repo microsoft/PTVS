@@ -23,7 +23,7 @@ namespace Microsoft.PythonTools.Debugger.Remote
 		public PythonRemoteEnumDebugProcesses(PythonRemoteDebugProcess process)
 			: base(process)
 		{
-			this._process = process;
+			_process = process;
 		}
 
 		public int Clone(out IEnumDebugProcesses2 ppEnum)

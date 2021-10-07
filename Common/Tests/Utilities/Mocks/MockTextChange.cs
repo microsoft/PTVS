@@ -16,7 +16,7 @@
 
 namespace TestUtilities.Mocks
 {
-	class MockTextChange : ITextChange
+	internal class MockTextChange : ITextChange
 	{
 		private readonly SnapshotSpan _removed;
 		private readonly string _inserted;
@@ -30,74 +30,29 @@ namespace TestUtilities.Mocks
 			_newStart = newStart;
 		}
 
-		public int Delta
-		{
-			get { return _inserted.Length - _removed.Length; }
-		}
+		public int Delta => _inserted.Length - _removed.Length;
 
-		public int LineCountDelta
-		{
-			get
-			{
-				return _inserted.Split(NewLines, StringSplitOptions.None).Length -
+		public int LineCountDelta => _inserted.Split(NewLines, StringSplitOptions.None).Length -
 					_removed.GetText().Split(NewLines, StringSplitOptions.None).Length;
-			}
-		}
 
-		public int NewEnd
-		{
-			get
-			{
-				return NewPosition + _inserted.Length;
-			}
-		}
+		public int NewEnd => NewPosition + _inserted.Length;
 
-		public int NewLength
-		{
-			get { return _inserted.Length; }
-		}
+		public int NewLength => _inserted.Length;
 
-		public int NewPosition
-		{
-			get { return _newStart; }
-		}
+		public int NewPosition => _newStart;
 
-		public Span NewSpan
-		{
-			get
-			{
-				return new Span(NewPosition, NewLength);
-			}
-		}
+		public Span NewSpan => new Span(NewPosition, NewLength);
 
-		public string NewText
-		{
-			get { return _inserted; }
-		}
+		public string NewText => _inserted;
 
-		public int OldEnd
-		{
-			get { return _removed.End; }
-		}
+		public int OldEnd => _removed.End;
 
-		public int OldLength
-		{
-			get { return _removed.Length; }
-		}
+		public int OldLength => _removed.Length;
 
-		public int OldPosition
-		{
-			get { return _removed.Start; }
-		}
+		public int OldPosition => _removed.Start;
 
-		public Span OldSpan
-		{
-			get { return _removed.Span; }
-		}
+		public Span OldSpan => _removed.Span;
 
-		public string OldText
-		{
-			get { return _removed.GetText(); }
-		}
+		public string OldText => _removed.GetText();
 	}
 }

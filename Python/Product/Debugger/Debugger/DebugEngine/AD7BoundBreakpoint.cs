@@ -21,7 +21,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 	// This class represents a breakpoint that has been bound to a location in the debuggee. It is a child of the pending breakpoint
 	// that creates it. Unless the pending breakpoint only has one bound breakpoint, each bound breakpoint is displayed as a child of the
 	// pending breakpoint in the breakpoints window. Otherwise, only one is displayed.
-	class AD7BoundBreakpoint : IDebugBoundBreakpoint2
+	internal class AD7BoundBreakpoint : IDebugBoundBreakpoint2
 	{
 		private readonly AD7PendingBreakpoint _pendingBreakpoint;
 		private readonly AD7BreakpointResolution _breakpointResolution;
@@ -128,7 +128,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 
 		int IDebugBoundBreakpoint2.GetHitCount(out uint pdwHitCount)
 		{
-			var remoteProcess = _engine.Process as PythonRemoteProcess;
+			PythonRemoteProcess remoteProcess = _engine.Process as PythonRemoteProcess;
 			if (remoteProcess != null && remoteProcess.TargetHostType == AD7Engine.TargetUwp)
 			{
 				// Target is UWP host and we will just assume breakpoint hit count is 1 from this

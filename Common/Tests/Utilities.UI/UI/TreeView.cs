@@ -130,19 +130,13 @@ namespace TestUtilities.UI
 		/// <summary>
 		/// return all visible nodes
 		/// </summary>
-		public List<TreeNode> Nodes
-		{
-			get
-			{
-				return Element.FindAll(
+		public List<TreeNode> Nodes => Element.FindAll(
 					TreeScope.Children,
 					new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.TreeItem)
 				)
 					.OfType<AutomationElement>()
 					.Select(e => new TreeNode(e))
 					.ToList();
-			}
-		}
 
 		/// <summary>
 		/// Gets or sets a single selected item or null if no item is selected.
@@ -172,10 +166,7 @@ namespace TestUtilities.UI
 
 		public IList<TreeNode> SelectedItems
 		{
-			get
-			{
-				return Element.GetSelectionPattern().Current.GetSelection().Select(e => new TreeNode(e)).ToArray();
-			}
+			get => Element.GetSelectionPattern().Current.GetSelection().Select(e => new TreeNode(e)).ToArray();
 			set
 			{
 				foreach (var selected in Element.GetSelectionPattern().Current.GetSelection())

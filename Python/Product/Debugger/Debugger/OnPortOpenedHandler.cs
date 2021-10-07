@@ -18,7 +18,7 @@ namespace Microsoft.PythonTools
 {
 	internal class OnPortOpenedHandler
 	{
-		class OnPortOpenedInfo
+		private class OnPortOpenedInfo
 		{
 			public readonly int Port;
 			public readonly TimeSpan Timeout;
@@ -66,7 +66,7 @@ namespace Microsoft.PythonTools
 
 		private static void OnPortOpened(object infoObj)
 		{
-			var info = (OnPortOpenedInfo)infoObj;
+			OnPortOpenedInfo info = (OnPortOpenedInfo)infoObj;
 
 			using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
 			{

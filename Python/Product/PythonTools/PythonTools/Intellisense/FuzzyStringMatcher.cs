@@ -19,7 +19,7 @@ namespace Microsoft.PythonTools.Intellisense
 	/// <summary>
 	/// The possible modes for a <see cref="FuzzyStringMatcher"/>.
 	/// </summary>
-	enum FuzzyMatchMode
+	internal enum FuzzyMatchMode
 	{
 		Prefix = 0,
 		PrefixIgnoreCase = 1,
@@ -37,14 +37,14 @@ namespace Microsoft.PythonTools.Intellisense
 	/// <summary>
 	/// Compares strings against patterns for sorting and filtering.
 	/// </summary>
-	class FuzzyStringMatcher
+	internal class FuzzyStringMatcher
 	{
-		delegate int Matcher(string text, string pattern, bool ignoreCase);
-		readonly Matcher _matcher;
-		readonly bool _ignoreCase;
+		private delegate int Matcher(string text, string pattern, bool ignoreCase);
 
-		readonly static bool[] _ignoreCaseMap = new[] { false, true, false, true, false, true, false, false, true };
-		readonly static Matcher[] _matcherMap = new Matcher[] {
+		private readonly Matcher _matcher;
+		private readonly bool _ignoreCase;
+		private static readonly bool[] _ignoreCaseMap = new[] { false, true, false, true, false, true, false, false, true };
+		private static readonly Matcher[] _matcherMap = new Matcher[] {
 			PrefixMatch, PrefixMatch,
 			SubstringMatch, SubstringMatch,
 			FuzzyMatch, FuzzyMatch,
@@ -89,7 +89,7 @@ namespace Microsoft.PythonTools.Intellisense
 			return sortKey >= pattern.Length;
 		}
 
-		static int PrefixMatch(string text, string pattern, bool ignoreCase)
+		private static int PrefixMatch(string text, string pattern, bool ignoreCase)
 		{
 			if (text.StartsWithOrdinal(pattern) || text.StartsWith(pattern, StringComparison.CurrentCulture))
 			{
@@ -105,7 +105,7 @@ namespace Microsoft.PythonTools.Intellisense
 			}
 		}
 
-		static int SubstringMatch(string text, string pattern, bool ignoreCase)
+		private static int SubstringMatch(string text, string pattern, bool ignoreCase)
 		{
 			int position = text.IndexOfOrdinal(pattern);
 			if (position >= 0)
@@ -133,7 +133,7 @@ namespace Microsoft.PythonTools.Intellisense
 			return 0;
 		}
 
-		static int RegexMatch(string text, string pattern, bool ignoreCase)
+		private static int RegexMatch(string text, string pattern, bool ignoreCase)
 		{
 			try
 			{
@@ -171,43 +171,48 @@ namespace Microsoft.PythonTools.Intellisense
 		/// <summary>
 		/// The reward for the first matching character.
 		/// </summary>
-		const int BASE_REWARD = 1;
+		private const int BASE_REWARD = 1;
+
 		/// <summary>
 		/// The amount to increase the reward for each consecutive character.
 		/// This bonus is cumulative for each character.
 		/// </summary>
-		const int CONSECUTIVE_BONUS = 1;
+		private const int CONSECUTIVE_BONUS = 1;
+
 		/// <summary>
 		/// The amount to increase the reward at the start of the word. This
 		/// bonus is applied once but remains for each consecutive character.
 		/// </summary>
-		const int START_OF_WORD_BONUS = 4;
+		private const int START_OF_WORD_BONUS = 4;
+
 		/// <summary>
 		/// The amount to increase the reward after an underscore. This bonus
 		/// is applied once but remains for each consecutive character.
 		/// </summary>
-		const int AFTER_UNDERSCORE_BONUS = 3;
+		private const int AFTER_UNDERSCORE_BONUS = 3;
+
 		/// <summary>
 		/// The amount to increase the reward for case-sensitive matches where
 		/// the user typed an uppercase character. This bonus is only applied
 		/// for the matching character.
 		/// </summary>
-		const int MATCHED_UPPERCASE_BONUS = 1;
+		private const int MATCHED_UPPERCASE_BONUS = 1;
+
 		/// <summary>
 		/// The amount to increase the reward for case-insensitive matches when
 		/// the user typed a lowercase character. This bonus is only applied
 		/// for the matching character, and is intended to be negative.
 		/// </summary>
-		const int EXPECTED_LOWERCASE_BONUS = -1;
+		private const int EXPECTED_LOWERCASE_BONUS = -1;
+
 		/// <summary>
 		/// The amount to increase the reward for case-insensitive matches when
 		/// the user typed an uppercase character. This bonus is only applied
 		/// for the matching character, and is intended to be negative.
 		/// </summary>
-		const int EXPECTED_UPPERCASE_BONUS = -2;
+		private const int EXPECTED_UPPERCASE_BONUS = -2;
 
-
-		static int FuzzyMatchInternal(string text, string pattern, bool ignoreLowerCase, bool ignoreUpperCase)
+		private static int FuzzyMatchInternal(string text, string pattern, bool ignoreLowerCase, bool ignoreUpperCase)
 		{
 			if (text == null || pattern == null)
 			{
@@ -312,12 +317,12 @@ namespace Microsoft.PythonTools.Intellisense
 			return total;
 		}
 
-		static int FuzzyMatch(string text, string pattern, bool ignoreCase)
+		private static int FuzzyMatch(string text, string pattern, bool ignoreCase)
 		{
 			return FuzzyMatchInternal(text, pattern, ignoreCase, ignoreCase);
 		}
 
-		static int FuzzyMatchIgnoreLowerCase(string text, string pattern, bool ignoreCase)
+		private static int FuzzyMatchIgnoreLowerCase(string text, string pattern, bool ignoreCase)
 		{
 			int total = FuzzyMatchInternal(text, pattern, true, false);
 			if (total == 0)

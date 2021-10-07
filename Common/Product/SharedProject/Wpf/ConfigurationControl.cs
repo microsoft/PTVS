@@ -19,7 +19,7 @@ namespace Microsoft.VisualStudioTools.Wpf
 	[TemplatePart(Name = "PART_TextBox", Type = typeof(TextBox))]
 	[TemplatePart(Name = "PART_Watermark", Type = typeof(TextBlock))]
 	[TemplatePart(Name = "PART_BrowseButton", Type = typeof(Button))]
-	sealed class ConfigurationTextBoxWithHelp : Control
+	internal sealed class ConfigurationTextBoxWithHelp : Control
 	{
 		public static readonly DependencyProperty WatermarkProperty = DependencyProperty.Register("Watermark", typeof(string), typeof(ConfigurationTextBoxWithHelp), new PropertyMetadata());
 		public static readonly DependencyProperty HelpTextProperty = DependencyProperty.Register("HelpText", typeof(string), typeof(ConfigurationTextBoxWithHelp), new PropertyMetadata());
@@ -34,50 +34,50 @@ namespace Microsoft.VisualStudioTools.Wpf
 
 		public string Watermark
 		{
-			get { return (string)GetValue(WatermarkProperty); }
-			set { SetValue(WatermarkProperty, value); }
+			get => (string)GetValue(WatermarkProperty);
+			set => SetValue(WatermarkProperty, value);
 		}
 
 		public string HelpText
 		{
-			get { return (string)GetValue(HelpTextProperty); }
-			set { SetValue(HelpTextProperty, value); }
+			get => (string)GetValue(HelpTextProperty);
+			set => SetValue(HelpTextProperty, value);
 		}
 
 		public string Text
 		{
-			get { return (string)GetValue(TextProperty); }
-			set { SetValue(TextProperty, value); }
+			get => (string)GetValue(TextProperty);
+			set => SetValue(TextProperty, value);
 		}
 
 		public bool IsReadOnly
 		{
-			get { return (bool)GetValue(IsReadOnlyProperty); }
-			set { SetValue(IsReadOnlyProperty, value); }
+			get => (bool)GetValue(IsReadOnlyProperty);
+			set => SetValue(IsReadOnlyProperty, value);
 		}
 
 		public bool IsRequiredForForm
 		{
-			get { return (bool)GetValue(IsRequiredForFormProperty); }
-			set { SetValue(IsRequiredForFormProperty, value); }
+			get => (bool)GetValue(IsRequiredForFormProperty);
+			set => SetValue(IsRequiredForFormProperty, value);
 		}
 
 		public Style BrowseButtonStyle
 		{
-			get { return (Style)GetValue(BrowseButtonStyleProperty); }
-			set { SetValue(BrowseButtonStyleProperty, value); }
+			get => (Style)GetValue(BrowseButtonStyleProperty);
+			set => SetValue(BrowseButtonStyleProperty, value);
 		}
 
 		public object BrowseCommandParameter
 		{
-			get { return (object)GetValue(BrowseCommandParameterProperty); }
-			set { SetValue(BrowseCommandParameterProperty, value); }
+			get => (object)GetValue(BrowseCommandParameterProperty);
+			set => SetValue(BrowseCommandParameterProperty, value);
 		}
 
 		public string BrowseAutomationName
 		{
-			get { return (string)GetValue(BrowseAutomationNameProperty); }
-			set { SetValue(BrowseAutomationNameProperty, value); }
+			get => (string)GetValue(BrowseAutomationNameProperty);
+			set => SetValue(BrowseAutomationNameProperty, value);
 		}
 
 		public override void OnApplyTemplate()
@@ -97,7 +97,7 @@ namespace Microsoft.VisualStudioTools.Wpf
 	}
 
 	[TemplatePart(Name = "PART_ComboBox", Type = typeof(ComboBox))]
-	sealed class ConfigurationComboBoxWithHelp : Control
+	internal sealed class ConfigurationComboBoxWithHelp : Control
 	{
 		public static readonly DependencyProperty WatermarkProperty = DependencyProperty.Register("Watermark", typeof(string), typeof(ConfigurationComboBoxWithHelp), new PropertyMetadata());
 		public static readonly DependencyProperty HelpTextProperty = DependencyProperty.Register("HelpText", typeof(string), typeof(ConfigurationComboBoxWithHelp), new PropertyMetadata());
@@ -109,32 +109,32 @@ namespace Microsoft.VisualStudioTools.Wpf
 
 		public string Watermark
 		{
-			get { return (string)GetValue(WatermarkProperty); }
-			set { SetValue(WatermarkProperty, value); }
+			get => (string)GetValue(WatermarkProperty);
+			set => SetValue(WatermarkProperty, value);
 		}
 
 		public string HelpText
 		{
-			get { return (string)GetValue(HelpTextProperty); }
-			set { SetValue(HelpTextProperty, value); }
+			get => (string)GetValue(HelpTextProperty);
+			set => SetValue(HelpTextProperty, value);
 		}
 
 		public bool IsRequiredForForm
 		{
-			get { return (bool)GetValue(IsRequiredForFormProperty); }
-			set { SetValue(IsRequiredForFormProperty, value); }
+			get => (bool)GetValue(IsRequiredForFormProperty);
+			set => SetValue(IsRequiredForFormProperty, value);
 		}
 
 		public string Value
 		{
-			get { return (string)GetValue(ValueProperty); }
-			set { SetValue(ValueProperty, value); }
+			get => (string)GetValue(ValueProperty);
+			set => SetValue(ValueProperty, value);
 		}
 
 		public IList<string> Values
 		{
-			get { return (IList<string>)GetValue(ValuesProperty); }
-			set { SetValue(ValuesProperty, value); }
+			get => (IList<string>)GetValue(ValuesProperty);
+			set => SetValue(ValuesProperty, value);
 		}
 
 		public override void OnApplyTemplate()

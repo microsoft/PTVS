@@ -42,7 +42,7 @@ namespace TestUtilities.Mocks
 			var newPos = _position;
 			var current = _snapshot.Version;
 			var target = version;
-			var toSnapshot = ((MockTextVersion)target)._snapshot;
+			MockTextSnapshot toSnapshot = ((MockTextVersion)target)._snapshot;
 			if (current.VersionNumber > target.VersionNumber)
 			{
 				// Apply the changes in reverse
@@ -129,20 +129,11 @@ namespace TestUtilities.Mocks
 			return GetPoint(snapshot).Position;
 		}
 
-		public ITextBuffer TextBuffer
-		{
-			get { return _snapshot.TextBuffer; }
-		}
+		public ITextBuffer TextBuffer => _snapshot.TextBuffer;
 
-		public TrackingFidelityMode TrackingFidelity
-		{
-			get { return _fidelity; }
-		}
+		public TrackingFidelityMode TrackingFidelity => _fidelity;
 
-		public PointTrackingMode TrackingMode
-		{
-			get { return _mode; }
-		}
+		public PointTrackingMode TrackingMode => _mode;
 
 	}
 }

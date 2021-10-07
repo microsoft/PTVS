@@ -16,7 +16,7 @@
 
 namespace IronPythonTests
 {
-	class IronPythonAnalysis : PythonAnalysis
+	internal class IronPythonAnalysis : PythonAnalysis
 	{
 		public IronPythonAnalysis(PythonLanguageVersion version) : base(version) { }
 

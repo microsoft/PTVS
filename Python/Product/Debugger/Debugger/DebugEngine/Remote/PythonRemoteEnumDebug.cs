@@ -25,14 +25,11 @@ namespace Microsoft.PythonTools.Debugger.Remote
 
 		public PythonRemoteEnumDebug(T elem = null)
 		{
-			this._elem = elem;
+			_elem = elem;
 			Reset();
 		}
 
-		protected T Element
-		{
-			get { return _elem; }
-		}
+		protected T Element => _elem;
 
 		public int GetCount(out uint pcelt)
 		{

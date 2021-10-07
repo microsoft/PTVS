@@ -16,7 +16,7 @@
 
 namespace Microsoft.PythonTools.Debugger
 {
-	class IdDispenser
+	internal class IdDispenser
 	{
 		private readonly List<int> _freedInts = new List<int>();
 		private int _curValue;

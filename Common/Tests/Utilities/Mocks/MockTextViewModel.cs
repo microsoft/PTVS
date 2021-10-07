@@ -20,10 +20,7 @@ namespace TestUtilities.Mocks
 	{
 		public ITextBuffer DataBuffer { get; set; }
 
-		public ITextDataModel DataModel
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public ITextDataModel DataModel => throw new NotImplementedException();
 
 		public ITextBuffer EditBuffer { get; set; }
 
@@ -42,15 +39,9 @@ namespace TestUtilities.Mocks
 			throw new NotImplementedException();
 		}
 
-		public ITextBuffer VisualBuffer
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public ITextBuffer VisualBuffer => throw new NotImplementedException();
 
-		public PropertyCollection Properties
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public PropertyCollection Properties => throw new NotImplementedException();
 
 		public void Dispose()
 		{

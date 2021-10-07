@@ -37,7 +37,7 @@ namespace TestUtilities
 				throw new ArgumentException($"{nameof(paths)} should not be empty", nameof(paths));
 			}
 
-			foreach (var path in paths)
+			foreach (global::System.String path in paths)
 			{
 				EnumerateAssemblies(path);
 			}
@@ -45,7 +45,7 @@ namespace TestUtilities
 
 		public static void EnsureLoaded(params string[] assemblyNames)
 		{
-			foreach (var assemblyName in assemblyNames)
+			foreach (global::System.String assemblyName in assemblyNames)
 			{
 				var loadedAssembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => string.Equals(a.GetName().Name, assemblyName, StringComparison.OrdinalIgnoreCase))
 					?? Assembly.Load(new AssemblyName { Name = assemblyName });

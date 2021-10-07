@@ -39,13 +39,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			_commandTarget = new EditorCommandTarget(this);
 		}
 
-		public MockTextView View
-		{
-			get
-			{
-				return _view;
-			}
-		}
+		public MockTextView View => _view;
 
 		public void Dispose()
 		{
@@ -66,21 +60,9 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			}
 		}
 
-		public IIntellisenseSession TopSession
-		{
-			get
-			{
-				return IntellisenseSessionStack.TopSession;
-			}
-		}
+		public IIntellisenseSession TopSession => IntellisenseSessionStack.TopSession;
 
-		public string Text
-		{
-			get
-			{
-				return View.TextBuffer.CurrentSnapshot.GetText();
-			}
-		}
+		public string Text => View.TextBuffer.CurrentSnapshot.GetText();
 
 		int IVsTextView.AddCommandFilter(IOleCommandTarget pNewCmdTarg, out IOleCommandTarget ppNextCmdTarg)
 		{
@@ -291,7 +273,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			throw new NotImplementedException();
 		}
 
-		class EditorCommandTarget : IOleCommandTarget
+		private class EditorCommandTarget : IOleCommandTarget
 		{
 			private readonly MockVsTextView _view;
 
@@ -361,13 +343,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			return _commandTarget.QueryStatus(pguidCmdGroup, cCmds, prgCmds, pCmdText);
 		}
 
-		public IWpfTextView TextView
-		{
-			get
-			{
-				return _view;
-			}
-		}
+		public IWpfTextView TextView => _view;
 		public void Select(int line, int column, int length)
 		{
 			throw new NotImplementedException();

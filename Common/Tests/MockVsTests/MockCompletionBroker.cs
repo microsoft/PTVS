@@ -17,7 +17,7 @@
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
 	[Export(typeof(ICompletionBroker))]
-	class MockCompletionBroker : ICompletionBroker
+	internal class MockCompletionBroker : ICompletionBroker
 	{
 		internal readonly IEnumerable<Lazy<ICompletionSourceProvider, IContentTypeMetadata>> _completionProviders;
 		internal readonly IIntellisenseSessionStackMapService _stackMap;

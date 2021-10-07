@@ -18,7 +18,7 @@ using Process = System.Diagnostics.Process;
 
 namespace TestRunnerInterop
 {
-	class VisualStudioApp : IDisposable
+	internal class VisualStudioApp : IDisposable
 	{
 		private static readonly Dictionary<int, VisualStudioApp> _knownInstances = new Dictionary<int, VisualStudioApp>();
 		private readonly int _processId;
@@ -233,9 +233,9 @@ namespace TestRunnerInterop
 			CoRegisterMessageFilter(null, out IOleMessageFilter oldFilter);
 		}
 
-		const int SERVERCALL_ISHANDLED = 0;
-		const int SERVERCALL_RETRYLATER = 2;
-		const int PENDINGMSG_WAITDEFPROCESS = 2;
+		private const int SERVERCALL_ISHANDLED = 0;
+		private const int SERVERCALL_RETRYLATER = 2;
+		private const int PENDINGMSG_WAITDEFPROCESS = 2;
 
 		private MessageFilter() { }
 
@@ -274,7 +274,7 @@ namespace TestRunnerInterop
 
 	[ComImport(), Guid("00000016-0000-0000-C000-000000000046"),
 	InterfaceTypeAttribute(ComInterfaceType.InterfaceIsIUnknown)]
-	interface IOleMessageFilter
+	internal interface IOleMessageFilter
 	{
 		[PreserveSig]
 		int HandleInComingCall(int dwCallType,

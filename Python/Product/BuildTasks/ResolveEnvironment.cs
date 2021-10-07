@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.BuildTasks
 		}
 
 #if !BUILDTASKS_CORE
-		class CatalogLog : ICatalogLog
+		private class CatalogLog : ICatalogLog
 		{
 			private readonly TaskLoggingHelper _helper;
 			public CatalogLog(TaskLoggingHelper helper)

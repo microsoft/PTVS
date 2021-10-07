@@ -48,13 +48,7 @@ namespace DebuggerTests
 
 		protected const int DefaultWaitForExitTimeout = 20000;
 
-		internal virtual string DebuggerTestPath
-		{
-			get
-			{
-				return TestData.GetPath(@"TestData\DebuggerProject\");
-			}
-		}
+		internal virtual string DebuggerTestPath => TestData.GetPath(@"TestData\DebuggerProject\");
 
 		internal static void ForEachLine(TextReader reader, Action<string> action)
 		{
@@ -94,14 +88,14 @@ namespace DebuggerTests
 				return new EvalResult(expression, error, true);
 			}
 
-			EvalResult(string expression, string exceptionText, bool isError)
+			private EvalResult(string expression, string exceptionText, bool isError)
 			{
 				Expression = expression;
 				ExceptionText = exceptionText;
 				IsError = isError;
 			}
 
-			EvalResult(string expression, string typeName, string repr, long? length, PythonEvaluationResultFlags? flags, bool allowOtherFlags)
+			private EvalResult(string expression, string typeName, string repr, long? length, PythonEvaluationResultFlags? flags, bool allowOtherFlags)
 			{
 				Expression = expression;
 				_typeName = typeName;
@@ -158,7 +152,7 @@ namespace DebuggerTests
 		{
 			public void Add(string name, string typeName = null, string repr = null)
 			{
-				var er = EvalResult.Value(name, typeName, repr);
+				EvalResult er = EvalResult.Value(name, typeName, repr);
 				if (repr == null)
 				{
 					er.ValidateRepr = false;
@@ -168,7 +162,7 @@ namespace DebuggerTests
 
 			public void AddRange(params string[] names)
 			{
-				foreach (var name in names)
+				foreach (global::System.String name in names)
 				{
 					Add(name);
 				}
@@ -222,7 +216,7 @@ namespace DebuggerTests
 
 			public void AddRange(params int[] lineNumbers)
 			{
-				foreach (var lineNumber in lineNumbers)
+				foreach (global::System.Int32 lineNumber in lineNumbers)
 				{
 					Add(lineNumber);
 				}
@@ -312,7 +306,7 @@ namespace DebuggerTests
 								var fileName = bp.FileName ?? breakFileName ?? runFileName;
 
 								PythonBreakpoint breakpoint;
-								var pyBP = bp as Breakpoint;
+								Breakpoint pyBP = bp as Breakpoint;
 								if (pyBP != null)
 								{
 									breakpoint = newproc.AddBreakpoint(fileName, pyBP.LineNumber, pyBP.ConditionKind, pyBP.Condition, pyBP.PassCountKind, pyBP.PassCount);
@@ -320,7 +314,7 @@ namespace DebuggerTests
 								}
 								else
 								{
-									var djangoBP = bp as DjangoBreakpoint;
+									DjangoBreakpoint djangoBP = bp as DjangoBreakpoint;
 									if (djangoBP != null)
 									{
 										breakpoint = newproc.AddDjangoBreakpoint(fileName, djangoBP.LineNumber);
@@ -370,7 +364,7 @@ namespace DebuggerTests
 					{
 						try
 						{
-							var bp = (Breakpoint)bps[args.Breakpoint];
+							global::DebuggerTests.BaseDebuggerTests.Breakpoint bp = (Breakpoint)bps[args.Breakpoint];
 							if (bp != null && !(bp.IsBindFailureExpected ?? IsBindFailureExpected))
 							{
 								Assert.Fail("Breakpoint at {0}:{1} failed to bind.", bp.FileName ?? breakFileName ?? runFileName, bp.LineNumber);
@@ -391,7 +385,7 @@ namespace DebuggerTests
 					{
 						try
 						{
-							var bp = (Breakpoint)bps[args.Breakpoint];
+							global::DebuggerTests.BaseDebuggerTests.Breakpoint bp = (Breakpoint)bps[args.Breakpoint];
 							Assert.AreEqual(bp.FileName ?? breakFileName ?? runFileName, args.Breakpoint.Filename);
 							Assert.IsTrue(unboundBps.Remove(bp));
 							++breakpointsBound;
@@ -637,13 +631,7 @@ namespace DebuggerTests
 			}
 		}
 
-		internal virtual PythonVersion Version
-		{
-			get
-			{
-				return PythonPaths.Python27;
-			}
-		}
+		internal virtual PythonVersion Version => PythonPaths.Python27;
 
 		internal enum StepKind
 		{
@@ -701,7 +689,7 @@ namespace DebuggerTests
 				bool processLoad = false, stepComplete = false;
 				process.ProcessLoaded += async (sender, args) =>
 				{
-					foreach (var breakLine in breakLines)
+					foreach (global::System.Int32 breakLine in breakLines)
 					{
 						var bp = process.AddBreakpointByFileExtension(breakLine, breakFile);
 						await bp.AddAsync(TimeoutToken());
@@ -764,7 +752,7 @@ namespace DebuggerTests
 					processLoad = stepComplete = false;
 
 					var frames = thread.Frames;
-					var stepInfo = kinds[curStep];
+					ExpectedStep stepInfo = kinds[curStep];
 					Assert.AreEqual(stepInfo.StartLine, frames[0].LineNo, String.Format("{0} != {1} on {2} step", stepInfo.StartLine, frames[0].LineNo, curStep));
 
 					switch (stepInfo.Kind)
@@ -927,7 +915,7 @@ namespace DebuggerTests
 		}
 	}
 
-	class PythonProcessRunInfo
+	internal class PythonProcessRunInfo
 	{
 		public PythonProcess Process;
 		public ExceptionDispatchInfo ProcessLoadedException;

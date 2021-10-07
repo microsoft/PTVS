@@ -16,7 +16,7 @@
 
 namespace TestRunnerInterop
 {
-	class TestFailedException : Exception
+	internal class TestFailedException : Exception
 	{
 		private readonly string _innerType;
 		private readonly string _stackTrace;

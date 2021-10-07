@@ -24,7 +24,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 		private readonly Dictionary<Guid, IVsProjectFactory> _projectFactories = new Dictionary<Guid, IVsProjectFactory>();
 		private static Regex _projectRegex = new Regex(@"Project\(""({[0-9A-Fa-f\-]+})""\)\s*=\s*""([\w\d\s]+)"",\s*""([\.\\\w\d\s]+)"",\s*""({[0-9A-Fa-f\-]+})""");
 
-		class ProjectInfo
+		private class ProjectInfo
 		{
 			public readonly Guid ProjectGuid;
 			public readonly Guid ProjectType;
@@ -41,13 +41,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			}
 		}
 
-		public string SolutionFile
-		{
-			get
-			{
-				return _solutionFile;
-			}
-		}
+		public string SolutionFile => _solutionFile;
 
 		public int AddVirtualProject(IVsHierarchy pHierarchy, uint grfAddVPFlags)
 		{
@@ -157,7 +151,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			return VSConstants.S_OK;
 		}
 
-		class ProjectEnum : IEnumHierarchies
+		private class ProjectEnum : IEnumHierarchies
 		{
 			private readonly ProjectInfo[] _projects;
 			private int _index;
@@ -332,7 +326,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 
 					var vsProj = (IVsProject)Marshal.GetObjectForIUnknown(project);
 
-					var projectInfo = new ProjectInfo(
+					ProjectInfo projectInfo = new ProjectInfo(
 						projectGuid,
 						typeGuid,
 						(IVsHierarchy)vsProj,

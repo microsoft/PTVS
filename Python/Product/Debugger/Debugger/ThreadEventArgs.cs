@@ -19,7 +19,7 @@ namespace Microsoft.PythonTools.Debugger
 	/// <summary>
 	/// Event args for start/stop of threads.
 	/// </summary>
-	class ThreadEventArgs : EventArgs
+	internal class ThreadEventArgs : EventArgs
 	{
 		private readonly PythonThread _thread;
 
@@ -28,12 +28,6 @@ namespace Microsoft.PythonTools.Debugger
 			_thread = thread;
 		}
 
-		public PythonThread Thread
-		{
-			get
-			{
-				return _thread;
-			}
-		}
+		public PythonThread Thread => _thread;
 	}
 }

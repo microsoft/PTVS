@@ -22,7 +22,7 @@ namespace Microsoft.VisualStudioTools
 	internal class WebSocketStream : Stream
 	{
 		private readonly WebSocket _webSocket;
-		private bool _ownsSocket;
+		private readonly bool _ownsSocket;
 
 		public WebSocketStream(WebSocket webSocket, bool ownsSocket = false)
 		{
@@ -39,20 +39,11 @@ namespace Microsoft.VisualStudioTools
 			}
 		}
 
-		public override bool CanRead
-		{
-			get { return true; }
-		}
+		public override bool CanRead => true;
 
-		public override bool CanWrite
-		{
-			get { return true; }
-		}
+		public override bool CanWrite => true;
 
-		public override bool CanSeek
-		{
-			get { return false; }
-		}
+		public override bool CanSeek => false;
 
 		public override void Flush()
 		{
@@ -97,15 +88,12 @@ namespace Microsoft.VisualStudioTools
 			}
 		}
 
-		public override long Length
-		{
-			get { throw new NotSupportedException(); }
-		}
+		public override long Length => throw new NotSupportedException();
 
 		public override long Position
 		{
-			get { throw new NotSupportedException(); }
-			set { throw new NotSupportedException(); }
+			get => throw new NotSupportedException();
+			set => throw new NotSupportedException();
 		}
 
 		public override void SetLength(long value)

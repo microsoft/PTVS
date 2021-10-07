@@ -37,7 +37,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			);
 		}
 
-		sealed class AggregatedClassifier : IClassifier, IDisposable
+		private sealed class AggregatedClassifier : IClassifier, IDisposable
 		{
 			private readonly ITextBuffer _buffer;
 			private readonly IReadOnlyList<IClassifier> _classifiers;

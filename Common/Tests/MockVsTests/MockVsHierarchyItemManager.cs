@@ -26,10 +26,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			throw new NotImplementedException();
 		}
 
-		public bool IsChangingItems
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public bool IsChangingItems => throw new NotImplementedException();
 
 		public event EventHandler<HierarchyItemEventArgs> OnItemAdded { add { } remove { } }
 

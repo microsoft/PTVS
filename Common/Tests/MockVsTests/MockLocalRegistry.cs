@@ -16,7 +16,7 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-	class MockLocalRegistry : ILocalRegistry, ILocalRegistryCorrected
+	internal class MockLocalRegistry : ILocalRegistry, ILocalRegistryCorrected
 	{
 		private static Guid AggregatorGuid = new Guid("{C402364C-5474-47e7-AE72-BF5418780221}");
 
@@ -39,7 +39,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 		{
 			if (clsid == typeof(Microsoft.VisualStudio.ProjectAggregator.CProjectAggregatorClass).GUID)
 			{
-				var res = new ProjectAggregator();
+				ProjectAggregator res = new ProjectAggregator();
 				ppvObj = Marshal.GetIUnknownForObject(res);
 				return VSConstants.S_OK;
 			}

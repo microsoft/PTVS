@@ -22,7 +22,7 @@ namespace Microsoft.PythonTools.XamlDesignerSupport
 	/// returns null;
 	/// </summary>
 	[Export(typeof(IXamlDesignerSupport))]
-	class XamlDesignerSupport : IXamlDesignerSupport
+	internal class XamlDesignerSupport : IXamlDesignerSupport
 	{
 		private readonly Lazy<Guid> _DesignerContextTypeGuid = new Lazy<Guid>(() =>
 		{

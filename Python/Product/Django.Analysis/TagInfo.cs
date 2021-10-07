@@ -16,8 +16,7 @@
 
 namespace Microsoft.PythonTools.Django.Analysis
 {
-
-	class TagInfo
+	internal class TagInfo
 	{
 		public readonly string Documentation;
 		public readonly IPythonProjectEntry Entry;

@@ -32,10 +32,16 @@ namespace PythonToolsTests
 		private static readonly string ErrorExtractFromClass = Strings.ExtractMethodStatementsFromClassDefinition;
 
 		[TestInitialize]
-		public void TestInitialize() => TestEnvironmentImpl.TestInitialize(60);
+		public void TestInitialize()
+		{
+			TestEnvironmentImpl.TestInitialize(60);
+		}
 
 		[TestCleanup]
-		public void TestCleanup() => TestEnvironmentImpl.TestCleanup();
+		public void TestCleanup()
+		{
+			TestEnvironmentImpl.TestCleanup();
+		}
 
 		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
 		public async Task TestGlobalNonLocalVars()
@@ -381,13 +387,13 @@ def f():
 		[TestCategory("10s")]
 		public async Task TestAllNodes()
 		{
-			var prefixes = new string[] { " # fob\r\n", "" };
-			var suffixes = new string[] { " # oar", "" };
-			foreach (var suffix in suffixes)
+			global::System.String[] prefixes = new string[] { " # fob\r\n", "" };
+			global::System.String[] suffixes = new string[] { " # oar", "" };
+			foreach (global::System.String suffix in suffixes)
 			{
-				foreach (var prefix in prefixes)
+				foreach (global::System.String prefix in prefixes)
 				{
-					foreach (var testCase in TestExpressions.Expressions)
+					foreach (global::System.String testCase in TestExpressions.Expressions)
 					{
 						if (testCase.StartsWith("yield"))
 						{
@@ -402,7 +408,7 @@ def f():
 				}
 			}
 
-			var bannedStmts = new[] { "break", "continue", "return abc" };
+			global::System.String[] bannedStmts = new[] { "break", "continue", "return abc" };
 			var allStmts = TestExpressions.Statements2x
 					.Except(bannedStmts)
 					.Select(text => new { Text = text, Version = PythonLanguageVersion.V27 })
@@ -410,14 +416,14 @@ def f():
 						TestExpressions.Statements3x
 							.Select(text => new { Text = text, Version = PythonLanguageVersion.V33 }));
 
-			foreach (var suffix in suffixes)
+			foreach (global::System.String suffix in suffixes)
 			{
-				foreach (var prefix in prefixes)
+				foreach (global::System.String prefix in prefixes)
 				{
 					foreach (var stmtTest in allStmts)
 					{
 						var text = prefix + stmtTest.Text + suffix;
-						var assignments = GetAssignments(text, stmtTest.Version);
+						global::System.String[] assignments = GetAssignments(text, stmtTest.Version);
 						string expected;
 						if (assignments.Length > 0 && stmtTest.Text != "del x")
 						{
@@ -448,12 +454,12 @@ def f():
 		private string[] GetAssignments(string testCase, PythonLanguageVersion version)
 		{
 			var ast = Parser.CreateParser(new StringReader(testCase), version).ParseFile();
-			var walker = new TestAssignmentWalker();
+			TestAssignmentWalker walker = new TestAssignmentWalker();
 			ast.Walk(walker);
 			return walker._names.ToArray();
 		}
 
-		class TestAssignmentWalker : AssignmentWalker
+		private class TestAssignmentWalker : AssignmentWalker
 		{
 			private readonly NameWalker _walker;
 			internal readonly List<string> _names = new List<string>();
@@ -463,12 +469,9 @@ def f():
 				_walker = new NameWalker(this);
 			}
 
-			public override AssignedNameWalker Define
-			{
-				get { return _walker; }
-			}
+			public override AssignedNameWalker Define => _walker;
 
-			class NameWalker : AssignedNameWalker
+			private class NameWalker : AssignedNameWalker
 			{
 				private readonly TestAssignmentWalker _outer;
 				public NameWalker(TestAssignmentWalker outer)
@@ -1673,8 +1676,7 @@ async def f():
 			return ExtractMethodTest(input, extract, TestResult.Success(result), scopeName: scopeName, version: version, parameters: parameters);
 		}
 
-
-		class TestResult
+		private class TestResult
 		{
 			public readonly bool IsError;
 			public readonly string Text;
@@ -1770,7 +1772,7 @@ async def f():
 				bp.AddBuffer(buffer);
 				await bp.EnsureCodeSyncedAsync(bi.Buffer, true);
 
-				var extractInput = new ExtractMethodTestInput(true, scopeName, targetName, parameters ?? new string[0]);
+				ExtractMethodTestInput extractInput = new ExtractMethodTestInput(true, scopeName, targetName, parameters ?? new string[0]);
 				await editorTestToolset.UIThread.InvokeTask(() =>
 				{
 					view.Selection.Select(new SnapshotSpan(view.TextBuffer.CurrentSnapshot, extract()), false);
@@ -1790,7 +1792,7 @@ async def f():
 			}
 		}
 
-		class ExtractMethodTestInput : IExtractMethodInput
+		private class ExtractMethodTestInput : IExtractMethodInput
 		{
 			private readonly bool _shouldExpand;
 			private readonly string _scopeName, _targetName;
@@ -1848,13 +1850,7 @@ async def f():
 				_failureReason = reason;
 			}
 
-			public string FailureReason
-			{
-				get
-				{
-					return _failureReason;
-				}
-			}
+			public string FailureReason => _failureReason;
 		}
 	}
 }

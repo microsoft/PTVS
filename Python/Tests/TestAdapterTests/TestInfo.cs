@@ -16,7 +16,7 @@
 
 namespace TestAdapterTests
 {
-	class TestInfo
+	internal class TestInfo
 	{
 		public TestInfo(
 			string displayName,

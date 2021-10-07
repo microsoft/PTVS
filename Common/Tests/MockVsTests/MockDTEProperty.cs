@@ -25,78 +25,30 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			_value = value;
 		}
 
-		public object Application
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public object Application => throw new NotImplementedException();
 
-		public Properties Collection
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public Properties Collection => throw new NotImplementedException();
 
-		public DTE DTE
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public DTE DTE => throw new NotImplementedException();
 
-		public string Name
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public string Name => throw new NotImplementedException();
 
-		public short NumIndices
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public short NumIndices => throw new NotImplementedException();
 
 		public object Object
 		{
-			get
-			{
-				throw new NotImplementedException();
-			}
+			get => throw new NotImplementedException();
 
-			set
-			{
-				throw new NotImplementedException();
-			}
+			set => throw new NotImplementedException();
 		}
 
-		public Properties Parent
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public Properties Parent => throw new NotImplementedException();
 
 		public object Value
 		{
-			get
-			{
-				return _value;
-			}
+			get => _value;
 
-			set
-			{
-				_value = value;
-			}
+			set => _value = value;
 		}
 
 		public object get_IndexedValue(object Index1, object Index2, object Index3, object Index4)

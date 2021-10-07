@@ -17,7 +17,7 @@
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
 	[Export(typeof(IStandardClassificationService))]
-	class MockStandardClassificationService : IStandardClassificationService
+	internal class MockStandardClassificationService : IStandardClassificationService
 	{
 		private readonly IClassificationTypeRegistryService _classRegistry;
 
@@ -27,133 +27,37 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			_classRegistry = classRegistry;
 		}
 
-		public IClassificationType CharacterLiteral
-		{
-			get
-			{
-				return _classRegistry.GetClassificationType(PredefinedClassificationTypeNames.Character);
-			}
-		}
+		public IClassificationType CharacterLiteral => _classRegistry.GetClassificationType(PredefinedClassificationTypeNames.Character);
 
-		public IClassificationType Comment
-		{
-			get
-			{
-				return _classRegistry.GetClassificationType(PredefinedClassificationTypeNames.Comment);
-			}
-		}
+		public IClassificationType Comment => _classRegistry.GetClassificationType(PredefinedClassificationTypeNames.Comment);
 
-		public IClassificationType ExcludedCode
-		{
-			get
-			{
-				return _classRegistry.GetClassificationType(PredefinedClassificationTypeNames.ExcludedCode);
-			}
-		}
+		public IClassificationType ExcludedCode => _classRegistry.GetClassificationType(PredefinedClassificationTypeNames.ExcludedCode);
 
-		public IClassificationType FormalLanguage
-		{
-			get
-			{
-				return _classRegistry.GetClassificationType(PredefinedClassificationTypeNames.FormalLanguage);
-			}
-		}
+		public IClassificationType FormalLanguage => _classRegistry.GetClassificationType(PredefinedClassificationTypeNames.FormalLanguage);
 
-		public IClassificationType Identifier
-		{
-			get
-			{
-				return _classRegistry.GetClassificationType(PredefinedClassificationTypeNames.Identifier);
-			}
-		}
+		public IClassificationType Identifier => _classRegistry.GetClassificationType(PredefinedClassificationTypeNames.Identifier);
 
-		public IClassificationType Keyword
-		{
-			get
-			{
-				return _classRegistry.GetClassificationType(PredefinedClassificationTypeNames.Keyword);
-			}
-		}
+		public IClassificationType Keyword => _classRegistry.GetClassificationType(PredefinedClassificationTypeNames.Keyword);
 
-		public IClassificationType Literal
-		{
-			get
-			{
-				return _classRegistry.GetClassificationType(PredefinedClassificationTypeNames.Literal);
-			}
-		}
+		public IClassificationType Literal => _classRegistry.GetClassificationType(PredefinedClassificationTypeNames.Literal);
 
-		public IClassificationType NaturalLanguage
-		{
-			get
-			{
-				return _classRegistry.GetClassificationType(PredefinedClassificationTypeNames.NaturalLanguage);
-			}
-		}
+		public IClassificationType NaturalLanguage => _classRegistry.GetClassificationType(PredefinedClassificationTypeNames.NaturalLanguage);
 
-		public IClassificationType NumberLiteral
-		{
-			get
-			{
-				return _classRegistry.GetClassificationType(PredefinedClassificationTypeNames.Number);
-			}
-		}
+		public IClassificationType NumberLiteral => _classRegistry.GetClassificationType(PredefinedClassificationTypeNames.Number);
 
-		public IClassificationType Operator
-		{
-			get
-			{
-				return _classRegistry.GetClassificationType(PredefinedClassificationTypeNames.Operator);
-			}
-		}
+		public IClassificationType Operator => _classRegistry.GetClassificationType(PredefinedClassificationTypeNames.Operator);
 
-		public IClassificationType Other
-		{
-			get
-			{
-				return _classRegistry.GetClassificationType(PredefinedClassificationTypeNames.Other);
-			}
-		}
+		public IClassificationType Other => _classRegistry.GetClassificationType(PredefinedClassificationTypeNames.Other);
 
-		public IClassificationType PreprocessorKeyword
-		{
-			get
-			{
-				return _classRegistry.GetClassificationType(PredefinedClassificationTypeNames.PreprocessorKeyword);
-			}
-		}
+		public IClassificationType PreprocessorKeyword => _classRegistry.GetClassificationType(PredefinedClassificationTypeNames.PreprocessorKeyword);
 
-		public IClassificationType StringLiteral
-		{
-			get
-			{
-				return _classRegistry.GetClassificationType(PredefinedClassificationTypeNames.String);
-			}
-		}
+		public IClassificationType StringLiteral => _classRegistry.GetClassificationType(PredefinedClassificationTypeNames.String);
 
-		public IClassificationType SymbolDefinition
-		{
-			get
-			{
-				return _classRegistry.GetClassificationType(PredefinedClassificationTypeNames.SymbolDefinition);
-			}
-		}
+		public IClassificationType SymbolDefinition => _classRegistry.GetClassificationType(PredefinedClassificationTypeNames.SymbolDefinition);
 
-		public IClassificationType SymbolReference
-		{
-			get
-			{
-				return _classRegistry.GetClassificationType(PredefinedClassificationTypeNames.SymbolReference);
-			}
-		}
+		public IClassificationType SymbolReference => _classRegistry.GetClassificationType(PredefinedClassificationTypeNames.SymbolReference);
 
-		public IClassificationType WhiteSpace
-		{
-			get
-			{
-				return _classRegistry.GetClassificationType(PredefinedClassificationTypeNames.WhiteSpace);
-			}
-		}
+		public IClassificationType WhiteSpace => _classRegistry.GetClassificationType(PredefinedClassificationTypeNames.WhiteSpace);
 
 		[Export]
 		[Name(PredefinedClassificationTypeNames.NaturalLanguage)]

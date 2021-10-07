@@ -102,10 +102,10 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
 		private void PackageExtension_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
 		{
-			var view = e.NewValue as EnvironmentView;
+			EnvironmentView view = e.NewValue as EnvironmentView;
 			if (view != null)
 			{
-				var current = Subcontext.DataContext as PipEnvironmentView;
+				PipEnvironmentView current = Subcontext.DataContext as PipEnvironmentView;
 				if (current == null || current.EnvironmentView != view)
 				{
 					if (current != null)
@@ -119,7 +119,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
 		private void UninstallPackage_CanExecute(object sender, CanExecuteRoutedEventArgs e)
 		{
-			var view = e.Parameter as PipPackageView;
+			PipPackageView view = e.Parameter as PipPackageView;
 			e.CanExecute = _provider.CanExecute && view != null && _provider._packageManager.CanUninstall(view.Package);
 			e.Handled = true;
 		}
@@ -133,7 +133,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 		{
 			try
 			{
-				var view = (PipPackageView)e.Parameter;
+				PipPackageView view = (PipPackageView)e.Parameter;
 				await _provider.UninstallPackage(view.Package);
 			}
 			catch (OperationCanceledException)
@@ -155,7 +155,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 				return;
 			}
 
-			var view = e.Parameter as PipPackageView;
+			PipPackageView view = e.Parameter as PipPackageView;
 			if (view == null)
 			{
 				e.CanExecute = false;
@@ -174,7 +174,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 		{
 			try
 			{
-				var view = (PipPackageView)e.Parameter;
+				PipPackageView view = (PipPackageView)e.Parameter;
 				// Construct a PackageSpec with the upgraded version.
 				await _provider.InstallPackage(new PackageSpec(view.Package.Name, view.UpgradeVersion));
 			}
@@ -286,7 +286,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 		}
 	}
 
-	sealed class PipEnvironmentView : DependencyObject, IDisposable
+	internal sealed class PipEnvironmentView : DependencyObject, IDisposable
 	{
 		private readonly EnvironmentView _view;
 		private readonly ObservableCollection<PipPackageView> _installed;
@@ -385,15 +385,9 @@ namespace Microsoft.PythonTools.EnvironmentsList
 			_installableViewRefreshTimer.Dispose();
 		}
 
-		public EnvironmentView EnvironmentView
-		{
-			get { return _view; }
-		}
+		public EnvironmentView EnvironmentView => _view;
 
-		public InstallPackageView InstallCommand
-		{
-			get { return _installCommandView; }
-		}
+		public InstallPackageView InstallCommand => _installCommandView;
 
 		private void PipExtensionProvider_UpdateStarted(object sender, EventArgs e)
 		{
@@ -448,8 +442,8 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
 		public bool IsPipInstalled
 		{
-			get { return (bool)GetValue(IsPipInstalledProperty); }
-			private set { SetValue(IsPipInstalledPropertyKey, value); }
+			get => (bool)GetValue(IsPipInstalledProperty);
+			private set => SetValue(IsPipInstalledPropertyKey, value);
 		}
 
 		private static readonly DependencyPropertyKey IsPipInstalledPropertyKey = DependencyProperty.RegisterReadOnly(
@@ -463,8 +457,8 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
 		public bool ShowSecurityWarning
 		{
-			get { return (bool)GetValue(ShowSecurityWarningProperty); }
-			private set { SetValue(ShowSecurityWarningPropertyKey, value); }
+			get => (bool)GetValue(ShowSecurityWarningProperty);
+			private set => SetValue(ShowSecurityWarningPropertyKey, value);
 		}
 
 		private static readonly DependencyPropertyKey ShowSecurityWarningPropertyKey = DependencyProperty.RegisterReadOnly(
@@ -478,8 +472,8 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
 		public string SearchQuery
 		{
-			get { return (string)GetValue(SearchQueryProperty); }
-			set { SetValue(SearchQueryProperty, value); }
+			get => (string)GetValue(SearchQueryProperty);
+			set => SetValue(SearchQueryProperty, value);
 		}
 
 		public static readonly DependencyProperty SearchQueryProperty = DependencyProperty.Register(
@@ -491,8 +485,8 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
 		public string InstallPackageText
 		{
-			get { return (string)GetValue(InstallPackageTextProperty); }
-			set { SetValue(InstallPackageTextProperty, value); }
+			get => (string)GetValue(InstallPackageTextProperty);
+			set => SetValue(InstallPackageTextProperty, value);
 		}
 
 		public static readonly DependencyProperty InstallPackageTextProperty = DependencyProperty.Register(
@@ -505,7 +499,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
 		private static void Filter_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e)
 		{
-			var view = d as PipEnvironmentView;
+			PipEnvironmentView view = d as PipEnvironmentView;
 			if (view != null)
 			{
 				try
@@ -611,7 +605,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 			PipPackageView package;
 			PackageResultView result;
 			var query = SearchQuery;
-			var matcher = string.IsNullOrEmpty(query) ? null : _matcher;
+			FuzzyStringMatcher matcher = string.IsNullOrEmpty(query) ? null : _matcher;
 
 			if ((package = e.Item as PipPackageView) != null)
 			{
@@ -698,8 +692,8 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
 		public bool IsListRefreshing
 		{
-			get { return (bool)GetValue(IsListRefreshingProperty); }
-			private set { SetValue(IsListRefreshingPropertyKey, value); }
+			get => (bool)GetValue(IsListRefreshingProperty);
+			private set => SetValue(IsListRefreshingPropertyKey, value);
 		}
 
 		private static readonly DependencyPropertyKey IsListRefreshingPropertyKey = DependencyProperty.RegisterReadOnly(
@@ -712,7 +706,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 			IsListRefreshingPropertyKey.DependencyProperty;
 	}
 
-	class PackageViewComparer :
+	internal class PackageViewComparer :
 		IEqualityComparer<PipPackageView>,
 		IComparer<PipPackageView>,
 		IEqualityComparer<PackageResultView>,
@@ -753,7 +747,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 		}
 	}
 
-	class InstallPackageView
+	internal class InstallPackageView
 	{
 		public InstallPackageView(PipEnvironmentView view)
 		{
@@ -763,7 +757,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 		public PipEnvironmentView View { get; }
 	}
 
-	class PackageResultView : INotifyPropertyChanged
+	internal class PackageResultView : INotifyPropertyChanged
 	{
 		public PackageResultView(PipEnvironmentView view, PipPackageView package)
 		{
@@ -794,7 +788,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 		public string Description => Package.Description;
 	}
 
-	class UpgradeMessageConverter : IMultiValueConverter
+	internal class UpgradeMessageConverter : IMultiValueConverter
 	{
 		public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
 		{
@@ -815,11 +809,11 @@ namespace Microsoft.PythonTools.EnvironmentsList
 	}
 
 	[ValueConversion(typeof(PipPackageView), typeof(string))]
-	class UninstallMessageConverter : IValueConverter
+	internal class UninstallMessageConverter : IValueConverter
 	{
 		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
 		{
-			var p = value as PipPackageView;
+			PipPackageView p = value as PipPackageView;
 			if (p == null)
 			{
 				return Strings.UninstallMessage;

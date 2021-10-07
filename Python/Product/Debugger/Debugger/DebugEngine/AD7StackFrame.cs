@@ -18,7 +18,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 {
 	// Represents a logical stack frame on the thread stack. 
 	// Also implements the IDebugExpressionContext interface, which allows expression evaluation and watch windows.
-	class AD7StackFrame : IDebugStackFrame2, IDebugExpressionContext2, IDebugProperty2
+	internal class AD7StackFrame : IDebugStackFrame2, IDebugExpressionContext2, IDebugProperty2
 	{
 		private readonly AD7Engine _engine;
 		private readonly AD7Thread _thread;
@@ -40,29 +40,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 			_locals = threadContext.Locals.ToArray();
 		}
 
-		public PythonStackFrame StackFrame
-		{
-			get
-			{
-				return _stackFrame;
-			}
-		}
+		public PythonStackFrame StackFrame => _stackFrame;
 
-		public AD7Engine Engine
-		{
-			get
-			{
-				return _engine;
-			}
-		}
+		public AD7Engine Engine => _engine;
 
-		public AD7Thread Thread
-		{
-			get
-			{
-				return _thread;
-			}
-		}
+		public AD7Thread Thread => _thread;
 
 		#region Non-interface methods
 
@@ -137,7 +119,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 			{
 				if (PathUtils.IsValidPath(_stackFrame.FileName))
 				{
-					frameInfo.m_bstrModule = Path.GetFileNameWithoutExtension(this._stackFrame.FileName);
+					frameInfo.m_bstrModule = Path.GetFileNameWithoutExtension(_stackFrame.FileName);
 				}
 				else if (_stackFrame.FileName.EndsWithOrdinal("<string>"))
 				{
@@ -358,7 +340,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 		// The name of a stack frame is typically the name of the method being executed.
 		int IDebugStackFrame2.GetName(out string name)
 		{
-			name = this._stackFrame.FunctionName;
+			name = _stackFrame.FunctionName;
 			return 0;
 		}
 
@@ -388,7 +370,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 		// "{ function-name, source-file-name, module-file-name }"
 		int IDebugExpressionContext2.GetName(out string pbstrName)
 		{
-			pbstrName = String.Format("{{ {0} {1} }}", this._stackFrame.FunctionName, this._stackFrame.FileName);
+			pbstrName = String.Format("{{ {0} {1} }}", _stackFrame.FunctionName, _stackFrame.FileName);
 			return VSConstants.S_OK;
 		}
 
@@ -407,7 +389,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 
 			if (_parameters != null)
 			{
-				foreach (var currVariable in _parameters)
+				foreach (PythonEvaluationResult currVariable in _parameters)
 				{
 					if (String.CompareOrdinal(currVariable.Expression, pszCode) == 0)
 					{
@@ -419,7 +401,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 
 			if (_locals != null)
 			{
-				foreach (var currVariable in _locals)
+				foreach (PythonEvaluationResult currVariable in _locals)
 				{
 					if (String.CompareOrdinal(currVariable.Expression, pszCode) == 0)
 					{

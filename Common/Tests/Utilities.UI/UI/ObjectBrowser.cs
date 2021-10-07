@@ -54,9 +54,11 @@ namespace TestUtilities.UI
 									"VsObjectBrowserTypesPane"
 								)
 							);
-					AutomationElement el = this.Element.FindFirst(TreeScope.Descendants, con);
+					AutomationElement el = Element.FindFirst(TreeScope.Descendants, con);
 					if (el != null)
+					{
 						_typeBrowserPane = new TypeBrowserPane(el);
+					}
 				}
 				return _typeBrowserPane;
 			}
@@ -84,9 +86,11 @@ namespace TestUtilities.UI
 									"VsObjectBrowserMembersPane"
 								)
 							);
-					AutomationElement el = this.Element.FindFirst(TreeScope.Descendants, con);
+					AutomationElement el = Element.FindFirst(TreeScope.Descendants, con);
 					if (el != null)
+					{
 						_typeNavigatorPane = new TypeNavigatorPane(el);
+					}
 				}
 				return _typeNavigatorPane;
 			}
@@ -114,9 +118,11 @@ namespace TestUtilities.UI
 									"VsObjectBrowserDescriptionPane"
 								)
 							);
-					AutomationElement el = this.Element.FindFirst(TreeScope.Descendants, con);
+					AutomationElement el = Element.FindFirst(TreeScope.Descendants, con);
 					if (el != null)
+					{
 						_detailPane = new DetailPane(el);
+					}
 				}
 				return _detailPane;
 			}
@@ -144,7 +150,7 @@ namespace TestUtilities.UI
 									"PART_EditableTextBox"
 								)
 							);
-					AutomationElement el = this.Element.FindFirst(TreeScope.Descendants, con);
+					AutomationElement el = Element.FindFirst(TreeScope.Descendants, con);
 
 					if (el != null)
 					{
@@ -177,7 +183,7 @@ namespace TestUtilities.UI
 									"Object Browser Search"
 								)
 							);
-					AutomationElementCollection ell = this.Element.FindAll(TreeScope.Descendants, con);
+					AutomationElementCollection ell = Element.FindAll(TreeScope.Descendants, con);
 
 					if (ell.Count == 2)
 					{
@@ -210,7 +216,7 @@ namespace TestUtilities.UI
 									"Object Browser Clear Search"
 								)
 							);
-					AutomationElement el = this.Element.FindFirst(TreeScope.Descendants, con);
+					AutomationElement el = Element.FindFirst(TreeScope.Descendants, con);
 					if (el != null)
 					{
 						_clearSearchButton = new Button(el);
@@ -242,7 +248,7 @@ namespace TestUtilities.UI
 									"Object Browser Back"
 								)
 							);
-					AutomationElement el = this.Element.FindFirst(TreeScope.Descendants, con);
+					AutomationElement el = Element.FindFirst(TreeScope.Descendants, con);
 					if (el != null)
 					{
 						_backButton = new Button(el);
@@ -274,7 +280,7 @@ namespace TestUtilities.UI
 									"Object Browser Forward"
 								)
 							);
-					AutomationElement el = this.Element.FindFirst(TreeScope.Descendants, con);
+					AutomationElement el = Element.FindFirst(TreeScope.Descendants, con);
 					if (el != null)
 					{
 						_forwardButton = new Button(el);

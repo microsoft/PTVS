@@ -16,15 +16,9 @@
 
 namespace CookiecutterTests
 {
-	class MockCookiecutterClient : ICookiecutterClient
+	internal class MockCookiecutterClient : ICookiecutterClient
 	{
-		public bool CookiecutterInstalled
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public bool CookiecutterInstalled => throw new NotImplementedException();
 
 		public Task CreateCookiecutterEnv()
 		{

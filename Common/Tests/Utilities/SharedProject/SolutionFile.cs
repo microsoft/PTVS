@@ -69,7 +69,7 @@ namespace TestUtilities.SharedProject
 			MSBuild.ProjectCollection collection = new MSBuild.ProjectCollection();
 			// VisualStudioVersion property may not be set in mock tests
 			collection.SetGlobalProperty("VisualStudioVersion", AssemblyVersionInfo.VSVersion);
-			foreach (var project in toGenerate)
+			foreach (ISolutionElement project in toGenerate)
 			{
 				projects.Add(project.Save(collection, location));
 			}
@@ -154,13 +154,7 @@ EndGlobal
 			return new SolutionFile(slnFilename, toGenerate);
 		}
 
-		public string Directory
-		{
-			get
-			{
-				return Path.GetDirectoryName(Filename);
-			}
-		}
+		public string Directory => Path.GetDirectoryName(Filename);
 
 		#region IDisposable Members
 

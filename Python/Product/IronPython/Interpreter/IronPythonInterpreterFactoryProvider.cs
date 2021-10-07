@@ -19,14 +19,14 @@ namespace Microsoft.IronPythonTools.Interpreter
 	[InterpreterFactoryId("IronPython")]
 	[Export(typeof(IPythonInterpreterFactoryProvider))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
-	sealed class IronPythonInterpreterFactoryProvider : IPythonInterpreterFactoryProvider, IDisposable
+	internal sealed class IronPythonInterpreterFactoryProvider : IPythonInterpreterFactoryProvider, IDisposable
 	{
 		private readonly IServiceProvider _site;
 		private bool _initialized;
 		private IPythonInterpreterFactory _interpreter;
 		private IPythonInterpreterFactory _interpreterX64;
 		private InterpreterConfiguration _config, _configX64;
-		const string IronPythonCorePath = "Software\\IronPython";
+		private const string IronPythonCorePath = "Software\\IronPython";
 
 		[ImportingConstructor]
 		public IronPythonInterpreterFactoryProvider([Import(typeof(SVsServiceProvider), AllowDefault = true)] IServiceProvider site = null)

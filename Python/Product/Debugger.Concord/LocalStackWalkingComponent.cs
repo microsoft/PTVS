@@ -65,7 +65,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 			public override void Handle(DkmProcess process)
 			{
-				var pyrtInfo = process.GetPythonRuntimeInfo();
+				PythonRuntimeInfo pyrtInfo = process.GetPythonRuntimeInfo();
 				var nativeModules = process.GetNativeRuntimeInstance().GetNativeModuleInstances();
 
 				pyrtInfo.DLLs.Python = nativeModules.Single(mi => mi.UniqueId == PythonDllModuleInstanceId);

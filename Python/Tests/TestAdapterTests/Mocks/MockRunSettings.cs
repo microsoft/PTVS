@@ -16,7 +16,7 @@
 
 namespace TestAdapterTests.Mocks
 {
-	class MockRunSettings : IRunSettings
+	internal class MockRunSettings : IRunSettings
 	{
 		private readonly string _xml;
 

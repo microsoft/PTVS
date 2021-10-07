@@ -40,7 +40,7 @@ namespace TestUtilities.UI
 					new PropertyCondition(AutomationElement.AutomationIdProperty, "_yes")
 				), "Not correct dialog - missing '_yes'");
 
-				var res = new OverwriteFileDialog(app, element);
+				OverwriteFileDialog res = new OverwriteFileDialog(app, element);
 				element = null;
 				return res;
 			}
@@ -76,10 +76,7 @@ namespace TestUtilities.UI
 
 		public bool AllItems
 		{
-			get
-			{
-				return FindByAutomationId("_allItems").GetTogglePattern().Current.ToggleState == ToggleState.On;
-			}
+			get => FindByAutomationId("_allItems").GetTogglePattern().Current.ToggleState == ToggleState.On;
 			set
 			{
 				if (AllItems)
@@ -100,12 +97,6 @@ namespace TestUtilities.UI
 		}
 
 
-		public override string Text
-		{
-			get
-			{
-				return FindByAutomationId("_message").GetValuePattern().Current.Value;
-			}
-		}
+		public override string Text => FindByAutomationId("_message").GetValuePattern().Current.Value;
 	}
 }

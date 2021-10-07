@@ -24,7 +24,7 @@ namespace Microsoft.VisualStudioTools.Wpf
 		private LambdaConverter(Func<object, object> lambda)
 		{
 			this.lambda = lambda;
-			this.multiLambda = (args) =>
+			multiLambda = (args) =>
 			{
 				Debug.Assert(args.Length == 1);
 				return lambda(args[0]);
@@ -34,7 +34,7 @@ namespace Microsoft.VisualStudioTools.Wpf
 		private LambdaConverter(Func<object[], object> multiLambda)
 		{
 			this.multiLambda = multiLambda;
-			this.lambda = (arg) => multiLambda(new[] { arg });
+			lambda = (arg) => multiLambda(new[] { arg });
 		}
 
 		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -129,14 +129,17 @@ namespace Microsoft.VisualStudioTools.Wpf
 				});
 		}
 
-		public static LambdaConverter CreateMulti<T>(Func<T[], object> lambda) => new LambdaConverter(args =>
+		public static LambdaConverter CreateMulti<T>(Func<T[], object> lambda)
 		{
-			if (args.Any(t => t == DependencyProperty.UnsetValue))
-			{
-				return DependencyProperty.UnsetValue;
-			}
+			return new LambdaConverter(args =>
+{
+	if (args.Any(t => t == DependencyProperty.UnsetValue))
+	{
+		return DependencyProperty.UnsetValue;
+	}
 
-			return lambda(args.Cast<T>().ToArray());
-		});
+	return lambda(args.Cast<T>().ToArray());
+});
+		}
 	}
 }

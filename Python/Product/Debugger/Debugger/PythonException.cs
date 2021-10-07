@@ -16,7 +16,7 @@
 
 namespace Microsoft.PythonTools.Debugger
 {
-	class PythonException
+	internal class PythonException
 	{
 		public PythonException() { }
 

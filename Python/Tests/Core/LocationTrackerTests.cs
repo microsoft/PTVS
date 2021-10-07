@@ -21,7 +21,7 @@ namespace PythonToolsTests
 	[TestClass]
 	public class LocationTrackerTests
 	{
-		List<ITextSnapshot> TestSnapshots
+		private List<ITextSnapshot> TestSnapshots
 		{
 			get
 			{
@@ -254,7 +254,7 @@ namespace PythonToolsTests
 			}
 		}
 
-		void CheckTranslate(LocationTracker tracker, int fromLine, int fromCol, int fromVersion, int toLine, int toCol, int toVersion, bool checkReverse = true)
+		private void CheckTranslate(LocationTracker tracker, int fromLine, int fromCol, int fromVersion, int toLine, int toCol, int toVersion, bool checkReverse = true)
 		{
 			var from_ = new SourceLocation(fromLine, fromCol);
 			var to_ = new SourceLocation(toLine, toCol);

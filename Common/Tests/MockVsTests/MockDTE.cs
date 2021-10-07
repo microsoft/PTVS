@@ -25,324 +25,96 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			_vs = vs;
 		}
 
-		public Document ActiveDocument
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public Document ActiveDocument => throw new NotImplementedException();
 
-		public object ActiveSolutionProjects
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public object ActiveSolutionProjects => throw new NotImplementedException();
 
-		public Window ActiveWindow
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public Window ActiveWindow => throw new NotImplementedException();
 
-		public AddIns AddIns
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public AddIns AddIns => throw new NotImplementedException();
 
-		public DTE Application
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public DTE Application => throw new NotImplementedException();
 
-		public object CommandBars
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public object CommandBars => throw new NotImplementedException();
 
-		public string CommandLineArguments
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public string CommandLineArguments => throw new NotImplementedException();
 
-		public Commands Commands
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public Commands Commands => throw new NotImplementedException();
 
-		public ContextAttributes ContextAttributes
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public ContextAttributes ContextAttributes => throw new NotImplementedException();
 
-		public Debugger Debugger
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public Debugger Debugger => throw new NotImplementedException();
 
 		public vsDisplay DisplayMode
 		{
-			get
-			{
-				throw new NotImplementedException();
-			}
+			get => throw new NotImplementedException();
 
-			set
-			{
-				throw new NotImplementedException();
-			}
+			set => throw new NotImplementedException();
 		}
 
-		public Documents Documents
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public Documents Documents => throw new NotImplementedException();
 
-		public DTE DTE
-		{
-			get
-			{
-				return this;
-			}
-		}
+		public DTE DTE => this;
 
-		public string Edition
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public string Edition => throw new NotImplementedException();
 
-		public Events Events
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public Events Events => throw new NotImplementedException();
 
-		public string FileName
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public string FileName => throw new NotImplementedException();
 
-		public Find Find
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public Find Find => throw new NotImplementedException();
 
-		public string FullName
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public string FullName => throw new NotImplementedException();
 
-		public Globals Globals
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public Globals Globals => throw new NotImplementedException();
 
-		public ItemOperations ItemOperations
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public ItemOperations ItemOperations => throw new NotImplementedException();
 
-		public int LocaleID
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public int LocaleID => throw new NotImplementedException();
 
-		public Macros Macros
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public Macros Macros => throw new NotImplementedException();
 
-		public DTE MacrosIDE
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public DTE MacrosIDE => throw new NotImplementedException();
 
-		public Window MainWindow
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public Window MainWindow => throw new NotImplementedException();
 
-		public vsIDEMode Mode
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public vsIDEMode Mode => throw new NotImplementedException();
 
-		public string Name
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public string Name => throw new NotImplementedException();
 
-		public ObjectExtenders ObjectExtenders
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public ObjectExtenders ObjectExtenders => throw new NotImplementedException();
 
-		public string RegistryRoot
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public string RegistryRoot => throw new NotImplementedException();
 
-		public SelectedItems SelectedItems
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public SelectedItems SelectedItems => throw new NotImplementedException();
 
-		public Solution Solution
-		{
-			get
-			{
-				return new MockDTESolution(this);
-			}
-		}
+		public Solution Solution => new MockDTESolution(this);
 
-		public SourceControl SourceControl
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public SourceControl SourceControl => throw new NotImplementedException();
 
-		public StatusBar StatusBar
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public StatusBar StatusBar => throw new NotImplementedException();
 
 		public bool SuppressUI
 		{
-			get
-			{
-				throw new NotImplementedException();
-			}
+			get => throw new NotImplementedException();
 
-			set
-			{
-				throw new NotImplementedException();
-			}
+			set => throw new NotImplementedException();
 		}
 
-		public UndoContext UndoContext
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public UndoContext UndoContext => throw new NotImplementedException();
 
 		public bool UserControl
 		{
-			get
-			{
-				throw new NotImplementedException();
-			}
+			get => throw new NotImplementedException();
 
-			set
-			{
-				throw new NotImplementedException();
-			}
+			set => throw new NotImplementedException();
 		}
 
-		public string Version
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public string Version => throw new NotImplementedException();
 
-		public WindowConfigurations WindowConfigurations
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public WindowConfigurations WindowConfigurations => throw new NotImplementedException();
 
-		public EnvDTE.Windows Windows
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public EnvDTE.Windows Windows => throw new NotImplementedException();
 
 		public void ExecuteCommand(string CommandName, string CommandArgs = "")
 		{
@@ -390,7 +162,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			throw new NotImplementedException();
 		}
 
-		Dictionary<string, Dictionary<string, Properties>> _properties = new Dictionary<string, Dictionary<string, Properties>>() {
+		private Dictionary<string, Dictionary<string, Properties>> _properties = new Dictionary<string, Dictionary<string, Properties>>() {
 			{
 				"Environment",
 				new Dictionary<string, Properties>() {

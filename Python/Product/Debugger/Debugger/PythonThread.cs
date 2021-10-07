@@ -16,7 +16,7 @@
 
 namespace Microsoft.PythonTools.Debugger
 {
-	class PythonThread
+	internal class PythonThread
 	{
 		private readonly long _identity;
 		private readonly PythonProcess _process;
@@ -64,26 +64,14 @@ namespace Microsoft.PythonTools.Debugger
 
 		public IList<PythonStackFrame> Frames
 		{
-			get
-			{
-				return _frames;
-			}
-			set
-			{
-				_frames = value;
-			}
+			get => _frames;
+			set => _frames = value;
 		}
 
 		public string Name
 		{
-			get
-			{
-				return _name;
-			}
-			set
-			{
-				_name = value;
-			}
+			get => _name;
+			set => _name = value;
 		}
 
 		public bool IsWorkerThread => _isWorkerThread;

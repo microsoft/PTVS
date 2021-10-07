@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 		public int MaxLength
 		{
-			get { return _maxLength; }
+			get => _maxLength;
 			set
 			{
 				if (value < 3)
@@ -82,10 +82,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			_nestingLevel = parent._nestingLevel;
 		}
 
-		public bool IsTopLevel
-		{
-			get { return _nestingLevel == 0; }
-		}
+		public bool IsTopLevel => _nestingLevel == 0;
 
 		public override string ToString()
 		{
@@ -356,16 +353,16 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 		string ICustomFormatter.Format(string format, object arg, IFormatProvider formatProvider)
 		{
-			var obj = arg as PyObject;
+			PyObject obj = arg as PyObject;
 			if (obj != null)
 			{
-				var builder = new ReprBuilder(Options);
+				ReprBuilder builder = new ReprBuilder(Options);
 				builder.AppendRepr(obj);
 				return builder.ToString();
 			}
 			else if (format == "PY")
 			{
-				var builder = new ReprBuilder(Options);
+				ReprBuilder builder = new ReprBuilder(Options);
 				builder.AppendLiteral(arg);
 				return builder.ToString();
 			}

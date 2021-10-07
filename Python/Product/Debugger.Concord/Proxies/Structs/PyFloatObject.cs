@@ -42,10 +42,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			return result;
 		}
 
-		private DoubleProxy ob_fval
-		{
-			get { return GetFieldProxy(_fields.ob_fval); }
-		}
+		private DoubleProxy ob_fval => GetFieldProxy(_fields.ob_fval);
 
 		public Double ToDouble()
 		{

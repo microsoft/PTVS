@@ -52,10 +52,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			return result;
 		}
 
-		private Int32Proxy ob_ival
-		{
-			get { return GetFieldProxy(_fields.ob_ival); }
-		}
+		private Int32Proxy ob_ival => GetFieldProxy(_fields.ob_ival);
 
 		public Int32 ToInt32()
 		{

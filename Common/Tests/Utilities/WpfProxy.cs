@@ -60,7 +60,7 @@ namespace TestUtilities
 
 		public static WpfProxy FromObject(object obj)
 		{
-			var proxy = obj as WpfObjectProxy;
+			WpfObjectProxy proxy = obj as WpfObjectProxy;
 			if (proxy != null)
 			{
 				return proxy._provider;
@@ -118,10 +118,7 @@ namespace TestUtilities
 			Dispose(false);
 		}
 
-		public bool IsDisposed
-		{
-			get { return _isDisposed; }
-		}
+		public bool IsDisposed => _isDisposed;
 
 		private CancellationToken DefaultCancellationToken => Debugger.IsAttached ? CancellationToken.None : new CancellationTokenSource(10000).Token;
 
@@ -226,7 +223,7 @@ namespace TestUtilities
 
 		internal static object UnwrapIfProxy(object value)
 		{
-			var proxy = value as WpfObjectProxy;
+			WpfObjectProxy proxy = value as WpfObjectProxy;
 			return (proxy != null) ? proxy._object : value;
 		}
 
@@ -241,10 +238,7 @@ namespace TestUtilities
 			return string.Format("{0}<{1}>", GetType().Name, _object.GetType().Name);
 		}
 
-		public Dispatcher Dispatcher
-		{
-			get { return _object.Dispatcher; }
-		}
+		public Dispatcher Dispatcher => _object.Dispatcher;
 
 		public U GetValue<U>(DependencyProperty property)
 		{
@@ -396,10 +390,7 @@ namespace TestUtilities
 		{
 		}
 
-		public T Object
-		{
-			get { return (T)_object; }
-		}
+		public T Object => (T)_object;
 	}
 
 }

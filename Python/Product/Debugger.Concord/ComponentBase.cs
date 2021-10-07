@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 			static MessageBase()
 			{
-				var msgAttr = (MessageToAttribute)typeof(TInput).GetCustomAttributes(typeof(MessageToAttribute), false).SingleOrDefault();
+				MessageToAttribute msgAttr = (MessageToAttribute)typeof(TInput).GetCustomAttributes(typeof(MessageToAttribute), false).SingleOrDefault();
 				if (msgAttr == null)
 				{
 					Debug.Fail("Message type " + typeof(TInput).FullName + " has no [RequestTo] attribute");
@@ -54,10 +54,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 				}
 			}
 
-			public int MessageCode
-			{
-				get { return _messageCode; }
-			}
+			public int MessageCode => _messageCode;
 
 			public void SendLower(DkmProcess process)
 			{
@@ -95,7 +92,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 			static MessageBase()
 			{
-				var msgAttr = (MessageToAttribute)typeof(TInput).GetCustomAttributes(typeof(MessageToAttribute), false).SingleOrDefault();
+				MessageToAttribute msgAttr = (MessageToAttribute)typeof(TInput).GetCustomAttributes(typeof(MessageToAttribute), false).SingleOrDefault();
 				if (msgAttr == null)
 				{
 					Debug.Fail("Message type " + typeof(TInput).FullName + " has no [RequestTo] attribute");
@@ -111,10 +108,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 				}
 			}
 
-			public int MessageCode
-			{
-				get { return _messageCode; }
-			}
+			public int MessageCode => _messageCode;
 
 			public TOutput SendLower(DkmProcess process)
 			{
@@ -140,7 +134,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 			DkmCustomMessage IMessage.Handle(DkmProcess process)
 			{
-				var response = Handle(process);
+				TOutput response = Handle(process);
 				var stream = new MemoryStream();
 				_outputSerializer.WriteObject(stream, response);
 				return DkmCustomMessage.Create(process.Connection, process, Guid.Empty, -1, stream.ToArray(), null);
@@ -182,8 +176,8 @@ namespace Microsoft.PythonTools.Debugger.Concord
 		private DkmCustomMessage Handle(DkmCustomMessage customMessage)
 		{
 			var requestSerializer = _messageSerializers[customMessage.MessageCode];
-			var requestData = (byte[])customMessage.Parameter1;
-			var request = (IMessage)requestSerializer.ReadObject(new MemoryStream(requestData, false));
+			global::System.Byte[] requestData = (byte[])customMessage.Parameter1;
+			IMessage request = (IMessage)requestSerializer.ReadObject(new MemoryStream(requestData, false));
 			return request.Handle(customMessage.Process);
 		}
 	}

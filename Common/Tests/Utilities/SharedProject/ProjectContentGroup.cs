@@ -38,7 +38,7 @@ namespace TestUtilities.SharedProject
 
 		public override void Generate(ProjectType projectType, MSBuild.Project project)
 		{
-			foreach (var content in _content)
+			foreach (ProjectContentGenerator content in _content)
 			{
 				content.Generate(projectType, project);
 			}

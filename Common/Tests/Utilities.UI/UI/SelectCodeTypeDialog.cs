@@ -18,7 +18,7 @@ namespace TestUtilities.UI
 {
 	public class SelectCodeTypeDialog : AutomationWrapper
 	{
-		private CheckListView _availableCodeTypes;
+		private readonly CheckListView _availableCodeTypes;
 
 		public SelectCodeTypeDialog(AutomationElement element) : base(element)
 		{
@@ -32,13 +32,7 @@ namespace TestUtilities.UI
 
 		public SelectCodeTypeDialog(IntPtr hwnd) : this(AutomationElement.FromHandle(hwnd)) { }
 
-		public CheckListView AvailableCodeTypes
-		{
-			get
-			{
-				return _availableCodeTypes;
-			}
-		}
+		public CheckListView AvailableCodeTypes => _availableCodeTypes;
 
 		public void SetDebugSpecificCodeTypes()
 		{
@@ -52,7 +46,7 @@ namespace TestUtilities.UI
 
 		public CheckBox GetCodeTypeCheckBox(string codeType)
 		{
-			var selectedItem = _availableCodeTypes.GetFirstByName(codeType);
+			CheckBox selectedItem = _availableCodeTypes.GetFirstByName(codeType);
 			return selectedItem;
 		}
 

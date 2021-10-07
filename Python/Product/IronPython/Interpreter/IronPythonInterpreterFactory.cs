@@ -16,7 +16,7 @@
 
 namespace Microsoft.IronPythonTools.Interpreter
 {
-	class IronPythonAstInterpreterFactory : AstPythonInterpreterFactory
+	internal class IronPythonAstInterpreterFactory : AstPythonInterpreterFactory
 	{
 		public IronPythonAstInterpreterFactory(VisualStudioInterpreterConfiguration config, InterpreterFactoryCreationOptions options)
 			: base(config, options)

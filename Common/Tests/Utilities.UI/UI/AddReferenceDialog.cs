@@ -19,7 +19,7 @@ namespace TestUtilities.UI
 	/// <summary>
 	/// Wrapps VS's Add Reference Dialog
 	/// </summary>
-	class AddReferenceDialog : AutomationWrapper
+	internal class AddReferenceDialog : AutomationWrapper
 	{
 		public AddReferenceDialog(AutomationElement element)
 			: base(element)
@@ -64,14 +64,8 @@ namespace TestUtilities.UI
 
 		public string BrowseFilename
 		{
-			get
-			{
-				return GetFilenameValuePattern().Current.Value;
-			}
-			set
-			{
-				GetFilenameValuePattern().SetValue(value);
-			}
+			get => GetFilenameValuePattern().Current.Value;
+			set => GetFilenameValuePattern().SetValue(value);
 		}
 
 		private ValuePattern GetFilenameValuePattern()

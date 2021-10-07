@@ -19,7 +19,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 	// An implementation of IDebugCodeContext2. 
 	// Represents the starting position of a code instruction. 
 	// For Python, this is fundamentally a specific line in the source code.
-	class AD7MemoryAddress : IDebugCodeContext2, IDebugCodeContext100
+	internal class AD7MemoryAddress : IDebugCodeContext2, IDebugCodeContext100
 	{
 		private readonly AD7Engine _engine;
 		private readonly uint _lineNo;
@@ -71,7 +71,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 					continue;
 				}
 
-				if (!AD7Engine.ReferenceEquals(this._engine, compareTo._engine))
+				if (!AD7Engine.ReferenceEquals(_engine, compareTo._engine))
 				{
 					continue;
 				}
@@ -81,23 +81,23 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 				switch (contextCompare)
 				{
 					case enum_CONTEXT_COMPARE.CONTEXT_EQUAL:
-						result = (this._lineNo == compareTo._lineNo);
+						result = (_lineNo == compareTo._lineNo);
 						break;
 
 					case enum_CONTEXT_COMPARE.CONTEXT_LESS_THAN:
-						result = (this._lineNo < compareTo._lineNo);
+						result = (_lineNo < compareTo._lineNo);
 						break;
 
 					case enum_CONTEXT_COMPARE.CONTEXT_GREATER_THAN:
-						result = (this._lineNo > compareTo._lineNo);
+						result = (_lineNo > compareTo._lineNo);
 						break;
 
 					case enum_CONTEXT_COMPARE.CONTEXT_LESS_THAN_OR_EQUAL:
-						result = (this._lineNo <= compareTo._lineNo);
+						result = (_lineNo <= compareTo._lineNo);
 						break;
 
 					case enum_CONTEXT_COMPARE.CONTEXT_GREATER_THAN_OR_EQUAL:
-						result = (this._lineNo >= compareTo._lineNo);
+						result = (_lineNo >= compareTo._lineNo);
 						break;
 
 					case enum_CONTEXT_COMPARE.CONTEXT_SAME_SCOPE:
@@ -112,7 +112,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 						}
 						else
 						{
-							result = this._lineNo == compareTo._lineNo && this._filename == compareTo._filename;
+							result = _lineNo == compareTo._lineNo && _filename == compareTo._filename;
 						}
 						break;
 
@@ -139,13 +139,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 			return VSConstants.S_FALSE;
 		}
 
-		public uint LineNumber
-		{
-			get
-			{
-				return _lineNo;
-			}
-		}
+		public uint LineNumber => _lineNo;
 
 		// Gets information that describes this context.
 		public int GetInfo(enum_CONTEXT_INFO_FIELDS dwFields, CONTEXT_INFO[] pinfo)

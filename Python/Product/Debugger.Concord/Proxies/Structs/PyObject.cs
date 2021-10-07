@@ -70,14 +70,14 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 				{
 					string typeVarName = null;
 
-					var pyTypeAttrs = (PyTypeAttribute[])Attribute.GetCustomAttributes(proxyType, typeof(PyTypeAttribute), inherit: false);
+					PyTypeAttribute[] pyTypeAttrs = (PyTypeAttribute[])Attribute.GetCustomAttributes(proxyType, typeof(PyTypeAttribute), inherit: false);
 					if (pyTypeAttrs.Length == 0)
 					{
 						typeVarName = ComputeVariableName(proxyType);
 					}
 					else
 					{
-						foreach (var pyTypeAttr in pyTypeAttrs)
+						foreach (PyTypeAttribute pyTypeAttr in pyTypeAttrs)
 						{
 							if (pyTypeAttr.MinVersion != PythonLanguageVersion.None && langVer < pyTypeAttr.MinVersion)
 							{
@@ -98,8 +98,8 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 						}
 					}
 
-					var pyType = PyTypeObject.FromNativeGlobalVariable(process, typeVarName);
-					var proxyInfo = new ProxyInfo(proxyType);
+					PyTypeObject pyType = PyTypeObject.FromNativeGlobalVariable(process, typeVarName);
+					ProxyInfo proxyInfo = new ProxyInfo(proxyType);
 					ProxyInfoFromPyTypePtr.Add(pyType.Address, proxyInfo);
 
 					PyTypeFromType.Add(proxyType, pyType);
@@ -151,9 +151,9 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 				return;
 			}
 
-			var proxyTypes = Process.GetOrCreateDataItem(() => new ProxyTypes(Process));
+			T proxyTypes = Process.GetOrCreateDataItem(() => new ProxyTypes(Process));
 			var expectedType = proxyTypes.PyTypeFromType[typeof(TObject)];
-			var ob_type = this.ob_type.Read();
+			PyTypeObject ob_type = this.ob_type.Read();
 			if (!ob_type.IsSubtypeOf(expectedType))
 			{
 				Debug.Fail("Expected object of type " + expectedType.tp_name.Read().ReadUnicode() + " but got a " + ob_type.tp_name.Read().ReadUnicode() + " instead.");
@@ -161,28 +161,20 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			}
 		}
 
-		public SSizeTProxy ob_refcnt
-		{
-			get { return GetFieldProxy(_fields.ob_refcnt); }
-		}
+		public SSizeTProxy ob_refcnt => GetFieldProxy(_fields.ob_refcnt);
 
-		public PointerProxy<PyTypeObject> ob_type
-		{
-			get
-			{
+		public PointerProxy<PyTypeObject> ob_type =>
 				// PyObject::ob_type is declared as PyTypeObject*, so layout of that struct is always valid and applicable;
 				// but ob_type->ob_type is not always PyTypeObject or a derived type (native modules can play shenanigans with
 				// metaclasses that way, and ctypes in particular does that). Since polymorphic creation relies on ob_type,
 				// skip here, and just return a PyTypeObject. We don't have any derived proxies to worry about, anyway.
-				return GetFieldProxy(_fields.ob_type).ReinterpretCast<PyTypeObject>(polymorphic: false);
-			}
-		}
+				GetFieldProxy(_fields.ob_type).ReinterpretCast<PyTypeObject>(polymorphic: false);
 
 		public PointerProxy<PyObject>? __dict__
 		{
 			get
 			{
-				var ob_type = this.ob_type.Read();
+				PyTypeObject ob_type = this.ob_type.Read();
 				long dictoffset = ob_type.tp_dictoffset.Read();
 
 				if (dictoffset == 0)
@@ -191,7 +183,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 				}
 				else if (dictoffset < 0)
 				{
-					var varObj = this as PyVarObject;
+					PyVarObject varObj = this as PyVarObject;
 					if (varObj == null)
 					{
 						throw new InvalidDataException();
@@ -224,8 +216,8 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 
 		public override string ToString()
 		{
-			var pyrtInfo = Process.GetPythonRuntimeInfo();
-			var reprBuilder = new ReprBuilder(new ReprOptions(Process));
+			PythonRuntimeInfo pyrtInfo = Process.GetPythonRuntimeInfo();
+			ReprBuilder reprBuilder = new ReprBuilder(new ReprOptions(Process));
 			Repr(reprBuilder);
 			return reprBuilder.ToString();
 		}
@@ -250,7 +242,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 		/// </summary>
 		public string Repr(ReprOptions options)
 		{
-			var builder = new ReprBuilder(options);
+			ReprBuilder builder = new ReprBuilder(options);
 			Repr(builder);
 			return builder.ToString();
 		}
@@ -267,14 +259,14 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 		{
 			var children = GetDebugChildrenFromSlots();
 
-			var maybeDictProxy = this.__dict__;
+			var maybeDictProxy = __dict__;
 			if (maybeDictProxy != null)
 			{
 				var dictProxy = maybeDictProxy.Value;
 				if (!dictProxy.IsNull)
 				{
 					yield return new PythonEvaluationResult(dictProxy, "__dict__");
-					var dict = dictProxy.TryRead() as PyDictObject;
+					PyDictObject dict = dictProxy.TryRead() as PyDictObject;
 					if (dict != null)
 					{
 						children = children.Concat(GetDebugChildrenFromDict(dict));
@@ -293,7 +285,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 		{
 			foreach (var pair in dict.ReadElements())
 			{
-				var name = pair.Key as IPyBaseStringObject;
+				IPyBaseStringObject name = pair.Key as IPyBaseStringObject;
 				if (name != null && !pair.Value.IsNull)
 				{
 					yield return new PythonEvaluationResult(pair.Value, name.ToString());
@@ -303,7 +295,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 
 		private IEnumerable<PythonEvaluationResult> GetDebugChildrenFromSlots()
 		{
-			var tp_members = ob_type.Read().tp_members;
+			PointerProxy<ArrayProxy<PyMemberDef>> tp_members = ob_type.Read().tp_members;
 			if (tp_members.IsNull)
 			{
 				yield break;
@@ -337,7 +329,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 							var ptr = GetFieldProxy(new StructField<PointerProxy> { Process = Process, Offset = offset }).Read();
 							if (ptr != 0)
 							{
-								var proxy = new CStringProxy(Process, ptr);
+								CStringProxy proxy = new CStringProxy(Process, ptr);
 								if (langVer <= PythonLanguageVersion.V27)
 								{
 									value = new ValueStore<AsciiString>(proxy.ReadAscii());
@@ -355,7 +347,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 						break;
 					case PyMemberDefType.T_STRING_INPLACE:
 						{
-							var proxy = new CStringProxy(Process, Address.OffsetBy(offset));
+							CStringProxy proxy = new CStringProxy(Process, Address.OffsetBy(offset));
 							if (langVer <= PythonLanguageVersion.V27)
 							{
 								value = new ValueStore<AsciiString>(proxy.ReadAscii());
@@ -433,10 +425,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			return process.GetOrCreateDataItem(() => new NoneHolder(process)).None;
 		}
 
-		public bool IsNone
-		{
-			get { return this == None(Process); }
-		}
+		public bool IsNone => this == None(Process);
 
 		public static PyObject FromAddress(DkmProcess process, ulong address)
 		{
@@ -447,7 +436,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 
 			// This is a hot code path, so avoid creating a PyTypeObject here just to check for reference equality -
 			// read it as raw pointer, and do direct address comparisons instead.
-			var fields = GetStructFields<PyObject, PyObject_Fields>(process);
+			PyObject_Fields fields = GetStructFields<PyObject, PyObject_Fields>(process);
 			ulong typePtr = new PointerProxy(process, address.OffsetBy(fields.ob_type.Offset)).Read();
 			var proxyInfo = FindProxyInfoForPyType(process, typePtr) ?? ProxyInfo.Default;
 			return proxyInfo.ProxyFactory(process, address);
@@ -467,7 +456,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			}
 
 			// If we didn't get a direct match, look at tp_base and tp_bases.
-			var typeObject = new PyTypeObject(process, typePtr);
+			PyTypeObject typeObject = new PyTypeObject(process, typePtr);
 			var tp_base = typeObject.tp_base.Raw.Read();
 			var baseProxyInfo = FindProxyInfoForPyType(process, tp_base);
 			if (baseProxyInfo != null)
@@ -475,7 +464,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 				return baseProxyInfo;
 			}
 
-			var tp_bases = typeObject.tp_bases.TryRead();
+			PyTupleObject tp_bases = typeObject.tp_bases.TryRead();
 			if (tp_bases != null)
 			{
 				foreach (var bas in tp_bases.ReadElements())
@@ -514,12 +503,6 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			InitializeStruct(this, out _fields);
 		}
 
-		public SSizeTProxy ob_size
-		{
-			get
-			{
-				return GetFieldProxy(_fields.ob_size);
-			}
-		}
+		public SSizeTProxy ob_size => GetFieldProxy(_fields.ob_size);
 	}
 }

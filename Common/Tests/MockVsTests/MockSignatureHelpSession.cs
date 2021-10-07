@@ -16,7 +16,7 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-	class MockSignatureHelpSession : ISignatureHelpSession
+	internal class MockSignatureHelpSession : ISignatureHelpSession
 	{
 		private bool _dismissed;
 		private readonly ITextView _view;
@@ -33,7 +33,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			_sigs = new ReadOnlyObservableCollection<ISignature>(sigs);
 		}
 
-		void sigs_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+		private void sigs_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
 		{
 			if (e.Action != NotifyCollectionChangedAction.Add)
 			{
@@ -47,14 +47,8 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 
 		public ISignature SelectedSignature
 		{
-			get
-			{
-				return _active;
-			}
-			set
-			{
-				_active = value;
-			}
+			get => _active;
+			set => _active = value;
 		}
 
 		public event EventHandler<SelectedSignatureChangedEventArgs> SelectedSignatureChanged
@@ -63,10 +57,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			remove { throw new NotImplementedException(); }
 		}
 
-		public System.Collections.ObjectModel.ReadOnlyObservableCollection<ISignature> Signatures
-		{
-			get { return _sigs; }
-		}
+		public System.Collections.ObjectModel.ReadOnlyObservableCollection<ISignature> Signatures => _sigs;
 
 		public void Collapse()
 		{
@@ -100,20 +91,14 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 
 		}
 
-		public bool IsDismissed
-		{
-			get { return _dismissed; }
-		}
+		public bool IsDismissed => _dismissed;
 
 		public bool Match()
 		{
 			throw new NotImplementedException();
 		}
 
-		public IIntellisensePresenter Presenter
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public IIntellisensePresenter Presenter => throw new NotImplementedException();
 
 		public event EventHandler PresenterChanged
 		{
@@ -137,14 +122,8 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			throw new NotImplementedException();
 		}
 
-		public VisualStudio.Text.Editor.ITextView TextView
-		{
-			get { return _view; }
-		}
+		public VisualStudio.Text.Editor.ITextView TextView => _view;
 
-		public VisualStudio.Utilities.PropertyCollection Properties
-		{
-			get { return _properties; }
-		}
+		public VisualStudio.Utilities.PropertyCollection Properties => _properties;
 	}
 }

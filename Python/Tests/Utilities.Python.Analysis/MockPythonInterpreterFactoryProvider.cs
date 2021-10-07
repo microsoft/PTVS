@@ -18,8 +18,8 @@ namespace TestUtilities.Python
 {
 	public class MockPythonInterpreterFactoryProvider : IPythonInterpreterFactoryProvider
 	{
-		readonly string _name;
-		readonly List<IPythonInterpreterFactory> _factories;
+		private readonly string _name;
+		private readonly List<IPythonInterpreterFactory> _factories;
 
 		public MockPythonInterpreterFactoryProvider(string name, params IPythonInterpreterFactory[] factories)
 		{

@@ -16,7 +16,7 @@
 
 namespace TestAdapterTests.Mocks
 {
-	class MockRunSettingsXmlBuilder
+	internal class MockRunSettingsXmlBuilder
 	{
 		// {0} is the test results directory
 		// {1} is one or more formatted _runSettingProject lines
@@ -61,8 +61,8 @@ namespace TestAdapterTests.Mocks
 		private string _testDir;
 		private string _interpreterPath;
 		private string _unitTestConfigAttributes;
-		private int _discoveryWaitTimeInSeconds;
-		private bool _isWorkspace;
+		private readonly int _discoveryWaitTimeInSeconds;
+		private readonly bool _isWorkspace;
 		private bool _coverage;
 		private StringBuilder _environmentLines = new StringBuilder();
 		private StringBuilder _searchLines = new StringBuilder();

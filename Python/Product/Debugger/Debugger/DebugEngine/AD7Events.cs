@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 {
 	#region Event base classes
 
-	class AD7AsynchronousEvent : IDebugEvent2
+	internal class AD7AsynchronousEvent : IDebugEvent2
 	{
 		public const uint Attributes = (uint)enum_EVENTATTRIBUTES.EVENT_ASYNCHRONOUS;
 
@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 		}
 	}
 
-	class AD7StoppingEvent : IDebugEvent2
+	internal class AD7StoppingEvent : IDebugEvent2
 	{
 		public const uint Attributes = (uint)enum_EVENTATTRIBUTES.EVENT_ASYNC_STOP;
 
@@ -48,7 +48,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 		}
 	}
 
-	class AD7SynchronousEvent : IDebugEvent2
+	internal class AD7SynchronousEvent : IDebugEvent2
 	{
 		public const uint Attributes = (uint)enum_EVENTATTRIBUTES.EVENT_SYNCHRONOUS;
 
@@ -62,12 +62,12 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 	#endregion
 
 	// The debug engine (DE) sends this interface to the session debug manager (SDM) when an instance of the DE is created.
-	sealed class AD7EngineCreateEvent : AD7AsynchronousEvent, IDebugEngineCreateEvent2
+	internal sealed class AD7EngineCreateEvent : AD7AsynchronousEvent, IDebugEngineCreateEvent2
 	{
 		public const string IID = "FE5B734C-759D-4E59-AB04-F103343BDD06";
 		private IDebugEngine2 m_engine;
 
-		AD7EngineCreateEvent(AD7Engine engine)
+		private AD7EngineCreateEvent(AD7Engine engine)
 		{
 			m_engine = engine;
 		}
@@ -86,7 +86,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 	}
 
 	// This interface is sent by the debug engine (DE) to the session debug manager (SDM) when a program is attached to.
-	sealed class AD7ProgramCreateEvent : AD7AsynchronousEvent, IDebugProgramCreateEvent2
+	internal sealed class AD7ProgramCreateEvent : AD7AsynchronousEvent, IDebugProgramCreateEvent2
 	{
 		public const string IID = "96CD11EE-ECD4-4E89-957E-B5D496FC4139";
 
@@ -98,7 +98,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 	}
 
 	// This interface is sent by the debug engine (DE) to the session debug manager (SDM) when a program is attached to.
-	sealed class AD7ExpressionEvaluationCompleteEvent : AD7AsynchronousEvent, IDebugExpressionEvaluationCompleteEvent2
+	internal sealed class AD7ExpressionEvaluationCompleteEvent : AD7AsynchronousEvent, IDebugExpressionEvaluationCompleteEvent2
 	{
 		public const string IID = "C0E13A85-238A-4800-8315-D947C960A843";
 		private readonly IDebugExpression2 _expression;
@@ -106,8 +106,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 
 		public AD7ExpressionEvaluationCompleteEvent(IDebugExpression2 expression, IDebugProperty2 property)
 		{
-			this._expression = expression;
-			this._property = property;
+			_expression = expression;
+			_property = property;
 		}
 
 		#region IDebugExpressionEvaluationCompleteEvent2 Members
@@ -128,12 +128,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 	}
 
 	// This interface is sent by the debug engine (DE) to the session debug manager (SDM) when a module is loaded or unloaded.
-	sealed class AD7ModuleLoadEvent : AD7AsynchronousEvent, IDebugModuleLoadEvent2
+	internal sealed class AD7ModuleLoadEvent : AD7AsynchronousEvent, IDebugModuleLoadEvent2
 	{
 		public const string IID = "989DB083-0D7C-40D1-A9D9-921BF611A4B2";
-
-		readonly AD7Module m_module;
-		readonly bool m_fLoad;
+		private readonly AD7Module m_module;
+		private readonly bool m_fLoad;
 
 		public AD7ModuleLoadEvent(AD7Module module, bool fLoad)
 		{
@@ -162,11 +161,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 
 	// This interface is sent by the debug engine (DE) to the session debug manager (SDM) when a program has run to completion
 	// or is otherwise destroyed.
-	sealed class AD7ProgramDestroyEvent : AD7SynchronousEvent, IDebugProgramDestroyEvent2
+	internal sealed class AD7ProgramDestroyEvent : AD7SynchronousEvent, IDebugProgramDestroyEvent2
 	{
 		public const string IID = "E147E9E3-6440-4073-A7B7-A65592C714B5";
-
-		readonly uint m_exitCode;
+		private readonly uint m_exitCode;
 		public AD7ProgramDestroyEvent(uint exitCode)
 		{
 			m_exitCode = exitCode;
@@ -185,17 +183,16 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 	}
 
 	// This interface is sent by the debug engine (DE) to the session debug manager (SDM) when a thread is created in a program being debugged.
-	sealed class AD7ThreadCreateEvent : AD7AsynchronousEvent, IDebugThreadCreateEvent2
+	internal sealed class AD7ThreadCreateEvent : AD7AsynchronousEvent, IDebugThreadCreateEvent2
 	{
 		public const string IID = "2090CCFC-70C5-491D-A5E8-BAD2DD9EE3EA";
 	}
 
 	// This interface is sent by the debug engine (DE) to the session debug manager (SDM) when a thread has exited.
-	sealed class AD7ThreadDestroyEvent : AD7AsynchronousEvent, IDebugThreadDestroyEvent2
+	internal sealed class AD7ThreadDestroyEvent : AD7AsynchronousEvent, IDebugThreadDestroyEvent2
 	{
 		public const string IID = "2C3B7532-A36F-4A6E-9072-49BE649B8541";
-
-		readonly uint m_exitCode;
+		private readonly uint m_exitCode;
 		public AD7ThreadDestroyEvent(uint exitCode)
 		{
 			m_exitCode = exitCode;
@@ -215,11 +212,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 
 	// This interface is sent by the debug engine (DE) to the session debug manager (SDM)
 	// when a program is loaded, but before any code is executed.
-	sealed class AD7LoadCompleteEvent : IDebugEvent2, IDebugLoadCompleteEvent2
+	internal sealed class AD7LoadCompleteEvent : IDebugEvent2, IDebugLoadCompleteEvent2
 	{
 		public const string IID = "B1844850-1349-45D4-9F12-495212F5EB0B";
 
-		private uint _attributes;
+		private readonly uint _attributes;
 
 		public AD7LoadCompleteEvent(IDebugThread2 thread)
 		{
@@ -235,7 +232,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 
 		internal static void Send(AD7Engine engine, IDebugThread2 thread)
 		{
-			var eventObject = new AD7LoadCompleteEvent(thread);
+			AD7LoadCompleteEvent eventObject = new AD7LoadCompleteEvent(thread);
 			engine.Send(eventObject, IID, thread);
 		}
 
@@ -247,24 +244,24 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 	}
 
 	// This interface tells the session debug manager (SDM) that an asynchronous break has been successfully completed.
-	sealed class AD7AsyncBreakCompleteEvent : AD7StoppingEvent, IDebugBreakEvent2
+	internal sealed class AD7AsyncBreakCompleteEvent : AD7StoppingEvent, IDebugBreakEvent2
 	{
 		public const string IID = "c7405d1d-e24b-44e0-b707-d8a5a4e1641b";
 	}
 
 	// This interface tells the session debug manager (SDM) that an asynchronous break has been successfully completed.
-	sealed class AD7SteppingCompleteEvent : AD7StoppingEvent, IDebugStepCompleteEvent2
+	internal sealed class AD7SteppingCompleteEvent : AD7StoppingEvent, IDebugStepCompleteEvent2
 	{
 		public const string IID = "0F7F24C1-74D9-4EA6-A3EA-7EDB2D81441D";
 	}
 
 	// This interface is sent when a pending breakpoint has been bound in the debuggee.
-	sealed class AD7BreakpointBoundEvent : AD7AsynchronousEvent, IDebugBreakpointBoundEvent2
+	internal sealed class AD7BreakpointBoundEvent : AD7AsynchronousEvent, IDebugBreakpointBoundEvent2
 	{
 		public const string IID = "1dddb704-cf99-4b8a-b746-dabb01dd13a0";
 
-		private AD7PendingBreakpoint m_pendingBreakpoint;
-		private AD7BoundBreakpoint m_boundBreakpoint;
+		private readonly AD7PendingBreakpoint m_pendingBreakpoint;
+		private readonly AD7BoundBreakpoint m_boundBreakpoint;
 
 		public AD7BreakpointBoundEvent(AD7PendingBreakpoint pendingBreakpoint, AD7BoundBreakpoint boundBreakpoint)
 		{
@@ -292,17 +289,16 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 	}
 
 	// This interface is sent when the entry point has been hit.
-	sealed class AD7EntryPointEvent : AD7StoppingEvent, IDebugEntryPointEvent2
+	internal sealed class AD7EntryPointEvent : AD7StoppingEvent, IDebugEntryPointEvent2
 	{
 		public const string IID = "e8414a3e-1642-48ec-829e-5f4040e16da9";
 	}
 
 	// This Event is sent when a breakpoint is hit in the debuggee
-	sealed class AD7BreakpointEvent : AD7StoppingEvent, IDebugBreakpointEvent2
+	internal sealed class AD7BreakpointEvent : AD7StoppingEvent, IDebugBreakpointEvent2
 	{
 		public const string IID = "501C1E21-C557-48B8-BA30-A1EAB0BC4A74";
-
-		IEnumDebugBoundBreakpoints2 m_boundBreakpoints;
+		private IEnumDebugBoundBreakpoints2 m_boundBreakpoints;
 
 		public AD7BreakpointEvent(IEnumDebugBoundBreakpoints2 boundBreakpoints)
 		{
@@ -320,7 +316,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 		#endregion
 	}
 
-	sealed class AD7DebugOutputStringEvent2 : AD7AsynchronousEvent, IDebugOutputStringEvent2
+	internal sealed class AD7DebugOutputStringEvent2 : AD7AsynchronousEvent, IDebugOutputStringEvent2
 	{
 		public const string IID = "569C4BB1-7B82-46FC-AE28-4536DDAD753E";
 		private readonly string _output;
@@ -340,7 +336,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 		#endregion
 	}
 
-	sealed class AD7CustomEvent : IDebugEvent2, IDebugCustomEvent110
+	internal sealed class AD7CustomEvent : IDebugEvent2, IDebugCustomEvent110
 	{
 		public const string IID = "2615D9BC-1948-4D21-81EE-7A963F20CF59";
 		private readonly VsComponentMessage _message;

@@ -16,14 +16,14 @@
 
 namespace Microsoft.PythonTools.Debugger
 {
-	enum OutputChannel
+	internal enum OutputChannel
 	{
 		Debug,
 		StdOut,
 		StdErr,
 	}
 
-	sealed class OutputEventArgs : EventArgs
+	internal sealed class OutputEventArgs : EventArgs
 	{
 		public OutputEventArgs(PythonThread thread, string output, OutputChannel channel)
 		{

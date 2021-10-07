@@ -35,15 +35,9 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			CheckPyType<PyDictObject36>();
 		}
 
-		public PointerProxy<PyDictKeysObject36> ma_keys
-		{
-			get { return GetFieldProxy(_fields.ma_keys); }
-		}
+		public PointerProxy<PyDictKeysObject36> ma_keys => GetFieldProxy(_fields.ma_keys);
 
-		public PointerProxy<ArrayProxy<PointerProxy<PyObject>>> ma_values
-		{
-			get { return GetFieldProxy(_fields.ma_values); }
-		}
+		public PointerProxy<ArrayProxy<PointerProxy<PyObject>>> ma_values => GetFieldProxy(_fields.ma_values);
 
 		public override IEnumerable<KeyValuePair<PyObject, PointerProxy<PyObject>>> ReadElements()
 		{
@@ -52,7 +46,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 				yield break;
 			}
 
-			var keys = ma_keys.Read();
+			PyDictKeysObject36 keys = ma_keys.Read();
 			var size = keys.dk_size.Read();
 			if (size <= 0)
 			{
@@ -60,17 +54,17 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			}
 
 			var n = keys.dk_nentries.Read();
-			var dk_entries = keys.dk_entries;
-			var entry = dk_entries[0];
+			ArrayProxy<PyDictKeyEntry> dk_entries = keys.dk_entries;
+			PyDictKeyEntry entry = dk_entries[0];
 
 			if (!ma_values.IsNull)
 			{
-				var values = ma_values.Read();
-				var value = values[0];
+				ArrayProxy<PointerProxy<PyObject>> values = ma_values.Read();
+				PointerProxy<PyObject> value = values[0];
 
 				for (int i = 0; i < n; ++i)
 				{
-					var key = entry.me_key;
+					PointerProxy<PyObject> key = entry.me_key;
 					if (!value.IsNull && !key.IsNull)
 					{
 						yield return new KeyValuePair<PyObject, PointerProxy<PyObject>>(key.Read(), value);
@@ -83,8 +77,8 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			{
 				for (int i = 0; i < n; ++i)
 				{
-					var key = entry.me_key;
-					var value = entry.me_value;
+					PointerProxy<PyObject> key = entry.me_key;
+					PointerProxy<PyObject> value = entry.me_value;
 					if (!key.IsNull && !value.IsNull)
 					{
 						yield return new KeyValuePair<PyObject, PointerProxy<PyObject>>(key.Read(), value);
@@ -107,15 +101,9 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 
 		public readonly Fields _fields;
 
-		public SSizeTProxy dk_size
-		{
-			get { return GetFieldProxy(_fields.dk_size); }
-		}
+		public SSizeTProxy dk_size => GetFieldProxy(_fields.dk_size);
 
-		public SSizeTProxy dk_nentries
-		{
-			get { return GetFieldProxy(_fields.dk_nentries); }
-		}
+		public SSizeTProxy dk_nentries => GetFieldProxy(_fields.dk_nentries);
 
 		public ArrayProxy<PyDictKeyEntry> dk_entries
 		{

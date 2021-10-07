@@ -19,7 +19,7 @@ extern alias pythontools;
 
 namespace PythonToolsMockTests
 {
-	sealed class PythonEditor : IDisposable
+	internal sealed class PythonEditor : IDisposable
 	{
 		private readonly bool _disposeVS, _disposeFactory, _disposeAnalyzer;
 		public readonly MockVs VS;
@@ -178,7 +178,7 @@ namespace PythonToolsMockTests
 
 		public string Text
 		{
-			get { return View.Text; }
+			get => View.Text;
 			set
 			{
 				var buffer = View.TextView.TextBuffer;
@@ -212,22 +212,19 @@ namespace PythonToolsMockTests
 			}
 		}
 
-		public ITextSnapshot CurrentSnapshot
-		{
-			get { return View.TextView.TextSnapshot; }
-		}
+		public ITextSnapshot CurrentSnapshot => View.TextView.TextSnapshot;
 
 		public WaitHandle AnalysisCompleteEvent
 		{
 			get
 			{
-				var evt = new AnalysisCompleteManualResetEvent(BufferInfo);
+				AnalysisCompleteManualResetEvent evt = new AnalysisCompleteManualResetEvent(BufferInfo);
 				BufferInfo.AddSink(evt, evt);
 				return evt;
 			}
 		}
 
-		class AnalysisCompleteManualResetEvent : WaitHandle, IPythonTextBufferInfoEventSink
+		private class AnalysisCompleteManualResetEvent : WaitHandle, IPythonTextBufferInfoEventSink
 		{
 			private readonly ManualResetEvent _event;
 			private readonly PythonTextBufferInfo _info;
@@ -338,13 +335,40 @@ namespace PythonToolsMockTests
 			}
 		}
 
-		public void Backspace() => VS.InvokeSync(() => View.Backspace());
-		public void Enter() => VS.InvokeSync(() => View.Enter());
-		public void Clear() => VS.InvokeSync(() => View.Clear());
-		public void MoveCaret(int line, int column) => View.MoveCaret(line, column);
-		public void MemberList() => VS.InvokeSync(() => View.MemberList());
-		public void ParamInfo() => VS.InvokeSync(() => View.ParamInfo());
-		public void Type(string text) => VS.InvokeSync(() => View.Type(text));
+		public void Backspace()
+		{
+			VS.InvokeSync(() => View.Backspace());
+		}
+
+		public void Enter()
+		{
+			VS.InvokeSync(() => View.Enter());
+		}
+
+		public void Clear()
+		{
+			VS.InvokeSync(() => View.Clear());
+		}
+
+		public void MoveCaret(int line, int column)
+		{
+			View.MoveCaret(line, column);
+		}
+
+		public void MemberList()
+		{
+			VS.InvokeSync(() => View.MemberList());
+		}
+
+		public void ParamInfo()
+		{
+			VS.InvokeSync(() => View.ParamInfo());
+		}
+
+		public void Type(string text)
+		{
+			VS.InvokeSync(() => View.Type(text));
+		}
 
 		public void TypeAndWaitForAnalysis(string text)
 		{

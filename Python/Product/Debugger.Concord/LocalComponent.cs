@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 		private static void CreatePythonRuntimeInstance(DkmProcess process)
 		{
-			var pyrtInfo = process.GetPythonRuntimeInfo();
+			PythonRuntimeInfo pyrtInfo = process.GetPythonRuntimeInfo();
 			var pythonDllId = pyrtInfo.DLLs.Python.UniqueId;
 			var debuggerHelperDllId = pyrtInfo.DLLs.DebuggerHelper != null ? pyrtInfo.DLLs.DebuggerHelper.UniqueId : Guid.Empty;
 
@@ -91,7 +91,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			injectionData = new HelperDllInjectionDataHolder();
 			process.SetDataItem(DkmDataCreationDisposition.CreateNew, injectionData);
 
-			var pyrtInfo = process.GetPythonRuntimeInfo();
+			PythonRuntimeInfo pyrtInfo = process.GetPythonRuntimeInfo();
 
 			// Loading the helper is done via CreateRemoteThread(LoadLibrary), which is inherently asynchronous.
 			// On the other hand, we will not handle breakpoints until it is loaded - they won't even be bound.
@@ -132,7 +132,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 		private static void OnHelperDllInitialized(DkmNativeModuleInstance moduleInstance)
 		{
 			var process = moduleInstance.Process;
-			var pyrtInfo = process.GetPythonRuntimeInfo();
+			PythonRuntimeInfo pyrtInfo = process.GetPythonRuntimeInfo();
 			pyrtInfo.DLLs.DebuggerHelper = moduleInstance;
 
 			if (pyrtInfo.DLLs.Python != null && pyrtInfo.DLLs.Python.HasSymbols())
@@ -170,7 +170,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 					return;
 				}
 
-				var pyrtInfo = process.GetPythonRuntimeInfo();
+				PythonRuntimeInfo pyrtInfo = process.GetPythonRuntimeInfo();
 				var moduleInstance = process.GetNativeRuntimeInstance().GetNativeModuleInstances().Single(mi => mi.UniqueId == ModuleInstanceId);
 
 				if (pyrtInfo.DLLs.CTypes == null && PythonDLLs.CTypesNames.Contains(moduleInstance.Name))
@@ -274,7 +274,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 				return;
 			}
 
-			var pyrtInfo = process.GetPythonRuntimeInfo();
+			PythonRuntimeInfo pyrtInfo = process.GetPythonRuntimeInfo();
 
 			var nativeModuleInstance = moduleInstance as DkmNativeModuleInstance;
 			if (nativeModuleInstance != null)
@@ -323,7 +323,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			process.SetDataItem(DkmDataCreationDisposition.CreateNew, new ExpressionEvaluator(process));
 			process.SetDataItem(DkmDataCreationDisposition.CreateNew, new PyObjectAllocator(process));
 
-			var exceptionManager = process.GetOrCreateDataItem(() => new ExceptionManagerLocalHelper(process));
+			T exceptionManager = process.GetOrCreateDataItem(() => new ExceptionManagerLocalHelper(process));
 			exceptionManager.OnPythonRuntimeInstanceLoaded();
 
 			if (process.LivePart != null)
@@ -504,43 +504,43 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 		void IDkmCustomVisualizer.EvaluateVisualizedExpression(DkmVisualizedExpression visualizedExpression, out DkmEvaluationResult resultObject)
 		{
-			var natVis = visualizedExpression.StackFrame.Process.GetOrCreateDataItem(() => new PyObjectNativeVisualizer());
+			T natVis = visualizedExpression.StackFrame.Process.GetOrCreateDataItem(() => new PyObjectNativeVisualizer());
 			natVis.EvaluateVisualizedExpression(visualizedExpression, out resultObject);
 		}
 
 		void IDkmCustomVisualizer.GetChildren(DkmVisualizedExpression visualizedExpression, int initialRequestSize, DkmInspectionContext inspectionContext, out DkmChildVisualizedExpression[] initialChildren, out DkmEvaluationResultEnumContext enumContext)
 		{
-			var natVis = visualizedExpression.StackFrame.Process.GetOrCreateDataItem(() => new PyObjectNativeVisualizer());
+			T natVis = visualizedExpression.StackFrame.Process.GetOrCreateDataItem(() => new PyObjectNativeVisualizer());
 			natVis.GetChildren(visualizedExpression, initialRequestSize, inspectionContext, out initialChildren, out enumContext);
 		}
 
 		void IDkmCustomVisualizer.GetItems(DkmVisualizedExpression visualizedExpression, DkmEvaluationResultEnumContext enumContext, int startIndex, int count, out DkmChildVisualizedExpression[] items)
 		{
-			var natVis = visualizedExpression.StackFrame.Process.GetOrCreateDataItem(() => new PyObjectNativeVisualizer());
+			T natVis = visualizedExpression.StackFrame.Process.GetOrCreateDataItem(() => new PyObjectNativeVisualizer());
 			natVis.GetItems(visualizedExpression, enumContext, startIndex, count, out items);
 		}
 
 		string IDkmCustomVisualizer.GetUnderlyingString(DkmVisualizedExpression visualizedExpression)
 		{
-			var natVis = visualizedExpression.StackFrame.Process.GetOrCreateDataItem(() => new PyObjectNativeVisualizer());
+			T natVis = visualizedExpression.StackFrame.Process.GetOrCreateDataItem(() => new PyObjectNativeVisualizer());
 			return natVis.GetUnderlyingString(visualizedExpression);
 		}
 
 		void IDkmCustomVisualizer.SetValueAsString(DkmVisualizedExpression visualizedExpression, string value, int timeout, out string errorText)
 		{
-			var natVis = visualizedExpression.StackFrame.Process.GetOrCreateDataItem(() => new PyObjectNativeVisualizer());
+			T natVis = visualizedExpression.StackFrame.Process.GetOrCreateDataItem(() => new PyObjectNativeVisualizer());
 			natVis.SetValueAsString(visualizedExpression, value, timeout, out errorText);
 		}
 
 		void IDkmCustomVisualizer.UseDefaultEvaluationBehavior(DkmVisualizedExpression visualizedExpression, out bool useDefaultEvaluationBehavior, out DkmEvaluationResult defaultEvaluationResult)
 		{
-			var natVis = visualizedExpression.StackFrame.Process.GetOrCreateDataItem(() => new PyObjectNativeVisualizer());
+			T natVis = visualizedExpression.StackFrame.Process.GetOrCreateDataItem(() => new PyObjectNativeVisualizer());
 			natVis.UseDefaultEvaluationBehavior(visualizedExpression, out useDefaultEvaluationBehavior, out defaultEvaluationResult);
 		}
 
 		DkmILEvaluationResult[] IDkmIntrinsicFunctionEvaluator140.Execute(DkmILExecuteIntrinsic executeIntrinsic, DkmILContext iLContext, DkmCompiledILInspectionQuery inspectionQuery, DkmILEvaluationResult[] arguments, ReadOnlyCollection<DkmCompiledInspectionQuery> subroutines, out DkmILFailureReason failureReason)
 		{
-			var natVis = iLContext.StackFrame.Process.GetOrCreateDataItem(() => new PyObjectNativeVisualizer());
+			T natVis = iLContext.StackFrame.Process.GetOrCreateDataItem(() => new PyObjectNativeVisualizer());
 			return natVis.Execute(executeIntrinsic, iLContext, inspectionQuery, arguments, subroutines, out failureReason);
 		}
 
@@ -629,7 +629,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 		private static DkmRuntimeInstructionBreakpoint CreateBreakpoint(DkmProcess process, ulong addr, RuntimeDllBreakpointHandler handler, bool enable)
 		{
-			var runtimeBreakpoints = process.GetOrCreateDataItem(() => new RuntimeDllBreakpoints());
+			T runtimeBreakpoints = process.GetOrCreateDataItem(() => new RuntimeDllBreakpoints());
 			var bp = process.CreateBreakpoint(Guids.LocalComponentGuid, addr);
 			if (enable)
 			{
@@ -641,7 +641,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 		private static void ClearBreakpoint(DkmProcess process, DkmRuntimeInstructionBreakpoint breakpoint)
 		{
-			var runtimeBreakpoints = process.GetOrCreateDataItem(() => new RuntimeDllBreakpoints());
+			T runtimeBreakpoints = process.GetOrCreateDataItem(() => new RuntimeDllBreakpoints());
 			runtimeBreakpoints.Handlers.Remove(breakpoint.UniqueId);
 			breakpoint.Close();
 		}
@@ -655,7 +655,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 		public static DkmRuntimeBreakpoint CreateRuntimeDllExportedFunctionBreakpoint(DkmNativeModuleInstance moduleInstance, string funcName, RuntimeDllBreakpointHandler handler, bool enable = false)
 		{
 			var process = moduleInstance.Process;
-			var runtimeBreakpoints = process.GetOrCreateDataItem(() => new RuntimeDllBreakpoints());
+			T runtimeBreakpoints = process.GetOrCreateDataItem(() => new RuntimeDllBreakpoints());
 
 			var addr = moduleInstance.GetExportedFunctionAddress(funcName);
 			var bp = DkmRuntimeInstructionBreakpoint.Create(Guids.LocalComponentGuid, null, addr, false, null);
@@ -670,10 +670,10 @@ namespace Microsoft.PythonTools.Debugger.Concord
 		public static DkmRuntimeBreakpoint[] CreateRuntimeDllFunctionExitBreakpoints(DkmNativeModuleInstance moduleInstance, string funcName, RuntimeDllBreakpointHandler handler, bool enable = false)
 		{
 			var process = moduleInstance.Process;
-			var runtimeBreakpoints = process.GetOrCreateDataItem(() => new RuntimeDllBreakpoints());
+			T runtimeBreakpoints = process.GetOrCreateDataItem(() => new RuntimeDllBreakpoints());
 
 			using (var moduleSym = moduleInstance.GetSymbols())
-			using (var funcSym = moduleSym.Object.GetSymbol(SymTagEnum.SymTagFunction, funcName))
+			using (ComPtr<IDiaSymbol> funcSym = moduleSym.Object.GetSymbol(SymTagEnum.SymTagFunction, funcName))
 			{
 				var funcEnds = funcSym.Object.GetSymbols(SymTagEnum.SymTagFuncDebugStart, null);
 				try
@@ -781,7 +781,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 			public override void Handle(DkmProcess process)
 			{
-				var exceptionHelper = process.GetOrCreateDataItem(() => new ExceptionManagerLocalHelper(process));
+				T exceptionHelper = process.GetOrCreateDataItem(() => new ExceptionManagerLocalHelper(process));
 				exceptionHelper.MonitorExceptions = MonitorExceptions;
 			}
 		}

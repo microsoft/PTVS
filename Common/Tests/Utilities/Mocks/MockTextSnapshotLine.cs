@@ -33,31 +33,13 @@ namespace TestUtilities.Mocks
 			_lineBreak = lineBreak;
 		}
 
-		public SnapshotPoint End
-		{
-			get { return new SnapshotPoint(_snapshot, _startPos + _text.Length); }
-		}
+		public SnapshotPoint End => new SnapshotPoint(_snapshot, _startPos + _text.Length);
 
-		public SnapshotPoint EndIncludingLineBreak
-		{
-			get
-			{
-				return new SnapshotPoint(_snapshot, _startPos + _text.Length + _lineBreak.Length);
-			}
-		}
+		public SnapshotPoint EndIncludingLineBreak => new SnapshotPoint(_snapshot, _startPos + _text.Length + _lineBreak.Length);
 
-		public SnapshotSpan Extent
-		{
-			get { return new SnapshotSpan(Start, End); }
-		}
+		public SnapshotSpan Extent => new SnapshotSpan(Start, End);
 
-		public SnapshotSpan ExtentIncludingLineBreak
-		{
-			get
-			{
-				return new SnapshotSpan(Start, EndIncludingLineBreak);
-			}
-		}
+		public SnapshotSpan ExtentIncludingLineBreak => new SnapshotSpan(Start, EndIncludingLineBreak);
 
 		public string GetLineBreakText()
 		{
@@ -74,37 +56,16 @@ namespace TestUtilities.Mocks
 			return _text + GetLineBreakText();
 		}
 
-		public int Length
-		{
-			get { return _text.Length; }
-		}
+		public int Length => _text.Length;
 
-		public int LengthIncludingLineBreak
-		{
-			get { return _text.Length + LineBreakLength; }
-		}
+		public int LengthIncludingLineBreak => _text.Length + LineBreakLength;
 
-		public int LineBreakLength
-		{
-			get
-			{
-				return _lineBreak.Length;
-			}
-		}
+		public int LineBreakLength => _lineBreak.Length;
 
-		public int LineNumber
-		{
-			get { return _lineNo; }
-		}
+		public int LineNumber => _lineNo;
 
-		public ITextSnapshot Snapshot
-		{
-			get { return _snapshot; }
-		}
+		public ITextSnapshot Snapshot => _snapshot;
 
-		public SnapshotPoint Start
-		{
-			get { return new SnapshotPoint(_snapshot, _startPos); }
-		}
+		public SnapshotPoint Start => new SnapshotPoint(_snapshot, _startPos);
 	}
 }

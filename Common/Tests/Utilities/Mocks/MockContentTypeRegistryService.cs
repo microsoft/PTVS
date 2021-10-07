@@ -22,7 +22,7 @@ namespace TestUtilities.Mocks
 		private readonly Dictionary<string, MockContentType> _contentTypes = new Dictionary<string, MockContentType>(StringComparer.InvariantCultureIgnoreCase);
 		private const string _unknownName = "UNKNOWN";
 		private readonly MockContentType _unknownType;
-		private static string[] Empty = new string[0];
+		private static readonly string[] Empty = new string[0];
 
 		public MockContentTypeRegistryService()
 		{
@@ -31,7 +31,7 @@ namespace TestUtilities.Mocks
 
 		public MockContentTypeRegistryService(params string[] existingNames) : this()
 		{
-			foreach (var type in existingNames)
+			foreach (global::System.String type in existingNames)
 			{
 				AddContentType(type, new string[0]);
 			}
@@ -65,10 +65,7 @@ namespace TestUtilities.Mocks
 			return type;
 		}
 
-		public IEnumerable<IContentType> ContentTypes
-		{
-			get { return _contentTypes.Values; }
-		}
+		public IEnumerable<IContentType> ContentTypes => _contentTypes.Values;
 
 		public IContentType GetContentType(string typeName)
 		{
@@ -89,10 +86,7 @@ namespace TestUtilities.Mocks
 			_contentTypes.Remove(typeName);
 		}
 
-		public IContentType UnknownContentType
-		{
-			get { return _unknownType; }
-		}
+		public IContentType UnknownContentType => _unknownType;
 
 		#endregion
 	}

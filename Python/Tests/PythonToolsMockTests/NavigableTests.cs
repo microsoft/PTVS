@@ -49,7 +49,7 @@ namespace PythonToolsMockTests
 		{
 			var code = @"import os
 ";
-			using (var helper = new NavigableHelper(code, Version))
+			using (NavigableHelper helper = new NavigableHelper(code, Version))
 			{
 				// os
 				await helper.CheckDefinitionLocations(7, 2, ExternalLocation(1, 1, "os.py"));
@@ -63,7 +63,7 @@ namespace PythonToolsMockTests
 
 sys.version
 ";
-			using (var helper = new NavigableHelper(code, Version))
+			using (NavigableHelper helper = new NavigableHelper(code, Version))
 			{
 				// sys
 				await helper.CheckDefinitionLocations(14, 3, null);
@@ -85,7 +85,7 @@ class ClassDerived(ClassBase):
 obj = ClassDerived()
 obj
 ";
-			using (var helper = new NavigableHelper(code, Version))
+			using (NavigableHelper helper = new NavigableHelper(code, Version))
 			{
 				// ClassBase
 				await helper.CheckDefinitionLocations(57, 9, Location(1, 1), Location(1, 7));
@@ -114,7 +114,7 @@ obj
 my_func(1)
 my_func(2, param2=False)
 ";
-			using (var helper = new NavigableHelper(code, Version))
+			using (NavigableHelper helper = new NavigableHelper(code, Version))
 			{
 				// param1
 				await helper.CheckDefinitionLocations(12, 6, Location(1, 13));
@@ -154,7 +154,7 @@ obj = MyClass()
 obj.my_class_func1(param2=False)
 obj.my_class_func2(param3=False)
 ";
-			using (var helper = new NavigableHelper(code, Version))
+			using (NavigableHelper helper = new NavigableHelper(code, Version))
 			{
 				// param3 in my_func(param3=False)
 				await helper.CheckDefinitionLocations(232, 6, Location(8, 13));
@@ -186,7 +186,7 @@ obj.my_attr = 5
 print(obj.my_attr)
 print(obj._my_attr_val)
 ";
-			using (var helper = new NavigableHelper(code, Version))
+			using (NavigableHelper helper = new NavigableHelper(code, Version))
 			{
 				// my_attr
 				await helper.CheckDefinitionLocations(71, 7, Location(4, 5), Location(8, 5), Location(9, 9));
@@ -220,18 +220,22 @@ print(obj._my_attr_val)
 my_var = 1
 res = my_var * 10
 ";
-			using (var helper = new NavigableHelper(code, Version))
+			using (NavigableHelper helper = new NavigableHelper(code, Version))
 			{
 				// 2 definitions for my_var
 				await helper.CheckDefinitionLocations(30, 6, Location(2, 1));
 			}
 		}
 
-		private LocationInfo Location(int line, int col) =>
-			new LocationInfo(null, null, line, col);
+		private LocationInfo Location(int line, int col)
+		{
+			return new LocationInfo(null, null, line, col);
+		}
 
-		private LocationInfo ExternalLocation(int line, int col, string filename) =>
-			new LocationInfo(filename, null, line, col);
+		private LocationInfo ExternalLocation(int line, int col, string filename)
+		{
+			return new LocationInfo(filename, null, line, col);
+		}
 
 		#region NavigableHelper class
 

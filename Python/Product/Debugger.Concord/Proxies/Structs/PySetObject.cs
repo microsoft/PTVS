@@ -33,10 +33,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 				InitializeStruct(this, out _fields);
 			}
 
-			public PointerProxy<PyObject> key
-			{
-				get { return GetFieldProxy(_fields.key); }
-			}
+			public PointerProxy<PyObject> key => GetFieldProxy(_fields.key);
 		}
 
 		private class DummyHolder : DkmDataItem
@@ -45,7 +42,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 
 			public DummyHolder(DkmProcess process)
 			{
-				var pyrtInfo = process.GetPythonRuntimeInfo();
+				PythonRuntimeInfo pyrtInfo = process.GetPythonRuntimeInfo();
 				Dummy =
 					pyrtInfo.LanguageVersion >= PythonLanguageVersion.V34 ?
 					pyrtInfo.DLLs.Python.GetStaticVariable<PointerProxy<PyObject>>("_PySet_Dummy") :
@@ -71,15 +68,9 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			_dummy = Process.GetOrCreateDataItem(() => new DummyHolder(Process)).Dummy.TryRead();
 		}
 
-		public SSizeTProxy mask
-		{
-			get { return GetFieldProxy(_fields.mask); }
-		}
+		public SSizeTProxy mask => GetFieldProxy(_fields.mask);
 
-		public PointerProxy<ArrayProxy<setentry>> table
-		{
-			get { return GetFieldProxy(_fields.table); }
-		}
+		public PointerProxy<ArrayProxy<setentry>> table => GetFieldProxy(_fields.table);
 
 		public IEnumerable<PyObject> ReadElements()
 		{

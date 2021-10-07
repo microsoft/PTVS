@@ -31,21 +31,9 @@ namespace TestUtilities.UI
 
 		public VisualStudioApp VisualStudioApp { get; }
 
-		public string Text
-		{
-			get
-			{
-				return TextView.TextSnapshot.GetText();
-			}
-		}
+		public string Text => TextView.TextSnapshot.GetText();
 
-		public virtual IWpfTextView TextView
-		{
-			get
-			{
-				return GetTextView(_filename);
-			}
-		}
+		public virtual IWpfTextView TextView => GetTextView(_filename);
 
 		public void MoveCaret(SnapshotPoint newPoint)
 		{
@@ -377,10 +365,7 @@ namespace TestUtilities.UI
 			return res;
 		}
 
-		public IIntellisenseSession TopSession
-		{
-			get { return IntellisenseSessionStack.TopSession; }
-		}
+		public IIntellisenseSession TopSession => IntellisenseSessionStack.TopSession;
 
 		public void Type(string text)
 		{

@@ -27,13 +27,7 @@ namespace TestUtilities.UI
 
 		}
 
-		public AutomationElement this[int row, int column]
-		{
-			get
-			{
-				return _pattern.GetItem(row, column);
-			}
-		}
+		public AutomationElement this[int row, int column] => _pattern.GetItem(row, column);
 
 		public AutomationElement FindItem(string name)
 		{

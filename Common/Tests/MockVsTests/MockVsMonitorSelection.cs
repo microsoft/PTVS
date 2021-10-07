@@ -16,7 +16,7 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-	class MockVsMonitorSelection : IVsMonitorSelection, IVsMonitorSelection2
+	internal class MockVsMonitorSelection : IVsMonitorSelection, IVsMonitorSelection2
 	{
 		private readonly MockVs _vs;
 		private uint _lastSelectionEventsCookie;
@@ -65,7 +65,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			var oldMis = _mis;
 			var oldContainer = _container;
 
-			var sel = mockVsTrackSelectionEx ?? _emptyCtx;
+			MockVsTrackSelectionEx sel = mockVsTrackSelectionEx ?? _emptyCtx;
 			if (sel != null)
 			{
 				sel.GetCurrentSelection(
@@ -194,7 +194,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			return VSConstants.S_OK;
 		}
 
-		class SelectionContext
+		private class SelectionContext
 		{
 			public readonly Guid Id;
 

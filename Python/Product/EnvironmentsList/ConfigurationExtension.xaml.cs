@@ -32,15 +32,15 @@ namespace Microsoft.PythonTools.EnvironmentsList
 			InitializeComponent();
 		}
 
-		void ConfigurationExtension_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+		private void ConfigurationExtension_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
 		{
-			var view = e.NewValue as EnvironmentView;
+			EnvironmentView view = e.NewValue as EnvironmentView;
 			if (view != null)
 			{
-				var current = Subcontext.DataContext as ConfigurationEnvironmentView;
+				ConfigurationEnvironmentView current = Subcontext.DataContext as ConfigurationEnvironmentView;
 				if (current == null || current.EnvironmentView != view)
 				{
-					var cev = new ConfigurationEnvironmentView(view);
+					ConfigurationEnvironmentView cev = new ConfigurationEnvironmentView(view);
 					_provider.ResetConfiguration(cev);
 					Subcontext.DataContext = cev;
 				}
@@ -49,14 +49,14 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
 		private void Apply_CanExecute(object sender, CanExecuteRoutedEventArgs e)
 		{
-			var view = e.Parameter as ConfigurationEnvironmentView;
+			ConfigurationEnvironmentView view = e.Parameter as ConfigurationEnvironmentView;
 			e.CanExecute = view != null && _provider.CanApply(view) && _provider.IsConfigurationChanged(view);
 			e.Handled = true;
 		}
 
 		private void Apply_Executed(object sender, ExecutedRoutedEventArgs e)
 		{
-			var cev = (ConfigurationEnvironmentView)e.Parameter;
+			ConfigurationEnvironmentView cev = (ConfigurationEnvironmentView)e.Parameter;
 			var id = _provider.ApplyConfiguration(cev);
 			if (_provider._alwaysCreateNew)
 			{
@@ -67,7 +67,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
 		private void Reset_CanExecute(object sender, CanExecuteRoutedEventArgs e)
 		{
-			var view = e.Parameter as ConfigurationEnvironmentView;
+			ConfigurationEnvironmentView view = e.Parameter as ConfigurationEnvironmentView;
 			e.CanExecute = view != null && _provider.IsConfigurationChanged(view);
 			e.Handled = true;
 		}
@@ -80,7 +80,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
 		private void Remove_CanExecute(object sender, CanExecuteRoutedEventArgs e)
 		{
-			var view = e.Parameter as ConfigurationEnvironmentView;
+			ConfigurationEnvironmentView view = e.Parameter as ConfigurationEnvironmentView;
 			e.CanExecute = !_provider._alwaysCreateNew && view != null;
 			e.Handled = true;
 		}
@@ -113,7 +113,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
 		private void AutoDetect_CanExecute(object sender, CanExecuteRoutedEventArgs e)
 		{
-			var view = e.Parameter as ConfigurationEnvironmentView;
+			ConfigurationEnvironmentView view = e.Parameter as ConfigurationEnvironmentView;
 			e.CanExecute = view != null && !view.IsAutoDetectRunning && (
 				Directory.Exists(view.PrefixPath) ||
 				File.Exists(view.InterpreterPath) ||
@@ -124,7 +124,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
 		private async void AutoDetect_Executed(object sender, ExecutedRoutedEventArgs e)
 		{
-			var view = (ConfigurationEnvironmentView)e.Parameter;
+			ConfigurationEnvironmentView view = (ConfigurationEnvironmentView)e.Parameter;
 			try
 			{
 				view.IsAutoDetectRunning = true;
@@ -218,7 +218,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 		}
 	}
 
-	sealed class ConfigurationExtensionProvider : IEnvironmentViewExtension
+	internal sealed class ConfigurationExtensionProvider : IEnvironmentViewExtension
 	{
 		private FrameworkElement _wpfObject;
 		private readonly IInterpreterOptionsService _interpreterOptions;
@@ -311,15 +311,9 @@ namespace Microsoft.PythonTools.EnvironmentsList
 			_interpreterOptions.RemoveConfigurableInterpreter(factory.Configuration.Id);
 		}
 
-		public int SortPriority
-		{
-			get { return -9; }
-		}
+		public int SortPriority => -9;
 
-		public string LocalizedDisplayName
-		{
-			get { return Resources.ConfigurationExtensionDisplayName; }
-		}
+		public string LocalizedDisplayName => Resources.ConfigurationExtensionDisplayName;
 
 		public FrameworkElement WpfObject
 		{
@@ -333,18 +327,12 @@ namespace Microsoft.PythonTools.EnvironmentsList
 			}
 		}
 
-		public object HelpContent
-		{
-			get { return Resources.ConfigurationExtensionHelpContent; }
-		}
+		public object HelpContent => Resources.ConfigurationExtensionHelpContent;
 
-		public string HelpText
-		{
-			get { return Resources.ConfigurationExtensionHelpContent; }
-		}
+		public string HelpText => Resources.ConfigurationExtensionHelpContent;
 	}
 
-	struct ConfigurationValues
+	internal struct ConfigurationValues
 	{
 		public string Description;
 		public string PrefixPath;
@@ -355,7 +343,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 		public string ArchitectureName;
 	}
 
-	sealed class ConfigurationEnvironmentView : INotifyPropertyChanged
+	internal sealed class ConfigurationEnvironmentView : INotifyPropertyChanged
 	{
 		public static readonly ICommand Added = new RoutedCommand();
 
@@ -395,7 +383,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
 		public bool IsAutoDetectRunning
 		{
-			get { return _isAutoDetectRunning; }
+			get => _isAutoDetectRunning;
 			set
 			{
 				if (_isAutoDetectRunning != value)
@@ -408,7 +396,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
 		public ConfigurationValues Values
 		{
-			get { return _values; }
+			get => _values;
 			set
 			{
 				Description = value.Description;
@@ -424,7 +412,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
 		public string Description
 		{
-			get { return _values.Description; }
+			get => _values.Description;
 			set
 			{
 				if (_values.Description != value)
@@ -437,7 +425,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
 		public string PrefixPath
 		{
-			get { return _values.PrefixPath; }
+			get => _values.PrefixPath;
 			set
 			{
 				if (_values.PrefixPath != value)
@@ -450,7 +438,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
 		public string InterpreterPath
 		{
-			get { return _values.InterpreterPath; }
+			get => _values.InterpreterPath;
 			set
 			{
 				if (_values.InterpreterPath != value)
@@ -463,7 +451,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
 		public string WindowsInterpreterPath
 		{
-			get { return _values.WindowsInterpreterPath; }
+			get => _values.WindowsInterpreterPath;
 			set
 			{
 				if (_values.WindowsInterpreterPath != value)
@@ -476,7 +464,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
 		public string PathEnvironmentVariable
 		{
-			get { return _values.PathEnvironmentVariable; }
+			get => _values.PathEnvironmentVariable;
 			set
 			{
 				if (_values.PathEnvironmentVariable != value)
@@ -489,7 +477,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
 		public string ArchitectureName
 		{
-			get { return _values.ArchitectureName; }
+			get => _values.ArchitectureName;
 			set
 			{
 				if (_values.ArchitectureName != value)
@@ -502,7 +490,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
 		public string VersionName
 		{
-			get { return _values.VersionName; }
+			get => _values.VersionName;
 			set
 			{
 				if (_values.VersionName != value)

@@ -116,7 +116,7 @@ namespace PythonToolsTests
 				))
 			{
 
-				foreach (var root in new[] { @"C:\", @"\\pc\Share\", @"ftp://me@ftp.home.net/" })
+				foreach (global::System.String root in new[] { @"C:\", @"\\pc\Share\", @"ftp://me@ftp.home.net/" })
 				{
 					string first, second;
 					first = root + testCase.Item1;
@@ -160,7 +160,7 @@ namespace PythonToolsTests
 				@"a\b\c\..\..", @"a"
 				))
 			{
-				foreach (var root in new[] { @"C:\", @"\\pc\Share\", @"ftp://me@example.com/" })
+				foreach (global::System.String root in new[] { @"C:\", @"\\pc\Share\", @"ftp://me@example.com/" })
 				{
 					string first, second;
 					first = root + testCase.Item1;
@@ -411,7 +411,7 @@ namespace PythonToolsTests
 				@"a\b\\c", @"a\b\c\"
 			))
 			{
-				foreach (var root in new[] { "", @".\", @"..\", @"\" })
+				foreach (global::System.String root in new[] { "", @".\", @"..\", @"\" })
 				{
 					var expected = (root == @".\" ? "" : root) + testCase.Item2;
 					var actual = PathUtils.NormalizeDirectoryPath(root + testCase.Item1);
@@ -427,7 +427,7 @@ namespace PythonToolsTests
 				@"a\..\..\b", @"b\"
 			))
 			{
-				foreach (var root in new[] { @"C:\", @"\\pc\share\", @"ftp://me@example.com/" })
+				foreach (global::System.String root in new[] { @"C:\", @"\\pc\share\", @"ftp://me@example.com/" })
 				{
 					var expected = root + testCase.Item2;
 					var actual = PathUtils.NormalizeDirectoryPath(root + testCase.Item1);
@@ -455,7 +455,7 @@ namespace PythonToolsTests
 				@"a\b\\c", @"a\b\c"
 			))
 			{
-				foreach (var root in new[] { "", @".\", @"..\", @"\" })
+				foreach (global::System.String root in new[] { "", @".\", @"..\", @"\" })
 				{
 					var expected = (root == @".\" ? "" : root) + testCase.Item2;
 					var actual = PathUtils.NormalizePath(root + testCase.Item1);
@@ -476,7 +476,7 @@ namespace PythonToolsTests
 				@"a\..\..\b", @"b"
 			))
 			{
-				foreach (var root in new[] { @"C:\", @"\\pc\share\", @"ftp://me@example.com/" })
+				foreach (global::System.String root in new[] { @"C:\", @"\\pc\share\", @"ftp://me@example.com/" })
 				{
 					var expected = root + testCase.Item2;
 					var actual = PathUtils.NormalizePath(root + testCase.Item1);
@@ -572,7 +572,7 @@ namespace PythonToolsTests
 				@"a\b\.\.\.\.\.\.\c", "b"
 			))
 			{
-				foreach (var scheme in new[] { "", "C:\\", "\\", ".\\", "\\\\share\\root\\", "ftp://" })
+				foreach (global::System.String scheme in new[] { "", "C:\\", "\\", ".\\", "\\\\share\\root\\", "ftp://" })
 				{
 					var path = scheme + testCase.Item1;
 
@@ -613,7 +613,7 @@ namespace PythonToolsTests
 				@"a\b\c\", @"a\b\"
 			))
 			{
-				foreach (var scheme in new[] { "", "C:\\", "\\", ".\\", "\\\\share\\root\\", "ftp://" })
+				foreach (global::System.String scheme in new[] { "", "C:\\", "\\", ".\\", "\\\\share\\root\\", "ftp://" })
 				{
 					var path = scheme + testCase.Item1;
 					var expected = scheme + testCase.Item2;
@@ -657,7 +657,7 @@ namespace PythonToolsTests
 				@"a\", @"a"
 			))
 			{
-				foreach (var scheme in new[] { "", "C:\\", "\\", ".\\", "\\\\share\\root\\", "ftp://" })
+				foreach (global::System.String scheme in new[] { "", "C:\\", "\\", ".\\", "\\\\share\\root\\", "ftp://" })
 				{
 					var path = scheme + testCase.Item1;
 					var expected = testCase.Item2;

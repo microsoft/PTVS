@@ -56,10 +56,7 @@ namespace Microsoft.PythonTools.BuildTasks
 		/// </summary>
 		public string TargetType
 		{
-			get
-			{
-				return _targetType;
-			}
+			get => _targetType;
 			set
 			{
 				if (!_targetTypes.Contains(value, StringComparer.OrdinalIgnoreCase))
@@ -83,10 +80,7 @@ namespace Microsoft.PythonTools.BuildTasks
 		/// </summary>
 		public string ExecuteIn
 		{
-			get
-			{
-				return _executeIn;
-			}
+			get => _executeIn;
 			set
 			{
 				string errorMessage;
@@ -266,31 +260,21 @@ namespace Microsoft.PythonTools.BuildTasks
 		}
 
 		[Output]
-		public string ConsoleOutput
-		{
-			get
-			{
-				return _consoleOutput.IsValueCreated ?
+		public string ConsoleOutput => _consoleOutput.IsValueCreated ?
 					string.Join(System.Environment.NewLine, _consoleOutput.Value) :
 					string.Empty;
-			}
-		}
 
 		[Output]
-		public string ConsoleError
-		{
-			get
-			{
-				return _consoleError.IsValueCreated ?
+		public string ConsoleError => _consoleError.IsValueCreated ?
 					string.Join(System.Environment.NewLine, _consoleError.Value) :
 					string.Empty;
-			}
-		}
 
 		public override bool Execute()
 		{
-			var psi = new ProcessStartInfo();
-			psi.UseShellExecute = false;
+			var psi = new ProcessStartInfo
+			{
+				UseShellExecute = false
+			};
 
 			if (TargetTypeExecutable.Equals(TargetType, StringComparison.OrdinalIgnoreCase))
 			{
@@ -300,7 +284,7 @@ namespace Microsoft.PythonTools.BuildTasks
 			else
 			{
 				// We need the active environment to run these commands.
-				var resolver = new ResolveEnvironment(ProjectPath, BuildEngine);
+				ResolveEnvironment resolver = new ResolveEnvironment(ProjectPath, BuildEngine);
 				if (!resolver.Execute())
 				{
 					return false;

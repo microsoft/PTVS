@@ -27,30 +27,44 @@ namespace TestUtilities
 		private static readonly PartDiscovery Discovery = PartDiscovery.Combine(new AttributedPartDiscoveryV1(StandardResolver), new AttributedPartDiscovery(StandardResolver, true));
 
 		public static ComposableCatalog AddJoinableTaskContext(this ComposableCatalog composableCatalog)
-			=> composableCatalog.AddInstance(() => new JoinableTaskContext(TestMainThreadService.Instance.Thread, TestMainThreadService.Instance.SyncContext));
+		{
+			return composableCatalog.AddInstance(() => new JoinableTaskContext(TestMainThreadService.Instance.Thread, TestMainThreadService.Instance.SyncContext));
+		}
 
 		public static ComposableCatalog WithServiceProvider(this ComposableCatalog composableCatalog)
-			=> composableCatalog.AddType<ServiceProvider>();
+		{
+			return composableCatalog.AddType<ServiceProvider>();
+		}
 
 		public static ComposableCatalog AddInstance<T>(this ComposableCatalog composableCatalog, Func<T> factory)
-			=> composableCatalog.AddType(MefFactoryGenerator.GetExportType(factory));
+		{
+			return composableCatalog.AddType(MefFactoryGenerator.GetExportType(factory));
+		}
 
 		public static ComposableCatalog AddInstance<T, TResult>(this ComposableCatalog composableCatalog, Func<T, TResult> factory)
-			=> composableCatalog.AddType(MefFactoryGenerator.GetExportType(factory));
+		{
+			return composableCatalog.AddType(MefFactoryGenerator.GetExportType(factory));
+		}
 
 		public static ComposableCatalog AddInstance<T1, T2, TResult>(this ComposableCatalog composableCatalog, Func<T1, T2, TResult> factory)
-			=> composableCatalog.AddType(MefFactoryGenerator.GetExportType(factory));
+		{
+			return composableCatalog.AddType(MefFactoryGenerator.GetExportType(factory));
+		}
 
 		public static ComposableCatalog AddType<T>(this ComposableCatalog composableCatalog)
-			=> composableCatalog.AddType(typeof(T));
+		{
+			return composableCatalog.AddType(typeof(T));
+		}
 
 		public static ComposableCatalog AddType(this ComposableCatalog composableCatalog, Type type)
-			=> composableCatalog.AddPart(Discovery.CreatePart(type));
+		{
+			return composableCatalog.AddPart(Discovery.CreatePart(type));
+		}
 
 		public static ComposableCatalog AddTypesFromAssembly(this ComposableCatalog composableCatalog, string assemblyName, params string[] typeNames)
 		{
 			var assembly = GetLoadedAssembly(assemblyName, AppDomain.CurrentDomain.GetAssemblies());
-			foreach (var typeName in typeNames)
+			foreach (global::System.String typeName in typeNames)
 			{
 				var type = assembly.GetType(typeName) ?? throw new AssertFailedException($@"Type {typeName} can't be found in assembly {assemblyName}.");
 				composableCatalog = composableCatalog.AddType(type);
@@ -61,7 +75,7 @@ namespace TestUtilities
 		public static ComposableCatalog CreateAssembliesCatalog(params string[] assemblyNames)
 		{
 			var appDomainAssemblies = AppDomain.CurrentDomain.GetAssemblies();
-			var loadedAssemblies = new Assembly[assemblyNames.Length];
+			Assembly[] loadedAssemblies = new Assembly[assemblyNames.Length];
 
 			for (var i = 0; i < assemblyNames.Length; i++)
 			{
@@ -69,12 +83,12 @@ namespace TestUtilities
 			}
 
 			var types = new List<Type>();
-			foreach (var assembly in loadedAssemblies)
+			foreach (Assembly assembly in loadedAssemblies)
 			{
 				types.AddRange(assembly.GetTypes());
 			}
 
-			var parts = new ComposablePartDefinition[types.Count];
+			Microsoft.VisualStudio.Composition.ComposablePartDefinition[] parts = new ComposablePartDefinition[types.Count];
 			Parallel.For(0, types.Count, i => parts[i] = Discovery.CreatePart(types[i]));
 			return ComposableCatalog.Create(StandardResolver).AddParts(parts.Where(p => p != null));
 		}
@@ -118,10 +132,20 @@ Please use {nameof(AssemblyLoader)}.{nameof(AssemblyLoader.EnsureLoaded)} to pre
 				DefaultCompositionService = compositionService;
 			}
 
-			public MefV1.Primitives.ComposablePartCatalog GetCatalog(string catalogName) => throw new NotSupportedException();
+			public MefV1.Primitives.ComposablePartCatalog GetCatalog(string catalogName)
+			{
+				throw new NotSupportedException();
+			}
 
-			public T GetService<T>() where T : class => _exportProvider.GetExportedValue<T>();
-			public IEnumerable<T> GetExtensions<T>() where T : class => _exportProvider.GetExportedValues<T>();
+			public T GetService<T>() where T : class
+			{
+				return _exportProvider.GetExportedValue<T>();
+			}
+
+			public IEnumerable<T> GetExtensions<T>() where T : class
+			{
+				return _exportProvider.GetExportedValues<T>();
+			}
 		}
 	}
 }

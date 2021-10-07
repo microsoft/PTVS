@@ -18,7 +18,7 @@ namespace TestUtilities.UI
 {
 	public class ListBoxItem : AutomationWrapper
 	{
-		private ListBox _parent;
+		private readonly ListBox _parent;
 
 		public ListBoxItem(AutomationElement element, ListBox parent) : base(element)
 		{

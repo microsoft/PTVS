@@ -25,15 +25,9 @@ namespace TestUtilities.Mocks
 			_trackingPoint = trackingPoint;
 		}
 
-		public ITextBuffer AnchorBuffer
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public ITextBuffer AnchorBuffer => throw new NotImplementedException();
 
-		public IBufferGraph BufferGraph
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public IBufferGraph BufferGraph => throw new NotImplementedException();
 
 		public SnapshotPoint? GetInsertionPoint(Predicate<ITextBuffer> match)
 		{

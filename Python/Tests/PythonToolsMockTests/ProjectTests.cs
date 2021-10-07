@@ -22,7 +22,7 @@ namespace PythonToolsMockTests
 	[TestClass]
 	public class ProjectTests
 	{
-		static PythonProjectGenerator Generator = PythonProjectGenerator.CreateStatic();
+		private static PythonProjectGenerator Generator = PythonProjectGenerator.CreateStatic();
 
 		[TestMethod, Priority(UnitTestPriority.P2_FAILING)]
 		public void BasicProjectTest()

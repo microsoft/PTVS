@@ -17,7 +17,7 @@
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
 	[Export(typeof(IVsFolderWorkspaceService))]
-	class MockVsFolderWorkspaceService : IVsFolderWorkspaceService
+	internal class MockVsFolderWorkspaceService : IVsFolderWorkspaceService
 	{
 		public IWorkspace CurrentWorkspace => null;
 

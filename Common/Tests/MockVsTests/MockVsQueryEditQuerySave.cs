@@ -16,7 +16,7 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-	class MockVsQueryEditQuerySave : IVsQueryEditQuerySave2
+	internal class MockVsQueryEditQuerySave : IVsQueryEditQuerySave2
 	{
 		public int BeginQuerySaveBatch()
 		{

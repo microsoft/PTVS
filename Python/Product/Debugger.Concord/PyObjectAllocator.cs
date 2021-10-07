@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 		public PyObjectAllocator(DkmProcess process)
 		{
 			_process = process;
-			var pyrtInfo = process.GetPythonRuntimeInfo();
+			PythonRuntimeInfo pyrtInfo = process.GetPythonRuntimeInfo();
 
 			_objectsToRelease = pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<UInt64Proxy>("objectsToRelease");
 		}
@@ -53,10 +53,10 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			where TObject : PyObject
 		{
 			ulong ptr = Allocate(StructProxy.SizeOf<TObject>(_process) + extraBytes);
-			var obj = DataProxy.Create<TObject>(_process, ptr, polymorphic: false);
+			TObject obj = DataProxy.Create<TObject>(_process, ptr, polymorphic: false);
 			obj.ob_refcnt.Write(1);
 
-			var pyType = PyObject.GetPyType<TObject>(_process);
+			PyTypeObject pyType = PyObject.GetPyType<TObject>(_process);
 			obj.ob_type.Write(pyType);
 
 			return obj;
@@ -67,7 +67,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			byte[] buf = new byte[sizeof(ObjectToRelease)];
 			fixed (byte* p = buf)
 			{
-				var otr = (ObjectToRelease*)p;
+				ObjectToRelease* otr = (ObjectToRelease*)p;
 				otr->pyObject = obj.Address;
 				otr->next = _objectsToRelease.Read();
 			}
@@ -81,7 +81,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 		{
 			_blocks.RemoveAll(block =>
 			{
-				var obj = new PyObject(_process, block);
+				PyObject obj = new PyObject(_process, block);
 				if (obj.ob_refcnt.Read() <= 1)
 				{
 					_process.FreeVirtualMemory(block, 0, NativeMethods.MEM_RELEASE);

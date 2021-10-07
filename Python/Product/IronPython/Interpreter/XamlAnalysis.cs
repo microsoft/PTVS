@@ -19,12 +19,12 @@ namespace Microsoft.IronPythonTools.Interpreter
 	/// <summary>
 	/// Walks the XAML file and provides data based upon things which should be provided via intellisense.
 	/// </summary>
-	sealed class XamlAnalysis
+	internal sealed class XamlAnalysis
 	{
 		private readonly Dictionary<string, XamlTypeReference> _knownTypes = new Dictionary<string, XamlTypeReference>();
 		private readonly Dictionary<string, XamlMemberReference> _eventInfo = new Dictionary<string, XamlMemberReference>();
 
-		enum MemberType
+		private enum MemberType
 		{
 			Unknown,
 			XName,
@@ -35,8 +35,10 @@ namespace Microsoft.IronPythonTools.Interpreter
 		{
 			try
 			{
-				var settings = new XamlXmlReaderSettings();
-				settings.ProvideLineInfo = true;
+				var settings = new XamlXmlReaderSettings
+				{
+					ProvideLineInfo = true
+				};
 
 				using (XamlXmlReader reader = new XamlXmlReader(filename, settings))
 				{
@@ -54,8 +56,10 @@ namespace Microsoft.IronPythonTools.Interpreter
 		{
 			try
 			{
-				var settings = new XamlXmlReaderSettings();
-				settings.ProvideLineInfo = true;
+				var settings = new XamlXmlReaderSettings
+				{
+					ProvideLineInfo = true
+				};
 
 				var context = new XamlSchemaContext(new XamlSchemaContextSettings() { FullyQualifyAssemblyNamesInClrNamespaces = true });
 
@@ -139,29 +143,17 @@ namespace Microsoft.IronPythonTools.Interpreter
 		/// <summary>
 		/// Dictionary from object name to type information for that object.
 		/// </summary>
-		public Dictionary<string, XamlTypeReference> NamedObjects
-		{
-			get
-			{
-				return _knownTypes;
-			}
-		}
+		public Dictionary<string, XamlTypeReference> NamedObjects => _knownTypes;
 
 		/// <summary>
 		/// Dictionary from event handler name to event handler member info.  The name referes
 		/// to something which will be fetched from the root object for binding the event 
 		/// handler to.  
 		/// </summary>
-		public Dictionary<string, XamlMemberReference> EventHandlers
-		{
-			get
-			{
-				return _eventInfo;
-			}
-		}
+		public Dictionary<string, XamlMemberReference> EventHandlers => _eventInfo;
 	}
 
-	struct XamlMemberReference
+	internal struct XamlMemberReference
 	{
 		public readonly XamlMember Member;
 		public readonly int LineNumber;
@@ -175,7 +167,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 		}
 	}
 
-	struct XamlTypeReference
+	internal struct XamlTypeReference
 	{
 		public readonly XamlType Type;
 		public readonly int LineNumber;

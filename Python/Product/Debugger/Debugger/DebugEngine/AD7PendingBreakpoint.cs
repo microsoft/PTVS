@@ -19,7 +19,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 	// This class represents a pending breakpoint which is an abstract representation of a breakpoint before it is bound.
 	// When a user creates a new breakpoint, the pending breakpoint is created and is later bound. The bound breakpoints
 	// become children of the pending breakpoint.
-	class AD7PendingBreakpoint : IDebugPendingBreakpoint2
+	internal class AD7PendingBreakpoint : IDebugPendingBreakpoint2
 	{
 		// The breakpoint request that resulted in this pending breakpoint being created.
 		private readonly IDebugBreakpointRequest2 _bpRequest;
@@ -118,7 +118,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 				{
 					if (_bpRequestInfo.guidLanguage == DebuggerConstants.guidLanguagePython)
 					{
-						var bp = _engine.Process.AddBreakpoint(
+						PythonBreakpoint bp = _engine.Process.AddBreakpoint(
 							documentName,
 							(int)(startPosition[0].dwLine + 1),
 							_bpRequestInfo.bpCondition.styleCondition.ToPython(),
@@ -142,7 +142,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 					{
 
 						// bind a Django template 
-						var bp = _engine.Process.AddDjangoBreakpoint(
+						PythonBreakpoint bp = _engine.Process.AddDjangoBreakpoint(
 							documentName,
 							(int)(startPosition[0].dwLine + 1)
 						);
@@ -289,7 +289,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 		#endregion
 	}
 
-	static class BreakpointEnumExtensions
+	internal static class BreakpointEnumExtensions
 	{
 		public static PythonBreakpointConditionKind ToPython(this enum_BP_COND_STYLE style)
 		{

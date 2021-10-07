@@ -16,7 +16,7 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-	class MockVsUIHierarchyWindow : IVsUIHierarchyWindow, IOleCommandTarget, ISelectionContainer
+	internal class MockVsUIHierarchyWindow : IVsUIHierarchyWindow, IOleCommandTarget, ISelectionContainer
 	{
 		private readonly HashSet<HierarchyItem> _selectedItems = new HashSet<HierarchyItem>();
 		private readonly MockVs _mockVs;
@@ -99,9 +99,9 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			_multiSelect = null;
 		}
 
-		class MultiItemSelect : IVsMultiItemSelect
+		private class MultiItemSelect : IVsMultiItemSelect
 		{
-			private HierarchyItem[] _items;
+			private readonly HierarchyItem[] _items;
 
 			public MultiItemSelect(HierarchyItem[] hierarchyItem)
 			{

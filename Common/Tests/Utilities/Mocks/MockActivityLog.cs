@@ -24,39 +24,21 @@ namespace TestUtilities.Mocks
 	{
 		public readonly List<string> Items = new List<string>();
 
-		private readonly static Dictionary<uint, string> ActivityType = new Dictionary<uint, string> {
+		private static readonly Dictionary<uint, string> ActivityType = new Dictionary<uint, string> {
 			{ (uint)__ACTIVITYLOG_ENTRYTYPE.ALE_ERROR, "Error" },
 			{ (uint)__ACTIVITYLOG_ENTRYTYPE.ALE_WARNING, "Warning" },
 			{ (uint)__ACTIVITYLOG_ENTRYTYPE.ALE_INFORMATION, "Information" }
 		};
 
-		public IEnumerable<string> AllItems
-		{
-			get
-			{
-				return Items.Select(t => Regex.Replace(t, "(\\r\\n|\\r|\\n)", "\\n"));
-			}
-		}
+		public IEnumerable<string> AllItems => Items.Select(t => Regex.Replace(t, "(\\r\\n|\\r|\\n)", "\\n"));
 
-		public IEnumerable<string> Errors
-		{
-			get
-			{
-				return Items
+		public IEnumerable<string> Errors => Items
 					.Where(t => t.StartsWith("Error"))
 					.Select(t => Regex.Replace(t, "(\\r\\n|\\r|\\n)", "\\n"));
-			}
-		}
 
-		public IEnumerable<string> ErrorsAndWarnings
-		{
-			get
-			{
-				return Items
+		public IEnumerable<string> ErrorsAndWarnings => Items
 					.Where(t => t.StartsWith("Error") || t.StartsWith("Warning"))
 					.Select(t => Regex.Replace(t, "(\\r\\n|\\r|\\n)", "\\n"));
-			}
-		}
 
 		public int LogEntry(uint actType, string pszSource, string pszDescription)
 		{

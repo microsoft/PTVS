@@ -21,7 +21,7 @@ namespace Microsoft.PythonTools.Debugger
 	/// <summary>
 	/// Handles connections from all debuggers.
 	/// </summary>
-	static class DebugConnectionListener
+	internal static class DebugConnectionListener
 	{
 		private static int _listenerPort = -1;
 		private static readonly Dictionary<Guid, WeakReference> _targets = new Dictionary<Guid, WeakReference>();
@@ -110,7 +110,7 @@ namespace Microsoft.PythonTools.Debugger
 				{
 					socket.Blocking = true;
 
-					var debugConn = new DebugConnection(stream, DebugLog);
+					DebugConnection debugConn = new DebugConnection(stream, DebugLog);
 					try
 					{
 						string debugId = string.Empty;

@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 		public PyFrameObject(DkmProcess process, ulong address)
 			: base(process, address)
 		{
-			var pythonInfo = process.GetPythonRuntimeInfo();
+			PythonRuntimeInfo pythonInfo = process.GetPythonRuntimeInfo();
 			if (pythonInfo.LanguageVersion <= PythonLanguageVersion.V35)
 			{
 				InitializeStruct(this, out Fields_27_35 fields);
@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 		private static bool IsInEvalFrame(DkmStackWalkFrame frame)
 		{
 			var process = frame.Process;
-			var pythonInfo = process.GetPythonRuntimeInfo();
+			PythonRuntimeInfo pythonInfo = process.GetPythonRuntimeInfo();
 			ulong addr = 0;
 			if (pythonInfo.LanguageVersion <= PythonLanguageVersion.V35)
 			{
@@ -127,35 +127,17 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			return new PyFrameObject(frame.Process, framePtr);
 		}
 
-		public PointerProxy<PyFrameObject> f_back
-		{
-			get { return GetFieldProxy((_fields as Fields_36)?.f_back); }
-		}
+		public PointerProxy<PyFrameObject> f_back => GetFieldProxy((_fields as Fields_36)?.f_back);
 
-		public PointerProxy<PyCodeObject> f_code
-		{
-			get { return GetFieldProxy((_fields as Fields_36)?.f_code ?? (_fields as Fields_27_35)?.f_code); }
-		}
+		public PointerProxy<PyCodeObject> f_code => GetFieldProxy((_fields as Fields_36)?.f_code ?? (_fields as Fields_27_35)?.f_code);
 
-		public PointerProxy<PyDictObject> f_globals
-		{
-			get { return GetFieldProxy((_fields as Fields_36)?.f_globals ?? (_fields as Fields_27_35)?.f_globals); }
-		}
+		public PointerProxy<PyDictObject> f_globals => GetFieldProxy((_fields as Fields_36)?.f_globals ?? (_fields as Fields_27_35)?.f_globals);
 
-		public PointerProxy<PyDictObject> f_locals
-		{
-			get { return GetFieldProxy((_fields as Fields_36)?.f_locals ?? (_fields as Fields_27_35)?.f_locals); }
-		}
+		public PointerProxy<PyDictObject> f_locals => GetFieldProxy((_fields as Fields_36)?.f_locals ?? (_fields as Fields_27_35)?.f_locals);
 
-		public Int32Proxy f_lineno
-		{
-			get { return GetFieldProxy((_fields as Fields_36)?.f_lineno ?? (_fields as Fields_27_35)?.f_lineno); }
-		}
+		public Int32Proxy f_lineno => GetFieldProxy((_fields as Fields_36)?.f_lineno ?? (_fields as Fields_27_35)?.f_lineno);
 
-		public ArrayProxy<PointerProxy<PyObject>> f_localsplus
-		{
-			get { return GetFieldProxy((_fields as Fields_36)?.f_localsplus ?? (_fields as Fields_27_35)?.f_localsplus); }
-		}
+		public ArrayProxy<PointerProxy<PyObject>> f_localsplus => GetFieldProxy((_fields as Fields_36)?.f_localsplus ?? (_fields as Fields_27_35)?.f_localsplus);
 
 	}
 }

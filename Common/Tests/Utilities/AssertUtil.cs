@@ -145,7 +145,7 @@ namespace TestUtilities
 		[System.Diagnostics.DebuggerStepThrough]
 		public static void Contains(string source, params string[] values)
 		{
-			foreach (var v in values)
+			foreach (global::System.String v in values)
 			{
 				if (!source.Contains(v))
 				{

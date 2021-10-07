@@ -21,7 +21,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 	// The property is usually the result of an expression evaluation. 
 	//
 	// The sample engine only supports locals and parameters for functions that have symbols loaded.
-	class AD7Property : IDebugProperty2, IDebugProperty3
+	internal class AD7Property : IDebugProperty2, IDebugProperty3
 	{
 		private readonly PythonEvaluationResult _evalResult;
 		private readonly AD7StackFrame _frame;

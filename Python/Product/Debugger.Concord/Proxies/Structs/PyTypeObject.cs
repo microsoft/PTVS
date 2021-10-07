@@ -44,56 +44,29 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 		{
 		}
 
-		public unsafe static PyTypeObject FromNativeGlobalVariable(DkmProcess process, string name)
+		public static unsafe PyTypeObject FromNativeGlobalVariable(DkmProcess process, string name)
 		{
 			var addr = process.GetPythonRuntimeInfo().DLLs.Python.GetStaticVariableAddress(name);
 			return new PyTypeObject(process, addr);
 		}
 
-		public PointerProxy<CStringProxy> tp_name
-		{
-			get { return GetFieldProxy(_fields.tp_name); }
-		}
+		public PointerProxy<CStringProxy> tp_name => GetFieldProxy(_fields.tp_name);
 
-		public SSizeTProxy tp_basicsize
-		{
-			get { return GetFieldProxy(_fields.tp_basicsize); }
-		}
+		public SSizeTProxy tp_basicsize => GetFieldProxy(_fields.tp_basicsize);
 
-		public SSizeTProxy tp_itemsize
-		{
-			get { return GetFieldProxy(_fields.tp_itemsize); }
-		}
+		public SSizeTProxy tp_itemsize => GetFieldProxy(_fields.tp_itemsize);
 
-		public Int32Proxy tp_flags
-		{
-			get { return GetFieldProxy(_fields.tp_flags); }
-		}
+		public Int32Proxy tp_flags => GetFieldProxy(_fields.tp_flags);
 
-		public PointerProxy<ArrayProxy<PyMemberDef>> tp_members
-		{
-			get { return GetFieldProxy(_fields.tp_members); }
-		}
+		public PointerProxy<ArrayProxy<PyMemberDef>> tp_members => GetFieldProxy(_fields.tp_members);
 
-		public SSizeTProxy tp_dictoffset
-		{
-			get { return GetFieldProxy(_fields.tp_dictoffset); }
-		}
+		public SSizeTProxy tp_dictoffset => GetFieldProxy(_fields.tp_dictoffset);
 
-		public PointerProxy<PyTypeObject> tp_base
-		{
-			get { return GetFieldProxy(_fields.tp_base); }
-		}
+		public PointerProxy<PyTypeObject> tp_base => GetFieldProxy(_fields.tp_base);
 
-		public PointerProxy<PyObject> tp_dict
-		{
-			get { return GetFieldProxy(_fields.tp_dict); }
-		}
+		public PointerProxy<PyObject> tp_dict => GetFieldProxy(_fields.tp_dict);
 
-		public PointerProxy<PyTupleObject> tp_bases
-		{
-			get { return GetFieldProxy(_fields.tp_bases); }
-		}
+		public PointerProxy<PyTupleObject> tp_bases => GetFieldProxy(_fields.tp_bases);
 
 		public string __name__
 		{
@@ -101,8 +74,8 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			{
 				if ((tp_flags.Read() & (int)Py_TPFLAGS.HEAPTYPE) != 0)
 				{
-					var heapType = new PyHeapTypeObject(Process, Address);
-					var nameObj = heapType.ht_name.Read() as IPyBaseStringObject;
+					PyHeapTypeObject heapType = new PyHeapTypeObject(Process, Address);
+					IPyBaseStringObject nameObj = heapType.ht_name.Read() as IPyBaseStringObject;
 					return nameObj.ToStringOrNull();
 				}
 				else
@@ -119,7 +92,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			{
 				if ((tp_flags.Read() & (int)Py_TPFLAGS.HEAPTYPE) != 0)
 				{
-					var dict = tp_dict.TryRead() as PyDictObject;
+					PyDictObject dict = tp_dict.TryRead() as PyDictObject;
 					if (dict == null)
 					{
 						return null;
@@ -156,13 +129,13 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 				return true;
 			}
 
-			var tp_base = this.tp_base.TryRead();
+			PyTypeObject tp_base = this.tp_base.TryRead();
 			if (tp_base != null && tp_base.IsSubtypeOf(type))
 			{
 				return true;
 			}
 
-			var tp_bases = this.tp_bases.TryRead();
+			PyTupleObject tp_bases = this.tp_bases.TryRead();
 			if (tp_bases != null)
 			{
 				var bases = tp_bases.ReadElements().OfType<PyTypeObject>();
@@ -196,10 +169,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			InitializeStruct(this, out _fields);
 		}
 
-		public PointerProxy<PyObject> ht_name
-		{
-			get { return GetFieldProxy(_fields.ht_name); }
-		}
+		public PointerProxy<PyObject> ht_name => GetFieldProxy(_fields.ht_name);
 	}
 
 	internal enum Py_TPFLAGS

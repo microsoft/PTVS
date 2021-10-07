@@ -17,7 +17,7 @@
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
 	[Export(typeof(ITextMarkerProviderFactory))]
-	class MockTextMarkerProviderFactory : ITextMarkerProviderFactory
+	internal class MockTextMarkerProviderFactory : ITextMarkerProviderFactory
 	{
 		public SimpleTagger<TextMarkerTag> GetTextMarkerTagger(ITextBuffer textBuffer)
 		{

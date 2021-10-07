@@ -16,7 +16,7 @@
 
 namespace Microsoft.IronPythonTools.Interpreter
 {
-	class IronPythonGenericMember : PythonObject
+	internal class IronPythonGenericMember : PythonObject
 	{
 		private readonly PythonMemberType _type;
 
@@ -26,12 +26,6 @@ namespace Microsoft.IronPythonTools.Interpreter
 			_type = type;
 		}
 
-		public override PythonMemberType MemberType
-		{
-			get
-			{
-				return _type;
-			}
-		}
+		public override PythonMemberType MemberType => _type;
 	}
 }

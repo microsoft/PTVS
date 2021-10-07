@@ -16,7 +16,7 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-	class MockVsTrackSelectionEx : IVsTrackSelectionEx
+	internal class MockVsTrackSelectionEx : IVsTrackSelectionEx
 	{
 		private readonly MockVsMonitorSelection _monSel;
 		private IVsHierarchy _curHierarchy;

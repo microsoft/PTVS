@@ -104,9 +104,10 @@ namespace CookiecutterTests
 				_gitHubTemplateSource,
 				ExecuteCommand,
 				_projectSystemClient
-			);
-
-			_vm.UserConfigFilePath = userConfigFilePath;
+			)
+			{
+				UserConfigFilePath = userConfigFilePath
+			};
 			((CookiecutterClient)_cutterClient).DefaultBasePath = outputProjectFolder;
 		}
 
@@ -638,7 +639,7 @@ namespace CookiecutterTests
 			Console.WriteLine($"DisplayName: '{template.DisplayName}', RemoteUrl: '{template.RemoteUrl}', ClonedPath: '{template.ClonedPath}', Desc: '{template.Description}'");
 		}
 
-		class ReplacedFileComparer : IComparer
+		private class ReplacedFileComparer : IComparer
 		{
 			public int Compare(object x, object y)
 			{

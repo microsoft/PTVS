@@ -16,7 +16,7 @@
 
 namespace Microsoft.IronPythonTools.Interpreter
 {
-	class IronPythonModuleContext : IModuleContext
+	internal class IronPythonModuleContext : IModuleContext
 	{
 		private bool _showClr;
 		public static readonly IronPythonModuleContext ShowClrInstance = new IronPythonModuleContext(true);
@@ -33,8 +33,8 @@ namespace Microsoft.IronPythonTools.Interpreter
 
 		public bool ShowClr
 		{
-			get { return _showClr; }
-			set { _showClr = value; }
+			get => _showClr;
+			set => _showClr = value;
 		}
 	}
 }

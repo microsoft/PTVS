@@ -46,14 +46,8 @@ namespace TestUtilities.UI
 
 		public string FolderName
 		{
-			get
-			{
-				return GetFilenameEditBox().GetValuePattern().Current.Value;
-			}
-			set
-			{
-				GetFilenameEditBox().GetValuePattern().SetValue(value);
-			}
+			get => GetFilenameEditBox().GetValuePattern().Current.Value;
+			set => GetFilenameEditBox().GetValuePattern().SetValue(value);
 		}
 
 		public string Address

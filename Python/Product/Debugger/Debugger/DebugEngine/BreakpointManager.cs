@@ -17,7 +17,7 @@
 namespace Microsoft.PythonTools.Debugger.DebugEngine
 {
 	// This class manages breakpoints for the engine. 
-	class BreakpointManager
+	internal class BreakpointManager
 	{
 		private readonly AD7Engine m_engine;
 		private readonly List<AD7PendingBreakpoint> m_pendingBreakpoints;

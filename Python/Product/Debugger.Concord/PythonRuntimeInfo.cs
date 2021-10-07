@@ -42,10 +42,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 		public DkmNativeModuleInstance Python
 		{
-			get
-			{
-				return _python;
-			}
+			get => _python;
 			set
 			{
 				_python = value;

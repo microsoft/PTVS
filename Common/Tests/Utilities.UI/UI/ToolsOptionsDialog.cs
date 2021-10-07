@@ -45,7 +45,7 @@ namespace TestUtilities.UI
 		{
 			set
 			{
-				var treeView = new TreeView(Element.FindFirst(
+				TreeView treeView = new TreeView(Element.FindFirst(
 					TreeScope.Descendants,
 					new PropertyCondition(AutomationElement.ClassNameProperty, "SysTreeView32")
 				));

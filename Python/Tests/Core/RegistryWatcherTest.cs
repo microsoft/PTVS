@@ -19,8 +19,8 @@ namespace PythonToolsTests
 	[TestClass]
 	public class RegistryWatcherTest
 	{
-		const string TESTKEY = @"Software\PythonToolsTestKey";
-		const int TIMEOUT = 500;
+		private const string TESTKEY = @"Software\PythonToolsTestKey";
+		private const int TIMEOUT = 500;
 
 		[TestInitialize]
 		public void CreateTestKey()
@@ -34,7 +34,7 @@ namespace PythonToolsTests
 			Registry.CurrentUser.DeleteSubKeyTree(TESTKEY, throwOnMissingSubKey: false);
 		}
 
-		void SetValue(string subkey, string name, object value)
+		private void SetValue(string subkey, string name, object value)
 		{
 			using (var reg1 = Registry.CurrentUser.OpenSubKey(TESTKEY, true))
 			using (var reg2 = reg1.CreateSubKey(subkey))
@@ -43,7 +43,7 @@ namespace PythonToolsTests
 			}
 		}
 
-		void DeleteValue(string subkey, string name)
+		private void DeleteValue(string subkey, string name)
 		{
 			using (var reg1 = Registry.CurrentUser.OpenSubKey(TESTKEY, true))
 			using (var reg2 = reg1.CreateSubKey(subkey))
@@ -52,7 +52,7 @@ namespace PythonToolsTests
 			}
 		}
 
-		void DeleteKey(string subkey)
+		private void DeleteKey(string subkey)
 		{
 			using (var reg1 = Registry.CurrentUser.OpenSubKey(TESTKEY, true))
 			{
@@ -60,12 +60,12 @@ namespace PythonToolsTests
 			}
 		}
 
-		string GetKey(string subkey)
+		private string GetKey(string subkey)
 		{
 			return TESTKEY + "\\" + subkey;
 		}
 
-		object AddWatch(RegistryWatcher watcher,
+		private object AddWatch(RegistryWatcher watcher,
 						string subkey,
 						Action<RegistryChangedEventArgs> callback,
 						bool recursive = false,
@@ -403,12 +403,11 @@ namespace PythonToolsTests
 			}
 		}
 
-
-		class ArgSetter
+		private class ArgSetter
 		{
-			readonly RegistryChangedEventArgs[] Args;
-			readonly ManualResetEventSlim[] ArgsSet;
-			readonly int Index;
+			private readonly RegistryChangedEventArgs[] Args;
+			private readonly ManualResetEventSlim[] ArgsSet;
+			private readonly int Index;
 
 			public ArgSetter(RegistryChangedEventArgs[] args, ManualResetEventSlim[] argsSet, int i)
 			{
@@ -436,9 +435,9 @@ namespace PythonToolsTests
 
 			using (var watcher = new RegistryWatcher())
 			{
-				var args = new RegistryChangedEventArgs[100];
+				RegistryChangedEventArgs[] args = new RegistryChangedEventArgs[100];
 				var argsSet = args.Select(_ => new ManualResetEventSlim()).ToArray();
-				var tokens = new object[100];
+				global::System.Object[] tokens = new object[100];
 
 				for (int i = 0; i < 100; ++i)
 				{

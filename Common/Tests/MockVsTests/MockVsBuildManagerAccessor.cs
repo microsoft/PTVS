@@ -18,7 +18,7 @@ using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-	class MockVsBuildManagerAccessor : IVsBuildManagerAccessor
+	internal class MockVsBuildManagerAccessor : IVsBuildManagerAccessor
 	{
 		public int BeginDesignTimeBuild()
 		{

@@ -16,29 +16,17 @@
 
 namespace Microsoft.PythonTools.EnvironmentsList
 {
-	sealed class EnvironmentPathsExtensionProvider : IEnvironmentViewExtension
+	internal sealed class EnvironmentPathsExtensionProvider : IEnvironmentViewExtension
 	{
 		private EnvironmentPathsExtension _wpfObject;
 
-		public int SortPriority
-		{
-			get { return -10; }
-		}
+		public int SortPriority => -10;
 
-		public string LocalizedDisplayName
-		{
-			get { return Resources.EnvironmentPathsExtensionDisplayName; }
-		}
+		public string LocalizedDisplayName => Resources.EnvironmentPathsExtensionDisplayName;
 
-		public object HelpContent
-		{
-			get { return Resources.EnvironmentPathsExtensionHelpContent; }
-		}
+		public object HelpContent => Resources.EnvironmentPathsExtensionHelpContent;
 
-		public string HelpText
-		{
-			get { return Resources.EnvironmentPathsExtensionHelpContent; }
-		}
+		public string HelpText => Resources.EnvironmentPathsExtensionHelpContent;
 
 		public FrameworkElement WpfObject
 		{
@@ -66,7 +54,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 			InitializeComponent();
 		}
 
-		void OpenInFileExplorer_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+		private void OpenInFileExplorer_CanExecute(object sender, CanExecuteRoutedEventArgs e)
 		{
 			var path = e.Parameter as string;
 			e.CanExecute = File.Exists(path) || Directory.Exists(path);
@@ -75,9 +63,11 @@ namespace Microsoft.PythonTools.EnvironmentsList
 		private void OpenInFileExplorer_Executed(object sender, ExecutedRoutedEventArgs e)
 		{
 			var path = (string)e.Parameter;
-			var psi = new ProcessStartInfo();
-			psi.UseShellExecute = false;
-			psi.FileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe");
+			var psi = new ProcessStartInfo
+			{
+				UseShellExecute = false,
+				FileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe")
+			};
 
 			if (File.Exists(path))
 			{
@@ -123,7 +113,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
 		private void IsIPythonModeEnabled_Loaded(object sender, RoutedEventArgs e)
 		{
-			var ev = (e.Source as FrameworkElement)?.DataContext as EnvironmentView;
+			EnvironmentView ev = (e.Source as FrameworkElement)?.DataContext as EnvironmentView;
 			if (ev == null)
 			{
 				return;

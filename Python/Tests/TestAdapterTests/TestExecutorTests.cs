@@ -72,8 +72,8 @@ namespace TestAdapterTests
 		private static void ExecuteTests(TestEnvironment testEnv, MockRunSettings runSettings, TestInfo[] expectedTests, CoverageInfo[] expectedCoverages = null)
 		{
 			var testCases = CreateTestCasesFromTestInfo(testEnv, expectedTests);
-			var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
-			var recorder = new MockTestExecutionRecorder();
+			MockRunContext runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
+			MockTestExecutionRecorder recorder = new MockTestExecutionRecorder();
 
 			ITestExecutor executor = null;
 			switch (testEnv.TestFramework)
@@ -161,7 +161,7 @@ namespace TestAdapterTests
 
 				Assert.AreEqual(expectedCoverages.Length, result.Length, "Unexpected number of files in coverage results");
 
-				foreach (var expectedInfo in expectedCoverages)
+				foreach (CoverageInfo expectedInfo in expectedCoverages)
 				{
 					var filePath = Path.Combine(sourceDir, expectedInfo.FileName);
 					var actual = result.SingleOrDefault(x => PathUtils.IsSamePath(x.Filename, filePath));
@@ -177,7 +177,7 @@ namespace TestAdapterTests
 			PrintTestResults(recorder);
 
 			var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
-			foreach (var expectedResult in expectedTests)
+			foreach (TestInfo expectedResult in expectedTests)
 			{
 				AssertUtil.ContainsAtLeast(resultNames, expectedResult.FullyQualifiedName);
 				var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.FullyQualifiedName);
@@ -231,12 +231,12 @@ namespace TestAdapterTests
 		[TestCategory("10s")]
 		public void RunPytest()
 		{
-			var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+			TestEnvironment testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
 			var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_pt.py");
 			File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "BasicPytest", "test_pt.py"), testFilePath);
 
-			var expectedTests = new[] {
+			TestInfo[] expectedTests = new[] {
 				new TestInfo(
 					"test_pt_pass",
 					"test_pt.py::test_pt::test_pt_pass",
@@ -265,7 +265,7 @@ namespace TestAdapterTests
 				),
 			};
 
-			var runSettings = new MockRunSettings(
+			MockRunSettings runSettings = new MockRunSettings(
 				new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
 					.WithTestFilesFromFolder(testEnv.SourceFolderPath)
 					.ToXml()
@@ -278,7 +278,7 @@ namespace TestAdapterTests
 		[TestCategory("10s")]
 		public void RunPytestCancel()
 		{
-			var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+			TestEnvironment testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 			var executor = new PytestTestExecutor();
 			TestCancel(testEnv, executor);
 		}
@@ -287,7 +287,7 @@ namespace TestAdapterTests
 		[TestCategory("10s")]
 		public void RunPytestCodeFilePathNotFound()
 		{
-			var runSettings = new MockRunSettings(
+			MockRunSettings runSettings = new MockRunSettings(
 				new MockRunSettingsXmlBuilder("pytest", "", "", "")
 					.WithTestFile("DummyFilePath")
 					.ToXml()
@@ -295,8 +295,8 @@ namespace TestAdapterTests
 
 			var differentDummyFilePath = "DifferentDummyFilePath";
 			var testCases = new List<TestCase>() { new TestCase("fakeTest", pt.Microsoft.PythonTools.PythonConstants.PytestExecutorUri, differentDummyFilePath) { CodeFilePath = differentDummyFilePath } };
-			var runContext = new MockRunContext(runSettings, testCases, "");
-			var recorder = new MockTestExecutionRecorder();
+			MockRunContext runContext = new MockRunContext(runSettings, testCases, "");
+			MockTestExecutionRecorder recorder = new MockTestExecutionRecorder();
 			var executor = new PytestTestExecutor();
 
 			//should not throw
@@ -307,13 +307,13 @@ namespace TestAdapterTests
 		[TestCategory("10s")]
 		public void RunPytestCoverage()
 		{
-			var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest, installCoverage: true);
+			TestEnvironment testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest, installCoverage: true);
 
 			FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestExecutor", "Coverage"), testEnv.SourceFolderPath);
 
 			var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_coverage.py");
 
-			var expectedTests = new[] {
+			TestInfo[] expectedTests = new[] {
 				new TestInfo(
 					"test_one",
 					"test_coverage.py::TestCoverage::test_one",
@@ -341,7 +341,7 @@ namespace TestAdapterTests
 				),
 			};
 
-			var expectedCoverages = new[] {
+			CoverageInfo[] expectedCoverages = new[] {
 				new CoverageInfo(
 					"test_coverage.py",
 					new[] { 1, 3, 5, 6, 7, 8, 10, 11, 13, 14, 16 }
@@ -352,7 +352,7 @@ namespace TestAdapterTests
 				)
 			};
 
-			var runSettings = new MockRunSettings(
+			MockRunSettings runSettings = new MockRunSettings(
 				new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
 					.WithTestFile(testFilePath)
 					.WithCoverage()
@@ -366,12 +366,12 @@ namespace TestAdapterTests
 		[TestCategory("10s")]
 		public void RunPytestDuration()
 		{
-			var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+			TestEnvironment testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
 			var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_duration.py");
 			File.Copy(TestData.GetPath("TestData", "TestExecutor", "test_duration.py"), testFilePath);
 
-			var expectedTests = new[] {
+			TestInfo[] expectedTests = new[] {
 				new TestInfo(
 					"test_sleep_0_1",
 					"test_duration.py::DurationTests::test_sleep_0_1",
@@ -401,7 +401,7 @@ namespace TestAdapterTests
 				),
 			};
 
-			var runSettings = new MockRunSettings(
+			MockRunSettings runSettings = new MockRunSettings(
 				new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
 					.WithTestFilesFromFolder(testEnv.SourceFolderPath)
 					.ToXml()
@@ -414,12 +414,12 @@ namespace TestAdapterTests
 		[TestCategory("10s")]
 		public void RunPytestEnvironmentVariable()
 		{
-			var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+			TestEnvironment testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
 			var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_env_var.py");
 			File.Copy(TestData.GetPath("TestData", "TestExecutor", "test_env_var.py"), testFilePath);
 
-			var expectedTests = new[] {
+			TestInfo[] expectedTests = new[] {
 				new TestInfo(
 					"test_variable",
 					"test_env_var.py::EnvironmentVariableTests::test_variable",
@@ -430,7 +430,7 @@ namespace TestAdapterTests
 				),
 			};
 
-			var runSettings = new MockRunSettings(
+			MockRunSettings runSettings = new MockRunSettings(
 				new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
 					.WithTestFilesFromFolder(testEnv.SourceFolderPath)
 					.WithEnvironmentVariable("USER_ENV_VAR", "123")
@@ -444,7 +444,7 @@ namespace TestAdapterTests
 		[TestCategory("10s")]
 		public void RunPytestLargeTestCount()
 		{
-			var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+			TestEnvironment testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
 			// Test that we don't try passing 1000 tests via command line arguments
 			// since that would exceed the 32k limit and fail.
@@ -470,7 +470,7 @@ namespace TestAdapterTests
 
 			File.WriteAllText(testFilePath, testContents.ToString());
 
-			var runSettings = new MockRunSettings(
+			MockRunSettings runSettings = new MockRunSettings(
 				new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
 					.WithTestFilesFromFolder(testEnv.SourceFolderPath)
 					.ToXml()
@@ -483,19 +483,19 @@ namespace TestAdapterTests
 		[TestCategory("10s")]
 		public void RunPytestMissingPytestIdShowsErrorAndReturnsPartialResults()
 		{
-			var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+			TestEnvironment testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
 			var testFilePath1 = Path.Combine(testEnv.SourceFolderPath, "test_indirect_list.py");
 			File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "Parameterized", "test_indirect_list.py"), testFilePath1);
 
-			var runSettings = new MockRunSettings(
+			MockRunSettings runSettings = new MockRunSettings(
 				new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
 					.WithTestFilesFromFolder(testEnv.SourceFolderPath)
 					.ToXml()
 			);
-			var discoveryContext = new MockDiscoveryContext(runSettings);
-			var discoverySink = new MockTestCaseDiscoverySink();
-			var logger = new MockMessageLogger();
+			MockDiscoveryContext discoveryContext = new MockDiscoveryContext(runSettings);
+			MockTestCaseDiscoverySink discoverySink = new MockTestCaseDiscoverySink();
+			MockMessageLogger logger = new MockMessageLogger();
 			var discoverer = new PytestTestDiscoverer();
 			discoverer.DiscoverTests(new[] { testFilePath1 }, discoveryContext, logger, discoverySink);
 
@@ -511,15 +511,17 @@ namespace TestAdapterTests
 			// create a Missing Test with valid file but missing pytestId
 			var tc = discoverySink.Tests.First();
 			var validId = tc.GetPropertyValue<string>(Microsoft.PythonTools.TestAdapter.Pytest.Constants.PytestIdProperty, "");
-			var missingTest = new TestCase(tc.DisplayName + "_copy", tc.ExecutorUri, tc.Source);
-			missingTest.CodeFilePath = tc.CodeFilePath;
+			var missingTest = new TestCase(tc.DisplayName + "_copy", tc.ExecutorUri, tc.Source)
+			{
+				CodeFilePath = tc.CodeFilePath
+			};
 			var missingPytestId = validId + "_copy";
 			missingTest.SetPropertyValue<string>(Microsoft.PythonTools.TestAdapter.Pytest.Constants.PytestIdProperty, missingPytestId);
 			discoverySink.Tests.Add(missingTest);
 
 			var testCases = discoverySink.Tests;
-			var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
-			var recorder = new MockTestExecutionRecorder();
+			MockRunContext runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
+			MockTestExecutionRecorder recorder = new MockTestExecutionRecorder();
 			var executor = new PytestTestExecutor();
 			executor.RunTests(testCases, runContext, recorder);
 
@@ -542,7 +544,7 @@ namespace TestAdapterTests
 		[TestCategory("10s")]
 		public void RunPytestNullCodeFilePath()
 		{
-			var runSettings = new MockRunSettings(
+			MockRunSettings runSettings = new MockRunSettings(
 				new MockRunSettingsXmlBuilder("pytest", "", "", "")
 					.WithTestFile("DummyFilePath")
 					.ToXml()
@@ -550,8 +552,8 @@ namespace TestAdapterTests
 
 			var differentDummyFilePath = "DifferentDummyFilePath";
 			var testCases = new List<TestCase>() { new TestCase("fakeTest", pt.Microsoft.PythonTools.PythonConstants.PytestExecutorUri, differentDummyFilePath) { CodeFilePath = null } };
-			var runContext = new MockRunContext(runSettings, testCases, "");
-			var recorder = new MockTestExecutionRecorder();
+			MockRunContext runContext = new MockRunContext(runSettings, testCases, "");
+			MockTestExecutionRecorder recorder = new MockTestExecutionRecorder();
 			var executor = new PytestTestExecutor();
 
 			//should not throw
@@ -563,21 +565,21 @@ namespace TestAdapterTests
 		[TestCategory("10s")]
 		public void RunPytestParameterizedAndDiscovery()
 		{
-			var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+			TestEnvironment testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
 			var testFilePath1 = Path.Combine(testEnv.SourceFolderPath, "test_indirect_list.py");
 			var testFilePath2 = Path.Combine(testEnv.SourceFolderPath, "test_Parameters.py");
 			File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "Parameterized", "test_indirect_list.py"), testFilePath1);
 			File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "Parameterized", "test_Parameters.py"), testFilePath2);
 
-			var runSettings = new MockRunSettings(
+			MockRunSettings runSettings = new MockRunSettings(
 				new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
 					.WithTestFilesFromFolder(testEnv.SourceFolderPath)
 					.ToXml()
 			);
-			var discoveryContext = new MockDiscoveryContext(runSettings);
-			var discoverySink = new MockTestCaseDiscoverySink();
-			var logger = new MockMessageLogger();
+			MockDiscoveryContext discoveryContext = new MockDiscoveryContext(runSettings);
+			MockTestCaseDiscoverySink discoverySink = new MockTestCaseDiscoverySink();
+			MockMessageLogger logger = new MockMessageLogger();
 			var discoverer = new PytestTestDiscoverer();
 			discoverer.DiscoverTests(new[] { testFilePath1, testFilePath2 }, discoveryContext, logger, discoverySink);
 
@@ -591,8 +593,8 @@ namespace TestAdapterTests
 			Assert.AreEqual(23, discoverySink.Tests.Count());
 
 			var testCases = discoverySink.Tests;
-			var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
-			var recorder = new MockTestExecutionRecorder();
+			MockRunContext runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
+			MockTestExecutionRecorder recorder = new MockTestExecutionRecorder();
 			var executor = new PytestTestExecutor();
 			executor.RunTests(testCases, runContext, recorder);
 
@@ -611,12 +613,12 @@ namespace TestAdapterTests
 		[TestCategory("10s")]
 		public void RunPytestSetupAndTeardown()
 		{
-			var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+			TestEnvironment testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
 			var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_teardown.py");
 			File.Copy(TestData.GetPath("TestData", "TestExecutor", "test_teardown.py"), testFilePath);
 
-			var expectedTests = new[] {
+			TestInfo[] expectedTests = new[] {
 				new TestInfo(
 					"test_success",
 					"test_teardown.py::TeardownTests::test_success",
@@ -637,7 +639,7 @@ namespace TestAdapterTests
 				),
 			};
 
-			var runSettings = new MockRunSettings(
+			MockRunSettings runSettings = new MockRunSettings(
 				new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
 					.WithTestFilesFromFolder(testEnv.SourceFolderPath)
 					.ToXml()
@@ -650,7 +652,7 @@ namespace TestAdapterTests
 		[TestCategory("10s")]
 		public void RunPytestSubmoduleWithIniAndDiscovery()
 		{
-			var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+			TestEnvironment testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
 			FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestExplorerPytestSubmodule"), testEnv.SourceFolderPath);
 			var testFilePath1 = Path.Combine(testEnv.SourceFolderPath, "Tests\\test_pt.py");
@@ -658,14 +660,14 @@ namespace TestAdapterTests
 
 			Assert.IsTrue(File.Exists(pytestIniPath), $"File path '{pytestIniPath}' does not exist");
 
-			var runSettings = new MockRunSettings(
+			MockRunSettings runSettings = new MockRunSettings(
 				new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
 					.WithTestFile(testFilePath1)
 					.ToXml()
 			);
-			var discoveryContext = new MockDiscoveryContext(runSettings);
-			var discoverySink = new MockTestCaseDiscoverySink();
-			var logger = new MockMessageLogger();
+			MockDiscoveryContext discoveryContext = new MockDiscoveryContext(runSettings);
+			MockTestCaseDiscoverySink discoverySink = new MockTestCaseDiscoverySink();
+			MockMessageLogger logger = new MockMessageLogger();
 			var discoverer = new PytestTestDiscoverer();
 			discoverer.DiscoverTests(new[] { testFilePath1 }, discoveryContext, logger, discoverySink);
 
@@ -680,8 +682,8 @@ namespace TestAdapterTests
 			Assert.IsTrue(discoverySink.Tests.First().FullyQualifiedName.Contains("Tests\\"));
 
 			var testCases = discoverySink.Tests;
-			var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
-			var recorder = new MockTestExecutionRecorder();
+			MockRunContext runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
+			MockTestExecutionRecorder recorder = new MockTestExecutionRecorder();
 			var executor = new PytestTestExecutor();
 			executor.RunTests(testCases, runContext, recorder);
 
@@ -696,14 +698,14 @@ namespace TestAdapterTests
 		[TestCategory("10s")]
 		public void RunPytestSubpackages()
 		{
-			var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+			TestEnvironment testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
 			FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestExecutor", "SubPackages"), testEnv.SourceFolderPath);
 
 			var testFilePath1 = Path.Combine(testEnv.SourceFolderPath, "package1\\packageA\\test1.py");
 			var testFilePath2 = Path.Combine(testEnv.SourceFolderPath, "package1\\packageA\\test2.py");
 
-			var expectedTests = new[] {
+			TestInfo[] expectedTests = new[] {
 				new TestInfo(
 				   "test_A",
 				   "package1\\packageA\\test1.py::Test_test1::test_A",
@@ -722,7 +724,7 @@ namespace TestAdapterTests
 				),
 			};
 
-			var runSettings = new MockRunSettings(
+			MockRunSettings runSettings = new MockRunSettings(
 				new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
 					.WithTestFile(testFilePath1)
 					.WithTestFile(testFilePath2)
@@ -736,12 +738,12 @@ namespace TestAdapterTests
 		[TestCategory("10s")]
 		public void RunPytestUppercaseFileName()
 		{
-			var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+			TestEnvironment testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
 			var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_Uppercase.py");
 			File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "Uppercase", "test_Uppercase.py"), testFilePath);
 
-			var expectedTests = new[] {
+			TestInfo[] expectedTests = new[] {
 				new TestInfo(
 				   "test_A",
 				   "test_Uppercase.py::Test_UppercaseClass::test_A",
@@ -752,7 +754,7 @@ namespace TestAdapterTests
 				),
 			};
 
-			var runSettings = new MockRunSettings(
+			MockRunSettings runSettings = new MockRunSettings(
 				new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
 					.WithTestFilesFromFolder(testEnv.SourceFolderPath)
 					.ToXml()
@@ -765,7 +767,7 @@ namespace TestAdapterTests
 		[TestCategory("10s")]
 		public void RunUnittest()
 		{
-			var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
+			TestEnvironment testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
 			var testFile1Path = Path.Combine(testEnv.SourceFolderPath, "test_ut.py");
 			File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "BasicUnittest", "test_ut.py"), testFile1Path);
@@ -773,7 +775,7 @@ namespace TestAdapterTests
 			var testFile2Path = Path.Combine(testEnv.SourceFolderPath, "test_runtest.py");
 			File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "BasicUnittest", "test_runtest.py"), testFile2Path);
 
-			var expectedTests = new[] {
+			TestInfo[] expectedTests = new[] {
 				new TestInfo(
 					"test_ut_fail",
 					"test_ut.py::TestClassUT::test_ut_fail",
@@ -797,7 +799,7 @@ namespace TestAdapterTests
 				),
 			};
 
-			var runSettings = new MockRunSettings(
+			MockRunSettings runSettings = new MockRunSettings(
 				new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
 					.WithTestFilesFromFolder(testEnv.SourceFolderPath)
 					.ToXml()
@@ -810,7 +812,7 @@ namespace TestAdapterTests
 		[TestCategory("10s")]
 		public void RunUnittestCancel()
 		{
-			var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
+			TestEnvironment testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 			var executor = new UnittestTestExecutor();
 			TestCancel(testEnv, executor);
 		}
@@ -819,13 +821,13 @@ namespace TestAdapterTests
 		[TestCategory("10s")]
 		public void RunUnittestCoverage()
 		{
-			var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest, installCoverage: true);
+			TestEnvironment testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest, installCoverage: true);
 
 			FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestExecutor", "Coverage"), testEnv.SourceFolderPath);
 
 			var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_coverage.py");
 
-			var expectedTests = new[] {
+			TestInfo[] expectedTests = new[] {
 				new TestInfo(
 					"test_one",
 					"test_coverage.py::TestCoverage::test_one",
@@ -842,7 +844,7 @@ namespace TestAdapterTests
 				),
 			};
 
-			var expectedCoverages = new[] {
+			CoverageInfo[] expectedCoverages = new[] {
 				new CoverageInfo(
 					"test_coverage.py",
 					new[] { 1, 3, 5, 6, 7, 8, 10, 11, 13, 16 }
@@ -853,7 +855,7 @@ namespace TestAdapterTests
 				)
 			};
 
-			var runSettings = new MockRunSettings(
+			MockRunSettings runSettings = new MockRunSettings(
 				new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
 					.WithTestFile(testFilePath)
 					.WithCoverage()
@@ -867,12 +869,12 @@ namespace TestAdapterTests
 		[TestCategory("10s")]
 		public void RunUnittestDuration()
 		{
-			var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
+			TestEnvironment testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
 			var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_duration.py");
 			File.Copy(TestData.GetPath("TestData", "TestExecutor", "test_duration.py"), testFilePath);
 
-			var expectedTests = new[] {
+			TestInfo[] expectedTests = new[] {
 				new TestInfo(
 					"test_sleep_0_1",
 					"test_duration.py::DurationTests::test_sleep_0_1",
@@ -899,7 +901,7 @@ namespace TestAdapterTests
 				),
 			};
 
-			var runSettings = new MockRunSettings(
+			MockRunSettings runSettings = new MockRunSettings(
 				new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
 					.WithTestFilesFromFolder(testEnv.SourceFolderPath)
 					.ToXml()
@@ -916,14 +918,14 @@ namespace TestAdapterTests
 			// For example, if the file where the test is defined has an unhandled ImportError.
 			// We check that this only causes the tests that can't be loaded to fail,
 			// all other tests in the test run which can be loaded successfully will be run.
-			var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
+			TestEnvironment testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
 			FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "ImportErrorUnittest"), testEnv.SourceFolderPath);
 
 			var testFilePath1 = Path.Combine(testEnv.SourceFolderPath, "test_no_error.py");
 			var testFilePath2 = Path.Combine(testEnv.SourceFolderPath, "test_import_error.py");
 
-			var expectedTests = new[] {
+			TestInfo[] expectedTests = new[] {
 				new TestInfo(
 					"test_no_error",
 					"test_no_error.py::NoErrorTests::test_no_error",
@@ -940,7 +942,7 @@ namespace TestAdapterTests
 				),
 			};
 
-			var runSettings = new MockRunSettings(
+			MockRunSettings runSettings = new MockRunSettings(
 				new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
 					.WithTestFilesFromFolder(testEnv.SourceFolderPath)
 					.ToXml()
@@ -953,14 +955,14 @@ namespace TestAdapterTests
 		[TestCategory("10s")]
 		public void RunUnittestInheritance()
 		{
-			var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
+			TestEnvironment testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
 			FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "Inheritance"), testEnv.SourceFolderPath);
 
 			var baseTestFilePath = Path.Combine(testEnv.SourceFolderPath, "test_base.py");
 			var derivedTestFilePath = Path.Combine(testEnv.SourceFolderPath, "test_derived.py");
 
-			var expectedTests = new[] {
+			TestInfo[] expectedTests = new[] {
 				new TestInfo(
 					"test_base_pass",
 					"test_base.py::BaseClassTests::test_base_pass",
@@ -1008,7 +1010,7 @@ namespace TestAdapterTests
 				),
 			};
 
-			var runSettings = new MockRunSettings(
+			MockRunSettings runSettings = new MockRunSettings(
 				new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
 					.WithTestFilesFromFolder(testEnv.SourceFolderPath)
 					.ToXml()
@@ -1021,7 +1023,7 @@ namespace TestAdapterTests
 		[TestCategory("10s")]
 		public void RunUnittestLargeTestCount()
 		{
-			var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
+			TestEnvironment testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
 			// Test that we don't try passing 1000 tests via command line arguments
 			// since that would exceed the 32k limit and fail.
@@ -1056,7 +1058,7 @@ if __name__ == '__main__':
 			var testContents = string.Format(testContentsFormat, testFunctions.ToString());
 			File.WriteAllText(testFilePath, testContents);
 
-			var runSettings = new MockRunSettings(
+			MockRunSettings runSettings = new MockRunSettings(
 				new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
 					.WithTestFilesFromFolder(testEnv.SourceFolderPath)
 					.ToXml()
@@ -1070,13 +1072,13 @@ if __name__ == '__main__':
 		[TestCategory("10s")]
 		public void RunUnittestRelativeImport()
 		{
-			var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
+			TestEnvironment testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
 			FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "RelativeImport"), testEnv.SourceFolderPath);
 
 			var testFilePath = Path.Combine(testEnv.SourceFolderPath, "relativeimportpackage\\test_relative_import.py");
 
-			var expectedTests = new[] {
+			TestInfo[] expectedTests = new[] {
 				new TestInfo(
 					"test_relative_import",
 					"relativeimportpackage\\test_relative_import.py::RelativeImportTests::test_relative_import",
@@ -1086,7 +1088,7 @@ if __name__ == '__main__':
 				),
 			};
 
-			var runSettings = new MockRunSettings(
+			MockRunSettings runSettings = new MockRunSettings(
 				new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
 					.WithTestFile(testFilePath)
 					.ToXml()
@@ -1099,12 +1101,12 @@ if __name__ == '__main__':
 		[TestCategory("10s")]
 		public void RunUnitTestStackTrace()
 		{
-			var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
+			TestEnvironment testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
 			var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_stack_trace.py");
 			File.Copy(TestData.GetPath("TestData", "TestExecutor", "test_stack_trace.py"), testFilePath);
 
-			var expectedTests = new[] {
+			TestInfo[] expectedTests = new[] {
 				new TestInfo(
 					"test_bad_import",
 					"test_stack_trace.py::StackTraceTests::test_bad_import",
@@ -1132,7 +1134,7 @@ if __name__ == '__main__':
 				),
 			};
 
-			var runSettings = new MockRunSettings(
+			MockRunSettings runSettings = new MockRunSettings(
 				new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
 					.WithTestFilesFromFolder(testEnv.SourceFolderPath)
 					.ToXml()
@@ -1147,7 +1149,7 @@ if __name__ == '__main__':
 			var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_cancel.py");
 			File.Copy(TestData.GetPath("TestData", "TestExecutor", "test_cancel.py"), testFilePath);
 
-			var expectedTests = new[] {
+			TestInfo[] expectedTests = new[] {
 				new TestInfo(
 					"test_sleep_1",
 					"test_cancel.py::CancelTests::test_sleep_1",
@@ -1186,15 +1188,15 @@ if __name__ == '__main__':
 				),
 			};
 
-			var runSettings = new MockRunSettings(
+			MockRunSettings runSettings = new MockRunSettings(
 				new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
 					.WithTestFilesFromFolder(testEnv.SourceFolderPath)
 					.ToXml()
 			);
 
 			var testCases = CreateTestCasesFromTestInfo(testEnv, expectedTests);
-			var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
-			var recorder = new MockTestExecutionRecorder();
+			MockRunContext runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
+			MockTestExecutionRecorder recorder = new MockTestExecutionRecorder();
 
 			var thread = new System.Threading.Thread(o =>
 			{

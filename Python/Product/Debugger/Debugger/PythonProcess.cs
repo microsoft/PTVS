@@ -21,7 +21,7 @@ namespace Microsoft.PythonTools.Debugger
 	/// <summary>
 	/// Handles all interactions with a Python process which is being debugged.
 	/// </summary>
-	class PythonProcess : IDisposable
+	internal class PythonProcess : IDisposable
 	{
 		private readonly Process _process;
 		private readonly ConcurrentDictionary<long, PythonThread> _threads = new ConcurrentDictionary<long, PythonThread>();
@@ -101,27 +101,28 @@ namespace Microsoft.PythonTools.Debugger
 				dir = dir.Substring(0, dir.Length - 1);
 			}
 			_dirMapping = dirMapping;
-			var processInfo = new ProcessStartInfo(exe);
+			var processInfo = new ProcessStartInfo(exe)
+			{
+				CreateNoWindow = (options & PythonDebugOptions.CreateNoWindow) != 0,
+				UseShellExecute = false,
+				RedirectStandardOutput = false,
+				RedirectStandardInput = (options & PythonDebugOptions.RedirectInput) != 0,
+				WorkingDirectory = dir,
 
-			processInfo.CreateNoWindow = (options & PythonDebugOptions.CreateNoWindow) != 0;
-			processInfo.UseShellExecute = false;
-			processInfo.RedirectStandardOutput = false;
-			processInfo.RedirectStandardInput = (options & PythonDebugOptions.RedirectInput) != 0;
-			processInfo.WorkingDirectory = dir;
-
-			processInfo.Arguments =
+				Arguments =
 				(String.IsNullOrWhiteSpace(interpreterOptions) ? "" : (interpreterOptions + " ")) +
 				"\"" + PythonToolsInstallPath.GetFile("ptvsd_launcher.py") + "\" " +
 				"\"" + dir + "\" " +
 				" " + DebugConnectionListener.ListenerPort + " " +
 				" " + _processGuid + " " +
 				"\"" + options + "\" " +
-				args;
+				args
+			};
 
 			if (env != null)
 			{
 				string[] envValues = env.Split('\0');
-				foreach (var curValue in envValues)
+				foreach (global::System.String curValue in envValues)
 				{
 					string[] nameValue = curValue.Split(new[] { '=' }, 2);
 					if (nameValue.Length == 2 && !String.IsNullOrWhiteSpace(nameValue[0]))
@@ -132,9 +133,11 @@ namespace Microsoft.PythonTools.Debugger
 			}
 
 			_debugLog.WriteLine(String.Format("Launching: {0} {1}", processInfo.FileName, processInfo.Arguments));
-			_process = new Process();
-			_process.StartInfo = processInfo;
-			_process.EnableRaisingEvents = true;
+			_process = new Process
+			{
+				StartInfo = processInfo,
+				EnableRaisingEvents = true
+			};
 			_process.Exited += new EventHandler(_process_Exited);
 		}
 
@@ -250,7 +253,7 @@ namespace Microsoft.PythonTools.Debugger
 			Dispose(false);
 		}
 
-		void _process_Exited(object sender, EventArgs e)
+		private void _process_Exited(object sender, EventArgs e)
 		{
 			// TODO: Abort all pending operations
 			if (!_sentExited)
@@ -375,7 +378,7 @@ namespace Microsoft.PythonTools.Debugger
 		)
 		{
 			int id = _breakpointCounter++;
-			var res = new PythonBreakpoint(this, filename, lineNo, conditionKind, condition, passCountKind, passCount, id);
+			PythonBreakpoint res = new PythonBreakpoint(this, filename, lineNo, conditionKind, condition, passCountKind, passCount, id);
 			_breakpoints[id] = res;
 			return res;
 		}
@@ -383,7 +386,7 @@ namespace Microsoft.PythonTools.Debugger
 		public PythonBreakpoint AddDjangoBreakpoint(string filename, int lineNo)
 		{
 			int id = _breakpointCounter++;
-			var res = new PythonBreakpoint(this, filename, lineNo, PythonBreakpointConditionKind.Always, "", PythonBreakpointPassCountKind.Always, 0, id, true);
+			PythonBreakpoint res = new PythonBreakpoint(this, filename, lineNo, PythonBreakpointConditionKind.Always, "", PythonBreakpointPassCountKind.Always, 0, id, true);
 			_breakpoints[id] = res;
 			return res;
 		}
@@ -781,7 +784,7 @@ namespace Microsoft.PythonTools.Debugger
 			_debugLog.WriteLine("Received execution request {0}", e.executionId);
 			if (completion != null)
 			{
-				var evalResult = ReadPythonObject(e.obj, completion.Text, null, completion.Frame);
+				PythonEvaluationResult evalResult = ReadPythonObject(e.obj, completion.Text, null, completion.Frame);
 				completion.Completion(evalResult);
 			}
 			else
@@ -794,7 +797,7 @@ namespace Microsoft.PythonTools.Debugger
 
 		private PythonEvaluationResult ReadPythonObject(LDP.PythonObject obj, string expr, string childName, PythonStackFrame frame)
 		{
-			var flags = FromLDPEvaluationResultFlags(obj.flags);
+			PythonEvaluationResultFlags flags = FromLDPEvaluationResultFlags(obj.flags);
 			var objRepr = obj.objRepr;
 			var hexRepr = obj.hexRepr;
 
@@ -851,7 +854,7 @@ namespace Microsoft.PythonTools.Debugger
 			if (e.moduleFileName != null)
 			{
 				_debugLog.WriteLine(String.Format("Module Loaded ({0}): {2} : {1}", e.moduleId, e.moduleFileName, e.moduleName));
-				var module = new PythonModule(e.moduleId, e.moduleFileName, e.moduleName, !e.isStdLib);
+				PythonModule module = new PythonModule(e.moduleId, e.moduleFileName, e.moduleName, !e.isStdLib);
 
 				ModuleLoaded?.Invoke(this, new ModuleLoadedEventArgs(module));
 			}
@@ -889,7 +892,7 @@ namespace Microsoft.PythonTools.Debugger
 
 		private void OnLegacyException(object sender, LDP.ExceptionEvent e)
 		{
-			var exc = new PythonException();
+			PythonException exc = new PythonException();
 			foreach (var item in e.data)
 			{
 				exc.SetValue(this, item.Key, item.Value);
@@ -998,7 +1001,7 @@ namespace Microsoft.PythonTools.Debugger
 
 			for (int i = 0; i < e.threadFrames.Length; i++)
 			{
-				var item = e.threadFrames[i];
+				LDP.ThreadFrameItem item = e.threadFrames[i];
 				PythonStackFrame frame = null;
 				switch (item.frameKind)
 				{
@@ -1073,7 +1076,7 @@ namespace Microsoft.PythonTools.Debugger
 
 		internal async Task BindBreakpointAsync(PythonBreakpoint breakpoint, CancellationToken ct)
 		{
-			var request = new LDP.SetBreakpointRequest()
+			LDP.SetBreakpointRequest request = new LDP.SetBreakpointRequest()
 			{
 				language = breakpoint.IsDjangoBreakpoint ? LDP.LanguageKind.Django : LDP.LanguageKind.Python,
 				breakpointId = breakpoint.Id,
@@ -1532,7 +1535,7 @@ namespace Microsoft.PythonTools.Debugger
 			}
 		}
 
-		class CompletionInfo
+		private class CompletionInfo
 		{
 			public readonly Action<PythonEvaluationResult> Completion;
 			public readonly string Text;
@@ -1546,7 +1549,7 @@ namespace Microsoft.PythonTools.Debugger
 			}
 		}
 
-		class ChildrenInfo
+		private class ChildrenInfo
 		{
 			public readonly Action<PythonEvaluationResult[]> Completion;
 			public readonly string Text;

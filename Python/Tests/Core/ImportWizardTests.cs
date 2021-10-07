@@ -419,8 +419,7 @@ namespace PythonToolsTests
 			});
 		}
 
-
-		static T Wait<T>(Task<T> task)
+		private static T Wait<T>(Task<T> task)
 		{
 			task.Wait();
 			return task.Result;
@@ -471,7 +470,7 @@ namespace PythonToolsTests
 		[TestMethod, Priority(UnitTestPriority.P1)]
 		public void ImportWizardDefaultStartupFile()
 		{
-			var files = new[] { "a.py", "b.py", "c.py" };
+			global::System.String[] files = new[] { "a.py", "b.py", "c.py" };
 			var expectedDefault = files[0];
 
 			Assert.AreEqual(expectedDefault, ImportSettings.SelectDefaultStartupFile(files, null));

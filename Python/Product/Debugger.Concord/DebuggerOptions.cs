@@ -28,10 +28,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 		public static bool ShowNativePythonFrames
 		{
-			get
-			{
-				return _showNativePythonFrames;
-			}
+			get => _showNativePythonFrames;
 			set
 			{
 				_showNativePythonFrames = value;
@@ -41,10 +38,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 		public static bool UsePythonStepping
 		{
-			get
-			{
-				return _usePythonStepping;
-			}
+			get => _usePythonStepping;
 			set
 			{
 				_usePythonStepping = value;
@@ -54,10 +48,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 		public static bool ShowCppViewNodes
 		{
-			get
-			{
-				return _showCppViewNodes;
-			}
+			get => _showCppViewNodes;
 			set
 			{
 				_showCppViewNodes = value;
@@ -67,10 +58,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 		public static bool ShowPythonViewNodes
 		{
-			get
-			{
-				return _showPythonViewNodes;
-			}
+			get => _showPythonViewNodes;
 			set
 			{
 				_showPythonViewNodes = value;

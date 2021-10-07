@@ -16,7 +16,7 @@
 
 namespace Microsoft.IronPythonTools.Interpreter
 {
-	class IronPythonNamespace : PythonObject, IPythonModule
+	internal class IronPythonNamespace : PythonObject, IPythonModule
 	{
 		public IronPythonNamespace(IronPythonInterpreter interpreter, ObjectIdentityHandle ns)
 			: base(interpreter, ns)
@@ -29,7 +29,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 		{
 			get
 			{
-				var ri = RemoteInterpreter;
+				RemoteInterpreterProxy ri = RemoteInterpreter;
 				return ri != null ? ri.GetNamespaceName(Value) : string.Empty;
 			}
 		}
@@ -41,14 +41,11 @@ namespace Microsoft.IronPythonTools.Interpreter
 
 		public IEnumerable<string> GetChildrenModules()
 		{
-			var ri = RemoteInterpreter;
+			RemoteInterpreterProxy ri = RemoteInterpreter;
 			return ri != null ? ri.GetNamespaceChildren(Value) : Enumerable.Empty<string>();
 		}
 
-		public string Documentation
-		{
-			get { return string.Empty; }
-		}
+		public string Documentation => string.Empty;
 
 		#endregion
 	}

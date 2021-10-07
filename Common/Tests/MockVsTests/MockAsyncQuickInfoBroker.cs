@@ -17,7 +17,7 @@
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
 	[Export(typeof(IAsyncQuickInfoBroker))]
-	class MockAsyncQuickInfoBroker : IAsyncQuickInfoBroker
+	internal class MockAsyncQuickInfoBroker : IAsyncQuickInfoBroker
 	{
 		public bool IsQuickInfoActive(ITextView textView)
 		{

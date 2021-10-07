@@ -35,7 +35,7 @@ namespace TestRunnerInterop
 				throw new InvalidOperationException("Failed to create job object");
 			}
 
-			var objInfo = new NativeMethods.JOBOBJECT_EXTENDED_LIMIT_INFORMATION();
+			NativeMethods.JOBOBJECT_EXTENDED_LIMIT_INFORMATION objInfo = new NativeMethods.JOBOBJECT_EXTENDED_LIMIT_INFORMATION();
 			objInfo.BasicLimitInformation.LimitFlags = NativeMethods.JOB_OBJECT_LIMIT.KILL_ON_JOB_CLOSE;
 			if (!NativeMethods.SetInformationJobObject(
 				_jobObject,
@@ -120,8 +120,8 @@ namespace TestRunnerInterop
 
 				// Forward console output to our own output, which will
 				// be captured by the test runner.
-				_vs.OutputDataReceived += (s, e) => { if (e.Data != null) Console.WriteLine(e.Data); };
-				_vs.ErrorDataReceived += (s, e) => { if (e.Data != null) Console.Error.WriteLine(e.Data); };
+				_vs.OutputDataReceived += (s, e) => { if (e.Data != null) { Console.WriteLine(e.Data); } };
+				_vs.ErrorDataReceived += (s, e) => { if (e.Data != null) { Console.Error.WriteLine(e.Data); } };
 				_vs.BeginOutputReadLine();
 				_vs.BeginErrorReadLine();
 
@@ -243,7 +243,7 @@ namespace TestRunnerInterop
 					continue;
 				}
 
-				using (var vs = VisualStudioApp.FromProcessId(p.Id))
+				using (VisualStudioApp vs = VisualStudioApp.FromProcessId(p.Id))
 				{
 					EnvDTE.DTE dte;
 					try
@@ -362,7 +362,7 @@ namespace TestRunnerInterop
 			return false;
 		}
 
-		void Dispose(bool disposing)
+		private void Dispose(bool disposing)
 		{
 			if (!_isDisposed)
 			{

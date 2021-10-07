@@ -27,46 +27,25 @@ namespace TestUtilities.Mocks
 			_position = new MockTrackingPoint((MockTextSnapshot)_view.TextBuffer.CurrentSnapshot, 0);
 		}
 
-		public double Bottom
-		{
-			get { throw new System.NotImplementedException(); }
-		}
+		public double Bottom => throw new System.NotImplementedException();
 
-		public Microsoft.VisualStudio.Text.Formatting.ITextViewLine ContainingTextViewLine
-		{
-			get { throw new System.NotImplementedException(); }
-		}
+		public Microsoft.VisualStudio.Text.Formatting.ITextViewLine ContainingTextViewLine => throw new System.NotImplementedException();
 
 		public void EnsureVisible()
 		{
 		}
 
-		public double Height
-		{
-			get { throw new System.NotImplementedException(); }
-		}
+		public double Height => throw new System.NotImplementedException();
 
-		public bool InVirtualSpace
-		{
-			get { throw new System.NotImplementedException(); }
-		}
+		public bool InVirtualSpace => throw new System.NotImplementedException();
 
 		public bool IsHidden
 		{
-			get
-			{
-				throw new System.NotImplementedException();
-			}
-			set
-			{
-				throw new System.NotImplementedException();
-			}
+			get => throw new System.NotImplementedException();
+			set => throw new System.NotImplementedException();
 		}
 
-		public double Left
-		{
-			get { throw new System.NotImplementedException(); }
-		}
+		public double Left => throw new System.NotImplementedException();
 
 		public CaretPosition MoveTo(Microsoft.VisualStudio.Text.VirtualSnapshotPoint bufferPosition, Microsoft.VisualStudio.Text.PositionAffinity caretAffinity, bool captureHorizontalPosition)
 		{
@@ -130,21 +109,12 @@ namespace TestUtilities.Mocks
 			throw new System.NotImplementedException();
 		}
 
-		public bool OverwriteMode
-		{
-			get { throw new System.NotImplementedException(); }
-		}
+		public bool OverwriteMode => throw new System.NotImplementedException();
 
-		public CaretPosition Position
-		{
-			get
-			{
-				return new CaretPosition(
+		public CaretPosition Position => new CaretPosition(
 			  new VirtualSnapshotPoint(_position.GetPoint(_view.TextBuffer.CurrentSnapshot)),
 			  new MockMappingPoint(_position),
 			  PositionAffinity.Predecessor);
-			}
-		}
 
 		internal void SetPosition(SnapshotPoint position)
 		{
@@ -161,19 +131,10 @@ namespace TestUtilities.Mocks
 			}
 		}
 
-		public double Right
-		{
-			get { throw new System.NotImplementedException(); }
-		}
+		public double Right => throw new System.NotImplementedException();
 
-		public double Top
-		{
-			get { throw new System.NotImplementedException(); }
-		}
+		public double Top => throw new System.NotImplementedException();
 
-		public double Width
-		{
-			get { throw new System.NotImplementedException(); }
-		}
+		public double Width => throw new System.NotImplementedException();
 	}
 }

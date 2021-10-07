@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools.Debugger.Transports
 			try
 			{
 				webSocket.ConnectAsync(uri, CancellationToken.None).GetAwaiter().GetResult();
-				var stream = new WebSocketStream(webSocket, ownsSocket: true);
+				WebSocketStream stream = new WebSocketStream(webSocket, ownsSocket: true);
 				webSocket = null;
 				return stream;
 			}

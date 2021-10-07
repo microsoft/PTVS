@@ -25,135 +25,45 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			_dte = dte;
 		}
 
-		public AddIns AddIns
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public AddIns AddIns => throw new NotImplementedException();
 
-		public int Count
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public int Count => throw new NotImplementedException();
 
-		public DTE DTE
-		{
-			get
-			{
-				return _dte;
-			}
-		}
+		public DTE DTE => _dte;
 
-		public string ExtenderCATID
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public string ExtenderCATID => throw new NotImplementedException();
 
-		public object ExtenderNames
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public object ExtenderNames => throw new NotImplementedException();
 
-		public string FileName
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public string FileName => throw new NotImplementedException();
 
-		public string FullName
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public string FullName => throw new NotImplementedException();
 
-		public Globals Globals
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public Globals Globals => throw new NotImplementedException();
 
 		public bool IsDirty
 		{
-			get
-			{
-				throw new NotImplementedException();
-			}
+			get => throw new NotImplementedException();
 
-			set
-			{
-				throw new NotImplementedException();
-			}
+			set => throw new NotImplementedException();
 		}
 
-		public bool IsOpen
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public bool IsOpen => throw new NotImplementedException();
 
-		public DTE Parent
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public DTE Parent => throw new NotImplementedException();
 
-		public Projects Projects
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public Projects Projects => throw new NotImplementedException();
 
-		public Properties Properties
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public Properties Properties => throw new NotImplementedException();
 
 		public bool Saved
 		{
-			get
-			{
-				throw new NotImplementedException();
-			}
+			get => throw new NotImplementedException();
 
-			set
-			{
-				throw new NotImplementedException();
-			}
+			set => throw new NotImplementedException();
 		}
 
-		public SolutionBuild SolutionBuild
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public SolutionBuild SolutionBuild => throw new NotImplementedException();
 
 		public Project AddFromFile(string FileName, bool Exclusive = false)
 		{

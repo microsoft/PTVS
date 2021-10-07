@@ -16,7 +16,7 @@
 
 namespace Microsoft.IronPythonTools.Interpreter
 {
-	class PythonObject : IMemberContainer, IMember
+	internal class PythonObject : IMemberContainer, IMember
 	{
 		private readonly ObjectIdentityHandle _obj;
 		private readonly IronPythonInterpreter _interpreter;
@@ -38,31 +38,13 @@ namespace Microsoft.IronPythonTools.Interpreter
 			_interpreter.UnloadingDomain -= Interpreter_UnloadingDomain;
 		}
 
-		public ObjectIdentityHandle Value
-		{
-			get
-			{
-				return _obj;
-			}
-		}
+		public ObjectIdentityHandle Value => _obj;
 
-		public IronPythonInterpreter Interpreter
-		{
-			get
-			{
-				return _interpreter;
-			}
-		}
+		public IronPythonInterpreter Interpreter => _interpreter;
 
-		public RemoteInterpreterProxy RemoteInterpreter
-		{
-			get
-			{
-				return _remote;
-			}
-		}
+		public RemoteInterpreterProxy RemoteInterpreter => _remote;
 
-		struct MemberInfo
+		private struct MemberInfo
 		{
 			public readonly IMember Member;
 			public IsClrOnly ClrOnly;
@@ -86,7 +68,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 			}
 		}
 
-		enum IsClrOnly
+		private enum IsClrOnly
 		{
 			NotChecked,
 			Yes,
@@ -105,8 +87,8 @@ namespace Microsoft.IronPythonTools.Interpreter
 
 			if (!_attrs.TryGetValue(name, out MemberInfo member) || member.Member == null)
 			{
-				var ri = RemoteInterpreter;
-				var res = ri != null ? ri.GetMember(Value, name) : default(ObjectIdentityHandle);
+				RemoteInterpreterProxy ri = RemoteInterpreter;
+				ObjectIdentityHandle res = ri != null ? ri.GetMember(Value, name) : default(ObjectIdentityHandle);
 				if (!res.Equals(Value))
 				{
 					_attrs[name] = member = new MemberInfo(_interpreter.MakeObject(res));
@@ -142,7 +124,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 		{
 			if (!_checkedClrAttrs)
 			{
-				var ri = RemoteInterpreter;
+				RemoteInterpreterProxy ri = RemoteInterpreter;
 				foreach (var name in ri != null ? ri.DirHelper(_obj, false) : Enumerable.Empty<string>())
 				{
 					if (!_attrs.ContainsKey(name))
@@ -169,7 +151,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 
 		public IEnumerable<string> GetMemberNames(IModuleContext moduleContext)
 		{
-			var ri = RemoteInterpreter;
+			RemoteInterpreterProxy ri = RemoteInterpreter;
 			return ri != null ? ri.DirHelper(Value, ((IronPythonModuleContext)moduleContext).ShowClr) : Enumerable.Empty<string>();
 		}
 
@@ -177,10 +159,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 
 		#region IMember Members
 
-		public virtual PythonMemberType MemberType
-		{
-			get { return PythonMemberType.Namespace; }
-		}
+		public virtual PythonMemberType MemberType => PythonMemberType.Namespace;
 
 		#endregion
 

@@ -32,7 +32,10 @@ namespace TestUtilities
 
 		public int ThreadId => _service.Thread.ManagedThreadId;
 
-		public void Dispose() => _onDispose();
+		public void Dispose()
+		{
+			_onDispose();
+		}
 
 		public void Post(Action action)
 		{
@@ -50,14 +53,14 @@ namespace TestUtilities
 		public bool Wait(Func<Task> method, int ms = Timeout.Infinite, CancellationToken cancellationToken = default(CancellationToken))
 		{
 			var delayTask = Task.Delay(ms, cancellationToken);
-			var resultTask = BlockUntilCompleted(() => Task.WhenAny(method(), delayTask));
+			TResult resultTask = BlockUntilCompleted(() => Task.WhenAny(method(), delayTask));
 			return resultTask != delayTask;
 		}
 
 		public bool Wait<T>(Func<Task<T>> method, out T result, int ms = Timeout.Infinite, CancellationToken cancellationToken = default(CancellationToken))
 		{
 			var delayTask = Task.Delay(ms, cancellationToken);
-			var resultTask = BlockUntilCompleted(() => Task.WhenAny(method(), delayTask));
+			TResult resultTask = BlockUntilCompleted(() => Task.WhenAny(method(), delayTask));
 			result = resultTask is Task<T> task ? task.GetAwaiter().GetResult() : default(T);
 			return resultTask != delayTask;
 		}
@@ -89,9 +92,9 @@ namespace TestUtilities
 			}
 
 			var sc = SynchronizationContext.Current;
-			var blockingLoopSynchronizationContext = new BlockingLoopSynchronizationContext(_service, this, sc);
+			BlockingLoopSynchronizationContext blockingLoopSynchronizationContext = new BlockingLoopSynchronizationContext(_service, this, sc);
 			SynchronizationContext.SetSynchronizationContext(blockingLoopSynchronizationContext);
-			var bl = new BlockingLoop(func, sc);
+			BlockingLoop bl = new BlockingLoop(func, sc);
 			try
 			{
 				_blockingLoop.Value = bl;
@@ -113,7 +116,10 @@ namespace TestUtilities
 			return atmb.Task;
 		}
 
-		public void CancelPendingTasks() => _cts.Cancel();
+		public void CancelPendingTasks()
+		{
+			_cts.Cancel();
+		}
 
 		private class BlockingLoop
 		{
@@ -154,7 +160,10 @@ namespace TestUtilities
 				}
 			}
 
-			private void Complete(Task task) => _are.Set();
+			private void Complete(Task task)
+			{
+				_are.Set();
+			}
 
 			private void ProcessQueue()
 			{
@@ -179,7 +188,9 @@ namespace TestUtilities
 			}
 
 			public override void Send(SendOrPostCallback d, object state)
-				=> _innerSynchronizationContext.Send(d, state);
+			{
+				_innerSynchronizationContext.Send(d, state);
+			}
 
 			public override void Post(SendOrPostCallback d, object state)
 			{
@@ -195,7 +206,9 @@ namespace TestUtilities
 			}
 
 			public override SynchronizationContext CreateCopy()
-				=> new BlockingLoopSynchronizationContext(_service, _mainThread, _innerSynchronizationContext);
+			{
+				return new BlockingLoopSynchronizationContext(_service, _mainThread, _innerSynchronizationContext);
+			}
 		}
 	}
 }

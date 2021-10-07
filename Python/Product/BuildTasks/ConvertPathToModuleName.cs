@@ -49,7 +49,7 @@ namespace Microsoft.PythonTools.BuildTasks
 		{
 			var modules = new List<ITaskItem>();
 
-			foreach (var path in Paths)
+			foreach (ITaskItem path in Paths)
 			{
 				try
 				{

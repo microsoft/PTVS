@@ -30,15 +30,9 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies
 			Address = address;
 		}
 
-		public long ObjectSize
-		{
-			get { return Process.GetPointerSize(); }
-		}
+		public long ObjectSize => Process.GetPointerSize();
 
-		public bool IsNull
-		{
-			get { return Read() == 0; }
-		}
+		public bool IsNull => Read() == 0;
 
 		public unsafe ulong Read()
 		{
@@ -94,23 +88,14 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies
 			_polymorphic = polymorphic;
 		}
 
-		public long ObjectSize
-		{
-			get { return Process.GetPointerSize(); }
-		}
+		public long ObjectSize => Process.GetPointerSize();
 
-		public bool IsNull
-		{
-			get { return Raw.IsNull; }
-		}
+		public bool IsNull => Raw.IsNull;
 
 		/// <summary>
 		/// Returns an untyped <see cref="PointerProxy"/> for the same memory location.
 		/// </summary>
-		public PointerProxy Raw
-		{
-			get { return new PointerProxy(Process, Address); }
-		}
+		public PointerProxy Raw => new PointerProxy(Process, Address);
 
 		public TProxy Read()
 		{

@@ -16,7 +16,7 @@
 
 namespace Microsoft.PythonTools.Interpreter
 {
-	static class MSBuildConstants
+	internal static class MSBuildConstants
 	{
 
 		// keys used for storing information about user defined interpreters

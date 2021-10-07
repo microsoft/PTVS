@@ -22,7 +22,7 @@ namespace CookiecutterTests
 		[TestMethod]
 		public void TelemetryTestService_DefaultPrefixConstructorTest()
 		{
-			var telemetryService = new TelemetryTestService();
+			TelemetryTestService telemetryService = new TelemetryTestService();
 			Assert.AreEqual(TelemetryTestService.EventNamePrefixString, telemetryService.EventNamePrefix);
 			Assert.AreEqual(TelemetryTestService.PropertyNamePrefixString, telemetryService.PropertyNamePrefix);
 		}
@@ -33,7 +33,7 @@ namespace CookiecutterTests
 			var eventPrefix = "Event/Prefix/";
 			var propertyPrefix = "Property.Prefix.";
 
-			var telemetryService = new TelemetryTestService(eventPrefix, propertyPrefix);
+			TelemetryTestService telemetryService = new TelemetryTestService(eventPrefix, propertyPrefix);
 			Assert.AreEqual(eventPrefix, telemetryService.EventNamePrefix);
 			Assert.AreEqual(propertyPrefix, telemetryService.PropertyNamePrefix);
 		}
@@ -44,7 +44,7 @@ namespace CookiecutterTests
 			var area = "Options";
 			var eventName = "event";
 
-			var telemetryService = new TelemetryTestService();
+			TelemetryTestService telemetryService = new TelemetryTestService();
 			telemetryService.ReportEvent(area, eventName);
 			string log = telemetryService.SessionLog;
 			Assert.AreEqual(TelemetryTestService.EventNamePrefixString + area.ToString() + "/" + eventName + "\r\n", log);
@@ -56,7 +56,7 @@ namespace CookiecutterTests
 			var area = "Options";
 			var eventName = "event";
 
-			var telemetryService = new TelemetryTestService();
+			TelemetryTestService telemetryService = new TelemetryTestService();
 			telemetryService.ReportEvent(area, eventName, new { parameter = "value" });
 			string log = telemetryService.SessionLog;
 			Assert.AreEqual(TelemetryTestService.EventNamePrefixString + area.ToString() + "/" + eventName +

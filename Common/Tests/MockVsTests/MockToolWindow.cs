@@ -16,7 +16,7 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-	class MockToolWindow : IVsWindowFrame
+	internal class MockToolWindow : IVsWindowFrame
 	{
 		private readonly object _docView;
 

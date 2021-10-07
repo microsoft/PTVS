@@ -27,8 +27,10 @@ namespace PythonToolsTests
 			AssertListener.Initialize();
 		}
 
-		private static Task<VsProjectAnalyzer> CreateAnalyzerAsync() =>
-			CreateAnalyzerAsync(PythonPaths.Versions.LastOrDefault());
+		private static Task<VsProjectAnalyzer> CreateAnalyzerAsync()
+		{
+			return CreateAnalyzerAsync(PythonPaths.Versions.LastOrDefault());
+		}
 
 		private static async Task<VsProjectAnalyzer> CreateAnalyzerAsync(PythonVersion version)
 		{

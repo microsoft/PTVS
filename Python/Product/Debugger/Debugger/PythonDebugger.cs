@@ -16,7 +16,7 @@
 
 namespace Microsoft.PythonTools.Debugger
 {
-	class PythonDebugger
+	internal class PythonDebugger
 	{
 		/// <summary>
 		/// Creates a new PythonProcess object for debugging.  The process does not start until Start is called 

@@ -25,7 +25,7 @@ namespace TestUtilities.Mocks
 			_source = source;
 		}
 
-		public ITextImageVersion Next => (_source.Next != null) ? (ITextImageVersion)(new MockTextImageVersion(_source.Next)) : null;
+		public ITextImageVersion Next => (_source.Next != null) ? new MockTextImageVersion(_source.Next) : null;
 
 		public int Length => _source.Length;
 

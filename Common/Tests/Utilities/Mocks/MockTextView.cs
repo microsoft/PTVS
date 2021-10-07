@@ -36,23 +36,11 @@ namespace TestUtilities.Mocks
 			_caret = new MockTextCaret(this);
 		}
 
-		public MockBufferGraph BufferGraph
-		{
-			get
-			{
-				return _bufferGraph;
-			}
-		}
+		public MockBufferGraph BufferGraph => _bufferGraph;
 
-		IBufferGraph ITextView.BufferGraph
-		{
-			get { return _bufferGraph; }
-		}
+		IBufferGraph ITextView.BufferGraph => _bufferGraph;
 
-		public ITextCaret Caret
-		{
-			get { return _caret; }
-		}
+		public ITextCaret Caret => _caret;
 
 		public void Close()
 		{
@@ -98,22 +86,13 @@ namespace TestUtilities.Mocks
 			_hasFocus = true;
 		}
 
-		public bool HasAggregateFocus
-		{
-			get { return _hasFocus; }
-		}
+		public bool HasAggregateFocus => _hasFocus;
 
-		public bool InLayout
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public bool InLayout => throw new NotImplementedException();
 
 		public bool IsClosed { get; set; }
 
-		public bool IsMouseOverViewOrAdornments
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public bool IsMouseOverViewOrAdornments => throw new NotImplementedException();
 
 		public event EventHandler<TextViewLayoutChangedEventArgs> LayoutChanged
 		{
@@ -121,10 +100,7 @@ namespace TestUtilities.Mocks
 			remove { throw new NotImplementedException(); }
 		}
 
-		public double LineHeight
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public double LineHeight => throw new NotImplementedException();
 
 		public event EventHandler LostAggregateFocus;
 
@@ -138,10 +114,7 @@ namespace TestUtilities.Mocks
 			_hasFocus = false;
 		}
 
-		public double MaxTextRightCoordinate
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public double MaxTextRightCoordinate => throw new NotImplementedException();
 
 		public event EventHandler<MouseHoverEventArgs> MouseHover;
 
@@ -154,21 +127,12 @@ namespace TestUtilities.Mocks
 			}
 		}
 
-		public IEditorOptions Options
-		{
-			get { return new MockTextOptions(); }
-		}
+		public IEditorOptions Options => new MockTextOptions();
 
 		public Microsoft.VisualStudio.Text.ITrackingSpan ProvisionalTextHighlight
 		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-			set
-			{
-				throw new NotImplementedException();
-			}
+			get => throw new NotImplementedException();
+			set => throw new NotImplementedException();
 		}
 
 		public void QueueSpaceReservationStackRefresh()
@@ -178,30 +142,15 @@ namespace TestUtilities.Mocks
 
 		public ITextViewRoleSet Roles { get; } = new MockTextViewRoleSet();
 
-		public ITextSelection Selection
-		{
-			get { return _selection; }
-		}
+		public ITextSelection Selection => _selection;
 
-		public ITextBuffer TextBuffer
-		{
-			get { return _buffer; }
-		}
+		public ITextBuffer TextBuffer => _buffer;
 
-		public Microsoft.VisualStudio.Text.ITextDataModel TextDataModel
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public Microsoft.VisualStudio.Text.ITextDataModel TextDataModel => throw new NotImplementedException();
 
-		public Microsoft.VisualStudio.Text.ITextSnapshot TextSnapshot
-		{
-			get { return _buffer.CurrentSnapshot; }
-		}
+		public Microsoft.VisualStudio.Text.ITextSnapshot TextSnapshot => _buffer.CurrentSnapshot;
 
-		public ITextViewLineCollection TextViewLines
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public ITextViewLineCollection TextViewLines => throw new NotImplementedException();
 
 		public ITextViewModel TextViewModel
 		{
@@ -215,26 +164,14 @@ namespace TestUtilities.Mocks
 				}
 				return _textViewModel;
 			}
-			set
-			{
-				_textViewModel = value;
-			}
+			set => _textViewModel = value;
 		}
 
-		public IViewScroller ViewScroller
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public IViewScroller ViewScroller => throw new NotImplementedException();
 
-		public double ViewportBottom
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public double ViewportBottom => throw new NotImplementedException();
 
-		public double ViewportHeight
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public double ViewportHeight => throw new NotImplementedException();
 
 		public event EventHandler ViewportHeightChanged
 		{
@@ -244,14 +181,8 @@ namespace TestUtilities.Mocks
 
 		public double ViewportLeft
 		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-			set
-			{
-				throw new NotImplementedException();
-			}
+			get => throw new NotImplementedException();
+			set => throw new NotImplementedException();
 		}
 
 		public event EventHandler ViewportLeftChanged
@@ -260,20 +191,11 @@ namespace TestUtilities.Mocks
 			remove { throw new NotImplementedException(); }
 		}
 
-		public double ViewportRight
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public double ViewportRight => throw new NotImplementedException();
 
-		public double ViewportTop
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public double ViewportTop => throw new NotImplementedException();
 
-		public double ViewportWidth
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public double ViewportWidth => throw new NotImplementedException();
 
 		public event EventHandler ViewportWidthChanged
 		{
@@ -281,28 +203,16 @@ namespace TestUtilities.Mocks
 			remove { throw new NotImplementedException(); }
 		}
 
-		public Microsoft.VisualStudio.Text.ITextSnapshot VisualSnapshot
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public Microsoft.VisualStudio.Text.ITextSnapshot VisualSnapshot => throw new NotImplementedException();
 
-		public Microsoft.VisualStudio.Utilities.PropertyCollection Properties
-		{
-			get { return _props; }
-		}
+		public Microsoft.VisualStudio.Utilities.PropertyCollection Properties => _props;
 
 		#region IWpfTextView Members
 
 		public System.Windows.Media.Brush Background
 		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-			set
-			{
-				throw new NotImplementedException();
-			}
+			get => throw new NotImplementedException();
+			set => throw new NotImplementedException();
 		}
 
 		public event EventHandler<BackgroundBrushChangedEventArgs> BackgroundBrushChanged
@@ -311,10 +221,7 @@ namespace TestUtilities.Mocks
 			remove { }
 		}
 
-		public Microsoft.VisualStudio.Text.Formatting.IFormattedLineSource FormattedLineSource
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public Microsoft.VisualStudio.Text.Formatting.IFormattedLineSource FormattedLineSource => throw new NotImplementedException();
 
 		public IAdornmentLayer GetAdornmentLayer(string name)
 		{
@@ -331,31 +238,16 @@ namespace TestUtilities.Mocks
 			throw new NotImplementedException();
 		}
 
-		public Microsoft.VisualStudio.Text.Formatting.ILineTransformSource LineTransformSource
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public Microsoft.VisualStudio.Text.Formatting.ILineTransformSource LineTransformSource => throw new NotImplementedException();
 
-		IWpfTextViewLineCollection IWpfTextView.TextViewLines
-		{
-			get { throw new NotImplementedException(); }
-		}
+		IWpfTextViewLineCollection IWpfTextView.TextViewLines => throw new NotImplementedException();
 
-		public System.Windows.FrameworkElement VisualElement
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public System.Windows.FrameworkElement VisualElement => throw new NotImplementedException();
 
 		public double ZoomLevel
 		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-			set
-			{
-				throw new NotImplementedException();
-			}
+			get => throw new NotImplementedException();
+			set => throw new NotImplementedException();
 		}
 
 		public event EventHandler<ZoomLevelChangedEventArgs> ZoomLevelChanged

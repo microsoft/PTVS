@@ -17,7 +17,7 @@
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
 	[Export(typeof(ISignatureHelpBroker))]
-	class MockSignatureHelpBroker : ISignatureHelpBroker
+	internal class MockSignatureHelpBroker : ISignatureHelpBroker
 	{
 		private readonly IEnumerable<Lazy<ISignatureHelpSourceProvider, IContentTypeMetadata>> _sigProviders;
 		private readonly IIntellisenseSessionStackMapService _stackMap;
@@ -78,7 +78,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 		public ISignatureHelpSession TriggerSignatureHelp(VisualStudio.Text.Editor.ITextView textView)
 		{
 			ObservableCollection<ISignature> sets = new ObservableCollection<ISignature>();
-			var session = new MockSignatureHelpSession(
+			MockSignatureHelpSession session = new MockSignatureHelpSession(
 				textView,
 				sets,
 				textView.TextBuffer.CurrentSnapshot.CreateTrackingPoint(

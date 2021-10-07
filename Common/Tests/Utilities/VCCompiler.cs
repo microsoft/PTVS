@@ -24,18 +24,18 @@ namespace TestUtilities
 		public readonly string LibPaths;
 		public readonly string IncludePaths;
 
-		public static VCCompiler VC9_X86 { get { return FindVC("9.0", ProcessorArchitecture.X86); } }
-		public static VCCompiler VC10_X86 { get { return FindVC("10.0", ProcessorArchitecture.X86); } }
-		public static VCCompiler VC11_X86 { get { return FindVC("11.0", ProcessorArchitecture.X86); } }
-		public static VCCompiler VC12_X86 { get { return FindVC("12.0", ProcessorArchitecture.X86); } }
-		public static VCCompiler VC14_X86 { get { return FindVC("14.0", ProcessorArchitecture.X86); } }
-		public static VCCompiler VC15_X86 { get { return FindVC("15.0", ProcessorArchitecture.X86); } }
-		public static VCCompiler VC9_X64 { get { return FindVC("9.0", ProcessorArchitecture.Amd64); } }
-		public static VCCompiler VC10_X64 { get { return FindVC("10.0", ProcessorArchitecture.Amd64); } }
-		public static VCCompiler VC11_X64 { get { return FindVC("11.0", ProcessorArchitecture.Amd64); } }
-		public static VCCompiler VC12_X64 { get { return FindVC("12.0", ProcessorArchitecture.Amd64); } }
-		public static VCCompiler VC14_X64 { get { return FindVC("14.0", ProcessorArchitecture.Amd64); } }
-		public static VCCompiler VC15_X64 { get { return FindVC("15.0", ProcessorArchitecture.Amd64); } }
+		public static VCCompiler VC9_X86 => FindVC("9.0", ProcessorArchitecture.X86);
+		public static VCCompiler VC10_X86 => FindVC("10.0", ProcessorArchitecture.X86);
+		public static VCCompiler VC11_X86 => FindVC("11.0", ProcessorArchitecture.X86);
+		public static VCCompiler VC12_X86 => FindVC("12.0", ProcessorArchitecture.X86);
+		public static VCCompiler VC14_X86 => FindVC("14.0", ProcessorArchitecture.X86);
+		public static VCCompiler VC15_X86 => FindVC("15.0", ProcessorArchitecture.X86);
+		public static VCCompiler VC9_X64 => FindVC("9.0", ProcessorArchitecture.Amd64);
+		public static VCCompiler VC10_X64 => FindVC("10.0", ProcessorArchitecture.Amd64);
+		public static VCCompiler VC11_X64 => FindVC("11.0", ProcessorArchitecture.Amd64);
+		public static VCCompiler VC12_X64 => FindVC("12.0", ProcessorArchitecture.Amd64);
+		public static VCCompiler VC14_X64 => FindVC("14.0", ProcessorArchitecture.Amd64);
+		public static VCCompiler VC15_X64 => FindVC("15.0", ProcessorArchitecture.Amd64);
 
 		private VCCompiler(string bin, string bins, string include, string lib)
 		{
@@ -161,7 +161,7 @@ namespace TestUtilities
 			ref string libPaths
 		)
 		{
-			foreach (var version in new[] { "v8.0A", "v7.0A", "v7.0" })
+			foreach (global::System.String version in new[] { "v8.0A", "v7.0A", "v7.0" })
 			{
 				var regValue = Registry.GetValue(
 					"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Microsoft SDKs\\Windows\\" + version,
@@ -175,7 +175,7 @@ namespace TestUtilities
 					Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft SDKs", "Windows", version)
 				};
 
-				foreach (var rootPath in locations)
+				foreach (global::System.String rootPath in locations)
 				{
 					if (!Directory.Exists(rootPath))
 					{
@@ -205,7 +205,7 @@ namespace TestUtilities
 			ref string libPaths
 		)
 		{
-			foreach (var version in new[] { "KitsRoot81", "KitsRoot" })
+			foreach (global::System.String version in new[] { "KitsRoot81", "KitsRoot" })
 			{
 				var regValue = Registry.GetValue(
 					"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows Kits\\Installed Roots",
@@ -271,7 +271,7 @@ namespace TestUtilities
 				return false;
 			}
 
-			foreach (var version in new[] { "KitsRoot10" })
+			foreach (global::System.String version in new[] { "KitsRoot10" })
 			{
 				var regValue = Registry.GetValue(
 					"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows Kits\\Installed Roots",

@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
 		private void EnvironmentsView_CurrentChanged(object sender, EventArgs e)
 		{
-			var item = _environmentsView.View.CurrentItem as EnvironmentView;
+			EnvironmentView item = _environmentsView.View.CurrentItem as EnvironmentView;
 			if (item == null)
 			{
 				lock (_extensions)
@@ -78,10 +78,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
 		public IServiceProvider Site
 		{
-			get
-			{
-				return _site;
-			}
+			get => _site;
 			set
 			{
 				_site = value;
@@ -114,7 +111,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 			}
 		}
 
-		void ToolWindow_SizeChanged(object sender, SizeChangedEventArgs e)
+		private void ToolWindow_SizeChanged(object sender, SizeChangedEventArgs e)
 		{
 			if (!e.WidthChanged)
 			{
@@ -124,7 +121,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 			UpdateLayout(e.NewSize.Width, e.NewSize.Height);
 		}
 
-		void UpdateLayout(double width, double height)
+		private void UpdateLayout(double width, double height)
 		{
 			if (double.IsNaN(width) || double.IsNaN(height))
 			{
@@ -145,7 +142,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 			}
 		}
 
-		void SwitchToHorizontalLayout()
+		private void SwitchToHorizontalLayout()
 		{
 			if (HorizontalLayout.Visibility == Visibility.Visible)
 			{
@@ -162,7 +159,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 			UpdateLayout();
 		}
 
-		void SwitchToVerticalLayout()
+		private void SwitchToVerticalLayout()
 		{
 			if (VerticalLayout.Visibility == Visibility.Visible)
 			{
@@ -184,7 +181,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
 		private void MakeGlobalDefault_CanExecute(object sender, CanExecuteRoutedEventArgs e)
 		{
-			var view = e.Parameter as EnvironmentView;
+			EnvironmentView view = e.Parameter as EnvironmentView;
 			e.CanExecute = view != null && !view.IsDefault && view.Factory.CanBeDefault();
 		}
 
@@ -208,7 +205,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 			{
 				if (select == null)
 				{
-					var selectView = _environmentsView.View.CurrentItem as EnvironmentView;
+					EnvironmentView selectView = _environmentsView.View.CurrentItem as EnvironmentView;
 					select = selectView?.Configuration?.Id;
 				}
 
@@ -409,7 +406,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 		{
 			e.Handled = true;
 
-			var env = (EnvironmentView)e.Parameter;
+			EnvironmentView env = (EnvironmentView)e.Parameter;
 			if (Environments.CurrentItem != env)
 			{
 				Environments.MoveCurrentTo(env);
@@ -455,8 +452,15 @@ namespace Microsoft.PythonTools.EnvironmentsList
 		{
 			public static readonly InterpreterConfigurationComparer Instance = new InterpreterConfigurationComparer();
 
-			public bool Equals(InterpreterConfiguration x, InterpreterConfiguration y) => x == y;
-			public int GetHashCode(InterpreterConfiguration obj) => obj.GetHashCode();
+			public bool Equals(InterpreterConfiguration x, InterpreterConfiguration y)
+			{
+				return x == y;
+			}
+
+			public int GetHashCode(InterpreterConfiguration obj)
+			{
+				return obj.GetHashCode();
+			}
 
 			public int Compare(InterpreterConfiguration x, InterpreterConfiguration y)
 			{

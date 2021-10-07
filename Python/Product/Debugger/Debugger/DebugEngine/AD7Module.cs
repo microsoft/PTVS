@@ -17,13 +17,13 @@
 namespace Microsoft.PythonTools.Debugger.DebugEngine
 {
 	// this class represents a module loaded in the debuggee process to the debugger. 
-	class AD7Module : IDebugModule2, IDebugModule3
+	internal class AD7Module : IDebugModule2, IDebugModule3
 	{
 		public readonly PythonModule DebuggedModule;
 
 		public AD7Module(PythonModule debuggedModule)
 		{
-			this.DebuggedModule = debuggedModule;
+			DebuggedModule = debuggedModule;
 		}
 
 		#region IDebugModule2 Members
@@ -48,7 +48,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 			}
 			if ((dwFields & enum_MODULE_INFO_FIELDS.MIF_LOADORDER) != 0)
 			{
-				info.m_dwLoadOrder = (uint)this.DebuggedModule.ModuleId;
+				info.m_dwLoadOrder = (uint)DebuggedModule.ModuleId;
 				info.dwValidFields |= enum_MODULE_INFO_FIELDS.MIF_LOADORDER;
 			}
 			if ((dwFields & enum_MODULE_INFO_FIELDS.MIF_URLSYMBOLLOCATION) != 0)
@@ -106,10 +106,12 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 			// This engine only supports loading symbols at the location specified in the binary's symbol path location in the PE file and
 			// does so only for the primary exe of the debuggee.
 			// Therefore, it only displays if the symbols were loaded or not. If symbols were loaded, that path is added.
-			pinfo[0] = new MODULE_SYMBOL_SEARCH_INFO();
-			pinfo[0].dwValidFields = 1; // SSIF_VERBOSE_SEARCH_INFO;
+			pinfo[0] = new MODULE_SYMBOL_SEARCH_INFO
+			{
+				dwValidFields = 1, // SSIF_VERBOSE_SEARCH_INFO;
 
-			pinfo[0].bstrVerboseSearchInfo = Strings.DebugModuleNoSymbolsRequired;
+				bstrVerboseSearchInfo = Strings.DebugModuleNoSymbolsRequired
+			};
 			/*
             if (this.DebuggedModule.SymbolsLoaded)
             {

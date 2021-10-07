@@ -28,21 +28,9 @@ namespace PythonToolsTests
 			AssertListener.Initialize();
 		}
 
-		internal virtual string DebuggerTestPath
-		{
-			get
-			{
-				return TestData.GetPath(@"TestData\DebuggerProject\");
-			}
-		}
+		internal virtual string DebuggerTestPath => TestData.GetPath(@"TestData\DebuggerProject\");
 
-		internal virtual PythonVersion Version
-		{
-			get
-			{
-				return PythonPaths.Python27 ?? PythonPaths.Python27_x64;
-			}
-		}
+		internal virtual PythonVersion Version => PythonPaths.Python27 ?? PythonPaths.Python27_x64;
 
 		[TestInitialize]
 		public void TestInit()
@@ -434,7 +422,7 @@ NameError: name 'does_not_exist' is not defined
 					}
 				}
 
-				var handles = new[] { brkHit, procExited };
+				AutoResetEvent[] handles = new[] { brkHit, procExited };
 				if (WaitHandle.WaitAny(handles, 25000) != 0)
 				{
 					Assert.Fail("Failed to wait on event");
@@ -478,13 +466,7 @@ NameError: name 'does_not_exist' is not defined
 			AssertListener.Initialize();
 		}
 
-		internal override PythonVersion Version
-		{
-			get
-			{
-				return PythonPaths.Python35 ?? PythonPaths.Python35_x64;
-			}
-		}
+		internal override PythonVersion Version => PythonPaths.Python35 ?? PythonPaths.Python35_x64;
 	}
 
 	[TestClass]
@@ -496,13 +478,7 @@ NameError: name 'does_not_exist' is not defined
 			AssertListener.Initialize();
 		}
 
-		internal override PythonVersion Version
-		{
-			get
-			{
-				return PythonPaths.Python36 ?? PythonPaths.Python36_x64;
-			}
-		}
+		internal override PythonVersion Version => PythonPaths.Python36 ?? PythonPaths.Python36_x64;
 	}
 
 	[TestClass]
@@ -514,13 +490,7 @@ NameError: name 'does_not_exist' is not defined
 			AssertListener.Initialize();
 		}
 
-		internal override PythonVersion Version
-		{
-			get
-			{
-				return PythonPaths.Python37 ?? PythonPaths.Python37_x64;
-			}
-		}
+		internal override PythonVersion Version => PythonPaths.Python37 ?? PythonPaths.Python37_x64;
 	}
 
 	[TestClass]
@@ -532,13 +502,7 @@ NameError: name 'does_not_exist' is not defined
 			AssertListener.Initialize();
 		}
 
-		internal override PythonVersion Version
-		{
-			get
-			{
-				return PythonPaths.Python27 ?? PythonPaths.Python27_x64;
-			}
-		}
+		internal override PythonVersion Version => PythonPaths.Python27 ?? PythonPaths.Python27_x64;
 	}
 
 	[TestClass]
@@ -550,21 +514,24 @@ NameError: name 'does_not_exist' is not defined
 			AssertListener.Initialize();
 		}
 
-		internal override PythonVersion Version
+		internal override PythonVersion Version => PythonPaths.IronPython27 ?? PythonPaths.IronPython27_x64;
+
+		[TestMethod, Priority(UnitTestPriority.P2_FAILING)]
+		public override async Task ChangeFrame()
 		{
-			get
-			{
-				return PythonPaths.IronPython27 ?? PythonPaths.IronPython27_x64;
-			}
+			await base.ChangeFrame();
 		}
 
 		[TestMethod, Priority(UnitTestPriority.P2_FAILING)]
-		public override async Task ChangeFrame() => await base.ChangeFrame();
+		public override async Task ChangeModule()
+		{
+			await base.ChangeModule();
+		}
 
 		[TestMethod, Priority(UnitTestPriority.P2_FAILING)]
-		public override async Task ChangeModule() => await base.ChangeModule();
-
-		[TestMethod, Priority(UnitTestPriority.P2_FAILING)]
-		public override async Task ChangeProcess() => await base.ChangeProcess();
+		public override async Task ChangeProcess()
+		{
+			await base.ChangeProcess();
+		}
 	}
 }

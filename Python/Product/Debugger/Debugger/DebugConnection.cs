@@ -21,7 +21,7 @@ namespace Microsoft.PythonTools.Debugger
 	/// <summary>
 	/// Handles connection from one debugger.
 	/// </summary>
-	class DebugConnection : IDisposable
+	internal class DebugConnection : IDisposable
 	{
 		private Stream _stream;
 		private TextWriter _debugLog;
@@ -85,12 +85,16 @@ namespace Microsoft.PythonTools.Debugger
 		/// </summary>
 		public void StartListening()
 		{
-			_eventThread = new Thread(EventHandlingThread);
-			_eventThread.Name = "Python Debugger Event Handling " + _processGuid;
+			_eventThread = new Thread(EventHandlingThread)
+			{
+				Name = "Python Debugger Event Handling " + _processGuid
+			};
 			_eventThread.Start();
 
-			_debuggerThread = new Thread(MessageProcessingThread);
-			_debuggerThread.Name = "Python Debugger Message Processing " + _processGuid;
+			_debuggerThread = new Thread(MessageProcessingThread)
+			{
+				Name = "Python Debugger Message Processing " + _processGuid
+			};
 			_debuggerThread.Start();
 
 			_listeningReadyEvent.Wait();

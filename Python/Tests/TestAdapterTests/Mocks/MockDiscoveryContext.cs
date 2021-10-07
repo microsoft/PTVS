@@ -16,7 +16,7 @@
 
 namespace TestAdapterTests.Mocks
 {
-	class MockDiscoveryContext : IDiscoveryContext
+	internal class MockDiscoveryContext : IDiscoveryContext
 	{
 		private readonly IRunSettings _runSettings;
 

@@ -16,7 +16,7 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-	class MockVsDebugger : IVsDebugger
+	internal class MockVsDebugger : IVsDebugger
 	{
 		public int AdviseDebugEventCallback(object punkDebuggerEvents)
 		{

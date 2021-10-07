@@ -64,10 +64,7 @@ namespace TestUtilities.UI
 
 		public string FileName
 		{
-			get
-			{
-				return GetFilenameEditBox().GetValuePattern().Current.Value;
-			}
+			get => GetFilenameEditBox().GetValuePattern().Current.Value;
 			set
 			{
 				for (int retries = 10; retries > 0 && FileName != value; --retries)

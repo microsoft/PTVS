@@ -39,10 +39,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies
 			Address = address;
 		}
 
-		long IDataProxy.ObjectSize
-		{
-			get { throw new NotSupportedException(); }
-		}
+		long IDataProxy.ObjectSize => throw new NotSupportedException();
 
 		object IValueStore.Read()
 		{
@@ -53,7 +50,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies
 		{
 			get
 			{
-				var result = DataProxy.Create<TProxy>(Process, Address);
+				TProxy result = DataProxy.Create<TProxy>(Process, Address);
 				if (index != 0)
 				{
 					result = result.GetAdjacentProxy(index);
@@ -68,7 +65,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies
 		/// </summary>
 		public IEnumerator<TProxy> GetEnumerator()
 		{
-			var element = this[0];
+			TProxy element = this[0];
 			while (true)
 			{
 				yield return element;

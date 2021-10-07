@@ -110,7 +110,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 		public static bool HasSymbols(this DkmModuleInstance moduleInstance)
 		{
-			using (var sym = moduleInstance.TryGetSymbols())
+			using (ComPtr<IDiaSymbol> sym = moduleInstance.TryGetSymbols())
 			{
 				return sym.Object != null;
 			}
@@ -118,7 +118,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 		public static ComPtr<IDiaSymbol> GetSymbols(this DkmModuleInstance moduleInstance)
 		{
-			var result = TryGetSymbols(moduleInstance);
+			ComPtr<IDiaSymbol> result = TryGetSymbols(moduleInstance);
 			if (result.Object == null)
 			{
 				Debug.Fail("Failed to load symbols for module " + moduleInstance.Name);
@@ -132,11 +132,11 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			uint rva;
 			using (var moduleSym = moduleInstance.GetSymbols())
 			{
-				using (var funcSym = moduleSym.Object.GetSymbol(SymTagEnum.SymTagFunction, name))
+				using (ComPtr<IDiaSymbol> funcSym = moduleSym.Object.GetSymbol(SymTagEnum.SymTagFunction, name))
 				{
 					if (debugStart)
 					{
-						using (var startSym = funcSym.Object.GetSymbol(SymTagEnum.SymTagFuncDebugStart, null))
+						using (ComPtr<IDiaSymbol> startSym = funcSym.Object.GetSymbol(SymTagEnum.SymTagFuncDebugStart, null))
 						{
 							rva = startSym.Object.relativeVirtualAddress;
 						}
@@ -157,15 +157,15 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			{
 				if (objFileName != null)
 				{
-					using (var compiland = moduleSym.Object.GetSymbol(SymTagEnum.SymTagCompiland, null, cmp => cmp.name.EndsWithOrdinal(objFileName, ignoreCase: true)))
-					using (var varSym = compiland.Object.GetSymbol(SymTagEnum.SymTagData, name))
+					using (ComPtr<IDiaSymbol> compiland = moduleSym.Object.GetSymbol(SymTagEnum.SymTagCompiland, null, cmp => cmp.name.EndsWithOrdinal(objFileName, ignoreCase: true)))
+					using (ComPtr<IDiaSymbol> varSym = compiland.Object.GetSymbol(SymTagEnum.SymTagData, name))
 					{
 						rva = varSym.Object.relativeVirtualAddress;
 					}
 				}
 				else
 				{
-					using (var varSym = moduleSym.Object.GetSymbol(SymTagEnum.SymTagData, name))
+					using (ComPtr<IDiaSymbol> varSym = moduleSym.Object.GetSymbol(SymTagEnum.SymTagData, name))
 					{
 						rva = varSym.Object.relativeVirtualAddress;
 					}

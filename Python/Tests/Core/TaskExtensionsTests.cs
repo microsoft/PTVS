@@ -136,23 +136,49 @@ namespace PythonToolsTests
 				_queue = queue;
 			}
 
-			public override void Send(SendOrPostCallback d, object state) => throw new NotSupportedException();
-			public override void Post(SendOrPostCallback d, object state) => _queue.Add(() => d(state));
-			public override int Wait(IntPtr[] waitHandles, bool waitAll, int millisecondsTimeout) => WaitHelper(waitHandles, waitAll, millisecondsTimeout);
-			public override SynchronizationContext CreateCopy() => new BlockingCollectionSynchronizationContext(_queue);
+			public override void Send(SendOrPostCallback d, object state)
+			{
+				throw new NotSupportedException();
+			}
+
+			public override void Post(SendOrPostCallback d, object state)
+			{
+				_queue.Add(() => d(state));
+			}
+
+			public override int Wait(IntPtr[] waitHandles, bool waitAll, int millisecondsTimeout)
+			{
+				return WaitHelper(waitHandles, waitAll, millisecondsTimeout);
+			}
+
+			public override SynchronizationContext CreateCopy()
+			{
+				return new BlockingCollectionSynchronizationContext(_queue);
+			}
 		}
 
 		private struct BackgroundThreadAwaitable
 		{
-			public BackgroundThreadAwaiter GetAwaiter() => new BackgroundThreadAwaiter();
+			public BackgroundThreadAwaiter GetAwaiter()
+			{
+				return new BackgroundThreadAwaiter();
+			}
 		}
 
 		private struct BackgroundThreadAwaiter : ICriticalNotifyCompletion
 		{
 			private static readonly WaitCallback WaitCallback = state => ((Action)state)();
 			public bool IsCompleted => TaskScheduler.Current == TaskScheduler.Default && Thread.CurrentThread.IsThreadPoolThread;
-			public void OnCompleted(Action continuation) => ThreadPool.QueueUserWorkItem(WaitCallback, continuation);
-			public void UnsafeOnCompleted(Action continuation) => ThreadPool.UnsafeQueueUserWorkItem(WaitCallback, continuation);
+			public void OnCompleted(Action continuation)
+			{
+				ThreadPool.QueueUserWorkItem(WaitCallback, continuation);
+			}
+
+			public void UnsafeOnCompleted(Action continuation)
+			{
+				ThreadPool.UnsafeQueueUserWorkItem(WaitCallback, continuation);
+			}
+
 			public void GetResult() { }
 		}
 	}

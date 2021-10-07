@@ -29,14 +29,11 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies
 			Address = address;
 		}
 
-		public long ObjectSize
-		{
-			get { return Marshal.SizeOf(typeof(TStruct)); }
-		}
+		public long ObjectSize => Marshal.SizeOf(typeof(TStruct));
 
 		public unsafe TStruct Read()
 		{
-			var buf = new byte[ObjectSize];
+			global::System.Byte[] buf = new byte[ObjectSize];
 			Process.ReadMemory(Address, DkmReadMemoryFlags.None, buf);
 			fixed (byte* p = buf)
 			{
@@ -51,7 +48,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies
 
 		public unsafe void Write(TStruct value)
 		{
-			var buf = new byte[ObjectSize];
+			global::System.Byte[] buf = new byte[ObjectSize];
 			fixed (byte* p = buf)
 			{
 				Marshal.StructureToPtr(value, (IntPtr)p, false);

@@ -75,7 +75,7 @@ namespace TestRunnerInterop
 			{
 				if (_devenvExe == null)
 				{
-					foreach (var envVar in new string[] {
+					foreach (global::System.String envVar in new string[] {
 						$"VisualStudio_IDE_{AssemblyVersionInfo.VSVersion}",
 						"VisualStudio_IDE",
 						"VSAPPIDDIR"
@@ -103,10 +103,7 @@ namespace TestRunnerInterop
 				}
 				return _devenvExe;
 			}
-			set
-			{
-				_devenvExe = value;
-			}
+			set => _devenvExe = value;
 		}
 
 		public string RootSuffix { get; set; }

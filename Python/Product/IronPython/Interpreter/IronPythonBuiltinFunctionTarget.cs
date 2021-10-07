@@ -16,7 +16,7 @@
 
 namespace Microsoft.IronPythonTools.Interpreter
 {
-	class IronPythonBuiltinFunctionTarget : IPythonFunctionOverload
+	internal class IronPythonBuiltinFunctionTarget : IPythonFunctionOverload
 	{
 		private readonly IronPythonInterpreter _interpreter;
 		private RemoteInterpreterProxy _remote;
@@ -44,27 +44,21 @@ namespace Microsoft.IronPythonTools.Interpreter
 		#region IBuiltinFunctionTarget Members
 
 		// FIXME
-		public string Documentation
-		{
-			get { return ""; }
-		}
+		public string Documentation => "";
 
 		// FIXME
-		public string ReturnDocumentation
-		{
-			get { return ""; }
-		}
+		public string ReturnDocumentation => "";
 
 		public IParameterInfo[] GetParameters()
 		{
 			if (_params == null)
 			{
-				var ri = _remote;
+				RemoteInterpreterProxy ri = _remote;
 				bool isInstanceExtensionMethod = ri != null ? ri.IsInstanceExtensionMethod(_overload, _declaringType.Value) : false;
 
-				var parameters = ri != null ? ri.GetParametersNoCodeContext(_overload) : new ObjectIdentityHandle[0];
+				ObjectIdentityHandle[] parameters = ri != null ? ri.GetParametersNoCodeContext(_overload) : new ObjectIdentityHandle[0];
 				var res = new List<IParameterInfo>(parameters.Length);
-				foreach (var param in parameters)
+				foreach (ObjectIdentityHandle param in parameters)
 				{
 					if (res.Count == 0 && isInstanceExtensionMethod)
 					{
@@ -90,7 +84,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 				if (_returnType == null)
 				{
 					_returnType = new List<IPythonType>();
-					var ri = _remote;
+					RemoteInterpreterProxy ri = _remote;
 					if (ri != null)
 					{
 						_returnType.Add(_interpreter.GetTypeFromType(ri.GetBuiltinFunctionOverloadReturnType(_overload)));

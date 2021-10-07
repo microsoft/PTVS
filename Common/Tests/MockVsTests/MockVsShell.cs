@@ -16,7 +16,7 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-	class MockVsShell : IVsShell
+	internal class MockVsShell : IVsShell
 	{
 		private readonly Dictionary<int, object> _properties = new Dictionary<int, object>();
 

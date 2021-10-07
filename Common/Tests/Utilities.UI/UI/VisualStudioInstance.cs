@@ -47,21 +47,9 @@ namespace TestUtilities.UI
 			SelectSolutionNode();
 		}
 
-		public VisualStudioApp App
-		{
-			get
-			{
-				return _app;
-			}
-		}
+		public VisualStudioApp App => _app;
 
-		public SolutionExplorerTree SolutionExplorer
-		{
-			get
-			{
-				return _solutionExplorer;
-			}
-		}
+		public SolutionExplorerTree SolutionExplorer => _solutionExplorer;
 
 		IEditor IVisualStudioInstance.OpenItem(string project, params string[] path)
 		{
@@ -79,7 +67,7 @@ namespace TestUtilities.UI
 				{
 					var items = proj.ProjectItems;
 					EnvDTE.ProjectItem item = null;
-					foreach (var itemName in path)
+					foreach (global::System.String itemName in path)
 					{
 						item = items.Item(itemName);
 						items = item.ProjectItems;
@@ -146,13 +134,7 @@ namespace TestUtilities.UI
 			App.ExecuteCommand(command);
 		}
 
-		public string SolutionFilename
-		{
-			get
-			{
-				return _solution.Filename;
-			}
-		}
+		public string SolutionFilename => _solution.Filename;
 
 		public IntPtr WaitForDialog()
 		{
@@ -164,13 +146,7 @@ namespace TestUtilities.UI
 			App.WaitForDialogDismissed();
 		}
 
-		public string SolutionDirectory
-		{
-			get
-			{
-				return _solution.Directory;
-			}
-		}
+		public string SolutionDirectory => _solution.Directory;
 
 		private string SolutionNodeText
 		{
@@ -382,10 +358,7 @@ namespace TestUtilities.UI
 			return App.WaitForErrorListItems(expectedItems);
 		}
 
-		public DTE Dte
-		{
-			get { return App.Dte; }
-		}
+		public DTE Dte => App.Dte;
 
 		public void OnDispose(Action action)
 		{

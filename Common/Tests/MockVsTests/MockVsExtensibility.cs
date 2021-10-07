@@ -16,7 +16,7 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-	class MockVsExtensibility : EnvDTE.IVsExtensibility, IVsExtensibility3
+	internal class MockVsExtensibility : EnvDTE.IVsExtensibility, IVsExtensibility3
 	{
 		[ThreadStatic]
 		private static int _inAutomation;

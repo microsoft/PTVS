@@ -47,14 +47,8 @@ namespace TestUtilities.UI
 
 		public string FileName
 		{
-			get
-			{
-				return GetFilenameEditBox().GetValuePattern().Current.Value;
-			}
-			set
-			{
-				GetFilenameEditBox().GetValuePattern().SetValue(value);
-			}
+			get => GetFilenameEditBox().GetValuePattern().Current.Value;
+			set => GetFilenameEditBox().GetValuePattern().SetValue(value);
 		}
 
 		private AutomationElement GetFilenameEditBox()

@@ -19,7 +19,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 	/// <summary>
 	/// Stores information about registered language services.
 	/// </summary>
-	class LanguageServiceInfo
+	internal class LanguageServiceInfo
 	{
 		public readonly ProvideLanguageServiceAttribute Attribute;
 

@@ -96,7 +96,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			}
 
 			PyCodeObject code = pythonFrame.f_code.Read();
-			var loc = new SourceLocation(
+			SourceLocation loc = new SourceLocation(
 				code.co_filename.Read().ToStringOrNull(),
 				pythonFrame.f_lineno.Read(),
 				code.co_name.Read().ToStringOrNull(),
@@ -139,7 +139,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 				throw new InvalidOperationException();
 			}
 
-			var loc = new SourceLocation(insAddr.AdditionalData, frame.Process);
+			SourceLocation loc = new SourceLocation(insAddr.AdditionalData, frame.Process);
 			completionRoutine(new DkmGetFrameNameAsyncResult(loc.FunctionName));
 		}
 

@@ -186,8 +186,10 @@ namespace TestUtilities.UI
 				intflags |= NativeMethods.MouseeventfVirtualdesk;
 			}
 
-			NativeMethods.INPUT mi = new NativeMethods.INPUT();
-			mi.type = NativeMethods.InputMouse;
+			NativeMethods.INPUT mi = new NativeMethods.INPUT
+			{
+				type = NativeMethods.InputMouse
+			};
 			mi.union.mouseInput.dx = x;
 			mi.union.mouseInput.dy = y;
 			mi.union.mouseInput.mouseData = data;

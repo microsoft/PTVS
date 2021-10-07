@@ -107,8 +107,8 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 		public void OnPythonRuntimeInstanceLoaded()
 		{
-			var pyrtInfo = _process.GetPythonRuntimeInfo();
-			var handlers = new PythonDllBreakpointHandlers(this);
+			PythonRuntimeInfo pyrtInfo = _process.GetPythonRuntimeInfo();
+			PythonDllBreakpointHandlers handlers = new PythonDllBreakpointHandlers(this);
 			_exceptionBreakpoints.AddRange(LocalComponent.CreateRuntimeDllFunctionExitBreakpoints(
 				pyrtInfo.DLLs.Python, "PyErr_SetObject", handlers.PyErr_SetObject, enable: _monitorExceptions));
 			if (pyrtInfo.LanguageVersion <= PythonLanguageVersion.V27)
@@ -120,10 +120,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 		public bool MonitorExceptions
 		{
-			get
-			{
-				return _monitorExceptions;
-			}
+			get => _monitorExceptions;
 			set
 			{
 				if (_monitorExceptions != value)
@@ -161,20 +158,20 @@ namespace Microsoft.PythonTools.Debugger.Concord
 				return;
 			}
 
-			var exc_type = tstate.curexc_type.TryRead();
-			var exc_value = tstate.curexc_value.TryRead();
+			PyObject exc_type = tstate.curexc_type.TryRead();
+			PyObject exc_value = tstate.curexc_value.TryRead();
 			if (exc_type == null || exc_type.IsNone)
 			{
 				return;
 			}
 
-			var reprOptions = new ReprOptions(process);
+			ReprOptions reprOptions = new ReprOptions(process);
 
 			string typeName = Strings.DebugUnknownExceptionType;
 			string additionalInfo = "";
 			try
 			{
-				var typeObject = exc_type as PyTypeObject;
+				PyTypeObject typeObject = exc_type as PyTypeObject;
 				if (typeObject != null)
 				{
 					var mod = typeObject.__module__;
@@ -191,10 +188,10 @@ namespace Microsoft.PythonTools.Debugger.Concord
 					}
 				}
 
-				var exc = exc_value as PyBaseExceptionObject;
+				PyBaseExceptionObject exc = exc_value as PyBaseExceptionObject;
 				if (exc != null)
 				{
-					var args = exc.args.TryRead();
+					PyObject args = exc.args.TryRead();
 					if (args != null)
 					{
 						additionalInfo = args.Repr(reprOptions);
@@ -202,7 +199,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 				}
 				else
 				{
-					var str = exc_value as IPyBaseStringObject;
+					IPyBaseStringObject str = exc_value as IPyBaseStringObject;
 					if (str != null)
 					{
 						additionalInfo = str.ToString();

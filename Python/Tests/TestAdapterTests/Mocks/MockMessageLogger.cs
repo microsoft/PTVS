@@ -16,7 +16,7 @@
 
 namespace TestAdapterTests.Mocks
 {
-	class MockMessageLogger : IMessageLogger
+	internal class MockMessageLogger : IMessageLogger
 	{
 		public readonly List<Tuple<TestMessageLevel, string>> Messages = new List<Tuple<TestMessageLevel, string>>();
 
@@ -25,10 +25,19 @@ namespace TestAdapterTests.Mocks
 			Messages.Add(new Tuple<TestMessageLevel, string>(testMessageLevel, message));
 		}
 
-		public IEnumerable<string> GetErrors() => Messages.Where(m => m.Item1 == TestMessageLevel.Error).Select(m => m.Item2);
+		public IEnumerable<string> GetErrors()
+		{
+			return Messages.Where(m => m.Item1 == TestMessageLevel.Error).Select(m => m.Item2);
+		}
 
-		public IEnumerable<string> GetWarnings() => Messages.Where(m => m.Item1 == TestMessageLevel.Warning).Select(m => m.Item2);
+		public IEnumerable<string> GetWarnings()
+		{
+			return Messages.Where(m => m.Item1 == TestMessageLevel.Warning).Select(m => m.Item2);
+		}
 
-		public IEnumerable<string> GetInfos() => Messages.Where(m => m.Item1 == TestMessageLevel.Informational).Select(m => m.Item2);
+		public IEnumerable<string> GetInfos()
+		{
+			return Messages.Where(m => m.Item1 == TestMessageLevel.Informational).Select(m => m.Item2);
+		}
 	}
 }

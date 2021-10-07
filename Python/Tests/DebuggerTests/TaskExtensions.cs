@@ -25,13 +25,19 @@ namespace DebuggerTests
 			throw new TaskCanceledException(message);
 		}
 
-		public static Task CancelAfter(int milliseconds, string message = null) =>
-			CancelAfter<object>(milliseconds, message);
+		public static Task CancelAfter(int milliseconds, string message = null)
+		{
+			return CancelAfter<object>(milliseconds, message);
+		}
 
-		public static Task WithTimeout(this Task task, int milliseconds, string message = null) =>
-			Task.WhenAny(task, CancelAfter(milliseconds, message)).Unwrap();
+		public static Task WithTimeout(this Task task, int milliseconds, string message = null)
+		{
+			return Task.WhenAny(task, CancelAfter(milliseconds, message)).Unwrap();
+		}
 
-		public static Task<T> WithTimeout<T>(this Task<T> task, int milliseconds, string message = null) =>
-			Task.WhenAny(task, CancelAfter<T>(milliseconds, message)).Unwrap();
+		public static Task<T> WithTimeout<T>(this Task<T> task, int milliseconds, string message = null)
+		{
+			return Task.WhenAny(task, CancelAfter<T>(milliseconds, message)).Unwrap();
+		}
 	}
 }

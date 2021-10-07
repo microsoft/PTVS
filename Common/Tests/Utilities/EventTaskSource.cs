@@ -45,12 +45,15 @@ namespace TestUtilities
 			_handlerConverter = handlerConverter;
 		}
 
-		public Task<TEventArgs> Create(T instance, CancellationToken cancellationToken = default(CancellationToken)) => Create(instance, null, cancellationToken);
+		public Task<TEventArgs> Create(T instance, CancellationToken cancellationToken = default(CancellationToken))
+		{
+			return Create(instance, null, cancellationToken);
+		}
 
 		public Task<TEventArgs> Create(T instance, Action<TEventArgs> callback, CancellationToken cancellationToken = default(CancellationToken))
 		{
 			var tcs = new TaskCompletionSource<TEventArgs>();
-			var reference = new HandlerReference(instance, tcs, _unsubscribe, _handlerConverter, callback);
+			HandlerReference reference = new HandlerReference(instance, tcs, _unsubscribe, _handlerConverter, callback);
 			if (cancellationToken != CancellationToken.None)
 			{
 				cancellationToken.Register(reference.Cancel);
@@ -97,7 +100,7 @@ namespace TestUtilities
 					return null;
 				}
 
-				var instance = _instance;
+				T instance = _instance;
 				var unsubscribe = _unsubscribe;
 				_instance = default(T);
 				_unsubscribe = null;

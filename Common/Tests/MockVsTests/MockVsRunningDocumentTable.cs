@@ -16,7 +16,7 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-	class MockVsRunningDocumentTable : IVsRunningDocumentTable
+	internal class MockVsRunningDocumentTable : IVsRunningDocumentTable
 #if DEV12_OR_LATER
         , IVsRunningDocumentTable4
 #endif
@@ -31,7 +31,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			_vs = vs;
 		}
 
-		class DocInfo
+		private class DocInfo
 		{
 			public _VSRDTFLAGS Flags;
 			public string Document;
@@ -155,7 +155,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			return res;
 		}
 
-		class RunningDocumentsEnum : IEnumRunningDocuments
+		private class RunningDocumentsEnum : IEnumRunningDocuments
 		{
 			private readonly MockVsRunningDocumentTable _docTable;
 			private IEnumerator<DocInfo> _enum;

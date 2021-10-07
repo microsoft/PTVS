@@ -16,27 +16,15 @@
 
 namespace Microsoft.PythonTools.Django.Analysis
 {
-	class DjangoUrl
+	internal class DjangoUrl
 	{
 		public readonly string Name;
-		public string FullName
-		{
-			get
-			{
-				return Name;
-			}
-		}
+		public string FullName => Name;
 		private readonly string _urlRegex;
 		private static readonly Regex _regexGroupMatchingRegex = new Regex(@"\(.*?\)");
 		public IList<DjangoUrlParameter> Parameters = new List<DjangoUrlParameter>();
 
-		public IEnumerable<DjangoUrlParameter> NamedParameters
-		{
-			get
-			{
-				return Parameters.Where(p => p.IsNamed);
-			}
-		}
+		public IEnumerable<DjangoUrlParameter> NamedParameters => Parameters.Where(p => p.IsNamed);
 
 		public DjangoUrl() { }
 
@@ -62,7 +50,7 @@ namespace Microsoft.PythonTools.Django.Analysis
 		}
 	}
 
-	class DjangoUrlParameter
+	internal class DjangoUrlParameter
 	{
 		private static readonly Regex _namedParameterRegex = new Regex(@"\?P<(.*)>");
 

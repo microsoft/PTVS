@@ -20,7 +20,7 @@ namespace TestAdapterTests
 {
 	public abstract partial class TestExecutorTests
 	{
-		class StackFrameComparer : IComparer
+		private class StackFrameComparer : IComparer
 		{
 			public int Compare(object x, object y)
 			{

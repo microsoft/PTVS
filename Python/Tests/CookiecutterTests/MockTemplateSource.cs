@@ -16,7 +16,7 @@
 
 namespace CookiecutterTests
 {
-	class MockTemplateSource : ILocalTemplateSource
+	internal class MockTemplateSource : ILocalTemplateSource
 	{
 		public Dictionary<Tuple<string, string>, Tuple<Template[], string>> Templates { get; } = new Dictionary<Tuple<string, string>, Tuple<Template[], string>>();
 		public Dictionary<string, bool?> UpdatesAvailable { get; } = new Dictionary<string, bool?>();

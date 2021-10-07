@@ -16,7 +16,7 @@
 
 namespace Microsoft.IronPythonTools.Interpreter
 {
-	class IronPythonConstant : PythonObject, IPythonConstant
+	internal class IronPythonConstant : PythonObject, IPythonConstant
 	{
 		private IPythonType _type;
 		private PythonMemberType _memType;
@@ -32,7 +32,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 			{
 				if (_memType == PythonMemberType.Unknown)
 				{
-					var ri = RemoteInterpreter;
+					RemoteInterpreterProxy ri = RemoteInterpreter;
 					if (!Value.IsNull && ri != null && ri.IsEnumValue(Value))
 					{
 						_memType = PythonMemberType.EnumInstance;
@@ -58,7 +58,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 					}
 					else
 					{
-						var ri = RemoteInterpreter;
+						RemoteInterpreterProxy ri = RemoteInterpreter;
 						_type = ri != null ? Interpreter.GetTypeFromType(ri.GetObjectPythonType(Value)) : null;
 					}
 				}

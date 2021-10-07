@@ -16,7 +16,7 @@
 
 namespace Microsoft.PythonTools.Debugger
 {
-	class PythonModule
+	internal class PythonModule
 	{
 		public PythonModule(int moduleId, string filename, string moduleName, bool isUserCode)
 		{

@@ -19,7 +19,7 @@ namespace Microsoft.PythonTools.Debugger
 	// These option names are also used as string literals in ptvsd/debugger.py, and so
 	// renaming them here also requires updating the literals there.
 	[Flags]
-	enum PythonDebugOptions
+	internal enum PythonDebugOptions
 	{
 		None,
 		/// <summary>

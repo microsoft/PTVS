@@ -22,7 +22,7 @@ namespace PythonToolsTests
 		[TestMethod, Priority(UnitTestPriority.P0)]
 		public void LaunchWebBrowserUriTests()
 		{
-			var testCases = new[] {
+			global::System.Object[] testCases = new[] {
 				new { Url = "/fob", Port = 1, Expected = "http://localhost:1/fob" },
 				new { Url = "http://localhost:9999/fob", Port = 9999, Expected = "http://localhost:9999/fob" },
 				new { Url = "http://localhost/fob", Port = 9999, Expected = "http://localhost:9999/fob" },
@@ -31,7 +31,7 @@ namespace PythonToolsTests
 				new { Url = "/fob", Port = -1, Expected = "http://localhost:{port}/fob" },
 			};
 
-			foreach (var testCase in testCases)
+			foreach (global::System.Object testCase in testCases)
 			{
 				Console.WriteLine("{0} {1} == {2}", testCase.Url, testCase.Port, testCase.Expected);
 

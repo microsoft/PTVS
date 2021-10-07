@@ -130,8 +130,10 @@ namespace Microsoft.VisualStudioTools.Wpf
 		{
 			if (Environment.OSVersion.Version.Major >= 6)
 			{
-				var sii = new NativeMethods.SHSTOCKICONINFO();
-				sii.cbSize = (UInt32)Marshal.SizeOf(typeof(NativeMethods.SHSTOCKICONINFO));
+				NativeMethods.SHSTOCKICONINFO sii = new NativeMethods.SHSTOCKICONINFO
+				{
+					cbSize = (UInt32)Marshal.SizeOf(typeof(NativeMethods.SHSTOCKICONINFO))
+				};
 
 				Marshal.ThrowExceptionForHR(NativeMethods.SHGetStockIconInfo(77, 0x0101, ref sii));
 				try

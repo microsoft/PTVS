@@ -52,7 +52,7 @@ namespace Microsoft.PythonTools.Debugger.Remote
 			}
 
 			var uri = new Uri(name, UriKind.Absolute);
-			var transport = DebuggerTransportFactory.Get(uri);
+			IDebuggerTransport transport = DebuggerTransportFactory.Get(uri);
 			if (transport == null)
 			{
 				MessageBox.Show(
@@ -70,7 +70,7 @@ namespace Microsoft.PythonTools.Debugger.Remote
 				return validationError.HResult;
 			}
 
-			var port = new PythonRemoteDebugPort(this, pRequest, uri, DebugLog);
+			PythonRemoteDebugPort port = new PythonRemoteDebugPort(this, pRequest, uri, DebugLog);
 
 			if (PythonDebugOptionsServiceHelper.Options.UseLegacyDebugger)
 			{

@@ -31,13 +31,7 @@ namespace TestUtilities.SharedProject
 			_codeExtension = extension;
 		}
 
-		public string CodeExtension
-		{
-			get
-			{
-				return _codeExtension;
-			}
-		}
+		public string CodeExtension => _codeExtension;
 	}
 
 }

@@ -16,7 +16,7 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-	class MockOleComponentManager : IOleComponentManager
+	internal class MockOleComponentManager : IOleComponentManager
 	{
 		private readonly Dictionary<uint, IOleComponent> _idleComponents = new Dictionary<uint, IOleComponent>();
 		private uint _idleCount;

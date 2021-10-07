@@ -16,7 +16,7 @@
 
 namespace TestUtilities.Mocks
 {
-	class MockNormalizedTextChangeCollection : INormalizedTextChangeCollection
+	internal class MockNormalizedTextChangeCollection : INormalizedTextChangeCollection
 	{
 		private readonly ITextChange[] _changes;
 
@@ -29,7 +29,7 @@ namespace TestUtilities.Mocks
 		{
 			get
 			{
-				foreach (var change in _changes)
+				foreach (ITextChange change in _changes)
 				{
 					if (change.OldText.IndexOfAny(new[] { '\r', '\n' }) != -1 ||
 						change.NewText.IndexOfAny(new[] { '\r', '\n' }) != -1)
@@ -65,14 +65,8 @@ namespace TestUtilities.Mocks
 
 		public ITextChange this[int index]
 		{
-			get
-			{
-				return _changes[index];
-			}
-			set
-			{
-				throw new NotImplementedException();
-			}
+			get => _changes[index];
+			set => throw new NotImplementedException();
 		}
 
 		public void Add(ITextChange item)
@@ -95,15 +89,9 @@ namespace TestUtilities.Mocks
 			_changes.CopyTo(array, arrayIndex);
 		}
 
-		public int Count
-		{
-			get { return _changes.Length; }
-		}
+		public int Count => _changes.Length;
 
-		public bool IsReadOnly
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public bool IsReadOnly => throw new NotImplementedException();
 
 		public bool Remove(ITextChange item)
 		{
@@ -112,7 +100,7 @@ namespace TestUtilities.Mocks
 
 		public IEnumerator<ITextChange> GetEnumerator()
 		{
-			foreach (var change in _changes)
+			foreach (ITextChange change in _changes)
 			{
 				yield return change;
 			}
@@ -120,7 +108,7 @@ namespace TestUtilities.Mocks
 
 		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
 		{
-			foreach (var change in _changes)
+			foreach (ITextChange change in _changes)
 			{
 				yield return change;
 			}

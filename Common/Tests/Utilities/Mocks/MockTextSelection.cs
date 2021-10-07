@@ -29,25 +29,13 @@ namespace TestUtilities.Mocks
 
 		public bool ActivationTracksFocus
 		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-			set
-			{
-				throw new NotImplementedException();
-			}
+			get => throw new NotImplementedException();
+			set => throw new NotImplementedException();
 		}
 
-		public Microsoft.VisualStudio.Text.VirtualSnapshotPoint ActivePoint
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public Microsoft.VisualStudio.Text.VirtualSnapshotPoint ActivePoint => throw new NotImplementedException();
 
-		public Microsoft.VisualStudio.Text.VirtualSnapshotPoint AnchorPoint
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public Microsoft.VisualStudio.Text.VirtualSnapshotPoint AnchorPoint => throw new NotImplementedException();
 
 		public void Clear()
 		{
@@ -55,10 +43,7 @@ namespace TestUtilities.Mocks
 			_end = new VirtualSnapshotPoint();
 		}
 
-		public Microsoft.VisualStudio.Text.VirtualSnapshotPoint End
-		{
-			get { return _end; }
-		}
+		public Microsoft.VisualStudio.Text.VirtualSnapshotPoint End => _end;
 
 		public Microsoft.VisualStudio.Text.VirtualSnapshotSpan? GetSelectionOnTextViewLine(Microsoft.VisualStudio.Text.Formatting.ITextViewLine line)
 		{
@@ -67,36 +52,18 @@ namespace TestUtilities.Mocks
 
 		public bool IsActive
 		{
-			get
-			{
-				return _isActive;
-			}
-			set
-			{
-				_isActive = true;
-			}
+			get => _isActive;
+			set => _isActive = true;
 		}
 
-		public bool IsEmpty
-		{
-			get { return _start == _end; }
-		}
+		public bool IsEmpty => _start == _end;
 
-		public bool IsReversed
-		{
-			get { return _isReversed; }
-		}
+		public bool IsReversed => _isReversed;
 
 		public TextSelectionMode Mode
 		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-			set
-			{
-				throw new NotImplementedException();
-			}
+			get => throw new NotImplementedException();
+			set => throw new NotImplementedException();
 		}
 
 		public void Select(VirtualSnapshotPoint anchorPoint, VirtualSnapshotPoint activePoint)
@@ -121,10 +88,7 @@ namespace TestUtilities.Mocks
 			}
 		}
 
-		public NormalizedSnapshotSpanCollection SelectedSpans
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public NormalizedSnapshotSpanCollection SelectedSpans => throw new NotImplementedException();
 
 		public event EventHandler SelectionChanged
 		{
@@ -136,27 +100,12 @@ namespace TestUtilities.Mocks
 			}
 		}
 
-		public VirtualSnapshotPoint Start
-		{
-			get { return _start; }
-		}
+		public VirtualSnapshotPoint Start => _start;
 
-		public Microsoft.VisualStudio.Text.VirtualSnapshotSpan StreamSelectionSpan
-		{
-			get
-			{
-				return new VirtualSnapshotSpan(_start, _end);
-			}
-		}
+		public Microsoft.VisualStudio.Text.VirtualSnapshotSpan StreamSelectionSpan => new VirtualSnapshotSpan(_start, _end);
 
-		public ITextView TextView
-		{
-			get { return _view; }
-		}
+		public ITextView TextView => _view;
 
-		public System.Collections.ObjectModel.ReadOnlyCollection<Microsoft.VisualStudio.Text.VirtualSnapshotSpan> VirtualSelectedSpans
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public System.Collections.ObjectModel.ReadOnlyCollection<Microsoft.VisualStudio.Text.VirtualSnapshotSpan> VirtualSelectedSpans => throw new NotImplementedException();
 	}
 }

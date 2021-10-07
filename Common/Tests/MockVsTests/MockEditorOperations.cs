@@ -16,7 +16,7 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-	class MockEditorOperations : IEditorOperations
+	internal class MockEditorOperations : IEditorOperations
 	{
 		private readonly MockTextView _view;
 
@@ -40,20 +40,11 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			throw new NotImplementedException();
 		}
 
-		public bool CanCut
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public bool CanCut => throw new NotImplementedException();
 
-		public bool CanDelete
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public bool CanDelete => throw new NotImplementedException();
 
-		public bool CanPaste
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public bool CanPaste => throw new NotImplementedException();
 
 		public bool Capitalize()
 		{
@@ -306,10 +297,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			throw new NotImplementedException();
 		}
 
-		public VisualStudio.Text.Editor.IEditorOptions Options
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public VisualStudio.Text.Editor.IEditorOptions Options => throw new NotImplementedException();
 
 		public void PageDown(bool extendSelection)
 		{
@@ -326,10 +314,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			throw new NotImplementedException();
 		}
 
-		public VisualStudio.Text.ITrackingSpan ProvisionalCompositionSpan
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public VisualStudio.Text.ITrackingSpan ProvisionalCompositionSpan => throw new NotImplementedException();
 
 		public int ReplaceAllMatches(string searchText, string replaceText, bool matchCase, bool matchWholeWord, bool useRegularExpressions)
 		{
@@ -446,10 +431,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			throw new NotImplementedException();
 		}
 
-		public string SelectedText
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public string SelectedText => throw new NotImplementedException();
 
 		public void SwapCaretAndAnchor()
 		{
@@ -461,10 +443,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			throw new NotImplementedException();
 		}
 
-		public VisualStudio.Text.Editor.ITextView TextView
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public VisualStudio.Text.Editor.ITextView TextView => throw new NotImplementedException();
 
 		public bool ToggleCase()
 		{

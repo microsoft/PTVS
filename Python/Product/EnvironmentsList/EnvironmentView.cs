@@ -137,31 +137,31 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
 		public bool IsConfigurable
 		{
-			get { return Factory == null ? false : (bool)GetValue(IsConfigurableProperty); }
+			get => Factory == null ? false : (bool)GetValue(IsConfigurableProperty);
 			set { if (Factory != null) { SetValue(IsConfigurablePropertyKey, value); } }
 		}
 
 		public bool CanBeDeleted
 		{
-			get { return Factory == null ? false : (bool)GetValue(CanBeDeletedProperty); }
+			get => Factory == null ? false : (bool)GetValue(CanBeDeletedProperty);
 			set { if (Factory != null) { SetValue(CanBeDeletedPropertyKey, value); } }
 		}
 
 		public bool CanBeDefault
 		{
-			get { return Factory == null ? false : (bool)GetValue(CanBeDefaultProperty); }
+			get => Factory == null ? false : (bool)GetValue(CanBeDefaultProperty);
 			set { if (Factory != null) { SetValue(CanBeDefaultPropertyKey, value); } }
 		}
 
 		public bool IsDefault
 		{
-			get { return Factory == null ? false : (bool)GetValue(IsDefaultProperty); }
+			get => Factory == null ? false : (bool)GetValue(IsDefaultProperty);
 			internal set { if (Factory != null) { SetValue(IsDefaultPropertyKey, value); } }
 		}
 
 		public bool IsBroken
 		{
-			get { return Factory == null ? false : (bool)GetValue(IsBrokenProperty); }
+			get => Factory == null ? false : (bool)GetValue(IsBrokenProperty);
 			internal set { if (Factory != null) { SetValue(IsBrokenPropertyKey, value); } }
 		}
 
@@ -183,31 +183,31 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
 		public string Description
 		{
-			get { return (string)GetValue(DescriptionProperty) ?? ""; }
-			set { SetValue(DescriptionPropertyKey, value ?? ""); }
+			get => (string)GetValue(DescriptionProperty) ?? "";
+			set => SetValue(DescriptionPropertyKey, value ?? "");
 		}
 
 		public string PrefixPath
 		{
-			get { return Factory == null ? string.Empty : (string)GetValue(PrefixPathProperty); }
+			get => Factory == null ? string.Empty : (string)GetValue(PrefixPathProperty);
 			set { if (Factory != null) { SetValue(PrefixPathPropertyKey, value); } }
 		}
 
 		public string InterpreterPath
 		{
-			get { return Factory == null ? string.Empty : (string)GetValue(InterpreterPathProperty); }
+			get => Factory == null ? string.Empty : (string)GetValue(InterpreterPathProperty);
 			set { if (Factory != null) { SetValue(InterpreterPathPropertyKey, value); } }
 		}
 
 		public string WindowsInterpreterPath
 		{
-			get { return Factory == null ? string.Empty : (string)GetValue(WindowsInterpreterPathProperty); }
+			get => Factory == null ? string.Empty : (string)GetValue(WindowsInterpreterPathProperty);
 			set { if (Factory != null) { SetValue(WindowsInterpreterPathPropertyKey, value); } }
 		}
 
 		public string PathEnvironmentVariable
 		{
-			get { return Factory == null ? string.Empty : (string)GetValue(PathEnvironmentVariableProperty); }
+			get => Factory == null ? string.Empty : (string)GetValue(PathEnvironmentVariableProperty);
 			set { if (Factory != null) { SetValue(PathEnvironmentVariablePropertyKey, value); } }
 		}
 
@@ -223,14 +223,14 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
 		public string Company
 		{
-			get { return (string)GetValue(CompanyProperty) ?? ""; }
-			set { SetValue(CompanyPropertyKey, value ?? ""); }
+			get => (string)GetValue(CompanyProperty) ?? "";
+			set => SetValue(CompanyPropertyKey, value ?? "");
 		}
 
 		public string SupportUrl
 		{
-			get { return (string)GetValue(SupportUrlProperty) ?? ""; }
-			set { SetValue(SupportUrlPropertyKey, value ?? ""); }
+			get => (string)GetValue(SupportUrlProperty) ?? "";
+			set => SetValue(SupportUrlPropertyKey, value ?? "");
 		}
 
 		#endregion
@@ -239,8 +239,8 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
 		public bool? IsIPythonModeEnabled
 		{
-			get { return (bool?)GetValue(IsIPythonModeEnabledProperty); }
-			set { SetValue(IsIPythonModeEnabledProperty, value); }
+			get => (bool?)GetValue(IsIPythonModeEnabledProperty);
+			set => SetValue(IsIPythonModeEnabledProperty, value);
 		}
 
 		public Func<EnvironmentView, bool> IPythonModeEnabledGetter { get; set; }
@@ -248,7 +248,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
 		private static void OnIsIPythonModeEnabledChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
 		{
-			var view = (EnvironmentView)d;
+			EnvironmentView view = (EnvironmentView)d;
 			view.IPythonModeEnabledSetter?.Invoke(view, (bool)e.NewValue);
 		}
 	}

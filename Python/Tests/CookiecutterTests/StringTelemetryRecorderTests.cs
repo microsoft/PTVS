@@ -24,7 +24,7 @@ namespace CookiecutterTests
 		{
 			var eventName = "event";
 
-			var telemetryRecorder = new TestTelemetryRecorder();
+			TestTelemetryRecorder telemetryRecorder = new TestTelemetryRecorder();
 			telemetryRecorder.RecordEvent(eventName);
 
 			string log = telemetryRecorder.SessionLog;
@@ -40,7 +40,7 @@ namespace CookiecutterTests
 			var parameter2 = "parameter2";
 			var value2 = "value2";
 
-			var telemetryRecorder = new TestTelemetryRecorder();
+			TestTelemetryRecorder telemetryRecorder = new TestTelemetryRecorder();
 			telemetryRecorder.RecordEvent(eventName, new Dictionary<string, object>() { { parameter1, value1 }, { parameter2, value2 } });
 
 			string log = telemetryRecorder.SessionLog;
@@ -52,7 +52,7 @@ namespace CookiecutterTests
 		{
 			var eventName = "event";
 
-			var telemetryRecorder = new TestTelemetryRecorder();
+			TestTelemetryRecorder telemetryRecorder = new TestTelemetryRecorder();
 			telemetryRecorder.RecordEvent(eventName, new { parameter1 = "value1", parameter2 = "value2" });
 
 			string log = telemetryRecorder.SessionLog;

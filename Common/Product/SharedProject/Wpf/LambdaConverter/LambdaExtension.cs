@@ -75,7 +75,7 @@ namespace Microsoft.VisualStudioTools.Wpf
 				throw new InvalidOperationException("Cannot locate root object - service provider did not provide IRootObjectProvider");
 			}
 
-			var provider = root as ILambdaConverterProvider;
+			ILambdaConverterProvider provider = root as ILambdaConverterProvider;
 			if (provider == null)
 			{
 				throw new InvalidOperationException("Root object does not implement ILambdaConverterProvider - code generator not run");

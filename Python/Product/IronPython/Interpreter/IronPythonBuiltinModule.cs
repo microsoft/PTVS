@@ -16,7 +16,7 @@
 
 namespace Microsoft.IronPythonTools.Interpreter
 {
-	class IronPythonBuiltinModule : IronPythonModule, IBuiltinPythonModule
+	internal class IronPythonBuiltinModule : IronPythonModule, IBuiltinPythonModule
 	{
 
 		public IronPythonBuiltinModule(IronPythonInterpreter interpreter, ObjectIdentityHandle mod, string name)

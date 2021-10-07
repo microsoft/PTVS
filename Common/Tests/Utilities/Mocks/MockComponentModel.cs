@@ -56,20 +56,11 @@ namespace TestUtilities.Mocks
 			return null;
 		}
 
-		public ComposablePartCatalog DefaultCatalog
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public ComposablePartCatalog DefaultCatalog => throw new NotImplementedException();
 
-		public ICompositionService DefaultCompositionService
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public ICompositionService DefaultCompositionService => throw new NotImplementedException();
 
-		public System.ComponentModel.Composition.Hosting.ExportProvider DefaultExportProvider
-		{
-			get { return this; }
-		}
+		public System.ComponentModel.Composition.Hosting.ExportProvider DefaultExportProvider => this;
 
 		public System.ComponentModel.Composition.Primitives.ComposablePartCatalog GetCatalog(string catalogName)
 		{

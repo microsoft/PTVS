@@ -19,13 +19,7 @@ namespace TestUtilities.UI
 	public class Header : AutomationWrapper
 	{
 		private Dictionary<string, int> _columns = new Dictionary<string, int>();
-		public Dictionary<string, int> Columns
-		{
-			get
-			{
-				return _columns;
-			}
-		}
+		public Dictionary<string, int> Columns => _columns;
 
 		public Header(AutomationElement element) : base(element)
 		{
@@ -33,7 +27,10 @@ namespace TestUtilities.UI
 			for (int i = 0; i < headerItems.Count; i++)
 			{
 				string colName = headerItems[i].GetCurrentPropertyValue(AutomationElement.NameProperty) as string;
-				if (colName != null && !_columns.ContainsKey(colName)) _columns[colName] = i;
+				if (colName != null && !_columns.ContainsKey(colName))
+				{
+					_columns[colName] = i;
+				}
 			}
 		}
 

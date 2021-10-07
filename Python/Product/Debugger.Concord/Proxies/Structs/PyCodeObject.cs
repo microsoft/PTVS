@@ -39,45 +39,21 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			CheckPyType<PyCodeObject>();
 		}
 
-		public Int32Proxy co_nlocals
-		{
-			get { return GetFieldProxy(_fields.co_nlocals); }
-		}
+		public Int32Proxy co_nlocals => GetFieldProxy(_fields.co_nlocals);
 
-		public PointerProxy<PyTupleObject> co_names
-		{
-			get { return GetFieldProxy(_fields.co_names); }
-		}
+		public PointerProxy<PyTupleObject> co_names => GetFieldProxy(_fields.co_names);
 
-		public PointerProxy<PyTupleObject> co_varnames
-		{
-			get { return GetFieldProxy(_fields.co_varnames); }
-		}
+		public PointerProxy<PyTupleObject> co_varnames => GetFieldProxy(_fields.co_varnames);
 
-		public PointerProxy<PyTupleObject> co_freevars
-		{
-			get { return GetFieldProxy(_fields.co_freevars); }
-		}
+		public PointerProxy<PyTupleObject> co_freevars => GetFieldProxy(_fields.co_freevars);
 
-		public PointerProxy<PyTupleObject> co_cellvars
-		{
-			get { return GetFieldProxy(_fields.co_cellvars); }
-		}
+		public PointerProxy<PyTupleObject> co_cellvars => GetFieldProxy(_fields.co_cellvars);
 
-		public PointerProxy<IPyBaseStringObject> co_filename
-		{
-			get { return GetFieldProxy(_fields.co_filename); }
-		}
+		public PointerProxy<IPyBaseStringObject> co_filename => GetFieldProxy(_fields.co_filename);
 
-		public PointerProxy<IPyBaseStringObject> co_name
-		{
-			get { return GetFieldProxy(_fields.co_name); }
-		}
+		public PointerProxy<IPyBaseStringObject> co_name => GetFieldProxy(_fields.co_name);
 
-		public Int32Proxy co_firstlineno
-		{
-			get { return GetFieldProxy(_fields.co_firstlineno); }
-		}
+		public Int32Proxy co_firstlineno => GetFieldProxy(_fields.co_firstlineno);
 
 		public override void Repr(ReprBuilder builder)
 		{

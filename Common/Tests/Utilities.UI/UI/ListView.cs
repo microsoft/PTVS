@@ -29,7 +29,9 @@ namespace TestUtilities.UI
 				{
 					var headerel = FindFirstByControlType(ControlType.Header);
 					if (headerel != null)
+					{
 						_header = new Header(FindFirstByControlType(ControlType.Header));
+					}
 				}
 				return _header;
 			}
@@ -64,7 +66,10 @@ namespace TestUtilities.UI
 		{
 			foreach (ListItem r in Items)
 			{
-				if (r[col].Equals(val, StringComparison.CurrentCulture)) return r;
+				if (r[col].Equals(val, StringComparison.CurrentCulture))
+				{
+					return r;
+				}
 			}
 			Assert.Fail("No item found with column {0} == {1}", col, val);
 			return null;

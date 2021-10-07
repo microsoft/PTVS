@@ -27,15 +27,9 @@ namespace TestUtilities.Mocks
 			_bases = new List<IClassificationType>(bases);
 		}
 
-		public IEnumerable<IClassificationType> BaseTypes
-		{
-			get { return _bases; }
-		}
+		public IEnumerable<IClassificationType> BaseTypes => _bases;
 
-		public string Classification
-		{
-			get { return _name; }
-		}
+		public string Classification => _name;
 
 		public bool IsOfType(string type)
 		{

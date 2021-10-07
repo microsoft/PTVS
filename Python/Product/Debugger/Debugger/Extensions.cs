@@ -16,7 +16,7 @@
 
 namespace Microsoft.PythonTools.Debugger
 {
-	static class Extensions
+	internal static class Extensions
 	{
 		/// <summary>
 		/// Reads a string from the socket which is encoded as:
@@ -88,7 +88,7 @@ namespace Microsoft.PythonTools.Debugger
 
 		internal static string ReadAsciiString(this Stream stream, int length)
 		{
-			var buf = new byte[length];
+			global::System.Byte[] buf = new byte[length];
 			stream.ReadToFill(buf);
 			return Encoding.ASCII.GetString(buf, 0, buf.Length);
 		}

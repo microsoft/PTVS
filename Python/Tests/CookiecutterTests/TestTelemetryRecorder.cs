@@ -21,15 +21,9 @@ namespace CookiecutterTests
 		private StringBuilder _stringBuilder = new StringBuilder();
 
 		#region ITelemetryRecorder
-		public bool IsEnabled
-		{
-			get { return true; }
-		}
+		public bool IsEnabled => true;
 
-		public bool CanCollectPrivateInformation
-		{
-			get { return true; }
-		}
+		public bool CanCollectPrivateInformation => true;
 
 		public void RecordEvent(string eventName, object parameters = null)
 		{
@@ -60,10 +54,7 @@ namespace CookiecutterTests
 			_stringBuilder.Clear();
 		}
 
-		public string SessionLog
-		{
-			get { return _stringBuilder.ToString(); }
-		}
+		public string SessionLog => _stringBuilder.ToString();
 		#endregion
 
 		public void Dispose() { }

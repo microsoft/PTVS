@@ -20,8 +20,15 @@ namespace TestUtilities
 	{
 		protected internal static TestEnvironmentImpl Instance { get; protected set; }
 
-		public static void TestInitialize(int secondsTimeout = 10) => Instance?.BeforeTestRun(secondsTimeout);
-		public static void TestCleanup() => Instance?.AfterTestRun();
+		public static void TestInitialize(int secondsTimeout = 10)
+		{
+			Instance?.BeforeTestRun(secondsTimeout);
+		}
+
+		public static void TestCleanup()
+		{
+			Instance?.AfterTestRun();
+		}
 
 		private readonly AsyncLocal<TaskObserver> _taskObserver = new AsyncLocal<TaskObserver>();
 		private readonly AssemblyLoader _assemblyLoader = new AssemblyLoader();
@@ -34,7 +41,9 @@ namespace TestUtilities
 		}
 
 		public TestEnvironmentImpl AddVsResolvePaths()
-			=> AddAssemblyResolvePaths(_binPath, VisualStudioPath.CommonExtensions, VisualStudioPath.PrivateAssemblies, VisualStudioPath.PublicAssemblies);
+		{
+			return AddAssemblyResolvePaths(_binPath, VisualStudioPath.CommonExtensions, VisualStudioPath.PrivateAssemblies, VisualStudioPath.PublicAssemblies);
+		}
 
 		public bool TryAddTaskToWait(Task task)
 		{

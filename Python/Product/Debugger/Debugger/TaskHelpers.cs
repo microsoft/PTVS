@@ -18,7 +18,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Debugger
 {
-	static class TaskHelpers
+	internal static class TaskHelpers
 	{
 		private static readonly Lazy<IVsThreadedWaitDialogFactory> _twdf = new Lazy<IVsThreadedWaitDialogFactory>(() =>
 		{

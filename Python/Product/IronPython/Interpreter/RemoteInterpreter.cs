@@ -23,7 +23,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 	/// which allows the local domain to cache based upon object identity w/o transitioning to this domain
 	/// to do comparisons.
 	/// </summary>
-	class RemoteInterpreter
+	internal class RemoteInterpreter
 	{
 		private readonly ScriptEngine _engine;
 		private readonly CodeContext _codeContext;
@@ -76,7 +76,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 
 			if (_analysisDirs != null)
 			{
-				foreach (var dir in _analysisDirs)
+				foreach (global::System.String dir in _analysisDirs)
 				{
 					var name = new AssemblyName(args.Name).Name;
 					var asm = TryLoad(dir, name, "");
@@ -157,13 +157,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 			GC.KeepAlive(typeof(IronPython.Modules.ArrayModule)); // IronPython.Modules
 		}
 
-		public ScriptEngine Engine
-		{
-			get
-			{
-				return _engine;
-			}
-		}
+		public ScriptEngine Engine => _engine;
 
 		private KeyValuePair<Assembly, TopNamespaceTracker> LoadAssemblyInfo(Assembly assm)
 		{
@@ -442,13 +436,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 			}
 		}
 
-		public CodeContext CodeContext
-		{
-			get
-			{
-				return _codeContext;
-			}
-		}
+		public CodeContext CodeContext => _codeContext;
 
 		internal string[] DirHelper(ObjectIdentityHandle handle, bool showClr)
 		{
@@ -837,7 +825,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 			{
 				var p = type.GetMethod("Invoke").GetParameters();
 
-				var args = new ObjectIdentityHandle[p.Length];
+				ObjectIdentityHandle[] args = new ObjectIdentityHandle[p.Length];
 				for (int i = 0; i < p.Length; i++)
 				{
 					args[i] = MakeHandle(DynamicHelpers.GetPythonTypeFromType(p[i].ParameterType));
@@ -1251,7 +1239,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 				var eventObj = (ReflectedEvent)Unwrap(value);
 
 				var parameters = eventObj.Info.EventHandlerType.GetMethod("Invoke").GetParameters();
-				var res = new ObjectIdentityHandle[parameters.Length];
+				ObjectIdentityHandle[] res = new ObjectIdentityHandle[parameters.Length];
 				for (int i = 0; i < parameters.Length; i++)
 				{
 					res[i] = MakeHandle(DynamicHelpers.GetPythonTypeFromType(parameters[i].ParameterType));
@@ -1413,7 +1401,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 
 		internal ObjectIdentityHandle[] GetTypeGroupConstructors(ObjectIdentityHandle typeGroup, out ObjectIdentityHandle declaringType)
 		{
-			var innerDeclaringType = new ObjectIdentityHandle();
+			ObjectIdentityHandle innerDeclaringType = new ObjectIdentityHandle();
 			declaringType = new ObjectIdentityHandle();
 			var result = CallAndHandle(() =>
 			{
@@ -1425,7 +1413,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 					var ctors = clrType.GetConstructors(BindingFlags.Public | BindingFlags.CreateInstance | BindingFlags.Instance);
 					if (ctors.Length > 0)
 					{
-						var res = new ObjectIdentityHandle[ctors.Length];
+						ObjectIdentityHandle[] res = new ObjectIdentityHandle[ctors.Length];
 						for (int i = 0; i < res.Length; i++)
 						{
 							res[i] = MakeHandle(ctors[i]);
@@ -1715,7 +1703,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 				{
 					// check if we're removing any dirs, and if we are, re-initialize our namespace object...
 					var newDirs = new HashSet<string>(dirs, StringComparer.OrdinalIgnoreCase);
-					foreach (var dir in _analysisDirs)
+					foreach (global::System.String dir in _analysisDirs)
 					{
 						lock (_assembliesLoadedFromDirectories)
 						{
@@ -1734,7 +1722,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 					if (raiseModuleChangedEvent == SetAnalysisDirectoriesResult.NoChange)
 					{
 						HashSet<string> existing = new HashSet<string>(_analysisDirs);
-						foreach (var dir in dirs)
+						foreach (global::System.String dir in dirs)
 						{
 							if (!existing.Contains(dir))
 							{
@@ -1824,7 +1812,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 		}
 	}
 
-	enum ParameterKind
+	internal enum ParameterKind
 	{
 		Unknown,
 		Normal,
@@ -1832,7 +1820,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 		Dictionary
 	}
 
-	enum ObjectKind
+	internal enum ObjectKind
 	{
 		None,
 		Module,
@@ -1855,7 +1843,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 		Unknown,
 	}
 
-	enum SetAnalysisDirectoriesResult
+	internal enum SetAnalysisDirectoriesResult
 	{
 		NoChange,
 		Reload,

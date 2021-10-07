@@ -56,10 +56,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies
 				Size = (long)Symbol.length;
 			}
 
-			public IDiaSymbol Symbol
-			{
-				get { return _symbol.Object; }
-			}
+			public IDiaSymbol Symbol => _symbol.Object;
 
 			protected override void OnClose()
 			{
@@ -81,14 +78,14 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies
 			{
 				var langVer = process.GetPythonRuntimeInfo().LanguageVersion;
 
-				var proxyAttrs = (StructProxyAttribute[])Attribute.GetCustomAttributes(typeof(TStruct), typeof(StructProxyAttribute));
+				StructProxyAttribute[] proxyAttrs = (StructProxyAttribute[])Attribute.GetCustomAttributes(typeof(TStruct), typeof(StructProxyAttribute));
 				if (proxyAttrs.Length == 0)
 				{
 					return typeof(TStruct).Name;
 				}
 				else
 				{
-					foreach (var proxyAttr in proxyAttrs)
+					foreach (StructProxyAttribute proxyAttr in proxyAttrs)
 					{
 						if (proxyAttr.MinVersion != PythonLanguageVersion.None && langVer < proxyAttr.MinVersion)
 						{
@@ -119,20 +116,11 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies
 			_address = address;
 		}
 
-		public DkmProcess Process
-		{
-			get { return _process; }
-		}
+		public DkmProcess Process => _process;
 
-		public ulong Address
-		{
-			get { return _address; }
-		}
+		public ulong Address => _address;
 
-		public long ObjectSize
-		{
-			get { return _metadata.Size; }
-		}
+		public long ObjectSize => _metadata.Size;
 
 		StructProxy IValueStore<StructProxy>.Read()
 		{
@@ -146,7 +134,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies
 
 		public override bool Equals(object obj)
 		{
-			var other = obj as StructProxy;
+			StructProxy other = obj as StructProxy;
 			if (other == null)
 			{
 				return false;
@@ -240,7 +228,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies
 
 			var pyVersion = metadata.Process.GetPythonRuntimeInfo().LanguageVersion;
 
-			var fields = new TFields();
+			TFields fields = new TFields();
 			foreach (var fieldInfo in typeof(TFields).GetFields())
 			{
 				var fieldType = fieldInfo.FieldType;
@@ -255,7 +243,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies
 					}
 
 					long offset = metadata.Symbol.GetFieldOffset(name);
-					var field = (IStructField)Activator.CreateInstance(fieldType);
+					IStructField field = (IStructField)Activator.CreateInstance(fieldType);
 					field.Process = metadata.Process;
 					field.Offset = offset;
 					fieldInfo.SetValue(fields, field);
@@ -270,7 +258,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies
 			where TStruct : StructProxy
 			where TFields : class, new()
 		{
-			var metadata = GetStructMetadata<TStruct>(process);
+			StructMetadata metadata = GetStructMetadata<TStruct>(process);
 			return GetStructFields<TFields>(metadata);
 		}
 
@@ -281,7 +269,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies
 
 			Debug.Assert(this == this_);
 
-			var metadata = GetStructMetadata<TStruct>(Process);
+			StructMetadata metadata = GetStructMetadata<TStruct>(Process);
 			fields = GetStructFields<TFields>(metadata);
 			_metadata = metadata;
 		}

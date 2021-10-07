@@ -205,7 +205,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			byte currentBreakpointData = (breakpointDataInUseByTraceFunc == 0) ? (byte)1 : (byte)0;
 			_currentBreakpointData.Write(currentBreakpointData);
 
-			var bpDataProxy = _breakpointData[currentBreakpointData];
+			CliStructProxy<BreakpointData> bpDataProxy = _breakpointData[currentBreakpointData];
 			BreakpointData bpData = bpDataProxy.Read();
 			if (bpData.lineNumbers != 0)
 			{
@@ -252,7 +252,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			_process.ReadMemory(cbp.fileName + dataOffset, DkmReadMemoryFlags.None, fileNameBuf, fileNameDS.length * 2);
 			string fileName = new string(fileNameBuf, 0, fileNameDS.length);
 
-			var loc = new SourceLocation(fileName, cbp.lineNumber);
+			SourceLocation loc = new SourceLocation(fileName, cbp.lineNumber);
 			if (!_breakpoints.TryGetValue(loc, out List<DkmRuntimeBreakpoint> bps))
 			{
 				Debug.Fail("TraceFunc signalled a breakpoint at a location that BreakpointManager does not know about.");

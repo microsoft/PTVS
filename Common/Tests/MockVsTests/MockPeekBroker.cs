@@ -17,7 +17,7 @@
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
 	[Export(typeof(IPeekBroker))]
-	class MockPeekBroker : IPeekBroker
+	internal class MockPeekBroker : IPeekBroker
 	{
 		public bool CanTriggerPeekSession(ITextView textView, string relationshipName, Predicate<string> isStandaloneFilePredicate)
 		{

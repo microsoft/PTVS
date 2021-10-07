@@ -90,7 +90,7 @@ namespace TestUtilities.UI
 				try
 				{
 					var shell = (IVsShell)ServiceProvider.GlobalProvider.GetService(typeof(SVsShell));
-					foreach (var guid in _dependentPackageGuids)
+					foreach (Guid guid in _dependentPackageGuids)
 					{
 						var pkgGuid = guid;
 						ErrorHandler.ThrowOnFailure(

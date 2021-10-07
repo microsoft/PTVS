@@ -23,7 +23,7 @@ namespace TestUtilities.Python
 	{
 		public static TestEnvironmentImpl Initialize()
 		{
-			var instance = new MSTestEnvironment();
+			MSTestEnvironment instance = new MSTestEnvironment();
 			Instance = instance;
 			Analysis.TestEnvironment.Current = instance;
 			Common.TestEnvironment.Current = instance;

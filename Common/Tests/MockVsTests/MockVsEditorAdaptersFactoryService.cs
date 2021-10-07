@@ -18,7 +18,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 {
 	[Export(typeof(MockVsEditorAdaptersFactoryService))]
 	[Export(typeof(IVsEditorAdaptersFactoryService))]
-	class MockVsEditorAdaptersFactoryService : IVsEditorAdaptersFactoryService
+	internal class MockVsEditorAdaptersFactoryService : IVsEditorAdaptersFactoryService
 	{
 		private readonly IServiceProvider _serviceProvider;
 

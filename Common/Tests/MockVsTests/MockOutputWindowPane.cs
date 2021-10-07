@@ -16,7 +16,7 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-	class MockOutputWindowPane : IVsOutputWindowPane
+	internal class MockOutputWindowPane : IVsOutputWindowPane
 	{
 		private string _name;
 		private readonly StringBuilder _content = new StringBuilder();

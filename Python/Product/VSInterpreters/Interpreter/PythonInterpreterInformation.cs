@@ -16,7 +16,7 @@
 
 namespace Microsoft.PythonTools.Interpreter
 {
-	class PythonInterpreterInformation
+	internal class PythonInterpreterInformation
 	{
 #if !NO_FACTORIES
 		private IPythonInterpreterFactory _factory;

@@ -27,18 +27,9 @@ namespace TestUtilities.Mocks
 			_bases = new List<IContentType>(bases);
 		}
 
-		IEnumerable<IContentType> IContentType.BaseTypes
-		{
-			get { return _bases; }
-		}
+		IEnumerable<IContentType> IContentType.BaseTypes => _bases;
 
-		public List<IContentType> BaseTypes
-		{
-			get
-			{
-				return _bases;
-			}
-		}
+		public List<IContentType> BaseTypes => _bases;
 
 		public bool IsOfType(string type)
 		{
@@ -57,14 +48,8 @@ namespace TestUtilities.Mocks
 			return false;
 		}
 
-		public string DisplayName
-		{
-			get { return _name; }
-		}
+		public string DisplayName => _name;
 
-		public string TypeName
-		{
-			get { return _name; }
-		}
+		public string TypeName => _name;
 	}
 }

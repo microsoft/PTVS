@@ -16,7 +16,7 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-	class MockCodeWindow : IVsCodeWindow, IVsDropdownBarManager, Microsoft.VisualStudio.OLE.Interop.IConnectionPointContainer
+	internal class MockCodeWindow : IVsCodeWindow, IVsDropdownBarManager, Microsoft.VisualStudio.OLE.Interop.IConnectionPointContainer
 	{
 		private readonly IServiceProvider _serviceProvider;
 		private readonly ITextView _view;

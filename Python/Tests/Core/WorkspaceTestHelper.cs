@@ -42,10 +42,10 @@ namespace PythonToolsTests
 
 		public static MockWorkspace CreateMockWorkspace(string workspaceFolder, string interpreterSetting)
 		{
-			var aggregatedSettings = new MockWorkspaceSettings(
+			MockWorkspaceSettings aggregatedSettings = new MockWorkspaceSettings(
 				new Dictionary<string, string> { { "Interpreter", interpreterSetting } }
 			);
-			var settingsManager = new MockWorkspaceSettingsManager(aggregatedSettings);
+			MockWorkspaceSettingsManager settingsManager = new MockWorkspaceSettingsManager(aggregatedSettings);
 			return new MockWorkspace(workspaceFolder, settingsManager);
 		}
 
@@ -107,13 +107,7 @@ namespace PythonToolsTests
 
 			public IEnumerable<IPythonInterpreterFactory> Interpreters { get; private set; }
 
-			public IEnumerable<InterpreterConfiguration> Configurations
-			{
-				get
-				{
-					return Interpreters.Select(x => x.Configuration);
-				}
-			}
+			public IEnumerable<InterpreterConfiguration> Configurations => Interpreters.Select(x => x.Configuration);
 
 			public IEnumerable<IPythonInterpreterFactory> InterpretersOrDefault => throw new NotImplementedException();
 
@@ -328,7 +322,10 @@ namespace PythonToolsTests
 
 			public IWorkspaceSettings Parent => null;
 
-			public IEnumerable<string> GetKeys() => _keyValuePairs.Keys;
+			public IEnumerable<string> GetKeys()
+			{
+				return _keyValuePairs.Keys;
+			}
 
 			public WorkspaceSettingsResult GetProperty<T>(string key, out T value, out IWorkspaceSettings originator, T defaultValue = default(T))
 			{
@@ -428,9 +425,15 @@ namespace PythonToolsTests
 				throw new NotImplementedException();
 			}
 
-			public string MakeRooted(string path) => PathUtils.GetAbsoluteFilePath(Location, path);
+			public string MakeRooted(string path)
+			{
+				return PathUtils.GetAbsoluteFilePath(Location, path);
+			}
 
-			public string ReadInterpreterSetting() => _interpreterSetting;
+			public string ReadInterpreterSetting()
+			{
+				return _interpreterSetting;
+			}
 
 			public Task SetInterpreterAsync(string interpreter)
 			{
@@ -467,7 +470,10 @@ namespace PythonToolsTests
 				throw new NotImplementedException();
 			}
 
-			public IEnumerable<string> EnumerateUserFiles(Predicate<string> predicate) => throw new NotImplementedException();
+			public IEnumerable<string> EnumerateUserFiles(Predicate<string> predicate)
+			{
+				throw new NotImplementedException();
+			}
 		}
 	}
 }

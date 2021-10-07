@@ -16,7 +16,7 @@
 
 namespace Microsoft.IronPythonTools.Interpreter
 {
-	class IronPythonNewClsParameterInfo : IParameterInfo
+	internal class IronPythonNewClsParameterInfo : IParameterInfo
 	{
 		private readonly IronPythonType _declaringType;
 
@@ -27,50 +27,17 @@ namespace Microsoft.IronPythonTools.Interpreter
 
 		#region IParameterInfo Members
 
-		public IList<IPythonType> ParameterTypes
-		{
-			get
-			{
-				return new[] { _declaringType };
-			}
-		}
+		public IList<IPythonType> ParameterTypes => new[] { _declaringType };
 
-		public string Documentation
-		{
-			get { return ""; }
-		}
+		public string Documentation => "";
 
-		public string Name
-		{
-			get
-			{
-				return "cls";
-			}
-		}
+		public string Name => "cls";
 
-		public bool IsParamArray
-		{
-			get
-			{
-				return false;
-			}
-		}
+		public bool IsParamArray => false;
 
-		public bool IsKeywordDict
-		{
-			get
-			{
-				return false;
-			}
-		}
+		public bool IsKeywordDict => false;
 
-		public string DefaultValue
-		{
-			get
-			{
-				return null;
-			}
-		}
+		public string DefaultValue => null;
 
 		#endregion
 	}

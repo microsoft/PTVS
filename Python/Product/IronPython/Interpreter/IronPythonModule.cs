@@ -16,7 +16,7 @@
 
 namespace Microsoft.IronPythonTools.Interpreter
 {
-	class IronPythonModule : PythonObject, IPythonModule
+	internal class IronPythonModule : PythonObject, IPythonModule
 	{
 		private string _name;
 
@@ -26,13 +26,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 			_name = name;
 		}
 
-		public override PythonMemberType MemberType
-		{
-			get
-			{
-				return PythonMemberType.Module;
-			}
-		}
+		public override PythonMemberType MemberType => PythonMemberType.Module;
 
 		#region IPythonModule Members
 
@@ -42,7 +36,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 			{
 				if (_name == null)
 				{
-					var ri = RemoteInterpreter;
+					RemoteInterpreterProxy ri = RemoteInterpreter;
 					_name = ri != null ? ri.GetModuleName(Value) : string.Empty;
 				}
 				return _name;
@@ -68,7 +62,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 
 		private void AddWpfReferences()
 		{
-			var ri = RemoteInterpreter;
+			RemoteInterpreterProxy ri = RemoteInterpreter;
 			if (ri != null && ri.LoadWpf())
 			{
 				Interpreter.RaiseModuleNamesChanged();
@@ -83,7 +77,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 		{
 			get
 			{
-				var ri = RemoteInterpreter;
+				RemoteInterpreterProxy ri = RemoteInterpreter;
 				return ri != null ? ri.GetModuleDocumentation(Value) : string.Empty;
 			}
 		}

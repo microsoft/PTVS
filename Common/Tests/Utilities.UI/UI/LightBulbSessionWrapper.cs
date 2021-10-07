@@ -36,10 +36,7 @@ namespace TestUtilities.UI
 				_action = action;
 			}
 
-			public string DisplayText
-			{
-				get { return _action.DisplayText; }
-			}
+			public string DisplayText => _action.DisplayText;
 
 			public void Invoke()
 			{
@@ -47,49 +44,19 @@ namespace TestUtilities.UI
 			}
 		}
 
-		public IEnumerable<LightBulbActionWrapper> Actions
-		{
-			get
-			{
-				return _session.TryGetSuggestedActionSets(out IEnumerable<SuggestedActionSet> sets) == QuerySuggestedActionCompletionStatus.Completed ?
+		public IEnumerable<LightBulbActionWrapper> Actions => _session.TryGetSuggestedActionSets(out IEnumerable<SuggestedActionSet> sets) == QuerySuggestedActionCompletionStatus.Completed ?
 					sets.SelectMany(s => s.Actions).Select(a => new LightBulbActionWrapper(a)) :
 					Enumerable.Empty<LightBulbActionWrapper>();
-			}
-		}
 
 		#region IIntellisenseSession Forwarders
 
-		public bool IsDismissed
-		{
-			get
-			{
-				return _session.IsDismissed;
-			}
-		}
+		public bool IsDismissed => _session.IsDismissed;
 
-		public IIntellisensePresenter Presenter
-		{
-			get
-			{
-				return _session.Presenter;
-			}
-		}
+		public IIntellisensePresenter Presenter => _session.Presenter;
 
-		public PropertyCollection Properties
-		{
-			get
-			{
-				return _session.Properties;
-			}
-		}
+		public PropertyCollection Properties => _session.Properties;
 
-		public ITextView TextView
-		{
-			get
-			{
-				return _session.TextView;
-			}
-		}
+		public ITextView TextView => _session.TextView;
 
 		public event EventHandler Dismissed
 		{

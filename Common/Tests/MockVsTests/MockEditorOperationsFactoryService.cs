@@ -17,7 +17,7 @@
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
 	[Export(typeof(IEditorOperationsFactoryService))]
-	class MockEditorOperationsFactoryService : IEditorOperationsFactoryService
+	internal class MockEditorOperationsFactoryService : IEditorOperationsFactoryService
 	{
 		public IEditorOperations GetEditorOperations(VisualStudio.Text.Editor.ITextView textView)
 		{

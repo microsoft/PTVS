@@ -30,10 +30,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies
 			Address = address;
 		}
 
-		public long ObjectSize
-		{
-			get { return sizeof(Byte); }
-		}
+		public long ObjectSize => sizeof(Byte);
 
 		public unsafe Byte Read()
 		{
@@ -72,10 +69,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies
 			Address = address;
 		}
 
-		public long ObjectSize
-		{
-			get { return sizeof(SByte); }
-		}
+		public long ObjectSize => sizeof(SByte);
 
 		public unsafe SByte Read()
 		{
@@ -114,10 +108,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies
 			Address = address;
 		}
 
-		public long ObjectSize
-		{
-			get { return sizeof(Int16); }
-		}
+		public long ObjectSize => sizeof(Int16);
 
 		public unsafe Int16 Read()
 		{
@@ -157,10 +148,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies
 			Address = address;
 		}
 
-		public long ObjectSize
-		{
-			get { return sizeof(UInt16); }
-		}
+		public long ObjectSize => sizeof(UInt16);
 
 		public unsafe UInt16 Read()
 		{
@@ -200,10 +188,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies
 			Address = address;
 		}
 
-		public long ObjectSize
-		{
-			get { return sizeof(Int32); }
-		}
+		public long ObjectSize => sizeof(Int32);
 
 		public unsafe Int32 Read()
 		{
@@ -243,10 +228,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies
 			Address = address;
 		}
 
-		public long ObjectSize
-		{
-			get { return sizeof(UInt32); }
-		}
+		public long ObjectSize => sizeof(UInt32);
 
 		public unsafe UInt32 Read()
 		{
@@ -290,20 +272,11 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies
 			UnderlyingProxy = new Int32Proxy(process, address);
 		}
 
-		public DkmProcess Process
-		{
-			get { return UnderlyingProxy.Process; }
-		}
+		public DkmProcess Process => UnderlyingProxy.Process;
 
-		public ulong Address
-		{
-			get { return UnderlyingProxy.Address; }
-		}
+		public ulong Address => UnderlyingProxy.Address;
 
-		public long ObjectSize
-		{
-			get { return UnderlyingProxy.ObjectSize; }
-		}
+		public long ObjectSize => UnderlyingProxy.ObjectSize;
 
 		public unsafe TEnum Read()
 		{
@@ -340,10 +313,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies
 			Address = address;
 		}
 
-		public long ObjectSize
-		{
-			get { return sizeof(Int64); }
-		}
+		public long ObjectSize => sizeof(Int64);
 
 		public unsafe Int64 Read()
 		{
@@ -383,10 +353,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies
 			Address = address;
 		}
 
-		public long ObjectSize
-		{
-			get { return sizeof(UInt64); }
-		}
+		public long ObjectSize => sizeof(UInt64);
 
 		public unsafe UInt64 Read()
 		{
@@ -426,10 +393,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies
 			Address = address;
 		}
 
-		public long ObjectSize
-		{
-			get { return sizeof(Single); }
-		}
+		public long ObjectSize => sizeof(Single);
 
 		public unsafe Single Read()
 		{
@@ -469,10 +433,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies
 			Address = address;
 		}
 
-		public long ObjectSize
-		{
-			get { return sizeof(Double); }
-		}
+		public long ObjectSize => sizeof(Double);
 
 		public unsafe Double Read()
 		{
@@ -512,10 +473,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies
 			Address = address;
 		}
 
-		public long ObjectSize
-		{
-			get { return Process.GetPointerSize(); }
-		}
+		public long ObjectSize => Process.GetPointerSize();
 
 		public unsafe long Read()
 		{
@@ -574,10 +532,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies
 			Address = address;
 		}
 
-		public long ObjectSize
-		{
-			get { return sizeof(byte); }
-		}
+		public long ObjectSize => sizeof(byte);
 
 		public unsafe bool Read()
 		{
@@ -616,10 +571,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies
 			Address = address;
 		}
 
-		public long ObjectSize
-		{
-			get { return sizeof(byte); }
-		}
+		public long ObjectSize => sizeof(byte);
 
 		unsafe object IValueStore.Read()
 		{

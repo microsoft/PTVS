@@ -16,7 +16,7 @@
 
 namespace Microsoft.IronPythonTools.Interpreter
 {
-	class IronPythonParameterInfo : IParameterInfo
+	internal class IronPythonParameterInfo : IParameterInfo
 	{
 		private readonly IronPythonInterpreter _interpreter;
 		private RemoteInterpreterProxy _remote;
@@ -49,7 +49,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 			{
 				if (_paramType == null)
 				{
-					var ri = _remote;
+					RemoteInterpreterProxy ri = _remote;
 					if (ri != null)
 					{
 						_paramType = new[] { _interpreter.GetTypeFromType(ri.GetParameterPythonType(_parameterInfo)) };
@@ -60,10 +60,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 		}
 
 		// FIXME
-		public string Documentation
-		{
-			get { return ""; }
-		}
+		public string Documentation => "";
 
 		public string Name
 		{
@@ -71,7 +68,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 			{
 				if (_name == null)
 				{
-					var ri = _remote;
+					RemoteInterpreterProxy ri = _remote;
 					_name = ri != null ? ri.GetParameterName(_parameterInfo) : string.Empty;
 				}
 				return _name;
@@ -84,7 +81,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 			{
 				if (_paramKind == ParameterKind.Unknown)
 				{
-					var ri = _remote;
+					RemoteInterpreterProxy ri = _remote;
 					_paramKind = ri != null ? ri.GetParameterKind(_parameterInfo) : ParameterKind.Unknown;
 				}
 				return _paramKind == ParameterKind.List;
@@ -97,7 +94,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 			{
 				if (_paramKind == ParameterKind.Unknown)
 				{
-					var ri = _remote;
+					RemoteInterpreterProxy ri = _remote;
 					_paramKind = ri != null ? ri.GetParameterKind(_parameterInfo) : ParameterKind.Unknown;
 				}
 				return _paramKind == ParameterKind.Dictionary;
@@ -110,7 +107,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 			{
 				if (_defaultValue == null)
 				{
-					var ri = _remote;
+					RemoteInterpreterProxy ri = _remote;
 					_defaultValue = (ri != null ? ri.GetParameterDefaultValue(_parameterInfo) : null) ?? _noDefaultValue;
 				}
 

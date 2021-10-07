@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 			public override void Handle(DkmProcess process)
 			{
-				var pyrtInfo = process.GetPythonRuntimeInfo();
+				PythonRuntimeInfo pyrtInfo = process.GetPythonRuntimeInfo();
 				var nativeModules = process.GetNativeRuntimeInstance().GetNativeModuleInstances();
 
 				pyrtInfo.DLLs.Python = nativeModules.Single(mi => mi.UniqueId == PythonDllModuleInstanceId);
@@ -70,7 +70,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			var nativeModuleInstance = moduleInstance as DkmNativeModuleInstance;
 			if (nativeModuleInstance != null && PythonDLLs.CTypesNames.Contains(moduleInstance.Name))
 			{
-				var pyrtInfo = moduleInstance.Process.GetPythonRuntimeInfo();
+				PythonRuntimeInfo pyrtInfo = moduleInstance.Process.GetPythonRuntimeInfo();
 				pyrtInfo.DLLs.CTypes = nativeModuleInstance;
 				nativeModuleInstance.FlagAsTransitionModule();
 			}
@@ -110,7 +110,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 				throw new InvalidOperationException();
 			}
 
-			var loc = new SourceLocation(instrAddr.AdditionalData);
+			SourceLocation loc = new SourceLocation(instrAddr.AdditionalData);
 			bp.SetDataItem(DkmDataCreationDisposition.CreateNew, loc);
 			traceManager.AddBreakpoint(bp);
 		}
@@ -194,7 +194,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			}
 
 			var process = runtimeInstance.Process;
-			var pyrtInfo = process.GetPythonRuntimeInfo();
+			PythonRuntimeInfo pyrtInfo = process.GetPythonRuntimeInfo();
 			if (pyrtInfo.DLLs.Python == null)
 			{
 				return false;
@@ -333,25 +333,25 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 		string IDkmExceptionFormatter.GetAdditionalInformation(DkmExceptionInformation exception)
 		{
-			var em = exception.Process.GetOrCreateDataItem(() => new ExceptionManager(exception.Process));
+			T em = exception.Process.GetOrCreateDataItem(() => new ExceptionManager(exception.Process));
 			return em.GetAdditionalInformation(exception);
 		}
 
 		string IDkmExceptionFormatter.GetDescription(DkmExceptionInformation exception)
 		{
-			var em = exception.Process.GetOrCreateDataItem(() => new ExceptionManager(exception.Process));
+			T em = exception.Process.GetOrCreateDataItem(() => new ExceptionManager(exception.Process));
 			return em.GetDescription(exception);
 		}
 
 		void IDkmExceptionManager.AddExceptionTrigger(DkmProcess process, Guid sourceId, DkmExceptionTrigger trigger)
 		{
-			var em = process.GetOrCreateDataItem(() => new ExceptionManager(process));
+			T em = process.GetOrCreateDataItem(() => new ExceptionManager(process));
 			em.AddExceptionTrigger(process, sourceId, trigger);
 		}
 
 		void IDkmExceptionManager.ClearExceptionTriggers(DkmProcess process, Guid sourceId)
 		{
-			var em = process.GetOrCreateDataItem(() => new ExceptionManager(process));
+			T em = process.GetOrCreateDataItem(() => new ExceptionManager(process));
 			em.ClearExceptionTriggers(process, sourceId);
 		}
 
@@ -394,7 +394,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			public override GetCurrentFrameInfoResponse Handle(DkmProcess process)
 			{
 				var thread = process.GetThreads().Single(t => t.UniqueId == ThreadId);
-				var response = new GetCurrentFrameInfoResponse();
+				GetCurrentFrameInfoResponse response = new GetCurrentFrameInfoResponse();
 				thread.GetCurrentFrameInfo(out response.RetAddr, out response.FrameBase, out response.VFrame);
 				return response;
 			}

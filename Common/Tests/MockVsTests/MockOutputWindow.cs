@@ -16,7 +16,7 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-	class MockOutputWindow : IVsOutputWindow
+	internal class MockOutputWindow : IVsOutputWindow
 	{
 		private static Dictionary<Guid, MockOutputWindowPane> _panes = new Dictionary<Guid, MockOutputWindowPane>() {
 			{VSConstants.OutputWindowPaneGuid.GeneralPane_guid, new MockOutputWindowPane("General") }

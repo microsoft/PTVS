@@ -80,19 +80,10 @@ namespace TestUtilities.Mocks
 			return snapshot.GetText(span);
 		}
 
-		public ITextBuffer TextBuffer
-		{
-			get { return _snapshot.TextBuffer; }
-		}
+		public ITextBuffer TextBuffer => _snapshot.TextBuffer;
 
-		public TrackingFidelityMode TrackingFidelity
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public TrackingFidelityMode TrackingFidelity => throw new NotImplementedException();
 
-		public SpanTrackingMode TrackingMode
-		{
-			get { return _trackingMode; }
-		}
+		public SpanTrackingMode TrackingMode => _trackingMode;
 	}
 }

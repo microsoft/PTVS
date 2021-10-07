@@ -16,7 +16,7 @@
 
 namespace Microsoft.IronPythonTools.Interpreter
 {
-	class IronPythonBuiltinFunction : PythonObject, IPythonFunction
+	internal class IronPythonBuiltinFunction : PythonObject, IPythonFunction
 	{
 		private IronPythonBuiltinFunctionTarget[] _targets;
 		private IPythonType _declaringType;
@@ -33,7 +33,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 		{
 			get
 			{
-				var ri = RemoteInterpreter;
+				RemoteInterpreterProxy ri = RemoteInterpreter;
 				return ri != null ? ri.GetBuiltinFunctionName(Value) : string.Empty;
 			}
 		}
@@ -42,7 +42,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 		{
 			get
 			{
-				var ri = RemoteInterpreter;
+				RemoteInterpreterProxy ri = RemoteInterpreter;
 				return ri != null ? ri.GetBuiltinFunctionDocumentation(Value) : string.Empty;
 			}
 		}
@@ -56,10 +56,10 @@ namespace Microsoft.IronPythonTools.Interpreter
 
 				if (_targets == null)
 				{
-					var ri = RemoteInterpreter;
-					var overloads = ri != null ? ri.GetBuiltinFunctionOverloads(Value) : new ObjectIdentityHandle[0];
-					var result = new IronPythonBuiltinFunctionTarget[overloads.Length];
-					var decltype = (IronPythonType)DeclaringType;
+					RemoteInterpreterProxy ri = RemoteInterpreter;
+					ObjectIdentityHandle[] overloads = ri != null ? ri.GetBuiltinFunctionOverloads(Value) : new ObjectIdentityHandle[0];
+					IronPythonBuiltinFunctionTarget[] result = new IronPythonBuiltinFunctionTarget[overloads.Length];
+					IronPythonType decltype = (IronPythonType)DeclaringType;
 					for (int i = 0; i < overloads.Length; i++)
 					{
 						result[i] = new IronPythonBuiltinFunctionTarget(
@@ -83,36 +83,18 @@ namespace Microsoft.IronPythonTools.Interpreter
 			{
 				if (_declaringType == null)
 				{
-					var ri = RemoteInterpreter;
+					RemoteInterpreterProxy ri = RemoteInterpreter;
 					_declaringType = ri != null ? Interpreter.GetTypeFromType(ri.GetBuiltinFunctionDeclaringPythonType(Value)) : null;
 				}
 				return _declaringType;
 			}
 		}
 
-		public bool IsBuiltin
-		{
-			get
-			{
-				return true;
-			}
-		}
+		public bool IsBuiltin => true;
 
-		public bool IsStatic
-		{
-			get
-			{
-				return true;
-			}
-		}
+		public bool IsStatic => true;
 
-		public bool IsClassMethod
-		{
-			get
-			{
-				return false;
-			}
-		}
+		public bool IsClassMethod => false;
 
 		public IPythonModule DeclaringModule
 		{
@@ -120,7 +102,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 			{
 				if (_declaringModule == null)
 				{
-					var ri = RemoteInterpreter;
+					RemoteInterpreterProxy ri = RemoteInterpreter;
 					_declaringModule = ri != null ? Interpreter.GetModule(ri.GetBuiltinFunctionModule(Value)) : null;
 				}
 				return _declaringModule;
@@ -131,10 +113,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 
 		#region IMember Members
 
-		public override PythonMemberType MemberType
-		{
-			get { return PythonMemberType.Function; }
-		}
+		public override PythonMemberType MemberType => PythonMemberType.Function;
 
 		#endregion
 

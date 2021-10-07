@@ -25,9 +25,15 @@ namespace TestUtilities.Mocks
 			HashCode = target.GetHashCode();
 		}
 
-		public override int GetHashCode() => HashCode;
+		public override int GetHashCode()
+		{
+			return HashCode;
+		}
 
-		public override bool Equals(object obj) => Equals(obj as KeyWeakReference);
+		public override bool Equals(object obj)
+		{
+			return Equals(obj as KeyWeakReference);
+		}
 
 		public bool Equals(KeyWeakReference other)
 		{

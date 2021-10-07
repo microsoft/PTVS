@@ -17,7 +17,7 @@
 namespace Microsoft.PythonTools.Debugger
 {
 	// Must be in sync with BREAKPOINT_CONDITION_* constants in ptvsd/debugger.py.
-	enum PythonBreakpointConditionKind
+	internal enum PythonBreakpointConditionKind
 	{
 		Always = 0,
 		WhenTrue = 1,
@@ -25,7 +25,7 @@ namespace Microsoft.PythonTools.Debugger
 	}
 
 	// Must be in sync with BREAKPOINT_PASS_COUNT_* constants in ptvsd/debugger.py.
-	enum PythonBreakpointPassCountKind
+	internal enum PythonBreakpointPassCountKind
 	{
 		Always = 0,
 		Every = 1,
@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.Debugger
 		WhenEqualOrGreater = 3
 	}
 
-	class PythonBreakpoint
+	internal class PythonBreakpoint
 	{
 		private readonly PythonProcess _process;
 		private readonly string _filename;

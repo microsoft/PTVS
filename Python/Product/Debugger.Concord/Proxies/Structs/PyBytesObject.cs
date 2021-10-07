@@ -61,10 +61,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			return result;
 		}
 
-		public ArrayProxy<ByteProxy> ob_sval
-		{
-			get { return GetFieldProxy(_fields.ob_sval); }
-		}
+		public ArrayProxy<ByteProxy> ob_sval => GetFieldProxy(_fields.ob_sval);
 
 		public byte[] ToBytes()
 		{
@@ -74,7 +71,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 				return new byte[0];
 			}
 
-			var buf = new byte[size];
+			global::System.Byte[] buf = new byte[size];
 			Process.ReadMemory(ob_sval.Address, DkmReadMemoryFlags.None, buf);
 			return buf;
 		}

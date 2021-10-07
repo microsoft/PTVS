@@ -79,7 +79,7 @@ namespace TestUtilities.Mocks
 				return result;
 			}
 
-			var reference = new KeyWeakReference(context);
+			KeyWeakReference reference = new KeyWeakReference(context);
 			if (_weakContextMapping.TryGetValue(reference, out result))
 			{
 				if (keepAlive)
@@ -118,7 +118,7 @@ namespace TestUtilities.Mocks
 				throw new ArgumentNullException(nameof(context));
 			}
 
-			if (!TryGetHistory(context, out var history))
+			if (!TryGetHistory(context, out ITextUndoHistory history))
 			{
 				throw new InvalidOperationException("Cannot find context in registry");
 			}

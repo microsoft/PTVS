@@ -38,14 +38,8 @@ namespace TestUtilities.Mocks
 
 		public Encoding Encoding
 		{
-			get
-			{
-				return Encoding.UTF8;
-			}
-			set
-			{
-				throw new NotImplementedException();
-			}
+			get => Encoding.UTF8;
+			set => throw new NotImplementedException();
 		}
 
 		public event EventHandler<EncodingChangedEventArgs> EncodingChanged
@@ -60,30 +54,15 @@ namespace TestUtilities.Mocks
 			remove { throw new NotImplementedException(); }
 		}
 
-		public string FilePath
-		{
-			get { return _filePath; }
-		}
+		public string FilePath => _filePath;
 
-		public bool IsDirty
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public bool IsDirty => throw new NotImplementedException();
 
-		public bool IsReloading
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public bool IsReloading => throw new NotImplementedException();
 
-		public DateTime LastContentModifiedTime
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public DateTime LastContentModifiedTime => throw new NotImplementedException();
 
-		public DateTime LastSavedTime
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public DateTime LastSavedTime => throw new NotImplementedException();
 
 		public ReloadResult Reload(EditOptions options)
 		{
@@ -140,10 +119,7 @@ namespace TestUtilities.Mocks
 			throw new NotImplementedException();
 		}
 
-		public ITextBuffer TextBuffer
-		{
-			get { return _buffer; }
-		}
+		public ITextBuffer TextBuffer => _buffer;
 
 		public void UpdateDirtyState(bool isDirty, DateTime lastContentModifiedTime)
 		{

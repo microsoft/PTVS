@@ -103,7 +103,7 @@ namespace TestUtilities
 
 			var ver = version.ToVersion();
 			var tag = ver + (arch == InterpreterArchitecture.x86 ? "-32" : "");
-			foreach (var path in new[] {
+			foreach (global::System.Object path in new[] {
 				string.Format("Python{0}{1}", ver.Major, ver.Minor),
 				string.Format("Python{0}{1}_{2}", ver.Major, ver.Minor, arch.ToString("x")),
 				string.Format("Python{0}{1}-{2}", ver.Major, ver.Minor, arch.ToString("#")),
@@ -185,12 +185,35 @@ namespace TestUtilities
 		{
 			get
 			{
-				if (Anaconda37 != null) yield return Anaconda37;
-				if (Anaconda37_x64 != null) yield return Anaconda37_x64;
-				if (Anaconda36 != null) yield return Anaconda36;
-				if (Anaconda36_x64 != null) yield return Anaconda36_x64;
-				if (Anaconda27 != null) yield return Anaconda27;
-				if (Anaconda27_x64 != null) yield return Anaconda27_x64;
+				if (Anaconda37 != null)
+				{
+					yield return Anaconda37;
+				}
+
+				if (Anaconda37_x64 != null)
+				{
+					yield return Anaconda37_x64;
+				}
+
+				if (Anaconda36 != null)
+				{
+					yield return Anaconda36;
+				}
+
+				if (Anaconda36_x64 != null)
+				{
+					yield return Anaconda36_x64;
+				}
+
+				if (Anaconda27 != null)
+				{
+					yield return Anaconda27;
+				}
+
+				if (Anaconda27_x64 != null)
+				{
+					yield return Anaconda27_x64;
+				}
 			}
 		}
 
@@ -198,17 +221,60 @@ namespace TestUtilities
 		{
 			get
 			{
-				if (Python27 != null) yield return Python27;
-				if (Python35 != null) yield return Python35;
-				if (Python36 != null) yield return Python36;
-				if (Python37 != null) yield return Python37;
-				if (IronPython27 != null) yield return IronPython27;
-				if (Python27_x64 != null) yield return Python27_x64;
-				if (Python35_x64 != null) yield return Python35_x64;
-				if (Python36_x64 != null) yield return Python36_x64;
-				if (Python37_x64 != null) yield return Python37_x64;
-				if (IronPython27_x64 != null) yield return IronPython27_x64;
-				if (Jython27 != null) yield return Jython27;
+				if (Python27 != null)
+				{
+					yield return Python27;
+				}
+
+				if (Python35 != null)
+				{
+					yield return Python35;
+				}
+
+				if (Python36 != null)
+				{
+					yield return Python36;
+				}
+
+				if (Python37 != null)
+				{
+					yield return Python37;
+				}
+
+				if (IronPython27 != null)
+				{
+					yield return IronPython27;
+				}
+
+				if (Python27_x64 != null)
+				{
+					yield return Python27_x64;
+				}
+
+				if (Python35_x64 != null)
+				{
+					yield return Python35_x64;
+				}
+
+				if (Python36_x64 != null)
+				{
+					yield return Python36_x64;
+				}
+
+				if (Python37_x64 != null)
+				{
+					yield return Python37_x64;
+				}
+
+				if (IronPython27_x64 != null)
+				{
+					yield return IronPython27_x64;
+				}
+
+				if (Jython27 != null)
+				{
+					yield return Jython27;
+				}
 			}
 		}
 
@@ -272,7 +338,11 @@ namespace TestUtilities
 			IsIronPython = selected.IsIronPython;
 		}
 
-		public override string ToString() => Configuration.Description;
+		public override string ToString()
+		{
+			return Configuration.Description;
+		}
+
 		public string PrefixPath => Configuration.GetPrefixPath();
 		public string InterpreterPath => Configuration.InterpreterPath;
 		public PythonLanguageVersion Version => Configuration.Version.ToLanguageVersion();

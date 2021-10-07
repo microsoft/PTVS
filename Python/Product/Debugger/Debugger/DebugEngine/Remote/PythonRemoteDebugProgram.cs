@@ -28,13 +28,10 @@ namespace Microsoft.PythonTools.Debugger.Remote
 
 		public PythonRemoteDebugProgram(PythonRemoteDebugProcess process)
 		{
-			this._process = process;
+			_process = process;
 		}
 
-		public PythonRemoteDebugProcess DebugProcess
-		{
-			get { return _process; }
-		}
+		public PythonRemoteDebugProcess DebugProcess => _process;
 
 		public int Attach(IDebugEventCallback2 pCallback)
 		{

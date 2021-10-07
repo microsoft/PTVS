@@ -61,8 +61,8 @@ namespace Microsoft.IronPythonTools.Interpreter
 				// IronPython not installed in the GAC...
 			}
 
-			var mod = Remote.ImportBuiltinModule("__builtin__");
-			var newMod = new IronPythonBuiltinModule(this, mod, "__builtin__");
+			ObjectIdentityHandle mod = Remote.ImportBuiltinModule("__builtin__");
+			IronPythonBuiltinModule newMod = new IronPythonBuiltinModule(this, mod, "__builtin__");
 			_modules[newMod.Name] = _builtinModule = newMod;
 
 			LoadModules();
@@ -79,21 +79,23 @@ namespace Microsoft.IronPythonTools.Interpreter
 			// We create a sacrificial domain for loading all of our assemblies into.  
 
 			var ironPythonAssemblyPath = Path.GetDirectoryName(_factory.Configuration.GetWindowsInterpreterPath());
-			AppDomainSetup setup = new AppDomainSetup();
-			setup.ShadowCopyFiles = "true";
-			// We are in ...\Extensions\Microsoft\IronPython Interpreter\2.0
-			// We need to be able to load assemblies from:
-			//      Python Tools for Visual Studio\2.0
-			//      IronPython Interpreter\2.0
-			//
-			// So setup the application base to be Extensions\Microsoft\, and then add the other 2 dirs to the private bin path.
-			setup.ApplicationBase = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)));
-			setup.PrivateBinPath = Path.GetDirectoryName(typeof(IronPythonInterpreter).Assembly.Location) + ";" +
+			AppDomainSetup setup = new AppDomainSetup
+			{
+				ShadowCopyFiles = "true",
+				// We are in ...\Extensions\Microsoft\IronPython Interpreter\2.0
+				// We need to be able to load assemblies from:
+				//      Python Tools for Visual Studio\2.0
+				//      IronPython Interpreter\2.0
+				//
+				// So setup the application base to be Extensions\Microsoft\, and then add the other 2 dirs to the private bin path.
+				ApplicationBase = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location))),
+				PrivateBinPath = Path.GetDirectoryName(typeof(IronPythonInterpreter).Assembly.Location) + ";" +
 								   Path.GetDirectoryName(typeof(IPythonFunction).Assembly.Location) + ";" +
 								   Path.Combine(ironPythonAssemblyPath, "DLLs") + ";" +
-								   ironPythonAssemblyPath;
+								   ironPythonAssemblyPath,
 
-			setup.PrivateBinPathProbe = "";
+				PrivateBinPathProbe = ""
+			};
 			if (Directory.Exists(_factory.Configuration.GetPrefixPath()))
 			{
 				setup.AppDomainInitializer = IronPythonResolver.Initialize;
@@ -136,7 +138,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 #endif
 
 		[Serializable]
-		class RemoteAssemblyResolver : IDisposable
+		private class RemoteAssemblyResolver : IDisposable
 		{
 			private readonly AppDomain _appDomain;
 			private readonly string _ironPythonRootPath;
@@ -194,7 +196,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 			}
 		}
 
-		class AssemblyResolver
+		private class AssemblyResolver
 		{
 			internal static AssemblyResolver Instance = new AssemblyResolver();
 
@@ -208,13 +210,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 			}
 		}
 
-		public RemoteInterpreterProxy Remote
-		{
-			get
-			{
-				return _remote;
-			}
-		}
+		public RemoteInterpreterProxy Remote => _remote;
 
 		private void LoadModules()
 		{
@@ -245,7 +241,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 			{
 				try
 				{
-					var mod = Remote.ImportBuiltinModule(modName);
+					ObjectIdentityHandle mod = Remote.ImportBuiltinModule(modName);
 
 					if (modName != "__builtin__")
 					{
@@ -424,7 +420,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 
 		private void ReloadRemoteDomain()
 		{
-			var oldUnloaded = _unloader;
+			DomainUnloader oldUnloaded = _unloader;
 
 			var evt = UnloadingDomain;
 			if (evt != null)
@@ -632,7 +628,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 				return mod;
 			}
 
-			var handle = Remote.LookupNamespace(name);
+			ObjectIdentityHandle handle = Remote.LookupNamespace(name);
 			if (!handle.IsNull)
 			{
 				mod = MakeObject(handle) as IPythonModule;
@@ -809,14 +805,14 @@ namespace Microsoft.IronPythonTools.Interpreter
 
 		public IProjectEntry AddXamlEntry(string filePath, Uri documentUri)
 		{
-			var entry = new XamlProjectEntry(filePath, documentUri);
+			XamlProjectEntry entry = new XamlProjectEntry(filePath, documentUri);
 			_xamlByFilename[filePath] = entry;
 			return entry;
 		}
 
 		#endregion
 
-		class DomainUnloader : IDisposable
+		private class DomainUnloader : IDisposable
 		{
 			private readonly AppDomain _domain;
 			private bool _isDisposed;

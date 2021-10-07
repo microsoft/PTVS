@@ -16,7 +16,7 @@
 
 namespace Microsoft.PythonTools.EnvironmentsList
 {
-	sealed class PipExtensionProvider : IEnvironmentViewExtension, IPackageManagerUI, IDisposable
+	internal sealed class PipExtensionProvider : IEnvironmentViewExtension, IPackageManagerUI, IDisposable
 	{
 		private readonly IPythonInterpreterFactory _factory;
 		internal readonly IPackageManager _packageManager;
@@ -47,30 +47,15 @@ namespace Microsoft.PythonTools.EnvironmentsList
 			_cancelAll.Dispose();
 		}
 
-		public int SortPriority
-		{
-			get { return -8; }
-		}
+		public int SortPriority => -8;
 
-		public string LocalizedDisplayName
-		{
-			get { return _packageManager.ExtensionDisplayName; }
-		}
+		public string LocalizedDisplayName => _packageManager.ExtensionDisplayName;
 
-		public string IndexName
-		{
-			get { return _packageManager.IndexDisplayName; }
-		}
+		public string IndexName => _packageManager.IndexDisplayName;
 
-		public object HelpContent
-		{
-			get { return Resources.PipExtensionHelpContent; }
-		}
+		public object HelpContent => Resources.PipExtensionHelpContent;
 
-		public string HelpText
-		{
-			get { return Resources.PipExtensionHelpContent; }
-		}
+		public string HelpText => Resources.PipExtensionHelpContent;
 
 		public FrameworkElement WpfObject
 		{
@@ -134,7 +119,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
 		public Task<bool> ShouldElevateAsync(IPackageManager sender, string operation)
 		{
-			var e = new QueryShouldElevateEventArgs(_factory);
+			QueryShouldElevateEventArgs e = new QueryShouldElevateEventArgs(_factory);
 			QueryShouldElevate?.Invoke(this, e);
 			if (e.ElevateAsync != null)
 			{
@@ -210,7 +195,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 			remove { _packageManager.InstalledPackagesChanged -= value; }
 		}
 
-		sealed class CallOnDispose : IDisposable
+		private sealed class CallOnDispose : IDisposable
 		{
 			private readonly Action _action;
 			public CallOnDispose(Action action) { _action = action; }

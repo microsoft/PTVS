@@ -16,7 +16,7 @@
 
 namespace Microsoft.PythonTools.XamlDesignerSupport
 {
-	class WpfEventBindingProvider : EventBindingProvider
+	internal class WpfEventBindingProvider : EventBindingProvider
 	{
 		private readonly IXamlDesignerCallback _callback;
 
@@ -41,10 +41,7 @@ namespace Microsoft.PythonTools.XamlDesignerSupport
 			throw new NotImplementedException();
 		}
 
-		public override string CodeProviderLanguage
-		{
-			get { return "Python"; }
-		}
+		public override string CodeProviderLanguage => "Python";
 
 		public override bool CreateMethod(EventDescription eventDescription, string methodName, string initialStatements)
 		{

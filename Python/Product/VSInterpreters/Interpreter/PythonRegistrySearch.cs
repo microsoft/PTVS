@@ -16,7 +16,7 @@
 
 namespace Microsoft.PythonTools.Interpreter
 {
-	class PythonRegistrySearch
+	internal class PythonRegistrySearch
 	{
 		public const string PythonCoreCompanyDisplayName = "Python Software Foundation";
 		public const string PythonCoreSupportUrl = "https://www.python.org/";
@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.Interpreter
 
 		public static IEnumerable<PythonInterpreterInformation> PerformDefaultSearch()
 		{
-			var search = new PythonRegistrySearch();
+			PythonRegistrySearch search = new PythonRegistrySearch();
 
 			using (var key = Registry.CurrentUser.OpenSubKey("Software\\Python"))
 			{
@@ -114,7 +114,7 @@ namespace Microsoft.PythonTools.Interpreter
 						using (var tagKey = companyKey.OpenSubKey(tag))
 						using (var installKey = tagKey?.OpenSubKey("InstallPath"))
 						{
-							var config = TryReadConfiguration(company, tag, tagKey, installKey, pythonCore, assumedArch);
+							VisualStudioInterpreterConfiguration config = TryReadConfiguration(company, tag, tagKey, installKey, pythonCore, assumedArch);
 							if (config == null)
 							{
 								continue;
@@ -136,7 +136,7 @@ namespace Microsoft.PythonTools.Interpreter
 									}
 								}
 
-								var info = new PythonInterpreterInformation(config, companyDisplay, companySupportUrl, supportUrl);
+								PythonInterpreterInformation info = new PythonInterpreterInformation(config, companyDisplay, companySupportUrl, supportUrl);
 								_info.Add(info);
 							}
 						}

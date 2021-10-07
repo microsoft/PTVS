@@ -67,7 +67,7 @@ namespace VSInterpretersTests
 		{
 			using (var r = new StringListReader(new[] { "0123456789", "ABCDEFGHIJ" }))
 			{
-				var buffer = new char[7];
+				global::System.Char[] buffer = new char[7];
 				Assert.AreEqual(7, r.Read(buffer, 0, 7));
 				Assert.AreEqual("0123456", ToString(buffer));
 
@@ -89,7 +89,7 @@ namespace VSInterpretersTests
 		{
 			using (var r = new StringListReader(new[] { "0123456789", "ABCDEFGHIJ" }))
 			{
-				var buffer = new char[7];
+				global::System.Char[] buffer = new char[7];
 				Assert.AreEqual(7, r.ReadBlock(buffer, 0, 7));
 				Assert.AreEqual("0123456", ToString(buffer));
 
@@ -104,7 +104,7 @@ namespace VSInterpretersTests
 		[TestMethod]
 		public void PeekTest()
 		{
-			var buffer = new char[10];
+			global::System.Char[] buffer = new char[10];
 
 			using (var r = new StringListReader(new[] { "AB", "CD", "EF" }))
 			{

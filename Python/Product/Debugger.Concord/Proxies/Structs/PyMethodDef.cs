@@ -31,9 +31,6 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			InitializeStruct(this, out _fields);
 		}
 
-		public PointerProxy ml_meth
-		{
-			get { return GetFieldProxy(_fields.ml_meth); }
-		}
+		public PointerProxy ml_meth => GetFieldProxy(_fields.ml_meth);
 	}
 }

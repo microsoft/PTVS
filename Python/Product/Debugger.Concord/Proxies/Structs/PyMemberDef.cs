@@ -57,19 +57,10 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			InitializeStruct(this, out _fields);
 		}
 
-		public PointerProxy<CStringProxy> name
-		{
-			get { return GetFieldProxy(_fields.name); }
-		}
+		public PointerProxy<CStringProxy> name => GetFieldProxy(_fields.name);
 
-		public Int32EnumProxy<PyMemberDefType> type
-		{
-			get { return GetFieldProxy(_fields.type); }
-		}
+		public Int32EnumProxy<PyMemberDefType> type => GetFieldProxy(_fields.type);
 
-		public SSizeTProxy offset
-		{
-			get { return GetFieldProxy(_fields.offset); }
-		}
+		public SSizeTProxy offset => GetFieldProxy(_fields.offset);
 	}
 }

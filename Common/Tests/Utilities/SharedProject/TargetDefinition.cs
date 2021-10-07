@@ -38,7 +38,7 @@ namespace TestUtilities.SharedProject
 			{
 				target.DependsOnTargets = DependsOnTargets;
 			}
-			foreach (var creator in Creators)
+			foreach (Action<ProjectTargetElement> creator in Creators)
 			{
 				creator(target);
 			}

@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 			public PyObject_FieldOffsets(DkmProcess process)
 			{
-				var fields = StructProxy.GetStructFields<PyObject, PyObject.PyObject_Fields>(process);
+				PyObject.PyObject_Fields fields = StructProxy.GetStructFields<PyObject, PyObject.PyObject_Fields>(process);
 				ob_type = fields.ob_type.Offset;
 			}
 		}
@@ -48,7 +48,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 			public PyVarObject_FieldOffsets(DkmProcess process)
 			{
-				var fields = StructProxy.GetStructFields<PyVarObject, PyVarObject.PyVarObject_Fields>(process);
+				PyVarObject.PyVarObject_Fields fields = StructProxy.GetStructFields<PyVarObject, PyVarObject.PyVarObject_Fields>(process);
 				ob_size = fields.ob_size.Offset;
 			}
 		}
@@ -61,7 +61,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 			public PyCodeObject_FieldOffsets(DkmProcess process)
 			{
-				var fields = StructProxy.GetStructFields<PyCodeObject, PyCodeObject.Fields>(process);
+				PyCodeObject.Fields fields = StructProxy.GetStructFields<PyCodeObject, PyCodeObject.Fields>(process);
 				co_varnames = fields.co_varnames.Offset;
 				co_filename = fields.co_filename.Offset;
 				co_name = fields.co_name.Offset;
@@ -78,7 +78,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 			{
 				if (process.GetPythonRuntimeInfo().LanguageVersion <= PythonLanguageVersion.V35)
 				{
-					var fields = StructProxy.GetStructFields<PyFrameObject, PyFrameObject.Fields_27_35>(process);
+					PyFrameObject.Fields_27_35 fields = StructProxy.GetStructFields<PyFrameObject, PyFrameObject.Fields_27_35>(process);
 					f_back = -1;
 					f_code = fields.f_code.Offset;
 					f_globals = fields.f_globals.Offset;
@@ -87,7 +87,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 				}
 				else
 				{
-					var fields = StructProxy.GetStructFields<PyFrameObject, PyFrameObject.Fields_36>(process);
+					PyFrameObject.Fields_36 fields = StructProxy.GetStructFields<PyFrameObject, PyFrameObject.Fields_36>(process);
 					f_back = fields.f_back.Offset;
 					f_code = fields.f_code.Offset;
 					f_globals = fields.f_globals.Offset;
@@ -105,7 +105,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 			public PyBytesObject_FieldOffsets(DkmProcess process)
 			{
-				var fields = StructProxy.GetStructFields<PyBytesObject, PyBytesObject.Fields>(process);
+				PyBytesObject.Fields fields = StructProxy.GetStructFields<PyBytesObject, PyBytesObject.Fields>(process);
 				ob_sval = fields.ob_sval.Offset;
 			}
 		}
@@ -118,7 +118,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 			public PyUnicodeObject27_FieldOffsets(DkmProcess process)
 			{
-				var fields = StructProxy.GetStructFields<PyUnicodeObject27, PyUnicodeObject27.Fields>(process);
+				PyUnicodeObject27.Fields fields = StructProxy.GetStructFields<PyUnicodeObject27, PyUnicodeObject27.Fields>(process);
 				length = fields.length.Offset;
 				str = fields.str.Offset;
 			}
@@ -136,15 +136,15 @@ namespace Microsoft.PythonTools.Debugger.Concord
 				sizeof_PyASCIIObject = StructProxy.SizeOf<PyASCIIObject>(process);
 				sizeof_PyCompactUnicodeObject = StructProxy.SizeOf<PyUnicodeObject33>(process);
 
-				var asciiFields = StructProxy.GetStructFields<PyASCIIObject, PyASCIIObject.Fields>(process);
+				PyASCIIObject.Fields asciiFields = StructProxy.GetStructFields<PyASCIIObject, PyASCIIObject.Fields>(process);
 				length = asciiFields.length.Offset;
 				state = asciiFields.state.Offset;
 				wstr = asciiFields.wstr.Offset;
 
-				var compactFields = StructProxy.GetStructFields<PyCompactUnicodeObject, PyCompactUnicodeObject.Fields>(process);
+				PyCompactUnicodeObject.Fields compactFields = StructProxy.GetStructFields<PyCompactUnicodeObject, PyCompactUnicodeObject.Fields>(process);
 				wstr_length = compactFields.wstr_length.Offset;
 
-				var unicodeFields = StructProxy.GetStructFields<PyUnicodeObject33, PyUnicodeObject33.Fields>(process);
+				PyUnicodeObject33.Fields unicodeFields = StructProxy.GetStructFields<PyUnicodeObject33, PyUnicodeObject33.Fields>(process);
 				data = unicodeFields.data.Offset;
 			}
 		}
@@ -270,16 +270,16 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 			if (kind == Kind.StepIn)
 			{
-				var fieldOffsets = _pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<CliStructProxy<FieldOffsets>>("fieldOffsets");
+				CliStructProxy<FieldOffsets> fieldOffsets = _pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<CliStructProxy<FieldOffsets>>("fieldOffsets");
 				fieldOffsets.Write(new FieldOffsets(process, _pyrtInfo));
 
-				var types = _pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<CliStructProxy<Types>>("types");
+				CliStructProxy<Types> types = _pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<CliStructProxy<Types>>("types");
 				types.Write(new Types(process, _pyrtInfo));
 
-				var functionPointers = _pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<CliStructProxy<FunctionPointers>>("functionPointers");
+				CliStructProxy<FunctionPointers> functionPointers = _pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<CliStructProxy<FunctionPointers>>("functionPointers");
 				functionPointers.Write(new FunctionPointers(process, _pyrtInfo));
 
-				var stringEquals = _pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<PointerProxy>("stringEquals");
+				PointerProxy stringEquals = _pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<PointerProxy>("stringEquals");
 				if (_pyrtInfo.LanguageVersion <= PythonLanguageVersion.V27)
 				{
 					stringEquals.Write(_pyrtInfo.DLLs.DebuggerHelper.GetExportedFunctionAddress("StringEquals27").GetPointer());
@@ -307,13 +307,13 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 				foreach (var methodInfo in _handlers.GetType().GetMethods())
 				{
-					var stepInAttr = (StepInGateAttribute)Attribute.GetCustomAttribute(methodInfo, typeof(StepInGateAttribute));
+					StepInGateAttribute stepInAttr = (StepInGateAttribute)Attribute.GetCustomAttribute(methodInfo, typeof(StepInGateAttribute));
 					if (stepInAttr != null &&
 						(stepInAttr.MinVersion == PythonLanguageVersion.None || _pyrtInfo.LanguageVersion >= stepInAttr.MinVersion) &&
 						(stepInAttr.MaxVersion == PythonLanguageVersion.None || _pyrtInfo.LanguageVersion <= stepInAttr.MaxVersion))
 					{
 
-						var handler = (StepInGateHandler)Delegate.CreateDelegate(typeof(StepInGateHandler), _handlers, methodInfo);
+						StepInGateHandler handler = (StepInGateHandler)Delegate.CreateDelegate(typeof(StepInGateHandler), _handlers, methodInfo);
 						AddStepInGate(handler, _pyrtInfo.DLLs.Python, methodInfo.Name, stepInAttr.HasMultipleExitPoints);
 					}
 				}

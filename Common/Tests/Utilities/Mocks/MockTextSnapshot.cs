@@ -38,10 +38,7 @@ namespace TestUtilities.Mocks
 			((MockTextVersion)prevVersion.Version).SetNext(_version, changes);
 		}
 
-		public Microsoft.VisualStudio.Utilities.IContentType ContentType
-		{
-			get { return _buffer.ContentType; }
-		}
+		public Microsoft.VisualStudio.Utilities.IContentType ContentType => _buffer.ContentType;
 
 		public void CopyTo(int sourceIndex, char[] destination, int destinationIndex, int count)
 		{
@@ -177,15 +174,9 @@ namespace TestUtilities.Mocks
 			return GetText().Substring(span.Start, span.Length);
 		}
 
-		public int Length
-		{
-			get { return _text.Length; }
-		}
+		public int Length => _text.Length;
 
-		public int LineCount
-		{
-			get { return GetLines().Length; }
-		}
+		public int LineCount => GetLines().Length;
 
 		public IEnumerable<ITextSnapshotLine> Lines
 		{
@@ -198,20 +189,14 @@ namespace TestUtilities.Mocks
 			}
 		}
 
-		public ITextBuffer TextBuffer
-		{
-			get { return _buffer; }
-		}
+		public ITextBuffer TextBuffer => _buffer;
 
 		public char[] ToCharArray(int startIndex, int length)
 		{
 			throw new NotImplementedException();
 		}
 
-		public ITextVersion Version
-		{
-			get { return _version; }
-		}
+		public ITextVersion Version => _version;
 
 		public void Write(System.IO.TextWriter writer)
 		{
@@ -223,9 +208,6 @@ namespace TestUtilities.Mocks
 			throw new NotImplementedException();
 		}
 
-		public char this[int position]
-		{
-			get { return _text[position]; }
-		}
+		public char this[int position] => _text[position];
 	}
 }

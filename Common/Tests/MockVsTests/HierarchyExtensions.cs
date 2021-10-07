@@ -53,12 +53,36 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 		/// </summary>
 		private static uint GetItemId(object pvar)
 		{
-			if (pvar == null) return VSConstants.VSITEMID_NIL;
-			if (pvar is int) return (uint)(int)pvar;
-			if (pvar is uint) return (uint)pvar;
-			if (pvar is short) return (uint)(short)pvar;
-			if (pvar is ushort) return (uint)(ushort)pvar;
-			if (pvar is long) return (uint)(long)pvar;
+			if (pvar == null)
+			{
+				return VSConstants.VSITEMID_NIL;
+			}
+
+			if (pvar is int)
+			{
+				return (uint)(int)pvar;
+			}
+
+			if (pvar is uint)
+			{
+				return (uint)pvar;
+			}
+
+			if (pvar is short)
+			{
+				return (uint)(short)pvar;
+			}
+
+			if (pvar is ushort)
+			{
+				return (uint)(ushort)pvar;
+			}
+
+			if (pvar is long)
+			{
+				return (uint)(long)pvar;
+			}
+
 			return VSConstants.VSITEMID_NIL;
 		}
 

@@ -20,7 +20,7 @@ namespace Microsoft.PythonTools.Debugger
 	/// Extracts a flat list of all the sections of code protected by exception
 	/// handlers.
 	/// </summary>
-	class TryHandlerWalker : PythonWalker
+	internal class TryHandlerWalker : PythonWalker
 	{
 		private readonly List<TryStatement> _statements;
 
@@ -29,13 +29,7 @@ namespace Microsoft.PythonTools.Debugger
 			_statements = new List<TryStatement>();
 		}
 
-		public ICollection<TryStatement> Statements
-		{
-			get
-			{
-				return _statements;
-			}
-		}
+		public ICollection<TryStatement> Statements => _statements;
 
 		public override bool Walk(TryStatement node)
 		{

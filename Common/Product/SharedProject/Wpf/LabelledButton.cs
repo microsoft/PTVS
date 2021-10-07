@@ -16,20 +16,20 @@
 
 namespace Microsoft.VisualStudioTools.Wpf
 {
-	sealed class LabelledButton : Button
+	internal sealed class LabelledButton : Button
 	{
 		public string Title
 		{
-			get { return (string)GetValue(TitleProperty); }
-			set { SetValue(TitleProperty, value); }
+			get => (string)GetValue(TitleProperty);
+			set => SetValue(TitleProperty, value);
 		}
 
 		public static readonly DependencyProperty TitleProperty = DependencyProperty.Register("Title", typeof(string), typeof(LabelledButton), new PropertyMetadata());
 
 		public string HelpText
 		{
-			get { return (string)GetValue(HelpTextProperty); }
-			set { SetValue(HelpTextProperty, value); }
+			get => (string)GetValue(HelpTextProperty);
+			set => SetValue(HelpTextProperty, value);
 		}
 
 		public static readonly DependencyProperty HelpTextProperty = DependencyProperty.Register("HelpText", typeof(string), typeof(LabelledButton), new PropertyMetadata(HelpText_PropertyChanged));
@@ -42,8 +42,8 @@ namespace Microsoft.VisualStudioTools.Wpf
 
 		public bool HasHelpText
 		{
-			get { return (bool)GetValue(HasHelpTextProperty); }
-			private set { SetValue(HasHelpTextPropertyKey, value); }
+			get => (bool)GetValue(HasHelpTextProperty);
+			private set => SetValue(HasHelpTextPropertyKey, value);
 		}
 
 		private static readonly DependencyPropertyKey HasHelpTextPropertyKey = DependencyProperty.RegisterReadOnly("HasHelpText", typeof(bool), typeof(LabelledButton), new PropertyMetadata(false));

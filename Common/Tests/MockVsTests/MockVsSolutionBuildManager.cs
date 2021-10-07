@@ -16,7 +16,7 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-	class MockVsSolutionBuildManager : IVsSolutionBuildManager
+	internal class MockVsSolutionBuildManager : IVsSolutionBuildManager
 	{
 		public int AdviseUpdateSolutionEvents(IVsUpdateSolutionEvents pIVsUpdateSolutionEvents, out uint pdwCookie)
 		{

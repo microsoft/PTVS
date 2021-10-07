@@ -16,7 +16,7 @@
 
 namespace Microsoft.IronPythonTools.Interpreter
 {
-	sealed class XamlProjectEntry : IXamlProjectEntry
+	internal sealed class XamlProjectEntry : IXamlProjectEntry
 	{
 		private XamlAnalysis _analysis;
 		private int _version;
@@ -45,10 +45,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 
 		#region IProjectEntry Members
 
-		public bool IsAnalyzed
-		{
-			get { return _analysis != null; }
-		}
+		public bool IsAnalyzed => _analysis != null;
 
 		public void Analyze(CancellationToken cancel)
 		{
@@ -99,13 +96,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 		public Uri DocumentUri { get; }
 		public IDocument Document => null;
 
-		public int AnalysisVersion
-		{
-			get
-			{
-				return _version;
-			}
-		}
+		public int AnalysisVersion => _version;
 
 		public Dictionary<object, object> Properties
 		{
@@ -119,10 +110,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 			}
 		}
 
-		public IModuleContext AnalysisContext
-		{
-			get { return null; }
-		}
+		public IModuleContext AnalysisContext => null;
 
 		public void RemovedFromProject() { }
 
@@ -130,17 +118,14 @@ namespace Microsoft.IronPythonTools.Interpreter
 
 		#region IXamlProjectEntry Members
 
-		public XamlAnalysis Analysis
-		{
-			get { return _analysis; }
-		}
+		public XamlAnalysis Analysis => _analysis;
 
 		#endregion
 
 		public void Dispose() { }
 	}
 
-	interface IXamlProjectEntry : IExternalProjectEntry
+	internal interface IXamlProjectEntry : IExternalProjectEntry
 	{
 		XamlAnalysis Analysis
 		{

@@ -16,7 +16,7 @@
 
 namespace Microsoft.PythonTools.Debugger
 {
-	class ProcessExitedEventArgs : EventArgs
+	internal class ProcessExitedEventArgs : EventArgs
 	{
 		private readonly int _exitCode;
 
@@ -25,12 +25,6 @@ namespace Microsoft.PythonTools.Debugger
 			_exitCode = exitCode;
 		}
 
-		public int ExitCode
-		{
-			get
-			{
-				return _exitCode;
-			}
-		}
+		public int ExitCode => _exitCode;
 	}
 }

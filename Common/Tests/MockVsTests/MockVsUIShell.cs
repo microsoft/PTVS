@@ -16,7 +16,7 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-	class MockVsUIShell : IVsUIShell
+	internal class MockVsUIShell : IVsUIShell
 	{
 		private readonly MockVs _instance;
 		internal Stack<MockDialog> Dialogs = new Stack<MockDialog>();
@@ -97,9 +97,9 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			return VSConstants.S_OK;
 		}
 
-		class EnumWindowFrames : IEnumWindowFrames
+		private class EnumWindowFrames : IEnumWindowFrames
 		{
-			private MockVsUIShell _uiShell;
+			private readonly MockVsUIShell _uiShell;
 
 			public EnumWindowFrames(MockVsUIShell mockVsUIShell)
 			{

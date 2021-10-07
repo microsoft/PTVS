@@ -16,7 +16,7 @@
 
 namespace Microsoft.IronPythonTools.Interpreter
 {
-	class IronPythonField : PythonObject, IBuiltinProperty
+	internal class IronPythonField : PythonObject, IBuiltinProperty
 	{
 		private IPythonType _fieldType;
 		private bool? _isStatic;
@@ -34,7 +34,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 			{
 				if (_fieldType == null)
 				{
-					var ri = RemoteInterpreter;
+					RemoteInterpreterProxy ri = RemoteInterpreter;
 					_fieldType = ri != null ? (IPythonType)Interpreter.MakeObject(ri.GetFieldType(Value)) : null;
 				}
 				return _fieldType;
@@ -47,7 +47,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 			{
 				if (_isStatic == null)
 				{
-					var ri = RemoteInterpreter;
+					RemoteInterpreterProxy ri = RemoteInterpreter;
 					_isStatic = ri != null ? ri.IsFieldStatic(Value) : false;
 				}
 
@@ -59,20 +59,14 @@ namespace Microsoft.IronPythonTools.Interpreter
 		{
 			get
 			{
-				var ri = RemoteInterpreter;
+				RemoteInterpreterProxy ri = RemoteInterpreter;
 				return ri != null ? ri.GetFieldDocumentation(Value) : string.Empty;
 			}
 		}
 
-		public string Description
-		{
-			get { return Documentation; }
-		}
+		public string Description => Documentation;
 
-		public override PythonMemberType MemberType
-		{
-			get { return PythonMemberType.Field; }
-		}
+		public override PythonMemberType MemberType => PythonMemberType.Field;
 
 		#endregion
 	}

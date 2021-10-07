@@ -31,8 +31,15 @@ namespace TestUtilities.UI
 			Assert.IsTrue((bool)Element.GetCurrentPropertyValue(AutomationElement.IsTogglePatternAvailableProperty), "Element is not a check box");
 			TogglePattern pattern = (TogglePattern)Element.GetCurrentPattern(TogglePattern.Pattern);
 
-			if (pattern.Current.ToggleState != ToggleState.On) pattern.Toggle();
-			if (pattern.Current.ToggleState != ToggleState.On) pattern.Toggle();
+			if (pattern.Current.ToggleState != ToggleState.On)
+			{
+				pattern.Toggle();
+			}
+
+			if (pattern.Current.ToggleState != ToggleState.On)
+			{
+				pattern.Toggle();
+			}
 
 			Assert.AreEqual(pattern.Current.ToggleState, ToggleState.On, "Could not toggle " + Name + " to On.");
 		}
@@ -42,8 +49,16 @@ namespace TestUtilities.UI
 			Assert.IsTrue((bool)Element.GetCurrentPropertyValue(AutomationElement.IsTogglePatternAvailableProperty), "Element is not a check box");
 			TogglePattern pattern = (TogglePattern)Element.GetCurrentPattern(TogglePattern.Pattern);
 
-			if (pattern.Current.ToggleState != ToggleState.Off) pattern.Toggle();
-			if (pattern.Current.ToggleState != ToggleState.Off) pattern.Toggle();
+			if (pattern.Current.ToggleState != ToggleState.Off)
+			{
+				pattern.Toggle();
+			}
+
+			if (pattern.Current.ToggleState != ToggleState.Off)
+			{
+				pattern.Toggle();
+			}
+
 			Assert.AreEqual(pattern.Current.ToggleState, ToggleState.Off, "Could not toggle " + Name + " to Off.");
 		}
 

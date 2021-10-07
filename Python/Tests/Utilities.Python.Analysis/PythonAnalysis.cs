@@ -192,7 +192,9 @@ namespace TestUtilities.Python
 		}
 
 		private static string Format(SourceSpan span)
-			=> $"({span.Start.Index},{span.Start.Line},{span.Start.Column})-({span.End.Index},{span.End.Line},{span.End.Column})";
+		{
+			return $"({span.Start.Index},{span.Start.Line},{span.Start.Column})-({span.End.Index},{span.End.Line},{span.End.Column})";
+		}
 
 		public void SetLimits(AnalysisLimits limits)
 		{
@@ -469,24 +471,45 @@ namespace TestUtilities.Python
 
 		#region Assert Analysis Results
 
-		public void AssertHasAttr(string expr, params string[] attrs) => AssertHasAttr(_entries[DefaultModule], expr, 0, attrs);
-		public void AssertHasAttr(string expr, int index, params string[] attrs) => AssertHasAttr(_entries[DefaultModule], expr, index, attrs);
+		public void AssertHasAttr(string expr, params string[] attrs)
+		{
+			AssertHasAttr(_entries[DefaultModule], expr, 0, attrs);
+		}
+
+		public void AssertHasAttr(string expr, int index, params string[] attrs)
+		{
+			AssertHasAttr(_entries[DefaultModule], expr, index, attrs);
+		}
 
 		public void AssertHasAttr(IPythonProjectEntry module, string expr, int index, params string[] attrs)
 		{
 			AssertUtil.ContainsAtLeast(GetMemberNames(module, expr, index), attrs);
 		}
 
-		public void AssertNotHasAttr(string expr, params string[] attrs) => AssertNotHasAttr(_entries[DefaultModule], expr, 0, attrs);
-		public void AssertNotHasAttr(string expr, int index, params string[] attrs) => AssertNotHasAttr(_entries[DefaultModule], expr, index, attrs);
+		public void AssertNotHasAttr(string expr, params string[] attrs)
+		{
+			AssertNotHasAttr(_entries[DefaultModule], expr, 0, attrs);
+		}
+
+		public void AssertNotHasAttr(string expr, int index, params string[] attrs)
+		{
+			AssertNotHasAttr(_entries[DefaultModule], expr, index, attrs);
+		}
 
 		public void AssertNotHasAttr(IPythonProjectEntry module, string expr, int index, params string[] attrs)
 		{
 			AssertUtil.DoesntContain(GetMemberNames(module, expr, index), attrs);
 		}
 
-		public void AssertHasAttrExact(string expr, params string[] attrs) => AssertHasAttrExact(_entries[DefaultModule], expr, 0, attrs);
-		public void AssertHasAttrExact(string expr, int index, params string[] attrs) => AssertHasAttrExact(_entries[DefaultModule], expr, index, attrs);
+		public void AssertHasAttrExact(string expr, params string[] attrs)
+		{
+			AssertHasAttrExact(_entries[DefaultModule], expr, 0, attrs);
+		}
+
+		public void AssertHasAttrExact(string expr, int index, params string[] attrs)
+		{
+			AssertHasAttrExact(_entries[DefaultModule], expr, index, attrs);
+		}
 
 		public void AssertHasAttrExact(IPythonProjectEntry module, string expr, int index, params string[] attrs)
 		{
@@ -583,7 +606,7 @@ namespace TestUtilities.Python
 
 		public void AssertIsInstance(IPythonProjectEntry module, string expr, int index, params string[] className)
 		{
-			var vars = GetValues(module, expr, index);
+			AnalysisValue[] vars = GetValues(module, expr, index);
 			AssertUtil.ContainsAtLeast(vars.Select(v => v.MemberType), PythonMemberType.Instance);
 			AssertUtil.ContainsExactly(vars.Select(v => v.ShortDescription), className);
 		}
@@ -746,10 +769,17 @@ namespace TestUtilities.Python
 			AssertReferencesWorker(module, expr, index, false, expectedVars);
 		}
 
-		sealed class LocationComparer : IEqualityComparer<ILocationInfo>
+		private sealed class LocationComparer : IEqualityComparer<ILocationInfo>
 		{
-			public bool Equals(ILocationInfo x, ILocationInfo y) => x.StartLine == y.StartLine && x.StartColumn == y.StartColumn;
-			public int GetHashCode(ILocationInfo obj) => obj.StartLine.GetHashCode() ^ obj.StartColumn.GetHashCode();
+			public bool Equals(ILocationInfo x, ILocationInfo y)
+			{
+				return x.StartLine == y.StartLine && x.StartColumn == y.StartColumn;
+			}
+
+			public int GetHashCode(ILocationInfo obj)
+			{
+				return obj.StartLine.GetHashCode() ^ obj.StartColumn.GetHashCode();
+			}
 		}
 
 		private void AssertReferencesWorker(IPythonProjectEntry module, string expr, int index, bool exact, VariableLocation[] expectedVars)
@@ -771,7 +801,7 @@ namespace TestUtilities.Python
 			var expectedNotFound = new List<VariableLocation>();
 			var notFoundYet = new HashSet<VariableLocation>(vars);
 
-			foreach (var e in expectedVars)
+			foreach (VariableLocation e in expectedVars)
 			{
 				if (!notFoundYet.Remove(e))
 				{
@@ -801,8 +831,8 @@ namespace TestUtilities.Python
 
 		public void AssertDiagnostics(IPythonProjectEntry module, params string[] diagnostics)
 		{
-			var diags = GetDiagnostics(module);
-			foreach (var d in diags)
+			global::System.String[] diags = GetDiagnostics(module);
+			foreach (global::System.String d in diags)
 			{
 				Console.WriteLine($"\"{d.Replace("\\", "\\\\")}\",");
 			}
@@ -877,7 +907,7 @@ namespace TestUtilities.Python
 
 		public override bool Equals(object obj)
 		{
-			var other = obj as VariableLocation;
+			VariableLocation other = obj as VariableLocation;
 			if (other != null)
 			{
 				return StartLine == other.StartLine &&

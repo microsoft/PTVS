@@ -16,7 +16,7 @@
 
 namespace Microsoft.PythonTools.Django.Analysis
 {
-	partial class DjangoAnalyzer
+	internal partial class DjangoAnalyzer
 	{
 		#region Known Tags / Filters
 

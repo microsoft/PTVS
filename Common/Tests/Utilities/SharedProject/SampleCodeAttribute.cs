@@ -31,12 +31,6 @@ namespace TestUtilities.SharedProject
 			_sampleCode = sampleCode;
 		}
 
-		public string SampleCode
-		{
-			get
-			{
-				return _sampleCode;
-			}
-		}
+		public string SampleCode => _sampleCode;
 	}
 }

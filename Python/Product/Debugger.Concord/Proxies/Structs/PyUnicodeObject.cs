@@ -53,15 +53,9 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			return result;
 		}
 
-		public SSizeTProxy length
-		{
-			get { return GetFieldProxy(_fields.length); }
-		}
+		public SSizeTProxy length => GetFieldProxy(_fields.length);
 
-		public PointerProxy<ArrayProxy<UInt16Proxy>> str
-		{
-			get { return GetFieldProxy(_fields.str); }
-		}
+		public PointerProxy<ArrayProxy<UInt16Proxy>> str => GetFieldProxy(_fields.str);
 
 		public override unsafe string ToString()
 		{
@@ -71,7 +65,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 				return "";
 			}
 
-			var buf = new byte[length * sizeof(char)];
+			global::System.Byte[] buf = new byte[length * sizeof(char)];
 			Process.ReadMemory(str.Raw.Read(), DkmReadMemoryFlags.None, buf);
 			fixed (byte* p = buf)
 			{
@@ -154,32 +148,32 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 
 			public Interned interned
 			{
-				get { return (Interned)_state[internedSection]; }
-				set { _state[internedSection] = (int)value; }
+				get => (Interned)_state[internedSection];
+				set => _state[internedSection] = (int)value;
 			}
 
 			public PyUnicode_Kind kind
 			{
-				get { return (PyUnicode_Kind)_state[kindSection]; }
-				set { _state[kindSection] = (int)value; }
+				get => (PyUnicode_Kind)_state[kindSection];
+				set => _state[kindSection] = (int)value;
 			}
 
 			public bool compact
 			{
-				get { return _state[compactSection] != 0; }
-				set { _state[compactSection] = value ? 1 : 0; }
+				get => _state[compactSection] != 0;
+				set => _state[compactSection] = value ? 1 : 0;
 			}
 
 			public bool ascii
 			{
-				get { return _state[asciiSection] != 0; }
-				set { _state[asciiSection] = value ? 1 : 0; }
+				get => _state[asciiSection] != 0;
+				set => _state[asciiSection] = value ? 1 : 0;
 			}
 
 			public bool ready
 			{
-				get { return _state[readySection] != 0; }
-				set { _state[readySection] = value ? 1 : 0; }
+				get => _state[readySection] != 0;
+				set => _state[readySection] = value ? 1 : 0;
 			}
 		}
 
@@ -213,7 +207,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			result._asciiObject.length.Write(value.Length);
 			result._compactObject.wstr_length.Write(value.Length);
 
-			var state = new State
+			State state = new State
 			{
 				interned = Interned.SSTATE_NOT_INTERNED,
 				kind = PyUnicode_Kind.PyUnicode_2BYTE_KIND,
@@ -350,25 +344,13 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			InitializeStruct(this, out _fields);
 		}
 
-		public SSizeTProxy length
-		{
-			get { return GetFieldProxy(_fields.length); }
-		}
+		public SSizeTProxy length => GetFieldProxy(_fields.length);
 
-		public SSizeTProxy hash
-		{
-			get { return GetFieldProxy(_fields.hash); }
-		}
+		public SSizeTProxy hash => GetFieldProxy(_fields.hash);
 
-		public ByteProxy state
-		{
-			get { return GetFieldProxy(_fields.state); }
-		}
+		public ByteProxy state => GetFieldProxy(_fields.state);
 
-		public PointerProxy wstr
-		{
-			get { return GetFieldProxy(_fields.wstr); }
-		}
+		public PointerProxy wstr => GetFieldProxy(_fields.wstr);
 	}
 
 	internal class PyCompactUnicodeObject : StructProxy
@@ -386,9 +368,6 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			InitializeStruct(this, out _fields);
 		}
 
-		public SSizeTProxy wstr_length
-		{
-			get { return GetFieldProxy(_fields.wstr_length); }
-		}
+		public SSizeTProxy wstr_length => GetFieldProxy(_fields.wstr_length);
 	}
 }

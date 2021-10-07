@@ -43,10 +43,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			return result;
 		}
 
-		public Py_complex cval
-		{
-			get { return GetFieldProxy(_fields.cval); }
-		}
+		public Py_complex cval => GetFieldProxy(_fields.cval);
 
 		public Complex ToComplex()
 		{
@@ -75,14 +72,8 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			InitializeStruct(this, out _fields);
 		}
 
-		public DoubleProxy real
-		{
-			get { return GetFieldProxy(_fields.real); }
-		}
+		public DoubleProxy real => GetFieldProxy(_fields.real);
 
-		public DoubleProxy imag
-		{
-			get { return GetFieldProxy(_fields.imag); }
-		}
+		public DoubleProxy imag => GetFieldProxy(_fields.imag);
 	}
 }

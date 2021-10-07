@@ -21,6 +21,8 @@ namespace PythonToolsTests
 	{
 		[AssemblyInitialize]
 		public static void Initialize(TestContext testContext)
-			=> MSTestEnvironment.Initialize().AddVsResolvePaths();
+		{
+			MSTestEnvironment.Initialize().AddVsResolvePaths();
+		}
 	}
 }

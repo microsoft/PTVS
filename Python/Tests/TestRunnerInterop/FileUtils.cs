@@ -16,7 +16,7 @@
 
 namespace TestRunnerInterop
 {
-	static partial class FileUtils
+	internal static partial class FileUtils
 	{
 		/// <summary>
 		/// Safely enumerates all subdirectories under a given root. If a
@@ -161,7 +161,10 @@ namespace TestRunnerInterop
 			}
 		}
 
-		public static void CopyDirectory(string sourceDir, string destDir) => CopyDirectory(sourceDir, destDir, false);
+		public static void CopyDirectory(string sourceDir, string destDir)
+		{
+			CopyDirectory(sourceDir, destDir, false);
+		}
 
 		public static void CopyDirectory(string sourceDir, string destDir, bool tryHardLinkFirst)
 		{

@@ -20,11 +20,23 @@
 // (See also AssemblyInfoCommon.cs in this same directory.)
 
 #if !SUPPRESS_COMMON_ASSEMBLY_VERSION
-[assembly: AssemblyVersion(AssemblyVersionInfo.StableVersion)]
+[assembly: AssemblyVersion(AssemblyVersion.StableVersion)]
 #endif
-[assembly: AssemblyFileVersion(AssemblyVersionInfo.Version)]
+[assembly: AssemblyFileVersion(AssemblyVersion.Version)]
 
-class AssemblyVersionInfo
+internal class AssemblyVersionInfoBase
+{
+	private static global::System.String VSMajorVersion;
+
+	public static global::System.String VSVersion => vSVersion;
+
+	public static void SetVSMajorVersion1(System.String value)
+	{
+		VSMajorVersion = value;
+	}
+}
+
+class AssemblyVersion : AssemblyVersionInfoBase
 {
 #if DEV15
     public const string VSMajorVersion = "15";
@@ -32,14 +44,22 @@ class AssemblyVersionInfo
 #elif DEV16
     public const string VSMajorVersion = "16";
     public const string VSName = "2019";
-#else
-#error Unrecognized VS Version.
+
 #endif
 
-	public const string VSVersion = VSMajorVersion + ".0";
+	private const string vSVersion = VSMajorVersion + ".0";
 
 	// These version strings are automatically updated at build.
 	public const string StableVersionPrefix = "1.0.0";
 	public const string StableVersion = "1.0.0.0";
 	public const string Version = "1.0.0.0";
+
+	public AssemblyVersion()
+	{
+	}
+
+	public static System.String GetVSMajorVersion1()
+	{
+		return VSMajorVersion;
+	}
 }

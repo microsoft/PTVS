@@ -17,7 +17,7 @@
 namespace Microsoft.PythonTools.Debugger.DebugEngine
 {
 	// This class represents the information that describes a bound breakpoint.
-	class AD7BreakpointResolution : IDebugBreakpointResolution2
+	internal class AD7BreakpointResolution : IDebugBreakpointResolution2
 	{
 		private readonly AD7Engine m_engine;
 		private readonly PythonBreakpoint m_address;
@@ -46,8 +46,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 			if ((dwFields & enum_BPRESI_FIELDS.BPRESI_BPRESLOCATION) != 0)
 			{
 				// The sample engine only supports code breakpoints.
-				BP_RESOLUTION_LOCATION location = new BP_RESOLUTION_LOCATION();
-				location.bpType = (uint)enum_BP_TYPE.BPT_CODE;
+				BP_RESOLUTION_LOCATION location = new BP_RESOLUTION_LOCATION
+				{
+					bpType = (uint)enum_BP_TYPE.BPT_CODE
+				};
 
 				// The debugger will not QI the IDebugCodeContex2 interface returned here. We must pass the pointer
 				// to IDebugCodeContex2 and not IUnknown.
@@ -71,7 +73,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 		#endregion
 	}
 
-	class AD7ErrorBreakpointResolution : IDebugErrorBreakpointResolution2
+	internal class AD7ErrorBreakpointResolution : IDebugErrorBreakpointResolution2
 	{
 		#region IDebugErrorBreakpointResolution2 Members
 

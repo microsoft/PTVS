@@ -46,7 +46,7 @@ namespace TestUtilities.UI
 			ErrorHandler.ThrowOnFailure(uiShell.GetDialogOwnerHwnd(out IntPtr hwnd));
 			if (hwnd != _mainWindowHandle)
 			{
-				using (var dlg = new AutomationDialog(this, AutomationElement.FromHandle(hwnd)))
+				using (AutomationDialog dlg = new AutomationDialog(this, AutomationElement.FromHandle(hwnd)))
 				{
 					//startup window popup, press button "Continue without code"
 					var cwc = dlg.FindByName("Continue without code");
@@ -79,10 +79,7 @@ namespace TestUtilities.UI
 			return (DTE)site.GetService(typeof(DTE));
 		}
 
-		public bool IsDisposed
-		{
-			get { return _isDisposed; }
-		}
+		public bool IsDisposed => _isDisposed;
 
 		public void OnDispose(Action action)
 		{
@@ -166,13 +163,7 @@ namespace TestUtilities.UI
 			_skipCloseAll = true;
 		}
 
-		public IComponentModel ComponentModel
-		{
-			get
-			{
-				return GetService<IComponentModel>(typeof(SComponentModel));
-			}
-		}
+		public IComponentModel ComponentModel => GetService<IComponentModel>(typeof(SComponentModel));
 
 		public IServiceProvider ServiceProvider { get; }
 
@@ -422,10 +413,10 @@ namespace TestUtilities.UI
 		{
 			Element.SetFocus();
 
-			using (var dialog = ToolsOptionsDialog.FromDte(this))
+			using (ToolsOptionsDialog dialog = ToolsOptionsDialog.FromDte(this))
 			{
 				dialog.SelectedView = "Source Control/Plug-in Selection";
-				var currentSourceControl = new ComboBox(
+				ComboBox currentSourceControl = new ComboBox(
 					dialog.FindByAutomationId("2001") // Current source control plug-in
 				);
 
@@ -453,13 +444,7 @@ namespace TestUtilities.UI
 			return ((DTE2)Dte).ToolWindows.OutputWindow.OutputWindowPanes.Item(name);
 		}
 
-		public IEnumerable<Window> OpenDocumentWindows
-		{
-			get
-			{
-				return Dte.Windows.OfType<Window>().Where(w => w.Document != null);
-			}
-		}
+		public IEnumerable<Window> OpenDocumentWindows => Dte.Windows.OfType<Window>().Where(w => w.Document != null);
 
 
 		public void WaitForBuildComplete(int timeout)
@@ -710,7 +695,7 @@ namespace TestUtilities.UI
 			Assert.AreNotEqual(IntPtr.Zero, hwnd, "hwnd is null, We failed to get the dialog");
 			Assert.AreNotEqual(handle, hwnd, "hwnd is Dte.MainWindow, We failed to get the dialog");
 			Console.WriteLine("Ending dialog: ");
-			var dlg = new AutomationDialog(this, AutomationElement.FromHandle(hwnd));
+			AutomationDialog dlg = new AutomationDialog(this, AutomationElement.FromHandle(hwnd));
 			AutomationWrapper.DumpElement(dlg.Element);
 			Console.WriteLine("--------");
 
@@ -1095,7 +1080,7 @@ namespace TestUtilities.UI
 							ErrorHandler.ThrowOnFailure(uiShell.GetDialogOwnerHwnd(out IntPtr hwnd));
 							if (hwnd != _mainWindowHandle)
 							{
-								using (var dlg = new AutomationDialog(this, AutomationElement.FromHandle(hwnd)))
+								using (AutomationDialog dlg = new AutomationDialog(this, AutomationElement.FromHandle(hwnd)))
 								{
 									if (onDialog == null || onDialog(dlg) == false)
 									{

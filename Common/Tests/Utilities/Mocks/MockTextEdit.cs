@@ -38,15 +38,9 @@ namespace TestUtilities.Mocks
 			return Delete(deleteSpan.Start, deleteSpan.Length);
 		}
 
-		public bool HasEffectiveChanges
-		{
-			get { throw new System.NotImplementedException(); }
-		}
+		public bool HasEffectiveChanges => throw new System.NotImplementedException();
 
-		public bool HasFailedChanges
-		{
-			get { throw new System.NotImplementedException(); }
-		}
+		public bool HasFailedChanges => throw new System.NotImplementedException();
 
 		public bool Insert(int position, char[] characterBuffer, int startIndex, int length)
 		{
@@ -120,7 +114,7 @@ namespace TestUtilities.Mocks
 				}
 				else
 				{
-					var delete = (DeletionEdit)edit;
+					DeletionEdit delete = (DeletionEdit)edit;
 					text.Remove(delete.Position, delete.Length);
 					change = new MockTextChange(
 						new SnapshotSpan(_snapshot, delete.Position, delete.Length),
@@ -133,8 +127,8 @@ namespace TestUtilities.Mocks
 			}
 			changes.Reverse();
 
-			var previous = _snapshot;
-			var res = ((MockTextBuffer)_snapshot.TextBuffer)._snapshot = new MockTextSnapshot(
+			MockTextSnapshot previous = _snapshot;
+			MockTextSnapshot res = ((MockTextBuffer)_snapshot.TextBuffer)._snapshot = new MockTextSnapshot(
 				(MockTextBuffer)_snapshot.TextBuffer,
 				text.ToString(),
 				_snapshot,
@@ -151,15 +145,9 @@ namespace TestUtilities.Mocks
 			_canceled = true;
 		}
 
-		public bool Canceled
-		{
-			get { return _canceled; }
-		}
+		public bool Canceled => _canceled;
 
-		public ITextSnapshot Snapshot
-		{
-			get { return _snapshot; }
-		}
+		public ITextSnapshot Snapshot => _snapshot;
 
 		public void Dispose()
 		{
@@ -175,10 +163,13 @@ namespace TestUtilities.Mocks
 
 			private EditTypeComparer() { }
 
-			public int Compare(Edit x, Edit y) => (x is InsertionEdit).CompareTo(y is InsertionEdit);
+			public int Compare(Edit x, Edit y)
+			{
+				return (x is InsertionEdit).CompareTo(y is InsertionEdit);
+			}
 		}
 
-		class Edit
+		private class Edit
 		{
 			public readonly int Position;
 
@@ -188,7 +179,7 @@ namespace TestUtilities.Mocks
 			}
 		}
 
-		sealed class InsertionEdit : Edit
+		private sealed class InsertionEdit : Edit
 		{
 			public readonly string Text;
 
@@ -204,7 +195,7 @@ namespace TestUtilities.Mocks
 			}
 		}
 
-		sealed class DeletionEdit : Edit
+		private sealed class DeletionEdit : Edit
 		{
 			public readonly int Length;
 
@@ -220,7 +211,7 @@ namespace TestUtilities.Mocks
 			}
 		}
 
-		sealed class ReplacementEdit : Edit
+		private sealed class ReplacementEdit : Edit
 		{
 			public readonly int Length;
 			public readonly string Text;

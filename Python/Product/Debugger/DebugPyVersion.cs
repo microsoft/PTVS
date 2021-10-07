@@ -17,7 +17,7 @@
 
 namespace Microsoft.PythonTools.Debugger
 {
-	static class DebugPyVersion
+	internal static class DebugPyVersion
 	{
 		// These version string is automatically updated at build.
 		// See BundledDebugPyVersion in Debugger.csproj

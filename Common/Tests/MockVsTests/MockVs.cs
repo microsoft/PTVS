@@ -143,8 +143,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			AssertListener.ThrowUnhandled();
 		}
 
-
-		class SelectionEvents : IVsSelectionEvents
+		private class SelectionEvents : IVsSelectionEvents
 		{
 			private readonly MockVs _vs;
 
@@ -171,7 +170,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			}
 		}
 
-		class MockSyncContext : SynchronizationContext
+		private class MockSyncContext : SynchronizationContext
 		{
 			private readonly MockVs _vs;
 			public MockSyncContext(MockVs vs)
@@ -295,7 +294,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 						events = _uiEvents.ToArray();
 						_uiEvents.Clear();
 					}
-					foreach (var action in events)
+					foreach (Action action in events)
 					{
 						action();
 					}
@@ -305,7 +304,10 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 
 		public bool HasPendingException => _edi != null;
 
-		public void ThrowPendingException() => ThrowPendingException(false);
+		public void ThrowPendingException()
+		{
+			ThrowPendingException(false);
+		}
 
 		private void ThrowPendingException(bool checkThread)
 		{
@@ -412,21 +414,9 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 		}
 
 
-		public IServiceContainer ServiceProvider
-		{
-			get
-			{
-				return _serviceProvider;
-			}
-		}
+		public IServiceContainer ServiceProvider => _serviceProvider;
 
-		public IComponentModel ComponentModel
-		{
-			get
-			{
-				return this;
-			}
-		}
+		public IComponentModel ComponentModel => this;
 
 		public void DoIdle()
 		{
@@ -452,7 +442,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			var buffer = new MockTextBuffer(content, ContentTypeRegistry.GetContentType(contentType), file);
 
 			var view = new MockTextView(buffer);
-			var res = new MockVsTextView(_serviceProvider, this, view);
+			MockVsTextView res = new MockVsTextView(_serviceProvider, this, view);
 			view.Properties[typeof(MockVsTextView)] = res;
 			onCreate?.Invoke(res);
 
@@ -472,7 +462,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 				{
 					throw new NotImplementedException("Unable to get IVsLanguageInfo for " + info.Attribute.LanguageName);
 				}
-				var codeWindow = new MockCodeWindow(serviceProvider, view);
+				MockCodeWindow codeWindow = new MockCodeWindow(serviceProvider, view);
 				view.Properties[typeof(MockCodeWindow)] = codeWindow;
 				if (ErrorHandler.Succeeded(langInfo.GetCodeWindowManager(codeWindow, out IVsCodeWindowManager mgr)))
 				{
@@ -654,7 +644,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 
 		ITreeNode IVisualStudioInstance.WaitForItem(params string[] items)
 		{
-			var res = WaitForItem(items);
+			HierarchyItem res = WaitForItem(items);
 			if (res.IsNull)
 			{
 				return null;
@@ -664,7 +654,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 
 		public ITreeNode FindItem(params string[] items)
 		{
-			var res = WaitForItem(items);
+			HierarchyItem res = WaitForItem(items);
 			if (res.IsNull)
 			{
 				return null;
@@ -695,7 +685,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			}
 
 			var firstItem = items[1];
-			var firstHierItem = new HierarchyItem();
+			HierarchyItem firstHierItem = new HierarchyItem();
 			foreach (var item in hierarchy.GetHierarchyItems())
 			{
 				if (item.Caption == firstItem)
@@ -749,7 +739,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			string[] temp = new string[path.Length + 1];
 			temp[0] = project;
 			Array.Copy(path, 0, temp, 1, path.Length);
-			var item = WaitForItemWorker(temp);
+			HierarchyItem item = WaitForItemWorker(temp);
 			if (item.IsNull)
 			{
 				return null;
@@ -760,7 +750,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 				languageName = "code";
 			}
 
-			var res = CreateTextViewWorker(languageName, File.ReadAllText(item.CanonicalName), view =>
+			MockVsTextView res = CreateTextViewWorker(languageName, File.ReadAllText(item.CanonicalName), view =>
 			{
 				ErrorHandler.ThrowOnFailure(((IVsTextView)view).GetBuffer(out IVsTextLines lines));
 				IntPtr linesPtr = Marshal.GetIUnknownForObject(lines);
@@ -792,20 +782,11 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			return res;
 		}
 
-		ComposablePartCatalog IComponentModel.DefaultCatalog
-		{
-			get { throw new NotImplementedException(); }
-		}
+		ComposablePartCatalog IComponentModel.DefaultCatalog => throw new NotImplementedException();
 
-		MefV1.ICompositionService IComponentModel.DefaultCompositionService
-		{
-			get { throw new NotImplementedException(); }
-		}
+		MefV1.ICompositionService IComponentModel.DefaultCompositionService => throw new NotImplementedException();
 
-		MefV1.Hosting.ExportProvider IComponentModel.DefaultExportProvider
-		{
-			get { return _container.AsExportProvider(); }
-		}
+		MefV1.Hosting.ExportProvider IComponentModel.DefaultExportProvider => _container.AsExportProvider();
 
 		ComposablePartCatalog IComponentModel.GetCatalog(string catalogName)
 		{
@@ -980,7 +961,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 		}
 
 		[StructLayout(LayoutKind.Explicit, Size = 16)]
-		struct VARIANT
+		private struct VARIANT
 		{
 			[FieldOffset(0)]
 			public ushort vt;
@@ -1036,21 +1017,9 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			throw new NotImplementedException();
 		}
 
-		public string SolutionFilename
-		{
-			get
-			{
-				return Solution.SolutionFile;
-			}
-		}
+		public string SolutionFilename => Solution.SolutionFile;
 
-		public string SolutionDirectory
-		{
-			get
-			{
-				return Path.GetDirectoryName(SolutionFilename);
-			}
-		}
+		public string SolutionDirectory => Path.GetDirectoryName(SolutionFilename);
 
 		public IntPtr WaitForDialog()
 		{
@@ -1130,7 +1099,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 				out IEnumHierarchies ppenum
 			));
 
-			var projects = new IVsHierarchy[32];
+			IVsHierarchy[] projects = new IVsHierarchy[32];
 			int hr;
 			while ((hr = ppenum.Next((uint)projects.Length, projects, out global::System.UInt32 fetched)) == VSConstants.S_OK && fetched > 0)
 			{
@@ -1182,10 +1151,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 		}
 
 
-		public DTE Dte
-		{
-			get { return _dte; }
-		}
+		public DTE Dte => _dte;
 
 		public void OnDispose(Action action)
 		{

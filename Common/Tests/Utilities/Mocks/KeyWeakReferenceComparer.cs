@@ -18,12 +18,15 @@ namespace TestUtilities.Mocks
 {
 	internal sealed class KeyWeakReferenceComparer : IEqualityComparer<object>
 	{
-		public int GetHashCode(object obj) => obj is KeyWeakReference key ? key.HashCode : obj.GetHashCode();
+		public int GetHashCode(object obj)
+		{
+			return obj is KeyWeakReference key ? key.HashCode : obj.GetHashCode();
+		}
 
 		bool IEqualityComparer<object>.Equals(object x, object y)
 		{
-			var xIsAlive = IsAlive(x, out var xTarget);
-			var yIsAlive = IsAlive(y, out var yTarget);
+			var xIsAlive = IsAlive(x, out global::System.Object xTarget);
+			var yIsAlive = IsAlive(y, out global::System.Object yTarget);
 
 			return xIsAlive
 				? yIsAlive && Equals(xTarget, yTarget)

@@ -31,9 +31,6 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			InitializeStruct(this, out _fields);
 		}
 
-		public PointerProxy<PyDictObject> md_dict
-		{
-			get { return GetFieldProxy(_fields.md_dict); }
-		}
+		public PointerProxy<PyDictObject> md_dict => GetFieldProxy(_fields.md_dict);
 	}
 }

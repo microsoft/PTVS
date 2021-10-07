@@ -36,13 +36,13 @@ namespace PythonToolsTests
 			Directory.CreateDirectory(workspaceFolder2);
 			File.WriteAllText(Path.Combine(workspaceFolder2, "app2.py"), string.Empty);
 
-			var workspace1 = new WorkspaceTestHelper.MockWorkspace(workspaceFolder1);
-			var workspace2 = new WorkspaceTestHelper.MockWorkspace(workspaceFolder2);
+			WorkspaceTestHelper.MockWorkspace workspace1 = new WorkspaceTestHelper.MockWorkspace(workspaceFolder1);
+			WorkspaceTestHelper.MockWorkspace workspace2 = new WorkspaceTestHelper.MockWorkspace(workspaceFolder2);
 
-			var workspaceContext1 = new WorkspaceTestHelper.MockWorkspaceContext(workspace1);
-			var workspaceContext2 = new WorkspaceTestHelper.MockWorkspaceContext(workspace2);
+			WorkspaceTestHelper.MockWorkspaceContext workspaceContext1 = new WorkspaceTestHelper.MockWorkspaceContext(workspace1);
+			WorkspaceTestHelper.MockWorkspaceContext workspaceContext2 = new WorkspaceTestHelper.MockWorkspaceContext(workspace2);
 
-			var workspaceContextProvider = new WorkspaceTestHelper.MockWorkspaceContextProvider(workspaceContext1);
+			WorkspaceTestHelper.MockWorkspaceContextProvider workspaceContextProvider = new WorkspaceTestHelper.MockWorkspaceContextProvider(workspaceContext1);
 
 			using (var factoryProvider = new WorkspaceInterpreterFactoryProvider(workspaceContextProvider))
 			{
@@ -63,8 +63,8 @@ namespace PythonToolsTests
 			Directory.CreateDirectory(workspaceFolder);
 			File.WriteAllText(Path.Combine(workspaceFolder, "app.py"), string.Empty);
 
-			var workspace = new WorkspaceTestHelper.MockWorkspace(workspaceFolder);
-			var workspaceContext = new WorkspaceTestHelper.MockWorkspaceContext(workspace);
+			WorkspaceTestHelper.MockWorkspace workspace = new WorkspaceTestHelper.MockWorkspace(workspaceFolder);
+			WorkspaceTestHelper.MockWorkspaceContext workspaceContext = new WorkspaceTestHelper.MockWorkspaceContext(workspace);
 
 			// Modify settings
 			Action triggerDiscovery = () =>
@@ -86,8 +86,8 @@ namespace PythonToolsTests
 
 			string envFolder = Path.Combine(workspaceFolder, "env");
 
-			var workspace = new WorkspaceTestHelper.MockWorkspace(workspaceFolder);
-			var workspaceContext = new WorkspaceTestHelper.MockWorkspaceContext(workspace);
+			WorkspaceTestHelper.MockWorkspace workspace = new WorkspaceTestHelper.MockWorkspace(workspaceFolder);
+			WorkspaceTestHelper.MockWorkspaceContext workspaceContext = new WorkspaceTestHelper.MockWorkspaceContext(workspace);
 
 			// Create virtual env inside the workspace folder (one level from root)
 			var configs = TestTriggerDiscovery(
@@ -127,9 +127,9 @@ namespace PythonToolsTests
 			// Normally a local virtual environment outside the workspace
 			// wouldn't be detected, but it is when it's referenced from
 			// the workspace python settings.
-			var workspace = new WorkspaceTestHelper.MockWorkspace(workspaceFolder);
-			var workspaceContext = new WorkspaceTestHelper.MockWorkspaceContext(workspace, @"..\outside\scripts\python.exe");
-			var workspaceContextProvider = new WorkspaceTestHelper.MockWorkspaceContextProvider(workspaceContext);
+			WorkspaceTestHelper.MockWorkspace workspace = new WorkspaceTestHelper.MockWorkspace(workspaceFolder);
+			WorkspaceTestHelper.MockWorkspaceContext workspaceContext = new WorkspaceTestHelper.MockWorkspaceContext(workspace, @"..\outside\scripts\python.exe");
+			WorkspaceTestHelper.MockWorkspaceContextProvider workspaceContextProvider = new WorkspaceTestHelper.MockWorkspaceContextProvider(workspaceContext);
 
 			using (var factoryProvider = new WorkspaceInterpreterFactoryProvider(workspaceContextProvider))
 			{
@@ -149,7 +149,7 @@ namespace PythonToolsTests
 		public void WatchWorkspaceVirtualEnvRenamed()
 		{
 			const string ENV_NAME = "env";
-			var workspaceContext = CreateEnvAndGetWorkspaceService(ENV_NAME);
+			WorkspaceTestHelper.MockWorkspaceContext workspaceContext = CreateEnvAndGetWorkspaceService(ENV_NAME);
 
 			string envPath = Path.Combine(workspaceContext.Location, ENV_NAME);
 			string renamedEnvPath = Path.Combine(workspaceContext.Location, string.Concat(ENV_NAME, "1"));
@@ -164,7 +164,7 @@ namespace PythonToolsTests
 		public void WatchWorkspaceVirtualEnvDeleted()
 		{
 			const string ENV_NAME = "env";
-			var workspaceContext = CreateEnvAndGetWorkspaceService(ENV_NAME);
+			WorkspaceTestHelper.MockWorkspaceContext workspaceContext = CreateEnvAndGetWorkspaceService(ENV_NAME);
 
 			string envPath = Path.Combine(workspaceContext.Location, ENV_NAME);
 			var configs = TestTriggerDiscovery(workspaceContext, () => Directory.Delete(envPath, true)).ToArray();

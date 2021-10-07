@@ -17,7 +17,7 @@
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
 	[Export(typeof(IGlyphService))]
-	class MockGlyphService : IGlyphService
+	internal class MockGlyphService : IGlyphService
 	{
 		public ImageSource GetGlyph(StandardGlyphGroup group, StandardGlyphItem item)
 		{

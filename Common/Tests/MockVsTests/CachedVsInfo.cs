@@ -21,7 +21,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 	/// re-used to create new MockVs instances.  We create fresh MockVs instances to avoid having state
 	/// lingering between tests.
 	/// </summary>
-	class CachedVsInfo
+	internal class CachedVsInfo
 	{
 		public readonly ComposableCatalog Catalog;
 		public readonly List<Type> Packages;
@@ -43,7 +43,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 					{
 						if (type.GUID == attr.LanguageServiceSid)
 						{
-							var info = new LanguageServiceInfo(attr);
+							LanguageServiceInfo info = new LanguageServiceInfo(attr);
 							LangServicesByGuid[attr.LanguageServiceSid] = info;
 							LangServicesByName[attr.LanguageName] = info;
 

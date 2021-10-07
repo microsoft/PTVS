@@ -50,7 +50,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 					var ip = reader.ReadUInt64();
 					var rva = reader.ReadUInt32();
 
-					var dlls = process.GetPythonRuntimeInfo().DLLs;
+					PythonDLLs dlls = process.GetPythonRuntimeInfo().DLLs;
 					DkmNativeModuleInstance dll = null;
 					switch (reader.ReadInt32())
 					{
@@ -99,7 +99,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 					writer.Write(true);
 					writer.Write(NativeAddress.CPUInstructionPart.InstructionPointer);
 					writer.Write(NativeAddress.RVA);
-					var dlls = NativeAddress.Process.GetPythonRuntimeInfo().DLLs;
+					PythonDLLs dlls = NativeAddress.Process.GetPythonRuntimeInfo().DLLs;
 					if (NativeAddress.ModuleInstance == dlls.Python)
 					{
 						writer.Write(0);
@@ -125,7 +125,7 @@ namespace Microsoft.PythonTools.Debugger.Concord
 
 		public override bool Equals(object obj)
 		{
-			var other = obj as SourceLocation;
+			SourceLocation other = obj as SourceLocation;
 			return other == null ? false : Equals(other);
 		}
 

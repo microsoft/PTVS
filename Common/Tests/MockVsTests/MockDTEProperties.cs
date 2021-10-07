@@ -24,37 +24,13 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 		{
 		}
 
-		public object Application
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public object Application => throw new NotImplementedException();
 
-		public int Count
-		{
-			get
-			{
-				return _properties.Count;
-			}
-		}
+		public int Count => _properties.Count;
 
-		public DTE DTE
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public DTE DTE => throw new NotImplementedException();
 
-		public object Parent
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public object Parent => throw new NotImplementedException();
 
 		public IEnumerator GetEnumerator()
 		{

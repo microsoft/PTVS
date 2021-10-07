@@ -77,7 +77,7 @@ v1.0rc1 == 1.0rc1 == 1.0c1 == 1.0_pre1 == 1.0preview-1
 		[TestMethod, Priority(UnitTestPriority.P0)]
 		public void VersionParsing()
 		{
-			foreach (var s in ExampleVersions)
+			foreach (global::System.String s in ExampleVersions)
 			{
 				Assert.IsTrue(PackageVersion.TryParse(s, out PackageVersion ver), s);
 				Assert.AreEqual(s, ver.OriginalForm);
@@ -96,7 +96,7 @@ v1.0rc1 == 1.0rc1 == 1.0c1 == 1.0_pre1 == 1.0preview-1
 				.ToList();
 			var reversed = versions.AsEnumerable().Reverse().ToList();
 
-			foreach (var src in new[] { shuffled, reversed })
+			foreach (global::System.Object src in new[] { shuffled, reversed })
 			{
 				var sorted = src.OrderBy(v => v).ToList();
 
@@ -111,7 +111,7 @@ v1.0rc1 == 1.0rc1 == 1.0c1 == 1.0_pre1 == 1.0preview-1
 		[TestMethod, Priority(UnitTestPriority.P0)]
 		public void VersionNormalization()
 		{
-			foreach (var line in ExampleNormalizedVersions)
+			foreach (global::System.String line in ExampleNormalizedVersions)
 			{
 				var versions = line.Split(new[] { "==" }, StringSplitOptions.RemoveEmptyEntries)
 					.Select(PackageVersion.Parse)

@@ -17,7 +17,7 @@
 namespace Microsoft.PythonTools.Debugger.DebugEngine
 {
 	// This class represents a document context to the debugger. A document context represents a location within a source file. 
-	class AD7DocumentContext : IDebugDocumentContext2
+	internal class AD7DocumentContext : IDebugDocumentContext2
 	{
 		private readonly string _fileName;
 		private readonly TEXT_POSITION _begPos, _endPos;

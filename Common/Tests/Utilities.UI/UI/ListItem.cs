@@ -18,7 +18,7 @@ namespace TestUtilities.UI
 {
 	public class ListItem : AutomationWrapper
 	{
-		private ListView _parent;
+		private readonly ListView _parent;
 		private AutomationElementCollection _columns;
 		public ListItem(AutomationElement element, ListView parent) : base(element)
 		{

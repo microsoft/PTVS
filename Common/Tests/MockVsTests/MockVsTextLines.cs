@@ -16,7 +16,7 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-	class MockVsTextLines : IVsTextLines, IVsPersistDocData, IVsExpansion
+	internal class MockVsTextLines : IVsTextLines, IVsPersistDocData, IVsExpansion
 	{
 		private readonly MockTextBuffer _buffer;
 		private readonly IServiceProvider _serviceProvider;

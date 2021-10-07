@@ -16,7 +16,7 @@
 
 namespace Microsoft.VisualStudioTools.Wpf
 {
-	static class NativeMethods
+	internal static class NativeMethods
 	{
 		[StructLayoutAttribute(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
 		public struct SHSTOCKICONINFO

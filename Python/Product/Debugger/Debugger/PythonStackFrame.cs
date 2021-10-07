@@ -18,7 +18,7 @@ using Microsoft.PythonTools.Analysis;
 
 namespace Microsoft.PythonTools.Debugger
 {
-	class PythonStackFrame
+	internal class PythonStackFrame
 	{
 		private int _lineNo;    // mutates on set next line
 		private readonly string _frameName, _filename;
@@ -44,79 +44,31 @@ namespace Microsoft.PythonTools.Debugger
 		/// <summary>
 		/// The line nubmer where the current function/class/module starts
 		/// </summary>
-		public int StartLine
-		{
-			get
-			{
-				return _startLine;
-			}
-		}
+		public int StartLine => _startLine;
 
 		/// <summary>
 		/// The line number where the current function/class/module ends.
 		/// </summary>
-		public int EndLine
-		{
-			get
-			{
-				return _endLine;
-			}
-		}
+		public int EndLine => _endLine;
 
-		public PythonThread Thread
-		{
-			get
-			{
-				return _thread;
-			}
-		}
+		public PythonThread Thread => _thread;
 
 		public int LineNo
 		{
-			get
-			{
-				return _lineNo;
-			}
-			set
-			{
-				_lineNo = value;
-			}
+			get => _lineNo;
+			set => _lineNo = value;
 		}
 
-		public string FunctionName
-		{
-			get
-			{
-				return _frameName;
-			}
-		}
+		public string FunctionName => _frameName;
 
-		public string FileName
-		{
-			get
-			{
-				return _thread.Process.MapFile(_filename, toDebuggee: false);
-			}
-		}
+		public string FileName => _thread.Process.MapFile(_filename, toDebuggee: false);
 
-		public FrameKind Kind
-		{
-			get
-			{
-				return _kind;
-			}
-		}
+		public FrameKind Kind => _kind;
 
 		/// <summary>
 		/// Gets the ID of the frame.  Frame 0 is the currently executing frame, 1 is the caller of the currently executing frame, etc...
 		/// </summary>
-		public int FrameId
-		{
-			get
-			{
-				return _frameId;
-			}
-		}
+		public int FrameId => _frameId;
 
 		internal void SetVariables(PythonEvaluationResult[] variables)
 		{
@@ -243,7 +195,7 @@ namespace Microsoft.PythonTools.Debugger
 		}
 	}
 
-	class DjangoStackFrame : PythonStackFrame
+	internal class DjangoStackFrame : PythonStackFrame
 	{
 		private readonly string _sourceFile;
 		private readonly int _sourceLine;
@@ -259,24 +211,12 @@ namespace Microsoft.PythonTools.Debugger
 		/// The source .py file which implements the template logic.  The normal filename is the
 		/// name of the template it's self.
 		/// </summary>
-		public string SourceFile
-		{
-			get
-			{
-				return _sourceFile;
-			}
-		}
+		public string SourceFile => _sourceFile;
 
 		/// <summary>
 		/// The line in the source .py file which implements the template logic.
 		/// </summary>
-		public int SourceLine
-		{
-			get
-			{
-				return _sourceLine;
-			}
-		}
+		public int SourceLine => _sourceLine;
 	}
 
 }

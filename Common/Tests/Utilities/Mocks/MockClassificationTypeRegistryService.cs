@@ -19,7 +19,7 @@ namespace TestUtilities.Mocks
 	[Export(typeof(IClassificationTypeRegistryService))]
 	public class MockClassificationTypeRegistryService : IClassificationTypeRegistryService
 	{
-		static Dictionary<string, MockClassificationType> _types = new Dictionary<string, MockClassificationType>();
+		private static Dictionary<string, MockClassificationType> _types = new Dictionary<string, MockClassificationType>();
 
 		public MockClassificationTypeRegistryService()
 		{
@@ -37,7 +37,7 @@ namespace TestUtilities.Mocks
 			foreach (var def in classTypeDefs)
 			{
 				string name = def.Metadata.Name;
-				var type = GetClasificationType(name);
+				MockClassificationType type = GetClasificationType(name);
 				foreach (var baseType in def.Metadata.BaseDefinition ?? Enumerable.Empty<string>())
 				{
 					type.AddBaseType(GetClasificationType(baseType));

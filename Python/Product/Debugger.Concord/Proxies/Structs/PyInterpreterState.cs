@@ -46,25 +46,13 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			return new PyInterpreterState(process, address);
 		}
 
-		public PointerProxy<PyInterpreterState> next
-		{
-			get { return GetFieldProxy(_fields.next); }
-		}
+		public PointerProxy<PyInterpreterState> next => GetFieldProxy(_fields.next);
 
-		public PointerProxy<PyThreadState> tstate_head
-		{
-			get { return GetFieldProxy(_fields.tstate_head); }
-		}
+		public PointerProxy<PyThreadState> tstate_head => GetFieldProxy(_fields.tstate_head);
 
-		public PointerProxy<PyDictObject> modules
-		{
-			get { return GetFieldProxy(_fields.modules); }
-		}
+		public PointerProxy<PyDictObject> modules => GetFieldProxy(_fields.modules);
 
-		public PointerProxy eval_frame
-		{
-			get { return GetFieldProxy(_fields.eval_frame); }
-		}
+		public PointerProxy eval_frame => GetFieldProxy(_fields.eval_frame);
 
 		private class InterpHeadHolder : DkmDataItem
 		{
@@ -72,7 +60,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 
 			public InterpHeadHolder(DkmProcess process)
 			{
-				var pyrtInfo = process.GetPythonRuntimeInfo();
+				PythonRuntimeInfo pyrtInfo = process.GetPythonRuntimeInfo();
 				Proxy = pyrtInfo.GetRuntimeState()?.interpreters.head
 					?? pyrtInfo.DLLs.Python.GetStaticVariable<PointerProxy<PyInterpreterState>>("interp_head");
 			}
@@ -85,7 +73,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 
 		public static IEnumerable<PyInterpreterState> GetInterpreterStates(DkmProcess process)
 		{
-			for (var interp = interp_head(process).TryRead(); interp != null; interp = interp.next.TryRead())
+			for (PyInterpreterState interp = interp_head(process).TryRead(); interp != null; interp = interp.next.TryRead())
 			{
 				yield return interp;
 			}
@@ -93,7 +81,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 
 		public IEnumerable<PyThreadState> GetThreadStates()
 		{
-			for (var tstate = tstate_head.TryRead(); tstate != null; tstate = tstate.next.TryRead())
+			for (PyThreadState tstate = tstate_head.TryRead(); tstate != null; tstate = tstate.next.TryRead())
 			{
 				yield return tstate;
 			}

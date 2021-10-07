@@ -27,7 +27,10 @@ namespace TestUtilities.Ben.Demystifier
 		private readonly byte[] _cil;
 		private int _ptr;
 
-		public ILReader(byte[] cil) => _cil = cil;
+		public ILReader(byte[] cil)
+		{
+			_cil = cil;
+		}
 
 		public OpCode OpCode { get; private set; }
 		public int MetadataToken { get; private set; }
@@ -83,7 +86,10 @@ namespace TestUtilities.Ben.Demystifier
 			}
 		}
 
-		private byte ReadByte() => _cil[_ptr++];
+		private byte ReadByte()
+		{
+			return _cil[_ptr++];
+		}
 
 		private int ReadInt()
 		{
@@ -99,21 +105,30 @@ namespace TestUtilities.Ben.Demystifier
 			singleByteOpCode = new OpCode[225];
 			doubleByteOpCode = new OpCode[31];
 
-			var fields = GetOpCodeFields();
+			FieldInfo[] fields = GetOpCodeFields();
 
-			foreach (var field in fields)
+			foreach (FieldInfo field in fields)
 			{
 				var code = (OpCode)field.GetValue(null);
 				if (code.OpCodeType == OpCodeType.Nternal)
+				{
 					continue;
+				}
 
 				if (code.Size == 1)
+				{
 					singleByteOpCode[code.Value] = code;
+				}
 				else
+				{
 					doubleByteOpCode[code.Value & 0xff] = code;
+				}
 			}
 		}
 
-		private static FieldInfo[] GetOpCodeFields() => typeof(OpCodes).GetFields(BindingFlags.Public | BindingFlags.Static);
+		private static FieldInfo[] GetOpCodeFields()
+		{
+			return typeof(OpCodes).GetFields(BindingFlags.Public | BindingFlags.Static);
+		}
 	}
 }

@@ -18,11 +18,10 @@ namespace TestUtilities.Python
 {
 	public class MockInterpreterOptionsService : IInterpreterOptionsService, IInterpreterRegistryService
 	{
-		readonly List<IPythonInterpreterFactoryProvider> _providers;
-		readonly IPythonInterpreterFactory _noInterpretersValue;
-		IPythonInterpreterFactory _defaultInterpreter;
-
-		readonly Dictionary<IPythonInterpreterFactory, IReadOnlyList<IPackageManager>> _packageManagers;
+		private readonly List<IPythonInterpreterFactoryProvider> _providers;
+		private readonly IPythonInterpreterFactory _noInterpretersValue;
+		private IPythonInterpreterFactory _defaultInterpreter;
+		private readonly Dictionary<IPythonInterpreterFactory, IReadOnlyList<IPackageManager>> _packageManagers;
 
 		public MockInterpreterOptionsService()
 		{
@@ -56,7 +55,7 @@ namespace TestUtilities.Python
 			}
 		}
 
-		void provider_InterpreterFactoriesChanged(object sender, EventArgs e)
+		private void provider_InterpreterFactoriesChanged(object sender, EventArgs e)
 		{
 			var evt = InterpretersChanged;
 			if (evt != null)
@@ -66,15 +65,9 @@ namespace TestUtilities.Python
 		}
 
 
-		public IEnumerable<IPythonInterpreterFactory> Interpreters
-		{
-			get { return _providers.Where(p => p != null).SelectMany(p => p.GetInterpreterFactories()); }
-		}
+		public IEnumerable<IPythonInterpreterFactory> Interpreters => _providers.Where(p => p != null).SelectMany(p => p.GetInterpreterFactories());
 
-		public IEnumerable<InterpreterConfiguration> Configurations
-		{
-			get { return _providers.Where(p => p != null).SelectMany(p => p.GetInterpreterFactories()).Select(x => x.Configuration); }
-		}
+		public IEnumerable<InterpreterConfiguration> Configurations => _providers.Where(p => p != null).SelectMany(p => p.GetInterpreterFactories()).Select(x => x.Configuration);
 
 		public IEnumerable<IPythonInterpreterFactory> InterpretersOrDefault
 		{
@@ -88,10 +81,7 @@ namespace TestUtilities.Python
 			}
 		}
 
-		public IPythonInterpreterFactory NoInterpretersValue
-		{
-			get { return _noInterpretersValue; }
-		}
+		public IPythonInterpreterFactory NoInterpretersValue => _noInterpretersValue;
 
 		public event EventHandler InterpretersChanged;
 
@@ -107,10 +97,7 @@ namespace TestUtilities.Python
 
 		public IPythonInterpreterFactory DefaultInterpreter
 		{
-			get
-			{
-				return _defaultInterpreter ?? _noInterpretersValue;
-			}
+			get => _defaultInterpreter ?? _noInterpretersValue;
 			set
 			{
 				if (value == _noInterpretersValue)
@@ -131,15 +118,9 @@ namespace TestUtilities.Python
 
 		public string DefaultInterpreterId
 		{
-			get
-			{
-				return DefaultInterpreter?.Configuration?.Id;
-			}
+			get => DefaultInterpreter?.Configuration?.Id;
 
-			set
-			{
-				DefaultInterpreter = FindInterpreter(value);
-			}
+			set => DefaultInterpreter = FindInterpreter(value);
 		}
 
 		public event EventHandler DefaultInterpreterChanged;

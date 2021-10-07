@@ -16,7 +16,7 @@
 
 namespace PythonToolsMockTests
 {
-	class MockClipboardService : IClipboardService
+	internal class MockClipboardService : IClipboardService
 	{
 		private IDataObject _data;
 

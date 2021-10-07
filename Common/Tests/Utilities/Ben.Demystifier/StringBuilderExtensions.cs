@@ -142,7 +142,9 @@ namespace TestUtilities.Ben.Demystifier
 				if (name == ".ctor")
 				{
 					if (!isSubMethodOrLambda)
+					{
 						stringBuilder.Append("new ");
+					}
 
 					stringBuilder.Append(declaringTypeName);
 				}
@@ -312,7 +314,7 @@ namespace TestUtilities.Ben.Demystifier
 
 		private static ResolvedMethod GetMethodDisplay(MethodBase originMethod)
 		{
-			var methodDisplayInfo = new ResolvedMethod();
+			ResolvedMethod methodDisplayInfo = new ResolvedMethod();
 
 			// Special case: no method available
 			if (originMethod == null)
@@ -349,7 +351,7 @@ namespace TestUtilities.Ben.Demystifier
 			methodDisplayInfo.Name = methodName;
 			if (method.Name.IndexOf("<", StringComparison.Ordinal) >= 0)
 			{
-				if (TryResolveGeneratedName(ref method, out type, out methodName, out subMethodName, out var kind, out var ordinal))
+				if (TryResolveGeneratedName(ref method, out type, out methodName, out subMethodName, out GeneratedNameKind kind, out global::System.Int32 ordinal))
 				{
 					methodName = method.Name;
 					methodDisplayInfo.MethodBase = method;
@@ -447,7 +449,7 @@ namespace TestUtilities.Ben.Demystifier
 					var parameterList = new List<ResolvedParameter>(parameters.Length);
 					foreach (var parameter in parameters)
 					{
-						var param = GetParameter(parameter);
+						ResolvedParameter param = GetParameter(parameter);
 						if (param.Name?.StartsWith("<") ?? true)
 						{
 							continue;
@@ -479,7 +481,7 @@ namespace TestUtilities.Ben.Demystifier
 
 			var generatedName = methodName;
 
-			if (!TryParseGeneratedName(generatedName, out kind, out var openBracketOffset, out var closeBracketOffset))
+			if (!TryParseGeneratedName(generatedName, out kind, out global::System.Int32 openBracketOffset, out global::System.Int32 closeBracketOffset))
 			{
 				return false;
 			}
@@ -491,7 +493,11 @@ namespace TestUtilities.Ben.Demystifier
 				case GeneratedNameKind.LocalFunction:
 					{
 						var localNameStart = generatedName.IndexOf((char)kind, closeBracketOffset + 1);
-						if (localNameStart < 0) break;
+						if (localNameStart < 0)
+						{
+							break;
+						}
+
 						localNameStart += 3;
 
 						if (localNameStart < generatedName.Length)
@@ -519,10 +525,16 @@ namespace TestUtilities.Ben.Demystifier
 			var matchName = methodName;
 
 			var candidateMethods = dt.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly).Where(m => m.Name == matchName);
-			if (TryResolveSourceMethod(candidateMethods, kind, matchHint, ref method, ref type, out ordinal)) return true;
+			if (TryResolveSourceMethod(candidateMethods, kind, matchHint, ref method, ref type, out ordinal))
+			{
+				return true;
+			}
 
 			var candidateConstructors = dt.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly).Where(m => m.Name == matchName);
-			if (TryResolveSourceMethod(candidateConstructors, kind, matchHint, ref method, ref type, out ordinal)) return true;
+			if (TryResolveSourceMethod(candidateConstructors, kind, matchHint, ref method, ref type, out ordinal))
+			{
+				return true;
+			}
 
 			const int MaxResolveDepth = 10;
 			for (var i = 0; i < MaxResolveDepth; i++)
@@ -534,10 +546,16 @@ namespace TestUtilities.Ben.Demystifier
 				}
 
 				candidateMethods = dt.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly).Where(m => m.Name == matchName);
-				if (TryResolveSourceMethod(candidateMethods, kind, matchHint, ref method, ref type, out ordinal)) return true;
+				if (TryResolveSourceMethod(candidateMethods, kind, matchHint, ref method, ref type, out ordinal))
+				{
+					return true;
+				}
 
 				candidateConstructors = dt.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly).Where(m => m.Name == matchName);
-				if (TryResolveSourceMethod(candidateConstructors, kind, matchHint, ref method, ref type, out ordinal)) return true;
+				if (TryResolveSourceMethod(candidateConstructors, kind, matchHint, ref method, ref type, out ordinal))
+				{
+					return true;
+				}
 
 				if (methodName == ".cctor")
 				{
@@ -588,7 +606,7 @@ namespace TestUtilities.Ben.Demystifier
 						continue;
 					}
 
-					var reader = new ILReader(rawIL);
+					ILReader reader = new ILReader(rawIL);
 					while (reader.Read(candidateMethod))
 					{
 						if (reader.Operand is MethodBase mb)
@@ -668,9 +686,16 @@ namespace TestUtilities.Ben.Demystifier
 			{
 				case GeneratedNameKind.LocalFunction:
 					var start = methodName.IndexOf("|", StringComparison.Ordinal);
-					if (start < 1) return null;
+					if (start < 1)
+					{
+						return null;
+					}
+
 					var end = methodName.IndexOf("_", start, StringComparison.Ordinal) + 1;
-					if (end <= start) return null;
+					if (end <= start)
+					{
+						return null;
+					}
 
 					return methodName.Substring(start, end - start);
 				default:

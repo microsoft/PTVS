@@ -219,9 +219,6 @@ namespace TestUtilities.Mocks
 			throw new NotImplementedException();
 		}
 
-		public ITextBuffer TopBuffer
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public ITextBuffer TopBuffer => throw new NotImplementedException();
 	}
 }

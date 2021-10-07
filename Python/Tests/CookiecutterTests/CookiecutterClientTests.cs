@@ -27,7 +27,7 @@ namespace CookiecutterTests
 		private static string UserConfigFilePath => Path.Combine(TestData.GetPath("TestData"), "Cookiecutter", "userconfig.yaml");
 
 		private ICookiecutterClient _client;
-		private MockRedirector _redirector = new MockRedirector();
+		private readonly MockRedirector _redirector = new MockRedirector();
 
 		private static ContextItem[] LocalTemplateNoUserConfigContextItems { get; } = new ContextItem[] {
 			new ContextItem("full_name", Selectors.String, "Default Full Name"),
@@ -176,7 +176,7 @@ namespace CookiecutterTests
 		public async Task CompareFiles()
 		{
 			Random rnd = new Random();
-			var original = new byte[32768 * 3 + 1024];
+			global::System.Byte[] original = new byte[32768 * 3 + 1024];
 			rnd.NextBytes(original);
 
 			var tempFolder = TestData.GetTempPath();
@@ -243,7 +243,7 @@ namespace CookiecutterTests
 			return dict;
 		}
 
-		class ContextItemComparer : IComparer
+		private class ContextItemComparer : IComparer
 		{
 			public int Compare(object x, object y)
 			{

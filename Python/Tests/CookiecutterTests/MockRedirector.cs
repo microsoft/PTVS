@@ -16,7 +16,7 @@
 
 namespace CookiecutterTests
 {
-	class MockRedirector : Redirector
+	internal class MockRedirector : Redirector
 	{
 		private List<string> ErrorLines { get; } = new List<string>();
 		private List<string> Lines { get; } = new List<string>();

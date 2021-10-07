@@ -16,7 +16,7 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-	class MockIncrementalSearch : IIncrementalSearch
+	internal class MockIncrementalSearch : IIncrementalSearch
 	{
 		private readonly MockTextView _view;
 
@@ -45,33 +45,18 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			throw new NotImplementedException();
 		}
 
-		public bool IsActive
-		{
-			get { return false; }
-		}
+		public bool IsActive => false;
 
 		public IncrementalSearchDirection SearchDirection
 		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-			set
-			{
-				throw new NotImplementedException();
-			}
+			get => throw new NotImplementedException();
+			set => throw new NotImplementedException();
 		}
 
 		public string SearchString
 		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-			set
-			{
-				throw new NotImplementedException();
-			}
+			get => throw new NotImplementedException();
+			set => throw new NotImplementedException();
 		}
 
 		public IncrementalSearchResult SelectNextResult()
@@ -84,9 +69,6 @@ namespace Microsoft.VisualStudioTools.MockVsTests
 			throw new NotImplementedException();
 		}
 
-		public VisualStudio.Text.Editor.ITextView TextView
-		{
-			get { throw new NotImplementedException(); }
-		}
+		public VisualStudio.Text.Editor.ITextView TextView => throw new NotImplementedException();
 	}
 }

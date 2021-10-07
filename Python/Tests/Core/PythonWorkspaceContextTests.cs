@@ -28,7 +28,7 @@ namespace PythonToolsTests
 		[TestMethod, Priority(UnitTestPriority.P0)]
 		public void DefaultInterpreter()
 		{
-			var data = PrepareWorkspace(WorkspaceTestHelper.PythonNoId);
+			TestSetupData data = PrepareWorkspace(WorkspaceTestHelper.PythonNoId);
 
 			var workspaceContext = new PythonWorkspaceContext(data.Workspace, data.OptionsService, data.RegistryService);
 			workspaceContext.Initialize();
@@ -41,7 +41,7 @@ namespace PythonToolsTests
 		[TestMethod, Priority(UnitTestPriority.P1)]
 		public void InstalledInterpreter()
 		{
-			var data = PrepareWorkspace(WorkspaceTestHelper.Python27Id);
+			TestSetupData data = PrepareWorkspace(WorkspaceTestHelper.Python27Id);
 
 			var workspaceContext = new PythonWorkspaceContext(data.Workspace, data.OptionsService, data.RegistryService);
 			workspaceContext.Initialize();
@@ -54,7 +54,7 @@ namespace PythonToolsTests
 		[TestMethod, Priority(UnitTestPriority.P1)]
 		public void UnavailableInterpreter()
 		{
-			var data = PrepareWorkspace(WorkspaceTestHelper.PythonUnavailableId);
+			TestSetupData data = PrepareWorkspace(WorkspaceTestHelper.PythonUnavailableId);
 
 			var workspaceContext = new PythonWorkspaceContext(data.Workspace, data.OptionsService, data.RegistryService);
 			workspaceContext.Initialize();
@@ -67,7 +67,7 @@ namespace PythonToolsTests
 		[TestMethod, Priority(UnitTestPriority.P1)]
 		public void ChangeInterpreterSetting()
 		{
-			var data = PrepareWorkspace(WorkspaceTestHelper.Python27Id);
+			TestSetupData data = PrepareWorkspace(WorkspaceTestHelper.Python27Id);
 
 			var workspaceContext = new PythonWorkspaceContext(data.Workspace, data.OptionsService, data.RegistryService);
 			workspaceContext.Initialize();
@@ -89,7 +89,7 @@ namespace PythonToolsTests
 					interpreterSettingEvent.Set();
 				};
 
-				var updatedSettings = new WorkspaceTestHelper.MockWorkspaceSettings(
+				WorkspaceTestHelper.MockWorkspaceSettings updatedSettings = new WorkspaceTestHelper.MockWorkspaceSettings(
 					new Dictionary<string, string> { { "Interpreter", WorkspaceTestHelper.Python37Id } }
 				);
 				data.Workspace.SettingsManager.SimulateChangeSettings(updatedSettings);
@@ -106,7 +106,7 @@ namespace PythonToolsTests
 		[TestMethod, Priority(UnitTestPriority.P1)]
 		public void RemoveInterpreterSetting()
 		{
-			var data = PrepareWorkspace(WorkspaceTestHelper.Python27Id);
+			TestSetupData data = PrepareWorkspace(WorkspaceTestHelper.Python27Id);
 
 			var workspaceContext = new PythonWorkspaceContext(data.Workspace, data.OptionsService, data.RegistryService);
 			workspaceContext.Initialize();
@@ -128,7 +128,7 @@ namespace PythonToolsTests
 					interpreterSettingEvent.Set();
 				};
 
-				var updatedSettings = new WorkspaceTestHelper.MockWorkspaceSettings(
+				WorkspaceTestHelper.MockWorkspaceSettings updatedSettings = new WorkspaceTestHelper.MockWorkspaceSettings(
 					new Dictionary<string, string> { { "Interpreter", WorkspaceTestHelper.PythonNoId } }
 				);
 				data.Workspace.SettingsManager.SimulateChangeSettings(updatedSettings);
@@ -145,7 +145,7 @@ namespace PythonToolsTests
 		[TestMethod, Priority(UnitTestPriority.P1)]
 		public void RemoveInterpreterSettingAlreadyDefault()
 		{
-			var data = PrepareWorkspace(WorkspaceTestHelper.DefaultFactory.Configuration.Id);
+			TestSetupData data = PrepareWorkspace(WorkspaceTestHelper.DefaultFactory.Configuration.Id);
 
 			var workspaceContext = new PythonWorkspaceContext(data.Workspace, data.OptionsService, data.RegistryService);
 			workspaceContext.Initialize();
@@ -167,7 +167,7 @@ namespace PythonToolsTests
 					interpreterSettingEvent.Set();
 				};
 
-				var updatedSettings = new WorkspaceTestHelper.MockWorkspaceSettings(
+				WorkspaceTestHelper.MockWorkspaceSettings updatedSettings = new WorkspaceTestHelper.MockWorkspaceSettings(
 					new Dictionary<string, string> { { "Interpreter", WorkspaceTestHelper.PythonNoId } }
 				);
 				data.Workspace.SettingsManager.SimulateChangeSettings(updatedSettings);
@@ -184,7 +184,7 @@ namespace PythonToolsTests
 		[TestMethod, Priority(UnitTestPriority.P1)]
 		public void ChangeDefaultInterpreterInUse()
 		{
-			var data = PrepareWorkspace(WorkspaceTestHelper.PythonNoId);
+			TestSetupData data = PrepareWorkspace(WorkspaceTestHelper.PythonNoId);
 
 			var workspaceContext = new PythonWorkspaceContext(data.Workspace, data.OptionsService, data.RegistryService);
 			workspaceContext.Initialize();
@@ -214,7 +214,7 @@ namespace PythonToolsTests
 		public void ChangeDefaultInterpreterNotInUse()
 		{
 			// We don't use the global default
-			var data = PrepareWorkspace(WorkspaceTestHelper.Python27Id);
+			TestSetupData data = PrepareWorkspace(WorkspaceTestHelper.Python27Id);
 
 			var workspaceContext = new PythonWorkspaceContext(data.Workspace, data.OptionsService, data.RegistryService);
 			workspaceContext.Initialize();
@@ -243,7 +243,7 @@ namespace PythonToolsTests
 		[TestMethod, Priority(UnitTestPriority.P1)]
 		public void RemoveInterpreterInUse()
 		{
-			var data = PrepareWorkspace(WorkspaceTestHelper.Python27Id);
+			TestSetupData data = PrepareWorkspace(WorkspaceTestHelper.Python27Id);
 
 			var workspaceContext = new PythonWorkspaceContext(data.Workspace, data.OptionsService, data.RegistryService);
 			workspaceContext.Initialize();
@@ -274,7 +274,7 @@ namespace PythonToolsTests
 		[TestMethod, Priority(UnitTestPriority.P1)]
 		public void RemoveInterpreterNotInUse()
 		{
-			var data = PrepareWorkspace(WorkspaceTestHelper.Python27Id);
+			TestSetupData data = PrepareWorkspace(WorkspaceTestHelper.Python27Id);
 
 			var workspaceContext = new PythonWorkspaceContext(data.Workspace, data.OptionsService, data.RegistryService);
 			workspaceContext.Initialize();
@@ -362,8 +362,8 @@ namespace PythonToolsTests
 		{
 			var virtualEnvName = "virtualEnv";
 
-			var mockWorkspace = WorkspaceTestHelper.CreateMockWorkspace(WorkspaceTestHelper.CreateWorkspaceFolder(), WorkspaceTestHelper.Python37Id);
-			var optionsService = new WorkspaceTestHelper.MockOptionsService(WorkspaceTestHelper.DefaultFactory);
+			WorkspaceTestHelper.MockWorkspace mockWorkspace = WorkspaceTestHelper.CreateMockWorkspace(WorkspaceTestHelper.CreateWorkspaceFolder(), WorkspaceTestHelper.Python37Id);
+			WorkspaceTestHelper.MockOptionsService optionsService = new WorkspaceTestHelper.MockOptionsService(WorkspaceTestHelper.DefaultFactory);
 			var includedWorkspaceFilePaths = GenerateWorkspaceFiles(mockWorkspace.Location, virtualEnvName, out string virtualEnvPath);
 			includedWorkspaceFilePaths.Add(Path.Combine(mockWorkspace.Location, "app.py")); //Created by WorkspaceTestHelper.CreateWorkspaceFolder()
 
@@ -372,9 +372,9 @@ namespace PythonToolsTests
 					new VisualStudioInterpreterConfiguration("Python|3.7", "Fake interpreter 3.7", Path.Combine(mockWorkspace.Location, virtualEnvName), virtualEnvPath)
 				)
 			};
-			var registryService = new WorkspaceTestHelper.MockRegistryService(workspaceInterpreterFactories);
+			WorkspaceTestHelper.MockRegistryService registryService = new WorkspaceTestHelper.MockRegistryService(workspaceInterpreterFactories);
 
-			var testDataSetup = new TestSetupData
+			TestSetupData testDataSetup = new TestSetupData
 			{
 				OptionsService = optionsService,
 				RegistryService = registryService,
@@ -440,7 +440,7 @@ namespace PythonToolsTests
 			};
 		}
 
-		class TestSetupData
+		private class TestSetupData
 		{
 			public WorkspaceTestHelper.MockOptionsService OptionsService { get; set; }
 

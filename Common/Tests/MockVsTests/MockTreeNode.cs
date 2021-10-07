@@ -16,7 +16,7 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-	class MockTreeNode : ITreeNode
+	internal class MockTreeNode : ITreeNode
 	{
 		private readonly MockVs _mockVs;
 		internal HierarchyItem _item;

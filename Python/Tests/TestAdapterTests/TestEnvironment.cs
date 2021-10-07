@@ -49,8 +49,10 @@ namespace TestAdapterTests
 				return foundEnv;
 			}
 
-			var env = new TestEnvironment();
-			env.TestFramework = testFramework;
+			TestEnvironment env = new TestEnvironment
+			{
+				TestFramework = testFramework
+			};
 
 			SetDirectories(env);
 

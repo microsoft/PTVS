@@ -16,7 +16,7 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-	class MockVsTrackProjectDocuments : IVsTrackProjectDocuments2
+	internal class MockVsTrackProjectDocuments : IVsTrackProjectDocuments2
 	{
 		private Dictionary<uint, IVsTrackProjectDocumentsEvents2> _events = new Dictionary<uint, IVsTrackProjectDocumentsEvents2>();
 		private uint _curCookie;

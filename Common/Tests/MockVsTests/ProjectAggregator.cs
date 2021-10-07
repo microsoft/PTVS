@@ -16,8 +16,7 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-
-	class ProjectAggregator : IVsProjectAggregator2, ICustomQueryInterface
+	internal class ProjectAggregator : IVsProjectAggregator2, ICustomQueryInterface
 	{
 		private IntPtr _inner;
 		private IntPtr _project;

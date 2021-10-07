@@ -65,7 +65,7 @@ namespace TestUtilities.UI
 					// so we need to find the one that actually has our templates.
 					foreach (AutomationElement template in templates)
 					{
-						var temp = new TreeView(template);
+						TreeView temp = new TreeView(template);
 #if DEV11_OR_LATER
                         var item = temp.FindItem("Templates");
 #else
@@ -112,26 +112,14 @@ namespace TestUtilities.UI
 
 		public string ProjectName
 		{
-			get
-			{
-				return ProjectNameBox.GetValuePattern().Current.Value;
-			}
-			set
-			{
-				ProjectNameBox.GetValuePattern().SetValue(value);
-			}
+			get => ProjectNameBox.GetValuePattern().Current.Value;
+			set => ProjectNameBox.GetValuePattern().SetValue(value);
 		}
 
 		public string Location
 		{
-			get
-			{
-				return LocationBox.GetValuePattern().Current.Value;
-			}
-			set
-			{
-				LocationBox.GetValuePattern().SetValue(value);
-			}
+			get => LocationBox.GetValuePattern().Current.Value;
+			set => LocationBox.GetValuePattern().SetValue(value);
 		}
 
 		public void FocusLanguageNode(string name = "Python")
@@ -162,30 +150,18 @@ namespace TestUtilities.UI
 			item.SetFocus();
 		}
 
-		private AutomationElement ProjectNameBox
-		{
-			get
-			{
-				return Element.FindFirst(TreeScope.Descendants,
+		private AutomationElement ProjectNameBox => Element.FindFirst(TreeScope.Descendants,
 					new AndCondition(
 						new PropertyCondition(AutomationElement.AutomationIdProperty, "txt_Name"),
 						new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Edit)
 					)
 				);
-			}
-		}
 
-		private AutomationElement LocationBox
-		{
-			get
-			{
-				return Element.FindFirst(TreeScope.Descendants,
+		private AutomationElement LocationBox => Element.FindFirst(TreeScope.Descendants,
 					new AndCondition(
 						new PropertyCondition(AutomationElement.AutomationIdProperty, "PART_EditableTextBox"),
 						new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Edit)
 					)
 				);
-			}
-		}
 	}
 }

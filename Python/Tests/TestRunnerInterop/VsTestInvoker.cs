@@ -45,7 +45,10 @@ namespace TestRunnerInterop
 			return -59922564 + EqualityComparer<VsTestContext>.Default.GetHashCode(Context);
 		}
 
-		public void RunTest(string testName, params object[] arguments) => RunTest(Context.DefaultTimeout, testName, arguments);
+		public void RunTest(string testName, params object[] arguments)
+		{
+			RunTest(Context.DefaultTimeout, testName, arguments);
+		}
 
 		public void RunTest(TimeSpan timeout, string testName, params object[] arguments)
 		{

@@ -31,11 +31,22 @@ namespace PythonToolsUITestsRunner
 		public TestContext TestContext { get; set; }
 
 		[TestInitialize]
-		public void TestInitialize() => VsTestContext.Instance.TestInitialize(TestContext.DeploymentDirectory);
+		public void TestInitialize()
+		{
+			VsTestContext.Instance.TestInitialize(TestContext.DeploymentDirectory);
+		}
+
 		[TestCleanup]
-		public void TestCleanup() => VsTestContext.Instance.TestCleanup();
+		public void TestCleanup()
+		{
+			VsTestContext.Instance.TestCleanup();
+		}
+
 		[ClassCleanup]
-		public static void ClassCleanup() => VsTestContext.Instance.Dispose();
+		public static void ClassCleanup()
+		{
+			VsTestContext.Instance.Dispose();
+		}
 		#endregion
 
 		[TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]

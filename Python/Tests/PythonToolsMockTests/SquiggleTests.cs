@@ -53,7 +53,7 @@ namespace PythonToolsMockTests
 		{
 			List<string> squiggles;
 
-			using (var view = new PythonEditor("import fob, oar\r\nfrom baz import *\r\nfrom spam import eggs"))
+			using (PythonEditor view = new PythonEditor("import fob, oar\r\nfrom baz import *\r\nfrom spam import eggs"))
 			{
 				var errorProvider = view.VS.ServiceProvider.GetComponentModel().GetService<IErrorProviderFactory>();
 				var tagger = errorProvider.GetErrorTagger(view.View.TextView.TextBuffer);
@@ -75,7 +75,7 @@ namespace PythonToolsMockTests
 			Console.WriteLine(" Found {0} squiggle(s)", squiggles.Count);
 
 			int i = 0;
-			foreach (var expected in new[] {
+			foreach (global::System.String expected in new[] {
                 // Ensure that the warning includes the module name
                 @".*warning:.*fob.*\(Python.+:7-10\)",
 				@".*warning:.*oar.*\(Python.+:12-15\)",
@@ -106,7 +106,7 @@ namespace PythonToolsMockTests
 				))
 			);
 
-			using (var view = new PythonEditor())
+			using (PythonEditor view = new PythonEditor())
 			{
 				var errorProvider = view.VS.ServiceProvider.GetComponentModel().GetService<IErrorProviderFactory>();
 				var tagger = errorProvider.GetErrorTagger(view.View.TextView.TextBuffer);

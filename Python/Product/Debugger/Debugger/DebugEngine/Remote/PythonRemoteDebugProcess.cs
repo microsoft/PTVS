@@ -28,17 +28,14 @@ namespace Microsoft.PythonTools.Debugger.Remote
 
 		public PythonRemoteDebugProcess(PythonRemoteDebugPort port, int pid, string exe, string username, string version)
 		{
-			this._port = port;
-			this._pid = (pid == 0) ? 1 : pid; // attach dialog won't show processes with pid==0
-			this._username = username;
-			this._exe = string.IsNullOrEmpty(exe) ? "<python>" : exe;
-			this._version = version;
+			_port = port;
+			_pid = (pid == 0) ? 1 : pid; // attach dialog won't show processes with pid==0
+			_username = username;
+			_exe = string.IsNullOrEmpty(exe) ? "<python>" : exe;
+			_version = version;
 		}
 
-		public PythonRemoteDebugPort DebugPort
-		{
-			get { return _port; }
-		}
+		public PythonRemoteDebugPort DebugPort => _port;
 
 		public int Attach(IDebugEventCallback2 pCallback, Guid[] rgguidSpecificEngines, uint celtSpecificEngines, int[] rghrEngineAttach)
 		{
@@ -79,11 +76,13 @@ namespace Microsoft.PythonTools.Debugger.Remote
 		public int GetInfo(enum_PROCESS_INFO_FIELDS Fields, PROCESS_INFO[] pProcessInfo)
 		{
 			// The various string fields should match the strings returned by GetName - keep them in sync when making any changes here.
-			var pi = new PROCESS_INFO();
-			pi.Fields = Fields;
-			pi.bstrFileName = _exe;
-			pi.bstrBaseName = BaseName;
-			pi.bstrTitle = Title;
+			var pi = new PROCESS_INFO
+			{
+				Fields = Fields,
+				bstrFileName = _exe,
+				bstrBaseName = BaseName,
+				bstrTitle = Title
+			};
 			pi.ProcessId.dwProcessId = (uint)_pid;
 			pProcessInfo[0] = pi;
 			return 0;
@@ -113,8 +112,10 @@ namespace Microsoft.PythonTools.Debugger.Remote
 
 		public int GetPhysicalProcessId(AD_PROCESS_ID[] pProcessId)
 		{
-			var pidStruct = new AD_PROCESS_ID();
-			pidStruct.dwProcessId = (uint)_pid;
+			var pidStruct = new AD_PROCESS_ID
+			{
+				dwProcessId = (uint)_pid
+			};
 			pProcessId[0] = pidStruct;
 			return 0;
 		}
@@ -168,10 +169,7 @@ namespace Microsoft.PythonTools.Debugger.Remote
 			}
 		}
 
-		private string Title
-		{
-			get { return _version; }
-		}
+		private string Title => _version;
 
 		public static async Task<PythonRemoteDebugProcess> ConnectAsync(PythonRemoteDebugPort port, TextWriter debugLog, CancellationToken ct)
 		{

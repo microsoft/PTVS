@@ -19,7 +19,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 	/// <summary>
 	/// Event args for start/stop of engines.
 	/// </summary>
-	class AD7EngineEventArgs : EventArgs
+	internal class AD7EngineEventArgs : EventArgs
 	{
 		private readonly AD7Engine _engine;
 
@@ -28,12 +28,6 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine
 			_engine = engine;
 		}
 
-		public AD7Engine Engine
-		{
-			get
-			{
-				return _engine;
-			}
-		}
+		public AD7Engine Engine => _engine;
 	}
 }

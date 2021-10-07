@@ -16,7 +16,7 @@
 
 namespace Microsoft.PythonTools.Debugger.DebugEngine
 {
-	static class EngineUtils
+	internal static class EngineUtils
 	{
 		public static void CheckOk(int hr)
 		{

@@ -45,7 +45,7 @@ namespace PythonToolsMockTests
 		[TestMethod, Priority(UnitTestPriority.P1)]
 		public void BuiltinFunctionSigHelp()
 		{
-			using (var view = new PythonEditor())
+			using (PythonEditor view = new PythonEditor())
 			{
 				view.TypeAndWaitForAnalysis("min");
 				view.Type("(");
@@ -70,7 +70,7 @@ namespace PythonToolsMockTests
 		[TestMethod, Priority(UnitTestPriority.P1)]
 		public void SigHelpInClass()
 		{
-			using (var view = new PythonEditor())
+			using (PythonEditor view = new PythonEditor())
 			{
 				view.TypeAndWaitForAnalysis("class C(): pass\n");
 				view.MoveCaret(1, 9);
@@ -84,7 +84,7 @@ namespace PythonToolsMockTests
 		[TestMethod, Priority(UnitTestPriority.P1)]
 		public void BuiltinFunctionCompletions()
 		{
-			using (var view = new PythonEditor())
+			using (PythonEditor view = new PythonEditor())
 			{
 				view.TypeAndWaitForAnalysis("min");
 				view.Type(".");
@@ -99,7 +99,7 @@ namespace PythonToolsMockTests
 		[TestMethod, Priority(UnitTestPriority.P1)]
 		public void FilterCompletions()
 		{
-			using (var view = new PythonEditor())
+			using (PythonEditor view = new PythonEditor())
 			{
 				view.TypeAndWaitForAnalysis("min");
 				view.Type(".");
@@ -118,7 +118,7 @@ namespace PythonToolsMockTests
 		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
 		public void DotCompletes()
 		{
-			using (var view = new PythonEditor())
+			using (PythonEditor view = new PythonEditor())
 			{
 				view.TypeAndWaitForAnalysis("min");
 				view.Type(".");
@@ -137,7 +137,7 @@ namespace PythonToolsMockTests
 		[TestMethod, Priority(UnitTestPriority.P1)]
 		public void NonIdentifierDismisses()
 		{
-			using (var view = new PythonEditor())
+			using (PythonEditor view = new PythonEditor())
 			{
 				view.TypeAndWaitForAnalysis("min");
 				view.Type(".");
@@ -158,7 +158,7 @@ namespace PythonToolsMockTests
 		[TestMethod, Priority(UnitTestPriority.P1)]
 		public void EnterCommits()
 		{
-			using (var view = new PythonEditor())
+			using (PythonEditor view = new PythonEditor())
 			{
 				view.TypeAndWaitForAnalysis("min");
 				view.Type(".");
@@ -176,7 +176,7 @@ namespace PythonToolsMockTests
 		[TestMethod, Priority(UnitTestPriority.P1)]
 		public void EnterDismisses()
 		{
-			using (var view = new PythonEditor())
+			using (PythonEditor view = new PythonEditor())
 			{
 				view.AdvancedOptions.EnterCommitsIntellisense = false;
 				view.AdvancedOptions.AutoListMembers = true;
@@ -197,7 +197,7 @@ namespace PythonToolsMockTests
 		[TestMethod, Priority(UnitTestPriority.P1)]
 		public void EnterCommitsCompleteNoNewLine()
 		{
-			using (var view = new PythonEditor())
+			using (PythonEditor view = new PythonEditor())
 			{
 				view.AdvancedOptions.AddNewLineAtEndOfFullyTypedWord = true;
 				view.AdvancedOptions.AutoListMembers = true;
@@ -219,7 +219,7 @@ namespace PythonToolsMockTests
 		[TestMethod, Priority(UnitTestPriority.P1)]
 		public void TabCommits()
 		{
-			using (var view = new PythonEditor())
+			using (PythonEditor view = new PythonEditor())
 			{
 				view.AdvancedOptions.EnterCommitsIntellisense = false;
 				view.AdvancedOptions.AutoListMembers = true;
@@ -242,7 +242,7 @@ namespace PythonToolsMockTests
 		[TestMethod, Priority(UnitTestPriority.P1)]
 		public void DecoratorCompletions()
 		{
-			using (var view = new PythonEditor())
+			using (PythonEditor view = new PythonEditor())
 			{
 				view.Type("@");
 
@@ -256,7 +256,7 @@ namespace PythonToolsMockTests
 		[TestMethod, Priority(UnitTestPriority.P1)]
 		public void DecoratorNonCompletions()
 		{
-			using (var view = new PythonEditor())
+			using (PythonEditor view = new PythonEditor())
 			{
 				view.Type("a = b @");
 
@@ -267,7 +267,7 @@ namespace PythonToolsMockTests
 		[TestMethod, Priority(UnitTestPriority.P1)]
 		public void AutoListIdentifierCompletions()
 		{
-			using (var view = new PythonEditor())
+			using (PythonEditor view = new PythonEditor())
 			{
 				view.AdvancedOptions.AutoListIdentifiers = true;
 
@@ -311,14 +311,14 @@ namespace PythonToolsMockTests
 
 		private void AutoListTest(string code, PythonLanguageVersion version, params int[] triggerAtIndex)
 		{
-			using (var view = new PythonEditor(version: version))
+			using (PythonEditor view = new PythonEditor(version: version))
 			{
 				view.AdvancedOptions.AutoListIdentifiers = true;
 				view.AdvancedOptions.AutoListMembers = true;
 
 				int lastStart = 0;
 				string text;
-				foreach (var _i in triggerAtIndex)
+				foreach (global::System.Int32 _i in triggerAtIndex)
 				{
 					bool expectCompletions = _i >= 0;
 					int expected = _i > 0 ? _i : -_i;
@@ -445,12 +445,12 @@ namespace PythonToolsMockTests
 		[TestMethod, Priority(UnitTestPriority.P1)]
 		public void DisableAutoCompletions()
 		{
-			using (var view = new PythonEditor())
+			using (PythonEditor view = new PythonEditor())
 			{
 				view.AdvancedOptions.AutoListMembers = false;
 				view.AdvancedOptions.AutoListIdentifiers = false;
 
-				foreach (var t in new[] { "a", "a.", "import " })
+				foreach (global::System.String t in new[] { "a", "a.", "import " })
 				{
 					Console.WriteLine("Typed " + t);
 					view.Type(t);
@@ -465,7 +465,7 @@ namespace PythonToolsMockTests
 		[TestMethod, Priority(UnitTestPriority.P1)]
 		public void CompletionsAtEndOfLastChildScope()
 		{
-			using (var view = new PythonEditor(@"class A:
+			using (PythonEditor view = new PythonEditor(@"class A:
     def f(param1, param2):
         y = 234
 
@@ -488,7 +488,7 @@ class B:
 		[TestMethod, Priority(UnitTestPriority.P1)]
 		public void NewlineWithinComment()
 		{
-			using (var view = new PythonEditor(@"# comment"))
+			using (PythonEditor view = new PythonEditor(@"# comment"))
 			{
 				view.MoveCaret(1, 1);
 				view.Enter();
@@ -497,7 +497,7 @@ class B:
 				Assert.AreEqual("# comment", view.CurrentSnapshot.GetLineFromLineNumber(1).GetText());
 			}
 
-			using (var view = new PythonEditor(@"# comment"))
+			using (PythonEditor view = new PythonEditor(@"# comment"))
 			{
 				view.MoveCaret(1, 3);
 				view.Enter();
@@ -506,7 +506,7 @@ class B:
 				Assert.AreEqual("# comment", view.CurrentSnapshot.GetLineFromLineNumber(1).GetText());
 			}
 
-			using (var view = new PythonEditor(@"# comment"))
+			using (PythonEditor view = new PythonEditor(@"# comment"))
 			{
 				view.MoveCaret(1, 10);
 				view.Enter();
@@ -515,7 +515,7 @@ class B:
 				Assert.AreEqual("", view.CurrentSnapshot.GetLineFromLineNumber(1).GetText());
 			}
 
-			using (var view = new PythonEditor(@"    # comment"))
+			using (PythonEditor view = new PythonEditor(@"    # comment"))
 			{
 				view.MoveCaret(1, 7);
 				view.Enter();
@@ -526,7 +526,7 @@ class B:
 		}
 	}
 
-	static class IntellisenseTestExtensions
+	internal static class IntellisenseTestExtensions
 	{
 		public static IEnumerable<string> Completions(this ICompletionSession session)
 		{

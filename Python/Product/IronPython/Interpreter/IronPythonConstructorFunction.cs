@@ -16,7 +16,7 @@
 
 namespace Microsoft.IronPythonTools.Interpreter
 {
-	class IronPythonConstructorFunction : IPythonFunction
+	internal class IronPythonConstructorFunction : IPythonFunction
 	{
 		private readonly ObjectIdentityHandle[] _infos;
 		private readonly IronPythonInterpreter _interpreter;
@@ -42,16 +42,10 @@ namespace Microsoft.IronPythonTools.Interpreter
 
 		#region IBuiltinFunction Members
 
-		public string Name
-		{
-			get { return "__new__"; }
-		}
+		public string Name => "__new__";
 
 		// TODO: Documentation
-		public string Documentation
-		{
-			get { return ""; }
-		}
+		public string Documentation => "";
 
 		public IReadOnlyList<IPythonFunctionOverload> Overloads
 		{
@@ -76,54 +70,27 @@ namespace Microsoft.IronPythonTools.Interpreter
 			{
 				if (_declaringType == null)
 				{
-					var ri = _remote;
+					RemoteInterpreterProxy ri = _remote;
 					_declaringType = ri != null ? _interpreter.GetTypeFromType(ri.GetConstructorDeclaringPythonType(_infos[0])) : null;
 				}
 				return _declaringType;
 			}
 		}
 
-		public bool IsBuiltin
-		{
-			get
-			{
-				return true;
-			}
-		}
+		public bool IsBuiltin => true;
 
-		public bool IsStatic
-		{
-			get
-			{
-				return true;
-			}
-		}
+		public bool IsStatic => true;
 
-		public bool IsClassMethod
-		{
-			get
-			{
-				return false;
-			}
-		}
+		public bool IsClassMethod => false;
 
 
-		public IPythonModule DeclaringModule
-		{
-			get
-			{
-				return _type.DeclaringModule;
-			}
-		}
+		public IPythonModule DeclaringModule => _type.DeclaringModule;
 
 		#endregion
 
 		#region IMember Members
 
-		public PythonMemberType MemberType
-		{
-			get { return PythonMemberType.Function; }
-		}
+		public PythonMemberType MemberType => PythonMemberType.Function;
 
 		#endregion
 	}

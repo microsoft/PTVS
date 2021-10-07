@@ -16,7 +16,7 @@
 
 namespace TestAdapterTests.Mocks
 {
-	class MockRunContext : IRunContext
+	internal class MockRunContext : IRunContext
 	{
 		public MockRunContext(IRunSettings runSettings, IReadOnlyList<TestCase> testCases, string resultsDirectory)
 		{

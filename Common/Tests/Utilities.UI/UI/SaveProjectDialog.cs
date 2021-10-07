@@ -16,7 +16,7 @@
 
 namespace TestUtilities.UI
 {
-	class SaveProjectDialog : AutomationDialog
+	internal class SaveProjectDialog : AutomationDialog
 	{
 		public SaveProjectDialog(VisualStudioApp app, AutomationElement element)
 			: base(app, element)

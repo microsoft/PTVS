@@ -16,7 +16,7 @@
 
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
-	class MockVsProfferCommands : IVsProfferCommands
+	internal class MockVsProfferCommands : IVsProfferCommands
 	{
 		public void AddCommandBar(string pszCmdBarName, vsCommandBarType dwType, object pCmdBarParent, uint dwIndex, out object ppCmdBar)
 		{

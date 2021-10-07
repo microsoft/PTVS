@@ -16,7 +16,7 @@
 
 namespace Microsoft.IronPythonTools.Interpreter
 {
-	class IronPythonTypeGroup : PythonObject, IAdvancedPythonType
+	internal class IronPythonTypeGroup : PythonObject, IAdvancedPythonType
 	{
 		private bool? _genericTypeDefinition;
 		private PythonMemberType _memberType;
@@ -35,7 +35,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 		{
 			if (_ctors == null)
 			{
-				var ri = RemoteInterpreter;
+				RemoteInterpreterProxy ri = RemoteInterpreter;
 				if (ri != null && !ri.TypeGroupHasNewOrInitMethods(Value))
 				{
 					_ctors = GetClrOverloads();
@@ -49,13 +49,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 			return _ctors;
 		}
 
-		public bool IsPythonType
-		{
-			get
-			{
-				return false;
-			}
-		}
+		public bool IsPythonType => false;
 
 		/// <summary>
 		/// Returns the overloads for a normal .NET type
@@ -63,8 +57,8 @@ namespace Microsoft.IronPythonTools.Interpreter
 		private IPythonFunction GetClrOverloads()
 		{
 			ObjectIdentityHandle declType = default(ObjectIdentityHandle);
-			var ri = RemoteInterpreter;
-			var ctors = ri != null ? ri.GetTypeGroupConstructors(Value, out declType) : null;
+			RemoteInterpreterProxy ri = RemoteInterpreter;
+			ObjectIdentityHandle[] ctors = ri != null ? ri.GetTypeGroupConstructors(Value, out declType) : null;
 			if (ctors != null)
 			{
 				return new IronPythonConstructorFunction(Interpreter, ctors, Interpreter.GetTypeFromType(declType));
@@ -78,7 +72,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 			{
 				if (_memberType == PythonMemberType.Unknown)
 				{
-					var ri = RemoteInterpreter;
+					RemoteInterpreterProxy ri = RemoteInterpreter;
 					_memberType = ri != null ? ri.GetTypeGroupMemberType(Value) : PythonMemberType.Unknown;
 				}
 				return _memberType;
@@ -89,7 +83,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 		{
 			get
 			{
-				var ri = RemoteInterpreter;
+				RemoteInterpreterProxy ri = RemoteInterpreter;
 				return ri != null ? ri.GetTypeGroupName(Value) : string.Empty;
 			}
 		}
@@ -98,24 +92,18 @@ namespace Microsoft.IronPythonTools.Interpreter
 		{
 			get
 			{
-				var ri = RemoteInterpreter;
+				RemoteInterpreterProxy ri = RemoteInterpreter;
 				return ri != null ? ri.GetTypeGroupDocumentation(Value) : string.Empty;
 			}
 		}
 
-		public BuiltinTypeId TypeId
-		{
-			get
-			{
-				return BuiltinTypeId.Unknown;
-			}
-		}
+		public BuiltinTypeId TypeId => BuiltinTypeId.Unknown;
 
 		public IPythonModule DeclaringModule
 		{
 			get
 			{
-				var ri = RemoteInterpreter;
+				RemoteInterpreterProxy ri = RemoteInterpreter;
 				return ri != null ? Interpreter.ImportModule(ri.GetTypeGroupDeclaringModule(Value)) : null;
 			}
 		}
@@ -132,29 +120,11 @@ namespace Microsoft.IronPythonTools.Interpreter
 			}
 		}
 
-		public bool IsBuiltin
-		{
-			get
-			{
-				return true;
-			}
-		}
+		public bool IsBuiltin => true;
 
-		public IEnumerable<IPythonType> IndexTypes
-		{
-			get
-			{
-				return null;
-			}
-		}
+		public IEnumerable<IPythonType> IndexTypes => null;
 
-		public bool IsArray
-		{
-			get
-			{
-				return false;
-			}
-		}
+		public bool IsArray => false;
 
 		public IPythonType GetElementType()
 		{
@@ -165,15 +135,15 @@ namespace Microsoft.IronPythonTools.Interpreter
 		{
 			if (_eventInvokeArgs == null)
 			{
-				var ri = RemoteInterpreter;
-				var types = ri != null ? ri.GetTypeGroupEventInvokeArgs(Value) : null;
+				RemoteInterpreterProxy ri = RemoteInterpreter;
+				ObjectIdentityHandle[] types = ri != null ? ri.GetTypeGroupEventInvokeArgs(Value) : null;
 				if (types == null)
 				{
 					_eventInvokeArgs = IronPythonType.EmptyTypes;
 				}
 				else
 				{
-					var args = new IPythonType[types.Length];
+					IPythonType[] args = new IPythonType[types.Length];
 					for (int i = 0; i < types.Length; i++)
 					{
 						args[i] = Interpreter.GetTypeFromType(types[i]);
@@ -195,7 +165,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 			{
 				if (_genericTypeDefinition == null)
 				{
-					var ri = RemoteInterpreter;
+					RemoteInterpreterProxy ri = RemoteInterpreter;
 					_genericTypeDefinition = ri != null ? ri.TypeGroupIsGenericTypeDefinition(Value) : false;
 				}
 				return _genericTypeDefinition.Value;
@@ -211,7 +181,7 @@ namespace Microsoft.IronPythonTools.Interpreter
 				types[i] = ((IronPythonType)indexTypes[i]).Value;
 			}
 
-			var ri = RemoteInterpreter;
+			RemoteInterpreterProxy ri = RemoteInterpreter;
 			return ri != null ? Interpreter.GetTypeFromType(ri.TypeGroupMakeGenericType(Value, types)) : null;
 		}
 

@@ -31,12 +31,6 @@ namespace TestUtilities.SharedProject
 			_projectTypeGuid = projectTypeGuid;
 		}
 
-		public string ProjectTypeGuid
-		{
-			get
-			{
-				return _projectTypeGuid;
-			}
-		}
+		public string ProjectTypeGuid => _projectTypeGuid;
 	}
 }

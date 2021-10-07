@@ -20,10 +20,16 @@ namespace PythonToolsTests
 	public class CommentBlockTests
 	{
 		[TestInitialize]
-		public void TestInitialize() => TestEnvironmentImpl.TestInitialize();
+		public void TestInitialize()
+		{
+			TestEnvironmentImpl.TestInitialize();
+		}
 
 		[TestCleanup]
-		public void TestCleanup() => TestEnvironmentImpl.TestCleanup();
+		public void TestCleanup()
+		{
+			TestEnvironmentImpl.TestCleanup();
+		}
 
 		[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
 		public void TestCommentCurrentLine()

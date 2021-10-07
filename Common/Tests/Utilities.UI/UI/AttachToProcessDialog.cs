@@ -19,7 +19,7 @@ namespace TestUtilities.UI
 	public class AttachToProcessDialog : AutomationWrapper
 	{
 		private ListView _processList;
-		private int _hwnd;
+		private readonly int _hwnd;
 
 		public AttachToProcessDialog(AutomationElement element) : base(element) { _hwnd = element.Current.NativeWindowHandle; }
 

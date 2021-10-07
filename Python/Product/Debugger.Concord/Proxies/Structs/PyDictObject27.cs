@@ -48,15 +48,9 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			_dummy = Process.GetOrCreateDataItem(() => new DummyHolder(Process)).Dummy.TryRead();
 		}
 
-		public PointerProxy<ArrayProxy<PyDictKeyEntry>> ma_table
-		{
-			get { return GetFieldProxy(_fields.ma_table); }
-		}
+		public PointerProxy<ArrayProxy<PyDictKeyEntry>> ma_table => GetFieldProxy(_fields.ma_table);
 
-		public SSizeTProxy ma_mask
-		{
-			get { return GetFieldProxy(_fields.ma_mask); }
-		}
+		public SSizeTProxy ma_mask => GetFieldProxy(_fields.ma_mask);
 
 		public override IEnumerable<KeyValuePair<PyObject, PointerProxy<PyObject>>> ReadElements()
 		{

@@ -16,10 +16,7 @@ namespace Microsoft.PythonTools.BuildTasks
 
 		public abstract ITask CreateTask(IBuildEngine taskFactoryLoggingHost);
 
-		public string FactoryName
-		{
-			get { return GetType().Name; }
-		}
+		public string FactoryName => GetType().Name;
 
 		private static TaskPropertyInfo CreatePropertyFromReflection(PropertyInfo info)
 		{
@@ -55,9 +52,6 @@ namespace Microsoft.PythonTools.BuildTasks
 			return true;
 		}
 
-		public Type TaskType
-		{
-			get { return typeof(T); }
-		}
+		public Type TaskType => typeof(T);
 	}
 }

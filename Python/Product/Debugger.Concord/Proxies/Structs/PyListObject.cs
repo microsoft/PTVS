@@ -32,10 +32,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			CheckPyType<PyListObject>();
 		}
 
-		public PointerProxy<ArrayProxy<PointerProxy<PyObject>>> ob_item
-		{
-			get { return GetFieldProxy(_fields.ob_item); }
-		}
+		public PointerProxy<ArrayProxy<PointerProxy<PyObject>>> ob_item => GetFieldProxy(_fields.ob_item);
 
 		public IEnumerable<PointerProxy<PyObject>> ReadElements()
 		{

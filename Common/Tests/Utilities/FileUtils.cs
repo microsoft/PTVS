@@ -163,7 +163,10 @@ namespace TestUtilities
 			}
 		}
 
-		public static void CopyDirectory(string sourceDir, string destDir) => CopyDirectory(sourceDir, destDir, false);
+		public static void CopyDirectory(string sourceDir, string destDir)
+		{
+			CopyDirectory(sourceDir, destDir, false);
+		}
 
 		public static void CopyDirectory(string sourceDir, string destDir, bool tryHardLinkFirst)
 		{

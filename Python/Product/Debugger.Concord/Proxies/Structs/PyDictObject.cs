@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 				Category = DkmEvaluationResultCategory.Method
 			};
 
-			var reprBuilder = new ReprBuilder(reprOptions);
+			ReprBuilder reprBuilder = new ReprBuilder(reprOptions);
 			foreach (var entry in ReadElements())
 			{
 				reprBuilder.Clear();
@@ -79,14 +79,8 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			InitializeStruct(this, out _fields);
 		}
 
-		public PointerProxy<PyObject> me_key
-		{
-			get { return GetFieldProxy(_fields.me_key); }
-		}
+		public PointerProxy<PyObject> me_key => GetFieldProxy(_fields.me_key);
 
-		public PointerProxy<PyObject> me_value
-		{
-			get { return GetFieldProxy(_fields.me_value); }
-		}
+		public PointerProxy<PyObject> me_value => GetFieldProxy(_fields.me_value);
 	}
 }

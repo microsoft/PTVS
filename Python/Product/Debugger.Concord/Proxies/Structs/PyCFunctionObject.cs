@@ -32,9 +32,6 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
 			CheckPyType<PyCFunctionObject>();
 		}
 
-		public PointerProxy<PyMethodDef> m_ml
-		{
-			get { return GetFieldProxy(_fields.m_ml); }
-		}
+		public PointerProxy<PyMethodDef> m_ml => GetFieldProxy(_fields.m_ml);
 	}
 }

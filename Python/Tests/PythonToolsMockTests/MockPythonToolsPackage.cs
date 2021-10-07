@@ -17,7 +17,7 @@
 namespace PythonToolsMockTests
 {
 	[Export(typeof(IMockPackage))]
-	sealed class MockPythonToolsPackage : IMockPackage
+	internal sealed class MockPythonToolsPackage : IMockPackage
 	{
 		private readonly IServiceContainer _serviceContainer;
 		private readonly List<Action> _onDispose = new List<Action>();

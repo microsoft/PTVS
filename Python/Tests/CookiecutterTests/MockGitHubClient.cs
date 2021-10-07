@@ -16,7 +16,7 @@
 
 namespace CookiecutterTests
 {
-	class MockGitHubClient : IGitHubClient
+	internal class MockGitHubClient : IGitHubClient
 	{
 		public Dictionary<Tuple<string, string>, string> Descriptions { get; } = new Dictionary<Tuple<string, string>, string>();
 
@@ -29,8 +29,10 @@ namespace CookiecutterTests
 		{
 			if (Descriptions.TryGetValue(Tuple.Create(owner, name), out global::System.String description))
 			{
-				var item = new GitHubRepoSearchItem();
-				item.Description = description;
+				var item = new GitHubRepoSearchItem
+				{
+					Description = description
+				};
 
 				return Task.FromResult(item);
 			}

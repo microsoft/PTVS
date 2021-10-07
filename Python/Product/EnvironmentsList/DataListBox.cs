@@ -16,14 +16,14 @@
 
 namespace Microsoft.PythonTools.EnvironmentsList
 {
-	sealed class DataListBox : ListBox
+	internal sealed class DataListBox : ListBox
 	{
 		protected override AutomationPeer OnCreateAutomationPeer()
 		{
 			return new DataListBoxAutomationPeer(this);
 		}
 
-		sealed class DataListBoxAutomationPeer : ListBoxAutomationPeer
+		private sealed class DataListBoxAutomationPeer : ListBoxAutomationPeer
 		{
 			public DataListBoxAutomationPeer(ListBox owner) : base(owner) { }
 
@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
 			}
 		}
 
-		sealed class DataListBoxItemAutomationPeer : ListBoxItemAutomationPeer
+		private sealed class DataListBoxItemAutomationPeer : ListBoxItemAutomationPeer
 		{
 			public DataListBoxItemAutomationPeer(object owner, SelectorAutomationPeer selectorAutomationPeer) : base(owner, selectorAutomationPeer)
 			{

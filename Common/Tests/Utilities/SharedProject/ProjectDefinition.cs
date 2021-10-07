@@ -103,17 +103,17 @@ namespace TestUtilities.SharedProject
 				group.AddProperty("DebugSymbols", "false");
 			}
 
-			foreach (var processor in ProjectType.Processors)
+			foreach (IProjectProcessor processor in ProjectType.Processors)
 			{
 				processor.PreProcess(project);
 			}
 
-			foreach (var item in Items)
+			foreach (ProjectContentGenerator item in Items)
 			{
 				item.Generate(ProjectType, project);
 			}
 
-			foreach (var processor in ProjectType.Processors)
+			foreach (IProjectProcessor processor in ProjectType.Processors)
 			{
 				processor.PostProcess(project);
 			}
@@ -143,6 +143,6 @@ namespace TestUtilities.SharedProject
 			}
 		}
 
-		public string Name { get { return _name; } }
+		public string Name => _name;
 	}
 }

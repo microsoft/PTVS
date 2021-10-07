@@ -35,16 +35,10 @@ namespace TestUtilities
 			return null;
 		}
 
-		public Guid TypeGuid
-		{
-			get { return _solutionFolderGuid; }
-		}
+		public Guid TypeGuid => _solutionFolderGuid;
 
-		public SolutionElementFlags Flags
-		{
-			get { return SolutionElementFlags.ExcludeFromConfiguration; }
-		}
+		public SolutionElementFlags Flags => SolutionElementFlags.ExcludeFromConfiguration;
 
-		public string Name { get { return _name; } }
+		public string Name => _name;
 	}
 }

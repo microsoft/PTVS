@@ -84,8 +84,8 @@ namespace TestUtilities.Mocks
 			var changed = ChangedLowPriority;
 			if (changed != null)
 			{
-				var oldSnapshot = _snapshot;
-				var newSnapshot = new MockTextSnapshot(this, _snapshot.GetText(), _snapshot,
+				MockTextSnapshot oldSnapshot = _snapshot;
+				MockTextSnapshot newSnapshot = new MockTextSnapshot(this, _snapshot.GetText(), _snapshot,
 					new MockTextChange(
 						new SnapshotSpan(_snapshot, 0, _snapshot.Length),
 						0,
@@ -102,10 +102,7 @@ namespace TestUtilities.Mocks
 			throw new NotImplementedException();
 		}
 
-		public IContentType ContentType
-		{
-			get { return _contentType; }
-		}
+		public IContentType ContentType => _contentType;
 
 		public ITextEdit CreateEdit()
 		{
@@ -127,10 +124,7 @@ namespace TestUtilities.Mocks
 			throw new NotImplementedException();
 		}
 
-		public ITextSnapshot CurrentSnapshot
-		{
-			get { return _snapshot; }
-		}
+		public ITextSnapshot CurrentSnapshot => _snapshot;
 
 		public ITextSnapshot Delete(Span deleteSpan)
 		{
@@ -141,16 +135,13 @@ namespace TestUtilities.Mocks
 			}
 		}
 
-		public bool EditInProgress
-		{
-			get { return _edit != null; }
-		}
+		public bool EditInProgress => _edit != null;
 
 		internal void EditApplied(ITextSnapshot previous)
 		{
 			_edit = null;
 			var e = new TextContentChangedEventArgs(previous, _snapshot, new EditOptions(), null);
-			foreach (var evt in new[] { ChangedHighPriority, Changed, ChangedLowPriority })
+			foreach (EventHandler<TextContentChangedEventArgs> evt in new[] { ChangedHighPriority, Changed, ChangedLowPriority })
 			{
 				if (evt != null)
 				{
