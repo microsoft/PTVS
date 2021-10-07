@@ -14,7 +14,7 @@
 [assembly: AssemblyVersion(AssemblyVersionInfo.StableVersion)]
 [assembly: AssemblyFileVersion(AssemblyVersionInfo.Version)]
 
-class AssemblyVersionInfo
+internal class AssemblyVersionInfo
 {
 	// This version string (and the comments for StableVersion and Version)
 	// should be updated manually between major releases.
@@ -46,7 +46,7 @@ class AssemblyVersionInfo
     public const string VSMajorVersion = "16";
     public const string VSVersionSuffix = "2019";
 #else
-#error Unrecognized VS Version.
+#nullable Unrecognized VS Version.
 #endif
 
 	public const string VSVersion = VSMajorVersion + ".0";
