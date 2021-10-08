@@ -36,7 +36,7 @@ internal class AssemblyVersionInfoBase
 	}
 }
 
-class AssemblyVersion : AssemblyVersionInfoBase
+internal class AssemblyVersion : AssemblyVersionInfoBase
 {
 #if DEV15
     public const string VSMajorVersion = "15";
