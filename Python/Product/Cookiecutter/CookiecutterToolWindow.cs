@@ -49,11 +49,13 @@ namespace Microsoft.CookiecutterTools {
 
         private readonly object _commandsLock = new object();
         private readonly Dictionary<Command, MenuCommand> _commands = new Dictionary<Command, MenuCommand>();
+        private readonly IServiceProvider _provider;
 
         public CookiecutterToolWindow(IServiceProvider serviceProvider) : base(serviceProvider) {
             BitmapImageMoniker = ImageMonikers.Cookiecutter;
             Caption = Strings.ToolWindowCaption;
             ToolBar = new CommandID(PackageGuids.guidCookiecutterCmdSet, PackageIds.WindowToolBarId);
+            _provider = serviceProvider;
         }
 
         protected override void Dispose(bool disposing) {
@@ -86,7 +88,7 @@ namespace Microsoft.CookiecutterTools {
             _dte = GetService(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
             _infoBarFactory = GetService(typeof(SVsInfoBarUIFactory)) as IVsInfoBarUIFactory;
 
-            if (CookiecutterClientProvider.IsCompatiblePythonAvailable()) {
+            if (CookiecutterClientProvider.IsCompatiblePythonAvailable(_provider)) {
                 ShowCookiecutterPage();
             } else {
                 ShowMissingDependenciesPage();
@@ -250,7 +252,7 @@ namespace Microsoft.CookiecutterTools {
         }
 
         internal void Home() {
-            if (_cookiecutterPage == null && CookiecutterClientProvider.IsCompatiblePythonAvailable()) {
+            if (_cookiecutterPage == null && CookiecutterClientProvider.IsCompatiblePythonAvailable(_provider)) {
                 // User has installed a compatible python since we first initialized
                 ShowCookiecutterPage();
             }
