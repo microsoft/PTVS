@@ -566,7 +566,10 @@ namespace CookiecutterTests {
         }
 
         private async Task EnsureCookiecutterInstalledAsync() {
-            if (!_cutterClient.CookiecutterInstalled) {
+
+            var cookieCutterInstalled = await _cutterClient.IsCookiecutterInstalled();
+
+            if (!cookieCutterInstalled) {
                 await _cutterClient.CreateCookiecutterEnv();
                 await _cutterClient.InstallPackage();
             }
