@@ -59,8 +59,9 @@ namespace Microsoft.CookiecutterTools.Model {
             // The linq for this is a little messy, so I'm just using a normal loop.
             var cpython = new List<InterpreterConfiguration>();
             foreach (var configuration in all) {
-                var company = interpreters.GetProperty(configuration.Id, "Company").ToString();
-                if (company.IndexOfOrdinal("Python Software Foundation", ignoreCase: true) == 0) {
+                var companyObj = interpreters.GetProperty(configuration.Id, "Company");
+                if (companyObj != null && 
+                    companyObj.ToString().IndexOfOrdinal("Python Software Foundation", ignoreCase: true) == 0) {
                     cpython.Add(configuration);
                 }
             }          
