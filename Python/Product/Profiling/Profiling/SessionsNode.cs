@@ -187,7 +187,7 @@ namespace Microsoft.PythonTools.Profiling {
 
                 case __VSHPROPID.VSHPROPID_IconImgList:
                 case __VSHPROPID.VSHPROPID_OpenFolderIconHandle:
-                    pvar = (int)_imageList.Handle;
+                    pvar = (IntPtr)_imageList.Handle;
                     break;
 
                 case __VSHPROPID.VSHPROPID_IconIndex:
@@ -195,7 +195,7 @@ namespace Microsoft.PythonTools.Profiling {
                     if (itemid == VSConstants.VSITEMID_ROOT) {
                         pvar = 0;
                     } else {
-                        pvar = (int)TreeViewIconIndex.PerformanceSession;
+                        pvar = (IntPtr)TreeViewIconIndex.PerformanceSession;
                     }
                     break;
                 case __VSHPROPID.VSHPROPID_SaveName:
