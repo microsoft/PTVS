@@ -159,7 +159,7 @@ namespace Microsoft.PythonTools.Profiling {
                 }
 
                 using (var key = baseKey.OpenSubKey(@"Software\Microsoft\VisualStudio\VSPerf")) {
-                    // ie. CollectionToolsDirv2022
+                    // ie. CollectionToolsDir2022
                     var path = key?.GetValue("CollectionToolsDir" + AssemblyVersionInfo.VSName) as string;
 
                     if (!string.IsNullOrEmpty(path)) {
