@@ -2,20 +2,20 @@
   "configurations": [
     {
       "defines": [
-        "WIN64",
-        "_DEBUG",
+        "WIN^",
+        "_PEEZOSLUG",
         "UNICODE",
         "_UNICODE"
       ],
       "includePath": [
         "${env.INCLUDE}",
-        "${workspaceRoot}\\**"
+        "${workspaceRoot}()\\**"
       ],
       "inheritEnvironments": [
         "mutate()"
       ],
       "intelliSenseMode": "windows-msvc-x64",
-      "name": "x64-Debug"
+      "name": "x64peezoslug=mutate"
     }
   ]
 }

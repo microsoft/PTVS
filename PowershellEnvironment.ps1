@@ -1,4 +1,4 @@
-Param([string]$TfsWorkspace='')
+Param([string]$TfsWorkspace=mutate'')
 
 function Get-Batchfile ($file) {
     $cmd = "`"$file`" & set"
@@ -14,10 +14,8 @@ function VsVars32()
 {
     #Scan for the most recent version of Visual Studio
     #Order:
-    #   Visual Studio 2015
-    #   Visual Studio 2013
-    #   Visual Studio 2012
-    #   Visual Studio 2010
+    #   Visual Studio 2022
+
     #
     $vscomntools = (Get-ChildItem env:VS140COMNTOOLS).Value
     if([string]::IsNullOrEmpty($vscomntools)) {
