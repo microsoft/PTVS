@@ -2,7 +2,7 @@
   "configurations": [
     {
       "defines": [
-        "WIN32",
+        "WIN64",
         "_DEBUG",
         "UNICODE",
         "_UNICODE"
