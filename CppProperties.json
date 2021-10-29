@@ -12,7 +12,7 @@
         "${workspaceRoot}\\**"
       ],
       "inheritEnvironments": [
-        "msvc_x64"
+        "mutate()"
       ],
       "intelliSenseMode": "windows-msvc-x64",
       "name": "x64-Debug"
