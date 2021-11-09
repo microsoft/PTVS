@@ -305,78 +305,82 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
+                    <StackPanel>
+                        <Label      
+                        Grid.Row="0"
+                        Style="{StaticResource ModernLabel}">
+                            <Label.Content>
+                                <AccessText TextWrapping="Wrap" Text="{x:Static common:Strings.AddCondaEnvironmentPreviewLabel}"/>
+                            </Label.Content>
+                        </Label>
 
-                    <Label
-                    Grid.Row="0"
-                    Style="{StaticResource ModernLabel}">
-                        <Label.Content>
-                            <AccessText TextWrapping="Wrap" Text="{x:Static common:Strings.AddCondaEnvironmentPreviewLabel}"/>
-                        </Label.Content>
-                    </Label>
-
-                    <!-- Progress bar, wrap in a grid to avoid accessibility issues when not visible -->
-                    <Grid Grid.Row="1" Visibility="{Binding CondaPreview.Progress.IsProgressDisplayed, Converter={x:Static wpf:Converters.FalseIsCollapsed}}">
-                        <vsui:ProgressControl
+                        <!-- Progress bar, wrap in a grid to avoid accessibility issues when not visible -->
+                        <Grid Grid.Row="1" Visibility="{Binding CondaPreview.Progress.IsProgressDisplayed, Converter={x:Static wpf:Converters.FalseIsCollapsed}}">
+                            <vsui:ProgressControl
                         HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
                         DataContext="{Binding CondaPreview.Progress}"/>
-                    </Grid>
+                        </Grid>
 
-                    <!-- Preview results -->
-                    <ScrollViewer
-                    Grid.Row="1"
-                    AutomationProperties.AutomationId="PreviewResult"
-                    VerticalScrollBarVisibility="Auto"
-                    HorizontalScrollBarVisibility="Auto"
-                    IsTabStop="True">
+                        <!-- Preview results -->
+                        <ScrollViewer
+                        Grid.Row="1"
+                        AutomationProperties.AutomationId="PreviewResult"
+                        VerticalScrollBarVisibility="Auto"
+                        HorizontalScrollBarVisibility="Auto"
+                        IsTabStop="True"
+                        Height ="300"
+                        >
 
-                        <StackPanel>
-                            <TextBlock
+                            <StackPanel>
+                                <TextBlock
                             Name="NoPackagesMessage"
                             Text="{x:Static common:Strings.AddCondaEnvironmentPreviewNoPackages}"
                             Visibility="{Binding Path=CondaPreview.IsNoPackages, Converter={x:Static wpf:Converters.FalseIsCollapsed}}"/>
-                            <TextBlock
+                                <TextBlock
                             Name="EnvFileMissing"
                             Text="{x:Static common:Strings.AddCondaEnvironmentPreviewNoEnvFile}"
                             Visibility="{Binding Path=CondaPreview.IsNoEnvFile, Converter={x:Static wpf:Converters.FalseIsCollapsed}}"/>
-                            <TextBlock
+                                <TextBlock
                             Name="EnvFileMessage"
                             Text="{Binding Path=CondaPreview.EnvFileContents}"
                             Visibility="{Binding Path=CondaPreview.IsEnvFile, Converter={x:Static wpf:Converters.FalseIsCollapsed}}"/>
-                            <TextBlock
+                                <TextBlock
                             Name="ErrorMessage"
                             Text="{Binding Path=CondaPreview.ErrorMessage}"
                             Visibility="{Binding Path=CondaPreview.HasPreviewError, Converter={x:Static wpf:Converters.FalseIsCollapsed}}"/>
-                            <ItemsControl
+                                <ItemsControl
                             Name="PackagesList"
                             ItemsSource="{Binding Path=CondaPreview.Packages}"
                             Grid.IsSharedSizeScope="True"
                             Focusable="False"
                             Visibility="{Binding Path=CondaPreview.IsPackages, Converter={x:Static wpf:Converters.FalseIsCollapsed}}">
 
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition SharedSizeGroup="A" Width="Auto"/>
-                                                <ColumnDefinition Width="8"/>
-                                                <ColumnDefinition SharedSizeGroup="B" Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition SharedSizeGroup="A" Width="Auto"/>
+                                                    <ColumnDefinition Width="8"/>
+                                                    <ColumnDefinition SharedSizeGroup="B" Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock
                                             Grid.Column="0"
                                             Margin="0 0 0 7"
                                             HorizontalAlignment="Left"
                                             Text="{Binding Name}"/>
-                                            <TextBlock
+                                                <TextBlock
                                             Grid.Column="2"
                                             Margin="0 0 0 7"
                                             HorizontalAlignment="Left"
                                             Text="{Binding Version}"/>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </StackPanel>
-                    </ScrollViewer>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </StackPanel>
                 </Grid>
             </ItemsControl>
         </ScrollViewer>
