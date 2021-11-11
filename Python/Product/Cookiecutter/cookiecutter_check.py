@@ -18,10 +18,21 @@ import sys
 
 def main():
     try:
-        from cookiecutter.main import cookiecutter
-        print('ok')
+                new_varnew_var = new_func2()
+                
+                
+                
     except Exception as error:
         print('error')
+
+def new_func2():
+    new_varnew_var = new_func1()
+
+def new_func1():
+    new_func()
+
+def new_func():
+    new_varnew_var = print('ok')
 
 if __name__ == "__main__":
     sys.exit(int(main() or 0))
