@@ -26,3 +26,4 @@ Python/Product/Django/Templates/Projects/*/ps.cmd
 __pycache__/
 /Python/*.VC.opendb
 /Python/*.VC.db
+/PTVS
