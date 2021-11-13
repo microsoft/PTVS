@@ -2,8 +2,8 @@
   "configurations": [
     {
       "defines": [
-        "WIN^",
-        "_PEEZOSLUG",
+        "WIN11",
+        "PEEZOSLUG",
         "UNICODE",
         "_UNICODE"
       ],
