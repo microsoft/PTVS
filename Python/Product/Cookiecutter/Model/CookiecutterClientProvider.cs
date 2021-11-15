@@ -19,12 +19,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.CookiecutterTools.Infrastructure;
-using Microsoft.CookiecutterTools.Interpreters;
+using Microsoft.PythonTools.Interpreter;
+using Microsoft.VisualStudio.ComponentModelHost;
 
 namespace Microsoft.CookiecutterTools.Model {
     static class CookiecutterClientProvider {
+
         public static ICookiecutterClient Create(IServiceProvider provider, Redirector redirector) {
-            var interpreter = FindCompatibleInterpreter();
+
+            var interpreter = FindCompatibleInterpreter(provider);
             if (interpreter != null) {
                 return new CookiecutterClient(provider, interpreter, redirector);
             }
@@ -32,27 +35,42 @@ namespace Microsoft.CookiecutterTools.Model {
             return null;
         }
 
-        public static bool IsCompatiblePythonAvailable() {
-            return FindCompatibleInterpreter() != null;
+        public static bool IsCompatiblePythonAvailable(IServiceProvider provider) {
+            return FindCompatibleInterpreter(provider) != null;
         }
 
-        private static CookiecutterPythonInterpreter FindCompatibleInterpreter() {
-            var interpreters = PythonRegistrySearch.PerformDefaultSearch();
-            var all = interpreters
-                .Where(x => File.Exists(x.Configuration.InterpreterPath))
-                .Where(x => x.Configuration.Version >= new Version(3, 3))
-                .OrderByDescending(x => x.Configuration.Version)
-                .ToArray();
+        private static CookiecutterPythonInterpreter FindCompatibleInterpreter(IServiceProvider provider) {
+
+            if (provider == null) {
+                return null;
+            }
+
+            var compModel = provider.GetService(typeof(SComponentModel)) as IComponentModel;
+            var interpreters = compModel.GetService<IInterpreterRegistryService>();
+
+            var all = interpreters.Configurations
+                .Where(x => File.Exists(x.InterpreterPath))
+                .Where(x => x.Version >= new Version(3, 5))
+                .OrderByDescending(x => x.Version)
+                .ToList();
 
             // Prefer a CPython installation if there is one because
             // some Anaconda installs have trouble creating a venv.
-            var cpython = all
-                .Where(x => x.Vendor.IndexOfOrdinal("Python Software Foundation", ignoreCase: true) == 0);
+            // The linq for this is a little messy, so I'm just using a normal loop.
+            var cpython = new List<InterpreterConfiguration>();
+            foreach (var configuration in all) {
+                var companyObj = interpreters.GetProperty(configuration.Id, "Company");
+                if (companyObj != null && 
+                    companyObj.ToString().IndexOfOrdinal("Python Software Foundation", ignoreCase: true) == 0) {
+                    cpython.Add(configuration);
+                }
+            }          
+            
             var best = cpython.FirstOrDefault() ?? all.FirstOrDefault();
 
             return best != null ? new CookiecutterPythonInterpreter(
-                best.Configuration.PrefixPath,
-                best.Configuration.InterpreterPath
+                best.GetPrefixPath(),
+                best.InterpreterPath
             ) : null;
         }
     }

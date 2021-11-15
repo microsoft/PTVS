@@ -1,7 +1,7 @@
 # This pipeline is used to build the PTVS product and installer.
 # A seperate release pipeline is used to create insertion PR's into Visual Studio.
 
-# build number format
+# build number format 
 name: $(date:yy)$(DayOfYear)$(rev:.r)
 
 # Trigger ci builds for commits into master and any release branches
@@ -199,7 +199,7 @@ steps:
     AccessToken: '$(System.AccessToken)'
   continueOnError: true
 
-# copy some files around to prepare for publishing build artifacts
+# copy some files around to prepare for publishing build artifacts 
 - task: CopyFiles@2
   displayName: 'Copy source to staging/src'
   inputs:

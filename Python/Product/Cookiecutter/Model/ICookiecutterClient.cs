@@ -18,7 +18,6 @@ using System.Threading.Tasks;
 
 namespace Microsoft.CookiecutterTools.Model {
     interface ICookiecutterClient {
-        bool CookiecutterInstalled { get; }
         Task<bool> IsCookiecutterInstalled();
         Task CreateCookiecutterEnv();
         Task InstallPackage();

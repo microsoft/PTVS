@@ -201,7 +201,7 @@ namespace Microsoft.PythonTools.Profiling {
 
                 case __VSHPROPID.VSHPROPID_IconImgList:
                 case __VSHPROPID.VSHPROPID_OpenFolderIconHandle:
-                    pvar = (int)SessionsNode._imageList.Handle;
+                    pvar = (IntPtr)SessionsNode._imageList.Handle;
                     break;
 
                 case __VSHPROPID.VSHPROPID_IconIndex:

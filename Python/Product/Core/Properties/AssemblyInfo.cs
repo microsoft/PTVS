@@ -53,7 +53,6 @@ using Microsoft.VisualStudio.Shell;
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.VSInterpreters", CodeBase = "Microsoft.PythonTools.VSInterpreters.dll", Version = AssemblyVersionInfo.StableVersion)]
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.Workspace", CodeBase = "Microsoft.PythonTools.Workspace.dll", Version = AssemblyVersionInfo.StableVersion)]
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.Extensions.FileSystemGlobbing", CodeBase = "Microsoft.Extensions.FileSystemGlobbing.dll", Version = "3.1.8.0")]
-[assembly: ProvideCodeBase(AssemblyName = "Microsoft.VisualStudio.LanguageServer.Protocol", CodeBase = @"$PackageFolder$\Microsoft.VisualStudio.LanguageServer.Protocol.dll")]
 
 internal static class ParserNuGetPackageInfo {
     // important: keep in sync with Build\17.0\package.config
