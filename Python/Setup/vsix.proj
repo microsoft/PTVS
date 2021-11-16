@@ -26,6 +26,5 @@
   </Target>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />
-  <Import Project="$(TargetsPath)\MicroBuild.targets" />
   <Import Project="SetupProjectAfter.settings"/>
 </Project>

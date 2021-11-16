@@ -48,7 +48,7 @@
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors Condition="'$(TreatWarningsAsErrors)' == ''">true</TreatWarningsAsErrors>
     <!-- Suppress warning about multiply defined AssemblyVersionInfo -->
-    <NoWarn>436;1998</NoWarn>
+    <NoWarn>$(NoWarn);436;1998;VSSDK1319</NoWarn>
     <RunCodeAnalysis>$(RunFXCop)</RunCodeAnalysis>
     <SignAssembly Condition="$(SignAssembly) == ''">true</SignAssembly>
 
