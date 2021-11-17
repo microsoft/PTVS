@@ -262,6 +262,9 @@ steps:
     symbolsFolder: '$(Build.ArtifactStagingDirectory)/symbols_and_binaries'
     searchPattern: '*.pdb'
     symbolServerType: TeamServices
+    ArtifactServices.Symbol.AccountName: microsoft
+    ArtifactServices.Symbol.PAT: $(System.AccessToken)
+    ArtifactServices.Symbol.UseAAD: false
 
 # Create bootstrapper for running integration tests. They only run on CI, not PR
 - task: MicroBuildBuildVSBootstrapper@2
