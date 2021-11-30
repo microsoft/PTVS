@@ -54,15 +54,8 @@ variables:
   - name: TrackFileAccess
     value: false
   
-  # PTVS variable group
-  # This contains variables shared between the PTVS "product" pipeline and the PTVS "policy" pipeline.
-  
-  # It also contains an AzDO Personal Access Token (ArtifactServices.Symbol.PAT) which is used to publish symbols to symweb.
-  
-  # If Visual Studio insertion PRs start failing the Symbol Check step, this token is most likely expired.
-  # See https://www.1eswiki.com/wiki/Using_Azure_DevOps_Symbols for more information about how to create a new 
-  # PAT and how to update the variable group.
-  # Variable group is defined here: https://devdiv.visualstudio.com/DevDiv/_library?itemType=VariableGroups&view=VariableGroupView&variableGroupId=334&path=PTVS
+  # Import variables from PTVS variable group
+  # Group is at https://devdiv.visualstudio.com/DevDiv/_library?itemType=VariableGroups&view=VariableGroupView&variableGroupId=381&path=PTVS-Dev17
   - group: PTVS-Dev17
 
 steps:
@@ -71,269 +64,67 @@ steps:
 - checkout: self
   clean: true
 
-# skip some steps if this is a PR build
+# Non-PR steps
 - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
 
-  # add build tag
+  # add VSTarget build tag
   - powershell: 'Write-Host "##vso[build.addbuildtag]$env:VSTarget"'
     displayName: 'Add vstarget build tag'
 
-  # install plugins needed for swixproj/vsmanproj, signing, and localization
-  - task: MicroBuildSwixPlugin@3
-    displayName: 'Install microbuild swix plugin'
-    inputs:
-      dropName: 'Products/$(System.TeamProject)/$(Build.Repository.Name)/$(Build.SourceBranchName)/$(Build.BuildNumber)'
-  - task: MicroBuildSigningPlugin@3
-    displayName: 'Install microbuild signing plugin'
-    inputs:
-      signType: 'Real'
-      zipSources: false
-  - task: MicroBuildLocalizationPlugin@3
-    displayName: 'Install localization plugin'
-    inputs:
-      type: 'Full'
-      languages: 'VS'
+  # install microbuild plugins used for swixproj/vsmanproj, signing, and localization
+  - template: Build/templates/install_microbuild_plugins.yml
 
-# Print out queued
-- powershell: 'dir env:'
-  displayName: 'List out environment'
+  # install pylance so it gets packaged into the PTVS installer
+  # todo: pass in pylance version to install (either "latest" or literal value)
+  - template: Build/templates/install_pylance.yml
 
-# Update our .npmrc file to point to the feed for pylance
-# AZURE_DEVOPS_TOKEN is the base64 encoded access token. See here to create it:
-# https://devdiv.visualstudio.com/DevDiv/_packaging?_a=connect&feed=Pylance
-# https://devdiv.visualstudio.com/_details/security/tokens
-- task: PowerShell@1
-  env:
-     MAPPED_AZURE_DEVOPS_TOKEN: $(AZURE_DEVOPS_TOKEN)
-     MAPPED_AZURE_DEVOPS_USERNAME: $(AZURE_DEVOPS_USERNAME)
-  displayName: 'Update .npmrc to find pylance feed'
-  inputs:
-    scriptName: Build/UpdateNpmrc.ps1
-
-# Print out npmrc
-- powershell: 'Get-Content ".npmrc"'
-  displayName: 'Dump npmrc'
-
-# Run npm ci to install pylance
-- powershell: 'npm install --verbose'
-  condition: notin(variables['Build.Reason'], 'PullRequest')
-  displayName: 'Install pylance with npm'
-
-# Clean old packages
-- task: DeleteFiles@1
-  displayName: 'Clean old packages'
-  inputs:
-    SourceFolder: 'packages'
-    Contents: '**'
-  continueOnError: true
-
-# Run a powershell script that does a package restore, some symlinking, and installs debugpy
+# Restore packages and install debugpy
 - task: PowerShell@1
   displayName: 'Restore packages'
   inputs:
     scriptName: Build/PreBuild.ps1
     arguments: '-vstarget $(VSTarget)'
 
-# Clean the old swix outputs
-- task: DeleteFiles@1
-  displayName: 'Clean old swix outputs'
-  inputs:
-    SourceFolder: '$(Build.BinariesDirectory)\raw\setup\swix'
-    Contents: '**'
-  continueOnError: true
+# Build
+- template: Build/templates/build.yml
 
-# Build the product
-- task: MSBuild@1
-  displayName: 'Build product'
-  inputs:
-    solution: Python/Product/dirs.proj
-    msbuildVersion: $(MsBuildVersion)
-    platform: $(Platform)
-    configuration: $(BuildConfiguration)
-    msbuildArguments: '/p:VSTarget=$(VSTarget) /bl:$(Build.SourcesDirectory)\logs\BuildProduct.binlog'
+# Publish build artifacts
+- template: Build/templates/publish_build_artifacts.yml
 
-# Build the tests
-- task: MSBuild@1
-  displayName: 'Build tests'
-  inputs:
-    solution: Python/Tests/dirs.proj
-    msbuildVersion: $(MsBuildVersion)
-    platform: $(Platform)
-    configuration: $(BuildConfiguration)
-    msbuildArguments: '/p:VSTarget=$(VSTarget) /bl:$(Build.SourcesDirectory)\logs\BuildTests.binlog'
+# Non-PR steps
+- ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
 
-# Build the installer
-- task: MSBuild@1
-  displayName: 'Build installer'
-  inputs:
-    solution: Python/Setup/dirs.proj
-    msbuildVersion: $(MsBuildVersion)
-    platform: $(Platform)
-    configuration: $(BuildConfiguration)
-    msbuildArguments: '/p:SkipProduct=true /p:VSTarget=$(VSTarget) /bl:$(Build.SourcesDirectory)\logs\BuildInstaller.binlog'
+  # Upload vsts drop used by Visual Studio insertions
+  - task: MicroBuildUploadVstsDropFolder@1
+    displayName: 'Upload vsts drop'
+    inputs:
+      DropFolder: '$(Build.StagingDirectory)\release'
+      DropServiceUri: 'https://devdiv.artifacts.visualstudio.com/DefaultCollection'
+      VSDropServiceUri: 'https://vsdrop.corp.microsoft.com/file/v1'
+      AccessToken: '$(System.AccessToken)'
+    continueOnError: true
 
-# Publish build artifact: raw
-- task: PublishBuildArtifacts@1
-  displayName: '[If build failed] Publish raw build artifact'
-  inputs:
-    PathtoPublish: '$(Build.BinariesDirectory)\raw'
-    ArtifactName: raw
-  condition: failed()
-
-# Publish build logs
-- task: PublishBuildArtifacts@1
-  displayName: 'Publish Build Logs'
-  inputs:
-    PathtoPublish: '$(Build.SourcesDirectory)\logs'
-    ArtifactName: Logs
-  condition: succeededOrFailed()
-
-# Upload vsts drop
-- task: MicroBuildUploadVstsDropFolder@1
-  displayName: 'Upload vsts drop'
-  condition: notin(variables['Build.Reason'], 'PullRequest')
-  inputs:
-    DropFolder: '$(Build.StagingDirectory)\release'
-    DropServiceUri: 'https://devdiv.artifacts.visualstudio.com/DefaultCollection'
-    VSDropServiceUri: 'https://vsdrop.corp.microsoft.com/file/v1'
-    AccessToken: '$(System.AccessToken)'
-  continueOnError: true
-
-# copy some files around to prepare for publishing build artifacts 
-- task: CopyFiles@2
-  displayName: 'Copy source to staging/src'
-  inputs:
-    SourceFolder: '$(Build.SourcesDirectory)'
-    TargetFolder: '$(Build.ArtifactStagingDirectory)/src'
-    CleanTargetFolder: true
-
-- task: CopyFiles@2
-  displayName: 'Copy layout to staging'
-  inputs:
-    SourceFolder: '$(Build.BinariesDirectory)/layout'
-    TargetFolder: '$(Build.ArtifactStagingDirectory)/layout'
-    CleanTargetFolder: true
-
-- task: CopyFiles@2
-  displayName: 'Copy binaries to staging'
-  inputs:
-    SourceFolder: '$(Build.BinariesDirectory)/raw/binaries'
-    TargetFolder: '$(Build.ArtifactStagingDirectory)/binaries'
-    CleanTargetFolder: true
-
-- task: CopyFiles@2
-  displayName: 'Copy swix to staging'
-  inputs:
-    SourceFolder: '$(Build.BinariesDirectory)/raw/setup'
-    TargetFolder: '$(Build.ArtifactStagingDirectory)/setup'
-    CleanTargetFolder: true
-
-- task: CopyFiles@2
-  displayName: 'Prepare for symbol publishing'
-  inputs:
-    SourceFolder: '$(Build.ArtifactStagingDirectory)/binaries'
-    Contents: |
-      Microsoft.PythonTools*.pdb
-      Microsoft.PythonTools*.dll
-      Microsoft.PythonTools*.exe
-      Microsoft.CookiecutterTools.pdb
-      Microsoft.CookiecutterTools.dll
-      Microsoft.IronPythonTools.Resolver.pdb
-      Microsoft.IronPythonTools.Resolver.dll
-      Microsoft.Python.Analysis.Engine.dll
-      Microsoft.Python.Analysis.Engine.pdb
-      Microsoft.Python.LanguageServer.Core.dll
-      Microsoft.Python.LanguageServer.Core.pdb
-      Microsoft.Python.Parsing.dll
-      Microsoft.Python.Parsing.pdb
-      Microsoft.Python.Core.dll
-      Microsoft.Python.Core.pdb
-      PyDebugAttach*.pdb
-      PyDebugAttach*.dll
-      VsPyProf*.pdb
-      VsPyProf*.dll
-    TargetFolder: '$(Build.ArtifactStagingDirectory)/symbols_and_binaries'
-
-# Index sources and publish symbols if not a pull request
-- task: PublishSymbols@2
-  displayName: 'Publish symbols'
-  condition: notin(variables['Build.Reason'], 'PullRequest')
-  inputs:
-    symbolsFolder: '$(Build.ArtifactStagingDirectory)/symbols_and_binaries'
-    searchPattern: '*.pdb'
-    symbolServerType: TeamServices
-    ArtifactServices.Symbol.AccountName: microsoft
-    ArtifactServices.Symbol.PAT: $(System.AccessToken)
-    ArtifactServices.Symbol.UseAAD: false
+  # publish symbols
+  - template: Build/templates/publish_symbols.yml
 
 # Create bootstrapper for running integration tests. They only run on CI, not PR
-- task: MicroBuildBuildVSBootstrapper@2
-  displayName: 'Build Bootstrapper.json'
-  condition: notin(variables['Build.Reason'], 'PullRequest')
-  inputs:
-    channelName: 'int.main'
-    vsMajorVersion: '17'
-    bootstrapperCoreFeedSource: 'https://devdiv.pkgs.visualstudio.com/_packaging/Setup/nuget/v3/index.json'
-    bootstrapperCoreDependenciesFeedSource: 'https://devdiv.pkgs.visualstudio.com/_packaging/Setup-Dependencies/nuget/v3/index.json'
-    nugetOrgPublicFeedSource: 'https://api.nuget.org/v3/index.json'
-    outputFolder: $(Build.BinariesDirectory)/raw/binaries
-    manifests: $(Build.StagingDirectory)\release\Microsoft.PythonTools.vsman
+# Commenting this out for now since it's not working anyway
+#- task: MicroBuildBuildVSBootstrapper@2
+#  displayName: 'Build Bootstrapper.json'
+#  condition: notin(variables['Build.Reason'], 'PullRequest')
+#  inputs:
+#    channelName: 'int.main'
+#    vsMajorVersion: '17'
+#    bootstrapperCoreFeedSource: 'https://devdiv.pkgs.visualstudio.com/_packaging/Setup/nuget/v3/index.json'
+#    bootstrapperCoreDependenciesFeedSource: 'https://devdiv.pkgs.visualstudio.com/_packaging/Setup-Dependencies/nuget/v3/index.json'
+#    nugetOrgPublicFeedSource: 'https://api.nuget.org/v3/index.json'
+#    outputFolder: $(Build.BinariesDirectory)/raw/binaries
+#    manifests: $(Build.StagingDirectory)\release\Microsoft.PythonTools.vsman
 
 # MicroBuild cleanup
 - task: MicroBuildCleanup@1
   displayName: 'Execute cleanup tasks'
   condition: succeededOrFailed()
 
-# Compress staging output
-- task: ArchiveFiles@2
-  displayName: 'Compress staging dir'
-  condition: notin(variables['Build.Reason'], 'PullRequest')
-  inputs:
-    rootFolderOrFile: '$(Build.ArtifactStagingDirectory)'
-    includeRootFolder: false
-    archiveType: 'zip'
-    archiveFile: '$(Build.ArtifactStagingDirectory)/PTVSBuildArchive.zip'
-    replaceExistingArchive: true
-
-# Compress just the test data
-# Used in this release task to run tests: https://devdiv.visualstudio.com/DevDiv/_taskgroup/a7b18468-aab5-4be7-b718-02f85b0828c4
-- task: ArchiveFiles@2
-  displayName: 'Compress test data dir'
-  inputs:
-    rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/src/Python/Tests/TestData'
-    includeRootFolder: false
-    archiveType: 'zip'
-    archiveFile: '$(Build.ArtifactStagingDirectory)/TestData.zip'
-    replaceExistingArchive: true
-
-# Publish build artifact: binaries
-- task: PublishBuildArtifacts@1
-  displayName: 'Upload binaries to build artifacts'
-  inputs:
-    PathtoPublish: '$(Build.BinariesDirectory)/raw/binaries'
-    ArtifactName: Binaries
-
-# Publish build artifact: staging output
-- task: PublishBuildArtifacts@1
-  condition: notin(variables['Build.Reason'], 'PullRequest')
-  displayName: 'Upload staging zip to build artifacts'
-  inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)/PTVSBuildArchive.zip'
-    ArtifactName: 'PTVS Staging Output'
-
-# Publish test data archive (so we don't have to pull down everything to run tests)
-- task: PublishBuildArtifacts@1
-  displayName: 'Upload test data zip to build artifacts'
-  inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)/TestData.zip'
-    ArtifactName: 'TestData'
-
-# Commenting this out for now as the microbuild outputs are empty and this is causing a build warning
-# Publish bootstrapper info
-#- task: PublishBuildArtifacts@1
-#  inputs:
-#    PathtoPublish: $(Build.StagingDirectory)\MicroBuild\Output
-#    ArtifactName: MicroBuildOutputs
-#    ArtifactType: Container
-#  displayName: 'Publish Artifact: MicroBuildOutputs'
-#  condition: succeeded()
+# Publish test data
+- template: Build/templates/publish_test_data.yml

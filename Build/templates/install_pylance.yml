@@ -1,0 +1,32 @@
+steps:
+
+  # Update our .npmrc file to point to the feed for pylance
+  # AZURE_DEVOPS_TOKEN is the base64 encoded access token. See here to create it:
+  # https://devdiv.visualstudio.com/DevDiv/_packaging?_a=connect&feed=Pylance
+  # https://devdiv.visualstudio.com/_details/security/tokens
+  - task: PowerShell@1
+    env:
+      MAPPED_AZURE_DEVOPS_TOKEN: $(AZURE_DEVOPS_TOKEN)
+      MAPPED_AZURE_DEVOPS_USERNAME: $(AZURE_DEVOPS_USERNAME)
+    displayName: 'Update .npmrc to find pylance feed'
+    inputs:
+      scriptName: $(Build.SourcesDirectory)/Build/UpdateNpmrc.ps1
+
+  # Print out npmrc
+  - powershell: 'Get-Content ".npmrc"'
+    displayName: 'Print .npmrc contents'
+
+  # todo: if pylance version parameter is set to "latest", use npm to get latest version and overwrite
+  # value in package.json for this build only
+
+  # todo: if pylance version parameter is set to a specific value, overwrite value in package.json
+  # for this build only
+
+  # Run npm to install pylance version specified in package.json
+  - powershell: 'npm install --verbose'
+    displayName: 'Install pylance with npm'
+
+  # todo: add pylance version build tag, similar to the following:
+  #- powershell: 'Write-Host "##vso[build.addbuildtag]$env:VSTarget"'
+  #  displayName: 'Add vstarget build tag'
+  #  condition: notin(variables['Build.Reason'], 'PullRequest')
