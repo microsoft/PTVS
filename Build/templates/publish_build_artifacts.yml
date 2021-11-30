@@ -2,7 +2,7 @@ steps:
 
   # If the build failed, publish raw binaries folder
   - task: PublishBuildArtifacts@1
-    displayName: '[If build failed] Publish raw build artifact'
+    displayName: 'Publish build artifact: raw'
     inputs:
       PathtoPublish: '$(Build.BinariesDirectory)\raw'
       ArtifactName: raw
@@ -10,7 +10,7 @@ steps:
 
   # Publish logs, even if the build failed
   - task: PublishBuildArtifacts@1
-    displayName: 'Publish logs artifact'
+    displayName: 'Publish build artifact: logs'
     inputs:
       PathtoPublish: '$(Build.SourcesDirectory)\logs'
       ArtifactName: Logs
