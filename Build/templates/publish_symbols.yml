@@ -4,7 +4,7 @@ steps:
   - task: CopyFiles@2
     displayName: 'Prepare for symbol publishing'
     inputs:
-      SourceFolder: '$(Build.BinariesDirectory)'
+      SourceFolder: '$(Build.BinariesDirectory)/raw/binaries'
       Contents: |
         Microsoft.PythonTools*.pdb
         Microsoft.PythonTools*.dll
@@ -26,6 +26,13 @@ steps:
         VsPyProf*.pdb
         VsPyProf*.dll
       TargetFolder: '$(Build.ArtifactStagingDirectory)/symbols'
+
+  # Publish Symbols as a build artifact
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish build artifact: symbols'
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)/symbols'
+      ArtifactName: Symbols
 
   # Publish Symbols
   - task: PublishSymbols@2
