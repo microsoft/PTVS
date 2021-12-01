@@ -41,6 +41,3 @@ steps:
       symbolsFolder: '$(Build.ArtifactStagingDirectory)/symbols'
       searchPattern: '*.pdb'
       symbolServerType: TeamServices
-      ArtifactServices.Symbol.AccountName: microsoft
-      ArtifactServices.Symbol.PAT: $(System.AccessToken)
-      ArtifactServices.Symbol.UseAAD: false
