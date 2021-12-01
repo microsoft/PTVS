@@ -15,10 +15,10 @@ jobs:
         uses: andymckay/labeler@master
         if: ${{ join(github.event.issue.labels.*.name, ',') == '' }}
         with:
-          add-labels: 'triage'
+          add-labels: 'needs triage'
 
       - name: If labeled, remove triage
         uses: andymckay/labeler@master
-        if: ${{ steps.no-labels.outcome == 'skipped' && join(github.event.issue.labels.*.name, ',') != 'triage' }}
+        if: ${{ steps.no-labels.outcome == 'skipped' && join(github.event.issue.labels.*.name, ',') != 'needs triage' }}
         with:
-          remove-labels: 'triage'
+          remove-labels: 'needs triage'
