@@ -1,0 +1,46 @@
+steps:
+
+  # Copy symbols that will be published
+  - task: CopyFiles@2
+    displayName: 'Prepare for symbol publishing'
+    inputs:
+      SourceFolder: '$(Build.BinariesDirectory)/raw/binaries'
+      Contents: |
+        Microsoft.PythonTools*.pdb
+        Microsoft.PythonTools*.dll
+        Microsoft.PythonTools*.exe
+        Microsoft.CookiecutterTools.pdb
+        Microsoft.CookiecutterTools.dll
+        Microsoft.IronPythonTools.Resolver.pdb
+        Microsoft.IronPythonTools.Resolver.dll
+        Microsoft.Python.Analysis.Engine.dll
+        Microsoft.Python.Analysis.Engine.pdb
+        Microsoft.Python.LanguageServer.Core.dll
+        Microsoft.Python.LanguageServer.Core.pdb
+        Microsoft.Python.Parsing.dll
+        Microsoft.Python.Parsing.pdb
+        Microsoft.Python.Core.dll
+        Microsoft.Python.Core.pdb
+        PyDebugAttach*.pdb
+        PyDebugAttach*.dll
+        VsPyProf*.pdb
+        VsPyProf*.dll
+      TargetFolder: '$(Build.ArtifactStagingDirectory)/symbols'
+
+  # Publish Symbols as a build artifact
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish build artifact: symbols'
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)/symbols'
+      ArtifactName: Symbols
+
+  # Publish Symbols
+  - task: PublishSymbols@2
+    displayName: 'Publish symbols'
+    inputs:
+      symbolsFolder: '$(Build.ArtifactStagingDirectory)/symbols'
+      searchPattern: '*.pdb'
+      symbolServerType: TeamServices
+      ArtifactServices.Symbol.AccountName: microsoft
+      ArtifactServices.Symbol.PAT: $(System.AccessToken)
+      ArtifactServices.Symbol.UseAAD: false
