@@ -35,12 +35,18 @@ steps:
       ArtifactName: Symbols
 
   # Publish Symbols
+  # This task uses two environment variables from the PTVS-Dev17 library (ArtifactServices.Symbol.AccountName and ArtifactServices.Symbol.PAT)
+  # If this step is failing due to authentication errors, the PAT is most likely expired. To regenerate the PAT:
+  # 1. Go to https://dev.azure.com/microsoft/_usersSettings/tokens (it has to be here in order for the PAT organization to be microsoft, which is required)
+  # 2. Create a new Token, name it whatever you want. Set the expiration as long as possible.
+  # 3. Click on Show more scopes, scroll down to Symbols, select Read & write, and click on Create.
+  # 4. Copy the PAT value to the clipboard.
+  # 5. Browse to the PTVS-Dev17 library at https://devdiv.visualstudio.com/DevDiv/_library?itemType=VariableGroups&view=VariableGroupView&variableGroupId=381&path=PTVS-Dev17
+  # 6. Paste the value from step 4 into the value of ArtifactServices.Symbol.PAT and make sure the variable type is set to secret.
+  # 7. Make sure the SAVE the changes!
   - task: PublishSymbols@2
     displayName: 'Publish symbols'
     inputs:
       symbolsFolder: '$(Build.ArtifactStagingDirectory)/symbols'
       searchPattern: '*.pdb'
       symbolServerType: TeamServices
-      ArtifactServices.Symbol.AccountName: microsoft
-      ArtifactServices.Symbol.PAT: $(System.AccessToken)
-      ArtifactServices.Symbol.UseAAD: false
