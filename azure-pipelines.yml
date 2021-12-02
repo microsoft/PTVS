@@ -131,5 +131,12 @@ steps:
   displayName: 'Execute cleanup tasks'
   condition: succeededOrFailed()
 
+# Publish binaries (used for localization)
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish build artifact: binaries'
+  inputs:
+    PathtoPublish: '$(Build.BinariesDirectory)/raw/binaries'
+    ArtifactName: Binaries
+
 # Publish test data
 - template: Build/templates/publish_test_data.yml
