@@ -93,11 +93,8 @@ steps:
     scriptName: Build/PreBuild.ps1
     arguments: '-vstarget $(VSTarget)'
 
-# Build
+# Build and publish logs
 - template: Build/templates/build.yml
-
-# Publish build artifacts
-- template: Build/templates/publish_build_artifacts.yml
 
 # Non-PR steps
 - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
