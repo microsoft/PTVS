@@ -123,7 +123,7 @@
   <PropertyGroup>
     <PackagePreprocessorDefinitions>
       <!-- VsDdeApplication is defined incorrectly in Microsoft.Wix4.Swix.Tools.targets so we hard code it until they fix it -->
-      VsDdeApplication16=VisualStudio.16.0
+      VsDdeApplication17=VisualStudio.17.0
     </PackagePreprocessorDefinitions>
   </PropertyGroup>
 
