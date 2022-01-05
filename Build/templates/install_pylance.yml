@@ -23,8 +23,8 @@ steps:
   # for this build only
 
   # Run npm to install pylance version specified in package.json
-  - powershell: 'npm install --verbose'
-    displayName: 'Install pylance with npm'
+  #- powershell: 'npm install --verbose'
+  #  displayName: 'Install pylance with npm'
 
   # todo: add pylance version build tag, similar to the following:
   #- powershell: 'Write-Host "##vso[build.addbuildtag]$env:VSTarget"'

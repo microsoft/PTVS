@@ -79,7 +79,7 @@ steps:
   # todo: pass in pylance version to install (either "latest" or literal value)
   - template: Build/templates/install_pylance.yml
 
-# Restore packages and install debugpy
+# Restore packages and install dependencies (pylance, debugpy)
 - task: PowerShell@1
   displayName: 'Restore packages'
   inputs:
