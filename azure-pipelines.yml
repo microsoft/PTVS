@@ -75,9 +75,9 @@ steps:
   # install microbuild plugins used for swixproj/vsmanproj, signing, and localization
   - template: Build/templates/install_microbuild_plugins.yml
 
-  # install pylance so it gets packaged into the PTVS installer
-  # todo: pass in pylance version to install (either "latest" or literal value)
-  - template: Build/templates/install_pylance.yml
+# install pylance so it gets packaged into the PTVS installer
+# todo: pass in pylance version to install (either "latest" or literal value)
+- template: Build/templates/install_pylance.yml
 
 # Restore packages and install dependencies (pylance, debugpy)
 - task: PowerShell@1
