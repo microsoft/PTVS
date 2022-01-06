@@ -11,6 +11,6 @@ jobs:
       uses: cb80/add2project@latest
       with:
         home: orgs/microsoft
-        project: Pylance
+        project: Python
         column: Triage
         token: ${{ secrets.PROJECT_TOKEN }}
