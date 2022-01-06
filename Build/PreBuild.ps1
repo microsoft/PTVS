@@ -53,7 +53,8 @@ try {
     $pylanceVersion = $output[1] -split "@" | Select-Object -Last 1
     "Installed Pylance $pylanceVersion"
     # add azdo build tag
-    Write-Host "##vso[build.addbuildtag]Pylance-$pylanceVersion"
+    # commenting this out for now since azdo is throwing errors for an unknown reason
+    #Write-Host "##vso[build.addbuildtag]Pylance-$pylanceVersion"
 
     "Restoring Packages"
     $arglist = "restore", "$vstarget\packages.config", "-OutputDirectory", "`"$outdir`"", "-Config", "nuget.config", "-NonInteractive"
