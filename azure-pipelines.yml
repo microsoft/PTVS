@@ -1,6 +1,12 @@
 # This pipeline is used to build the PTVS product and installer.
 # A seperate release pipeline is used to create insertion PR's into Visual Studio.
 
+parameters:
+- name: pylanceVersion
+  displayName: Pylance Version
+  type: string
+  default: latest
+
 # build number format 
 name: $(date:yy)$(DayOfYear)$(rev:.r)
 
@@ -83,7 +89,7 @@ steps:
   displayName: 'Restore packages'
   inputs:
     scriptName: Build/PreBuild.ps1
-    arguments: '-vstarget $(VSTarget)'
+    arguments: '-vstarget $(VSTarget) -pylanceVersion ${{ parameters.pylanceVersion }}'
 
 # Build and publish logs
 - template: Build/templates/build.yml
