@@ -16,7 +16,4 @@ steps:
   - powershell: 'Get-Content ".npmrc"'
     displayName: 'Print .npmrc contents'
 
-  # todo: add pylance version parameter
-  # todo: overwrite pylance version in package.json based on pylance version parameter
-
-  # pylance is now installed with the rest of the dependencies in the 'Restore packages' step
+  # pylance installation has been moved to the 'Restore packages' step
