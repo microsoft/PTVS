@@ -1,4 +1,4 @@
-param ($vstarget, $outdir, $pylanceVersion)
+param ($vstarget, $outdir, $pylanceVersion, $debugpyVersion)
 
 $ErrorActionPreference = "Stop"
 
@@ -25,6 +25,10 @@ if (-not $vstarget) {
 
 if (-not $pylanceVersion) {
     $pylanceVersion = "latest"
+}
+
+if (-not $debugpyVersion) {
+    $debugpyVersion = "latest"
 }
 
 $buildroot = $MyInvocation.MyCommand.Definition | Split-Path -Parent | Split-Path -Parent
@@ -59,15 +63,19 @@ try {
         $packageJson | ConvertTo-Json -depth 8 | Set-Content $packageJsonFile
     }
 
+    # install pylance and update the package-lock.json file
     npm install --save
+
     # print out the installed version
     $npmLsOutput = & npm ls @pylance/pylance
     $installedPylanceVersion = $npmLsOutput[1] -split "@" | Select-Object -Last 1
     "Installed Pylance $installedPylanceVersion"
+    
     # add azdo build tag
     # commenting this out for now since azdo is throwing errors for an unknown reason
     #Write-Host "##vso[build.addbuildtag]Pylance-$installedPylanceVersion"
 
+    "-----"
     "Restoring Packages"
     $arglist = "restore", "$vstarget\packages.config", "-OutputDirectory", "`"$outdir`"", "-Config", "nuget.config", "-NonInteractive"
     $nuget = Get-Command nuget.exe -EA 0
@@ -77,9 +85,9 @@ try {
     Start-Process -Wait -NoNewWindow $nuget.Source -ErrorAction Stop -ArgumentList $arglist
 
     $versions = @{}
-    ([xml](Get-Content "$vstarget\packages.config")).packages.package | ForEach-Object{ $versions[$_.id] = $_.version }
+    ([xml](Get-Content "$vstarget\packages.config")).packages.package | ForEach-Object { $versions[$_.id] = $_.version }
 
-    $need_symlink | Where-Object{ $versions[$_] } | ForEach-Object{
+    $need_symlink | Where-Object { $versions[$_] } | ForEach-Object {
         $existing = Get-Item "$outdir\$_" -EA 0
         if ($existing) {
             if ($existing.LinkType) {
@@ -93,12 +101,35 @@ try {
         New-Item -ItemType Junction "$outdir\$_" -Value "$outdir\$_.$($versions[$_])"
     } | Out-Null
 
-    $debugpyver = Get-Content "$buildroot\Build\debugpy-version.txt" -Raw 
-    Write-Host "Downloading debugpy version $debugpyver"
-    $debugpyarglist = "install_debugpy.py", $debugpyver, "`"$outdir`""
-    Start-Process -Wait -NoNewWindow "$outdir\python\tools\python.exe" -ErrorAction Stop -ArgumentList $debugpyarglist
+    # debugpy install must come after package restore because it uses python which is symlinked as part of the previous step
 
-    Write-Host "Updating Microsoft.Python.*.dll pdbs to be windows format"
+    "-----"
+    "Installing Debugpy"
+    # pip install python packaging utilities
+    $pipArgList = "-m", "pip", "install", "packaging" 
+    Start-Process -Wait -NoNewWindow "$outdir\python\tools\python.exe" -ErrorAction Stop -ArgumentList $pipArgList
+
+    # install debugpy
+    $debugpyArglist = "install_debugpy.py", $debugpyVersion, "`"$outdir`""
+    Start-Process -Wait -NoNewWindow "$outdir\python\tools\python.exe" -ErrorAction Stop -ArgumentList $debugpyArglist
+
+    # print out the installed version
+    $installedDebugpyVersion = ""
+    $versionPyFile = Join-Path $outdir "debugpy\_version.py"
+    foreach ($line in Get-Content $versionPyFile) {
+        if ($line.Trim().StartsWith("`"version`"")) {
+            $installedDebugpyVersion = $line.split(":")[1].Trim(" `"") # trim spaces and double quotes
+            break
+        }
+    }
+    "Installed Debugpy $installedDebugpyVersion"
+
+    # add azdo build tag
+    # commenting this out for now since azdo is throwing errors for an unknown reason
+    #Write-Host "##vso[build.addbuildtag]Debugpy-$installedDebugpyVersion"
+
+    "-----"
+    "Updating Microsoft.Python.*.dll pdbs to be windows format"
     Get-ChildItem "$outdir\Microsoft.Python.Parsing\lib\netstandard2.0" -Filter "*.pdb" | ForEach-Object {
         # Skip if there's already a pdb2 file
         # Convert each pdb $_.FullName
