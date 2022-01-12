@@ -16,17 +16,4 @@ steps:
   - powershell: 'Get-Content ".npmrc"'
     displayName: 'Print .npmrc contents'
 
-  # todo: if pylance version parameter is set to "latest", use npm to get latest version and overwrite
-  # value in package.json for this build only
-
-  # todo: if pylance version parameter is set to a specific value, overwrite value in package.json
-  # for this build only
-
-  # Run npm to install pylance version specified in package.json
-  - powershell: 'npm install --verbose'
-    displayName: 'Install pylance with npm'
-
-  # todo: add pylance version build tag, similar to the following:
-  #- powershell: 'Write-Host "##vso[build.addbuildtag]$env:VSTarget"'
-  #  displayName: 'Add vstarget build tag'
-  #  condition: notin(variables['Build.Reason'], 'PullRequest')
+  # pylance installation has been moved to the 'Restore packages' step
