@@ -106,8 +106,9 @@ try {
     "-----"
     "Installing Debugpy"
     # pip install python packaging utilities
-    $pipArgList = "-m", "pip", "install", "packaging" 
-    Start-Process -Wait -NoNewWindow -PassThru "$outdir\python\tools\python.exe" -ErrorAction Stop -ArgumentList $pipArgList
+    # SilentlyContinue on error since pip warnings will cause the build to fail, and installing debugpy will fail later if this step fails anyway
+    $pipArgList = "-m", "pip", "--disable-pip-version-check", "install", "packaging" 
+    Start-Process -Wait -NoNewWindow "$outdir\python\tools\python.exe" -ErrorAction SilentlyContinue -ArgumentList $pipArgList
 
     # install debugpy
     $debugpyArglist = "install_debugpy.py", $debugpyVersion, "`"$outdir`""
