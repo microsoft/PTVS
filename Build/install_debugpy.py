@@ -10,7 +10,7 @@ import zipfile
 # if this import fails, run PreBuild.ps1, which will pip install packaging
 from packaging.version import parse as version_parser
 
-DEBUGGER_PYTHON_VERSIONS = ("cp35", "cp36", "cp37", "cp38")
+DEBUGGER_PYTHON_VERSIONS = ("cp35", "cp36", "cp37", "cp38", "cp39")
 DEBUGGER_EXCLUDED_PLATFORMS = ("manylinux", "macosx")
 
 def _contains(s, parts=()):
