@@ -125,6 +125,9 @@ try {
     }
     "Installed Debugpy $installedDebugpyVersion"
 
+    # write debugpy version out to $buildroot\build\debugpy-version.txt, since that file is used by Debugger.csproj and various other classes
+    Set-Content -NoNewline -Force -Path "$buildroot\build\debugpy-version.txt" -Value $installedDebugpyVersion
+
     # add azdo build tag
     # commenting this out for now since azdo is throwing errors for an unknown reason
     #Write-Host "##vso[build.addbuildtag]Debugpy-$installedDebugpyVersion"
