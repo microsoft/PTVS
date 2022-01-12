@@ -107,7 +107,7 @@ try {
     "Installing Debugpy"
     # pip install python packaging utilities
     $pipArgList = "-m", "pip", "install", "packaging" 
-    Start-Process -Wait -NoNewWindow "$outdir\python\tools\python.exe" -ErrorAction Stop -ArgumentList $pipArgList
+    Start-Process -Wait -NoNewWindow -PassThru "$outdir\python\tools\python.exe" -ErrorAction Stop -ArgumentList $pipArgList
 
     # install debugpy
     $debugpyArglist = "install_debugpy.py", $debugpyVersion, "`"$outdir`""
