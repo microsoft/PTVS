@@ -69,11 +69,11 @@ try {
     # print out the installed version
     $npmLsOutput = & npm ls @pylance/pylance
     $installedPylanceVersion = $npmLsOutput[1] -split "@" | Select-Object -Last 1
+    $installedPylanceVersion = $installedPylanceVersion.Trim()
     "Installed Pylance $installedPylanceVersion"
     
     # add azdo build tag
-    # commenting this out for now since azdo is throwing errors for an unknown reason
-    #Write-Host "##vso[build.addbuildtag]Pylance-$installedPylanceVersion"
+    Write-Host "##vso[build.addbuildtag]Pylance-$installedPylanceVersion"
 
     "-----"
     "Restoring Packages"
@@ -129,8 +129,7 @@ try {
     Set-Content -NoNewline -Force -Path "$buildroot\build\debugpy-version.txt" -Value $installedDebugpyVersion
 
     # add azdo build tag
-    # commenting this out for now since azdo is throwing errors for an unknown reason
-    #Write-Host "##vso[build.addbuildtag]Debugpy-$installedDebugpyVersion"
+    Write-Host "##vso[build.addbuildtag]Debugpy-$installedDebugpyVersion"
 
     "-----"
     "Updating Microsoft.Python.*.dll pdbs to be windows format"
