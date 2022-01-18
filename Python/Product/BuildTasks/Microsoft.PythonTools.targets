@@ -27,6 +27,17 @@ permissions and limitations under the License.
     <_PTVSBuildTasks Condition="!Exists($(_PTVSBuildTasks))">$([MSBuild]::Unescape($(_PTVSSupportPath)Microsoft.PythonTools.BuildTasks.Core.dll))</_PTVSBuildTasks>
   </PropertyGroup>
 
+  <!-- 
+    The global default value for target framework version seems to be v4.0.
+    This is used in various places, but specifically used by the GetReferenceAssemblyPaths target in Microsoft.Common.CurrentVersion.Targets.
+    The default version works with VS 2019 and lower, but it is not supported by VS 2022 and higher. This is causing pyproj files to break in VS2022.
+    Therefore, we're overriding it to 4.7.2, which is supported.
+  -->
+  <PropertyGroup>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkMoniker>.NETFramework,Version=$(TargetFrameworkVersion)</TargetFrameworkMoniker>
+  </PropertyGroup>
+
   <!-- Creates a command object that will be displayed in the IDE.
   
   ErrorRegex/WarningRegex are only useful when ExecuteIn="output". They identify
