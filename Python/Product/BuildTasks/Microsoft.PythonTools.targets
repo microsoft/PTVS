@@ -24,7 +24,7 @@ permissions and limitations under the License.
     <_PTVSSupportPath Condition="'$(_PTVSSupportPath)' == ''">$(MSBuildThisFileDirectory)</_PTVSSupportPath>
     <_PTVSSupportPath Condition="!HasTrailingSlash('$(_PTVSSupportPath)')">$(_PTVSSupportPath)\</_PTVSSupportPath>
     <_PTVSBuildTasks Condition="'$(_PTVSBuildTasks)' == ''">$([MSBuild]::Unescape($(_PythonToolsPath)Microsoft.PythonTools.BuildTasks.dll))</_PTVSBuildTasks>
-    <_PTVSBuildTasks Condition="!Exists($(_PTVSBuildTasks))">$([MSBuild]::Unescape($(_PTVSSupportPath)Microsoft.PythonTools.BuildTasks.Core.dll))</_PTVSBuildTasks>  
+    <_PTVSBuildTasks Condition="!Exists($(_PTVSBuildTasks))">$([MSBuild]::Unescape($(_PTVSSupportPath)Microsoft.PythonTools.BuildTasks.Core.dll))</_PTVSBuildTasks>
   </PropertyGroup>
 
   <!-- 
