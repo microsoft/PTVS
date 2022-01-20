@@ -1355,7 +1355,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Snippets]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Ausschnitte]]></Val>
+            <Val><![CDATA[Schnipsel]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -4556,7 +4556,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Insert Snippet]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Codeausschnitt einfügen]]></Val>
+            <Val><![CDATA[Schnipsel einfügen]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

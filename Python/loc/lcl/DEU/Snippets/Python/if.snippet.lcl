@@ -12,7 +12,7 @@
       <Str Cat="AppData">
         <Val><![CDATA[Code snippet for an if statement]]></Val>
         <Tgt Cat="AppData" Stat="Loc" Orig="New">
-          <Val><![CDATA[Codeausschnitt für eine if-Anweisung]]></Val>
+          <Val><![CDATA[Codeschnipsel für eine if-Anweisung]]></Val>
         </Tgt>
       </Str>
       <Disp Icon="Str" />
