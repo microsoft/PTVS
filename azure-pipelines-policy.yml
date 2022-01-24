@@ -2,6 +2,16 @@
 # For more information about the suite of tools used, see 
 # https://www.1eswiki.com/wiki/Secure_Development_Tools_Extension_For_Azure_DevOps
 
+parameters:
+- name: pylanceVersion
+  displayName: Pylance Version
+  type: string
+  default: latest
+- name: debugpyVersion
+  displayName: Debugpy Version
+  type: string
+  default: latest
+
 # Build number format
 name: $(date:yy)$(DayOfYear)$(rev:.r)
 
