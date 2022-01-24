@@ -50,8 +50,10 @@ steps:
 - checkout: self
   clean: true
 
-# install microbuild plugins used for swixproj/vsmanproj, signing, and localization
-- template: Build/templates/install_microbuild_plugins.yml
+# Install plugins needed for swixproj/vsmanproj and signing
+# We don't use Build/templates/install_microbuild_plugins.yml here because this project doesn't need to real sign
+- task: MicroBuildSwixPlugin@3
+  displayName: 'Install microbuild swix plugin'
 
 # configure pylance before installing it
 - template: Build/templates/configure_pylance.yml
