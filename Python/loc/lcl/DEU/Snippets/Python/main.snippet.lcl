@@ -12,7 +12,7 @@
       <Str Cat="AppData">
         <Val><![CDATA[Code snippet for a main function]]></Val>
         <Tgt Cat="AppData" Stat="Loc" Orig="New">
-          <Val><![CDATA[Codeausschnitt für eine main-Funktion]]></Val>
+          <Val><![CDATA[Codeschnipsel für eine main-Funktion]]></Val>
         </Tgt>
       </Str>
       <Disp Icon="Str" />

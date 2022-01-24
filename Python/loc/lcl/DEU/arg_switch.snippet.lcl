@@ -12,7 +12,7 @@
       <Str Cat="AppData">
         <Val><![CDATA[Code snippet for a switch argument for an argparse parser.]]></Val>
         <Tgt Cat="AppData" Stat="Loc" Orig="New">
-          <Val><![CDATA[Codeausschnitt für ein Optionsargument für einen argparse-Parser.]]></Val>
+          <Val><![CDATA[Codeschnipsel für ein Optionsargument für einen argparse-Parser.]]></Val>
         </Tgt>
       </Str>
       <Disp Icon="Str" />
