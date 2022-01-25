@@ -14,8 +14,4 @@ steps:
     inputs:
       scriptName: $(Build.SourcesDirectory)/Build/UpdateNpmrc.ps1
 
-  # Print out npmrc
-  - powershell: 'Get-Content ".npmrc"'
-    displayName: 'Print .npmrc contents'
-
   # pylance installation has been moved to the 'Restore packages' step
