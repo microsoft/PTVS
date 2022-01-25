@@ -1,0 +1,26 @@
+name: issue-automation
+permissions:
+  issues: write
+
+on:
+  issues:
+    types: [opened, labeled]
+
+jobs:
+  triage-labels:
+    runs-on: ubuntu-latest
+    steps:
+      - name: If no labels, add triage
+        id: no-labels
+        uses: andymckay/labeler@master
+        if: ${{ join(github.event.issue.labels.*.name, ',') == '' }}
+        with:
+          add-labels: 'needs triage'
+          ignore-if-assigned: true
+
+      - name: If labeled, remove triage
+        uses: andymckay/labeler@master
+        if: ${{ steps.no-labels.outcome == 'skipped' && join(github.event.issue.labels.*.name, ',') != 'needs triage' }}
+        with:
+          remove-labels: 'needs triage'
+          ignore-if-assigned: true

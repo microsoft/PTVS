@@ -1,0 +1,47 @@
+steps:
+
+  # Build the product
+  - task: MSBuild@1
+    displayName: 'Build product'
+    inputs:
+      solution: $(Build.SourcesDirectory)/Python/Product/dirs.proj
+      msbuildVersion: $(MsBuildVersion)
+      platform: $(Platform)
+      configuration: $(BuildConfiguration)
+      msbuildArguments: '/p:VSTarget=$(VSTarget) /bl:$(Build.SourcesDirectory)\logs\BuildProduct.binlog'
+
+  # Build the tests
+  - task: MSBuild@1
+    displayName: 'Build tests'
+    inputs:
+      solution: $(Build.SourcesDirectory)/Python/Tests/dirs.proj
+      msbuildVersion: $(MsBuildVersion)
+      platform: $(Platform)
+      configuration: $(BuildConfiguration)
+      msbuildArguments: '/p:VSTarget=$(VSTarget) /bl:$(Build.SourcesDirectory)\logs\BuildTests.binlog'
+
+  # Build the installer
+  - task: MSBuild@1
+    displayName: 'Build installer'
+    inputs:
+      solution: $(Build.SourcesDirectory)/Python/Setup/dirs.proj
+      msbuildVersion: $(MsBuildVersion)
+      platform: $(Platform)
+      configuration: $(BuildConfiguration)
+      msbuildArguments: '/p:SkipProduct=true /p:VSTarget=$(VSTarget) /bl:$(Build.SourcesDirectory)\logs\BuildInstaller.binlog'
+
+  # If the build failed, publish raw binaries folder
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish build artifact: raw'
+    inputs:
+      PathtoPublish: '$(Build.BinariesDirectory)\raw'
+      ArtifactName: raw
+    condition: failed()
+
+  # Publish logs, even if the build failed
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish build artifact: logs'
+    inputs:
+      PathtoPublish: '$(Build.SourcesDirectory)\logs'
+      ArtifactName: Logs
+    condition: succeededOrFailed()

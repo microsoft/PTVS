@@ -35,7 +35,7 @@
     <AssemblyName>Microsoft.PythonTools.Django</AssemblyName>
     <UseVSSDK>true</UseVSSDK>
     <CreateVsixContainer>true</CreateVsixContainer>
-    <NoWarn>1762;0436</NoWarn>
+    <NoWarn>$(NoWarn);1762</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -50,14 +50,8 @@
     </Reference>
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost" />
     <Reference Include="Microsoft.VisualStudio.CoreUtility" />
-    <Reference Include="Microsoft.VisualStudio.Debugger.Interop">
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
     <Reference Include="Microsoft.VisualStudio.Debugger.Interop.10.0" />
     <Reference Include="Microsoft.VisualStudio.Debugger.InteropA" />
-    <Reference Include="Microsoft.VisualStudio.Designer.Interfaces, Version=1.0.5000.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
     <Reference Include="Microsoft.VisualStudio.Editor" />
     <Reference Include="Microsoft.VisualStudio.Language" />
     <Reference Include="Microsoft.VisualStudio.Language.Intellisense" />

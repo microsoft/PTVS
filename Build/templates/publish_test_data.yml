@@ -1,0 +1,19 @@
+steps:
+
+  # Compress just the test data
+  # Used in this release task to run tests: https://devdiv.visualstudio.com/DevDiv/_taskgroup/a7b18468-aab5-4be7-b718-02f85b0828c4
+  - task: ArchiveFiles@2
+    displayName: 'Compress test data dir'
+    inputs:
+      rootFolderOrFile: '$(Build.SourcesDirectory)/Python/Tests/TestData'
+      includeRootFolder: false
+      archiveType: 'zip'
+      archiveFile: '$(Build.ArtifactStagingDirectory)/TestData.zip'
+      replaceExistingArchive: true
+
+  # Publish test data archive (so we don't have to pull down everything to run tests)
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish build artifact: TestData'
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)/TestData.zip'
+      ArtifactName: 'TestData'

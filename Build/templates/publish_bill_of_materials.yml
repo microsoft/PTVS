@@ -1,0 +1,16 @@
+steps:
+
+  # generate the bill of materials
+  - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
+    displayName: 'Generate bill of materials'
+    inputs:
+      BuildDropPath: '$(Build.StagingDirectory)\release'
+      PackageName: 'PTVS'
+      PackageVersion: '$(VSTarget)'
+  
+  # publish the bill of materials as a build artifact
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish build artifact: BoM'
+    inputs:
+      PathtoPublish: '$(Build.StagingDirectory)\release\_manifest'
+      ArtifactName: SBOM
