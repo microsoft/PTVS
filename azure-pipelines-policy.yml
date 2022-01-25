@@ -2,6 +2,16 @@
 # For more information about the suite of tools used, see 
 # https://www.1eswiki.com/wiki/Secure_Development_Tools_Extension_For_Azure_DevOps
 
+parameters:
+- name: pylanceVersion
+  displayName: Pylance Version
+  type: string
+  default: latest
+- name: debugpyVersion
+  displayName: Debugpy Version
+  type: string
+  default: latest
+
 # Build number format
 name: $(date:yy)$(DayOfYear)$(rev:.r)
 
@@ -34,223 +44,189 @@ variables:
   # This contains variables shared between the PTVS "product" pipeline and the PTVS "policy" pipeline.
   - group: PTVS-Dev17
 
-jobs:
-- job: Phase_1
-  displayName: Phase 1
-  timeoutInMinutes: 300 # Long timeout is needed because API scan takes longer than the default job timeout (60 minutes)
-  cancelTimeoutInMinutes: 1
+steps:
 
-  steps:
+# Check out code clean from source control
+- checkout: self
+  clean: true
 
-  # Check out code clean from source control
-  - checkout: self
-    clean: true
+# Install plugins needed for swixproj/vsmanproj and signing
+# We don't use Build/templates/install_microbuild_plugins.yml here because this project doesn't need to real sign
+- task: MicroBuildSwixPlugin@3
+  displayName: 'Install microbuild swix plugin'
 
-  # Install plugins needed for swixproj/vsmanproj and signing
-  - task: MicroBuildSwixPlugin@3
-    displayName: 'Install microbuild swix plugin'
+# configure pylance before installing it
+- template: Build/templates/configure_pylance.yml
 
-  # Clean old packages
-  - task: DeleteFiles@1
-    displayName: 'Clean old packages'
-    inputs:
-      SourceFolder: 'packages'
-      Contents: '**'
-    continueOnError: true
-  # Run a powershell script that does a package restore, some symlinking, and installs debugpy
-  - task: PowerShell@1
-    displayName: 'Restore packages'
-    inputs:
-      scriptName: Build/PreBuild.ps1
-      arguments: '-vstarget $(VSTarget)'
+# Restore packages and install dependencies (pylance, debugpy)
+- task: PowerShell@1
+  displayName: 'Restore packages'
+  inputs:
+    scriptName: Build/PreBuild.ps1
+    arguments: '-vstarget $(VSTarget) -pylanceVersion ${{ parameters.pylanceVersion }} -debugpyVersion ${{ parameters.debugpyVersion }}'
 
-  # Clean the old swix outputs
-  - task: DeleteFiles@1
-    displayName: 'Clean old swix outputs'
-    inputs:
-      SourceFolder: '$(Build.BinariesDirectory)\raw\setup\swix'
-      Contents: '**'
-    continueOnError: true
+# Clean the Guardian temp files
+- powershell: Get-ChildItem -Path $env:TEMP -Filter 'MpCmdRun.*' -Recurse -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force
+  displayName: Clean guardian temp files
+  continueOnError: true
 
-  # Clean the Guardian temp files
-  - powershell: Get-ChildItem -Path $env:TEMP -Filter 'MpCmdRun.*' -Recurse -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force
-    displayName: Clean guardian temp files
-    continueOnError: true
+# Build and publish logs
+- template: Build/templates/build.yml
 
-  # Build the product
-  - task: MSBuild@1
-    displayName: 'Build product'
-    inputs:
-      solution: Python/Product/dirs.proj
-      msbuildVersion: $(MSBuildVersion)
-      platform: $(Platform)
-      configuration: $(BuildConfiguration)
-      msbuildArguments: '/p:VSTarget=$(VSTarget)'
-    continueOnError: true
+# Anti-Malware Scan of build sources and/or artifacts
+# See https://www.1eswiki.com/wiki/AntiMalware_Scan_Build_Task for more info
+- task: AntiMalware@3
+  displayName: 'Run Antivirus on Source'
+  inputs:
+    FileDirPath: $(Build.SourcesDirectory)
+  condition: succeededOrFailed()
+  continueOnError: True
+- task: AntiMalware@3
+  displayName: Run Antivirus on Binaries
+  inputs:
+    FileDirPath: $(Build.BinariesDirectory)
+  condition: succeededOrFailed()
+  continueOnError: True
 
-  # Build the installer
-  - task: MSBuild@1
-    displayName: 'Build installer'
-    inputs:
-      solution: Python/Setup/dirs.proj
-      msbuildVersion: $(MsBuildVersion)
-      platform: $(Platform)
-      configuration: $(BuildConfiguration)
-      msbuildArguments: '/p:SkipProduct=true /p:VSTarget=$(VSTarget)'
-    continueOnError: true
+# APIScan only works on prem now, so comment this out until we figure out where to run it
 
-  # Anti-Malware Scan of build sources and/or artifacts
-  # See https://www.1eswiki.com/wiki/AntiMalware_Scan_Build_Task for more info
-  - task: AntiMalware@3
-    displayName: 'Run Antivirus on Source'
-    inputs:
-      FileDirPath: $(Build.SourcesDirectory)
-    condition: succeededOrFailed()
-    continueOnError: True
-  - task: AntiMalware@3
-    displayName: Run Antivirus on Binaries
-    inputs:
-      FileDirPath: $(Build.BinariesDirectory)
-    condition: succeededOrFailed()
-    continueOnError: True
+# Copy files for APIScan
+#- task: CopyFiles@2
+#  displayName: 'Copy Files for APIScan'
+#  inputs:
+#    SourceFolder: $(Build.BinariesDirectory)
+#    Contents: |
+#      layout\Microsoft.PythonTools.Core\Microsoft.PythonTools.*
+#      layout\Microsoft.PythonTools.Core\Microsoft.Python.*
+#      layout\Microsoft.PythonTools.Core\PyDebugAttach*.*
+#      layout\Microsoft.PythonTools.Django\Microsoft.PythonTools.*
+#      layout\Microsoft.PythonTools.Profiling\Microsoft.PythonTools.*
+#      layout\Microsoft.PythonTools.IronPython\Microsoft.PythonTools.*
+#      layout\Microsoft.PythonTools.IronPython\Microsoft.IronPythonTools.*
+#      layout\Microsoft.PythonTools.Miniconda\Microsoft.PythonTools.*
+#      layout\Microsoft.PythonTools.LiveShare\Microsoft.PythonTools.*
+#      layout\Microsoft.CookiecutterTools\Microsoft.CookiecutterTools.*
+#    TargetFolder: $(Agent.TempDirectory)\APIScanFiles
 
-  # Copy files for APIScan
-  - task: CopyFiles@2
-    displayName: 'Copy Files for APIScan'
-    inputs:
-      SourceFolder: $(Build.BinariesDirectory)
-      Contents: |
-        layout\Microsoft.PythonTools.Core\Microsoft.PythonTools.*
-        layout\Microsoft.PythonTools.Core\Microsoft.Python.*
-        layout\Microsoft.PythonTools.Core\PyDebugAttach*.*
-        layout\Microsoft.PythonTools.Django\Microsoft.PythonTools.*
-        layout\Microsoft.PythonTools.Profiling\Microsoft.PythonTools.*
-        layout\Microsoft.PythonTools.IronPython\Microsoft.PythonTools.*
-        layout\Microsoft.PythonTools.IronPython\Microsoft.IronPythonTools.*
-        layout\Microsoft.PythonTools.Miniconda\Microsoft.PythonTools.*
-        layout\Microsoft.PythonTools.LiveShare\Microsoft.PythonTools.*
-        layout\Microsoft.CookiecutterTools\Microsoft.CookiecutterTools.*
-      TargetFolder: $(Agent.TempDirectory)\APIScanFiles
+# Verify that your software complies with the API Usage Standard of the Interoperability Policy
+# See https://microsoft.sharepoint.com/teams/apiscan/Content/Home.aspx for more info
+#- task: APIScan@1
+#  displayName: Run APIScan
+#  inputs:
+#    softwareFolder: $(Agent.TempDirectory)\APIScanFiles
+#    softwareName: PTVS
+#    softwareVersionNum: 16.0
+#    isLargeApp: false
+#    toolVersion: LatestPreRelease
+#  condition: succeededOrFailed()
+#  continueOnError: True
 
-  # Verify that your software complies with the API Usage Standard of the Interoperability Policy
-  # See https://microsoft.sharepoint.com/teams/apiscan/Content/Home.aspx for more info
-  - task: APIScan@1
-    displayName: Run APIScan
-    inputs:
-      softwareFolder: $(Agent.TempDirectory)\APIScanFiles
-      softwareName: PTVS
-      softwareVersionNum: 16.0
-      isLargeApp: false
-      toolVersion: LatestPreRelease
-    condition: succeededOrFailed()
-    continueOnError: True
+# Run component governance detection
+# See http://aka.ms/cgdocs for more info
+- task: ComponentGovernanceComponentDetection@0
+  displayName: Run Component Detection
+  inputs:
+    scanType: 'Register'
+    verbosity: 'Verbose'
+    alertWarningLevel: 'High'
+  condition: succeededOrFailed()
+  continueOnError: True
 
-  # Run component governance detection
-  # See http://aka.ms/cgdocs for more info
-  - task: ComponentGovernanceComponentDetection@0
-    displayName: Run Component Detection
-    inputs:
-      scanType: 'Register'
-      verbosity: 'Verbose'
-      alertWarningLevel: 'High'
-    condition: succeededOrFailed()
-    continueOnError: True
+# Analyze source and build output text files for credentials
+# See https://www.1eswiki.com/wiki/CredScan_Azure_DevOps_Build_Task for more info
+- task: CredScan@2
+  displayName: Run CredScan
+  inputs:
+    toolMajorVersion: V2
+    suppressionsFile: $(Build.SourcesDirectory)\Build\CredScanSuppressions.json
+    debugMode: true
+    folderSuppression: true
+  condition: succeededOrFailed()
+  continueOnError: True
 
-  # Analyze source and build output text files for credentials
-  # See https://www.1eswiki.com/wiki/CredScan_Azure_DevOps_Build_Task for more info
-  - task: CredScan@2
-    displayName: Run CredScan
-    inputs:
-      toolMajorVersion: V2
-      suppressionsFile: $(Build.SourcesDirectory)\Build\CredScanSuppressions.json
-      debugMode: true
-      folderSuppression: true
-    condition: succeededOrFailed()
-    continueOnError: True
+# Scan text elements including code, code comments, and content/web pages, for sensitive terms based on legal, cultural, or geopolitical reasons
+# See https://www.1eswiki.com/wiki/PoliCheck_Build_Task for more info
+- task: PoliCheck@1
+  displayName: Run PoliCheck
+  inputs:
+    importEx: 0
+    optionsFC: 1
+    optionsUEPATH: $(Build.SourcesDirectory)\Build\PoliCheckExclusions.xml
+  condition: succeededOrFailed()
+  continueOnError: True
 
-  # Scan text elements including code, code comments, and content/web pages, for sensitive terms based on legal, cultural, or geopolitical reasons
-  # See https://www.1eswiki.com/wiki/PoliCheck_Build_Task for more info
-  - task: PoliCheck@1
-    displayName: Run PoliCheck
-    inputs:
-      importEx: 0
-      optionsFC: 1
-      optionsUEPATH: $(Build.SourcesDirectory)\Build\PoliCheckExclusions.xml
-    condition: succeededOrFailed()
-    continueOnError: True
+# Analyze managed C#/VB code (.NET framework and .NET Core) for security vulnerabilities
+# See https://www.1eswiki.com/wiki/Roslyn_Analyzers_Build_Task for more info
+- task: RoslynAnalyzers@2
+  displayName: Run Roslyn Analyzers. {Required and Recommended}
+  inputs:
+    internalAnalyzersVersion: 2.6.2
+    microsoftAnalyzersVersion: 2.9.4
+  condition: succeededOrFailed()
+  continueOnError: True
 
-  # Analyze managed C#/VB code (.NET framework and .NET Core) for security vulnerabilities
-  # See https://www.1eswiki.com/wiki/Roslyn_Analyzers_Build_Task for more info
-  - task: RoslynAnalyzers@2
-    displayName: Run Roslyn Analyzers. {Required and Recommended}
-    inputs:
-      internalAnalyzersVersion: 2.6.2
-      microsoftAnalyzersVersion: 2.9.4
-    condition: succeededOrFailed()
-    continueOnError: True
+# Analyze unmanaged C/C++ code for security vulnerabilities
+# See https://www.1eswiki.com/wiki/SDL_Native_Rules_Build_Task for more info
+- task: SDLNativeRules@2
+  displayName: Run PREfast SDL Native Rules for MSBuild
+  inputs:
+    msBuildVersion: $(MsBuildVersion)
+  condition: succeededOrFailed()
+  continueOnError: True
 
-  # Analyze unmanaged C/C++ code for security vulnerabilities
-  # See https://www.1eswiki.com/wiki/SDL_Native_Rules_Build_Task for more info
-  - task: SDLNativeRules@2
-    displayName: Run PREfast SDL Native Rules for MSBuild
-    inputs:
-      msBuildVersion: $(MsBuildVersion)
-    condition: succeededOrFailed()
-    continueOnError: True
+# No idea what this does, it's not listed anywhere on https://www.1eswiki.com/wiki/Secure_Development_Tools_Extension_For_Azure_DevOps
+# But it was here already, so I'm leaving it in for now
+- task: VulnerabilityAssessment@0
+  displayName: Run Vulnerability Assessment
+  condition: succeededOrFailed()
+  continueOnError: True
 
-  # No idea what this does, it's not listed anywhere on https://www.1eswiki.com/wiki/Secure_Development_Tools_Extension_For_Azure_DevOps
-  # But it was here already, so I'm leaving it in for now
-  - task: VulnerabilityAssessment@0
-    displayName: Run Vulnerability Assessment
-    condition: succeededOrFailed()
-    continueOnError: True
+- task: MicroBuildCleanup@1
+  displayName: MicroBuild cleanup
+  continueOnError: True
 
-  - task: MicroBuildCleanup@1
-    displayName: MicroBuild cleanup
-    continueOnError: True
+# Generate security analysis report
+# See https://www.1eswiki.com/wiki/Security_Analysis_Report_Build_Task for more info
+- task: SdtReport@1
+  displayName: Create Security Analysis Report
+  inputs:
+    AllTools: true
+    BinSkimBreakOn: WarningAbove
+    PoliCheckBreakOn: Severity4Above
+    RoslynAnalyzersBreakOn: WarningAbove
+  condition: succeededOrFailed()
+  continueOnError: True
 
-  # Generate security analysis report
-  # See https://www.1eswiki.com/wiki/Security_Analysis_Report_Build_Task for more info
-  - task: SdtReport@1
-    displayName: Create Security Analysis Report
-    inputs:
-      AllTools: true
-      BinSkimBreakOn: WarningAbove
-      PoliCheckBreakOn: Severity4Above
-      RoslynAnalyzersBreakOn: WarningAbove
-    condition: succeededOrFailed()
-    continueOnError: True
+# Publish security analysis logs
+- task: PublishSecurityAnalysisLogs@2
+  displayName: Publish Security Analysis Logs
+  condition: succeededOrFailed()
+  continueOnError: True
 
-  # Publish security analysis logs
-  - task: PublishSecurityAnalysisLogs@2
-    displayName: Publish Security Analysis Logs
-    condition: succeededOrFailed()
-    continueOnError: True
+# Copy sdt logs for publishing
+- task: CopyFiles@2
+  displayName: Save SDT logs to Staging Directory
+  inputs:
+    SourceFolder: $(Agent.BuildDirectory)\_sdt
+    TargetFolder: $(Build.StagingDirectory)
 
-  # Copy sdt logs for publishing
-  - task: CopyFiles@2
-    displayName: Save SDT logs to Staging Directory
-    inputs:
-      SourceFolder: $(Agent.BuildDirectory)\_sdt
-      TargetFolder: $(Build.StagingDirectory)
+# Publish staging artifacts
+- task: PublishBuildArtifacts@1
+  displayName: Publish Staging Directory
+  inputs:
+    PathtoPublish: $(Build.StagingDirectory)
 
-  # Publish staging artifacts
-  - task: PublishBuildArtifacts@1
-    displayName: Publish Staging Directory
-    inputs:
-      PathtoPublish: $(Build.StagingDirectory)
-
-  # Upload results to TSA
-  # See https://www.1eswiki.com/wiki/TSAUpload_VSTS_Build_Task for more info
-  - task: TSAUpload@1
-    displayName: TSA Upload
-    inputs:
-      tsaVersion: TsaV2
-      codebase: NewOrUpdate
-      codeBaseName: Python VS IDE PTVS
-      notificationAlias: pyvs@microsoft.com
-      codeBaseAdmins: redmond\advolker;redmond\judej
-      instanceUrlForTsaV2: DEVDIV
-      projectNameDEVDIV: DevDiv
-      areaPath: DevDiv\Python and AI Tools\Python\VS IDE
-      iterationPath: DevDiv
+# Upload results to TSA
+# See https://www.1eswiki.com/wiki/TSAUpload_VSTS_Build_Task for more info
+- task: TSAUpload@1
+  displayName: TSA Upload
+  inputs:
+    tsaVersion: TsaV2
+    codebase: NewOrUpdate
+    codeBaseName: Python VS IDE PTVS
+    notificationAlias: pyvs@microsoft.com
+    codeBaseAdmins: redmond\advolker;redmond\judej
+    instanceUrlForTsaV2: DEVDIV
+    projectNameDEVDIV: DevDiv
+    areaPath: DevDiv\Python and AI Tools\Python\VS IDE
+    iterationPath: DevDiv
