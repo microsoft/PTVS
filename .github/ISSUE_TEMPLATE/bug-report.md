@@ -28,7 +28,7 @@ XXX
 
 **Configuration information (If you are providing a diagnostics file (see below), skip this section)**
 VS Version: [Can be found under "Help->About Microsoft Visual Studio"]
-PTVS version: [Can be found under "Help->About Microsoft Visual Studio->Installed products"]
+PTVS version: [Can be found under "Help->About Microsoft Visual Studio->Installed products->Python with Pylance"]
 Python version:
 Debugger Type (if applicable): [New debugger or legacy debugger?]
 
