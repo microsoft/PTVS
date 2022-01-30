@@ -13,6 +13,4 @@ always-auth=true
 //devdiv.pkgs.visualstudio.com/_packaging/Pylance%40Local/npm/:email=npm requires email to be set but doesn't use the value
 ; end auth token
 "
-
-Write-Host "Writing .npmrc with token $Env:MAPPED_AZURE_DEVOPS_TOKEN from environment"
 Set-Content -Path ".npmrc" -Value $str
