@@ -89,11 +89,10 @@ steps:
 - template: Build/templates/configure_pylance.yml
 
 # Restore packages and install dependencies (pylance, debugpy)
-- task: PowerShell@1
-  displayName: 'Restore packages'
-  inputs:
-    scriptName: Build/PreBuild.ps1
-    arguments: '-vstarget $(VSTarget) -pylanceVersion ${{ parameters.pylanceVersion }} -debugpyVersion ${{ parameters.debugpyVersion }}'
+- template: Build/templates/restore_packages.yml
+  parameters:
+    pylanceVersion: ${{ parameters.pylanceVersion }}
+    debugpyVersion: ${{ parameters.debugpyVersion }}
 
 # Build and publish logs
 - template: Build/templates/build.yml
