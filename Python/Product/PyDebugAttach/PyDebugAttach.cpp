@@ -659,6 +659,8 @@ DWORD GetPythonThreadId(PythonVersion version, PyThreadState* curThread) {
         threadId = (DWORD)((PyThreadState_34_36*)curThread)->thread_id;
     } else if (PyThreadState_37::IsFor(version)) {
         threadId = (DWORD)((PyThreadState_37*)curThread)->thread_id;
+    } else if (PyThreadState_310::IsFor(version)) {
+        threadId = (DWORD)((PyThreadState_310*)curThread)->thread_id;
     }
     return threadId;
 }
@@ -1103,6 +1105,8 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                             frame = ((PyThreadState_34_36*)curThread)->frame;
                         } else if (PyThreadState_37::IsFor(version)) {
                             frame = ((PyThreadState_37*)curThread)->frame;
+                        } else if (PyThreadState_310::IsFor(version)) {
+                            frame = ((PyThreadState_310*)curThread)->frame;
                         } else {
                             _ASSERTE(false);
                             frame = nullptr; // prevent compiler warning
@@ -1151,13 +1155,29 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                         // update all of the frames so they have our trace func
                         auto curFrame = (PyFrameObject*)GetPyObjectPointerNoDebugInfo(isDebug, frame);
                         while (curFrame != nullptr) {
+
+                            PyObject **f_trace = nullptr;
+
+                            if (PyFrameObject25_33::IsFor(version)) {
+                                f_trace = &((PyFrameObject25_33*)curFrame)->f_trace;
+                            } else if (PyFrameObject34_36::IsFor(version)) {
+                                f_trace = &((PyFrameObject34_36*)curFrame)->f_trace;
+                            } else if (PyFrameObject37_39::IsFor(version)) {
+                                f_trace = &((PyFrameObject37_39*)curFrame)->f_trace;
+                            } else if (PyFrameObject310::IsFor(version)) {
+                                f_trace = &((PyFrameObject310*)curFrame)->f_trace;
+                            } else {
+                                _ASSERTE(false);
+                                break;
+                            }
+
                             // Special case for CFrame objects
                             // Stackless CFrame does not have a trace function
                             // This will just prevent a crash on attach.
                             if (((PyObject*)curFrame)->ob_type != PyCFrame_Type) {
-                                DecRef(curFrame->f_trace, isDebug);
+                                DecRef(*f_trace, isDebug);
                                 IncRef(*traceFunc);
-                                curFrame->f_trace = traceFunc.ToPython();
+                                *f_trace = traceFunc.ToPython();
                             }
                             curFrame = (PyFrameObject*)GetPyObjectPointerNoDebugInfo(isDebug, curFrame->f_back);
                         }
@@ -1312,6 +1332,8 @@ int TraceGeneral(int interpreterId, PyObject *obj, PyFrameObject *frame, int wha
             ((PyThreadState_34_36*)curThread)->c_tracefunc(((PyThreadState_34_36*)curThread)->c_traceobj, frame, what, arg);
         } else if (PyThreadState_37::IsFor(version)) {
             ((PyThreadState_37*)curThread)->c_tracefunc(((PyThreadState_37*)curThread)->c_traceobj, frame, what, arg);
+        } else if (PyThreadState_310::IsFor(version)) {
+            ((PyThreadState_310*)curThread)->c_tracefunc(((PyThreadState_310*)curThread)->c_traceobj, frame, what, arg);
         }
     }
     return 0;
@@ -1359,6 +1381,8 @@ void SetInitialTraceFunc(DWORD interpreterId, PyThreadState *thread) {
         gilstate_counter = ((PyThreadState_34_36*)thread)->gilstate_counter;
     } else if (PyThreadState_37::IsFor(version)) {
         gilstate_counter = ((PyThreadState_37*)thread)->gilstate_counter;
+    } else if (PyThreadState_310::IsFor(version)) {
+        gilstate_counter = ((PyThreadState_310*)thread)->gilstate_counter;
     }
 
     if (gilstate_counter == 1) {

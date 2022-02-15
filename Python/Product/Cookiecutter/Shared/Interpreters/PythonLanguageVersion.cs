@@ -38,7 +38,8 @@ namespace Microsoft.CookiecutterTools.Interpreters {
         V36 = 0x0306,
         V37 = 0x0307,
         V38 = 0x0308,
-        V39 = 0x0309
+        V39 = 0x0309,
+        V310 = 0x0310
     }
 
     public static class PythonLanguageVersionExtensions {
@@ -85,6 +86,7 @@ namespace Microsoft.CookiecutterTools.Interpreters {
                         case 7: return PythonLanguageVersion.V37;
                         case 8: return PythonLanguageVersion.V38;
                         case 9: return PythonLanguageVersion.V39;
+                        case 10: return PythonLanguageVersion.V310;
                     }
                     break;
             }
