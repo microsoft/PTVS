@@ -1,0 +1,21 @@
+parameters:
+- name: pylanceVersion
+  displayName: Pylance Version
+  type: string
+  default: latest
+- name: debugpyVersion
+  displayName: Debugpy Version
+  type: string
+  default: latest
+
+steps:
+
+  # nuget authenticate so we can restore from azure artifacts
+  - task: NuGetAuthenticate@0
+
+  # Restore packages and install dependencies (pylance, debugpy)
+  - task: PowerShell@1
+    displayName: 'Restore packages'
+    inputs:
+      scriptName: Build/PreBuild.ps1
+      arguments: '-vstarget $(VSTarget) -pylanceVersion ${{ parameters.pylanceVersion }} -debugpyVersion ${{ parameters.debugpyVersion }}'
