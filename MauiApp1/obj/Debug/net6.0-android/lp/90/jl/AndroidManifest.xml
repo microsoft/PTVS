@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
- Copyright 2017 The Android Open Source Project
+ Copyright (C) 2014 The Android Open Source Project
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -15,10 +15,8 @@
      limitations under the License.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="androidx.viewpager2" >
+    package="androidx.localbroadcastmanager" >
 
-    <uses-sdk
-        android:minSdkVersion="14"
-        android:targetSdkVersion="28" />
+    <uses-sdk android:minSdkVersion="14" />
 
 </manifest>

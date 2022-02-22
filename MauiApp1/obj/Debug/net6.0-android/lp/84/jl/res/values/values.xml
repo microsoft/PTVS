@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <id name="view_tree_view_model_store_owner"/>
+    <declare-styleable name="ViewPager2">
+        <attr name="android:orientation"/>
+    </declare-styleable>
 </resources>

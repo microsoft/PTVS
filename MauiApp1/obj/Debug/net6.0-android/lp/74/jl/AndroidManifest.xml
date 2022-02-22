@@ -15,13 +15,8 @@
      limitations under the License.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="androidx.versionedparcelable" >
+    package="androidx.viewpager" >
 
-    <uses-sdk
-        android:minSdkVersion="14"
-        android:targetSdkVersion="28" />
-
-    <application>
-    </application>
+    <uses-sdk android:minSdkVersion="14" />
 
 </manifest>

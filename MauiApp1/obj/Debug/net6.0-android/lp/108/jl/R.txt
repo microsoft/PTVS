@@ -1,4 +1,19 @@
+int anim fragment_close_enter 0x0
+int anim fragment_close_exit 0x0
+int anim fragment_fade_enter 0x0
+int anim fragment_fade_exit 0x0
+int anim fragment_fast_out_extra_slow_in 0x0
+int anim fragment_open_enter 0x0
+int anim fragment_open_exit 0x0
+int attr action 0x0
 int attr alpha 0x0
+int attr argType 0x0
+int attr data 0x0
+int attr dataPattern 0x0
+int attr defaultNavHost 0x0
+int attr destination 0x0
+int attr enterAnim 0x0
+int attr exitAnim 0x0
 int attr font 0x0
 int attr fontProviderAuthority 0x0
 int attr fontProviderCerts 0x0
@@ -9,8 +24,19 @@ int attr fontProviderQuery 0x0
 int attr fontStyle 0x0
 int attr fontVariationSettings 0x0
 int attr fontWeight 0x0
-int attr swipeRefreshLayoutProgressSpinnerBackgroundColor 0x0
+int attr graph 0x0
+int attr launchSingleTop 0x0
+int attr mimeType 0x0
+int attr navGraph 0x0
+int attr nullable 0x0
+int attr popEnterAnim 0x0
+int attr popExitAnim 0x0
+int attr popUpTo 0x0
+int attr popUpToInclusive 0x0
+int attr startDestination 0x0
+int attr targetPackage 0x0
 int attr ttcIndex 0x0
+int attr uri 0x0
 int color notification_action_color_filter 0x0
 int color notification_icon_bg_color 0x0
 int color ripple_material_light 0x0
@@ -92,12 +118,15 @@ int id blocking 0x0
 int id chronometer 0x0
 int id dialog_button 0x0
 int id forever 0x0
+int id fragment_container_view_tag 0x0
 int id icon 0x0
 int id icon_group 0x0
 int id info 0x0
 int id italic 0x0
 int id line1 0x0
 int id line3 0x0
+int id nav_controller_view_tag 0x0
+int id nav_host_fragment_container 0x0
 int id normal 0x0
 int id notification_background 0x0
 int id notification_main_column 0x0
@@ -116,6 +145,7 @@ int id text 0x0
 int id text2 0x0
 int id time 0x0
 int id title 0x0
+int id visible_removing_fragment_view_tag 0x0
 int integer status_bar_notification_info_maxnum 0x0
 int layout custom_dialog 0x0
 int layout notification_action 0x0
@@ -132,10 +162,18 @@ int style TextAppearance_Compat_Notification_Time 0x0
 int style TextAppearance_Compat_Notification_Title 0x0
 int style Widget_Compat_NotificationActionContainer 0x0
 int style Widget_Compat_NotificationActionText 0x0
+int[] styleable ActivityNavigator { 0x0, 0x1010003, 0x0, 0x0, 0x0 }
+int styleable ActivityNavigator_action 0
+int styleable ActivityNavigator_android_name 1
+int styleable ActivityNavigator_data 2
+int styleable ActivityNavigator_dataPattern 3
+int styleable ActivityNavigator_targetPackage 4
 int[] styleable ColorStateListItem { 0x0, 0x101031f, 0x10101a5 }
 int styleable ColorStateListItem_alpha 0
 int styleable ColorStateListItem_android_alpha 1
 int styleable ColorStateListItem_android_color 2
+int[] styleable DialogFragmentNavigator { 0x1010003 }
+int styleable DialogFragmentNavigator_android_name 0
 int[] styleable FontFamily { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 }
 int styleable FontFamily_fontProviderAuthority 0
 int styleable FontFamily_fontProviderCerts 1
@@ -154,6 +192,15 @@ int styleable FontFamilyFont_fontStyle 6
 int styleable FontFamilyFont_fontVariationSettings 7
 int styleable FontFamilyFont_fontWeight 8
 int styleable FontFamilyFont_ttcIndex 9
+int[] styleable Fragment { 0x10100d0, 0x1010003, 0x10100d1 }
+int styleable Fragment_android_id 0
+int styleable Fragment_android_name 1
+int styleable Fragment_android_tag 2
+int[] styleable FragmentContainerView { 0x1010003, 0x10100d1 }
+int styleable FragmentContainerView_android_name 0
+int styleable FragmentContainerView_android_tag 1
+int[] styleable FragmentNavigator { 0x1010003 }
+int styleable FragmentNavigator_android_name 0
 int[] styleable GradientColor { 0x101020b, 0x10101a2, 0x10101a3, 0x101019e, 0x1010512, 0x1010513, 0x10101a4, 0x101019d, 0x1010510, 0x1010511, 0x1010201, 0x10101a1 }
 int styleable GradientColor_android_centerColor 0
 int styleable GradientColor_android_centerX 1
@@ -170,5 +217,34 @@ int styleable GradientColor_android_type 11
 int[] styleable GradientColorItem { 0x10101a5, 0x1010514 }
 int styleable GradientColorItem_android_color 0
 int styleable GradientColorItem_android_offset 1
-int[] styleable SwipeRefreshLayout { 0x0 }
-int styleable SwipeRefreshLayout_swipeRefreshLayoutProgressSpinnerBackgroundColor 0
+int[] styleable NavAction { 0x10100d0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 }
+int styleable NavAction_android_id 0
+int styleable NavAction_destination 1
+int styleable NavAction_enterAnim 2
+int styleable NavAction_exitAnim 3
+int styleable NavAction_launchSingleTop 4
+int styleable NavAction_popEnterAnim 5
+int styleable NavAction_popExitAnim 6
+int styleable NavAction_popUpTo 7
+int styleable NavAction_popUpToInclusive 8
+int[] styleable NavArgument { 0x10101ed, 0x1010003, 0x0, 0x0 }
+int styleable NavArgument_android_defaultValue 0
+int styleable NavArgument_android_name 1
+int styleable NavArgument_argType 2
+int styleable NavArgument_nullable 3
+int[] styleable NavDeepLink { 0x0, 0x10104ee, 0x0, 0x0 }
+int styleable NavDeepLink_action 0
+int styleable NavDeepLink_android_autoVerify 1
+int styleable NavDeepLink_mimeType 2
+int styleable NavDeepLink_uri 3
+int[] styleable NavGraphNavigator { 0x0 }
+int styleable NavGraphNavigator_startDestination 0
+int[] styleable NavHost { 0x0 }
+int styleable NavHost_navGraph 0
+int[] styleable NavHostFragment { 0x0 }
+int styleable NavHostFragment_defaultNavHost 0
+int[] styleable NavInclude { 0x0 }
+int styleable NavInclude_graph 0
+int[] styleable Navigator { 0x10100d0, 0x1010001 }
+int styleable Navigator_android_id 0
+int styleable Navigator_android_label 1
