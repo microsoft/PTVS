@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "lcjoxd7rhatMmu31qDvjXd9tMlz0Fn4Aze2Mlpi328k=",
+  "Hash": "DGqT0vYxMOMAZJveJRY/dgr75Tz68NYKnvhkBDbj0YQ=",
   "Source": "MauiApp1",
   "BasePath": "/",
   "Mode": "Root",
@@ -17,10 +17,10 @@
   ],
   "Assets": [
     {
-      "Identity": "C:\\Users\\peezo\\source\\repos\\PeezoSlug\\PTVS\\MauiApp1\\obj\\ARM64\\Debug\\net6.0-android\\scopedcss\\bundle\\MauiApp1.styles.css",
+      "Identity": "C:\\Users\\peezo\\source\\repos\\PeezoSlug\\PTVS\\MauiApp1\\obj\\Debug\\net6.0-android\\scopedcss\\bundle\\MauiApp1.styles.css",
       "SourceId": "MauiApp1",
       "SourceType": "Computed",
-      "ContentRoot": "C:\\Users\\peezo\\source\\repos\\PeezoSlug\\PTVS\\MauiApp1\\obj\\ARM64\\Debug\\net6.0-android\\scopedcss\\bundle\\",
+      "ContentRoot": "C:\\Users\\peezo\\source\\repos\\PeezoSlug\\PTVS\\MauiApp1\\obj\\Debug\\net6.0-android\\scopedcss\\bundle\\",
       "BasePath": "/",
       "RelativePath": "MauiApp1.styles.css",
       "AssetKind": "All",
@@ -31,13 +31,13 @@
       "AssetTraitValue": "ApplicationBundle",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "C:\\Users\\peezo\\source\\repos\\PeezoSlug\\PTVS\\MauiApp1\\obj\\ARM64\\Debug\\net6.0-android\\scopedcss\\bundle\\MauiApp1.styles.css"
+      "OriginalItemSpec": "C:\\Users\\peezo\\source\\repos\\PeezoSlug\\PTVS\\MauiApp1\\obj\\Debug\\net6.0-android\\scopedcss\\bundle\\MauiApp1.styles.css"
     },
     {
-      "Identity": "C:\\Users\\peezo\\source\\repos\\PeezoSlug\\PTVS\\MauiApp1\\obj\\ARM64\\Debug\\net6.0-android\\scopedcss\\projectbundle\\MauiApp1.bundle.scp.css",
+      "Identity": "C:\\Users\\peezo\\source\\repos\\PeezoSlug\\PTVS\\MauiApp1\\obj\\Debug\\net6.0-android\\scopedcss\\projectbundle\\MauiApp1.bundle.scp.css",
       "SourceId": "MauiApp1",
       "SourceType": "Computed",
-      "ContentRoot": "C:\\Users\\peezo\\source\\repos\\PeezoSlug\\PTVS\\MauiApp1\\obj\\ARM64\\Debug\\net6.0-android\\scopedcss\\projectbundle\\",
+      "ContentRoot": "C:\\Users\\peezo\\source\\repos\\PeezoSlug\\PTVS\\MauiApp1\\obj\\Debug\\net6.0-android\\scopedcss\\projectbundle\\",
       "BasePath": "/",
       "RelativePath": "MauiApp1.bundle.scp.css",
       "AssetKind": "All",
@@ -48,7 +48,7 @@
       "AssetTraitValue": "ProjectBundle",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "C:\\Users\\peezo\\source\\repos\\PeezoSlug\\PTVS\\MauiApp1\\obj\\ARM64\\Debug\\net6.0-android\\scopedcss\\projectbundle\\MauiApp1.bundle.scp.css"
+      "OriginalItemSpec": "C:\\Users\\peezo\\source\\repos\\PeezoSlug\\PTVS\\MauiApp1\\obj\\Debug\\net6.0-android\\scopedcss\\projectbundle\\MauiApp1.bundle.scp.css"
     },
     {
       "Identity": "C:\\Users\\peezo\\source\\repos\\PeezoSlug\\PTVS\\MauiApp1\\wwwroot\\css\\app.css",
