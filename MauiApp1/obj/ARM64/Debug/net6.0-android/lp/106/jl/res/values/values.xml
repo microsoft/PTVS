@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="nav_controller_view_tag" type="id"/>
+    <declare-styleable name="ActivityNavigator">
+        <attr name="android:name"/>
+        <attr format="string" name="action"/>
+        <attr format="string" name="data"/>
+        <attr format="string" name="dataPattern"/>
+        <attr format="string" name="targetPackage"/>
+    </declare-styleable>
+    <declare-styleable name="NavHost">
+        <attr format="reference" name="navGraph"/>
+    </declare-styleable>
+    <declare-styleable name="NavInclude">
+        <attr format="reference" name="graph"/>
+    </declare-styleable>
+</resources>
