@@ -1,0 +1,38 @@
+{
+  "runtimeOptions": {
+    "tfm": "net6.0",
+    "frameworks": [
+      {
+        "name": "Microsoft.NETCore.App",
+        "version": "6.0.0"
+      },
+      {
+        "name": "Microsoft.Android",
+        "version": ""
+      },
+      {
+        "name": "Microsoft.Maui.Core",
+        "version": "**FromWorkload**"
+      },
+      {
+        "name": "Microsoft.Maui.Controls",
+        "version": "**FromWorkload**"
+      },
+      {
+        "name": "Microsoft.Maui.Essentials",
+        "version": "**FromWorkload**"
+      }
+    ],
+    "configProperties": {
+      "System.AggressiveAttributeTrimming": true,
+      "System.Diagnostics.Tracing.EventSource.IsSupported": false,
+      "System.Net.Http.EnableActivityPropagation": false,
+      "System.Net.Http.UseNativeHttpHandler": true,
+      "System.Reflection.NullabilityInfoContext.IsSupported": false,
+      "System.Runtime.InteropServices.BuiltInComInterop.IsSupported": false,
+      "System.Runtime.Serialization.EnableUnsafeBinaryFormatterSerialization": false,
+      "System.StartupHookProvider.IsSupported": false,
+      "System.Text.Encoding.EnableUnsafeUTF7Encoding": false
+    }
+  }
+}

@@ -1,0 +1,3 @@
+__XA_PACKAGE_NAMING_POLICY__=LowercaseCrc64
+mono.enable_assembly_preload=0
+DOTNET_MODIFIABLE_ASSEMBLIES=Debug
