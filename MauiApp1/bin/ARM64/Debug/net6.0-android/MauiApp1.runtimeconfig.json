@@ -4,11 +4,11 @@
     "frameworks": [
       {
         "name": "Microsoft.NETCore.App",
-        "version": "6.0.0"
+        "version": "6.0.2-mauipre.1.22102.15"
       },
       {
         "name": "Microsoft.Android",
-        "version": ""
+        "version": "**FromWorkload**"
       },
       {
         "name": "Microsoft.Maui.Core",
