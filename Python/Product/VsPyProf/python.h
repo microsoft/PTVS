@@ -801,7 +801,7 @@ struct _PyErr_StackItem {
 };
 
 // 3.7 - 3.9
-class PyThreadState_37 : public PyThreadState {
+class PyThreadState_37_39 : public PyThreadState {
 public:
     PyThreadState * prev;
     PyThreadState *next;
