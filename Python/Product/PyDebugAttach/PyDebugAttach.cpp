@@ -657,8 +657,8 @@ DWORD GetPythonThreadId(PythonVersion version, PyThreadState* curThread) {
         threadId = (DWORD)((PyThreadState_30_33*)curThread)->thread_id;
     } else if (PyThreadState_34_36::IsFor(version)) {
         threadId = (DWORD)((PyThreadState_34_36*)curThread)->thread_id;
-    } else if (PyThreadState_37::IsFor(version)) {
-        threadId = (DWORD)((PyThreadState_37*)curThread)->thread_id;
+    } else if (PyThreadState_37_39::IsFor(version)) {
+        threadId = (DWORD)((PyThreadState_37_39*)curThread)->thread_id;
     } else if (PyThreadState_310::IsFor(version)) {
         threadId = (DWORD)((PyThreadState_310*)curThread)->thread_id;
     }
@@ -1103,8 +1103,8 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                             frame = ((PyThreadState_30_33*)curThread)->frame;
                         } else if (PyThreadState_34_36::IsFor(version)) {
                             frame = ((PyThreadState_34_36*)curThread)->frame;
-                        } else if (PyThreadState_37::IsFor(version)) {
-                            frame = ((PyThreadState_37*)curThread)->frame;
+                        } else if (PyThreadState_37_39::IsFor(version)) {
+                            frame = ((PyThreadState_37_39*)curThread)->frame;
                         } else if (PyThreadState_310::IsFor(version)) {
                             frame = ((PyThreadState_310*)curThread)->frame;
                         } else {
@@ -1330,8 +1330,8 @@ int TraceGeneral(int interpreterId, PyObject *obj, PyFrameObject *frame, int wha
             ((PyThreadState_30_33*)curThread)->c_tracefunc(((PyThreadState_30_33*)curThread)->c_traceobj, frame, what, arg);
         } else if (PyThreadState_34_36::IsFor(version)) {
             ((PyThreadState_34_36*)curThread)->c_tracefunc(((PyThreadState_34_36*)curThread)->c_traceobj, frame, what, arg);
-        } else if (PyThreadState_37::IsFor(version)) {
-            ((PyThreadState_37*)curThread)->c_tracefunc(((PyThreadState_37*)curThread)->c_traceobj, frame, what, arg);
+        } else if (PyThreadState_37_39::IsFor(version)) {
+            ((PyThreadState_37_39*)curThread)->c_tracefunc(((PyThreadState_37_39*)curThread)->c_traceobj, frame, what, arg);
         } else if (PyThreadState_310::IsFor(version)) {
             ((PyThreadState_310*)curThread)->c_tracefunc(((PyThreadState_310*)curThread)->c_traceobj, frame, what, arg);
         }
@@ -1379,8 +1379,8 @@ void SetInitialTraceFunc(DWORD interpreterId, PyThreadState *thread) {
         gilstate_counter = ((PyThreadState_30_33*)thread)->gilstate_counter;
     } else if (PyThreadState_34_36::IsFor(version)) {
         gilstate_counter = ((PyThreadState_34_36*)thread)->gilstate_counter;
-    } else if (PyThreadState_37::IsFor(version)) {
-        gilstate_counter = ((PyThreadState_37*)thread)->gilstate_counter;
+    } else if (PyThreadState_37_39::IsFor(version)) {
+        gilstate_counter = ((PyThreadState_37_39*)thread)->gilstate_counter;
     } else if (PyThreadState_310::IsFor(version)) {
         gilstate_counter = ((PyThreadState_310*)thread)->gilstate_counter;
     }
