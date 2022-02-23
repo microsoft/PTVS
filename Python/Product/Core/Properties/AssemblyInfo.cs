@@ -56,7 +56,7 @@ using Microsoft.VisualStudio.Shell;
 
 internal static class ParserNuGetPackageInfo {
     // important: keep in sync with Build\17.0\package.config
-    public const string Version = "0.646.0";
+    public const string Version = "0.655.0";
     public const string Culture = "neutral";
     public const string PublicKeyToken = "b03f5f7f11d50a3a";
 }
