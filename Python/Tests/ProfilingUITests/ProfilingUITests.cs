@@ -1150,6 +1150,24 @@ namespace ProfilingUITests {
             );
         }
 
+        public void BuiltinsProfilePython310(PythonVisualStudioApp app, ProfileCleanup cleanup, DotNotWaitOnExit optionSetter) {
+            BuiltinsProfile(
+                app,
+                PythonPaths.Python310,
+                new[] { "BuiltinsProfile.f", "str.startswith", "isinstance", "marshal.dumps", "array.array.tostring" },
+                new[] { "compile", "exec", "execfile", "_io.TextIOWrapper.read" }
+            );
+        }
+
+        public void BuiltinsProfilePython310x64(PythonVisualStudioApp app, ProfileCleanup cleanup, DotNotWaitOnExit optionSetter) {
+            BuiltinsProfile(
+                app,
+                PythonPaths.Python310_x64,
+                new[] { "BuiltinsProfile.f", "str.startswith", "isinstance", "marshal.dumps", "array.array.tostring" },
+                new[] { "compile", "exec", "execfile", "_io.TextIOWrapper.read" }
+            );
+        }
+
         public void LaunchExecutableUsingInterpreterGuid(PythonVisualStudioApp app, ProfileCleanup cleanup, DotNotWaitOnExit optionSetter) {
             PythonPaths.Python27.AssertInstalled();
 
