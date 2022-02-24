@@ -321,7 +321,7 @@ namespace ProfilingUITestsRunner {
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void BuiltinsProfilePython310x64() {
-            _vs.RunTest(nameof(PUIT.BuiltinsProfilePython310x64)); 
+            _vs.RunTest(nameof(PUIT.BuiltinsProfilePython310x64));  
         }
 
         [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
