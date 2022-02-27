@@ -1,0 +1,13 @@
+C:\Users\peezo\source\repos\PeezoSlug\PTVS\Android1\Android1.Packaging\ARM\Debug\Android1.apk.recipe
+C:\Users\peezo\source\repos\PeezoSlug\PTVS\Android1\Android1.Packaging\ARM\Debug\Android1.apk.recipe.merged
+C:\Users\peezo\source\repos\PeezoSlug\PTVS\Android1\Android1.Packaging\ARM\Debug\Package\libs\armeabi-v7a\libAndroid1.so
+C:\Users\peezo\source\repos\PeezoSlug\PTVS\Android1\Android1.Packaging\ARM\Debug\Package\libs\armeabi-v7a\gdbserver
+C:\Users\peezo\source\repos\PeezoSlug\PTVS\Android1\Android1.Packaging\ARM\Debug\Package\libs\armeabi-v7a\libc++_static.a
+C:\Users\peezo\source\repos\PeezoSlug\PTVS\Android1\Android1.Packaging\ARM\Debug\Package\libs\armeabi-v7a\libc++abi.a
+C:\Users\peezo\source\repos\PeezoSlug\PTVS\Android1\Android1.Packaging\ARM\Debug\Package\res\values\strings.xml
+C:\Users\peezo\source\repos\PeezoSlug\PTVS\Android1\Android1.Packaging\ARM\Debug\Package\AndroidManifest.xml
+C:\Users\peezo\source\repos\PeezoSlug\PTVS\Android1\Android1.Packaging\ARM\Debug\Package\project.properties
+C:\Users\peezo\source\repos\PeezoSlug\PTVS\Android1\Android1.Packaging\ARM\Debug\Package\build.xml
+C:\Users\peezo\source\repos\PeezoSlug\PTVS\Android1\Android1.Packaging\ARM\Debug\FileStringReplace.incremental
+C:\Users\peezo\source\repos\PeezoSlug\PTVS\Android1\Android1.Packaging\ARM\Debug\Android1.apk
+C:\Users\peezo\source\repos\PeezoSlug\PTVS\Android1\Android1.Packaging\ARM\Debug\Android1.lastsuccessfuldeploy

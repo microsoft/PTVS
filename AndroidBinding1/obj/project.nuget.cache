@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "dgSpecHash": "hxgDHGg1wYHDeeQK4//wOcVlmcuv3hHwRQz7AAfrHvyXGclhpd88rOPpp0Xmip6QJkWo0Nwe7m27Vsca49S4pA==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\peezo\\source\\repos\\PeezoSlug\\PTVS\\AndroidBinding1\\AndroidBinding1.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\peezo\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\6.0.0\\microsoft.aspnetcore.app.ref.6.0.0.nupkg.sha512",
+    "C:\\Users\\peezo\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\6.0.0\\microsoft.windowsdesktop.app.ref.6.0.0.nupkg.sha512",
+    "C:\\Users\\peezo\\.nuget\\packages\\microsoft.android.ref.31\\31.0.101-preview.11.117\\microsoft.android.ref.31.31.0.101-preview.11.117.nupkg.sha512",
+    "C:\\Users\\peezo\\.nuget\\packages\\microsoft.netcore.app.ref\\6.0.0\\microsoft.netcore.app.ref.6.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}

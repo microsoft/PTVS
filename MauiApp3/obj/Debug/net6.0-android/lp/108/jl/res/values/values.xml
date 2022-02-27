@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="SwipeRefreshLayout">
+        <!-- Background color for SwipeRefreshLayout progress spinner. -->
+        <attr format="color" name="swipeRefreshLayoutProgressSpinnerBackgroundColor"/>
+    </declare-styleable>
+</resources>

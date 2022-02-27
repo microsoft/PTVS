@@ -1,0 +1,1 @@
+xml/xamarin_essentials_fileprovider_file_paths.xml;xml/xamarin_essentials_fileprovider_file_paths.xml

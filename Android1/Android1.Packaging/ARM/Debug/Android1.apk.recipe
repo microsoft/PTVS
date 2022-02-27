@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<project>
+  <SOLibPaths />
+  <AndroidLibPaths />
+  <OObjPaths />
+  <Configuration />
+  <Platform />
+  <AndroidArchitecture />
+  <!--links to other recipe files-->
+  <RecipeFiles>C:\Users\peezo\source\repos\PeezoSlug\PTVS\Android1\ARM\Debug\libAndroid1.so.recipe</RecipeFiles>
+</project>

@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<project>
+  <SOLibPaths>C:\Users\peezo\source\repos\PeezoSlug\PTVS\Android1\ARM\Debug\libAndroid1.so;C:\Microsoft\AndroidNDK\android-ndk-r21e\prebuilt\android-arm\gdbserver\gdbserver;C:\Microsoft\AndroidNDK\android-ndk-r21e\sources\cxx-stl\llvm-libc++\libs\armeabi-v7a\libc++_static.a;C:\Microsoft\AndroidNDK\android-ndk-r21e\sources\cxx-stl\llvm-libc++\libs\armeabi-v7a\libc++abi.a</SOLibPaths>
+  <AndroidLibPaths></AndroidLibPaths>
+  <OObjPaths>C:\Users\peezo\source\repos\PeezoSlug\PTVS\Android1\Android1.NativeActivity\ARM\Debug</OObjPaths>
+  <Configuration>Debug</Configuration>
+  <Platform>ARM</Platform>
+  <AndroidArchitecture>armeabi-v7a</AndroidArchitecture>
+</project>

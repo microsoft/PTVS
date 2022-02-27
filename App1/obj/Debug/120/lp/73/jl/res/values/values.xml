@@ -1,0 +1,1197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:ns1="http://schemas.android.com/tools">
+    <attr format="reference" name="bottomAppBarStyle"/>
+    <attr format="reference" name="bottomNavigationStyle"/>
+    <attr format="reference" name="bottomSheetDialogTheme"/>
+    <attr format="reference" name="bottomSheetStyle"/>
+    <attr format="reference" name="chipGroupStyle"/>
+    <attr format="reference" name="chipStandaloneStyle"/>
+    <attr format="reference" name="chipStyle"/>
+    <attr format="color" name="colorSecondary"/>
+    <attr name="floatingActionButtonStyle"/>
+    <attr format="reference" name="hideMotionSpec"/>
+    <attr format="reference" name="materialButtonStyle"/>
+    <attr format="reference" name="materialCardViewStyle"/>
+    <attr format="reference" name="navigationViewStyle"/>
+    <attr format="color" name="rippleColor"/>
+    <attr format="color|reference" name="scrimBackground"/>
+    <attr format="reference" name="showMotionSpec"/>
+    <attr format="color" name="strokeColor"/>
+    <attr format="dimension" name="strokeWidth"/>
+    <attr format="reference" name="tabStyle"/>
+    <attr format="reference" name="textAppearanceBody1"/>
+    <attr format="reference" name="textAppearanceBody2"/>
+    <attr format="reference" name="textAppearanceButton"/>
+    <attr format="reference" name="textAppearanceCaption"/>
+    <attr format="reference" name="textAppearanceHeadline1"/>
+    <attr format="reference" name="textAppearanceHeadline2"/>
+    <attr format="reference" name="textAppearanceHeadline3"/>
+    <attr format="reference" name="textAppearanceHeadline4"/>
+    <attr format="reference" name="textAppearanceHeadline5"/>
+    <attr format="reference" name="textAppearanceHeadline6"/>
+    <attr format="reference" name="textAppearanceOverline"/>
+    <attr format="reference" name="textAppearanceSubtitle1"/>
+    <attr format="reference" name="textAppearanceSubtitle2"/>
+    <attr format="reference" name="textInputStyle"/>
+    <bool name="mtrl_btn_textappearance_all_caps">true</bool>
+    <color name="design_bottom_navigation_shadow_color">#14000000</color>
+    <color name="design_default_color_primary">#3F51B5</color>
+    <color name="design_default_color_primary_dark">#303F9F</color>
+    <color name="design_fab_shadow_end_color">@android:color/transparent</color>
+    <color name="design_fab_shadow_mid_color">#14000000</color>
+    <color name="design_fab_shadow_start_color">#44000000</color>
+    <color name="design_fab_stroke_end_inner_color">#0A000000</color>
+    <color name="design_fab_stroke_end_outer_color">#0F000000</color>
+    <color name="design_fab_stroke_top_inner_color">#1AFFFFFF</color>
+    <color name="design_fab_stroke_top_outer_color">#2EFFFFFF</color>
+    <color name="design_snackbar_background_color">#323232</color>
+    <color name="mtrl_btn_bg_color_disabled">#1F000000</color>
+    <color name="mtrl_btn_text_color_disabled">#61000000</color>
+    <color name="mtrl_btn_transparent_bg_color">#00ffffff</color>
+    <color name="mtrl_scrim_color">#52000000</color>
+    <color name="mtrl_textinput_default_box_stroke_color">#6B000000</color>
+    <color name="mtrl_textinput_disabled_color">#1F000000</color>
+    <color name="mtrl_textinput_filled_box_default_background_color">#0A000000</color>
+    <color name="mtrl_textinput_hovered_box_stroke_color">#DE000000</color>
+    <declare-styleable name="AppBarLayout"><attr name="elevation"/><attr name="android:background"/><attr format="boolean" name="expanded"/><attr name="android:keyboardNavigationCluster"/><attr name="android:touchscreenBlocksFocus"/><attr format="boolean" name="liftOnScroll"/></declare-styleable>
+    <declare-styleable name="AppBarLayoutStates"><attr format="boolean" name="state_collapsed"/><attr format="boolean" name="state_collapsible"/><attr format="boolean" name="state_lifted"/><attr format="boolean" name="state_liftable"/></declare-styleable>
+    <declare-styleable name="AppBarLayout_Layout"><attr name="layout_scrollFlags">
+      
+      <flag name="scroll" value="0x1"/>
+
+      
+      <flag name="exitUntilCollapsed" value="0x2"/>
+
+      
+      <flag name="enterAlways" value="0x4"/>
+
+      
+      <flag name="enterAlwaysCollapsed" value="0x8"/>
+
+      
+      <flag name="snap" value="0x10"/>
+
+      
+      <flag name="snapMargins" value="0x20"/>
+    </attr><attr format="reference" name="layout_scrollInterpolator"/></declare-styleable>
+    <declare-styleable name="BottomAppBar"><attr name="backgroundTint"/><attr name="fabAlignmentMode">
+      
+      <enum name="center" value="0"/>
+      
+      <enum name="end" value="1"/>
+    </attr><attr format="dimension" name="fabCradleMargin"/><attr format="dimension" name="fabCradleRoundedCornerRadius"/><attr format="dimension" name="fabCradleVerticalOffset"/><attr format="boolean" name="hideOnScroll"/></declare-styleable>
+    <declare-styleable name="BottomNavigationView"><attr name="menu"/><attr name="labelVisibilityMode">
+      
+      <enum name="auto" value="-1"/>
+      
+      <enum name="selected" value="0"/>
+      
+      <enum name="labeled" value="1"/>
+      
+      <enum name="unlabeled" value="2"/>
+    </attr><attr name="itemBackground"/><attr format="dimension" name="itemIconSize"/><attr name="itemIconTint"/><attr format="reference" name="itemTextAppearanceInactive"/><attr format="reference" name="itemTextAppearanceActive"/><attr name="itemTextColor"/><attr format="boolean" name="itemHorizontalTranslationEnabled"/><attr name="elevation"/></declare-styleable>
+    <declare-styleable name="BottomSheetBehavior_Layout"><attr format="dimension" name="behavior_peekHeight">
+      
+      <enum name="auto" value="-1"/>
+    </attr><attr format="boolean" name="behavior_hideable"/><attr format="boolean" name="behavior_skipCollapsed"/><attr format="boolean" name="behavior_fitToContents"/></declare-styleable>
+    <declare-styleable name="Chip"><attr format="color" name="chipBackgroundColor"/><attr format="dimension" name="chipMinHeight"/><attr format="dimension" name="chipCornerRadius"/><attr format="color" name="chipStrokeColor"/><attr format="dimension" name="chipStrokeWidth"/><attr name="rippleColor"/><attr name="android:text"/><attr name="android:textAppearance"/><attr name="android:ellipsize"/><attr name="android:maxWidth"/><attr format="boolean" name="chipIconVisible"/><attr format="boolean" name="chipIconEnabled"/><attr format="reference" name="chipIcon"/><attr format="color" name="chipIconTint"/><attr format="dimension" name="chipIconSize"/><attr format="boolean" name="closeIconVisible"/><attr format="boolean" name="closeIconEnabled"/><attr format="reference" name="closeIcon"/><attr format="color" name="closeIconTint"/><attr format="dimension" name="closeIconSize"/><attr name="android:checkable"/><attr format="boolean" name="checkedIconVisible"/><attr format="boolean" name="checkedIconEnabled"/><attr format="reference" name="checkedIcon"/><attr name="showMotionSpec"/><attr name="hideMotionSpec"/><attr format="dimension" name="chipStartPadding"/><attr format="dimension" name="iconStartPadding"/><attr format="dimension" name="iconEndPadding"/><attr format="dimension" name="textStartPadding"/><attr format="dimension" name="textEndPadding"/><attr format="dimension" name="closeIconStartPadding"/><attr format="dimension" name="closeIconEndPadding"/><attr format="dimension" name="chipEndPadding"/></declare-styleable>
+    <declare-styleable name="ChipGroup"><attr format="dimension" name="chipSpacing"/><attr format="dimension" name="chipSpacingHorizontal"/><attr format="dimension" name="chipSpacingVertical"/><attr format="boolean" name="singleLine"/><attr format="boolean" name="singleSelection"/><attr format="reference" name="checkedChip"/></declare-styleable>
+    <declare-styleable name="CollapsingToolbarLayout"><attr format="dimension" name="expandedTitleMargin"/><attr format="dimension" name="expandedTitleMarginStart"/><attr format="dimension" name="expandedTitleMarginTop"/><attr format="dimension" name="expandedTitleMarginEnd"/><attr format="dimension" name="expandedTitleMarginBottom"/><attr format="reference" name="expandedTitleTextAppearance"/><attr format="reference" name="collapsedTitleTextAppearance"/><attr format="color" name="contentScrim"/><attr format="color" name="statusBarScrim"/><attr format="reference" name="toolbarId"/><attr format="dimension" name="scrimVisibleHeightTrigger"/><attr format="integer" name="scrimAnimationDuration"/><attr name="collapsedTitleGravity">
+      
+      <flag name="top" value="0x30"/>
+      
+      <flag name="bottom" value="0x50"/>
+      
+      <flag name="left" value="0x03"/>
+      
+      <flag name="right" value="0x05"/>
+      
+      <flag name="center_vertical" value="0x10"/>
+      
+      <flag name="fill_vertical" value="0x70"/>
+      
+      <flag name="center_horizontal" value="0x01"/>
+      
+      <flag name="center" value="0x11"/>
+      
+      <flag name="start" value="0x00800003"/>
+      
+      <flag name="end" value="0x00800005"/>
+    </attr><attr name="expandedTitleGravity">
+      
+      <flag name="top" value="0x30"/>
+      
+      <flag name="bottom" value="0x50"/>
+      
+      <flag name="left" value="0x03"/>
+      
+      <flag name="right" value="0x05"/>
+      
+      <flag name="center_vertical" value="0x10"/>
+      
+      <flag name="fill_vertical" value="0x70"/>
+      
+      <flag name="center_horizontal" value="0x01"/>
+      
+      <flag name="center" value="0x11"/>
+      
+      <flag name="start" value="0x00800003"/>
+      
+      <flag name="end" value="0x00800005"/>
+    </attr><attr format="boolean" name="titleEnabled"/><attr name="title"/></declare-styleable>
+    <declare-styleable name="CollapsingToolbarLayout_Layout"><attr name="layout_collapseMode">
+      
+      <enum name="none" value="0"/>
+      
+      <enum name="pin" value="1"/>
+      
+      <enum name="parallax" value="2"/>
+    </attr><attr format="float" name="layout_collapseParallaxMultiplier"/></declare-styleable>
+    <declare-styleable name="DesignTheme"><attr name="bottomSheetDialogTheme"/><attr name="bottomSheetStyle"/></declare-styleable>
+    <declare-styleable name="FloatingActionButton"><attr name="backgroundTint"/><attr name="backgroundTintMode"/><attr name="rippleColor"/><attr name="fabSize">
+      
+      <enum name="auto" value="-1"/>
+      
+      <enum name="normal" value="0"/>
+      
+      <enum name="mini" value="1"/>
+    </attr><attr format="dimension" name="fabCustomSize"/><attr name="elevation"/><attr format="dimension" name="hoveredFocusedTranslationZ"/><attr format="dimension" name="pressedTranslationZ"/><attr format="dimension" name="borderWidth"/><attr format="boolean" name="useCompatPadding"/><attr format="dimension" name="maxImageSize"/><attr name="showMotionSpec"/><attr name="hideMotionSpec"/></declare-styleable>
+    <declare-styleable name="FloatingActionButton_Behavior_Layout"><attr format="boolean" name="behavior_autoHide"/></declare-styleable>
+    <declare-styleable name="FlowLayout"><attr format="dimension" name="itemSpacing"/><attr format="dimension" name="lineSpacing"/></declare-styleable>
+    <declare-styleable name="ForegroundLinearLayout"><attr name="android:foreground"/><attr name="android:foregroundGravity"/><attr format="boolean" name="foregroundInsidePadding"/></declare-styleable>
+    <declare-styleable name="MaterialButton"><attr name="android:insetLeft"/><attr name="android:insetRight"/><attr name="android:insetTop"/><attr name="android:insetBottom"/><attr name="backgroundTint"/><attr name="backgroundTintMode"/><attr format="reference" name="icon"/><attr format="dimension" name="iconSize"/><attr format="dimension" name="iconPadding"/><attr name="iconGravity">
+      
+      <flag name="start" value="0x1"/>
+      
+      <flag name="textStart" value="0x2"/>
+    </attr><attr format="color" name="iconTint"/><attr name="iconTintMode"/><attr name="strokeColor"/><attr name="strokeWidth"/><attr format="dimension" name="cornerRadius"/><attr name="rippleColor"/></declare-styleable>
+    <declare-styleable name="MaterialCardView"><attr name="strokeColor"/><attr name="strokeWidth"/></declare-styleable>
+    <declare-styleable name="MaterialComponentsTheme"><attr name="colorAccent"/><attr name="colorPrimary"/><attr name="colorPrimaryDark"/><attr name="colorSecondary"/><attr name="scrimBackground"/><attr name="colorBackgroundFloating"/><attr name="bottomSheetDialogTheme"/><attr name="bottomSheetStyle"/><attr name="materialButtonStyle"/><attr name="chipGroupStyle"/><attr name="chipStyle"/><attr name="chipStandaloneStyle"/><attr name="editTextStyle"/><attr name="floatingActionButtonStyle"/><attr name="materialCardViewStyle"/><attr name="navigationViewStyle"/><attr name="tabStyle"/><attr name="textInputStyle"/><attr name="snackbarButtonStyle"/><attr name="textAppearanceHeadline1"/><attr name="textAppearanceHeadline2"/><attr name="textAppearanceHeadline3"/><attr name="textAppearanceHeadline4"/><attr name="textAppearanceHeadline5"/><attr name="textAppearanceHeadline6"/><attr name="textAppearanceSubtitle1"/><attr name="textAppearanceSubtitle2"/><attr name="textAppearanceBody1"/><attr name="textAppearanceBody2"/><attr name="textAppearanceCaption"/><attr name="textAppearanceButton"/><attr name="textAppearanceOverline"/></declare-styleable>
+    <declare-styleable name="NavigationView"><attr name="android:background"/><attr name="android:fitsSystemWindows"/><attr name="android:maxWidth"/><attr name="elevation"/><attr format="reference" name="menu"/><attr format="color" name="itemIconTint"/><attr format="color" name="itemTextColor"/><attr format="reference" name="itemBackground"/><attr format="reference" name="itemTextAppearance"/><attr format="reference" name="headerLayout"/><attr format="dimension" name="itemHorizontalPadding"/><attr format="dimension" name="itemIconPadding"/></declare-styleable>
+    <declare-styleable name="ScrimInsetsFrameLayout"><attr format="color|reference" name="insetForeground"/></declare-styleable>
+    <declare-styleable name="ScrollingViewBehavior_Layout"><attr format="dimension" name="behavior_overlapTop"/></declare-styleable>
+    <declare-styleable name="Snackbar"><attr format="reference" name="snackbarStyle"/><attr format="reference" name="snackbarButtonStyle"/></declare-styleable>
+    <declare-styleable name="SnackbarLayout"><attr name="android:maxWidth"/><attr name="elevation"/><attr format="dimension" name="maxActionInlineWidth"/></declare-styleable>
+    <declare-styleable name="TabItem"><attr name="android:text"/><attr name="android:icon"/><attr name="android:layout"/></declare-styleable>
+    <declare-styleable name="TabLayout"><attr format="color" name="tabIndicatorColor"/><attr format="dimension" name="tabIndicatorHeight"/><attr format="dimension" name="tabContentStart"/><attr format="reference" name="tabBackground"/><attr format="reference" name="tabIndicator"/><attr name="tabIndicatorGravity">
+      
+      <enum name="bottom" value="0"/>
+      
+      <enum name="center" value="1"/>
+      
+      <enum name="top" value="2"/>
+      
+      <enum name="stretch" value="3"/>
+    </attr><attr format="integer" name="tabIndicatorAnimationDuration"/><attr format="boolean" name="tabIndicatorFullWidth"/><attr name="tabMode">
+      <enum name="scrollable" value="0"/>
+      <enum name="fixed" value="1"/>
+    </attr><attr name="tabGravity">
+      <enum name="fill" value="0"/>
+      <enum name="center" value="1"/>
+    </attr><attr format="boolean" name="tabInlineLabel"/><attr format="dimension" name="tabMinWidth"/><attr format="dimension" name="tabMaxWidth"/><attr format="reference" name="tabTextAppearance"/><attr format="color" name="tabTextColor"/><attr format="color" name="tabSelectedTextColor"/><attr format="dimension" name="tabPaddingStart"/><attr format="dimension" name="tabPaddingTop"/><attr format="dimension" name="tabPaddingEnd"/><attr format="dimension" name="tabPaddingBottom"/><attr format="dimension" name="tabPadding"/><attr format="color" name="tabIconTint"/><attr name="tabIconTintMode">
+      <enum name="src_over" value="3"/>
+      <enum name="src_in" value="5"/>
+      <enum name="src_atop" value="9"/>
+      <enum name="multiply" value="14"/>
+      <enum name="screen" value="15"/>
+      <enum name="add" value="16"/>
+    </attr><attr format="color" name="tabRippleColor"/><attr format="boolean" name="tabUnboundedRipple"/></declare-styleable>
+    <declare-styleable name="TextInputLayout"><attr name="android:textColorHint"/><attr name="android:hint"/><attr format="boolean" name="hintEnabled"/><attr format="boolean" name="hintAnimationEnabled"/><attr format="reference" name="hintTextAppearance"/><attr format="string" name="helperText"/><attr format="boolean" name="helperTextEnabled"/><attr format="reference" name="helperTextTextAppearance"/><attr format="boolean" name="errorEnabled"/><attr format="reference" name="errorTextAppearance"/><attr format="boolean" name="counterEnabled"/><attr format="integer" name="counterMaxLength"/><attr format="reference" name="counterTextAppearance"/><attr format="reference" name="counterOverflowTextAppearance"/><attr format="boolean" name="passwordToggleEnabled"/><attr format="reference" name="passwordToggleDrawable"/><attr format="string" name="passwordToggleContentDescription"/><attr format="color" name="passwordToggleTint"/><attr name="passwordToggleTintMode">
+      
+      <enum name="src_over" value="3"/>
+      
+      <enum name="src_in" value="5"/>
+      
+      <enum name="src_atop" value="9"/>
+      
+      <enum name="multiply" value="14"/>
+      
+      <enum name="screen" value="15"/>
+    </attr><attr name="boxBackgroundMode">
+      
+      <enum name="none" value="0"/>
+      
+      <enum name="filled" value="1"/>
+      
+      <enum name="outline" value="2"/>
+    </attr><attr format="dimension" name="boxCollapsedPaddingTop"/><attr format="dimension" name="boxCornerRadiusTopStart"/><attr format="dimension" name="boxCornerRadiusTopEnd"/><attr format="dimension" name="boxCornerRadiusBottomStart"/><attr format="dimension" name="boxCornerRadiusBottomEnd"/><attr format="color" name="boxStrokeColor"/><attr format="color" name="boxBackgroundColor"/><attr format="dimension" name="boxStrokeWidth"/></declare-styleable>
+    <declare-styleable name="ThemeEnforcement"><attr format="boolean" name="enforceMaterialTheme"/><attr format="boolean" name="enforceTextAppearance"/><attr name="android:textAppearance"/></declare-styleable>
+    <dimen name="design_appbar_elevation">4dp</dimen>
+    <dimen name="design_bottom_navigation_active_item_max_width">168dp</dimen>
+    <dimen name="design_bottom_navigation_active_item_min_width">96dp</dimen>
+    <dimen name="design_bottom_navigation_active_text_size">14sp</dimen>
+    <dimen name="design_bottom_navigation_elevation">8dp</dimen>
+    <dimen name="design_bottom_navigation_height">56dp</dimen>
+    <dimen name="design_bottom_navigation_icon_size">24dp</dimen>
+    <dimen name="design_bottom_navigation_item_max_width">96dp</dimen>
+    <dimen name="design_bottom_navigation_item_min_width">56dp</dimen>
+    <dimen name="design_bottom_navigation_margin">8dp</dimen>
+    <dimen name="design_bottom_navigation_shadow_height">1dp</dimen>
+    <dimen name="design_bottom_navigation_text_size">12sp</dimen>
+    <dimen name="design_bottom_sheet_modal_elevation">16dp</dimen>
+    <dimen name="design_bottom_sheet_peek_height_min">64dp</dimen>
+    <dimen name="design_fab_border_width">0.5dp</dimen>
+    <dimen name="design_fab_elevation">6dp</dimen>
+    <dimen name="design_fab_image_size">24dp</dimen>
+    <dimen name="design_fab_size_mini">40dp</dimen>
+    <dimen name="design_fab_size_normal">56dp</dimen>
+    <dimen name="design_fab_translation_z_hovered_focused">6dp</dimen>
+    <dimen name="design_fab_translation_z_pressed">6dp</dimen>
+    <dimen name="design_navigation_elevation">16dp</dimen>
+    <dimen name="design_navigation_icon_padding">32dp</dimen>
+    <dimen name="design_navigation_icon_size">24dp</dimen>
+    <dimen name="design_navigation_item_horizontal_padding">16dp</dimen>
+    <dimen name="design_navigation_item_icon_padding">32dp</dimen>
+    <dimen name="design_navigation_max_width">280dp</dimen>
+    <dimen name="design_navigation_padding_bottom">8dp</dimen>
+    <dimen name="design_navigation_separator_vertical_padding">8dp</dimen>
+    <dimen name="design_snackbar_action_inline_max_width">128dp</dimen>
+    <dimen name="design_snackbar_background_corner_radius">0dp</dimen>
+    <dimen name="design_snackbar_elevation">6dp</dimen>
+    <dimen name="design_snackbar_extra_spacing_horizontal">0dp</dimen>
+    <dimen name="design_snackbar_max_width">-1px</dimen>
+    <dimen name="design_snackbar_min_width">-1px</dimen>
+    <dimen name="design_snackbar_padding_horizontal">12dp</dimen>
+    <dimen name="design_snackbar_padding_vertical">14dp</dimen>
+    <dimen name="design_snackbar_padding_vertical_2lines">24dp</dimen>
+    <dimen name="design_snackbar_text_size">14sp</dimen>
+    <dimen name="design_tab_max_width">264dp</dimen>
+    <dimen name="design_tab_scrollable_min_width">72dp</dimen>
+    <dimen name="design_tab_text_size">14sp</dimen>
+    <dimen name="design_tab_text_size_2line">12sp</dimen>
+    <dimen name="design_textinput_caption_translate_y">5dp</dimen>
+    <dimen name="mtrl_bottomappbar_fabOffsetEndMode">60dp</dimen>
+    <dimen name="mtrl_bottomappbar_fab_cradle_margin">5dp</dimen>
+    <dimen name="mtrl_bottomappbar_fab_cradle_rounded_corner_radius">8dp</dimen>
+    <dimen name="mtrl_bottomappbar_fab_cradle_vertical_offset">0dp</dimen>
+    <dimen name="mtrl_bottomappbar_height">56dp</dimen>
+    <dimen name="mtrl_btn_corner_radius">4dp</dimen>
+    <dimen name="mtrl_btn_dialog_btn_min_width">64dp</dimen>
+    <dimen name="mtrl_btn_disabled_elevation">0dp</dimen>
+    <dimen name="mtrl_btn_disabled_z">0dp</dimen>
+    <dimen name="mtrl_btn_elevation">2dp</dimen>
+    <dimen name="mtrl_btn_focused_z">2dp</dimen>
+    <dimen name="mtrl_btn_hovered_z">2dp</dimen>
+    <dimen name="mtrl_btn_icon_btn_padding_left">12dp</dimen>
+    <dimen name="mtrl_btn_icon_padding">8dp</dimen>
+    <dimen name="mtrl_btn_inset">6dp</dimen>
+    <item format="float" name="mtrl_btn_letter_spacing" type="dimen">0.07</item>
+    <dimen name="mtrl_btn_padding_bottom">4dp</dimen>
+    <dimen name="mtrl_btn_padding_left">16dp</dimen>
+    <dimen name="mtrl_btn_padding_right">16dp</dimen>
+    <dimen name="mtrl_btn_padding_top">4dp</dimen>
+    <dimen name="mtrl_btn_pressed_z">6dp</dimen>
+    <dimen name="mtrl_btn_stroke_size">1dp</dimen>
+    <dimen name="mtrl_btn_text_btn_icon_padding">4dp</dimen>
+    <dimen name="mtrl_btn_text_btn_padding_left">8dp</dimen>
+    <dimen name="mtrl_btn_text_btn_padding_right">8dp</dimen>
+    <dimen name="mtrl_btn_text_size">14sp</dimen>
+    <dimen name="mtrl_btn_z">0dp</dimen>
+    <dimen name="mtrl_card_elevation">1dp</dimen>
+    <dimen name="mtrl_card_spacing">8dp</dimen>
+    <dimen name="mtrl_chip_pressed_translation_z">3dp</dimen>
+    <dimen name="mtrl_chip_text_size">14sp</dimen>
+    <dimen name="mtrl_fab_elevation">6dp</dimen>
+    <dimen name="mtrl_fab_translation_z_hovered_focused">2dp</dimen>
+    <dimen name="mtrl_fab_translation_z_pressed">6dp</dimen>
+    <dimen name="mtrl_navigation_elevation">0dp</dimen>
+    <dimen name="mtrl_navigation_item_horizontal_padding">22dp</dimen>
+    <dimen name="mtrl_navigation_item_icon_padding">14dp</dimen>
+    <dimen name="mtrl_snackbar_background_corner_radius">4dp</dimen>
+    <dimen name="mtrl_snackbar_margin">8dp</dimen>
+    <dimen name="mtrl_textinput_box_bottom_offset">3dp</dimen>
+    <dimen name="mtrl_textinput_box_corner_radius_medium">4dp</dimen>
+    <dimen name="mtrl_textinput_box_corner_radius_small">0dp</dimen>
+    <dimen name="mtrl_textinput_box_label_cutout_padding">4dp</dimen>
+    <dimen name="mtrl_textinput_box_padding_end">12dp</dimen>
+    <dimen name="mtrl_textinput_box_stroke_width_default">1dp</dimen>
+    <dimen name="mtrl_textinput_box_stroke_width_focused">2dp</dimen>
+    <dimen name="mtrl_textinput_outline_box_expanded_padding">16dp</dimen>
+    <dimen name="mtrl_toolbar_default_height">56dp</dimen>
+    <item name="mtrl_child_content_container" type="id"/>
+    <item name="mtrl_internal_children_alpha_tag" type="id"/>
+    <item name="snackbar_action" type="id"/>
+    <item name="snackbar_text" type="id"/>
+    <item name="textinput_counter" type="id"/>
+    <item name="textinput_error" type="id"/>
+    <item name="textinput_helper_text" type="id"/>
+    <item name="view_offset_helper" type="id"/>
+    <integer name="app_bar_elevation_anim_duration">150</integer>
+    <integer name="bottom_sheet_slide_duration">150</integer>
+    <integer name="design_snackbar_text_max_lines">2</integer>
+    <integer name="design_tab_indicator_anim_duration_ms">300</integer>
+    <integer name="hide_password_duration">320</integer>
+    <integer name="mtrl_btn_anim_delay_ms">100</integer>
+    <integer name="mtrl_btn_anim_duration_ms">100</integer>
+    <integer name="mtrl_chip_anim_duration">100</integer>
+    <integer name="mtrl_tab_indicator_anim_duration_ms">250</integer>
+    <integer name="show_password_duration">200</integer>
+    <string name="appbar_scrolling_view_behavior" translatable="false">com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior</string>
+    <string name="bottom_sheet_behavior" translatable="false">com.google.android.material.bottomsheet.BottomSheetBehavior</string>
+    <string name="character_counter_content_description">Character limit exceeded %1$d of %2$d</string>
+    <string name="character_counter_pattern" translatable="false">%1$d / %2$d</string>
+    <string name="fab_transformation_scrim_behavior" translatable="false">com.google.android.material.transformation.FabTransformationScrimBehavior</string>
+    <string name="fab_transformation_sheet_behavior" translatable="false">com.google.android.material.transformation.FabTransformationSheetBehavior</string>
+    <string name="hide_bottom_view_on_scroll_behavior" translatable="false">com.google.android.material.behavior.HideBottomViewOnScrollBehavior</string>
+    <string name="mtrl_chip_close_icon_content_description">Remove %1$s</string>
+    <string name="password_toggle_content_description">Show password</string>
+    <string name="path_password_eye" translatable="false">M12,4.5C7,4.5 2.73,7.61 1,12c1.73,4.39 6,7.5 11,7.5s9.27,-3.11 11,-7.5c-1.73,-4.39 -6,-7.5 -11,-7.5zM12,17c-2.76,0 -5,-2.24 -5,-5s2.24,-5 5,-5 5,2.24 5,5 -2.24,5 -5,5zM12,9c-1.66,0 -3,1.34 -3,3s1.34,3 3,3 3,-1.34 3,-3 -1.34,-3 -3,-3z</string>
+    <string name="path_password_eye_mask_strike_through" translatable="false">M2,4.27 L19.73,22 L22.27,19.46 L4.54,1.73 L4.54,1 L23,1 L23,23 L1,23 L1,4.27 Z</string>
+    <string name="path_password_eye_mask_visible" translatable="false">M2,4.27 L2,4.27 L4.54,1.73 L4.54,1.73 L4.54,1 L23,1 L23,23 L1,23 L1,4.27 Z</string>
+    <string name="path_password_strike_through" translatable="false">M3.27,4.27 L19.74,20.74</string>
+    <style name="Animation.Design.BottomSheetDialog" parent="Animation.AppCompat.Dialog">
+    <item name="android:windowEnterAnimation">@anim/design_bottom_sheet_slide_in</item>
+    <item name="android:windowExitAnimation">@anim/design_bottom_sheet_slide_out</item>
+  </style>
+    <style name="Base.Theme.MaterialComponents" parent="Base.V14.Theme.MaterialComponents"/>
+    <style name="Base.Theme.MaterialComponents.Bridge" parent="Base.V14.Theme.MaterialComponents.Bridge"/>
+    <style name="Base.Theme.MaterialComponents.CompactMenu" parent="">
+    <item name="android:itemTextAppearance">?android:attr/textAppearanceMedium</item>
+    <item name="android:listViewStyle">@style/Widget.AppCompat.ListView.Menu</item>
+    <item name="android:windowAnimationStyle">@style/Animation.AppCompat.DropDownUp</item>
+  </style>
+    <style name="Base.Theme.MaterialComponents.Dialog" parent="Base.V14.Theme.MaterialComponents.Dialog"/>
+    <style name="Base.Theme.MaterialComponents.Dialog.Alert">
+    <item name="windowMinWidthMajor">@dimen/abc_dialog_min_width_major</item>
+    <item name="windowMinWidthMinor">@dimen/abc_dialog_min_width_minor</item>
+  </style>
+    <style name="Base.Theme.MaterialComponents.Dialog.FixedSize">
+    <item name="windowFixedWidthMajor">@dimen/abc_dialog_fixed_width_major</item>
+    <item name="windowFixedWidthMinor">@dimen/abc_dialog_fixed_width_minor</item>
+    <item name="windowFixedHeightMajor">@dimen/abc_dialog_fixed_height_major</item>
+    <item name="windowFixedHeightMinor">@dimen/abc_dialog_fixed_height_minor</item>
+  </style>
+    <style name="Base.Theme.MaterialComponents.Dialog.MinWidth">
+    <item name="windowMinWidthMajor">@dimen/abc_dialog_min_width_major</item>
+    <item name="windowMinWidthMinor">@dimen/abc_dialog_min_width_minor</item>
+  </style>
+    <style name="Base.Theme.MaterialComponents.DialogWhenLarge" parent="Theme.MaterialComponents"/>
+    <style name="Base.Theme.MaterialComponents.Light" parent="Base.V14.Theme.MaterialComponents.Light"/>
+    <style name="Base.Theme.MaterialComponents.Light.Bridge" parent="Base.V14.Theme.MaterialComponents.Light.Bridge"/>
+    <style name="Base.Theme.MaterialComponents.Light.DarkActionBar" parent="Base.Theme.MaterialComponents.Light">
+    <item name="actionBarPopupTheme">@style/ThemeOverlay.MaterialComponents.Light</item>
+    <item name="actionBarWidgetTheme">@null</item>
+    <item name="actionBarTheme">@style/ThemeOverlay.MaterialComponents.Dark.ActionBar</item>
+
+    <!-- Panel attributes -->
+    <item name="listChoiceBackgroundIndicator">@drawable/abc_list_selector_holo_dark</item>
+
+    <item name="colorPrimaryDark">@color/primary_dark_material_dark</item>
+    <item name="colorPrimary">@color/primary_material_dark</item>
+  </style>
+    <style name="Base.Theme.MaterialComponents.Light.DarkActionBar.Bridge" parent="Base.V14.Theme.MaterialComponents.Light.DarkActionBar.Bridge"/>
+    <style name="Base.Theme.MaterialComponents.Light.Dialog" parent="Base.V14.Theme.MaterialComponents.Light.Dialog"/>
+    <style name="Base.Theme.MaterialComponents.Light.Dialog.Alert">
+    <item name="windowMinWidthMajor">@dimen/abc_dialog_min_width_major</item>
+    <item name="windowMinWidthMinor">@dimen/abc_dialog_min_width_minor</item>
+  </style>
+    <style name="Base.Theme.MaterialComponents.Light.Dialog.FixedSize">
+    <item name="windowFixedWidthMajor">@dimen/abc_dialog_fixed_width_major</item>
+    <item name="windowFixedWidthMinor">@dimen/abc_dialog_fixed_width_minor</item>
+    <item name="windowFixedHeightMajor">@dimen/abc_dialog_fixed_height_major</item>
+    <item name="windowFixedHeightMinor">@dimen/abc_dialog_fixed_height_minor</item>
+  </style>
+    <style name="Base.Theme.MaterialComponents.Light.Dialog.MinWidth">
+    <item name="windowMinWidthMajor">@dimen/abc_dialog_min_width_major</item>
+    <item name="windowMinWidthMinor">@dimen/abc_dialog_min_width_minor</item>
+  </style>
+    <style name="Base.Theme.MaterialComponents.Light.DialogWhenLarge" parent="Theme.MaterialComponents.Light"/>
+    <style name="Base.ThemeOverlay.MaterialComponents.Dialog" parent="Base.V14.ThemeOverlay.MaterialComponents.Dialog"/>
+    <style name="Base.ThemeOverlay.MaterialComponents.Dialog.Alert" parent="Base.V14.ThemeOverlay.MaterialComponents.Dialog.Alert"/>
+    <style name="Base.V14.Theme.MaterialComponents" parent="Base.V14.Theme.MaterialComponents.Bridge">
+    <item name="viewInflaterClass">com.google.android.material.theme.MaterialComponentsViewInflater</item>
+
+    <!-- Colors -->
+    <item name="colorPrimary">@color/design_default_color_primary</item>
+    <item name="colorPrimaryDark">@color/design_default_color_primary_dark</item>
+    <item name="colorAccent">?attr/colorSecondary</item>
+
+    <!-- Widget styles -->
+    <item name="borderlessButtonStyle">@style/Widget.MaterialComponents.Button.TextButton</item>
+    <item name="bottomAppBarStyle">@style/Widget.MaterialComponents.BottomAppBar</item>
+    <item name="bottomNavigationStyle">@style/Widget.MaterialComponents.BottomNavigationView.Colored</item>
+    <item name="chipStyle">@style/Widget.MaterialComponents.Chip.Action</item>
+    <item name="chipGroupStyle">@style/Widget.MaterialComponents.ChipGroup</item>
+    <item name="chipStandaloneStyle">@style/Widget.MaterialComponents.Chip.Entry</item>
+    <item name="floatingActionButtonStyle">@style/Widget.MaterialComponents.FloatingActionButton</item>
+    <item name="materialButtonStyle">@style/Widget.MaterialComponents.Button</item>
+    <item name="materialCardViewStyle">@style/Widget.MaterialComponents.CardView</item>
+    <item name="navigationViewStyle">@style/Widget.MaterialComponents.NavigationView</item>
+    <item name="snackbarStyle">@style/Widget.MaterialComponents.Snackbar</item>
+    <item name="snackbarButtonStyle">?attr/borderlessButtonStyle</item>
+    <item name="tabStyle">@style/Widget.MaterialComponents.TabLayout.Colored</item>
+    <item name="textInputStyle">@style/Widget.Design.TextInputLayout</item>
+    <item name="toolbarStyle">@style/Widget.MaterialComponents.Toolbar</item>
+
+    <!-- Dialog themes -->
+    <item name="alertDialogTheme">@style/ThemeOverlay.MaterialComponents.Dialog.Alert</item>
+    <item name="android:datePickerDialogTheme" ns1:ignore="NewApi">@style/ThemeOverlay.MaterialComponents.Dialog</item>
+    <item name="android:timePickerDialogTheme" ns1:ignore="NewApi">@style/ThemeOverlay.MaterialComponents.Dialog</item>
+  </style>
+    <style name="Base.V14.Theme.MaterialComponents.Bridge" parent="Platform.MaterialComponents">
+    <item name="colorSecondary">?attr/colorPrimary</item>
+
+    <item name="scrimBackground">@color/mtrl_scrim_color</item>
+
+    <!-- Type styles -->
+    <item name="textAppearanceHeadline1">@style/TextAppearance.MaterialComponents.Headline1</item>
+    <item name="textAppearanceHeadline2">@style/TextAppearance.MaterialComponents.Headline2</item>
+    <item name="textAppearanceHeadline3">@style/TextAppearance.MaterialComponents.Headline3</item>
+    <item name="textAppearanceHeadline4">@style/TextAppearance.MaterialComponents.Headline4</item>
+    <item name="textAppearanceHeadline5">@style/TextAppearance.MaterialComponents.Headline5</item>
+    <item name="textAppearanceHeadline6">@style/TextAppearance.MaterialComponents.Headline6</item>
+    <item name="textAppearanceSubtitle1">@style/TextAppearance.MaterialComponents.Subtitle1</item>
+    <item name="textAppearanceSubtitle2">@style/TextAppearance.MaterialComponents.Subtitle2</item>
+    <item name="textAppearanceBody1">@style/TextAppearance.MaterialComponents.Body1</item>
+    <item name="textAppearanceBody2">@style/TextAppearance.MaterialComponents.Body2</item>
+    <item name="textAppearanceCaption">@style/TextAppearance.MaterialComponents.Caption</item>
+    <item name="textAppearanceButton">@style/TextAppearance.MaterialComponents.Button</item>
+    <item name="textAppearanceOverline">@style/TextAppearance.MaterialComponents.Overline</item>
+  </style>
+    <style name="Base.V14.Theme.MaterialComponents.Dialog" parent="Platform.MaterialComponents.Dialog">
+    <item name="viewInflaterClass">com.google.android.material.theme.MaterialComponentsViewInflater</item>
+
+    <!-- Colors -->
+    <item name="colorPrimary">@color/design_default_color_primary</item>
+    <item name="colorPrimaryDark">@color/design_default_color_primary_dark</item>
+
+    <item name="colorSecondary">?attr/colorPrimary</item>
+
+    <item name="colorAccent">?attr/colorSecondary</item>
+
+    <item name="scrimBackground">@color/mtrl_scrim_color</item>
+
+    <!-- Widget styles -->
+    <item name="borderlessButtonStyle">@style/Widget.MaterialComponents.Button.TextButton</item>
+    <item name="bottomAppBarStyle">@style/Widget.MaterialComponents.BottomAppBar</item>
+    <item name="bottomNavigationStyle">@style/Widget.MaterialComponents.BottomNavigationView.Colored</item>
+    <item name="buttonBarButtonStyle">@style/Widget.MaterialComponents.Button.TextButton.Dialog</item>
+    <item name="chipStyle">@style/Widget.MaterialComponents.Chip.Action</item>
+    <item name="chipGroupStyle">@style/Widget.MaterialComponents.ChipGroup</item>
+    <item name="chipStandaloneStyle">@style/Widget.MaterialComponents.Chip.Entry</item>
+    <item name="floatingActionButtonStyle">@style/Widget.MaterialComponents.FloatingActionButton</item>
+    <item name="materialButtonStyle">@style/Widget.MaterialComponents.Button</item>
+    <item name="materialCardViewStyle">@style/Widget.MaterialComponents.CardView</item>
+    <item name="navigationViewStyle">@style/Widget.MaterialComponents.NavigationView</item>
+    <item name="snackbarStyle">@style/Widget.MaterialComponents.Snackbar</item>
+    <item name="snackbarButtonStyle">?attr/borderlessButtonStyle</item>
+    <item name="tabStyle">@style/Widget.MaterialComponents.TabLayout.Colored</item>
+    <item name="textInputStyle">@style/Widget.Design.TextInputLayout</item>
+    <item name="toolbarStyle">@style/Widget.MaterialComponents.Toolbar</item>
+
+    <!-- Type styles -->
+    <item name="textAppearanceHeadline1">@style/TextAppearance.MaterialComponents.Headline1</item>
+    <item name="textAppearanceHeadline2">@style/TextAppearance.MaterialComponents.Headline2</item>
+    <item name="textAppearanceHeadline3">@style/TextAppearance.MaterialComponents.Headline3</item>
+    <item name="textAppearanceHeadline4">@style/TextAppearance.MaterialComponents.Headline4</item>
+    <item name="textAppearanceHeadline5">@style/TextAppearance.MaterialComponents.Headline5</item>
+    <item name="textAppearanceHeadline6">@style/TextAppearance.MaterialComponents.Headline6</item>
+    <item name="textAppearanceSubtitle1">@style/TextAppearance.MaterialComponents.Subtitle1</item>
+    <item name="textAppearanceSubtitle2">@style/TextAppearance.MaterialComponents.Subtitle2</item>
+    <item name="textAppearanceBody1">@style/TextAppearance.MaterialComponents.Body1</item>
+    <item name="textAppearanceBody2">@style/TextAppearance.MaterialComponents.Body2</item>
+    <item name="textAppearanceCaption">@style/TextAppearance.MaterialComponents.Caption</item>
+    <item name="textAppearanceButton">@style/TextAppearance.MaterialComponents.Button</item>
+    <item name="textAppearanceOverline">@style/TextAppearance.MaterialComponents.Overline</item>
+  </style>
+    <style name="Base.V14.Theme.MaterialComponents.Light" parent="Base.V14.Theme.MaterialComponents.Light.Bridge">
+    <item name="viewInflaterClass">com.google.android.material.theme.MaterialComponentsViewInflater</item>
+
+    <!-- Colors -->
+    <item name="colorPrimary">@color/design_default_color_primary</item>
+    <item name="colorPrimaryDark">@color/design_default_color_primary_dark</item>
+    <item name="colorAccent">?attr/colorSecondary</item>
+
+    <!-- Widget styles -->
+    <item name="borderlessButtonStyle">@style/Widget.MaterialComponents.Button.TextButton</item>
+    <item name="bottomAppBarStyle">@style/Widget.MaterialComponents.BottomAppBar</item>
+    <item name="bottomNavigationStyle">@style/Widget.MaterialComponents.BottomNavigationView</item>
+    <item name="chipStyle">@style/Widget.MaterialComponents.Chip.Action</item>
+    <item name="chipGroupStyle">@style/Widget.MaterialComponents.ChipGroup</item>
+    <item name="chipStandaloneStyle">@style/Widget.MaterialComponents.Chip.Entry</item>
+    <item name="floatingActionButtonStyle">@style/Widget.MaterialComponents.FloatingActionButton</item>
+    <item name="materialButtonStyle">@style/Widget.MaterialComponents.Button</item>
+    <item name="materialCardViewStyle">@style/Widget.MaterialComponents.CardView</item>
+    <item name="navigationViewStyle">@style/Widget.MaterialComponents.NavigationView</item>
+    <item name="snackbarStyle">@style/Widget.MaterialComponents.Snackbar</item>
+    <item name="snackbarButtonStyle">?attr/borderlessButtonStyle</item>
+    <item name="tabStyle">@style/Widget.MaterialComponents.TabLayout</item>
+    <item name="textInputStyle">@style/Widget.Design.TextInputLayout</item>
+    <item name="toolbarStyle">@style/Widget.MaterialComponents.Toolbar</item>
+
+    <!-- Dialog themes -->
+    <item name="alertDialogTheme">@style/ThemeOverlay.MaterialComponents.Dialog.Alert</item>
+    <item name="android:datePickerDialogTheme" ns1:ignore="NewApi">@style/ThemeOverlay.MaterialComponents.Dialog</item>
+    <item name="android:timePickerDialogTheme" ns1:ignore="NewApi">@style/ThemeOverlay.MaterialComponents.Dialog</item>
+  </style>
+    <style name="Base.V14.Theme.MaterialComponents.Light.Bridge" parent="Platform.MaterialComponents.Light">
+    <item name="colorSecondary">?attr/colorPrimary</item>
+
+    <item name="scrimBackground">@color/mtrl_scrim_color</item>
+
+    <!-- Type styles -->
+    <item name="textAppearanceHeadline1">@style/TextAppearance.MaterialComponents.Headline1</item>
+    <item name="textAppearanceHeadline2">@style/TextAppearance.MaterialComponents.Headline2</item>
+    <item name="textAppearanceHeadline3">@style/TextAppearance.MaterialComponents.Headline3</item>
+    <item name="textAppearanceHeadline4">@style/TextAppearance.MaterialComponents.Headline4</item>
+    <item name="textAppearanceHeadline5">@style/TextAppearance.MaterialComponents.Headline5</item>
+    <item name="textAppearanceHeadline6">@style/TextAppearance.MaterialComponents.Headline6</item>
+    <item name="textAppearanceSubtitle1">@style/TextAppearance.MaterialComponents.Subtitle1</item>
+    <item name="textAppearanceSubtitle2">@style/TextAppearance.MaterialComponents.Subtitle2</item>
+    <item name="textAppearanceBody1">@style/TextAppearance.MaterialComponents.Body1</item>
+    <item name="textAppearanceBody2">@style/TextAppearance.MaterialComponents.Body2</item>
+    <item name="textAppearanceCaption">@style/TextAppearance.MaterialComponents.Caption</item>
+    <item name="textAppearanceButton">@style/TextAppearance.MaterialComponents.Button</item>
+    <item name="textAppearanceOverline">@style/TextAppearance.MaterialComponents.Overline</item>
+  </style>
+    <style name="Base.V14.Theme.MaterialComponents.Light.DarkActionBar.Bridge" parent="Theme.AppCompat.Light.DarkActionBar">
+    <item name="colorSecondary">?attr/colorPrimary</item>
+
+    <item name="scrimBackground">@color/mtrl_scrim_color</item>
+
+    <!-- Type styles -->
+    <item name="textAppearanceHeadline1">@style/TextAppearance.MaterialComponents.Headline1</item>
+    <item name="textAppearanceHeadline2">@style/TextAppearance.MaterialComponents.Headline2</item>
+    <item name="textAppearanceHeadline3">@style/TextAppearance.MaterialComponents.Headline3</item>
+    <item name="textAppearanceHeadline4">@style/TextAppearance.MaterialComponents.Headline4</item>
+    <item name="textAppearanceHeadline5">@style/TextAppearance.MaterialComponents.Headline5</item>
+    <item name="textAppearanceHeadline6">@style/TextAppearance.MaterialComponents.Headline6</item>
+    <item name="textAppearanceSubtitle1">@style/TextAppearance.MaterialComponents.Subtitle1</item>
+    <item name="textAppearanceSubtitle2">@style/TextAppearance.MaterialComponents.Subtitle2</item>
+    <item name="textAppearanceBody1">@style/TextAppearance.MaterialComponents.Body1</item>
+    <item name="textAppearanceBody2">@style/TextAppearance.MaterialComponents.Body2</item>
+    <item name="textAppearanceCaption">@style/TextAppearance.MaterialComponents.Caption</item>
+    <item name="textAppearanceButton">@style/TextAppearance.MaterialComponents.Button</item>
+    <item name="textAppearanceOverline">@style/TextAppearance.MaterialComponents.Overline</item>
+  </style>
+    <style name="Base.V14.Theme.MaterialComponents.Light.Dialog" parent="Platform.MaterialComponents.Light.Dialog">
+    <item name="viewInflaterClass">com.google.android.material.theme.MaterialComponentsViewInflater</item>
+
+    <!-- Colors -->
+    <item name="colorPrimary">@color/design_default_color_primary</item>
+    <item name="colorPrimaryDark">@color/design_default_color_primary_dark</item>
+
+    <item name="colorSecondary">?attr/colorPrimary</item>
+
+    <item name="colorAccent">?attr/colorSecondary</item>
+
+    <item name="scrimBackground">@color/mtrl_scrim_color</item>
+
+    <!-- Widget styles -->
+    <item name="borderlessButtonStyle">@style/Widget.MaterialComponents.Button.TextButton</item>
+    <item name="bottomAppBarStyle">@style/Widget.MaterialComponents.BottomAppBar</item>
+    <item name="bottomNavigationStyle">@style/Widget.MaterialComponents.BottomNavigationView</item>
+    <item name="buttonBarButtonStyle">@style/Widget.MaterialComponents.Button.TextButton.Dialog</item>
+    <item name="chipStyle">@style/Widget.MaterialComponents.Chip.Action</item>
+    <item name="chipGroupStyle">@style/Widget.MaterialComponents.ChipGroup</item>
+    <item name="chipStandaloneStyle">@style/Widget.MaterialComponents.Chip.Entry</item>
+    <item name="floatingActionButtonStyle">@style/Widget.MaterialComponents.FloatingActionButton</item>
+    <item name="materialButtonStyle">@style/Widget.MaterialComponents.Button</item>
+    <item name="materialCardViewStyle">@style/Widget.MaterialComponents.CardView</item>
+    <item name="navigationViewStyle">@style/Widget.MaterialComponents.NavigationView</item>
+    <item name="snackbarStyle">@style/Widget.MaterialComponents.Snackbar</item>
+    <item name="snackbarButtonStyle">?attr/borderlessButtonStyle</item>
+    <item name="tabStyle">@style/Widget.MaterialComponents.TabLayout</item>
+    <item name="textInputStyle">@style/Widget.Design.TextInputLayout</item>
+    <item name="toolbarStyle">@style/Widget.MaterialComponents.Toolbar</item>
+
+    <!-- Type styles -->
+    <item name="textAppearanceHeadline1">@style/TextAppearance.MaterialComponents.Headline1</item>
+    <item name="textAppearanceHeadline2">@style/TextAppearance.MaterialComponents.Headline2</item>
+    <item name="textAppearanceHeadline3">@style/TextAppearance.MaterialComponents.Headline3</item>
+    <item name="textAppearanceHeadline4">@style/TextAppearance.MaterialComponents.Headline4</item>
+    <item name="textAppearanceHeadline5">@style/TextAppearance.MaterialComponents.Headline5</item>
+    <item name="textAppearanceHeadline6">@style/TextAppearance.MaterialComponents.Headline6</item>
+    <item name="textAppearanceSubtitle1">@style/TextAppearance.MaterialComponents.Subtitle1</item>
+    <item name="textAppearanceSubtitle2">@style/TextAppearance.MaterialComponents.Subtitle2</item>
+    <item name="textAppearanceBody1">@style/TextAppearance.MaterialComponents.Body1</item>
+    <item name="textAppearanceBody2">@style/TextAppearance.MaterialComponents.Body2</item>
+    <item name="textAppearanceCaption">@style/TextAppearance.MaterialComponents.Caption</item>
+    <item name="textAppearanceButton">@style/TextAppearance.MaterialComponents.Button</item>
+    <item name="textAppearanceOverline">@style/TextAppearance.MaterialComponents.Overline</item>
+  </style>
+    <style name="Base.V14.ThemeOverlay.MaterialComponents.Dialog" parent="ThemeOverlay.AppCompat.Dialog">
+    <!-- Widget styles -->
+    <item name="materialButtonStyle">@style/Widget.MaterialComponents.Button.TextButton.Dialog</item>
+  </style>
+    <style name="Base.V14.ThemeOverlay.MaterialComponents.Dialog.Alert" parent="ThemeOverlay.AppCompat.Dialog.Alert">
+    <!-- Widget styles -->
+    <item name="buttonBarButtonStyle">@style/Widget.MaterialComponents.Button.TextButton.Dialog</item>
+  </style>
+    <style name="Base.Widget.Design.TabLayout" parent="android:Widget">
+    <item name="android:background">@null</item>
+    <item name="tabIconTint">@null</item>
+    <item name="tabMaxWidth">@dimen/design_tab_max_width</item>
+    <item name="tabIndicatorAnimationDuration">@integer/design_tab_indicator_anim_duration_ms</item>
+    <item name="tabIndicatorColor">?attr/colorAccent</item>
+    <item name="tabIndicatorGravity">bottom</item>
+    <item name="tabIndicator">@drawable/mtrl_tabs_default_indicator</item>
+    <item name="tabPaddingStart">12dp</item>
+    <item name="tabPaddingEnd">12dp</item>
+    <item name="tabTextAppearance">@style/TextAppearance.Design.Tab</item>
+    <item name="tabRippleColor">?attr/colorControlHighlight</item>
+    <item name="tabUnboundedRipple">false</item>
+  </style>
+    <style name="Base.Widget.MaterialComponents.Chip" parent="android:Widget">
+    <item name="android:focusable">true</item>
+    <item name="android:clickable">true</item>
+    <item name="android:checkable">false</item>
+    <item name="android:stateListAnimator" ns1:ignore="NewApi">
+      @animator/mtrl_chip_state_list_anim
+    </item>
+
+    <item name="chipIconVisible">true</item>
+    <item name="checkedIconVisible">true</item>
+    <item name="closeIconVisible">true</item>
+
+    <item name="chipIcon">@null</item>
+    <item name="checkedIcon">@drawable/ic_mtrl_chip_checked_circle</item>
+    <item name="closeIcon">@drawable/ic_mtrl_chip_close_circle</item>
+
+    <item name="android:text">@null</item>
+    <item name="enforceTextAppearance">true</item>
+    <item name="android:textAppearance">?attr/textAppearanceBody2</item>
+    <item name="android:textColor">@color/mtrl_chip_text_color</item>
+    <item name="closeIconTint">@color/mtrl_chip_close_icon_tint</item>
+
+    <item name="chipBackgroundColor">@color/mtrl_chip_background_color</item>
+    <item name="chipStrokeColor">#00000000</item>
+    <item name="chipStrokeWidth">0dp</item>
+    <item name="rippleColor">@color/mtrl_chip_ripple_color</item>
+
+    <item name="chipMinHeight">32dp</item>
+    <item name="chipCornerRadius">16dp</item>
+    <item name="chipIconSize">24dp</item>
+    <item name="closeIconSize">18dp</item>
+
+    <item name="chipStartPadding">4dp</item>
+    <item name="iconStartPadding">0dp</item>
+    <item name="iconEndPadding">0dp</item>
+    <item name="textStartPadding">8dp</item>
+    <item name="textEndPadding">6dp</item>
+    <item name="closeIconStartPadding">2dp</item>
+    <item name="closeIconEndPadding">2dp</item>
+    <item name="chipEndPadding">6dp</item>
+  </style>
+    <style name="Base.Widget.MaterialComponents.TextInputEditText" parent="Widget.AppCompat.EditText">
+    <item name="android:paddingStart" ns1:ignore="NewApi">12dp</item>
+    <item name="android:paddingEnd" ns1:ignore="NewApi">12dp</item>
+    <item name="android:paddingLeft">12dp</item>
+    <item name="android:paddingRight">12dp</item>
+    <item name="android:paddingTop">16dp</item>
+    <item name="android:paddingBottom">16dp</item>
+  </style>
+    <style name="Base.Widget.MaterialComponents.TextInputLayout" parent="Widget.Design.TextInputLayout">
+    <item name="boxBackgroundMode">outline</item>
+    <item name="boxBackgroundColor">@null</item>
+    <item name="boxCollapsedPaddingTop">0dp</item>
+    <item name="boxCornerRadiusTopStart">@dimen/mtrl_textinput_box_corner_radius_medium</item>
+    <item name="boxCornerRadiusTopEnd">@dimen/mtrl_textinput_box_corner_radius_medium</item>
+    <item name="boxCornerRadiusBottomEnd">@dimen/mtrl_textinput_box_corner_radius_medium</item>
+    <item name="boxCornerRadiusBottomStart">@dimen/mtrl_textinput_box_corner_radius_medium</item>
+    <item name="boxStrokeColor">?attr/colorControlActivated</item>
+  </style>
+    <style name="Platform.MaterialComponents" parent="Theme.AppCompat"/>
+    <style name="Platform.MaterialComponents.Dialog" parent="Theme.AppCompat.Dialog"/>
+    <style name="Platform.MaterialComponents.Light" parent="Theme.AppCompat.Light"/>
+    <style name="Platform.MaterialComponents.Light.Dialog" parent="Theme.AppCompat.Light.Dialog"/>
+    <style name="TextAppearance.Design.CollapsingToolbar.Expanded" parent="TextAppearance.AppCompat.Display1">
+    <item name="android:textColor">?android:attr/textColorPrimary</item>
+  </style>
+    <style name="TextAppearance.Design.Counter" parent="TextAppearance.AppCompat.Caption"/>
+    <style name="TextAppearance.Design.Counter.Overflow" parent="TextAppearance.AppCompat.Caption">
+    <item name="android:textColor">@color/design_error</item>
+  </style>
+    <style name="TextAppearance.Design.Error" parent="TextAppearance.AppCompat.Caption">
+    <item name="android:textColor">@color/design_error</item>
+  </style>
+    <style name="TextAppearance.Design.HelperText" parent="TextAppearance.AppCompat.Caption"/>
+    <style name="TextAppearance.Design.Hint" parent="TextAppearance.AppCompat.Caption">
+    <item name="android:textColor">?attr/colorControlActivated</item>
+  </style>
+    <style name="TextAppearance.Design.Snackbar.Message" parent="android:TextAppearance">
+    <item name="android:textSize">@dimen/design_snackbar_text_size</item>
+    <item name="android:textColor">?android:textColorPrimary</item>
+  </style>
+    <style name="TextAppearance.Design.Tab" parent="TextAppearance.AppCompat.Button">
+    <item name="android:textSize">@dimen/design_tab_text_size</item>
+    <item name="android:textColor">@color/mtrl_tabs_legacy_text_color_selector</item>
+    <item name="textAllCaps">true</item>
+  </style>
+    <style name="TextAppearance.MaterialComponents.Body1" parent="TextAppearance.AppCompat.Body2">
+    <item name="fontFamily">sans-serif</item>
+    <item name="android:fontFamily">sans-serif</item>
+    <item name="android:textStyle">normal</item>
+    <item name="android:textAllCaps">false</item>
+    <item name="android:textSize">16sp</item>
+    <item name="android:letterSpacing">0.03125</item>
+  </style>
+    <style name="TextAppearance.MaterialComponents.Body2" parent="TextAppearance.AppCompat.Body1">
+    <item name="fontFamily">sans-serif</item>
+    <item name="android:fontFamily">sans-serif</item>
+    <item name="android:textStyle">normal</item>
+    <item name="android:textAllCaps">false</item>
+    <item name="android:textSize">14sp</item>
+    <item name="android:letterSpacing">0.0178571429</item>
+  </style>
+    <style name="TextAppearance.MaterialComponents.Button" parent="TextAppearance.AppCompat.Button">
+    <!-- Fake Roboto Medium. -->
+    <item name="fontFamily">sans-serif-medium</item>
+    <item name="android:fontFamily">sans-serif-medium</item>
+    <item name="android:textStyle">bold</item>
+    <item name="android:textAllCaps">true</item>
+    <item name="android:textSize">14sp</item>
+    <item name="android:letterSpacing">0.0892857143</item>
+  </style>
+    <style name="TextAppearance.MaterialComponents.Caption" parent="TextAppearance.AppCompat.Caption">
+    <item name="fontFamily">sans-serif</item>
+    <item name="android:fontFamily">sans-serif</item>
+    <item name="android:textStyle">normal</item>
+    <item name="android:textAllCaps">false</item>
+    <item name="android:textSize">12sp</item>
+    <item name="android:letterSpacing">0.0333333333</item>
+  </style>
+    <style name="TextAppearance.MaterialComponents.Chip" parent="TextAppearance.AppCompat">
+    <item name="android:textColor">@color/mtrl_chip_text_color</item>
+    <item name="android:textSize">@dimen/mtrl_chip_text_size</item>
+  </style>
+    <style name="TextAppearance.MaterialComponents.Headline1" parent="TextAppearance.AppCompat.Display4">
+    <item name="fontFamily">sans-serif-light</item>
+    <item name="android:fontFamily">sans-serif-light</item>
+    <item name="android:textStyle">normal</item>
+    <item name="android:textAllCaps">false</item>
+    <item name="android:textSize">96sp</item>
+    <item name="android:letterSpacing">-0.015625</item>
+  </style>
+    <style name="TextAppearance.MaterialComponents.Headline2" parent="TextAppearance.AppCompat.Display3">
+    <item name="fontFamily">sans-serif-light</item>
+    <item name="android:fontFamily">sans-serif-light</item>
+    <item name="android:textStyle">normal</item>
+    <item name="android:textAllCaps">false</item>
+    <item name="android:textSize">60sp</item>
+    <item name="android:letterSpacing">-0.00833333333</item>
+  </style>
+    <style name="TextAppearance.MaterialComponents.Headline3" parent="TextAppearance.AppCompat.Display2">
+    <item name="fontFamily">sans-serif</item>
+    <item name="android:fontFamily">sans-serif</item>
+    <item name="android:textStyle">normal</item>
+    <item name="android:textAllCaps">false</item>
+    <item name="android:textSize">48sp</item>
+    <item name="android:letterSpacing">0</item>
+  </style>
+    <style name="TextAppearance.MaterialComponents.Headline4" parent="TextAppearance.AppCompat.Display1">
+    <item name="fontFamily">sans-serif</item>
+    <item name="android:fontFamily">sans-serif</item>
+    <item name="android:textStyle">normal</item>
+    <item name="android:textAllCaps">false</item>
+    <item name="android:textSize">34sp</item>
+    <item name="android:letterSpacing">0.00735294118</item>
+  </style>
+    <style name="TextAppearance.MaterialComponents.Headline5" parent="TextAppearance.AppCompat.Headline">
+    <item name="fontFamily">sans-serif</item>
+    <item name="android:fontFamily">sans-serif</item>
+    <item name="android:textStyle">normal</item>
+    <item name="android:textAllCaps">false</item>
+    <item name="android:textSize">24sp</item>
+    <item name="android:letterSpacing">0</item>
+  </style>
+    <style name="TextAppearance.MaterialComponents.Headline6" parent="TextAppearance.AppCompat.Title">
+    <!-- Fake Roboto Medium. -->
+    <item name="fontFamily">sans-serif-medium</item>
+    <item name="android:fontFamily">sans-serif-medium</item>
+    <item name="android:textStyle">bold</item>
+    <item name="android:textAllCaps">false</item>
+    <item name="android:textSize">20sp</item>
+    <item name="android:letterSpacing">0.0125</item>
+  </style>
+    <style name="TextAppearance.MaterialComponents.Overline" parent="TextAppearance.AppCompat">
+    <!-- Fake Roboto Medium. -->
+    <item name="fontFamily">sans-serif-medium</item>
+    <item name="android:fontFamily">sans-serif-medium</item>
+    <item name="android:textStyle">bold</item>
+    <item name="android:textAllCaps">true</item>
+    <item name="android:textSize">12sp</item>
+    <item name="android:letterSpacing">0.166666667</item>
+  </style>
+    <style name="TextAppearance.MaterialComponents.Subtitle1" parent="TextAppearance.AppCompat.Subhead">
+    <item name="fontFamily">sans-serif</item>
+    <item name="android:fontFamily">sans-serif</item>
+    <item name="android:textStyle">normal</item>
+    <item name="android:textAllCaps">false</item>
+    <item name="android:textSize">16sp</item>
+    <item name="android:letterSpacing">0.009375</item>
+  </style>
+    <style name="TextAppearance.MaterialComponents.Subtitle2" parent="TextAppearance.AppCompat.Subhead">
+    <!-- Fake Roboto Medium. -->
+    <item name="fontFamily">sans-serif-medium</item>
+    <item name="android:fontFamily">sans-serif-medium</item>
+    <item name="android:textStyle">bold</item>
+    <item name="android:textAllCaps">false</item>
+    <item name="android:textSize">14sp</item>
+    <item name="android:letterSpacing">0.00714285714</item>
+  </style>
+    <style name="TextAppearance.MaterialComponents.Tab" parent="TextAppearance.Design.Tab">
+    <item name="android:textColor">@color/mtrl_tabs_icon_color_selector</item>
+  </style>
+    <style name="Theme.Design" parent="Theme.AppCompat">
+  </style>
+    <style name="Theme.Design.BottomSheetDialog" parent="Theme.AppCompat.Dialog">
+    <item name="android:windowBackground">@android:color/transparent</item>
+    <item name="android:windowAnimationStyle">@style/Animation.Design.BottomSheetDialog</item>
+    <item name="bottomSheetStyle">@style/Widget.Design.BottomSheet.Modal</item>
+  </style>
+    <style name="Theme.Design.Light" parent="Theme.AppCompat.Light">
+  </style>
+    <style name="Theme.Design.Light.BottomSheetDialog" parent="Theme.AppCompat.Light.Dialog">
+    <item name="android:windowBackground">@android:color/transparent</item>
+    <item name="android:windowAnimationStyle">@style/Animation.Design.BottomSheetDialog</item>
+    <item name="bottomSheetStyle">@style/Widget.Design.BottomSheet.Modal</item>
+  </style>
+    <style name="Theme.Design.Light.NoActionBar">
+    <item name="windowActionBar">false</item>
+    <item name="windowNoTitle">true</item>
+  </style>
+    <style name="Theme.Design.NoActionBar">
+    <item name="windowActionBar">false</item>
+    <item name="windowNoTitle">true</item>
+  </style>
+    <style name="Theme.MaterialComponents" parent="Base.Theme.MaterialComponents"/>
+    <style name="Theme.MaterialComponents.BottomSheetDialog" parent="Theme.MaterialComponents.Dialog">
+    <item name="android:windowBackground">@android:color/transparent</item>
+    <item name="android:windowAnimationStyle">@style/Animation.Design.BottomSheetDialog</item>
+    <item name="bottomSheetStyle">@style/Widget.Design.BottomSheet.Modal</item>
+  </style>
+    <style name="Theme.MaterialComponents.Bridge" parent="Base.Theme.MaterialComponents.Bridge"/>
+    <style name="Theme.MaterialComponents.CompactMenu" parent="Base.Theme.MaterialComponents.CompactMenu"/>
+    <style name="Theme.MaterialComponents.Dialog" parent="Base.Theme.MaterialComponents.Dialog"/>
+    <style name="Theme.MaterialComponents.Dialog.Alert" parent="Base.Theme.MaterialComponents.Dialog.Alert"/>
+    <style name="Theme.MaterialComponents.Dialog.MinWidth" parent="Base.Theme.MaterialComponents.Dialog.MinWidth"/>
+    <style name="Theme.MaterialComponents.DialogWhenLarge" parent="Base.Theme.MaterialComponents.DialogWhenLarge">
+  </style>
+    <style name="Theme.MaterialComponents.Light" parent="Base.Theme.MaterialComponents.Light"/>
+    <style name="Theme.MaterialComponents.Light.BottomSheetDialog" parent="Theme.MaterialComponents.Light.Dialog">
+    <item name="android:windowBackground">@android:color/transparent</item>
+    <item name="android:windowAnimationStyle">@style/Animation.Design.BottomSheetDialog</item>
+    <item name="bottomSheetStyle">@style/Widget.Design.BottomSheet.Modal</item>
+  </style>
+    <style name="Theme.MaterialComponents.Light.Bridge" parent="Base.Theme.MaterialComponents.Light.Bridge"/>
+    <style name="Theme.MaterialComponents.Light.DarkActionBar" parent="Base.Theme.MaterialComponents.Light.DarkActionBar"/>
+    <style name="Theme.MaterialComponents.Light.DarkActionBar.Bridge" parent="Base.Theme.MaterialComponents.Light.DarkActionBar.Bridge"/>
+    <style name="Theme.MaterialComponents.Light.Dialog" parent="Base.Theme.MaterialComponents.Light.Dialog"/>
+    <style name="Theme.MaterialComponents.Light.Dialog.Alert" parent="Base.Theme.MaterialComponents.Light.Dialog.Alert"/>
+    <style name="Theme.MaterialComponents.Light.Dialog.MinWidth" parent="Base.Theme.MaterialComponents.Light.Dialog.MinWidth"/>
+    <style name="Theme.MaterialComponents.Light.DialogWhenLarge" parent="Base.Theme.MaterialComponents.Light.DialogWhenLarge">
+  </style>
+    <style name="Theme.MaterialComponents.Light.NoActionBar">
+    <item name="windowActionBar">false</item>
+    <item name="windowNoTitle">true</item>
+  </style>
+    <style name="Theme.MaterialComponents.Light.NoActionBar.Bridge" parent="Theme.MaterialComponents.Light.Bridge">
+    <item name="windowActionBar">false</item>
+    <item name="windowNoTitle">true</item>
+  </style>
+    <style name="Theme.MaterialComponents.NoActionBar">
+    <item name="windowActionBar">false</item>
+    <item name="windowNoTitle">true</item>
+  </style>
+    <style name="Theme.MaterialComponents.NoActionBar.Bridge" parent="Theme.MaterialComponents.Bridge">
+    <item name="windowActionBar">false</item>
+    <item name="windowNoTitle">true</item>
+  </style>
+    <style name="ThemeOverlay.MaterialComponents" parent="ThemeOverlay.AppCompat"/>
+    <style name="ThemeOverlay.MaterialComponents.ActionBar" parent="ThemeOverlay.AppCompat.ActionBar"/>
+    <style name="ThemeOverlay.MaterialComponents.Dark" parent="ThemeOverlay.AppCompat.Dark"/>
+    <style name="ThemeOverlay.MaterialComponents.Dark.ActionBar" parent="ThemeOverlay.AppCompat.Dark.ActionBar"/>
+    <style name="ThemeOverlay.MaterialComponents.Dialog" parent="Base.ThemeOverlay.MaterialComponents.Dialog"/>
+    <style name="ThemeOverlay.MaterialComponents.Dialog.Alert" parent="Base.ThemeOverlay.MaterialComponents.Dialog.Alert"/>
+    <style name="ThemeOverlay.MaterialComponents.Light" parent="ThemeOverlay.AppCompat.Light"/>
+    <style name="ThemeOverlay.MaterialComponents.TextInputEditText" parent=""/>
+    <style name="ThemeOverlay.MaterialComponents.TextInputEditText.FilledBox">
+    <item name="editTextStyle">@style/Widget.MaterialComponents.TextInputEditText.FilledBox</item>
+  </style>
+    <style name="ThemeOverlay.MaterialComponents.TextInputEditText.FilledBox.Dense">
+    <item name="editTextStyle">@style/Widget.MaterialComponents.TextInputEditText.FilledBox.Dense
+    </item>
+  </style>
+    <style name="ThemeOverlay.MaterialComponents.TextInputEditText.OutlinedBox">
+    <item name="editTextStyle">@style/Widget.MaterialComponents.TextInputEditText.OutlinedBox</item>
+  </style>
+    <style name="ThemeOverlay.MaterialComponents.TextInputEditText.OutlinedBox.Dense">
+    <item name="editTextStyle">@style/Widget.MaterialComponents.TextInputEditText.OutlinedBox.Dense
+    </item>
+  </style>
+    <style name="Widget.Design.AppBarLayout" parent="android:Widget">
+    <item name="android:background">?attr/colorPrimary</item>
+    <item name="android:stateListAnimator" ns1:ignore="NewApi">
+      @animator/design_appbar_state_list_animator
+    </item>
+    <item name="android:keyboardNavigationCluster" ns1:ignore="NewApi">true</item>
+    <item name="android:touchscreenBlocksFocus" ns1:ignore="NewApi">true</item>
+  </style>
+    <style name="Widget.Design.BottomNavigationView" parent="">
+    <item name="elevation">@dimen/design_bottom_navigation_elevation</item>
+    <item name="itemBackground">?attr/selectableItemBackgroundBorderless</item>
+    <item name="itemHorizontalTranslationEnabled">true</item>
+    <item name="itemIconSize">@dimen/design_bottom_navigation_icon_size</item>
+    <item name="labelVisibilityMode">auto</item>
+  </style>
+    <style name="Widget.Design.BottomSheet.Modal" parent="android:Widget">
+    <item name="android:background">?android:attr/colorBackground</item>
+    <item name="android:elevation" ns1:ignore="NewApi">
+      @dimen/design_bottom_sheet_modal_elevation
+    </item>
+    <item name="behavior_peekHeight">auto</item>
+    <item name="behavior_hideable">true</item>
+    <item name="behavior_skipCollapsed">false</item>
+  </style>
+    <style name="Widget.Design.CollapsingToolbar" parent="android:Widget">
+    <item name="expandedTitleMargin">32dp</item>
+    <item name="statusBarScrim">?attr/colorPrimaryDark</item>
+  </style>
+    <style name="Widget.Design.FloatingActionButton" parent="android:Widget">
+    <item name="android:background">@drawable/design_fab_background</item>
+    <item name="android:clickable">true</item>
+    <item name="android:focusable">true</item>
+    <item name="backgroundTint">?attr/colorAccent</item>
+    <item name="fabSize">auto</item>
+    <item name="elevation">@dimen/design_fab_elevation</item>
+    <item name="hoveredFocusedTranslationZ">@dimen/design_fab_translation_z_hovered_focused</item>
+    <item name="pressedTranslationZ">@dimen/design_fab_translation_z_pressed</item>
+    <item name="rippleColor">?attr/colorControlHighlight</item>
+    <item name="borderWidth">@dimen/design_fab_border_width</item>
+    <item name="maxImageSize">@dimen/design_fab_image_size</item>
+    <item name="showMotionSpec">@animator/design_fab_show_motion_spec</item>
+    <item name="hideMotionSpec">@animator/design_fab_hide_motion_spec</item>
+  </style>
+    <style name="Widget.Design.NavigationView" parent="">
+    <item name="elevation">@dimen/design_navigation_elevation</item>
+    <item name="itemIconPadding">@dimen/design_navigation_item_icon_padding</item>
+    <item name="itemHorizontalPadding">@dimen/design_navigation_item_horizontal_padding</item>
+    <item name="android:background">?android:attr/windowBackground</item>
+    <item name="android:fitsSystemWindows">true</item>
+    <item name="android:maxWidth">@dimen/design_navigation_max_width</item>
+  </style>
+    <style name="Widget.Design.ScrimInsetsFrameLayout" parent="">
+    <item name="insetForeground">#4000</item>
+  </style>
+    <style name="Widget.Design.Snackbar" parent="android:Widget">
+    <item name="android:minWidth">@dimen/design_snackbar_min_width</item>
+    <item name="android:maxWidth">@dimen/design_snackbar_max_width</item>
+    <item name="android:background">@drawable/design_snackbar_background</item>
+    <item name="android:paddingLeft">@dimen/design_snackbar_padding_horizontal</item>
+    <item name="android:paddingRight">@dimen/design_snackbar_padding_horizontal</item>
+    <item name="elevation">@dimen/design_snackbar_elevation</item>
+    <item name="maxActionInlineWidth">@dimen/design_snackbar_action_inline_max_width</item>
+  </style>
+    <style name="Widget.Design.TabLayout" parent="Base.Widget.Design.TabLayout">
+    <item name="tabGravity">fill</item>
+    <item name="tabMode">fixed</item>
+    <item name="tabIndicatorFullWidth">true</item>
+  </style>
+    <style name="Widget.Design.TextInputLayout" parent="android:Widget">
+    <item name="boxBackgroundMode">none</item>
+    <item name="hintTextAppearance">@style/TextAppearance.Design.Hint</item>
+    <item name="helperTextTextAppearance">@style/TextAppearance.Design.HelperText</item>
+    <item name="errorTextAppearance">@style/TextAppearance.Design.Error</item>
+    <item name="counterTextAppearance">@style/TextAppearance.Design.Counter</item>
+    <item name="counterOverflowTextAppearance">@style/TextAppearance.Design.Counter.Overflow</item>
+    <item name="passwordToggleDrawable">@drawable/design_password_eye</item>
+    <item name="passwordToggleTint">@color/design_tint_password_toggle</item>
+    <item name="passwordToggleContentDescription">@string/password_toggle_content_description</item>
+  </style>
+    <style name="Widget.MaterialComponents.BottomAppBar" parent="Widget.AppCompat.Toolbar">
+    <item name="backgroundTint">@android:color/white</item>
+    <item name="fabCradleMargin">@dimen/mtrl_bottomappbar_fab_cradle_margin</item>
+    <item name="fabCradleRoundedCornerRadius">
+      @dimen/mtrl_bottomappbar_fab_cradle_rounded_corner_radius
+    </item>
+    <item name="fabCradleVerticalOffset">@dimen/mtrl_bottomappbar_fab_cradle_vertical_offset</item>
+  </style>
+    <style name="Widget.MaterialComponents.BottomAppBar.Colored" parent="Widget.MaterialComponents.BottomAppBar">
+    <item name="backgroundTint">?attr/colorPrimary</item>
+  </style>
+    <style name="Widget.MaterialComponents.BottomNavigationView" parent="Widget.Design.BottomNavigationView">
+    <item name="android:background">@android:color/white</item>
+    <item name="enforceTextAppearance">true</item>
+    <item name="itemHorizontalTranslationEnabled">false</item>
+    <item name="itemIconTint">@color/mtrl_bottom_nav_item_tint</item>
+    <item name="itemTextAppearanceInactive">?attr/textAppearanceCaption</item>
+    <item name="itemTextAppearanceActive">?attr/textAppearanceCaption</item>
+    <item name="itemTextColor">@color/mtrl_bottom_nav_item_tint</item>
+  </style>
+    <style name="Widget.MaterialComponents.BottomNavigationView.Colored">
+    <item name="android:background">?attr/colorPrimary</item>
+    <item name="itemIconTint">@color/mtrl_bottom_nav_colored_item_tint</item>
+    <item name="itemTextAppearanceInactive">?attr/textAppearanceCaption</item>
+    <item name="itemTextAppearanceActive">?attr/textAppearanceCaption</item>
+    <item name="itemTextColor">@color/mtrl_bottom_nav_colored_item_tint</item>
+  </style>
+    <style name="Widget.MaterialComponents.BottomSheet.Modal" parent="Widget.Design.BottomSheet.Modal"/>
+    <style name="Widget.MaterialComponents.Button" parent="Widget.AppCompat.Button">
+    <item name="enforceTextAppearance">true</item>
+    <item name="android:textAppearance">?attr/textAppearanceButton</item>
+    <item name="android:textColor">@color/mtrl_btn_text_color_selector</item>
+    <item name="android:paddingLeft">@dimen/mtrl_btn_padding_left</item>
+    <item name="android:paddingRight">@dimen/mtrl_btn_padding_right</item>
+    <item name="android:paddingTop">@dimen/mtrl_btn_padding_top</item>
+    <item name="android:paddingBottom">@dimen/mtrl_btn_padding_bottom</item>
+    <item name="android:insetLeft">0dp</item>
+    <item name="android:insetRight">0dp</item>
+    <item name="android:insetTop">@dimen/mtrl_btn_inset</item>
+    <item name="android:insetBottom">@dimen/mtrl_btn_inset</item>
+    <item name="android:stateListAnimator" ns1:ignore="NewApi">@animator/mtrl_btn_state_list_anim</item>
+    <item name="cornerRadius">@dimen/mtrl_btn_corner_radius</item>
+    <item name="iconPadding">@dimen/mtrl_btn_icon_padding</item>
+    <item name="iconTint">@color/mtrl_btn_text_color_selector</item>
+    <item name="rippleColor">@color/mtrl_btn_ripple_color</item>
+    <item name="backgroundTint">@color/mtrl_btn_bg_color_selector</item>
+  </style>
+    <style name="Widget.MaterialComponents.Button.Icon">
+    <item name="android:paddingLeft">@dimen/mtrl_btn_icon_btn_padding_left</item>
+  </style>
+    <style name="Widget.MaterialComponents.Button.OutlinedButton" parent="Widget.MaterialComponents.Button.TextButton">
+    <item name="android:paddingLeft">@dimen/mtrl_btn_padding_left</item>
+    <item name="android:paddingRight">@dimen/mtrl_btn_padding_right</item>
+    <item name="strokeColor">@color/mtrl_btn_stroke_color_selector</item>
+    <item name="strokeWidth">@dimen/mtrl_btn_stroke_size</item>
+  </style>
+    <style name="Widget.MaterialComponents.Button.OutlinedButton.Icon">
+    <item name="android:paddingLeft">@dimen/mtrl_btn_icon_btn_padding_left</item>
+  </style>
+    <style name="Widget.MaterialComponents.Button.TextButton" parent="Widget.MaterialComponents.Button.UnelevatedButton">
+    <item name="android:textColor">@color/mtrl_text_btn_text_color_selector</item>
+    <item name="android:paddingLeft">@dimen/mtrl_btn_text_btn_padding_left</item>
+    <item name="android:paddingRight">@dimen/mtrl_btn_text_btn_padding_right</item>
+    <item name="iconTint">@color/mtrl_text_btn_text_color_selector</item>
+    <item name="iconPadding">@dimen/mtrl_btn_text_btn_icon_padding</item>
+    <item name="backgroundTint">@color/mtrl_btn_transparent_bg_color</item>
+    <item name="rippleColor">@color/mtrl_btn_text_btn_ripple_color</item>
+  </style>
+    <style name="Widget.MaterialComponents.Button.TextButton.Dialog">
+    <item name="android:minWidth">@dimen/mtrl_btn_dialog_btn_min_width</item>
+  </style>
+    <style name="Widget.MaterialComponents.Button.TextButton.Dialog.Icon">
+    <!-- Icon text button has the same padding as a regular text button -->
+  </style>
+    <style name="Widget.MaterialComponents.Button.TextButton.Icon">
+    <!-- Icon text button has the same padding as a regular text button -->
+  </style>
+    <style name="Widget.MaterialComponents.Button.UnelevatedButton">
+    <item name="android:stateListAnimator" ns1:ignore="NewApi">@animator/mtrl_btn_unelevated_state_list_anim</item>
+  </style>
+    <style name="Widget.MaterialComponents.Button.UnelevatedButton.Icon">
+    <item name="android:paddingLeft">@dimen/mtrl_btn_icon_btn_padding_left</item>
+  </style>
+    <style name="Widget.MaterialComponents.CardView" parent="CardView">
+    <item name="cardElevation">@dimen/mtrl_card_elevation</item>
+    <item name="cardBackgroundColor">?attr/colorBackgroundFloating</item>
+  </style>
+    <style name="Widget.MaterialComponents.Chip.Action" parent="Base.Widget.MaterialComponents.Chip">
+    <item name="closeIconVisible">false</item>
+  </style>
+    <style name="Widget.MaterialComponents.Chip.Choice" parent="Base.Widget.MaterialComponents.Chip">
+    <item name="android:checkable">true</item>
+
+    <item name="chipIconVisible">false</item>
+    <item name="checkedIconVisible">false</item>
+    <item name="closeIconVisible">false</item>
+
+    <item name="checkedIcon">@drawable/ic_mtrl_chip_checked_black</item>
+  </style>
+    <style name="Widget.MaterialComponents.Chip.Entry" parent="Base.Widget.MaterialComponents.Chip">
+    <item name="android:checkable">true</item>
+  </style>
+    <style name="Widget.MaterialComponents.Chip.Filter" parent="Base.Widget.MaterialComponents.Chip">
+    <item name="android:checkable">true</item>
+
+    <item name="chipIconVisible">false</item>
+    <item name="closeIconVisible">false</item>
+
+    <item name="checkedIcon">@drawable/ic_mtrl_chip_checked_black</item>
+  </style>
+    <style name="Widget.MaterialComponents.ChipGroup" parent="android:Widget">
+    <item name="chipSpacing">4dp</item>
+    <item name="singleLine">false</item>
+    <item name="singleSelection">false</item>
+  </style>
+    <style name="Widget.MaterialComponents.FloatingActionButton" parent="Widget.Design.FloatingActionButton">
+    <item name="elevation">@dimen/mtrl_fab_elevation</item>
+    <item name="hoveredFocusedTranslationZ">@dimen/mtrl_fab_translation_z_hovered_focused</item>
+    <item name="pressedTranslationZ">@dimen/mtrl_fab_translation_z_pressed</item>
+    <item name="rippleColor">@color/mtrl_fab_ripple_color</item>
+    <item name="showMotionSpec">@animator/mtrl_fab_show_motion_spec</item>
+    <item name="hideMotionSpec">@animator/mtrl_fab_hide_motion_spec</item>
+  </style>
+    <style name="Widget.MaterialComponents.NavigationView" parent="Widget.Design.NavigationView">
+    <item name="elevation">@dimen/mtrl_navigation_elevation</item>
+    <item name="itemIconPadding">@dimen/mtrl_navigation_item_icon_padding</item>
+    <item name="itemHorizontalPadding">@dimen/mtrl_navigation_item_horizontal_padding</item>
+  </style>
+    <style name="Widget.MaterialComponents.Snackbar" parent="Widget.Design.Snackbar">
+    <item name="android:background">@drawable/mtrl_snackbar_background</item>
+    <item name="android:layout_margin">@dimen/mtrl_snackbar_margin</item>
+  </style>
+    <style name="Widget.MaterialComponents.Snackbar.FullWidth" parent="Widget.Design.Snackbar"/>
+    <style name="Widget.MaterialComponents.TabLayout" parent="Widget.Design.TabLayout">
+    <item name="enforceTextAppearance">true</item>
+    <item name="android:background">@android:color/white</item>
+    <item name="tabIconTint">@color/mtrl_tabs_icon_color_selector</item>
+    <item name="tabIndicatorAnimationDuration">@integer/mtrl_tab_indicator_anim_duration_ms</item>
+    <item name="tabIndicatorColor">?attr/colorAccent</item>
+    <item name="tabTextAppearance">?attr/textAppearanceButton</item>
+    <item name="tabTextColor">@color/mtrl_tabs_icon_color_selector</item>
+    <item name="tabRippleColor">@color/mtrl_tabs_ripple_color</item>
+    <item name="tabUnboundedRipple">true</item>
+  </style>
+    <style name="Widget.MaterialComponents.TabLayout.Colored">
+    <item name="android:background">?attr/colorAccent</item>
+    <item name="tabIconTint">@color/mtrl_tabs_icon_color_selector_colored</item>
+    <item name="tabIndicatorColor">@android:color/white</item>
+    <item name="tabTextColor">@color/mtrl_tabs_icon_color_selector_colored</item>
+    <item name="tabRippleColor">@color/mtrl_tabs_colored_ripple_color</item>
+  </style>
+    <style name="Widget.MaterialComponents.TextInputEditText.FilledBox" parent="Base.Widget.MaterialComponents.TextInputEditText">
+    <item name="android:paddingTop">20dp</item>
+    <item name="android:paddingBottom">16dp</item>
+  </style>
+    <style name="Widget.MaterialComponents.TextInputEditText.FilledBox.Dense">
+    <item name="android:paddingTop">16dp</item>
+    <item name="android:paddingBottom">16dp</item>
+  </style>
+    <style name="Widget.MaterialComponents.TextInputEditText.OutlinedBox" parent="Base.Widget.MaterialComponents.TextInputEditText"/>
+    <style name="Widget.MaterialComponents.TextInputEditText.OutlinedBox.Dense">
+    <item name="android:paddingTop">12dp</item>
+    <item name="android:paddingBottom">12dp</item>
+  </style>
+    <style name="Widget.MaterialComponents.TextInputLayout.FilledBox" parent="Base.Widget.MaterialComponents.TextInputLayout">
+    <item name="android:theme">@style/ThemeOverlay.MaterialComponents.TextInputEditText.FilledBox</item>
+    <item name="boxBackgroundMode">filled</item>
+    <item name="boxBackgroundColor">@color/mtrl_textinput_filled_box_default_background_color</item>
+    <item name="boxCollapsedPaddingTop">12dp</item>
+    <item name="boxCornerRadiusBottomStart">@dimen/mtrl_textinput_box_corner_radius_small</item>
+    <item name="boxCornerRadiusBottomEnd">@dimen/mtrl_textinput_box_corner_radius_small</item>
+  </style>
+    <style name="Widget.MaterialComponents.TextInputLayout.FilledBox.Dense">
+    <item name="android:theme">@style/ThemeOverlay.MaterialComponents.TextInputEditText.FilledBox.Dense</item>
+    <item name="boxCollapsedPaddingTop">8dp</item>
+  </style>
+    <style name="Widget.MaterialComponents.TextInputLayout.OutlinedBox" parent="Base.Widget.MaterialComponents.TextInputLayout">
+    <item name="android:theme">@style/ThemeOverlay.MaterialComponents.TextInputEditText.OutlinedBox
+    </item>
+    <item name="boxCollapsedPaddingTop">0dp</item>
+  </style>
+    <style name="Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+    <item name="android:theme">
+      @style/ThemeOverlay.MaterialComponents.TextInputEditText.OutlinedBox.Dense
+    </item>
+  </style>
+    <style name="Widget.MaterialComponents.Toolbar" parent="Widget.AppCompat.Toolbar">
+    <item name="titleTextAppearance">?attr/textAppearanceHeadline6</item>
+    <item name="titleTextColor">?android:attr/textColorPrimary</item>
+    <item name="subtitleTextAppearance">?attr/textAppearanceSubtitle1</item>
+    <item name="subtitleTextColor">?android:attr/textColorSecondary</item>
+    <!-- Overrides minimum height in landscape to avoid headline6 and subtitle1
+         height concerns. -->
+    <item name="android:minHeight">@dimen/mtrl_toolbar_default_height</item>
+  </style>
+</resources>
