@@ -1,0 +1,7 @@
+﻿  ANDROID_HOME=C:\Microsoft\AndroidSDK\25
+  ANT_HOME=c:\program files\microsoft visual studio\2022\preview\Apps\apache-ant-1.9.3
+  JAVA_HOME=C:\Program Files\Android\jdk\jdk-8.0.302.8-hotspot\jdk8u302-b08
+  NDK_ROOT=C:\Microsoft\AndroidNDK\android-ndk-r21e
+  pch.h
+  SharedObject1.cpp
+  SharedObject1.vcxproj -> C:\Users\peezo\source\repos\PeezoSlug\PTVS\SharedObject1\ARM64\Debug\libSharedObject1.so

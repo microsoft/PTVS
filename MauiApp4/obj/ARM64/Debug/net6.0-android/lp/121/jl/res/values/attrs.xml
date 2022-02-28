@@ -1,0 +1,4 @@
+<resources xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:android="http://schemas.android.com/apk/res/android"><!-- 
+    This defines the collectionViewStyle attribute so that we can use it 
+    to add the scrollbars style to the CollectionView/CarouselView renderers.
+  --><declare-styleable name="ItemsViewRendererTheme"><attr name="collectionViewStyle" format="reference" /></declare-styleable><declare-styleable name="ScrollViewRendererTheme"><attr name="scrollViewStyle" format="reference" /></declare-styleable></resources>

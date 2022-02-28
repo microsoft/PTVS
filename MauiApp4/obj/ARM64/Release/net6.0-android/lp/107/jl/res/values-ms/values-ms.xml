@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string msgid="6301633601645100427" name="nav_app_bar_navigate_up_description">"Navigasi ke atas"</string>
+    <string msgid="7456070600745802113" name="nav_app_bar_open_drawer_description">"Buka laci navigasi"</string>
+</resources>

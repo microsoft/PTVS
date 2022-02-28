@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<project>
+  <SOLibPaths>C:\Users\peezo\source\repos\PeezoSlug\PTVS\SharedObject1\ARM64\Debug\libSharedObject1.so;C:\Microsoft\AndroidNDK\android-ndk-r21e\prebuilt\android-arm64\gdbserver\gdbserver;C:\Microsoft\AndroidNDK\android-ndk-r21e\sources\cxx-stl\llvm-libc++\libs\arm64-v8a\libc++_static.a;C:\Microsoft\AndroidNDK\android-ndk-r21e\sources\cxx-stl\llvm-libc++\libs\arm64-v8a\libc++abi.a</SOLibPaths>
+  <AndroidLibPaths />
+  <OObjPaths>C:\Users\peezo\source\repos\PeezoSlug\PTVS\SharedObject1\ARM64\Debug</OObjPaths>
+  <Configuration>Debug</Configuration>
+  <Platform>ARM64</Platform>
+  <AndroidArchitecture>arm64-v8a</AndroidArchitecture>
+  <!--links to other recipe files-->
+  <RecipeFiles />
+</project>

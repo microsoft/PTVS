@@ -1,0 +1,5 @@
+Android/Resources/Layout/rootlayout.axml;layout/rootlayout.xml
+Android/Resources/Layout/tabbar.axml;layout/tabbar.xml
+Android/Resources/Layout/toolbar.axml;layout/toolbar.xml
+Android/Resources/values/styles.xml;values/styles.xml
+Android/Resources/values/attrs.xml;values/attrs.xml
