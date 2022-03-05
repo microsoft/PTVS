@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition="'$(ExcludeRestorePackageImports)' != 'true'">
+    <RestoreSuccess Condition="'$(RestoreSuccess)' == ''">True</RestoreSuccess>
+    <RestoreTool Condition="'$(RestoreTool)' == ''">NuGet</RestoreTool>
+    <ProjectAssetsFile Condition="'$(ProjectAssetsFile)' == ''">$(MSBuildThisFileDirectory)project.assets.json</ProjectAssetsFile>
+    <NuGetPackageRoot Condition="'$(NuGetPackageRoot)' == ''">$(UserProfile)\.nuget\packages\</NuGetPackageRoot>
+    <NuGetPackageFolders Condition="'$(NuGetPackageFolders)' == ''">C:\Users\peezo\.nuget\packages\;C:\Program Files (x86)\Microsoft Visual Studio\Shared\NuGetPackages</NuGetPackageFolders>
+    <NuGetProjectStyle Condition="'$(NuGetProjectStyle)' == ''">PackageReference</NuGetProjectStyle>
+    <NuGetToolVersion Condition="'$(NuGetToolVersion)' == ''">6.2.0</NuGetToolVersion>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(ExcludeRestorePackageImports)' != 'true'">
+    <SourceRoot Include="C:\Users\peezo\.nuget\packages\" />
+    <SourceRoot Include="C:\Program Files (x86)\Microsoft Visual Studio\Shared\NuGetPackages\" />
+  </ItemGroup>
+  <ImportGroup Condition="'$(TargetFramework)' == 'net6.0-android' AND '$(ExcludeRestorePackageImports)' != 'true'">
+    <Import Project="$(NuGetPackageRoot)microsoft.aspnetcore.components.webview.maui\6.0.200-preview.13.2865\build\Microsoft.AspNetCore.Components.WebView.Maui.props" Condition="Exists('$(NuGetPackageRoot)microsoft.aspnetcore.components.webview.maui\6.0.200-preview.13.2865\build\Microsoft.AspNetCore.Components.WebView.Maui.props')" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(TargetFramework)' == 'net6.0-ios' AND '$(ExcludeRestorePackageImports)' != 'true'">
+    <Import Project="$(NuGetPackageRoot)microsoft.aspnetcore.components.webview.maui\6.0.200-preview.13.2865\build\Microsoft.AspNetCore.Components.WebView.Maui.props" Condition="Exists('$(NuGetPackageRoot)microsoft.aspnetcore.components.webview.maui\6.0.200-preview.13.2865\build\Microsoft.AspNetCore.Components.WebView.Maui.props')" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(TargetFramework)' == 'net6.0-maccatalyst' AND '$(ExcludeRestorePackageImports)' != 'true'">
+    <Import Project="$(NuGetPackageRoot)microsoft.aspnetcore.components.webview.maui\6.0.200-preview.13.2865\build\Microsoft.AspNetCore.Components.WebView.Maui.props" Condition="Exists('$(NuGetPackageRoot)microsoft.aspnetcore.components.webview.maui\6.0.200-preview.13.2865\build\Microsoft.AspNetCore.Components.WebView.Maui.props')" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(TargetFramework)' == 'net6.0-windows10.0.19041' AND '$(ExcludeRestorePackageImports)' != 'true'">
+    <Import Project="C:\Program Files (x86)\Microsoft Visual Studio\Shared\NuGetPackages\microsoft.windows.sdk.buildtools\10.0.22000.194\build\Microsoft.Windows.SDK.BuildTools.props" Condition="Exists('C:\Program Files (x86)\Microsoft Visual Studio\Shared\NuGetPackages\microsoft.windows.sdk.buildtools\10.0.22000.194\build\Microsoft.Windows.SDK.BuildTools.props')" />
+    <Import Project="$(NuGetPackageRoot)microsoft.windowsappsdk\1.0.0\build\Microsoft.WindowsAppSDK.props" Condition="Exists('$(NuGetPackageRoot)microsoft.windowsappsdk\1.0.0\build\Microsoft.WindowsAppSDK.props')" />
+    <Import Project="$(NuGetPackageRoot)microsoft.aspnetcore.components.webview.maui\6.0.200-preview.13.2865\build\Microsoft.AspNetCore.Components.WebView.Maui.props" Condition="Exists('$(NuGetPackageRoot)microsoft.aspnetcore.components.webview.maui\6.0.200-preview.13.2865\build\Microsoft.AspNetCore.Components.WebView.Maui.props')" />
+  </ImportGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net6.0-windows10.0.19041' AND '$(ExcludeRestorePackageImports)' != 'true'">
+    <PkgMicrosoft_WindowsAppSDK Condition="'$(PkgMicrosoft_WindowsAppSDK)' == ''">C:\Users\peezo\.nuget\packages\microsoft.windowsappsdk\1.0.0\</PkgMicrosoft_WindowsAppSDK>
+  </PropertyGroup>
+</Project>
