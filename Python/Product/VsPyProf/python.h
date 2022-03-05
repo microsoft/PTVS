@@ -32,42 +32,80 @@ enum PythonVersion {
     PythonVersion_36 = 0x0306,
     PythonVersion_37 = 0x0307,
     PythonVersion_38 = 0x0308,
-    PythonVersion_39 = 0x0309
+    PythonVersion_39 = 0x0309,
+    PythonVersion_310 = 0x0310
+};
+
+struct PythonVersionMajMin {
+    int major;
+    int minor;
 };
 
 typedef const char* (GetVersionFunc)();
 
-static PythonVersion GetPythonVersion(HMODULE hMod) {
-    auto versionFunc = (GetVersionFunc*)GetProcAddress(hMod, "Py_GetVersion");
-    if (versionFunc != nullptr) {
-        auto version = versionFunc();
-        if (version != nullptr && strlen(version) >= 3 && version[1] == '.') {
-            if (version[0] == '2') {
-                switch (version[2]) {
-                case '5': return PythonVersion_25;
-                case '6': return PythonVersion_26;
-                case '7': return PythonVersion_27;
-                }
-            }
-            else if (version[0] == '3') {
-                switch (version[2]) {
-                case '0': return PythonVersion_30;
-                case '1': return PythonVersion_31;
-                case '2': return PythonVersion_32;
-                case '3': return PythonVersion_33;
-                case '4': return PythonVersion_34;
-                case '5': return PythonVersion_35;
-                case '6': return PythonVersion_36;
-                case '7': return PythonVersion_37;
-                case '8': return PythonVersion_38;
-                case '9': return PythonVersion_39;
-                }
-            }
-        }
+// Get the python version in major and minor parts from a version string
+static PythonVersionMajMin GetPythonVersionFromVersionString(const char* version) {
+
+    int major = atoi(version);
+    int minor = 0;
+
+    while (*version && *version >= '0' && *version <= '9') {
+        version++;
     }
-    return PythonVersion_Unknown;
+    if (*version == '.') {
+        version++;
+        minor = atoi(version);
+    }
+
+    PythonVersionMajMin ver = {};
+    ver.major = major;
+    ver.minor = minor;
+
+    return ver;
 }
 
+static PythonVersion GetPythonVersion(HMODULE hMod) {
+    auto versionFunc = (GetVersionFunc*)GetProcAddress(hMod, "Py_GetVersion");
+
+    // if we can't find the version function, we're done
+    if (versionFunc == nullptr) {
+        return PythonVersion_Unknown;
+    }
+    auto version = versionFunc();
+
+    // if the results of the version function are bad, we're done
+    if (version == nullptr || strlen(version) < 3 || version[1] != '.') {
+        return PythonVersion_Unknown;
+    }
+
+    // get the python major and minor versions, parse them, and return the correct enum
+    PythonVersionMajMin pythonVer = GetPythonVersionFromVersionString(version);
+
+    if (pythonVer.major == 2) {
+        switch (pythonVer.minor) {
+        case 5: return PythonVersion_25;
+        case 6: return PythonVersion_26;
+        case 7: return PythonVersion_27;
+        }
+    }
+    else if (pythonVer.major == 3) {
+        switch (pythonVer.minor) {
+        case 1: return PythonVersion_31;
+        case 2: return PythonVersion_32;
+        case 3: return PythonVersion_33;
+        case 4: return PythonVersion_34;
+        case 5: return PythonVersion_35;
+        case 6: return PythonVersion_36;
+        case 7: return PythonVersion_37;
+        case 8: return PythonVersion_38;
+        case 9: return PythonVersion_39;
+        case 10: return PythonVersion_310;
+        }
+    }
+
+    // if we get here, the version doesn't match an expected value
+    return PythonVersion_Unknown;
+}
 
 // defines limited header of Python API for compatible access across a number of Pythons.
 
@@ -243,7 +281,7 @@ public:
     }
 };
 
-// 3.8 - 3.9
+// 3.8 - 3.10
 class PyCodeObject38 : public PyObject {
 public:
     int co_argcount;            /* #arguments, except *args */
@@ -263,7 +301,10 @@ public:
     SSIZE_T* co_cell2arg;       /* Maps cell vars which are arguments. */
     PyObject* co_filename;      /* unicode (where it was loaded from) */
     PyObject* co_name;          /* unicode (name, for reference) */
-    PyObject* co_lnotab;        /* string (encoding addr<->lineno mapping) */
+    union {
+        PyObject* co_lnotab;    /* <= 3.9 string (encoding addr<->lineno mapping) */
+        PyObject* co_linetable; /* >= 3.10 string (encoding addr<->lineno mapping) */
+    };
     void* co_zombieframe;       /* for optimization only (see frameobject.c) */
 
     static bool IsFor(int majorVersion, int minorVersion) {
@@ -275,7 +316,8 @@ public:
     }
 };
 
-// 2.5 - 3.9
+// 2.5 - 3.10
+// corresponds to the PyFunctionObject struct in include\funcobject.h in the CPython install
 class PyFunctionObject : public PyObject {
 public:
     PyObject *func_code;    /* A code object */
@@ -298,7 +340,8 @@ public:
      */
 };
 
-// 2.4 - 3.9 compatible
+// 2.4 - 3.10 compatible
+// corresponds to the PyASCIIObject struct in include\cpython\unicodeobject.h in the CPython install
 typedef struct {
     PyObject_HEAD
     size_t length;      /* Length of raw Unicode data in buffer */
@@ -306,20 +349,16 @@ typedef struct {
     long hash;          /* Hash value; -1 if not set */
 } PyUnicodeObject;
 
-// 2.4 - 3.9 compatible
+// 2.4 - 3.10 compatible
+// corresponds to the _frame struct in include\cpython\frameobject.h in the CPython install.
 class PyFrameObject : public PyVarObject {
 public:
-    PyFrameObject *f_back;  /* previous frame, or NULL */
+    PyFrameObject *f_back;      /* previous frame, or NULL */
     PyObject *f_code;           /* code segment */
     PyObject *f_builtins;       /* builtin symbol table (PyDictObject) */
     PyObject *f_globals;        /* global symbol table (PyDictObject) */
     PyObject *f_locals;         /* local symbol table (any mapping) */
     PyObject **f_valuestack;    /* points after the last local */
-    /* Next free slot in f_valuestack.  Frame creation sets to f_valuestack.
-       Frame evaluation usually NULLs it, but a frame that yields sets it
-       to the current stack top. */
-    PyObject **f_stacktop;
-    PyObject *f_trace;          /* Trace function */
 };
 
 #define CO_MAXBLOCKS 20
@@ -331,6 +370,11 @@ typedef struct {
 
 class PyFrameObject25_33 : public PyFrameObject {
 public:
+        /* Next free slot in f_valuestack.  Frame creation sets to f_valuestack.
+       Frame evaluation usually NULLs it, but a frame that yields sets it
+       to the current stack top. */
+    PyObject **f_stacktop;
+    PyObject *f_trace;          /* Trace function */
     PyObject * f_exc_type, *f_exc_value, *f_exc_traceback;
     PyThreadState* f_tstate;
     int f_lasti;                /* Last instruction if called */
@@ -345,10 +389,20 @@ public:
         return majorVersion == 2 && (minorVersion >= 5 && minorVersion <= 7) ||
             majorVersion == 3 && (minorVersion >= 0 && minorVersion <= 3);
     }
+
+    static bool IsFor(PythonVersion version) {
+        return ((version >= PythonVersion_25 && version <= PythonVersion_27) ||
+            (version >= PythonVersion_30 && version <= PythonVersion_33));
+    }
 };
 
 class PyFrameObject34_36 : public PyFrameObject {
 public:
+        /* Next free slot in f_valuestack.  Frame creation sets to f_valuestack.
+       Frame evaluation usually NULLs it, but a frame that yields sets it
+       to the current stack top. */
+    PyObject **f_stacktop;
+    PyObject *f_trace;          /* Trace function */
     PyObject * f_exc_type, *f_exc_value, *f_exc_traceback;
     /* Borrowed reference to a generator, or NULL */
     PyObject *f_gen;
@@ -365,10 +419,20 @@ public:
     static bool IsFor(int majorVersion, int minorVersion) {
         return majorVersion == 3 && minorVersion >= 4 && minorVersion <= 6;
     }
+
+    static bool IsFor(PythonVersion version) {
+        return version >= PythonVersion_34 && version <= PythonVersion_36;
+    }
 };
 
-class PyFrameObject37 : public PyFrameObject {
+// 3.7 - 3.9
+class PyFrameObject37_39 : public PyFrameObject {
 public:
+        /* Next free slot in f_valuestack.  Frame creation sets to f_valuestack.
+       Frame evaluation usually NULLs it, but a frame that yields sets it
+       to the current stack top. */
+    PyObject **f_stacktop;
+    PyObject *f_trace;          /* Trace function */
     char f_trace_lines;         /* Emit per-line trace events? */
     char f_trace_opcodes;       /* Emit per-opcode trace events? */
     /* Borrowed reference to a generator, or NULL */
@@ -384,22 +448,73 @@ public:
     PyObject *f_localsplus[1];    /* locals+stack, dynamically sized */
 
     static bool IsFor(int majorVersion, int minorVersion) {
-        return majorVersion == 3 && minorVersion >= 7;
+        return majorVersion == 3 && (minorVersion >= 7 && minorVersion <= 9);
+    }
+
+    static bool IsFor(PythonVersion version) {
+        return version >= PythonVersion_37 && version <= PythonVersion_39;
+    }
+};
+
+enum _framestate {
+    FRAME_CREATED = -2,
+    FRAME_SUSPENDED = -1,
+    FRAME_EXECUTING = 0,
+    FRAME_RETURNED = 1,
+    FRAME_UNWINDING = 2,
+    FRAME_RAISED = 3,
+    FRAME_CLEARED = 4
+};
+
+typedef signed char PyFrameState;
+
+// 3.10
+// corresponds to the _frame struct in include\cpython\frameobject.h in the CPython install.
+class PyFrameObject310 : public PyFrameObject {
+public:
+    PyObject *f_trace;          /* Trace function */
+    int f_stackdepth;           /* Depth of value stack */
+    char f_trace_lines;         /* Emit per-line trace events? */
+    char f_trace_opcodes;       /* Emit per-opcode trace events? */
+
+    /* Borrowed reference to a generator, or NULL */
+    PyObject *f_gen;
+
+    int f_lasti;                /* Last instruction if called */
+    /* As of 2.3 f_lineno is only valid when tracing is active (i.e. when
+       f_trace is set) -- at other times use PyCode_Addr2Line instead. */
+    int f_lineno;               /* Current line number */
+    int f_iblock;               /* index in f_blockstack */
+    PyFrameState f_state;       /* What state the frame is in */
+    PyTryBlock f_blockstack[CO_MAXBLOCKS]; /* for try and loop blocks */
+    PyObject *f_localsplus[1];    /* locals+stack, dynamically sized */
+
+    static bool IsFor(int majorVersion, int minorVersion) {
+        return majorVersion == 3 && minorVersion >= 10;
+    }
+
+    static bool IsFor(PythonVersion version) {
+        return version >= PythonVersion_310;
     }
 };
 
 
 typedef void (*destructor)(PyObject *);
 
-// 2.4 - 3.9
+// 2.4 - 3.10
+// corresponds to the PyMethodDef struct in include\methodobject.h in the CPython install
 class PyMethodDef {
 public:
     char    *ml_name;    /* The name of the built-in function/method */
+    PyObject *m_self;
+    PyObject *m_module;
+    PyObject *m_reflist;
 };
 
 
 // 
-// 2.5 - 3.9
+// 2.5 - 3.10
+// corresponds to the _typeobject struct in include\cpython\object.h in the CPython install
 // While these are compatible there are fields only available on later versions.
 class PyTypeObject : public PyVarObject {
 public:
@@ -409,12 +524,15 @@ public:
     /* Methods to implement standard operations */
 
     destructor tp_dealloc;
-    void *tp_print; // 3.8: Py_ssize_t tp_vectorcall_offset; (same size as void*)
+    union {
+        void* tp_print; // < 3.8
+        void* tp_vectorcall_offset; // >= 3.8
+    };
     void *tp_getattr;
     void *tp_setattr;
     union {
         void *tp_compare; /* 2.4 - 3.4 */
-        void *tp_as_async; /* 3.5 - 3.7 */
+        void *tp_as_async; /* > 3.5 */
     };
     void *tp_repr;
 
@@ -484,7 +602,8 @@ public:
     unsigned int tp_version_tag;
 };
 
-// 2.4 - 3.9
+// 2.4 - 3.10
+// corresponds to the PyTupleObject struct in include\cpython\tupleobject.h in the CPython install
 class PyTupleObject : public PyVarObject {
 public:
     PyObject *ob_item[1];
@@ -495,7 +614,8 @@ public:
      */
 };
 
-// 2.4 - 3.9
+// 2.4 - 3.10
+// corresponds to the PyCFunctionObject struct in include\cpython\methodobject.h in the CPython install
 class PyCFunctionObject : public PyObject {
 public:
     PyMethodDef *m_ml;      /* Description of the C function to call */
@@ -680,7 +800,8 @@ struct _PyErr_StackItem {
     struct _PyErr_StackItem *previous_item;
 };
 
-class PyThreadState_37 : public PyThreadState {
+// 3.7 - 3.9
+class PyThreadState_37_39 : public PyThreadState {
 public:
     PyThreadState * prev;
     PyThreadState *next;
@@ -721,11 +842,83 @@ public:
     unsigned long thread_id; /* Thread id where this tstate was created */
 
     static bool IsFor(int majorVersion, int minorVersion) {
-        return majorVersion == 3 && minorVersion >= 7;
+        return majorVersion == 3 && (minorVersion >= 7 && minorVersion <= 9);
     }
 
     static bool IsFor(PythonVersion version) {
-        return version >= PythonVersion_37;
+        return version >= PythonVersion_37 && version <= PythonVersion_39;
+    }
+};
+
+typedef struct _cframe {
+    /* This struct will be threaded through the C stack
+     * allowing fast access to per-thread state that needs
+     * to be accessed quickly by the interpreter, but can
+     * be modified outside of the interpreter.
+     *
+     * WARNING: This makes data on the C stack accessible from
+     * heap objects. Care must be taken to maintain stack
+     * discipline and make sure that instances of this struct cannot
+     * accessed outside of their lifetime.
+     */
+    int use_tracing;
+    struct _cframe *previous;
+} CFrame;
+
+// 3.10
+// corresponds to the _ts struct in include\cpython\pystate.h in the CPython install
+class PyThreadState_310 : public PyThreadState {
+public:
+    PyThreadState * prev;
+    PyThreadState *next;
+    PyInterpreterState *interp;
+
+    PyFrameObject *frame;
+    int recursion_depth;
+    int recursion_headroom; /* Allow 50 more calls to handle any errors. */
+    int stackcheck_counter;
+
+    /* 'tracing' keeps track of the execution depth when tracing/profiling.
+       This is to prevent the actual trace/profile code from being recorded in
+       the trace/profile. */
+    int tracing;
+
+    /* Pointer to current CFrame in the C stack frame of the currently,
+     * or most recently, executing _PyEval_EvalFrameDefault. */
+    CFrame *cframe;
+
+    Py_tracefunc c_profilefunc;
+    Py_tracefunc c_tracefunc;
+    PyObject *c_profileobj;
+    PyObject *c_traceobj;
+
+    /* The exception currently being raised */
+    PyObject *curexc_type;
+    PyObject *curexc_value;
+    PyObject *curexc_traceback;
+
+    /* The exception currently being handled, if no coroutines/generators
+     * are present. Always last element on the stack referred to be exc_info.
+     */
+    _PyErr_StackItem exc_state;
+
+    /* Pointer to the top of the stack of the exceptions currently
+     * being handled */
+    _PyErr_StackItem *exc_info;
+
+    PyObject *dict;  /* Stores per-thread state */
+
+    int gilstate_counter;
+
+    PyObject *async_exc; /* Asynchronous exception to raise */
+    unsigned long thread_id; /* Thread id where this tstate was created */
+
+    static bool IsFor(int majorVersion, int minorVersion) {
+        return majorVersion == 3 && minorVersion >= 10;
+    }
+
+    static bool IsFor(PythonVersion version) {
+        return version >= PythonVersion_310;
     }
 };
 

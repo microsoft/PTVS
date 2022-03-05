@@ -45,12 +45,14 @@ namespace TestUtilities {
         public static readonly PythonVersion Python37 = GetCPythonVersion(PythonLanguageVersion.V37, InterpreterArchitecture.x86);
         public static readonly PythonVersion Python38 = GetCPythonVersion(PythonLanguageVersion.V38, InterpreterArchitecture.x86);
         public static readonly PythonVersion Python39 = GetCPythonVersion(PythonLanguageVersion.V39, InterpreterArchitecture.x86);
+        public static readonly PythonVersion Python310 = GetCPythonVersion(PythonLanguageVersion.V310, InterpreterArchitecture.x86);
         public static readonly PythonVersion Python27_x64 = GetCPythonVersion(PythonLanguageVersion.V27, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python35_x64 = GetCPythonVersion(PythonLanguageVersion.V35, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python36_x64 = GetCPythonVersion(PythonLanguageVersion.V36, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python37_x64 = GetCPythonVersion(PythonLanguageVersion.V37, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python38_x64 = GetCPythonVersion(PythonLanguageVersion.V38, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python39_x64 = GetCPythonVersion(PythonLanguageVersion.V39, InterpreterArchitecture.x64);
+        public static readonly PythonVersion Python310_x64 = GetCPythonVersion(PythonLanguageVersion.V310, InterpreterArchitecture.x64);
         public static readonly PythonVersion Anaconda27 = GetAnacondaVersion(PythonLanguageVersion.V27, InterpreterArchitecture.x86);
         public static readonly PythonVersion Anaconda27_x64 = GetAnacondaVersion(PythonLanguageVersion.V27, InterpreterArchitecture.x64);
         public static readonly PythonVersion Anaconda36 = GetAnacondaVersion(PythonLanguageVersion.V36, InterpreterArchitecture.x86);

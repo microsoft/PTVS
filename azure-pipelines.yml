@@ -108,7 +108,6 @@ steps:
       DropServiceUri: 'https://devdiv.artifacts.visualstudio.com/DefaultCollection'
       VSDropServiceUri: 'https://vsdrop.corp.microsoft.com/file/v1'
       AccessToken: '$(System.AccessToken)'
-    continueOnError: true
 
   # publish symbols
   - template: Build/templates/publish_symbols.yml

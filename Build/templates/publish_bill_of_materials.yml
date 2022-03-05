@@ -7,6 +7,7 @@ steps:
       BuildDropPath: '$(Build.StagingDirectory)\release'
       PackageName: 'PTVS'
       PackageVersion: '$(VSTarget)'
+    continueOnError: true
   
   # publish the bill of materials as a build artifact
   - task: PublishBuildArtifacts@1
@@ -14,3 +15,4 @@ steps:
     inputs:
       PathtoPublish: '$(Build.StagingDirectory)\release\_manifest'
       ArtifactName: SBOM
+    continueOnError: true
