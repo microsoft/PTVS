@@ -80,22 +80,14 @@ VsPyProf* VsPyProf::Create(HMODULE pythonModule) {
         pyFuncType != NULL && pyModuleType != NULL) {
             auto version = getVersion();
             if (version != NULL) {
-                // parse version like "2.7"
-                int major = atoi(version);
-                int minor = 0;
-                while (*version && *version >= '0' && *version <= '9') {
-                    version++;
-                }
-                if (*version == '.') {
-                    version++;
-                    minor = atoi(version);
-                }
 
-                if ((major == 2 && (minor >= 4 && minor <= 7)) ||
-                    (major == 3 && (minor >= 0 && minor <= 9))) {
+                PythonVersionMajMin pythonVer = GetPythonVersionFromVersionString(version);
+
+                if ((pythonVer.major == 2 && (pythonVer.minor >= 4 && pythonVer.minor <= 7)) ||
+                    (pythonVer.major == 3 && (pythonVer.minor >= 0 && pythonVer.minor <= 10))) {
                         return new VsPyProf(pythonModule,
-                            major,
-                            minor,
+                            pythonVer.major,
+                            pythonVer.minor,
                             enterFunction,
                             exitFunction,
                             nameToken,
@@ -282,8 +274,10 @@ wstring VsPyProf::GetClassNameFromFrame(PyFrameObject* frameObj, PyObject *codeO
                     self = ((PyFrameObject25_33*)frameObj)->f_localsplus[0];
                 } else if (PyFrameObject34_36::IsFor(MajorVersion, MinorVersion)) {
                     self = ((PyFrameObject34_36*)frameObj)->f_localsplus[0];
-                } else if (PyFrameObject37::IsFor(MajorVersion, MinorVersion)) {
-                    self = ((PyFrameObject37*)frameObj)->f_localsplus[0];
+                } else if (PyFrameObject37_39::IsFor(MajorVersion, MinorVersion)) {
+                    self = ((PyFrameObject37_39*)frameObj)->f_localsplus[0];
+                } else if (PyFrameObject310::IsFor(MajorVersion, MinorVersion)) {
+                    self = ((PyFrameObject310*)frameObj)->f_localsplus[0];
                 }
                 return GetClassNameFromSelf(self, codeObj);
             }
