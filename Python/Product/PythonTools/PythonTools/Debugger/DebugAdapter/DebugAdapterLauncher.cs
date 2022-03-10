@@ -16,16 +16,16 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Web;
 using System.Windows.Forms;
+using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
 using Microsoft.VisualStudio.Shell;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Debugger {
@@ -42,25 +42,49 @@ namespace Microsoft.PythonTools.Debugger {
 
         public DebugAdapterLauncher() { }
 
-        public void Initialize(IDebugAdapterHostContext context) => _adapterHostContext = context ?? throw new ArgumentNullException(nameof(context));
+        public void Initialize(IDebugAdapterHostContext context) {
+            _adapterHostContext = context ?? throw new ArgumentNullException(nameof(context));
+
+            // We need various PTVS services to retrieve debug options and interpreters, but it's
+            // possible for the package to not be loaded yet if Attach to Process dialog is used
+            // before loading a Python project or using some PTVS command.
+            PythonToolsPackage.EnsureLoaded();
+        }
 
         public ITargetHostProcess LaunchAdapter(IAdapterLaunchInfo launchInfo, ITargetHostInterop targetInterop) {
-            if (launchInfo.LaunchType == LaunchType.Attach) {
-                var debugAttachInfo = (DebugAttachInfo)_debugInfo;
-                return DebugAdapterRemoteProcess.Attach(debugAttachInfo);
+            if (_debugInfo is DebugTcpAttachInfo tcpAttach) { 
+                return DebugAdapterRemoteProcess.Attach(tcpAttach);
             }
 
-            var debugLaunchInfo = (DebugLaunchInfo)_debugInfo;
+            string pythonExe, webPageUrl;
+            if (_debugInfo is DebugLaunchInfo launch) {
+                pythonExe = launch.InterpreterPathAndArguments.FirstOrDefault();
+                webPageUrl = launch.LaunchWebPageUrl;
+            } else if (_debugInfo is DebugLocalAttachInfo) {
+                var interp = ((PythonToolsService)Package.GetGlobalService(typeof(PythonToolsService))).InterpreterOptionsService.DefaultInterpreter;
+                if (interp == null) {
+                    throw new Exception(Strings.NoInterpretersAvailable);
+                }
+                interp.ThrowIfNotRunnable();
+                pythonExe = interp.Configuration.InterpreterPath;
+                webPageUrl = null;
+            } else {
+                throw new ArgumentException(nameof(launchInfo));
+            }
+
             var debugPyAdapterDirectory = Path.GetDirectoryName(PythonToolsInstallPath.GetFile("debugpy\\adapter\\__init__.py"));
             var targetProcess = new DebugAdapterProcess(_adapterHostContext, targetInterop, debugPyAdapterDirectory);
-
-            return targetProcess.StartProcess(debugLaunchInfo.InterpreterPathAndArguments.FirstOrDefault(), debugLaunchInfo.LaunchWebPageUrl);
+            return targetProcess.StartProcess(pythonExe, webPageUrl);
         }
 
         public void UpdateLaunchOptions(IAdapterLaunchInfo adapterLaunchInfo) {
-            _debugInfo = adapterLaunchInfo.LaunchType == LaunchType.Launch
-                ? GetLaunchDebugInfo(adapterLaunchInfo.LaunchJson)
-                : (DebugInfo)GetTcpAttachDebugInfo(adapterLaunchInfo);
+            if (adapterLaunchInfo.LaunchType == LaunchType.Launch) {
+                _debugInfo = GetLaunchDebugInfo(adapterLaunchInfo.LaunchJson);
+            } else if (adapterLaunchInfo.DebugPort is PythonRemoteDebugPort) {
+                _debugInfo = GetTcpAttachDebugInfo(adapterLaunchInfo);
+            } else {
+                _debugInfo = GetLocalAttachDebugInfo(adapterLaunchInfo);
+            }
 
             AddDebuggerOptions(adapterLaunchInfo, _debugInfo);
             adapterLaunchInfo.LaunchJson = _debugInfo.GetJsonString();
@@ -164,8 +188,8 @@ namespace Microsoft.PythonTools.Debugger {
         #endregion
 
         #region Attach
-        private static DebugAttachInfo GetTcpAttachDebugInfo(IAdapterLaunchInfo adapterLaunchInfo) {
-            var debugAttachInfo = new DebugAttachInfo();
+        private static DebugTcpAttachInfo GetTcpAttachDebugInfo(IAdapterLaunchInfo adapterLaunchInfo) {
+            var debugAttachInfo = new DebugTcpAttachInfo();
 
             adapterLaunchInfo.DebugPort.GetPortName(out var adapterHostPortInfo);
             debugAttachInfo.RemoteUri = new Uri(adapterHostPortInfo);
@@ -176,6 +200,9 @@ namespace Microsoft.PythonTools.Debugger {
 
             return debugAttachInfo;
         }
+
+        private static DebugLocalAttachInfo GetLocalAttachDebugInfo(IAdapterLaunchInfo adapterLaunchInfo) =>
+            new DebugLocalAttachInfo { ProcessId = adapterLaunchInfo.AttachProcessId };
 
         #endregion
 

@@ -207,6 +207,14 @@ namespace Microsoft.PythonTools {
             }
         }
 
+        internal static void EnsureLoaded() {
+            var shell = (IVsShell)GetGlobalService(typeof(SVsShell));
+            var pkgGuid = CommonGuidList.guidPythonToolsPackage;
+            if (ErrorHandler.Failed(shell.IsPackageLoaded(ref pkgGuid, out var pkg)) || pkg == null) {
+                Marshal.ThrowExceptionForHR(shell.LoadPackage(ref pkgGuid, out pkg));
+            }
+        }
+
         public override Microsoft.VisualStudio.Shell.Interop.IVsAsyncToolWindowFactory GetAsyncToolWindowFactory(Guid toolWindowType)
             => toolWindowType == typeof(InterpreterListToolWindow).GUID ? this : base.GetAsyncToolWindowFactory(toolWindowType);
 
