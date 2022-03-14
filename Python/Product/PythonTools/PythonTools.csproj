@@ -442,7 +442,6 @@
       <DependentUpon>ModernDialogHeaderControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="PythonTools\Repl\PythonCommonInteractiveEvaluator.cs" />
-    <Compile Include="PythonTools\Repl\PythonDebugProcessReplEvaluator.cs" />
     <Compile Include="PythonTools\SearchPathManager.cs" />
     <Compile Include="PythonTools\Project\VsPackageManagerUI.cs" />
     <Compile Include="PythonTools\ProvideBraceCompletionAttribute.cs" />

@@ -84,7 +84,7 @@ namespace Microsoft.PythonTools {
     [ProvideLanguageExtension(typeof(PythonLanguageInfo), PythonConstants.WindowsFileExtension)]
     [ProvideLanguageExtension(typeof(PythonLanguageInfo), PythonConstants.StubFileExtension)]
     [ProvideDebugEngine(AD7Engine.DebugEngineName, typeof(AD7ProgramProvider), typeof(AD7Engine), AD7Engine.DebugEngineId, hitCountBp: true)]
-    [ProvideDebugAdapter("VSCode Python Debugger", DebugAdapterLauncher.VSCodeDebugEngineId, DebugAdapterLauncher.DebugAdapterLauncherCLSID, CustomDebugAdapterProtocolExtension.CustomProtocolExtensionCLSID, "Python", "{DA3C7D59-F9E4-4697-BEE7-3A0703AF6BFF}", typeof(DebugAdapterLauncher), typeof(CustomDebugAdapterProtocolExtension))]
+    [ProvideDebugAdapter("Python", DebugAdapterLauncher.VSCodeDebugEngineId, DebugAdapterLauncher.DebugAdapterLauncherCLSID, CustomDebugAdapterProtocolExtension.CustomProtocolExtensionCLSID, "Python", "{DA3C7D59-F9E4-4697-BEE7-3A0703AF6BFF}", typeof(DebugAdapterLauncher), typeof(CustomDebugAdapterProtocolExtension))]
     [ProvideDebugLanguage("Python", "{DA3C7D59-F9E4-4697-BEE7-3A0703AF6BFF}", PythonExpressionEvaluatorGuid, AD7Engine.DebugEngineId)]
     [ProvideDebugPortSupplier("Python remote (ptvsd)", typeof(PythonRemoteDebugPortSupplier), PythonRemoteDebugPortSupplier.PortSupplierId, typeof(PythonRemoteDebugPortPicker))]
     [ProvideDebugPortPicker(typeof(PythonRemoteDebugPortPicker))]
