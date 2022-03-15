@@ -5,7 +5,8 @@ $ErrorActionPreference = "Stop"
 # These packages require a versionless symlink pointing to the versioned install.
 $need_symlink = @(
     "python",
-    "MicroBuild.Core",
+#    "MicroBuild.Core",                             # for dev16, uncomment this line
+    "Microsoft.VisualStudioEng.MicroBuild.Core",    # for dev16, comment this line
     "Microsoft.Python.Parsing",
     "Microsoft.DiaSymReader.Pdb2Pdb",
     "Microsoft.Extensions.FileSystemGlobbing",
