@@ -361,9 +361,8 @@ namespace Microsoft.PythonTools.Environments {
             }
 
             _isStartupFocusSet = true;
-            var textBox = ((AddCondaEnvironmentControl)sender).EnvNameTextBox;
-            textBox.SelectAll();
-            textBox.Focus();
+            var comboBox = ((AddCondaEnvironmentControl)sender).ProjectComboBox;
+            comboBox.Focus();
         }
 
         private void AddVirtualEnvironmentControl_Loaded(object sender, RoutedEventArgs e) {
@@ -372,9 +371,8 @@ namespace Microsoft.PythonTools.Environments {
             }
 
             _isStartupFocusSet = true;
-            var textBox = ((AddVirtualEnvironmentControl)sender).EnvNameTextBox;
-            textBox.SelectAll();
-            textBox.Focus();
+            var comboBox = ((AddVirtualEnvironmentControl)sender).ProjectComboBox;
+            comboBox.Focus();
         }
 
         private void AddExistingEnvironmentControl_Loaded(object sender, RoutedEventArgs e) {
