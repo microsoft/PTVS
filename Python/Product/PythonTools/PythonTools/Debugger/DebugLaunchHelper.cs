@@ -158,7 +158,23 @@ namespace Microsoft.PythonTools.Debugger {
             // jsonObj["$adapterArgs"] = "";
             // jsonObj["$adapterRuntime"] = "";
 
+            // There is a bug when trying to run the 3.10+ python.exe directly from conda environments
+            // See https://github.com/conda/conda/issues/11072
+            // The workaround is to run this instead:
+            // conda run -n <env> --no-capture-output --live-stream python <debugpy>
+            if (CondaUtils.IsCondaEnvironment(Path.GetDirectoryName(config.GetInterpreterPath())) &&
+                config.Interpreter.Version > new Version(3, 10)) {
+
+                DoConda310Workaround(jsonObj);
+            }
+
             return jsonObj.ToString();
+        }
+
+        private static void DoConda310Workaround(JObject jsonObj) {
+
+            // do stuff
+
         }
 
         public static void RequireStartupFile(LaunchConfiguration config) {
