@@ -12,6 +12,13 @@ steps:
 
   # nuget authenticate so we can restore from azure artifacts
   - task: NuGetAuthenticate@0
+    displayName: 'NuGet Authenticate'
+
+  # npm authenticate so we can restore from azure artifacts
+  - task: npmAuthenticate@0
+    displayName: 'npm Authenticate'
+    inputs:
+      workingFile: .npmrc
 
   # Restore packages and install dependencies (pylance, debugpy)
   - task: PowerShell@1

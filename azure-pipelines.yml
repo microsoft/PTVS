@@ -86,7 +86,7 @@ steps:
   - template: Build/templates/install_microbuild_plugins.yml
 
 # configure pylance before installing it
-- template: Build/templates/configure_pylance.yml
+#- template: Build/templates/configure_pylance.yml
 
 # Restore packages and install dependencies (pylance, debugpy)
 - template: Build/templates/restore_packages.yml
