@@ -165,7 +165,10 @@ namespace Microsoft.PythonTools.Debugger {
             if (CondaUtils.IsCondaEnvironment(Path.GetDirectoryName(config.GetInterpreterPath())) &&
                 config.Interpreter.Version > new Version(3, 10)) {
 
-                DoConda310Workaround(jsonObj);
+                var condaProvider = provider.GetComponentModel().GetService<CondaEnvironmentFactoryProvider>();
+                var condaExe = condaProvider
+
+                //DoConda310Workaround(provider, jsonObj);
             }
 
             return jsonObj.ToString();
