@@ -327,6 +327,8 @@
 
                         <!-- Preview results -->
                         <ScrollViewer
+                        x:Name="CondaEnvironmentPreview"
+                        AutomationProperties.Name ="CondaEnvironmentPreview"
                         Grid.Row="1"
                         AutomationProperties.AutomationId="PreviewResult"
                         VerticalScrollBarVisibility="Auto"
