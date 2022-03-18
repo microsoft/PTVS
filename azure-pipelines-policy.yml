@@ -55,9 +55,6 @@ steps:
 - task: MicroBuildSwixPlugin@3
   displayName: 'Install microbuild swix plugin'
 
-# configure pylance before installing it
-- template: Build/templates/configure_pylance.yml
-
 # Restore packages and install dependencies (pylance, debugpy)
 - template: Build/templates/restore_packages.yml
   parameters:
