@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Debugger {
 
         private DebugAdapterRemoteProcess() { }
 
-        public static ITargetHostProcess Attach(DebugAttachInfo debugAttachInfo) {
+        public static ITargetHostProcess Attach(DebugTcpAttachInfo debugAttachInfo) {
             var attachedProcess = new DebugAdapterRemoteProcess();
             return attachedProcess.ConnectSocket(debugAttachInfo.RemoteUri) ? attachedProcess : null;
         }

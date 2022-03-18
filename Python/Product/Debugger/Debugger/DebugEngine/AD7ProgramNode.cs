@@ -32,10 +32,13 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         #region IDebugProgramNode2 Members
 
+        private const string VSCodeDebugEngineId = "{86432F39-ADFD-4C56-AA8F-AF8FCDC66039}";
+        private static Guid VSCodeDebugEngine = new Guid(VSCodeDebugEngineId);
+
         // Gets the name and identifier of the DE running this program.
         int IDebugProgramNode2.GetEngineInfo(out string engineName, out Guid engineGuid) {
             engineName = "Python";
-            engineGuid = new Guid(AD7Engine.DebugEngineId);
+            engineGuid = VSCodeDebugEngine;
 
             return VSConstants.S_OK;
         }

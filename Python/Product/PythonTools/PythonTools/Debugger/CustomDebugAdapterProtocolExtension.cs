@@ -33,7 +33,8 @@ namespace Microsoft.PythonTools.Debugger {
         public CustomDebugAdapterProtocolExtension() {}
 
         private static CustomDebugAdapterProtocolExtension Evaluator { get; set; }
-        public static bool CanUseExperimental() {
+
+        public static bool IsAvailable() {
             return Evaluator != null;
         }
 
