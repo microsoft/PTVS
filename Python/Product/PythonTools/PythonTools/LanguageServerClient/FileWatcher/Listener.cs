@@ -114,11 +114,14 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
                 return;
             }
 
-            // If the rpc has been disconnected, the _rpc_Disconnected callback will set _rpc to null.
-            // So check for null now, and also check before every rpc call to avoid a null reference exception
+            // _rpc can be disposed and set to null at any time, since all the calls using it are asynchronous.
+            // If the rpc has already been set to null, we're done.
+            // Otherwise, store a local copy of the rpc to avoid having to check for null every time it's used.
+            // Then, when using it, catch any expected exceptions to avoid a crash.
             if (_rpc is null) {
                 return;
             }
+            var rpc = _rpc;
 
             // Create something to match with
             var item = new InMemoryDirectoryInfo(_root, new string[] { e.FullPath });
@@ -168,9 +171,7 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
 
                 if (didChangeParams.Changes.Any()) {
                     try {
-                        if (_rpc != null) {
-                            await _rpc.NotifyWithParameterObjectAsync(Methods.WorkspaceDidChangeWatchedFiles.Name, didChangeParams);
-                        }
+                        await rpc.NotifyWithParameterObjectAsync(Methods.WorkspaceDidChangeWatchedFiles.Name, didChangeParams);
                         if (renamedArgs != null) {
                             var textDocumentIdentifier = new TextDocumentIdentifier();
                             textDocumentIdentifier.Uri = new Uri(renamedArgs.OldFullPath);
@@ -178,19 +179,15 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
                             var closeParam = new DidCloseTextDocumentParams();
                             closeParam.TextDocument = textDocumentIdentifier;
 
-                            if (_rpc != null) {
-                                await _rpc.NotifyWithParameterObjectAsync(Methods.TextDocumentDidClose.Name, closeParam);
-                            }
+                            await rpc.NotifyWithParameterObjectAsync(Methods.TextDocumentDidClose.Name, closeParam);
                             var textDocumentItem = new TextDocumentItem();
                             textDocumentItem.Uri = new Uri(renamedArgs.FullPath);
 
                             var openParam = new DidOpenTextDocumentParams();
                             openParam.TextDocument = textDocumentItem;
-                            if (_rpc != null) {
-                                await _rpc.NotifyWithParameterObjectAsync(Methods.TextDocumentDidOpen.Name, openParam);
-                            }
+                            await rpc.NotifyWithParameterObjectAsync(Methods.TextDocumentDidOpen.Name, openParam);
                         }
-                    } catch (ConnectionLostException) { 
+                    } catch (ConnectionLostException) {
                         // If the rpc is disposed in the middle of an rpc call, a ConnectionLostException is thrown.
                         // Catch this to avoid an unhandled exception.
                     }
