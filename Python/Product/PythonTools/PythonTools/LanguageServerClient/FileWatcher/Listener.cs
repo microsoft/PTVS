@@ -108,56 +108,70 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
             await OnFileChanged(sender, e);
         }
         private async Task OnFileChanged(object sender, System.IO.FileSystemEventArgs e) {
-            // Skip directory change events and when rpc has ben disconnected
-            if (!e.IsDirectoryChanged() && _rpc != null) {
-                // Create something to match with
-                var item = new InMemoryDirectoryInfo(_root, new string[] { e.FullPath });
 
-                // See if this matches one of our patterns.
-                if (_matcher.Execute(item).HasMatches) {
-                    // Send out the event to the language server
-                    var renamedArgs = e as System.IO.RenamedEventArgs;
-                    var didChangeParams = new DidChangeWatchedFilesParams();
+            // Skip directory change events
+            if (e.IsDirectoryChanged()) {
+                return;
+            }
 
-                    // Visual Studio actually does a rename when saving. The rename is from a file ending with '~'
-                    if (renamedArgs == null || renamedArgs.OldFullPath.EndsWith("~")) {
-                        renamedArgs = null;
-                        didChangeParams.Changes = new FileEvent[] { new FileEvent() };
-                        didChangeParams.Changes[0].Uri = new Uri(e.FullPath);
+            // _rpc can be disposed and set to null at any time, since all the calls using it are asynchronous.
+            // If the rpc has already been set to null, we're done.
+            // Otherwise, store a local copy of the rpc to avoid having to check for null every time it's used.
+            // Then, when using it, catch any expected exceptions to avoid a crash.
+            if (_rpc is null) {
+                return;
+            }
+            var rpc = _rpc;
 
-                        switch (e.ChangeType) {
-                            case WatcherChangeTypes.Created:
-                                didChangeParams.Changes[0].FileChangeType = FileChangeType.Created;
-                                break;
-                            case WatcherChangeTypes.Deleted:
-                                didChangeParams.Changes[0].FileChangeType = FileChangeType.Deleted;
-                                break;
-                            case WatcherChangeTypes.Changed:
-                                didChangeParams.Changes[0].FileChangeType = FileChangeType.Changed;
-                                break;
-                            case WatcherChangeTypes.Renamed:
-                                didChangeParams.Changes[0].FileChangeType = FileChangeType.Changed;
-                                break;
+            // Create something to match with
+            var item = new InMemoryDirectoryInfo(_root, new string[] { e.FullPath });
 
-                            default:
-                                didChangeParams.Changes = Array.Empty<FileEvent>();
-                                break;
-                        }
-                    } else {
-                        // file renamed
-                        var deleteEvent = new FileEvent();
-                        deleteEvent.FileChangeType = FileChangeType.Deleted;
-                        deleteEvent.Uri = new Uri(renamedArgs.OldFullPath);
+            // See if this matches one of our patterns.
+            if (_matcher.Execute(item).HasMatches) {
+                // Send out the event to the language server
+                var renamedArgs = e as System.IO.RenamedEventArgs;
+                var didChangeParams = new DidChangeWatchedFilesParams();
 
-                        var createEvent = new FileEvent();
-                        createEvent.FileChangeType = FileChangeType.Created;
-                        createEvent.Uri = new Uri(renamedArgs.FullPath);
+                // Visual Studio actually does a rename when saving. The rename is from a file ending with '~'
+                if (renamedArgs == null || renamedArgs.OldFullPath.EndsWith("~")) {
+                    renamedArgs = null;
+                    didChangeParams.Changes = new FileEvent[] { new FileEvent() };
+                    didChangeParams.Changes[0].Uri = new Uri(e.FullPath);
 
-                        didChangeParams.Changes = new FileEvent[] { deleteEvent, createEvent };
+                    switch (e.ChangeType) {
+                        case WatcherChangeTypes.Created:
+                            didChangeParams.Changes[0].FileChangeType = FileChangeType.Created;
+                            break;
+                        case WatcherChangeTypes.Deleted:
+                            didChangeParams.Changes[0].FileChangeType = FileChangeType.Deleted;
+                            break;
+                        case WatcherChangeTypes.Changed:
+                            didChangeParams.Changes[0].FileChangeType = FileChangeType.Changed;
+                            break;
+                        case WatcherChangeTypes.Renamed:
+                            didChangeParams.Changes[0].FileChangeType = FileChangeType.Changed;
+                            break;
+
+                        default:
+                            didChangeParams.Changes = Array.Empty<FileEvent>();
+                            break;
                     }
+                } else {
+                    // file renamed
+                    var deleteEvent = new FileEvent();
+                    deleteEvent.FileChangeType = FileChangeType.Deleted;
+                    deleteEvent.Uri = new Uri(renamedArgs.OldFullPath);
 
-                    if (didChangeParams.Changes.Any()) {
-                        await _rpc.NotifyWithParameterObjectAsync(Methods.WorkspaceDidChangeWatchedFiles.Name, didChangeParams);
+                    var createEvent = new FileEvent();
+                    createEvent.FileChangeType = FileChangeType.Created;
+                    createEvent.Uri = new Uri(renamedArgs.FullPath);
+
+                    didChangeParams.Changes = new FileEvent[] { deleteEvent, createEvent };
+                }
+
+                if (didChangeParams.Changes.Any()) {
+                    try {
+                        await rpc.NotifyWithParameterObjectAsync(Methods.WorkspaceDidChangeWatchedFiles.Name, didChangeParams);
                         if (renamedArgs != null) {
                             var textDocumentIdentifier = new TextDocumentIdentifier();
                             textDocumentIdentifier.Uri = new Uri(renamedArgs.OldFullPath);
@@ -165,15 +179,17 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
                             var closeParam = new DidCloseTextDocumentParams();
                             closeParam.TextDocument = textDocumentIdentifier;
 
-                            await _rpc.NotifyWithParameterObjectAsync(Methods.TextDocumentDidClose.Name, closeParam);
-
+                            await rpc.NotifyWithParameterObjectAsync(Methods.TextDocumentDidClose.Name, closeParam);
                             var textDocumentItem = new TextDocumentItem();
                             textDocumentItem.Uri = new Uri(renamedArgs.FullPath);
 
                             var openParam = new DidOpenTextDocumentParams();
                             openParam.TextDocument = textDocumentItem;
-                            await _rpc.NotifyWithParameterObjectAsync(Methods.TextDocumentDidOpen.Name, openParam);
+                            await rpc.NotifyWithParameterObjectAsync(Methods.TextDocumentDidOpen.Name, openParam);
                         }
+                    } catch (ConnectionLostException) {
+                        // If the rpc is disposed in the middle of an rpc call, a ConnectionLostException is thrown.
+                        // Catch this to avoid an unhandled exception.
                     }
                 }
             }
