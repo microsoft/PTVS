@@ -2,7 +2,7 @@
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
         <Identity Id="PythonVCDebugLauncher.5AF7E179-1406-4804-9267-93F3BD7C7422" Version="17.0.0" Language="en-US" Publisher="Microsoft Corporation" />
-        <DisplayName>Change from 2</DisplayName>
+        <DisplayName>Change from 2 and 1</DisplayName>
         <Description xml:space="preserve">Adds a debug launcher for C++ projects that launches with Python debugging enabled.</Description>
         <MoreInfo>http://aka.ms/ptvs</MoreInfo>
         <License>License_en-US.rtf</License>
