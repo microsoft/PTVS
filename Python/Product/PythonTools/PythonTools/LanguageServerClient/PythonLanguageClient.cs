@@ -328,14 +328,29 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public Task InvokeTextDocumentDidChangeAsync(LSP.DidChangeTextDocumentParams request)
             => NotifyWithParametersAsync("textDocument/didChange", request);
 
-        public Task InvokeDidChangeConfigurationAsync(LSP.DidChangeConfigurationParams request)
-            => _rpc == null ? Task.CompletedTask : _rpc.NotifyWithParameterObjectAsync("workspace/didChangeConfiguration", request);
+        public Task InvokeDidChangeConfigurationAsync(LSP.DidChangeConfigurationParams request) {
+            if (_rpc == null || _rpc.IsDisposed) {
+                return Task.CompletedTask;
+            }
+
+            try {
+                return _rpc.NotifyWithParameterObjectAsync("workspace/didChangeConfiguration", request);
+            } catch (ConnectionLostException) {
+                return Task.CompletedTask;
+            }
+        }
 
         public async Task InvokeDidChangeWorkspaceFoldersAsync(WorkspaceFolder[] added, WorkspaceFolder[] removed) {
-            var task = _rpc == null ? Task.CompletedTask : _rpc.NotifyWithParameterObjectAsync("workspace/didChangeWorkspaceFolders",
-                    new DidChangeWorkspaceFoldersParams { changeEvent = new WorkspaceFoldersChangeEvent { added = added, removed = removed } });
+            if (_rpc == null || _rpc.IsDisposed) {
+                await Task.CompletedTask;
+            }
 
-            await task;
+            try {
+                await _rpc.NotifyWithParameterObjectAsync("workspace/didChangeWorkspaceFolders",
+                    new DidChangeWorkspaceFoldersParams { changeEvent = new WorkspaceFoldersChangeEvent { added = added, removed = removed } });
+            } catch (ConnectionLostException) {
+                await Task.CompletedTask;
+            }
 
             // If we send workspace folder updates, we have to resend document opens
             await SendDocumentOpensAsync();
@@ -362,16 +377,26 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         private async Task<R> InvokeWithParametersAsync<R>(string request, object parameters, CancellationToken t) where R : class {
             await _readyTcs.Task.ConfigureAwait(false);
-            if (_rpc != null) {
-                return await _rpc.InvokeWithParameterObjectAsync<R>(request, parameters, t).ConfigureAwait(false);
+            if (_rpc == null || _rpc.IsDisposed) {
+                return null;
             }
-            return null;
+
+            try {
+                return await _rpc.InvokeWithParameterObjectAsync<R>(request, parameters, t).ConfigureAwait(false);
+            } catch (ConnectionLostException) {
+                return null;
+            }
         }
 
         private async Task NotifyWithParametersAsync(string request, object parameters) {
             await _readyTcs.Task.ConfigureAwait(false);
-            if (_rpc != null) {
+            if (_rpc == null || _rpc.IsDisposed) {
+                return;
+            }
+
+            try {
                 await _rpc.NotifyWithParameterObjectAsync(request, parameters).ConfigureAwait(false);
+            } catch (ConnectionLostException) {
             }
         }
 
