@@ -329,7 +329,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             => NotifyWithParametersAsync("textDocument/didChange", request);
 
         public Task InvokeDidChangeConfigurationAsync(LSP.DidChangeConfigurationParams request) {
-            if (_rpc == null || _rpc.IsDisposed) {
+            if (_rpc == null) {
                 return Task.CompletedTask;
             }
 
@@ -341,7 +341,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         public async Task InvokeDidChangeWorkspaceFoldersAsync(WorkspaceFolder[] added, WorkspaceFolder[] removed) {
-            if (_rpc == null || _rpc.IsDisposed) {
+            if (_rpc == null) {
                 await Task.CompletedTask;
             }
 
@@ -377,7 +377,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         private async Task<R> InvokeWithParametersAsync<R>(string request, object parameters, CancellationToken t) where R : class {
             await _readyTcs.Task.ConfigureAwait(false);
-            if (_rpc == null || _rpc.IsDisposed) {
+            if (_rpc == null) {
                 return null;
             }
 
@@ -390,7 +390,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         private async Task NotifyWithParametersAsync(string request, object parameters) {
             await _readyTcs.Task.ConfigureAwait(false);
-            if (_rpc == null || _rpc.IsDisposed) {
+            if (_rpc == null) {
                 return;
             }
 
