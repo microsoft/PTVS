@@ -23,4 +23,3 @@ jobs:
         if: ${{ steps.no-labels.outcome == 'skipped' && join(github.event.issue.labels.*.name, ',') != 'needs triage' }}
         with:
           remove-labels: 'needs triage'
-          ignore-if-assigned: true
