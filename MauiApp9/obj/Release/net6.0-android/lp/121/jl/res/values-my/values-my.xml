@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string msgid="3260749812566568062" name="copy_toast_msg">"လင့်ခ်ကို ကလစ်ဘုတ်သို့ ကူးပြီးပါပြီ"</string>
-    <string msgid="4566929209979330987" name="fallback_menu_item_copy_link">"လင့်ခ်ကို ကူးယူရန်"</string>
-    <string msgid="3413186855122069269" name="fallback_menu_item_open_in_browser">"ဘရောင်ဇာတွင် ဖွင့်ရန်"</string>
-    <string msgid="7145444925855055364" name="fallback_menu_item_share_link">"လင့်ခ်ကို မျှဝေရန်"</string>
-</resources>
