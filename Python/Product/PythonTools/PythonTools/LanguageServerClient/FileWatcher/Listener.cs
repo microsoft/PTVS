@@ -19,6 +19,8 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.FileSystemGlobbing;
+using Microsoft.PythonTools.Common.Infrastructure;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.Workspace;
 using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
@@ -27,6 +29,7 @@ using StreamJsonRpc;
 namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
     class Listener : IDisposable {
         private JsonRpc _rpc;
+        private JsonRpcWrapper _rpcWrapper;
         private System.IO.FileSystemWatcher _solutionWatcher;
         private Microsoft.Extensions.FileSystemGlobbing.Matcher _matcher = new Microsoft.Extensions.FileSystemGlobbing.Matcher(StringComparison.InvariantCultureIgnoreCase);
         private bool disposedValue;
@@ -35,6 +38,9 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
         public Listener(StreamJsonRpc.JsonRpc rpc, IVsFolderWorkspaceService workspaceService, IServiceProvider site) {
             this._rpc = rpc;
             this._rpc.Disconnected += _rpc_Disconnected;
+
+            // wrap the rpc so we can handle exceptions in a common place
+            this._rpcWrapper = new JsonRpcWrapper(this._rpc);
 
             // Ignore some common directories
             _matcher.AddExclude("**/.vs/**/*.*");
@@ -114,14 +120,6 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
                 return;
             }
 
-            // _rpc can be disposed or set to null from a different thread.
-            // Store a local copy of the rpc to avoid having to check for null every time it's used.
-            // Then, when using it, catch any expected exceptions to avoid a crash.
-            var rpc = _rpc;
-            if (rpc is null || rpc.IsDisposed) {
-                return;
-            }
-
             // Create something to match with
             var item = new InMemoryDirectoryInfo(_root, new string[] { e.FullPath });
 
@@ -169,28 +167,21 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
                 }
 
                 if (didChangeParams.Changes.Any()) {
-                    try {
-                        await rpc.NotifyWithParameterObjectAsync(Methods.WorkspaceDidChangeWatchedFiles.Name, didChangeParams);
-                        if (renamedArgs != null) {
-                            var textDocumentIdentifier = new TextDocumentIdentifier();
-                            textDocumentIdentifier.Uri = new Uri(renamedArgs.OldFullPath);
+                    await _rpcWrapper.NotifyWithParameterObjectAsync(Methods.WorkspaceDidChangeWatchedFiles.Name, didChangeParams);
 
-                            var closeParam = new DidCloseTextDocumentParams();
-                            closeParam.TextDocument = textDocumentIdentifier;
-                            await rpc.NotifyWithParameterObjectAsync(Methods.TextDocumentDidClose.Name, closeParam);
-                            
-                            var textDocumentItem = new TextDocumentItem();
-                            textDocumentItem.Uri = new Uri(renamedArgs.FullPath);
-                            var openParam = new DidOpenTextDocumentParams();
-                            openParam.TextDocument = textDocumentItem;
-                            await rpc.NotifyWithParameterObjectAsync(Methods.TextDocumentDidOpen.Name, openParam);
-                        }
-                    } catch (ConnectionLostException) {
-                        // If the rpc is disposed DURING an rpc call, a ConnectionLostException is thrown.
-                        // Catch this to avoid an unhandled exception.
-                    } catch (ObjectDisposedException) {
-                        // If the rpc is disposed BEFORE an rpc call, an ObjectDisposedException is thrown.
-                        // Catch this to avoid an unhandled exception.
+                    if (renamedArgs != null) {
+                        var textDocumentIdentifier = new TextDocumentIdentifier();
+                        textDocumentIdentifier.Uri = new Uri(renamedArgs.OldFullPath);
+
+                        var closeParam = new DidCloseTextDocumentParams();
+                        closeParam.TextDocument = textDocumentIdentifier;
+                        await _rpcWrapper.NotifyWithParameterObjectAsync(Methods.TextDocumentDidClose.Name, closeParam);
+
+                        var textDocumentItem = new TextDocumentItem();
+                        textDocumentItem.Uri = new Uri(renamedArgs.FullPath);
+                        var openParam = new DidOpenTextDocumentParams();
+                        openParam.TextDocument = textDocumentItem;
+                        await _rpcWrapper.NotifyWithParameterObjectAsync(Methods.TextDocumentDidOpen.Name, openParam);
                     }
                 }
             }
