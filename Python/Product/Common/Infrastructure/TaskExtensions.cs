@@ -94,7 +94,7 @@ namespace Microsoft.PythonTools.Infrastructure {
                 }
                 throw;
             }
-            return default(T);
+            return default;
         }
 
         /// <summary>
@@ -163,7 +163,7 @@ namespace Microsoft.PythonTools.Infrastructure {
                 try {
                     t.Wait();
                 } catch (AggregateException ex) {
-                    ex.Handle(e => exceptionTypes.Any(f => e.GetType().Equals(f)));
+                    ex.Handle(e => exceptionTypes.Any(f => f.IsAssignableFrom(e.GetType())));
                 }
             });
         }
@@ -171,12 +171,12 @@ namespace Microsoft.PythonTools.Infrastructure {
         /// <summary>
         /// Silently handles a collection of exception types
         /// </summary>
-        public static Task<U> SilenceExceptions<U>(this Task<U> task, IEnumerable<Type> exceptionTypes) {
+        public static Task<T> SilenceExceptions<T>(this Task<T> task, IEnumerable<Type> exceptionTypes) {
             return task.ContinueWith(t => {
                 try {
                     return t.Result;
                 } catch (AggregateException ex) {
-                    ex.Handle(e => exceptionTypes.Any(f => e.GetType().Equals(f)));
+                    ex.Handle(e => exceptionTypes.Any(f => f.IsAssignableFrom(e.GetType())));
                     return default;
                 }
             });
