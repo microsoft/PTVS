@@ -235,15 +235,7 @@ namespace Microsoft.PythonTools.Repl {
 
             var thread = await EnsureConnectedAsync();
             if (thread != null) {
-                ExecutionResult result = await thread.ExecuteText(text);
-
-                try {
-                    await _serviceProvider.GetUIThread().InvokeTask(async () => await _serviceProvider.RefreshVariableViewsAsync());
-                } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    Debug.Fail(ex.ToString());
-                }
-                
-                return result;
+                return await thread.ExecuteText(text);
             }
 
             WriteError(Strings.ReplDisconnected);

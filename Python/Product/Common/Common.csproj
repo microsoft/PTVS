@@ -55,10 +55,12 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="StreamJsonRpc" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Infrastructure\BindableBase.cs" />
     <Compile Include="Infrastructure\CancellationTokens.cs" />
+    <Compile Include="Infrastructure\JsonRpcWrapper.cs" />
     <Compile Include="Infrastructure\COMEnumerator.cs" />
     <Compile Include="Infrastructure\DefaultDisposable.cs" />
     <Compile Include="Infrastructure\Disposable.cs" />

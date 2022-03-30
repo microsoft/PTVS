@@ -98,7 +98,7 @@
                                     <ControlTemplate TargetType="Button">
                                         <Canvas Width="16" Height="16">
                                             <Ellipse Width="14" Height="14" Canvas.Left="1" Canvas.Top="1"
-                                                             Fill="{TemplateBinding Background}"
+                                                             Fill="{TemplateBinding Background}" 
                                                              Stroke="{TemplateBinding BorderBrush}"
                                                              StrokeThickness="1" />
                                             <Path Data="M5,5 L11,11 M5,11 L11,5"
@@ -106,6 +106,10 @@
                                                           StrokeThickness="2" />
                                         </Canvas>
                                         <ControlTemplate.Triggers>
+                                            <Trigger Property="IsFocused" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.HotTrackKey}}" />
+                                                <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.HotTrackTextKey}}" />
+                                            </Trigger>
                                             <Trigger Property="IsEnabled" Value="False">
                                                 <Setter Property="Visibility" Value="Hidden" />
                                             </Trigger>

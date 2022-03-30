@@ -62,12 +62,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AttachTests.cs" />
-    <Compile Include="BaseDebuggerTests.cs" />
     <Compile Include="TaskExtensions.cs" />
     <Compile Include="MiniDumpWriter.cs" />
-    <Compile Include="DebuggerTests.cs" />
-    <Compile Include="DebugExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -63,6 +63,7 @@ namespace Microsoft.VisualStudioTools {
              * "Attach to Process" support
              * To support attaching via the VS "Attach to Process" dialog:
              *     - Set the "Attach" property to "1" below
+             *     - Provide a program provider.
              *     - Provide a port supplier GUID.  To attach to processes on the local machine by PID, the default
              *         port supplier is suffient, and can be used by uncommenting the "PortSupplier" property below.
              *     - Provide a custom IAdapterLauncher implementation to generate launch configuration JSON
@@ -70,7 +71,8 @@ namespace Microsoft.VisualStudioTools {
              *         its CLSID in the "AdapterLauncher" property below.
              */
             engineKey.SetValue("Attach", 1);
-            // engineKey.SetValue("PortSupplier", "{708C1ECA-FF48-11D2-904F-00C04FA302A1}");
+            engineKey.SetValue("PortSupplier", "{708C1ECA-FF48-11D2-904F-00C04FA302A1}");
+            engineKey.SetValue("ProgramProvider", typeof(PythonTools.Debugger.DebugEngine.AD7ProgramProvider).GUID.ToString("B"));
             engineKey.SetValue("AdapterLauncher", _adapterLauncherCLSID);
 
             /*
@@ -161,6 +163,21 @@ namespace Microsoft.VisualStudioTools {
             customProtocolKey.SetValue("Assembly", customProtocolAssembly);
             customProtocolKey.SetValue("Class", customProtocolClassName);
             customProtocolKey.SetValue("CodeBase", $@"$PackageFolder$\{customProtocolAssembly}.dll");
+
+            // When auto-detecting code type in Attach to Process dialog, we don't want Python processes
+            // to be detected as both Python and Native by default (i.e. no mixed-mode debugging).
+            using (var autoSelectIncompatKey = engineKey.CreateSubkey("AutoSelectIncompatibleList")) {
+                autoSelectIncompatKey.SetValue("guidNativeOnlyEng", "{3B476D35-A401-11D2-AAD4-00C04F990171}");
+            }
+
+            using (var incompatKey = engineKey.CreateSubkey("IncompatibleList")) {
+                incompatKey.SetValue("guidCOMPlusNativeEng", "{92EF0900-2251-11D2-B72E-0000F87572EF}");
+                incompatKey.SetValue("guidCOMPlusOnlyEng", "{449EC4CC-30D2-4032-9256-EE18EB41B62B}");
+                incompatKey.SetValue("guidScriptEng", "{F200A7E7-DEA5-11D0-B854-00A0244A1DE2}");
+                incompatKey.SetValue("guidCOMPlusOnlyEng2", "{5FFF7536-0C87-462D-8FD2-7971D948E6DC}");
+                incompatKey.SetValue("guidCOMPlusOnlyEng4", "{FB0D4648-F776-4980-95F8-BB7F36EBC1EE}");
+                incompatKey.SetValue("guidNativeOnlyEng", "{3B476D35-A401-11D2-AAD4-00C04F990171}");
+            }
         }
 
         public override void Unregister(RegistrationContext context) {
