@@ -23,6 +23,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Python.Core.Disposables;
+using Microsoft.PythonTools.Common.Infrastructure;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -86,12 +87,13 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         /// </summary>
         public static Task ReadyTask => _readyTcs.Task;
 
-        private readonly DisposableBag _disposables;
+        private readonly Microsoft.Python.Core.Disposables.DisposableBag _disposables;
         private List<IPythonLanguageClientContext> _clientContexts = new List<IPythonLanguageClientContext>();
         private PythonAnalysisOptions _analysisOptions;
         private PythonAdvancedEditorOptions _advancedEditorOptions;
         private LanguageServer _server;
         private JsonRpc _rpc;
+        private JsonRpcWrapper _rpcWrapper;
         private bool _workspaceFoldersSupported = false;
         private bool _isDebugging = LanguageServer.IsDebugging();
         private bool _sentInitialWorkspaceFolders = false;
@@ -101,7 +103,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private bool _loaded = false;
 
         public PythonLanguageClient() {
-            _disposables = new DisposableBag(GetType().Name);
+            _disposables = new Microsoft.Python.Core.Disposables.DisposableBag(GetType().Name);
         }
 
         public string ContentTypeName => PythonCoreConstants.ContentType;
@@ -311,6 +313,9 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 // Any exceptions, just skip this part
             }
 
+            // wrap the rpc so we can handle exceptions in a common place
+            _rpcWrapper = new JsonRpcWrapper(_rpc);
+
             return Task.CompletedTask;
         }
 
@@ -328,15 +333,21 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public Task InvokeTextDocumentDidChangeAsync(LSP.DidChangeTextDocumentParams request)
             => NotifyWithParametersAsync("textDocument/didChange", request);
 
-        public Task InvokeDidChangeConfigurationAsync(LSP.DidChangeConfigurationParams request)
-            => _rpc == null ? Task.CompletedTask : _rpc.NotifyWithParameterObjectAsync("workspace/didChangeConfiguration", request);
+        public Task InvokeDidChangeConfigurationAsync(LSP.DidChangeConfigurationParams request) {
+
+            return _rpcWrapper.NotifyWithParameterObjectAsync("workspace/didChangeConfiguration", request);
+        }
 
         public async Task InvokeDidChangeWorkspaceFoldersAsync(WorkspaceFolder[] added, WorkspaceFolder[] removed) {
-            var task = _rpc == null ? Task.CompletedTask : _rpc.NotifyWithParameterObjectAsync("workspace/didChangeWorkspaceFolders",
-                    new DidChangeWorkspaceFoldersParams { changeEvent = new WorkspaceFoldersChangeEvent { added = added, removed = removed } });
 
-            await task;
-
+            await _rpcWrapper.NotifyWithParameterObjectAsync("workspace/didChangeWorkspaceFolders",
+                new DidChangeWorkspaceFoldersParams {
+                    changeEvent = new WorkspaceFoldersChangeEvent {
+                        added = added,
+                        removed = removed
+                    }
+                });
+                   
             // If we send workspace folder updates, we have to resend document opens
             await SendDocumentOpensAsync();
         }
@@ -362,17 +373,14 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         private async Task<R> InvokeWithParametersAsync<R>(string request, object parameters, CancellationToken t) where R : class {
             await _readyTcs.Task.ConfigureAwait(false);
-            if (_rpc != null) {
-                return await _rpc.InvokeWithParameterObjectAsync<R>(request, parameters, t).ConfigureAwait(false);
-            }
-            return null;
+
+            return await _rpcWrapper.InvokeWithParameterObjectAsync<R>(request, parameters, t).ConfigureAwait(false);
         }
 
         private async Task NotifyWithParametersAsync(string request, object parameters) {
             await _readyTcs.Task.ConfigureAwait(false);
-            if (_rpc != null) {
-                await _rpc.NotifyWithParameterObjectAsync(request, parameters).ConfigureAwait(false);
-            }
+
+            await _rpcWrapper.NotifyWithParameterObjectAsync(request, parameters).ConfigureAwait(false);
         }
 
         private void OnSettingsChanged(object sender, EventArgs e) => InvokeDidChangeConfigurationAsync(new LSP.DidChangeConfigurationParams() {
