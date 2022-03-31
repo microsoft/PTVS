@@ -149,6 +149,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             //Note pytest specific arguments go after this separator
             arguments.Add("--");
             arguments.Add("--cache-clear");
+            arguments.Add(String.Format("--rootdir={0}", projSettings.ProjectHome));
             if (string.IsNullOrEmpty(projSettings.UnitTestRootDir)) {
                 arguments.Add(String.Format("{0}", projSettings.ProjectHome));
             } else {
