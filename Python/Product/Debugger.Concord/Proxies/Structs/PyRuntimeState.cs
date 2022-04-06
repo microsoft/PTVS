@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             public StructField<BoolProxy> core_initialized;
             public StructField<BoolProxy> initialized;
             public StructField<pyinterpreters> interpreters;
-            [FieldProxy(MaxVersion = PythonLanguageVersion.V37)]
+            [FieldProxy(MaxVersion = PythonLanguageVersion.V38)]
             public StructField<ceval_runtime_state> ceval;
         }
 
@@ -67,7 +67,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             public PointerProxy<PyInterpreterState> main => GetFieldProxy(_fields.main);
         }
 
-        [StructProxy(MinVersion = PythonLanguageVersion.V37, MaxVersion = PythonLanguageVersion.V37, StructName = "_ceval_runtime_state")]
+        [StructProxy(MinVersion = PythonLanguageVersion.V37, MaxVersion = PythonLanguageVersion.V38, StructName = "_ceval_runtime_state")]
         public class ceval_runtime_state : StructProxy {
             private class Fields {
                 public StructField<Int32Proxy> recursion_limit;

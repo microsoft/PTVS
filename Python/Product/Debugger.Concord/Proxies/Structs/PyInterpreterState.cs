@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             public StructField<PointerProxy<PyDictObject>> modules;
             [FieldProxy(MinVersion = PythonLanguageVersion.V36)]
             public StructField<PointerProxy> eval_frame;
-            [FieldProxy(MinVersion = PythonLanguageVersion.V38)]
+            [FieldProxy(MinVersion = PythonLanguageVersion.V39)]
             public StructField<ceval_state> ceval;
         }
 
