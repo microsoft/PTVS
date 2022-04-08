@@ -150,11 +150,6 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             arguments.Add("--");
             arguments.Add("--cache-clear");
             arguments.Add(String.Format("--rootdir={0}", projSettings.ProjectHome));
-            //if (string.IsNullOrEmpty(projSettings.UnitTestRootDir)) {
-            //    arguments.Add(String.Format("{0}", projSettings.ProjectHome));
-            //} else {
-            //    arguments.Add(String.Format("{0}\\{1}", projSettings.ProjectHome, projSettings.UnitTestRootDir));
-            //}
             
             return arguments.ToArray();
         }
