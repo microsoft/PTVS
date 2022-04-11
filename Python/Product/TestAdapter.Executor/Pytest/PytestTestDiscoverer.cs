@@ -139,25 +139,18 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             return null;
         }
 
-        public string[] GetArguments(IEnumerable<string> sources, PythonProjectSettings projSettings, string outputfilename) {
-            var arguments = new List<string>();
-            arguments.Add(DiscoveryAdapterPath);
-            arguments.Add("discover");
-            arguments.Add("pytest");
-            arguments.Add("--output-file");
-            arguments.Add(outputfilename);
+        public string[] GetArguments(IEnumerable<string> sources, PythonProjectSettings projSettings, string outputfilename) =>
+            new[] {
+            DiscoveryAdapterPath,
+            "discover",
+            "pytest",
+            "--output-file",
+            outputfilename,
             //Note pytest specific arguments go after this separator
-            arguments.Add("--");
-            arguments.Add("--cache-clear");
-            arguments.Add(String.Format("--rootdir={0}", projSettings.ProjectHome));
-            if (string.IsNullOrEmpty(projSettings.UnitTestRootDir)) {
-                arguments.Add(String.Format("{0}", projSettings.ProjectHome));
-            } else {
-                arguments.Add(String.Format("{0}\\{1}", projSettings.ProjectHome, projSettings.UnitTestRootDir));
-            }
-            
-            return arguments.ToArray();
-        }
+            "--",
+            "--cache-clear",
+            String.Format("--rootdir={0}", projSettings.ProjectHome)
+            };
 
         private Dictionary<string, string> InitializeEnvironment(IEnumerable<string> sources, PythonProjectSettings projSettings) {
             var pythonPathVar = projSettings.PathEnv;
