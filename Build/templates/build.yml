@@ -33,7 +33,6 @@ steps:
 
     # for testing, remove when done
     - script: dir $(Build.BinariesDirectory)\raw\setup
-    - script: dir $(Build.BinariesDirectory)\raw\setup\swix
 
   # Build the tests
   - task: MSBuild@1
@@ -54,6 +53,8 @@ steps:
       platform: $(Platform)
       configuration: $(BuildConfiguration)
       msbuildArguments: '/p:SkipProduct=true /p:VSTarget=$(VSTarget) /p:BUILD_BINARIESDIRECTORY=$(Build.BinariesDirectory) /bl:$(Build.SourcesDirectory)\logs\BuildInstaller.binlog'
+
+  - script: dir $(Build.StagingDirectory)\release
 
   # If the build failed, publish raw binaries folder
   - task: PublishBuildArtifacts@1
