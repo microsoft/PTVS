@@ -10,16 +10,6 @@ steps:
       configuration: $(BuildConfiguration)
       msbuildArguments: '/p:VSTarget=$(VSTarget) /bl:$(Build.SourcesDirectory)\logs\BuildProduct.binlog'
 
-  # Build the tests
-  - task: MSBuild@1
-    displayName: 'Build tests'
-    inputs:
-      solution: $(Build.SourcesDirectory)/Python/Tests/dirs.proj
-      msbuildVersion: $(MsBuildVersion)
-      platform: $(Platform)
-      configuration: $(BuildConfiguration)
-      msbuildArguments: '/p:VSTarget=$(VSTarget) /bl:$(Build.SourcesDirectory)\logs\BuildTests.binlog'
-
   # Non-PR steps
   - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
 
@@ -40,6 +30,20 @@ steps:
         PathtoPublish: '$(Build.BinariesDirectory)\raw\setup\_manifest'
         ArtifactName: SBOM
       continueOnError: true
+
+    # for testing, remove when done
+    - script: dir $(Build.BinariesDirectory)\raw\setup
+    - script: dir $(Build.BinariesDirectory)\raw\setup\swix
+
+  # Build the tests
+  - task: MSBuild@1
+    displayName: 'Build tests'
+    inputs:
+      solution: $(Build.SourcesDirectory)/Python/Tests/dirs.proj
+      msbuildVersion: $(MsBuildVersion)
+      platform: $(Platform)
+      configuration: $(BuildConfiguration)
+      msbuildArguments: '/p:VSTarget=$(VSTarget) /bl:$(Build.SourcesDirectory)\logs\BuildTests.binlog'
 
   # Build the installer
   - task: MSBuild@1
