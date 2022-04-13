@@ -69,8 +69,8 @@ try {
         $packageJson | ConvertTo-Json -depth 8 | Set-Content $packageJsonFile
     }
 
-    # install pylance and update the package-lock.json file
-    npm install --save
+    # install pylance
+    npm install
 
     # print out the installed version
     $npmLsOutput = & npm ls @pylance/pylance
