@@ -20,6 +20,27 @@ steps:
       configuration: $(BuildConfiguration)
       msbuildArguments: '/p:VSTarget=$(VSTarget) /bl:$(Build.SourcesDirectory)\logs\BuildTests.binlog'
 
+  # Non-PR steps
+  - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
+
+    # Generate the bill of materials
+    # This must be done AFTER building binaries, but BEFORE building the installer
+    - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
+      displayName: 'Generate bill of materials'
+      inputs:
+        BuildDropPath: '$(Build.BinariesDirectory)\raw\setup'
+        PackageName: 'PTVS'
+        PackageVersion: '$(VSTarget)'
+      continueOnError: true
+
+    # publish the bill of materials as a build artifact
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish build artifact: BoM'
+      inputs:
+        PathtoPublish: '$(Build.BinariesDirectory)\raw\setup\_manifest'
+        ArtifactName: SBOM
+      continueOnError: true
+
   # Build the installer
   - task: MSBuild@1
     displayName: 'Build installer'
@@ -28,7 +49,7 @@ steps:
       msbuildVersion: $(MsBuildVersion)
       platform: $(Platform)
       configuration: $(BuildConfiguration)
-      msbuildArguments: '/p:SkipProduct=true /p:VSTarget=$(VSTarget) /bl:$(Build.SourcesDirectory)\logs\BuildInstaller.binlog'
+      msbuildArguments: '/p:SkipProduct=true /p:VSTarget=$(VSTarget) /p:BUILD_BINARIESDIRECTORY=$(Build.BinariesDirectory) /bl:$(Build.SourcesDirectory)\logs\BuildInstaller.binlog'
 
   # If the build failed, publish raw binaries folder
   - task: PublishBuildArtifacts@1
