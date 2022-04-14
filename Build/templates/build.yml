@@ -52,8 +52,13 @@ steps:
       msbuildVersion: $(MsBuildVersion)
       platform: $(Platform)
       configuration: $(BuildConfiguration)
-      msbuildArguments: '/p:SkipProduct=true /p:VSTarget=$(VSTarget) /p:BUILD_BINARIESDIRECTORY=$(Build.BinariesDirectory) /bl:$(Build.SourcesDirectory)\logs\BuildInstaller.binlog'
+      msbuildArguments: ' /p:SkipProduct=true 
+                          /p:VSTarget=$(VSTarget) 
+                          /p:BUILD_BINARIESDIRECTORY=$(Build.BinariesDirectory) 
+                          /p:BUILD_STAGINGDIRECTORY=$(Build.StagingDirectory) 
+                          /bl:$(Build.SourcesDirectory)\logs\BuildInstaller.binlog'
 
+  # for testing, remove when done
   - script: dir $(Build.StagingDirectory)\release
 
   # If the build failed, publish raw binaries folder
