@@ -64,7 +64,7 @@ variables:
   - name: TrackFileAccess
     value: false
   - name: Packaging.EnableSBOMSigning
-    value: true
+    value: false  # disabled for now because of known issue
   
   # Import variables from PTVS-Dev17 variable group
   - group: PTVS-Dev17
