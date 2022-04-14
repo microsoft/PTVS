@@ -19,7 +19,6 @@ steps:
       displayName: 'Generate bill of materials'
       inputs:
         BuildDropPath: '$(Build.BinariesDirectory)\layout'
-        ManifestDirPath: '$(Build.BinariesDirectory)\sbom'
         PackageName: 'PTVS'
         PackageVersion: '$(VSTarget)'
       continueOnError: true
@@ -28,7 +27,7 @@ steps:
     - task: PublishBuildArtifacts@1
       displayName: 'Publish build artifact: BoM'
       inputs:
-        PathtoPublish: '$(Build.BinariesDirectory)\sbom'
+        PathtoPublish: '$(Build.BinariesDirectory)\layout\_manifest'
         ArtifactName: SBOM
       continueOnError: true
 
@@ -52,7 +51,7 @@ steps:
       configuration: $(BuildConfiguration)
       msbuildArguments: ' /p:SkipProduct=true 
                           /p:VSTarget=$(VSTarget) 
-                          /p:BUILD_SBOMDIRECTORY=$(Build.BinariesDirectory)\sbom 
+                          /p:BUILD_BINARIESDIRECTORY=$(Build.BinariesDirectory)
                           /p:BUILD_STAGINGDIRECTORY=$(Build.StagingDirectory) 
                           /bl:$(Build.SourcesDirectory)\logs\BuildInstaller.binlog'
 
