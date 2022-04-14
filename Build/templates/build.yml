@@ -55,9 +55,6 @@ steps:
                           /p:BUILD_STAGINGDIRECTORY=$(Build.StagingDirectory) 
                           /bl:$(Build.SourcesDirectory)\logs\BuildInstaller.binlog'
 
-  # for testing, remove when done
-  - script: dir $(Build.StagingDirectory)\release
-
   # If the build failed, publish raw binaries folder
   - task: PublishBuildArtifacts@1
     displayName: 'Publish build artifact: raw'
