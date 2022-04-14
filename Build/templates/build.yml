@@ -18,7 +18,8 @@ steps:
     - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
       displayName: 'Generate bill of materials'
       inputs:
-        BuildDropPath: '$(Build.BinariesDirectory)\raw\setup'
+        BuildDropPath: '$(Build.BinariesDirectory)\layout'
+        ManifestDirPath: '$(Build.BinariesDirectory)\sbom'
         PackageName: 'PTVS'
         PackageVersion: '$(VSTarget)'
       continueOnError: true
@@ -27,12 +28,9 @@ steps:
     - task: PublishBuildArtifacts@1
       displayName: 'Publish build artifact: BoM'
       inputs:
-        PathtoPublish: '$(Build.BinariesDirectory)\raw\setup\_manifest'
+        PathtoPublish: '$(Build.BinariesDirectory)\sbom'
         ArtifactName: SBOM
       continueOnError: true
-
-    # for testing, remove when done
-    - script: dir $(Build.BinariesDirectory)\raw\setup
 
   # Build the tests
   - task: MSBuild@1
@@ -54,7 +52,7 @@ steps:
       configuration: $(BuildConfiguration)
       msbuildArguments: ' /p:SkipProduct=true 
                           /p:VSTarget=$(VSTarget) 
-                          /p:BUILD_BINARIESDIRECTORY=$(Build.BinariesDirectory) 
+                          /p:BUILD_SBOMDIRECTORY=$(Build.BinariesDirectory)\sbom 
                           /p:BUILD_STAGINGDIRECTORY=$(Build.StagingDirectory) 
                           /bl:$(Build.SourcesDirectory)\logs\BuildInstaller.binlog'
 

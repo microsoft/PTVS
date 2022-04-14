@@ -15,7 +15,7 @@
 
   <ItemGroup>
     <MergeManifest Include="$(OutDir)*.json">
-      <SBOMFileLocation>$(BUILD_BINARIESDIRECTORY)\raw\setup\_manifest\spdx_2.2\manifest.spdx.json</SBOMFileLocation>
+      <SBOMFileLocation>$(BUILD_SBOMDIRECTORY)\spdx_2.2\manifest.spdx.json</SBOMFileLocation>
       <SBOMFileDestPath>$(BUILD_STAGINGDIRECTORY)\release</SBOMFileDestPath>
     </MergeManifest>
   </ItemGroup>
