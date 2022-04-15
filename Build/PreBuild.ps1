@@ -2,10 +2,21 @@ param ($vstarget, $outdir, $pylanceVersion, $debugpyVersion)
 
 $ErrorActionPreference = "Stop"
 
+if (-not $vstarget) {
+    $vstarget = "17.0"
+} elseif ($vstarget.ToString() -match "^\d\d$") {
+    $vstarget = "$vstarget.0"
+}
+
+# Use a different MicroBuildCore package for VS >= 17.0
+$microBuildCorePackageName = "Microsoft.Core"
+if ([int] $vstarget -ge 17) {
+    $microBuildCorePackageName = "Microsoft.VisualStudioEng.MicroBuild.Core"
+}
+
 # These packages require a versionless symlink pointing to the versioned install.
 $need_symlink = @(
     "python",
-    "MicroBuild.Core",
     "Microsoft.Python.Parsing",
     "Microsoft.DiaSymReader.Pdb2Pdb",
     "Microsoft.Extensions.FileSystemGlobbing",
@@ -14,14 +25,9 @@ $need_symlink = @(
     "Microsoft.VisualStudio.Interop",
     "Microsoft.VSSDK.BuildTools",
     "Microsoft.VSSDK.Debugger.VSDConfigTool",
-    "Newtonsoft.Json"
+    "Newtonsoft.Json",
+    $microBuildCorePackageName
 )
-
-if (-not $vstarget) {
-    $vstarget = "17.0"
-} elseif ($vstarget.ToString() -match "^\d\d$") {
-    $vstarget = "$vstarget.0"
-}
 
 if (-not $pylanceVersion) {
     $pylanceVersion = "latest"
@@ -63,8 +69,8 @@ try {
         $packageJson | ConvertTo-Json -depth 8 | Set-Content $packageJsonFile
     }
 
-    # install pylance and update the package-lock.json file
-    npm install --save
+    # install pylance
+    npm install
 
     # print out the installed version
     $npmLsOutput = & npm ls @pylance/pylance

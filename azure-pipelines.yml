@@ -64,7 +64,7 @@ variables:
   - name: TrackFileAccess
     value: false
   - name: Packaging.EnableSBOMSigning
-    value: true
+    value: false  # disabled for now because of known issue
   
   # Import variables from PTVS-Dev17 variable group
   - group: PTVS-Dev17
@@ -108,9 +108,6 @@ steps:
 
   # publish symbols
   - template: Build/templates/publish_symbols.yml
-
-  # create and publish bill of materials
-  - template: Build/templates/publish_bill_of_materials.yml
 
 # Create bootstrapper for running integration tests. They only run on CI, not PR
 # Commenting this out for now since it's not working anyway
