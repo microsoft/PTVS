@@ -11,7 +11,6 @@ Windows Registry Editor Version 5.00
 [-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\FastCgiTests,B03F5F7F11D50A3A]
 [-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\IpcJsonTests,B03F5F7F11D50A3A]
 [-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\Microsoft.CookiecutterTools,B03F5F7F11D50A3A]
-[-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\Microsoft.Python.Parsing,B03F5F7F11D50A3A]
 [-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\Microsoft.PythonTools,B03F5F7F11D50A3A]
 [-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\Microsoft.PythonTools.Attacher,B03F5F7F11D50A3A]
 [-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\Microsoft.PythonTools.AttacherX86,B03F5F7F11D50A3A]

@@ -33,13 +33,7 @@ using Microsoft.VisualStudio.Shell;
      Version = ParserNuGetPackageInfo.Version, Culture = ParserNuGetPackageInfo.Culture, PublicKeyToken = ParserNuGetPackageInfo.PublicKeyToken
  )]
 
-[assembly: ProvideRawCodeBase(
-     AssemblyName = "Microsoft.Python.Parsing", CodeBase = @"$PackageFolder$\Microsoft.Python.Parsing.dll",
-     Version = ParserNuGetPackageInfo.Version, Culture = ParserNuGetPackageInfo.Culture, PublicKeyToken = ParserNuGetPackageInfo.PublicKeyToken
- )]
-
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.Python.Core", CodeBase = @"$PackageFolder$\Microsoft.Python.Core.dll")]
-[assembly: ProvideCodeBase(AssemblyName = "Microsoft.Python.Parsing", CodeBase = @"$PackageFolder$\Microsoft.Python.Parsing.dll")]
 
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools", CodeBase = "Microsoft.PythonTools.dll", Version = AssemblyVersionInfo.StableVersion)]
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.Attacher", CodeBase = "Microsoft.PythonTools.Attacher.exe", Version = AssemblyVersionInfo.StableVersion)]

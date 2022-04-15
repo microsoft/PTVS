@@ -74,9 +74,6 @@
       <Private>True</Private>
       <IncludeInVSIX>True</IncludeInVSIX>
     </Reference>
-    <Reference Include="Microsoft.Python.Parsing">
-      <IncludeInVSIX>True</IncludeInVSIX>
-    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="PresentationUI, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />

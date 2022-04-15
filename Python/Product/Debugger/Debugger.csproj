@@ -54,9 +54,6 @@
     <Reference Include="Microsoft.Python.Core">
       <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.Python.Parsing">
-      <Private>True</Private>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\..\..\Common\Product\SharedProject\DebugTimer.cs">

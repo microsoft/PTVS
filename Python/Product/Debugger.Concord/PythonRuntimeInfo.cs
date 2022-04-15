@@ -17,7 +17,6 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Debugger.Concord.Proxies.Structs;
-using Microsoft.Python.Parsing;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Native;
 

@@ -17,7 +17,6 @@
 using System;
 using System.Diagnostics;
 using System.Text;
-using Microsoft.Python.Parsing;
 using Microsoft.VisualStudio.Debugger;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies {

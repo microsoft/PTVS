@@ -17,7 +17,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Xml;
-using Microsoft.Python.Parsing.Ast;
 
 namespace Microsoft.PythonTools.CodeCoverage {
     class CoverageExporter {

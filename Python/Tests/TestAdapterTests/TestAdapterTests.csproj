@@ -66,9 +66,6 @@
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.XML" />
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
-    <Reference Include="Microsoft.Python.Parsing">
-      <Private>True</Private>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Mocks\MockPythonProject.cs" />

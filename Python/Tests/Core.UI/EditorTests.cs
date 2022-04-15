@@ -26,7 +26,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using EnvDTE;
-using Microsoft.Python.Parsing;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;

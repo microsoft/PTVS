@@ -20,7 +20,6 @@ ASSEMBLIES = sorted([
     "Microsoft.Python.Analysis.Core",
     "Microsoft.Python.Core",
     "Microsoft.Python.LanguageServer",
-    "Microsoft.Python.Parsing",
     "Microsoft.PythonTools",
     "Microsoft.PythonTools.Attacher",
     "Microsoft.PythonTools.AttacherX86",

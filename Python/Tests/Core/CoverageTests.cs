@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using Microsoft.Python.Parsing.Ast;
 using Microsoft.PythonTools.CodeCoverage;
 using Microsoft.PythonTools.Commands;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

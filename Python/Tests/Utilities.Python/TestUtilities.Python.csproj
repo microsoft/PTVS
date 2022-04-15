@@ -53,9 +53,6 @@
     <Reference Include="Microsoft.Python.Core">
       <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.Python.Parsing">
-      <Private>True</Private>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(BuildRoot)\Common\Tests\MockVsTests\MockVsTests.csproj">

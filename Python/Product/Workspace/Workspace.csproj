@@ -93,10 +93,6 @@
       <Private>True</Private>
       <IncludeInVSIX>True</IncludeInVSIX>
     </Reference>
-    <Reference Include="Microsoft.Python.Parsing">
-      <Private>True</Private>
-      <IncludeInVSIX>True</IncludeInVSIX>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj">

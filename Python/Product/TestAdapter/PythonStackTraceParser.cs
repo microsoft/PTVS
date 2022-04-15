@@ -20,8 +20,6 @@ using System.ComponentModel.Composition;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Microsoft.Python.Parsing;
-using Microsoft.Python.Parsing.Ast;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.TestWindow.Extensibility;

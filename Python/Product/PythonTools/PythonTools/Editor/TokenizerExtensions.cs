@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using Microsoft.Python.Core.Text;
-using Microsoft.Python.Parsing;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Editor {

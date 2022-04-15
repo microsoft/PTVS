@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Python.Parsing;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Text;
 using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;

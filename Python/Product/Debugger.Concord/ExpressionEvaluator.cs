@@ -26,8 +26,6 @@ using System.Threading;
 using Microsoft.PythonTools.Debugger.Concord.Proxies;
 using Microsoft.PythonTools.Debugger.Concord.Proxies.Structs;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.Python.Parsing;
-using Microsoft.Python.Parsing.Ast;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.CallStack;
 using Microsoft.VisualStudio.Debugger.Evaluation;

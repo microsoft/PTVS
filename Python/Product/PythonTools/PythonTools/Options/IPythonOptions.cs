@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System.Runtime.InteropServices;
-using Microsoft.Python.Parsing;
 
 namespace Microsoft.PythonTools.Options {
     // TODO: We should switch to a scheme which takes strings / returns object for options so they're extensible w/o reving the interface

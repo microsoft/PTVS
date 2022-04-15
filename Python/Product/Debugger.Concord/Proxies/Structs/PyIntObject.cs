@@ -16,7 +16,6 @@
 
 using System;
 using System.Diagnostics;
-using Microsoft.Python.Parsing;
 using Microsoft.VisualStudio.Debugger;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {

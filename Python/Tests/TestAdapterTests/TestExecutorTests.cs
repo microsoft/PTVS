@@ -24,7 +24,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
-using Microsoft.Python.Parsing;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.TestAdapter;
 using Microsoft.PythonTools.TestAdapter.Pytest;
