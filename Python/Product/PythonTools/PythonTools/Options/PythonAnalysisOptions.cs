@@ -16,7 +16,6 @@
 
 using System;
 using System.Linq;
-using Microsoft.Python.Core;
 using Microsoft.PythonTools.LanguageServerClient;
 
 namespace Microsoft.PythonTools.Options {

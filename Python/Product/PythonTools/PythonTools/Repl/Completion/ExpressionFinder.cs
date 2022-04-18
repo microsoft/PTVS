@@ -15,8 +15,6 @@
 
 using System.IO;
 using System.Linq;
-using Microsoft.Python.Core;
-using Microsoft.Python.Core.Text;
 
 namespace Microsoft.PythonTools.Repl.Completion {
     public sealed class ExpressionFinder {

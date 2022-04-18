@@ -17,7 +17,6 @@
 using System;
 using System.IO;
 using System.Threading;
-using Microsoft.Python.Core;
 using StreamJsonRpc;
 
 namespace Microsoft.PythonTools.LanguageServerClient {

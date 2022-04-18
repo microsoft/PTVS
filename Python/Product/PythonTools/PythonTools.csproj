@@ -172,10 +172,6 @@
       <Private>True</Private>
       <IncludeInVSIX>False</IncludeInVSIX>
     </Reference>
-    <Reference Include="Microsoft.Python.Core">
-      <Private>True</Private>
-      <IncludeInVSIX>True</IncludeInVSIX>
-    </Reference>
     <Reference Include="Microsoft.Extensions.FileSystemGlobbing">
       <Private>True</Private>
       <IncludeInVSIX>True</IncludeInVSIX>

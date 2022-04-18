@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
-using Microsoft.Python.Core;
 using Microsoft.VisualStudio.Telemetry;
 
 namespace Microsoft.PythonTools.Logging {

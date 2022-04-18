@@ -89,10 +89,6 @@
     <Reference Include="Microsoft.VisualStudio.Threading">
       <SpecificVersion>False</SpecificVersion>
     </Reference>
-    <Reference Include="Microsoft.Python.Core">
-      <Private>True</Private>
-      <IncludeInVSIX>True</IncludeInVSIX>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj">

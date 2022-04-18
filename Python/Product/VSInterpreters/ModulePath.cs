@@ -17,8 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
-using Microsoft.Python.Core;
-using Microsoft.Python.Core.IO;
 
 namespace Microsoft.PythonTools {
     public struct ModulePath {

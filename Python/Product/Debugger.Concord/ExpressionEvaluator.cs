@@ -29,7 +29,6 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.CallStack;
 using Microsoft.VisualStudio.Debugger.Evaluation;
-using Microsoft.Python.Core.Text;
 
 namespace Microsoft.PythonTools.Debugger.Concord {
     internal class ExpressionEvaluator : DkmDataItem {

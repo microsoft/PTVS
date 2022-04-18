@@ -18,7 +18,6 @@ ASSEMBLIES = sorted([
     "IpcJsonTests",
     "Microsoft.Python.Analysis",
     "Microsoft.Python.Analysis.Core",
-    "Microsoft.Python.Core",
     "Microsoft.Python.LanguageServer",
     "Microsoft.PythonTools",
     "Microsoft.PythonTools.Attacher",

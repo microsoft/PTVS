@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using Microsoft.Python.Core.Text;
 
 namespace Microsoft.PythonTools.CodeCoverage {
     /// <summary>

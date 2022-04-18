@@ -20,10 +20,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Python.Core;
-using Microsoft.Python.Core.Collections;
-using Microsoft.Python.Core.IO;
-using Microsoft.Python.Core.OS;
 using Microsoft.PythonTools.Interpreter;
 using IOPath = System.IO.Path;
 
