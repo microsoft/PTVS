@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System.Collections.Generic;
+using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.VisualStudio.Debugger;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {

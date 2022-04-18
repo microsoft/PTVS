@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Evaluation;
 

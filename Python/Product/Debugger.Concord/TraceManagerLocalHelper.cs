@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.PythonTools.Debugger.Concord.Proxies;
 using Microsoft.PythonTools.Debugger.Concord.Proxies.Structs;
 using Microsoft.VisualStudio.Debugger;

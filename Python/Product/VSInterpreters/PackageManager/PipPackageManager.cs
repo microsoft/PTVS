@@ -22,6 +22,8 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Common.Core.IO;
+using Microsoft.PythonTools.Common.Core.OS;
 using Microsoft.PythonTools.Infrastructure;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;

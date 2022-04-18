@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.Win32;
 

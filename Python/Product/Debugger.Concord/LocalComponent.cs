@@ -21,6 +21,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.Serialization;
 using Microsoft.Dia;
+using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.PythonTools.Debugger.Concord.Proxies;
 using Microsoft.PythonTools.Debugger.Concord.Proxies.Structs;
 using Microsoft.VisualStudio.Debugger;

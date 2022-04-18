@@ -16,6 +16,7 @@
 
 using System;
 using System.Diagnostics;
+using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.CallStack;
 using Microsoft.VisualStudio.Debugger.Evaluation;

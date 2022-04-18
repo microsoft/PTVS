@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using Microsoft.PythonTools.Common.Parsing;
 
 namespace Microsoft.PythonTools.Interpreter {
     public class AstPythonInterpreterFactory : IPythonInterpreterFactory, IDisposable {
