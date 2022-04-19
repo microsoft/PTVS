@@ -16,7 +16,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Microsoft.Python.Core {
+namespace Microsoft.PythonTools.Common.Core {
     public sealed class AsyncManualResetEvent {
         private TaskCompletionSource<bool> _tcs;
         public Task WaitAsync() => _tcs.Task;

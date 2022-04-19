@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools.Common.Core.Extensions;
 using Microsoft.PythonTools.Common.Core.Threading;
 
-namespace Microsoft.Python.Core {
+namespace Microsoft.PythonTools.Common.Core {
     public sealed class AsyncAutoResetEvent {
         private readonly Queue<(CancellationTokenRegistration, TaskCompletionSource<bool>)> _waiters = new Queue<(CancellationTokenRegistration, TaskCompletionSource<bool>)>(); 
         private bool _isSignaled;

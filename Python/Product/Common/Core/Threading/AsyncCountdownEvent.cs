@@ -18,7 +18,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Common.Core.Disposables;
 
-namespace Microsoft.Python.Core {
+namespace Microsoft.PythonTools.Common.Core {
     public class AsyncCountdownEvent {
         private readonly AsyncManualResetEvent _mre = new AsyncManualResetEvent();
         private int _count;
