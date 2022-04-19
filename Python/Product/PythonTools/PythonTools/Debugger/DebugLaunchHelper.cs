@@ -162,23 +162,20 @@ namespace Microsoft.PythonTools.Debugger {
             // See https://github.com/conda/conda/issues/11072
             // The workaround is to run this instead:
             // conda run -n <env> --no-capture-output --live-stream python <debugpy>
-            if (CondaUtils.IsCondaEnvironment(Path.GetDirectoryName(config.GetInterpreterPath())) &&
-                config.Interpreter.Version > new Version(3, 10)) {
-
-                var condaProvider = provider.GetComponentModel().GetService<CondaEnvironmentFactoryProvider>();
-                var condaExe = condaProvider
-
-                //DoConda310Workaround(provider, jsonObj);
-            }
+            //if (CondaUtils.IsCondaEnvironment(Path.GetDirectoryName(config.GetInterpreterPath())) &&
+            //    config.Interpreter.Version > new Version(3, 10)) {
+            //
+            //    var condaProvider = provider.GetComponentModel().GetService<CondaEnvironmentFactoryProvider>();
+            //    var condaExe = condaProvider
+            //
+            //    //DoConda310Workaround(provider, jsonObj);
+            //}
 
             return jsonObj.ToString();
         }
 
-        private static void DoConda310Workaround(JObject jsonObj) {
-
-            // do stuff
-
-        }
+        //private static void DoConda310Workaround(JObject jsonObj) {
+        //}
 
         public static void RequireStartupFile(LaunchConfiguration config) {
             if (string.IsNullOrEmpty(config.ScriptName)) {
