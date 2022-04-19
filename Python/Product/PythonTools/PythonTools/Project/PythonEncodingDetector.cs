@@ -17,6 +17,7 @@
 using System.ComponentModel.Composition;
 using System.IO;
 using System.Text;
+using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Utilities;
 

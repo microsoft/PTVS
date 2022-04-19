@@ -20,6 +20,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Project.ImportWizard;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

@@ -16,6 +16,8 @@
 
 using System;
 using System.Collections.Generic;
+using Microsoft.PythonTools.Common.Core.Text;
+using Microsoft.PythonTools.Common.Parsing.Ast;
 
 namespace Microsoft.PythonTools.CodeCoverage {
     /// <summary>

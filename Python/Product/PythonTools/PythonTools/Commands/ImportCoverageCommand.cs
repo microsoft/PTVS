@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 using Microsoft.PythonTools.CodeCoverage;
+using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Shell;

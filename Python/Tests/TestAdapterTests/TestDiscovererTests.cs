@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.PythonTools.TestAdapter.Pytest;
 using Microsoft.PythonTools.TestAdapter.UnitTest;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;

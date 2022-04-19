@@ -86,7 +86,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         /// </summary>
         public static Task ReadyTask => _readyTcs.Task;
 
-        private readonly Disposables.DisposableBag _disposables;
+        private readonly Common.Core.Disposables.DisposableBag _disposables;
         private List<IPythonLanguageClientContext> _clientContexts = new List<IPythonLanguageClientContext>();
         private PythonAnalysisOptions _analysisOptions;
         private PythonAdvancedEditorOptions _advancedEditorOptions;
@@ -102,7 +102,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private bool _loaded = false;
 
         public PythonLanguageClient() {
-            _disposables = new Disposables.DisposableBag(GetType().Name);
+            _disposables = new Common.Core.Disposables.DisposableBag(GetType().Name);
         }
 
         public string ContentTypeName => PythonCoreConstants.ContentType;

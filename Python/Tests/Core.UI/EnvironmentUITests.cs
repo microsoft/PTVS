@@ -22,6 +22,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Common;
+using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Shell;

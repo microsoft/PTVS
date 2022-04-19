@@ -20,6 +20,7 @@ using System.IO;
 using System.Text;
 using Microsoft.PythonTools.CodeCoverage;
 using Microsoft.PythonTools.Commands;
+using Microsoft.PythonTools.Common.Parsing.Ast;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;

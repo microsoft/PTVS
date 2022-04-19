@@ -16,6 +16,7 @@
 
 using System;
 using EnvDTE;
+using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.PythonTools.Options;
 
 namespace TestUtilities.Python {

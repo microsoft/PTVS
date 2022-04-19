@@ -30,6 +30,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Utilities;
 using Task = System.Threading.Tasks.Task;
 using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
+using Microsoft.PythonTools.Common.Parsing;
 
 namespace Microsoft.PythonTools.Repl {
     [InteractiveWindowRole("Execution")]

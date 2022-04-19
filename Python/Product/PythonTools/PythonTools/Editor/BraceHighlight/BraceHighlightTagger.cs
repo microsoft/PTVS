@@ -16,6 +16,8 @@
 
 using System;
 using System.Collections.Generic;
+using Microsoft.PythonTools.Common.Core.Disposables;
+using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;

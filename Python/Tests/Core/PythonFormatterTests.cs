@@ -20,6 +20,7 @@ using TestUtilities;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
+using Microsoft.PythonTools.Common.Parsing;
 
 namespace PythonToolsTests {
     [TestClass]

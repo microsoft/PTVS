@@ -55,6 +55,8 @@ using Task = System.Threading.Tasks.Task;
 using Microsoft.PythonTools.LanguageServerClient;
 using Microsoft.PythonTools.Utility;
 using Microsoft.PythonTools.Common;
+using Microsoft.PythonTools.Common.Parsing;
+using Microsoft.PythonTools.Common.Parsing.Ast;
 
 namespace Microsoft.PythonTools {
     static class Extensions {
