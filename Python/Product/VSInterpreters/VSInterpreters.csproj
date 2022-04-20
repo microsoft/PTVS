@@ -92,12 +92,6 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="Microsoft.Python.Parsing">
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Microsoft.Python.Core">
-      <Private>True</Private>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="InterpreterArchitecture.cs" />

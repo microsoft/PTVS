@@ -2,11 +2,21 @@ param ($vstarget, $outdir, $pylanceVersion, $debugpyVersion)
 
 $ErrorActionPreference = "Stop"
 
+if (-not $vstarget) {
+    $vstarget = "17.0"
+} elseif ($vstarget.ToString() -match "^\d\d$") {
+    $vstarget = "$vstarget.0"
+}
+
+# Use a different MicroBuildCore package for VS >= 17.0
+$microBuildCorePackageName = "Microsoft.Core"
+if ([int] $vstarget -ge 17) {
+    $microBuildCorePackageName = "Microsoft.VisualStudioEng.MicroBuild.Core"
+}
+
 # These packages require a versionless symlink pointing to the versioned install.
 $need_symlink = @(
     "python",
-    "MicroBuild.Core",
-    "Microsoft.Python.Parsing",
     "Microsoft.DiaSymReader.Pdb2Pdb",
     "Microsoft.Extensions.FileSystemGlobbing",
     "Microsoft.VisualStudio.LanguageServer.Protocol",
@@ -14,14 +24,9 @@ $need_symlink = @(
     "Microsoft.VisualStudio.Interop",
     "Microsoft.VSSDK.BuildTools",
     "Microsoft.VSSDK.Debugger.VSDConfigTool",
-    "Newtonsoft.Json"
+    "Newtonsoft.Json",
+    $microBuildCorePackageName
 )
-
-if (-not $vstarget) {
-    $vstarget = "17.0"
-} elseif ($vstarget.ToString() -match "^\d\d$") {
-    $vstarget = "$vstarget.0"
-}
 
 if (-not $pylanceVersion) {
     $pylanceVersion = "latest"
@@ -63,8 +68,8 @@ try {
         $packageJson | ConvertTo-Json -depth 8 | Set-Content $packageJsonFile
     }
 
-    # install pylance and update the package-lock.json file
-    npm install --save
+    # install pylance
+    npm install
 
     # print out the installed version
     $npmLsOutput = & npm ls @pylance/pylance
@@ -131,24 +136,6 @@ try {
     # add azdo build tag
     Write-Host "##vso[build.addbuildtag]Debugpy $installedDebugpyVersion"
 
-    "-----"
-    "Updating Microsoft.Python.*.dll pdbs to be windows format"
-    Get-ChildItem "$outdir\Microsoft.Python.Parsing\lib\netstandard2.0" -Filter "*.pdb" | ForEach-Object {
-        # Skip if there's already a pdb2 file
-        # Convert each pdb $_.FullName
-        $dir = $_.Directory
-        $base = $_.BaseName
-        $pdb2 = "$dir\$base.pdb2"
-        if (!(Test-Path $pdb2)) {
-            Write-Host "Modifying" $_.Name
-            Start-Process -Wait -NoNewWindow "$outdir\Microsoft.DiaSymReader.Pdb2Pdb\tools\Pdb2Pdb.exe" -ErrorAction Stop -ArgumentList "$dir\$base.dll"
-            # That should have created a pdb2 file. Rename it to the .pdb file
-            Copy-Item $_.FullName "$dir\$base.old_pdb"
-            Copy-Item "$dir\$base.pdb2" $_.FullName -Force
-        } else {
-            Write-Host "Already updated the pdb for" $_.FullName
-        }
-    } | Out-Null
 } finally {
     Pop-Location
 }

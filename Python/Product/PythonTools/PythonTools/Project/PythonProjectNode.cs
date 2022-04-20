@@ -278,6 +278,7 @@ namespace Microsoft.PythonTools.Project {
                 if (_active != oldActive || oldActive == null) {
                     ActiveInterpreterChanged?.Invoke(this, EventArgs.Empty);
                 }
+                BoldActiveEnvironment();
             }
         }
 

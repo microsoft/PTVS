@@ -49,12 +49,6 @@
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.XML" />
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
-    <Reference Include="Microsoft.Python.Core">
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Microsoft.Python.Parsing">
-      <Private>True</Private>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="PipRequirementsUtilsTests.cs" />

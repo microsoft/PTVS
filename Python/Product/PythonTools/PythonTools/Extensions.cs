@@ -33,8 +33,6 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.InterpreterList;
-using Microsoft.Python.Parsing;
-using Microsoft.Python.Parsing.Ast;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
@@ -57,6 +55,8 @@ using Task = System.Threading.Tasks.Task;
 using Microsoft.PythonTools.LanguageServerClient;
 using Microsoft.PythonTools.Utility;
 using Microsoft.PythonTools.Common;
+using Microsoft.PythonTools.Common.Parsing;
+using Microsoft.PythonTools.Common.Parsing.Ast;
 
 namespace Microsoft.PythonTools {
     static class Extensions {
@@ -738,23 +738,6 @@ namespace Microsoft.PythonTools {
 
         internal static IVsDebugger GetShellDebugger(this IServiceProvider provider) {
             return (IVsDebugger)provider.GetService(typeof(SVsShellDebugger));
-        }
-
-        internal static async Task RefreshVariableViewsAsync(this IServiceProvider serviceProvider, CancellationToken ct = default(CancellationToken)) {
-            serviceProvider.GetUIThread().MustBeCalledFromUIThread();
-            EnvDTE.Debugger debugger = serviceProvider.GetDTE()?.Debugger;
-            if (debugger == null) {
-                return;
-            }
-            AD7Engine engine = AD7Engine.GetEngineForProcess(debugger.CurrentProcess);
-            if (engine != null) {
-                await engine.RefreshThreadFrames(debugger.CurrentThread.ID, ct);
-                var vsDebugger = serviceProvider.GetShellDebugger() as IDebugRefreshNotification140;
-                if (vsDebugger != null) {
-                    // Passing fCallstackFormattingAffected = TRUE to OnExpressionEvaluationRefreshRequested to force refresh
-                    vsDebugger.OnExpressionEvaluationRefreshRequested(1);
-                }
-            }
         }
 
         internal static SolutionEventsListener GetSolutionEvents(this IServiceProvider serviceProvider) {

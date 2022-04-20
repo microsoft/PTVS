@@ -92,7 +92,7 @@ namespace Microsoft.PythonTools.Debugger {
     }
 
     [JsonObject(MemberSerialization.OptIn)]
-    internal class DebugAttachInfo : DebugInfo {
+    internal class DebugTcpAttachInfo : DebugInfo {
         [JsonProperty("host")]
         public string Host { get; set; }
 
@@ -100,6 +100,12 @@ namespace Microsoft.PythonTools.Debugger {
         public int Port { get; set; }
 
         public Uri RemoteUri { get; set; }
+    }
+
+    [JsonObject(MemberSerialization.OptIn)]
+    internal class DebugLocalAttachInfo : DebugInfo {
+        [JsonProperty("processId")]
+        public long ProcessId { get; set; }
     }
 
     public class PathRule {

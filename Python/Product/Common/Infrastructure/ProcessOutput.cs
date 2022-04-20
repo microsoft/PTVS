@@ -778,7 +778,7 @@ namespace Microsoft.PythonTools.Infrastructure {
         }
 
         /// <summary>
-        /// Called to dispose of unmanaged resources.
+        /// Called to dispose of unmanaged Strings.
         /// </summary>
         public void Dispose() {
             if (!_isDisposed) {

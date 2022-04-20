@@ -20,7 +20,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Python.Core;
+using Microsoft.PythonTools.Common.Core.Extensions;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Workspace;
 using Microsoft.VisualStudio.Workspace.Evaluator;

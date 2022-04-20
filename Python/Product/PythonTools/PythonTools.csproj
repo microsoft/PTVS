@@ -172,14 +172,6 @@
       <Private>True</Private>
       <IncludeInVSIX>False</IncludeInVSIX>
     </Reference>
-    <Reference Include="Microsoft.Python.Core">
-      <Private>True</Private>
-      <IncludeInVSIX>True</IncludeInVSIX>
-    </Reference>
-    <Reference Include="Microsoft.Python.Parsing">
-      <Private>True</Private>
-      <IncludeInVSIX>True</IncludeInVSIX>
-    </Reference>
     <Reference Include="Microsoft.Extensions.FileSystemGlobbing">
       <Private>True</Private>
       <IncludeInVSIX>True</IncludeInVSIX>
@@ -442,7 +434,6 @@
       <DependentUpon>ModernDialogHeaderControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="PythonTools\Repl\PythonCommonInteractiveEvaluator.cs" />
-    <Compile Include="PythonTools\Repl\PythonDebugProcessReplEvaluator.cs" />
     <Compile Include="PythonTools\SearchPathManager.cs" />
     <Compile Include="PythonTools\Project\VsPackageManagerUI.cs" />
     <Compile Include="PythonTools\ProvideBraceCompletionAttribute.cs" />
@@ -950,16 +941,6 @@
   </Target> -->
   <ItemGroup>
     <Content Include="$(PackagesPath)Microsoft.Extensions.FileSystemGlobbing\lib\netstandard2.0\Microsoft.Extensions.FileSystemGlobbing.dll">
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <VSIXSubPath>.</VSIXSubPath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(PackagesPath)Microsoft.Python.Parsing\lib\netstandard2.0\Microsoft.Python.Core.dll">
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <VSIXSubPath>.</VSIXSubPath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(PackagesPath)Microsoft.Python.Parsing\lib\netstandard2.0\Microsoft.Python.Parsing.dll">
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

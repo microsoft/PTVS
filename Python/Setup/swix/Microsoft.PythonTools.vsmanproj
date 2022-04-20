@@ -14,7 +14,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <MergeManifest Include="$(OutDir)*.json" />
+    <MergeManifest Include="$(OutDir)*.json">
+      <SBOMFileLocation>$(BUILD_BINARIESDIRECTORY)\layout\_manifest\spdx_2.2\manifest.spdx.json</SBOMFileLocation>
+      <SBOMFileDestPath>$(BUILD_STAGINGDIRECTORY)\release</SBOMFileDestPath>
+    </MergeManifest>
   </ItemGroup>
 
   <Import Project="..\SetupProjectAfter.settings" />

@@ -16,7 +16,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Python.Parsing;
+using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.VisualStudio.Debugger;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {

@@ -15,7 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
-using Microsoft.Python.Parsing;
+using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;

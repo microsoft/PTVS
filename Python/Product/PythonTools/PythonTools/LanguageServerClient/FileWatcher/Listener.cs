@@ -19,6 +19,8 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.FileSystemGlobbing;
+using Microsoft.PythonTools.Common.Infrastructure;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.Workspace;
 using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
@@ -27,6 +29,7 @@ using StreamJsonRpc;
 namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
     class Listener : IDisposable {
         private JsonRpc _rpc;
+        private JsonRpcWrapper _rpcWrapper;
         private System.IO.FileSystemWatcher _solutionWatcher;
         private Microsoft.Extensions.FileSystemGlobbing.Matcher _matcher = new Microsoft.Extensions.FileSystemGlobbing.Matcher(StringComparison.InvariantCultureIgnoreCase);
         private bool disposedValue;
@@ -35,6 +38,9 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
         public Listener(StreamJsonRpc.JsonRpc rpc, IVsFolderWorkspaceService workspaceService, IServiceProvider site) {
             this._rpc = rpc;
             this._rpc.Disconnected += _rpc_Disconnected;
+
+            // wrap the rpc so we can handle exceptions in a common place
+            this._rpcWrapper = new JsonRpcWrapper(this._rpc);
 
             // Ignore some common directories
             _matcher.AddExclude("**/.vs/**/*.*");
@@ -108,72 +114,74 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
             await OnFileChanged(sender, e);
         }
         private async Task OnFileChanged(object sender, System.IO.FileSystemEventArgs e) {
-            // Skip directory change events and when rpc has ben disconnected
-            if (!e.IsDirectoryChanged() && _rpc != null) {
-                // Create something to match with
-                var item = new InMemoryDirectoryInfo(_root, new string[] { e.FullPath });
 
-                // See if this matches one of our patterns.
-                if (_matcher.Execute(item).HasMatches) {
-                    // Send out the event to the language server
-                    var renamedArgs = e as System.IO.RenamedEventArgs;
-                    var didChangeParams = new DidChangeWatchedFilesParams();
+            // Skip directory change events
+            if (e.IsDirectoryChanged()) {
+                return;
+            }
 
-                    // Visual Studio actually does a rename when saving. The rename is from a file ending with '~'
-                    if (renamedArgs == null || renamedArgs.OldFullPath.EndsWith("~")) {
-                        renamedArgs = null;
-                        didChangeParams.Changes = new FileEvent[] { new FileEvent() };
-                        didChangeParams.Changes[0].Uri = new Uri(e.FullPath);
+            // Create something to match with
+            var item = new InMemoryDirectoryInfo(_root, new string[] { e.FullPath });
 
-                        switch (e.ChangeType) {
-                            case WatcherChangeTypes.Created:
-                                didChangeParams.Changes[0].FileChangeType = FileChangeType.Created;
-                                break;
-                            case WatcherChangeTypes.Deleted:
-                                didChangeParams.Changes[0].FileChangeType = FileChangeType.Deleted;
-                                break;
-                            case WatcherChangeTypes.Changed:
-                                didChangeParams.Changes[0].FileChangeType = FileChangeType.Changed;
-                                break;
-                            case WatcherChangeTypes.Renamed:
-                                didChangeParams.Changes[0].FileChangeType = FileChangeType.Changed;
-                                break;
+            // See if this matches one of our patterns.
+            if (_matcher.Execute(item).HasMatches) {
+                // Send out the event to the language server
+                var renamedArgs = e as System.IO.RenamedEventArgs;
+                var didChangeParams = new DidChangeWatchedFilesParams();
 
-                            default:
-                                didChangeParams.Changes = Array.Empty<FileEvent>();
-                                break;
-                        }
-                    } else {
-                        // file renamed
-                        var deleteEvent = new FileEvent();
-                        deleteEvent.FileChangeType = FileChangeType.Deleted;
-                        deleteEvent.Uri = new Uri(renamedArgs.OldFullPath);
+                // Visual Studio actually does a rename when saving. The rename is from a file ending with '~'
+                if (renamedArgs == null || renamedArgs.OldFullPath.EndsWith("~")) {
+                    renamedArgs = null;
+                    didChangeParams.Changes = new FileEvent[] { new FileEvent() };
+                    didChangeParams.Changes[0].Uri = new Uri(e.FullPath);
 
-                        var createEvent = new FileEvent();
-                        createEvent.FileChangeType = FileChangeType.Created;
-                        createEvent.Uri = new Uri(renamedArgs.FullPath);
+                    switch (e.ChangeType) {
+                        case WatcherChangeTypes.Created:
+                            didChangeParams.Changes[0].FileChangeType = FileChangeType.Created;
+                            break;
+                        case WatcherChangeTypes.Deleted:
+                            didChangeParams.Changes[0].FileChangeType = FileChangeType.Deleted;
+                            break;
+                        case WatcherChangeTypes.Changed:
+                            didChangeParams.Changes[0].FileChangeType = FileChangeType.Changed;
+                            break;
+                        case WatcherChangeTypes.Renamed:
+                            didChangeParams.Changes[0].FileChangeType = FileChangeType.Changed;
+                            break;
 
-                        didChangeParams.Changes = new FileEvent[] { deleteEvent, createEvent };
+                        default:
+                            didChangeParams.Changes = Array.Empty<FileEvent>();
+                            break;
                     }
+                } else {
+                    // file renamed
+                    var deleteEvent = new FileEvent();
+                    deleteEvent.FileChangeType = FileChangeType.Deleted;
+                    deleteEvent.Uri = new Uri(renamedArgs.OldFullPath);
 
-                    if (didChangeParams.Changes.Any()) {
-                        await _rpc.NotifyWithParameterObjectAsync(Methods.WorkspaceDidChangeWatchedFiles.Name, didChangeParams);
-                        if (renamedArgs != null) {
-                            var textDocumentIdentifier = new TextDocumentIdentifier();
-                            textDocumentIdentifier.Uri = new Uri(renamedArgs.OldFullPath);
+                    var createEvent = new FileEvent();
+                    createEvent.FileChangeType = FileChangeType.Created;
+                    createEvent.Uri = new Uri(renamedArgs.FullPath);
 
-                            var closeParam = new DidCloseTextDocumentParams();
-                            closeParam.TextDocument = textDocumentIdentifier;
+                    didChangeParams.Changes = new FileEvent[] { deleteEvent, createEvent };
+                }
 
-                            await _rpc.NotifyWithParameterObjectAsync(Methods.TextDocumentDidClose.Name, closeParam);
+                if (didChangeParams.Changes.Any()) {
+                    await _rpcWrapper.NotifyWithParameterObjectAsync(Methods.WorkspaceDidChangeWatchedFiles.Name, didChangeParams);
 
-                            var textDocumentItem = new TextDocumentItem();
-                            textDocumentItem.Uri = new Uri(renamedArgs.FullPath);
+                    if (renamedArgs != null) {
+                        var textDocumentIdentifier = new TextDocumentIdentifier();
+                        textDocumentIdentifier.Uri = new Uri(renamedArgs.OldFullPath);
 
-                            var openParam = new DidOpenTextDocumentParams();
-                            openParam.TextDocument = textDocumentItem;
-                            await _rpc.NotifyWithParameterObjectAsync(Methods.TextDocumentDidOpen.Name, openParam);
-                        }
+                        var closeParam = new DidCloseTextDocumentParams();
+                        closeParam.TextDocument = textDocumentIdentifier;
+                        await _rpcWrapper.NotifyWithParameterObjectAsync(Methods.TextDocumentDidClose.Name, closeParam);
+
+                        var textDocumentItem = new TextDocumentItem();
+                        textDocumentItem.Uri = new Uri(renamedArgs.FullPath);
+                        var openParam = new DidOpenTextDocumentParams();
+                        openParam.TextDocument = textDocumentItem;
+                        await _rpcWrapper.NotifyWithParameterObjectAsync(Methods.TextDocumentDidOpen.Name, openParam);
                     }
                 }
             }
