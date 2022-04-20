@@ -16,7 +16,6 @@
 
 using System;
 using System.Diagnostics;
-using Microsoft.Python.Core.Text;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;

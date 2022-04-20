@@ -107,12 +107,6 @@
     <Reference Include="System.XML" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="WindowsBase" />
-    <Reference Include="Microsoft.Python.Core">
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Microsoft.Python.Parsing">
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Microsoft.NET.StringTools">
       <Private>True</Private>
     </Reference>

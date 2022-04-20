@@ -33,8 +33,6 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.InterpreterList;
-using Microsoft.Python.Parsing;
-using Microsoft.Python.Parsing.Ast;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
@@ -57,6 +55,8 @@ using Task = System.Threading.Tasks.Task;
 using Microsoft.PythonTools.LanguageServerClient;
 using Microsoft.PythonTools.Utility;
 using Microsoft.PythonTools.Common;
+using Microsoft.PythonTools.Common.Parsing;
+using Microsoft.PythonTools.Common.Parsing.Ast;
 
 namespace Microsoft.PythonTools {
     static class Extensions {

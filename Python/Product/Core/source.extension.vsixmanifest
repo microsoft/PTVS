@@ -45,8 +45,6 @@
         <Asset Type="DebuggerEngineExtension" Path="DkmDebugger.vsdconfig" />
         <Asset Type="NativeVisualizer" Path="Visualizers\PythonDkm.natvis" />
         <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Newtonsoft.Json.dll" />
-        <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Microsoft.Python.Core.dll" />
-        <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Microsoft.Python.Parsing.dll" />
         <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Microsoft.PythonTools.Ipc.Json.dll" />
         <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Microsoft.PythonTools.Attacher.exe" />        
         <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Microsoft.Extensions.FileSystemGlobbing.dll" />

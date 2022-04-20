@@ -22,7 +22,6 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Python.Core.Disposables;
 using Microsoft.PythonTools.Common.Infrastructure;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
@@ -87,7 +86,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         /// </summary>
         public static Task ReadyTask => _readyTcs.Task;
 
-        private readonly Microsoft.Python.Core.Disposables.DisposableBag _disposables;
+        private readonly Common.Core.Disposables.DisposableBag _disposables;
         private List<IPythonLanguageClientContext> _clientContexts = new List<IPythonLanguageClientContext>();
         private PythonAnalysisOptions _analysisOptions;
         private PythonAdvancedEditorOptions _advancedEditorOptions;
@@ -103,7 +102,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private bool _loaded = false;
 
         public PythonLanguageClient() {
-            _disposables = new Microsoft.Python.Core.Disposables.DisposableBag(GetType().Name);
+            _disposables = new Common.Core.Disposables.DisposableBag(GetType().Name);
         }
 
         public string ContentTypeName => PythonCoreConstants.ContentType;
