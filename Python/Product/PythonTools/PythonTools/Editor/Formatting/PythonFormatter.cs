@@ -61,6 +61,7 @@ namespace Microsoft.PythonTools.Editor.Formatting {
         protected virtual async Task<string> RunToolAsync(string interpreterExePath, string documentFilePath, Range range, string[] extraArgs) {
             var output = ProcessOutput.RunHiddenAndCapture(
                 interpreterExePath,
+                System.Text.Encoding.UTF8,
                 GetToolCommandArgs(documentFilePath, range, extraArgs)
             );
 

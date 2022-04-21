@@ -192,6 +192,10 @@ namespace Microsoft.PythonTools.Infrastructure {
             return Run(filename, arguments, null, null, false, null);
         }
 
+        public static ProcessOutput RunHiddenAndCapture(string filename, Encoding encoding, params string[] arguments) {
+            return Run(filename, arguments, null, null, false, null, true, false, encoding, encoding);
+        }
+
         /// <summary>
         /// Runs the file with the provided settings.
         /// </summary>
