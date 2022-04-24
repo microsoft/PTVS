@@ -1,6 +1,6 @@
 steps:
 
-  - task: MicroBuildSwixPlugin@3
+  - task: MicroBuildSwixPlugin@4
     displayName: 'Install microbuild swix plugin'
     inputs:
       dropName: 'Products/$(System.TeamProject)/$(Build.Repository.Name)/$(Build.SourceBranchName)/$(Build.BuildNumber)'

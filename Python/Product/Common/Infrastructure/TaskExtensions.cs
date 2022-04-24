@@ -15,7 +15,10 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -91,7 +94,7 @@ namespace Microsoft.PythonTools.Infrastructure {
                 }
                 throw;
             }
-            return default(T);
+            return default;
         }
 
         /// <summary>
@@ -147,7 +150,34 @@ namespace Microsoft.PythonTools.Infrastructure {
                     return t.Result;
                 } catch (AggregateException ex) {
                     ex.Handle(e => e is T);
-                    return default(U);
+                    return default;
+                }
+            });
+        }
+
+        /// <summary>
+        /// Silently handles a collection of exception types
+        /// </summary>
+        public static Task SilenceExceptions(this Task task, IEnumerable<Type> exceptionTypes) {
+            return task.ContinueWith(t => {
+                try {
+                    t.Wait();
+                } catch (AggregateException ex) {
+                    ex.Handle(e => exceptionTypes.Any(f => f.IsAssignableFrom(e.GetType())));
+                }
+            });
+        }
+
+        /// <summary>
+        /// Silently handles a collection of exception types
+        /// </summary>
+        public static Task<T> SilenceExceptions<T>(this Task<T> task, IEnumerable<Type> exceptionTypes) {
+            return task.ContinueWith(t => {
+                try {
+                    return t.Result;
+                } catch (AggregateException ex) {
+                    ex.Handle(e => exceptionTypes.Any(f => f.IsAssignableFrom(e.GetType())));
+                    return default;
                 }
             });
         }

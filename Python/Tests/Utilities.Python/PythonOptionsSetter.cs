@@ -16,8 +16,8 @@
 
 using System;
 using EnvDTE;
+using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.PythonTools.Options;
-using Microsoft.Python.Parsing;
 
 namespace TestUtilities.Python {
     public class PythonOptionsSetter : IDisposable {
