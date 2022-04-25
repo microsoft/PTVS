@@ -15,7 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
-using Microsoft.Python.Parsing;
+using Microsoft.PythonTools.Common.Parsing;
 
 namespace Microsoft.PythonTools.Options {
     public sealed class PythonGeneralOptions{

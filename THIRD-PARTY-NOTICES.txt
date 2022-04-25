@@ -341,7 +341,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ---------------------------------------------------------
 
-MicroBuild.Core 0.2.0 - MIT
+Microsoft.VisualStudioEng.MicroBuild.Core 1.0.0 - MIT
 
 
 (c) 2008 VeriSign, Inc.

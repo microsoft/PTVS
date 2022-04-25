@@ -17,7 +17,7 @@
 using System;
 using System.IO;
 using System.Linq;
-using Microsoft.Python.Parsing;
+using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.PythonTools.Debugger.Concord.Proxies;
 using Microsoft.PythonTools.Debugger.Concord.Proxies.Structs;
 using Microsoft.PythonTools.Infrastructure;

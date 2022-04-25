@@ -39,6 +39,7 @@ namespace Microsoft.PythonTools.Editor.Formatting {
 
             // Diff tools may print a header with the original/modified file names
             // and that header must be removed for diff_match_patch.
+            diffOutputText = diffOutputText.Trim(new char[] { '\uFEFF'});
             if (diffOutputText.StartsWithOrdinal("---")) {
                 var startIndex = diffOutputText.IndexOfOrdinal("@@");
                 if (startIndex >= 0) {

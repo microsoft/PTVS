@@ -1091,6 +1091,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;as&apos; requires Python 2.6 or later.
+        /// </summary>
+        public static string AsRequiresPython2dot6OrlaterErrorMsg {
+            get {
+                return ResourceManager.GetString("AsRequiresPython2dot6OrlaterErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to These tools are an installable workload for your version of Visual Studio that allow you to write, deploy and debug applications for Microsoft Azure in a range of programming languages..
         /// </summary>
         public static string AzureToolsInstallInstructions {
@@ -1129,6 +1138,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to f-string expression part cannot include a backslash.
+        /// </summary>
+        public static string BackslashFStringExpressionErrorMsg {
+            get {
+                return ResourceManager.GetString("BackslashFStringExpressionErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to If checked, statements separated by semicolons are moved onto individual lines. If unchecked, lines with multiple statements are not modified..
         /// </summary>
         public static string BreakMultipleStatementsPerLineLong {
@@ -1143,6 +1161,15 @@ namespace Microsoft.PythonTools {
         public static string BreakMultipleStatementsPerLineShort {
             get {
                 return ResourceManager.GetString("BreakMultipleStatementsPerLineShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;break&apos; outside loop.
+        /// </summary>
+        public static string BreakOustideLoopErrorMsg {
+            get {
+                return ResourceManager.GetString("BreakOustideLoopErrorMsg", resourceCulture);
             }
         }
         
@@ -1183,11 +1210,38 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to can&apos;t use starred expression here.
+        /// </summary>
+        public static string CantUseStarredExpErrorMsg {
+            get {
+                return ResourceManager.GetString("CantUseStarredExpErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Python Class.
         /// </summary>
         public static string ClassClassificationType {
             get {
                 return ResourceManager.GetString("ClassClassificationType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to invalid syntax, class decorators require 2.6 or later..
+        /// </summary>
+        public static string ClassDecoratorsRequireTwodotSixErrorMsg {
+            get {
+                return ResourceManager.GetString("ClassDecoratorsRequireTwodotSixErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to f-string: closing parenthesis &apos;{0}&apos; does not match opening parenthesis &apos;{1}&apos;.
+        /// </summary>
+        public static string ClosingParensNotMatchFStringErrorMsg {
+            get {
+                return ResourceManager.GetString("ClosingParensNotMatchFStringErrorMsg", resourceCulture);
             }
         }
         
@@ -2335,6 +2389,24 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;continue&apos; not properly in loop.
+        /// </summary>
+        public static string ContinueNotInLoopErrorMsg {
+            get {
+                return ResourceManager.GetString("ContinueNotInLoopErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;continue&apos; not supported inside &apos;finally&apos; clause.
+        /// </summary>
+        public static string ContinueNotSupportedInsideFinallyErrorMsg {
+            get {
+                return ResourceManager.GetString("ContinueNotSupportedInsideFinallyErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Continue
         ///Some manual steps will be required to configure your project..
         /// </summary>
@@ -3277,6 +3349,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to default &apos;except&apos; must be last.
+        /// </summary>
+        public static string DefaultExceptMustBeLastErrorMsg {
+            get {
+                return ResourceManager.GetString("DefaultExceptMustBeLastErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to your default environment.
         /// </summary>
         public static string DefaultInterpreterDescription {
@@ -3300,6 +3381,15 @@ namespace Microsoft.PythonTools {
         public static string DefaultLauncherName {
             get {
                 return ResourceManager.GetString("DefaultLauncherName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to default value must be specified here.
+        /// </summary>
+        public static string DefaultValueMustBeSpecifiedErrorMsg {
+            get {
+                return ResourceManager.GetString("DefaultValueMustBeSpecifiedErrorMsg", resourceCulture);
             }
         }
         
@@ -3404,6 +3494,51 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to duplicate ** args arguments.
+        /// </summary>
+        public static string DuplicateArgsDoubleArgumentErrorMsg {
+            get {
+                return ResourceManager.GetString("DuplicateArgsDoubleArgumentErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to duplicate * args arguments.
+        /// </summary>
+        public static string DuplicateArgsSingleArgumentErrorMsg {
+            get {
+                return ResourceManager.GetString("DuplicateArgsSingleArgumentErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to duplicate argument &apos;{0}&apos; in function definition.
+        /// </summary>
+        public static string DuplicateArgumentInFunctionDefinitionErrorMsg {
+            get {
+                return ResourceManager.GetString("DuplicateArgumentInFunctionDefinitionErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to duplicate argument &apos;{0}&apos; in function definition.
+        /// </summary>
+        public static string DuplicateArgumentInFunctionErrorMsg {
+            get {
+                return ResourceManager.GetString("DuplicateArgumentInFunctionErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to duplicate keyword argument.
+        /// </summary>
+        public static string DuplicateKeywordArgumentErrorMsg {
+            get {
+                return ResourceManager.GetString("DuplicateKeywordArgumentErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Continue without Administrator privileges.
         /// </summary>
         public static string ElevateForInstallPackage_DoNotElevate {
@@ -3463,6 +3598,15 @@ namespace Microsoft.PythonTools {
         public static string ElevateForInstallPackage_MainInstruction {
             get {
                 return ResourceManager.GetString("ElevateForInstallPackage_MainInstruction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to f-string: empty expression not allowed.
+        /// </summary>
+        public static string EmptyExpressionFStringErrorMsg {
+            get {
+                return ResourceManager.GetString("EmptyExpressionFStringErrorMsg", resourceCulture);
             }
         }
         
@@ -3818,6 +3962,69 @@ namespace Microsoft.PythonTools {
         public static string ExecutingCommandSucceeded {
             get {
                 return ResourceManager.GetString("ExecutingCommandSucceeded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to expected &apos;:&apos;.
+        /// </summary>
+        public static string ExpectedColonErrorMsg {
+            get {
+                return ResourceManager.GetString("ExpectedColonErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to expected expression after del.
+        /// </summary>
+        public static string ExpectedExpressionAfterDelErrorMsg {
+            get {
+                return ResourceManager.GetString("ExpectedExpressionAfterDelErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to print statement expected expression to be printed.
+        /// </summary>
+        public static string ExpectedExpressionToBePrintedErrorMsg {
+            get {
+                return ResourceManager.GetString("ExpectedExpressionToBePrintedErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to expected an indented block.
+        /// </summary>
+        public static string ExpectedIndentedBlockErrorMsg {
+            get {
+                return ResourceManager.GetString("ExpectedIndentedBlockErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to expected name.
+        /// </summary>
+        public static string ExpectedNameErrorMsg {
+            get {
+                return ResourceManager.GetString("ExpectedNameErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to f-string: expecting &apos;{0}&apos; but found &apos;{1}&apos;.
+        /// </summary>
+        public static string ExpectingCharButFoundFStringErrorMsg {
+            get {
+                return ResourceManager.GetString("ExpectingCharButFoundFStringErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to f-string: expecting &apos;{0}&apos;.
+        /// </summary>
+        public static string ExpectingCharFStringErrorMsg {
+            get {
+                return ResourceManager.GetString("ExpectingCharFStringErrorMsg", resourceCulture);
             }
         }
         
@@ -4220,6 +4427,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to invalid syntax, from cause not allowed in 2.x..
+        /// </summary>
+        public static string FromCauseNotAllowedIn2XErrorMsg {
+            get {
+                return ResourceManager.GetString("FromCauseNotAllowedIn2XErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Import all members from the module.
         /// </summary>
         public static string FromImportCompletionImportAllMembersFromModuleTooltip {
@@ -4274,6 +4490,33 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to future feature is not defined: .
+        /// </summary>
+        public static string FutureFeatureNotDefinedErrorMsg {
+            get {
+                return ResourceManager.GetString("FutureFeatureNotDefinedErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to from __future__ imports must occur at the beginning of the file.
+        /// </summary>
+        public static string FutureImportsMustOccorAtBeginningOfFileErrorMsg {
+            get {
+                return ResourceManager.GetString("FutureImportsMustOccorAtBeginningOfFileErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to future statement does not support import *.
+        /// </summary>
+        public static string FutureStatementDoesNotSupportImportErrorMsg {
+            get {
+                return ResourceManager.GetString("FutureStatementDoesNotSupportImportErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to General.
         /// </summary>
         public static string GeneralPaneName {
@@ -4310,11 +4553,29 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to illegal target for annotation.
+        /// </summary>
+        public static string IllegalTargetAnnotationErrorMsg {
+            get {
+                return ResourceManager.GetString("IllegalTargetAnnotationErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to coverage.py XML (*.xml)|*.xml|All Files (*.*)|*.*.
         /// </summary>
         public static string ImportCoverageCommandFileFilter {
             get {
                 return ResourceManager.GetString("ImportCoverageCommandFileFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to import * only allowed at module level.
+        /// </summary>
+        public static string ImportOnlyAllowedAtModuleErrorMsg {
+            get {
+                return ResourceManager.GetString("ImportOnlyAllowedAtModuleErrorMsg", resourceCulture);
             }
         }
         
@@ -4607,6 +4868,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Start location was not set correctly.
+        /// </summary>
+        public static string IncorrectStartLocationErrorMsg {
+            get {
+                return ResourceManager.GetString("IncorrectStartLocationErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Insert Snippet.
         /// </summary>
         public static string InsertSnippet {
@@ -4871,11 +5141,47 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to f-string: invalid conversion character: {0} expected &apos;s&apos;, &apos;r&apos;, or &apos;a&apos;.
+        /// </summary>
+        public static string InvalidConversionCharacterExpectedFStringErrorMsg {
+            get {
+                return ResourceManager.GetString("InvalidConversionCharacterExpectedFStringErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to f-string: invalid conversion character: expected &apos;s&apos;, &apos;r&apos;, or &apos;a&apos;.
+        /// </summary>
+        public static string InvalidConversionCharacterFStringErrorMsg {
+            get {
+                return ResourceManager.GetString("InvalidConversionCharacterFStringErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to f-string: invalid expression.
+        /// </summary>
+        public static string InvalidExpressionFStringErrorMsg {
+            get {
+                return ResourceManager.GetString("InvalidExpressionFStringErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to bad char for integer value: {0}.
         /// </summary>
         public static string InvalidHexValue {
             get {
                 return ResourceManager.GetString("InvalidHexValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to invalid parameter.
+        /// </summary>
+        public static string InvalidParameterErrorMsg {
+            get {
+                return ResourceManager.GetString("InvalidParameterErrorMsg", resourceCulture);
             }
         }
         
@@ -4889,11 +5195,74 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to invalid sublist parameter.
+        /// </summary>
+        public static string InvalidSublistParameterErrorMsg {
+            get {
+                return ResourceManager.GetString("InvalidSublistParameterErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to invalid syntax, only exception value is allowed in 3.x..
+        /// </summary>
+        public static string InvalidSyntaxAllowedInVersion3XErrorMsg {
+            get {
+                return ResourceManager.GetString("InvalidSyntaxAllowedInVersion3XErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to invalid syntax.
+        /// </summary>
+        public static string InvalidSyntaxErrorMsg {
+            get {
+                return ResourceManager.GetString("InvalidSyntaxErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to https://go.microsoft.com/fwlink/?LinkId=402428.
         /// </summary>
         public static string IssueTrackerUrl {
             get {
                 return ResourceManager.GetString("IssueTrackerUrl", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to iterable argument unpacking follows keyword argument unpacking.
+        /// </summary>
+        public static string IterableArgumentFollowsKeywordArgumentErrorMsg {
+            get {
+                return ResourceManager.GetString("IterableArgumentFollowsKeywordArgumentErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to iterable unpacking cannot be used in comprehension.
+        /// </summary>
+        public static string IterableUnpackingErrorMsg {
+            get {
+                return ResourceManager.GetString("IterableUnpackingErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to keywords must come before ** args.
+        /// </summary>
+        public static string KeywordsMustComeBeforeArgsErrorMsg {
+            get {
+                return ResourceManager.GetString("KeywordsMustComeBeforeArgsErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to f-string: lambda must be inside parentheses.
+        /// </summary>
+        public static string LambdaParenthesesFstringErrorMsg {
+            get {
+                return ResourceManager.GetString("LambdaParenthesesFstringErrorMsg", resourceCulture);
             }
         }
         
@@ -5033,6 +5402,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to misplaced yield.
+        /// </summary>
+        public static string MisplacedYieldErrorMsg {
+            get {
+                return ResourceManager.GetString("MisplacedYieldErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The environment &quot;{0}&quot; appears to be incorrectly configured or missing. You may need to install Python {1} or re-create a virtual environment..
         /// </summary>
         public static string MissingEnvironment {
@@ -5047,6 +5425,15 @@ namespace Microsoft.PythonTools {
         public static string MissingEnvironmentUnknownVersion {
             get {
                 return ResourceManager.GetString("MissingEnvironmentUnknownVersion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to missing module name.
+        /// </summary>
+        public static string MissingModuleNameErrorMsg {
+            get {
+                return ResourceManager.GetString("MissingModuleNameErrorMsg", resourceCulture);
             }
         }
         
@@ -5114,6 +5501,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to cannot mix bytes and nonbytes literals.
+        /// </summary>
+        public static string MixingBytesAndNonBytesErrorMsg {
+            get {
+                return ResourceManager.GetString("MixingBytesAndNonBytesErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Close.
         /// </summary>
         public static string ModernDialogHeaderCloseButtonAutomationName {
@@ -5128,6 +5524,69 @@ namespace Microsoft.PythonTools {
         public static string ModuleClassificationType {
             get {
                 return ResourceManager.GetString("ModuleClassificationType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to named arguments must follow bare *.
+        /// </summary>
+        public static string NamedArgumentsMustFollowBareErrorMsg {
+            get {
+                return ResourceManager.GetString("NamedArgumentsMustFollowBareErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to cannot use named assignment with {0}.
+        /// </summary>
+        public static string NamedAssignmentWithErrorMsg {
+            get {
+                return ResourceManager.GetString("NamedAssignmentWithErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to named expression must be parenthesized in this context.
+        /// </summary>
+        public static string NamedExpressionCtxtErrorMsg {
+            get {
+                return ResourceManager.GetString("NamedExpressionCtxtErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to assignment expression within a comprehension cannot be used in a class body.
+        /// </summary>
+        public static string NamedExpressionInClassBodyErrorMsg {
+            get {
+                return ResourceManager.GetString("NamedExpressionInClassBodyErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to assignment expression cannot be used in a comprehension iterable expression.
+        /// </summary>
+        public static string NamedExpressionInComprehensionIteratorErrorMsg {
+            get {
+                return ResourceManager.GetString("NamedExpressionInComprehensionIteratorErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to comprehension inner loop cannot rebind assignment expression target &apos;{0}&apos;.
+        /// </summary>
+        public static string NamedExpressionIteratorRebindsNamedErrorMsg {
+            get {
+                return ResourceManager.GetString("NamedExpressionIteratorRebindsNamedErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to assignment expression cannot rebind comprehension iteration variable &apos;{0}&apos;.
+        /// </summary>
+        public static string NamedExpressionRebindIteratorErrorMsg {
+            get {
+                return ResourceManager.GetString("NamedExpressionRebindIteratorErrorMsg", resourceCulture);
             }
         }
         
@@ -5159,6 +5618,24 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to non-keyword arg after keyword arg.
+        /// </summary>
+        public static string NonKeywordArgAfterKeywordArgErrorMsg {
+            get {
+                return ResourceManager.GetString("NonKeywordArgAfterKeywordArgErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to nonlocal declaration not allowed at module level.
+        /// </summary>
+        public static string NonLocalDeclarationAtModuleErrorMsg {
+            get {
+                return ResourceManager.GetString("NonLocalDeclarationAtModuleErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Your project needs a Python script marked as the startup file to perform this operation..
         /// </summary>
         public static string NoStartupFileAvailable {
@@ -5173,6 +5650,42 @@ namespace Microsoft.PythonTools {
         public static string NoSurveyNewsAvailable {
             get {
                 return ResourceManager.GetString("NoSurveyNewsAvailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to not a chance.
+        /// </summary>
+        public static string NotAChanceErrorMsg {
+            get {
+                return ResourceManager.GetString("NotAChanceErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to f-string expression part cannot include &apos;#&apos;.
+        /// </summary>
+        public static string NumberSignFStringExpressionErrorMsg {
+            get {
+                return ResourceManager.GetString("NumberSignFStringExpressionErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to only one ** allowed.
+        /// </summary>
+        public static string OnlyOneAllowedDoubleErrorMsg {
+            get {
+                return ResourceManager.GetString("OnlyOneAllowedDoubleErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to only one * allowed.
+        /// </summary>
+        public static string OnlyOneAllowedSingleErrorMsg {
+            get {
+                return ResourceManager.GetString("OnlyOneAllowedSingleErrorMsg", resourceCulture);
             }
         }
         
@@ -5313,11 +5826,29 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to invalid syntax, parameter annotations require 3.x.
+        /// </summary>
+        public static string ParameterAnnotationsRequire3dotXErrorMsg {
+            get {
+                return ResourceManager.GetString("ParameterAnnotationsRequire3dotXErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Python Parameter.
         /// </summary>
         public static string ParameterClassificationType {
             get {
                 return ResourceManager.GetString("ParameterClassificationType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Parsing already started. Use Restart to start again..
+        /// </summary>
+        public static string ParsingAlreadyStartedErrorMsg {
+            get {
+                return ResourceManager.GetString("ParsingAlreadyStartedErrorMsg", resourceCulture);
             }
         }
         
@@ -5381,6 +5912,87 @@ namespace Microsoft.PythonTools {
         public static string PipInstallSucceeded {
             get {
                 return ResourceManager.GetString("PipInstallSucceeded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to positional argument follows keyword argument.
+        /// </summary>
+        public static string PositionalArgumentKeywardArgumentErrorMsg {
+            get {
+                return ResourceManager.GetString("PositionalArgumentKeywardArgumentErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to positional argument follows keyword argument unpacking.
+        /// </summary>
+        public static string PositionalArgumentKeywardArgumentUnpackingErrorMsg {
+            get {
+                return ResourceManager.GetString("PositionalArgumentKeywardArgumentUnpackingErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to positional only marker after ** args not allowed.
+        /// </summary>
+        public static string PositionalOnlyMarkerAfterDictArgsErrorMsg {
+            get {
+                return ResourceManager.GetString("PositionalOnlyMarkerAfterDictArgsErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to positional only marker after * args not allowed.
+        /// </summary>
+        public static string PositionalOnlyMarkerAfterListArgsErrorMsg {
+            get {
+                return ResourceManager.GetString("PositionalOnlyMarkerAfterListArgsErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to positional only marker may not have annotation.
+        /// </summary>
+        public static string PositionalOnlyMarkerAnnotationErrorMsg {
+            get {
+                return ResourceManager.GetString("PositionalOnlyMarkerAnnotationErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to positional only marker may not have default.
+        /// </summary>
+        public static string PositionalOnlyMarkerDefaultErrorMsg {
+            get {
+                return ResourceManager.GetString("PositionalOnlyMarkerDefaultErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to duplicate positional only marker.
+        /// </summary>
+        public static string PositionalOnlyMarkerDuplicateErrorMsg {
+            get {
+                return ResourceManager.GetString("PositionalOnlyMarkerDuplicateErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to positional only marker may not be first parameter.
+        /// </summary>
+        public static string PositionalOnlyMarkerFirstParamErrorMessage {
+            get {
+                return ResourceManager.GetString("PositionalOnlyMarkerFirstParamErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to positional parameter after * args not allowed.
+        /// </summary>
+        public static string PositionalParameterNotAllowedErrorMsg {
+            get {
+                return ResourceManager.GetString("PositionalParameterNotAllowedErrorMsg", resourceCulture);
             }
         }
         
@@ -6909,6 +7521,33 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to invalid syntax, return annotations require 3.x.
+        /// </summary>
+        public static string ReturnAnnotationsRequire3dotXErrorMsg {
+            get {
+                return ResourceManager.GetString("ReturnAnnotationsRequire3dotXErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;return&apos; outside function.
+        /// </summary>
+        public static string ReturnOutsideFunctionErrorMsg {
+            get {
+                return ResourceManager.GetString("ReturnOutsideFunctionErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;return&apos; with argument inside generator.
+        /// </summary>
+        public static string ReturnWithArgumentInGeneratorErrorMsg {
+            get {
+                return ResourceManager.GetString("ReturnWithArgumentInGeneratorErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to get classifier from buffer.
         /// </summary>
         public static string ReverseExpressionParserFailedToGetClassifierFromBufferException {
@@ -7019,6 +7658,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to invalid syntax, set literals require Python 2.7 or later..
+        /// </summary>
+        public static string SetLiteralsRequirePython2dot7ErrorMsg {
+            get {
+                return ResourceManager.GetString("SetLiteralsRequirePython2dot7ErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Show &amp;requirements.txt.
         /// </summary>
         public static string ShouldInstallRequirementsTxtCollapsedControl {
@@ -7071,6 +7719,24 @@ namespace Microsoft.PythonTools {
         public static string ShowDetails {
             get {
                 return ResourceManager.GetString("ShowDetails", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to f-string: single &apos;}&apos; is not allowed.
+        /// </summary>
+        public static string SingleClosedBraceFStringErrorMsg {
+            get {
+                return ResourceManager.GetString("SingleClosedBraceFStringErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to only single target (not tuple) can be annotated.
+        /// </summary>
+        public static string SingleTargetCanBeAnnotatedErrorMsg {
+            get {
+                return ResourceManager.GetString("SingleTargetCanBeAnnotatedErrorMsg", resourceCulture);
             }
         }
         
@@ -7500,6 +8166,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to sublist parameters are not supported in 3.x.
+        /// </summary>
+        public static string SublistParametersNotSupported3dotXErrorMsg {
+            get {
+                return ResourceManager.GetString("SublistParametersNotSupported3dotXErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Surround With.
         /// </summary>
         public static string SurroundWith {
@@ -7532,6 +8207,15 @@ namespace Microsoft.PythonTools {
         public static string SymbolListValues {
             get {
                 return ResourceManager.GetString("SymbolListValues", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to syntax error.
+        /// </summary>
+        public static string SyntaxErrorMsg {
+            get {
+                return ResourceManager.GetString("SyntaxErrorMsg", resourceCulture);
             }
         }
         
@@ -7626,6 +8310,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to two starred expressions in assignment.
+        /// </summary>
+        public static string TwoStarredExpressionErrorMsg {
+            get {
+                return ResourceManager.GetString("TwoStarredExpressionErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Basic.
         /// </summary>
         public static string TypeCheckingModeBasic {
@@ -7698,6 +8391,24 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to unexpected end of file.
+        /// </summary>
+        public static string UnexpectedEndOfFileErrorMsg {
+            get {
+                return ResourceManager.GetString("UnexpectedEndOfFileErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to unexpected EOF while parsing.
+        /// </summary>
+        public static string UnexpectedEndOfFileWhileParsingErrorMsg {
+            get {
+                return ResourceManager.GetString("UnexpectedEndOfFileWhileParsingErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Please press Ctrl+C to copy the contents of this dialog and report this error..
         /// </summary>
         public static string UnexpectedError_Instruction {
@@ -7725,6 +8436,24 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to unexpected indent.
+        /// </summary>
+        public static string UnexpectedIndentErrorMsg {
+            get {
+                return ResourceManager.GetString("UnexpectedIndentErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to unexpected token &apos;{0}&apos;.
+        /// </summary>
+        public static string UnexpectedTokenErrorMsg {
+            get {
+                return ResourceManager.GetString("UnexpectedTokenErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An error occurred while upgrading projects: {0}.
         /// </summary>
         public static string UnexpectedUpgradeError {
@@ -7740,6 +8469,15 @@ namespace Microsoft.PythonTools {
         public static string UnhandledException {
             get {
                 return ResourceManager.GetString("UnhandledException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unhandled string token.
+        /// </summary>
+        public static string UnhandledStringTokenErrorMsg {
+            get {
+                return ResourceManager.GetString("UnhandledStringTokenErrorMsg", resourceCulture);
             }
         }
         
@@ -7821,11 +8559,29 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to encoding problem: unknown encoding (line {0}).
+        /// </summary>
+        public static string UnknownEncodingErrorMsg {
+            get {
+                return ResourceManager.GetString("UnknownEncodingErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unknown role type: {0}.
         /// </summary>
         public static string UnknownRoleTypeException {
             get {
                 return ResourceManager.GetString("UnknownRoleTypeException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to f-string: unmatched &apos;{0}&apos;.
+        /// </summary>
+        public static string UnmatchedFStringErrorMsg {
+            get {
+                return ResourceManager.GetString("UnmatchedFStringErrorMsg", resourceCulture);
             }
         }
         
@@ -7991,6 +8747,24 @@ namespace Microsoft.PythonTools {
         public static string UpgradeMessage_Package {
             get {
                 return ResourceManager.GetString("UpgradeMessage_Package", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to file has both Unicode marker and PEP-263 file encoding.  You must use \&quot;utf-8\&quot; as the encoding name when a BOM is present..
+        /// </summary>
+        public static string Utf8EncodingErrorMsg {
+            get {
+                return ResourceManager.GetString("Utf8EncodingErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &quot;, variable&quot; not allowed in 3.x - use &quot;as variable&quot; instead..
+        /// </summary>
+        public static string VariableIn3dotXErrorMsg {
+            get {
+                return ResourceManager.GetString("VariableIn3dotXErrorMsg", resourceCulture);
             }
         }
         
@@ -8283,6 +9057,15 @@ namespace Microsoft.PythonTools {
         public static string WsgiHandlerHelp {
             get {
                 return ResourceManager.GetString("WsgiHandlerHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;yield&apos; inside async function.
+        /// </summary>
+        public static string YieldInsideAsyncErrorMsg {
+            get {
+                return ResourceManager.GetString("YieldInsideAsyncErrorMsg", resourceCulture);
             }
         }
         
