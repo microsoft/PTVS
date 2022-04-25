@@ -293,7 +293,7 @@ namespace Microsoft.PythonTools.Interpreter {
         internal async static Task<Version> ExecuteCondaListAsync(string condaPath, string envName) {
             Version version = null;
 
-            var activationVars = await CondaUtils.GetActivationEnvironmentVariablesForRootAsync(condaPath);
+            var activationVars = await CondaUtils.GetActivationEnvironmentVariablesForRootAsync(condaPath).ConfigureAwait(false);
             var envVars = activationVars.Union(UnbufferedEnv).ToArray();
 
             // command looks like `conda list -n <envName> python --json`
@@ -403,7 +403,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             var arch = CPythonInterpreterFactoryProvider.ArchitectureFromExe(interpreterPath);
-            var version = await Task.Run(() => ExecuteCondaListAsync(condaPath, name));
+            var version = await ExecuteCondaListAsync(condaPath, name);
 
             var config = new VisualStudioInterpreterConfiguration(
                 CondaEnvironmentFactoryConstants.GetInterpreterId(CondaEnvironmentFactoryProvider.EnvironmentCompanyName, name),
