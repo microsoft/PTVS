@@ -383,7 +383,9 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
 
                 var environmentInfo = await CreateEnvironmentInfo(folder, condaPath);
-                condaEnvironments.Add(environmentInfo);
+                if (environmentInfo != null) {
+                    condaEnvironments.Add(environmentInfo);
+                }
             }
 
             return condaEnvironments;
