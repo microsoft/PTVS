@@ -165,7 +165,7 @@ namespace Microsoft.PythonTools.Profiling {
                 if (_interpreterPath != value) {
                     _interpreterPath = value;
                     if (Interpreter.Name == Strings.LaunchProfiling_OtherInterpreter && Interpreter.Path == null) {
-                        Interpreter = new PythonInterpreterView(Strings.LaunchProfiling_OtherInterpreter, "Global|"+ Strings.LaunchProfiling_OtherInterpreter, _interpreterPath);
+                        Interpreter = new PythonInterpreterView(Strings.LaunchProfiling_OtherInterpreter, Strings.LaunchProfiling_OtherInterpreter, _interpreterPath);
                     }
                     OnPropertyChanged("InterpreterPath");
                 }
