@@ -108,7 +108,7 @@ namespace Microsoft.PythonTools.Profiling {
             if (IsValid) {
                 return new StandaloneTarget {
                     PythonInterpreter = CanSpecifyInterpreterPath ? null : Interpreter.GetInterpreter(),
-                    InterpreterPath = CanSpecifyInterpreterPath ? InterpreterPath : null,
+                    InterpreterPath = CanSpecifyInterpreterPath ? null : InterpreterPath,
                     Script = ScriptPath ?? string.Empty,
                     WorkingDirectory = WorkingDirectory ?? string.Empty,
                     Arguments = Arguments ?? string.Empty
@@ -164,6 +164,9 @@ namespace Microsoft.PythonTools.Profiling {
             set {
                 if (_interpreterPath != value) {
                     _interpreterPath = value;
+                    if (Interpreter.Name == Strings.LaunchProfiling_OtherInterpreter && Interpreter.Path == null) {
+                        Interpreter = new PythonInterpreterView(Strings.LaunchProfiling_OtherInterpreter, "Global|"+ Strings.LaunchProfiling_OtherInterpreter, _interpreterPath);
+                    }
                     OnPropertyChanged("InterpreterPath");
                 }
             }
