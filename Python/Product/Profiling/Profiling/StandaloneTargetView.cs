@@ -29,6 +29,7 @@ namespace Microsoft.PythonTools.Profiling {
     /// </summary>
     sealed class StandaloneTargetView : INotifyPropertyChanged {
         private readonly ReadOnlyCollection<PythonInterpreterView> _availableInterpreters;
+        private readonly PythonInterpreterView _customInterpreter;
 
         private PythonInterpreterView _interpreter;
         private string _interpreterPath;
@@ -55,7 +56,7 @@ namespace Microsoft.PythonTools.Profiling {
                 )
             ).ToList();
 
-            var _customInterpreter = new CustomPythonInterpreterView();
+            _customInterpreter = new CustomPythonInterpreterView();
             availableInterpreters.Add(_customInterpreter);
             _availableInterpreters = new ReadOnlyCollection<PythonInterpreterView>(availableInterpreters);
 
