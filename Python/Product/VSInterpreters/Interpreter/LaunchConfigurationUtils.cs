@@ -25,7 +25,7 @@ using Microsoft.VisualStudioTools;
 namespace Microsoft.PythonTools.Interpreter {
     public class LaunchConfigurationUtils {
         public static Dictionary<string, string> GetFullEnvironment(LaunchConfiguration config, IServiceProvider serviceProvider, UIThreadBase uiThread) {
-            if (config.Interpreter == null) {
+            if (config.Interpreter == null && config.InterpreterPath == null) {
                 throw new ArgumentNullException(nameof(Interpreter));
             }
             if (serviceProvider == null) {

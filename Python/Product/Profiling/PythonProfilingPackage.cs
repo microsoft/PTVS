@@ -287,17 +287,12 @@ namespace Microsoft.PythonTools.Profiling {
         private static void ProfileStandaloneTarget(SessionNode session, StandaloneTarget runTarget, bool openReport) {
             LaunchConfiguration config;
             if (runTarget.PythonInterpreter != null) {
-                if (runTarget.PythonInterpreter.Id == Strings.LaunchProfiling_OtherInterpreter) {
-                    var interpreter = new VisualStudioInterpreterConfiguration(runTarget.PythonInterpreter.Id, runTarget.PythonInterpreter.Id, runTarget.InterpreterPath);
-                    config = new LaunchConfiguration(interpreter);
-                } else {
-                    var registry = session._serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
-                    var interpreter = registry.FindConfiguration(runTarget.PythonInterpreter.Id);
-                    if (interpreter == null) {
-                        return;
-                    }
-                    config = new LaunchConfiguration(interpreter);
+                var registry = session._serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
+                var interpreter = registry.FindConfiguration(runTarget.PythonInterpreter.Id);
+                if (interpreter == null) {
+                    return;
                 }
+                config = new LaunchConfiguration(interpreter);
             } else {
                 config = new LaunchConfiguration(null);
             }
