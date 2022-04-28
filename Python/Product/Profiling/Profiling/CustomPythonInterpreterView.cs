@@ -16,10 +16,7 @@
 
 namespace Microsoft.PythonTools.Profiling {
     class CustomPythonInterpreterView : PythonInterpreterView {
-        public CustomPythonInterpreterView() :
-            base(Strings.LaunchProfiling_OtherInterpreter, "", null) {
-        }
-        public CustomPythonInterpreterView(string path) :
+        public CustomPythonInterpreterView(string path = null) :
             base(Strings.LaunchProfiling_OtherInterpreter, "", path) {
         }
 
