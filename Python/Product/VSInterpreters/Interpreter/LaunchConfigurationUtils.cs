@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Interpreter {
     public class LaunchConfigurationUtils {
         public static Dictionary<string, string> GetFullEnvironment(LaunchConfiguration config, IServiceProvider serviceProvider, UIThreadBase uiThread) {
             if (config.Interpreter == null && config.InterpreterPath == null) {
-                throw new ArgumentNullException(nameof(Interpreter));
+                throw new ArgumentException("Interpreter was invalid");
             }
             if (serviceProvider == null) {
                 throw new ArgumentNullException(nameof(serviceProvider));

@@ -56,7 +56,7 @@ namespace Microsoft.PythonTools.Profiling {
                 )
             ).ToList();
 
-            _customInterpreter = new PythonInterpreterView(Strings.LaunchProfiling_OtherInterpreter, "", null);
+            _customInterpreter = new CustomPythonInterpreterView();
             availableInterpreters.Add(_customInterpreter);
             _availableInterpreters = new ReadOnlyCollection<PythonInterpreterView>(availableInterpreters);
 
@@ -148,7 +148,7 @@ namespace Microsoft.PythonTools.Profiling {
                 if (_interpreter != value) {
                     _interpreter = value ?? _customInterpreter;
                     OnPropertyChanged("Interpreter");
-                    CanSpecifyInterpreterPath = (_interpreter == _customInterpreter);
+                    CanSpecifyInterpreterPath = (_interpreter is CustomPythonInterpreterView);
                 }
             }
         }
@@ -164,9 +164,8 @@ namespace Microsoft.PythonTools.Profiling {
             set {
                 if (_interpreterPath != value) {
                     _interpreterPath = value;
-                    if (Interpreter.Name == Strings.LaunchProfiling_OtherInterpreter && Interpreter.Path == null) {
-                        Interpreter = new PythonInterpreterView(Strings.LaunchProfiling_OtherInterpreter, Strings.LaunchProfiling_OtherInterpreter, _interpreterPath);
-                        CanSpecifyInterpreterPath = (_interpreter.Name == _customInterpreter.Name);
+                    if (Interpreter is CustomPythonInterpreterView) {
+                        Interpreter = new CustomPythonInterpreterView(_interpreterPath);
                     }
                     OnPropertyChanged("InterpreterPath");
                 }
