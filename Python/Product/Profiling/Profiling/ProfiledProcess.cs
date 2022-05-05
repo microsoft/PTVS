@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Profiling {
         private readonly ProcessorArchitecture _arch;
         private readonly Process _process;
         private readonly PythonToolsService _pyService;
-        public string pyArch { get; set; }
+        private string _pyArch;
         public ProfiledProcess(PythonToolsService pyService, string exe, string args, string dir, Dictionary<string, string> envVars) {
 
             string pythonInstallDir = Path.GetDirectoryName(PythonToolsInstallPath.GetFile("VsPyProf.dll", typeof(ProfiledProcess).Assembly));
@@ -38,12 +38,12 @@ namespace Microsoft.PythonTools.Profiling {
             var arg = ProcessOutput.QuoteSingleArgument(Path.Combine(pythonInstallDir, "getArch.py"));
             getPyArch(exe, arg);
 
-            if (pyArch == "64") {
+            if (_pyArch == "64") {
                 _arch = ProcessorArchitecture.Amd64;
-            } else if (pyArch == "32") {
+            } else if (_pyArch == "32") {
                 _arch = ProcessorArchitecture.X86;
             } else {
-                throw new InvalidOperationException(Strings.UnsupportedArchitecture.FormatUI(_arch));
+                throw new InvalidOperationException(Strings.UnsupportedArchitecture.FormatUI(_pyArch));
             }
 
             dir = PathUtils.TrimEndSeparator(dir);
@@ -113,7 +113,7 @@ namespace Microsoft.PythonTools.Profiling {
 
         void Process_OutputDataReceived(object sender, DataReceivedEventArgs e) {
             if (!string.IsNullOrEmpty(e.Data)) {
-                pyArch = e.Data;
+                _pyArch = e.Data;
             }  
         }
 
