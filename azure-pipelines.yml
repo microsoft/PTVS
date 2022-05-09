@@ -109,18 +109,18 @@ steps:
   # publish symbols
   - template: Build/templates/publish_symbols.yml
 
-# Create bootstrapper for running integration tests. They only run on CI, not PR
-- task: MicroBuildBuildVSBootstrapper@2
-  displayName: 'Build Bootstrapper.json'
-  condition: notin(variables['Build.Reason'], 'PullRequest')
-  inputs:
-    channelName: 'int.main'
-    vsMajorVersion: '17'
-    bootstrapperCoreFeedSource: 'https://devdiv.pkgs.visualstudio.com/_packaging/Setup/nuget/v3/index.json'
-    bootstrapperCoreDependenciesFeedSource: 'https://devdiv.pkgs.visualstudio.com/_packaging/Setup-Dependencies/nuget/v3/index.json'
-    nugetOrgPublicFeedSource: 'https://api.nuget.org/v3/index.json'
-    outputFolder: $(Build.BinariesDirectory)/raw/binaries
-    manifests: $(Build.StagingDirectory)\release\Microsoft.PythonTools.vsman
+  # Create bootstrapper for running integration tests. They only run on CI, not PR
+  - task: MicroBuildBuildVSBootstrapper@2
+    displayName: 'Build Bootstrapper.json'
+    condition: notin(variables['Build.Reason'], 'PullRequest')
+    inputs:
+      channelName: 'int.main'
+      vsMajorVersion: '17'
+      bootstrapperCoreFeedSource: 'https://devdiv.pkgs.visualstudio.com/_packaging/Setup/nuget/v3/index.json'
+      bootstrapperCoreDependenciesFeedSource: 'https://devdiv.pkgs.visualstudio.com/_packaging/Setup-Dependencies/nuget/v3/index.json'
+      nugetOrgPublicFeedSource: 'https://api.nuget.org/v3/index.json'
+      outputFolder: $(Build.BinariesDirectory)/raw/binaries
+      manifests: $(Build.StagingDirectory)\release\Microsoft.PythonTools.vsman
 
 # MicroBuild cleanup
 - task: MicroBuildCleanup@1
