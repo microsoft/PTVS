@@ -1,0 +1,38 @@
+trigger: none
+
+resources:
+  pipelines:
+  - pipeline: ComponentBuildUnderTest
+    source: PTVS-Build-Dev17
+  - pipeline: DartLab
+    project: DevDiv
+    source: DartLab
+    branch: main
+  repositories:
+  - repository: DartLabTemplates
+    type: git
+    name: DartLab.Templates
+    ref: refs/heads/main
+
+stages:
+- template: stages/visual-studio/single-runsettings.yml@DartLabTemplates
+  parameters:
+    displayName: Integration Tests
+    variables:
+    - name: VisualStudio.InstallationUnderTest.BootstrapperBranch
+      value: main
+    testLabPoolName: Azure-and-Web
+    testMachineTotalCount: 1
+    runSettingsURI: $(System.DefaultWorkingDirectory)\VSSourceBuild\BuildArtifacts\runsettings\default.runsettings # The URI to your .runsettings file. File paths are supported, e.g. $(Pipeline.Workspace)\ComponentBuildUnderTest\RunSettings\MyTestRun.runsettings
+    visualStudioBootstrapperURI: $(VisualStudio.InstallationUnderTest.BootstrapperURL)
+    visualStudioSigning: Test
+    preTestMachineConfigurationStepList:
+    - download: ComponentBuildUnderTest
+      artifact: MicroBuildOutputs
+      patterns: '**\BootstrapperInfo.json'
+      displayName: Download Bootstrapper Information
+    - task: PowerShell@2
+      displayName: Set 'VisualStudio.InstallationUnderTest.BootstrapperURL'
+      inputs:
+        filePath: $(DartLab.Path)\Scripts\VisualStudio\Bootstrapper\Get-BootstrapperURL.ps1
+        arguments: -BootstrapperInfoJsonURI '$(Pipeline.Workspace)\ComponentBuildUnderTest\MicroBuildOutputs\BootstrapperInfo.json' -VSBranch '$(VisualStudio.InstallationUnderTest.BootstrapperBranch)' -OutVariableName 'VisualStudio.InstallationUnderTest.BootstrapperURL'
