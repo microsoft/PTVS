@@ -1,0 +1,21 @@
+steps:
+
+  # Create VS bootstrapper used by tests on lab machines
+  - task: MicroBuildBuildVSBootstrapper@2
+    displayName: 'Build Bootstrapper.json'
+    condition: notin(variables['Build.Reason'], 'PullRequest')
+    inputs:
+      channelName: 'int.main'
+      vsMajorVersion: '17'
+      bootstrapperCoreFeedSource: 'https://devdiv.pkgs.visualstudio.com/_packaging/Setup/nuget/v3/index.json'
+      bootstrapperCoreDependenciesFeedSource: 'https://devdiv.pkgs.visualstudio.com/_packaging/Setup-Dependencies/nuget/v3/index.json'
+      nugetOrgPublicFeedSource: 'https://api.nuget.org/v3/index.json'
+      outputFolder: $(Build.BinariesDirectory)/raw/binaries
+      manifests: $(Build.StagingDirectory)\release\Microsoft.PythonTools.vsman
+
+  # Publish Bootstrapper.json as a build artifact so test pipelines can consume it
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: $(Build.StagingDirectory)\MicroBuild\Output
+      ArtifactName: MicroBuildOutputs
+    displayName: 'Publish Artifact: MicroBuildOutputs (Bootstrapper.json)'
