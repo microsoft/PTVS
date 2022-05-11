@@ -351,11 +351,15 @@ namespace PythonToolsTests {
 
             public bool IsCurrentFactoryDefault => throw new NotImplementedException();
 
+            public bool IsTrusted { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
 #pragma warning disable CS0067
             public event EventHandler InterpreterSettingChanged;
             public event EventHandler SearchPathsSettingChanged;
             public event EventHandler ActiveInterpreterChanged;
             public event EventHandler TestSettingChanged;
+            public event EventHandler IsTrustedChanged;
+            public event EventHandler IsTrustedQueried;
 #pragma warning restore CS0067
 
             public void Dispose() {
