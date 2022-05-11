@@ -1,5 +1,3 @@
-trigger: none
-
 # For more info about how this resources section works, see https://docs.microsoft.com/en-us/azure/devops/pipelines/process/resources?view=azure-devops&tabs=schema
 resources:
 
@@ -9,6 +7,10 @@ resources:
   # $(Pipeline.Workspace)\ComponentBuildUnderTest\<artifactName>\<filePath>
   - pipeline: ComponentBuildUnderTest
     source: PTVS-Build-Dev17
+    trigger:
+      branches:
+      - main
+      - release/*
 
   - pipeline: DartLab
     project: DevDiv
