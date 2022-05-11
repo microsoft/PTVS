@@ -1,20 +1,29 @@
 trigger: none
 
+# For more info about how this resources section works, see https://docs.microsoft.com/en-us/azure/devops/pipelines/process/resources?view=azure-devops&tabs=schema
 resources:
+
   pipelines:
+
+  # All PTVS build artifacts come from this pipeline and are referenced like this:
+  # $(Pipeline.Workspace)\ComponentBuildUnderTest\<artifactName>\<filePath>
   - pipeline: ComponentBuildUnderTest
     source: PTVS-Build-Dev17
+
   - pipeline: DartLab
     project: DevDiv
     source: DartLab
     branch: main
+
   repositories:
+
   - repository: DartLabTemplates
     type: git
     name: DartLab.Templates
     ref: refs/heads/main
 
 stages:
+
 - template: stages/visual-studio/single-runsettings.yml@DartLabTemplates
   parameters:
     displayName: Integration Tests
@@ -23,7 +32,8 @@ stages:
       value: main
     testLabPoolName: Azure-and-Web
     testMachineTotalCount: 1
-    runSettingsURI: $(System.DefaultWorkingDirectory)\VSSourceBuild\BuildArtifacts\runsettings\default.runsettings # The URI to your .runsettings file. File paths are supported, e.g. $(Pipeline.Workspace)\ComponentBuildUnderTest\RunSettings\MyTestRun.runsettings
+    # This assumes the PTVS build has published a build artifact called "RunSettings" that contains the default.runsettings file
+    runSettingsURI: $(Pipeline.Workspace)\ComponentBuildUnderTest\RunSettings\default.runsettings
     visualStudioBootstrapperURI: $(VisualStudio.InstallationUnderTest.BootstrapperURL)
     visualStudioSigning: Test
     preTestMachineConfigurationStepList:
@@ -35,4 +45,5 @@ stages:
       displayName: Set 'VisualStudio.InstallationUnderTest.BootstrapperURL'
       inputs:
         filePath: $(DartLab.Path)\Scripts\VisualStudio\Bootstrapper\Get-BootstrapperURL.ps1
+        # This assumes the PTVS build has published a build artifact called "MicroBuildOutputs" that contains the generated BootstrapperInfo.json
         arguments: -BootstrapperInfoJsonURI '$(Pipeline.Workspace)\ComponentBuildUnderTest\MicroBuildOutputs\BootstrapperInfo.json' -VSBranch '$(VisualStudio.InstallationUnderTest.BootstrapperBranch)' -OutVariableName 'VisualStudio.InstallationUnderTest.BootstrapperURL'

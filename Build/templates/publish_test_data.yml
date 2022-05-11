@@ -17,3 +17,10 @@ steps:
     inputs:
       PathtoPublish: '$(Build.ArtifactStagingDirectory)/TestData.zip'
       ArtifactName: 'TestData'
+  
+  # Publish test runsettings for integration tests
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish build artifact: RunSettings'
+    inputs:
+      PathtoPublish: '$(Build.SourcesDirectory)/Python/Tests/TestData/default.runsettings'
+      ArtifactName: 'RunSettings'
