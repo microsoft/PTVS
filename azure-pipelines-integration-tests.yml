@@ -9,6 +9,7 @@ resources:
   # $(Pipeline.Workspace)\ComponentBuildUnderTest\<artifactName>\<filePath>
   - pipeline: ComponentBuildUnderTest
     source: PTVS-Build-Dev17
+    branch: main # This is only used for manual runs of this pipeline
     trigger:
       branches:
       - main
