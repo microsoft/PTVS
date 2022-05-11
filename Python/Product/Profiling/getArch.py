@@ -1,3 +1,3 @@
-﻿import struct
+﻿import sys
 
-print(struct.calcsize("P")*8)
+print(sys.winver)

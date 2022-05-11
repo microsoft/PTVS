@@ -38,12 +38,12 @@ namespace Microsoft.PythonTools.Profiling {
             var arg = ProcessOutput.QuoteSingleArgument(Path.Combine(pythonInstallDir, "getArch.py"));
             getPyArch(exe, arg);
 
-            if (_pyArch == "64") {
-                _arch = ProcessorArchitecture.Amd64;
-            } else if (_pyArch == "32") {
+            if (_pyArch.EndsWith("-arm64")) {
+                throw new InvalidOperationException(Strings.UnsupportedArchitecture.FormatUI(_pyArch));  
+            } else if (_pyArch.EndsWith("-32")) {
                 _arch = ProcessorArchitecture.X86;
             } else {
-                throw new InvalidOperationException(Strings.UnsupportedArchitecture.FormatUI(_pyArch));
+                _arch = ProcessorArchitecture.Amd64;
             }
 
             dir = PathUtils.TrimEndSeparator(dir);
