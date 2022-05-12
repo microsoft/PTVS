@@ -42,10 +42,17 @@ stages:
     visualStudioBootstrapperURI: $(VisualStudio.InstallationUnderTest.BootstrapperURL)
     visualStudioSigning: Test
     preTestMachineConfigurationStepList:
+    
     - download: ComponentBuildUnderTest
       artifact: MicroBuildOutputs
       patterns: '**\BootstrapperInfo.json'
       displayName: Download Bootstrapper Information
+    
+    - download: ComponentBuildUnderTest
+      artifact: RunSettings
+      patterns: '**\default.runsettings'
+      displayName: Download RunSettings
+    
     - task: PowerShell@2
       displayName: Set 'VisualStudio.InstallationUnderTest.BootstrapperURL'
       inputs:
