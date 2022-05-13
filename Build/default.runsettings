@@ -25,7 +25,7 @@
 
   <VisualStudioConfiguration>
     <InstallationUnderTest>
-      <Components All="False">
+      <Components All="false">
         <Include ID="Microsoft.VisualStudio.Component.VC.CLI.Support" />
         <Include ID="Microsoft.VisualStudio.Component.Windows81SDK" />
         <Include ID="Microsoft.VisualStudio.ComponentGroup.UWP.VC" />
@@ -35,7 +35,7 @@
         <Exclude ID="Component.JavaJDK" />
         <Exclude ID="Microsoft.VisualStudio.Component.AspNet45" />
       </Components>
-      <Workloads All="False" IncludeComponents="Required,Recommended">
+      <Workloads All="false" IncludeComponents="Required,Recommended">
         <Include ID="Microsoft.VisualStudio.Workload.CoreEditor" IncludeComponents="Required" />
         <Include ID="Microsoft.VisualStudio.Workload.ManagedDesktop" IncludeComponents="Required" />
         <Include ID="Microsoft.VisualStudio.Workload.NativeCrossPlat" IncludeComponents="Required" />
