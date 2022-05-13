@@ -98,6 +98,11 @@ steps:
 # Non-PR steps
 - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
 
+  # Create VS bootstrapper for tests.
+  # This must happen BEFORE the MicroBuildUploadVstsDropFolder@1 task, since the bootstrapper
+  # needs to be uploaded to the drop as well.
+  - template: Build/templates/create_vs_bootstrapper.yml
+
   # Upload vsts drop used by Visual Studio insertions
   - task: MicroBuildUploadVstsDropFolder@1
     displayName: 'Upload vsts drop'
@@ -109,9 +114,6 @@ steps:
 
   # publish symbols
   - template: Build/templates/publish_symbols.yml
-
-  # create VS bootstrapper for tests
-  - template: Build/templates/create_vs_bootstrapper.yml
 
 # MicroBuild cleanup
 - task: MicroBuildCleanup@1
