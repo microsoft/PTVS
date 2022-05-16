@@ -41,6 +41,9 @@ stages:
     runSettingsURI: $(Pipeline.Workspace)\ComponentBuildUnderTest\RunSettings\default.runsettings
     visualStudioBootstrapperURI: $(VisualStudio.InstallationUnderTest.BootstrapperURL)
     visualStudioSigning: Test
+
+    # These steps run on the machine that is creating the test machine configuration, which isn't the same
+    # as the machine running the actual tests
     preTestMachineConfigurationStepList:
     
     - download: ComponentBuildUnderTest
@@ -59,3 +62,11 @@ stages:
         filePath: $(DartLab.Path)\Scripts\VisualStudio\Bootstrapper\Get-BootstrapperURL.ps1
         # This assumes the PTVS build has published a build artifact called "MicroBuildOutputs" that contains the generated BootstrapperInfo.json
         arguments: -BootstrapperInfoJsonURI '$(Pipeline.Workspace)\ComponentBuildUnderTest\MicroBuildOutputs\BootstrapperInfo.json' -VSBranch '$(VisualStudio.InstallationUnderTest.BootstrapperBranch)' -OutVariableName 'VisualStudio.InstallationUnderTest.BootstrapperURL'
+    
+    # These steps run on the machine that is running the tests
+    preDeployAndRunTestsStepList:
+
+    - download: ComponentBuildUnderTest
+      artifact: RunSettings
+      patterns: '**\default.runsettings'
+      displayName: Download RunSettings
