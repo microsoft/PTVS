@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Debugger {
 
         private static Process _checkProcess;
         private static readonly Regex _pythonModRegex = new Regex(
-            @".*python(2[5-7]|3[0-9])(_d)?\.dll$",
+            @".*python(3\d+)(_d)?\.dll$",
             RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace | RegexOptions.CultureInvariant
         );
 

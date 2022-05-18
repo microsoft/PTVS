@@ -21,7 +21,7 @@ using Microsoft.PythonTools.Infrastructure;
 using StreamJsonRpc;
 
 namespace Microsoft.PythonTools.Common.Infrastructure {
-    internal class JsonRpcWrapper {
+    internal readonly struct JsonRpcWrapper {
 
         private readonly JsonRpc _rpc;
 

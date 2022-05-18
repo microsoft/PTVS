@@ -74,6 +74,7 @@ namespace Microsoft.VisualStudioTools {
             engineKey.SetValue("PortSupplier", "{708C1ECA-FF48-11D2-904F-00C04FA302A1}");
             engineKey.SetValue("ProgramProvider", typeof(PythonTools.Debugger.DebugEngine.AD7ProgramProvider).GUID.ToString("B"));
             engineKey.SetValue("AdapterLauncher", _adapterLauncherCLSID);
+            engineKey.SetValue("AutoSelectPriority", 6); // prioritize it higher than Native when auto-detecting Code Type
 
             /*
              * Modules request on attach behavior(optional)

@@ -24,7 +24,7 @@ using Microsoft.VisualStudio.Debugger.Native;
 namespace Microsoft.PythonTools.Debugger.Concord {
 
     internal class PythonDLLs {
-        private static readonly Regex pythonName = new Regex(@"^python(\d\d)(?:_d)?\.dll$");
+        private static readonly Regex pythonName = new Regex(@"^python(3\d+)(?:_d)?\.dll$");
 
         public static readonly string[] DebuggerHelperNames = {
             "Microsoft.PythonTools.Debugger.Helper.x86.dll",

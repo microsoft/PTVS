@@ -30,11 +30,20 @@ namespace Microsoft.PythonTools.Profiling {
         private readonly ProcessorArchitecture _arch;
         private readonly Process _process;
         private readonly PythonToolsService _pyService;
-
+        private string _pyArch;
         public ProfiledProcess(PythonToolsService pyService, string exe, string args, string dir, Dictionary<string, string> envVars) {
-            var arch = NativeMethods.GetBinaryType(exe);
-            if (arch != ProcessorArchitecture.X86 && arch != ProcessorArchitecture.Amd64) {
-                throw new InvalidOperationException(Strings.UnsupportedArchitecture.FormatUI(arch));
+
+            string pythonInstallDir = Path.GetDirectoryName(PythonToolsInstallPath.GetFile("VsPyProf.dll", typeof(ProfiledProcess).Assembly));
+
+            var arg = ProcessOutput.QuoteSingleArgument(Path.Combine(pythonInstallDir, "getArch.py"));
+            getPyArch(exe, arg);
+
+            if (_pyArch.EndsWith("-arm64")) {
+                throw new InvalidOperationException(Strings.UnsupportedArchitecture.FormatUI(_pyArch));  
+            } else if (_pyArch.EndsWith("-32")) {
+                _arch = ProcessorArchitecture.X86;
+            } else {
+                _arch = ProcessorArchitecture.Amd64;
             }
 
             dir = PathUtils.TrimEndSeparator(dir);
@@ -46,10 +55,8 @@ namespace Microsoft.PythonTools.Profiling {
             _exe = exe;
             _args = args;
             _dir = dir;
-            _arch = arch;
 
             ProcessStartInfo processInfo;
-            string pythonInstallDir = Path.GetDirectoryName(PythonToolsInstallPath.GetFile("VsPyProf.dll", typeof(ProfiledProcess).Assembly));
 
             string dll = _arch == ProcessorArchitecture.Amd64 ? "VsPyProf.dll" : "VsPyProfX86.dll";
             string arguments = string.Join(" ",
@@ -80,6 +87,34 @@ namespace Microsoft.PythonTools.Profiling {
 
             _process = new Process();
             _process.StartInfo = processInfo;
+        }
+
+        public void getPyArch(string exe, string arg) {
+            var process = new Process {
+                StartInfo = new ProcessStartInfo {
+                    FileName = exe,
+                    Arguments = arg,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                },
+                EnableRaisingEvents = true
+            };
+
+            process.ErrorDataReceived += Process_OutputDataReceived;
+            process.OutputDataReceived += Process_OutputDataReceived;
+
+            process.Start();
+            process.BeginErrorReadLine();
+            process.BeginOutputReadLine();
+            process.WaitForExit();
+        }
+
+        void Process_OutputDataReceived(object sender, DataReceivedEventArgs e) {
+            if (!string.IsNullOrEmpty(e.Data)) {
+                _pyArch = e.Data;
+            }  
         }
 
         public void Dispose() {

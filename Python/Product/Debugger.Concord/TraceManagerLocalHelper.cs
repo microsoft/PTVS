@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.PythonTools.Debugger.Concord.Proxies;
@@ -311,16 +312,15 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             }
         }
 
-        private Int32Proxy GetTracingPossible(PythonRuntimeInfo pyrtInfo, DkmProcess process) {
-           if (pyrtInfo.LanguageVersion == PythonLanguageVersion.V37) {
-               return _pyrtInfo.GetRuntimeState().ceval.tracing_possible;
-           } else if (pyrtInfo.LanguageVersion > PythonLanguageVersion.V37) {
-               foreach (var interp in PyInterpreterState.GetInterpreterStates(process)) {
-                   return interp.ceval.tracing_possible;
-               }
-           }
-           return pyrtInfo.DLLs.Python.GetStaticVariable<Int32Proxy>("_Py_TracingPossible");
-        }
+        private Int32Proxy GetTracingPossible(PythonRuntimeInfo pyrtInfo, DkmProcess process) =>
+            pyrtInfo.LanguageVersion switch {
+                PythonLanguageVersion.V37 or PythonLanguageVersion.V38 =>
+                    _pyrtInfo.GetRuntimeState().ceval.tracing_possible,
+                PythonLanguageVersion.V39 =>
+                    PyInterpreterState.GetInterpreterStates(process).First().ceval.tracing_possible,
+                _ =>
+                    throw new InvalidOperationException($"Unsupported Python version: {pyrtInfo.LanguageVersion}")
+            };
 
         private void AddStepInGate(StepInGateHandler handler, DkmNativeModuleInstance module, string funcName, bool hasMultipleExitPoints) {
             var gate = new StepInGate {

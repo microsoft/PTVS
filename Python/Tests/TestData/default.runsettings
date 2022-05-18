@@ -31,4 +31,30 @@
     <TestTimeout>300000</TestTimeout>
   </MSTest>
 
+  <VisualStudioConfiguration>
+    <InstallationUnderTest>
+      <Components All="false">
+        <Include ID="Microsoft.VisualStudio.Component.VC.CLI.Support" />
+        <Include ID="Microsoft.VisualStudio.Component.Windows81SDK" />
+        <Include ID="Microsoft.VisualStudio.ComponentGroup.UWP.VC" />
+        <Include ID="Microsoft.VisualStudio.Component.Windows10SDK.15063.UWP" />
+        <Include ID="Microsoft.VisualStudio.Component.Windows10SDK.17134" />
+        <Exclude ID="Component.Incredibuild" />
+        <Exclude ID="Component.JavaJDK" />
+        <Exclude ID="Microsoft.VisualStudio.Component.AspNet45" />
+      </Components>
+      <Workloads All="false" IncludeComponents="Required,Recommended">
+        <Include ID="Microsoft.VisualStudio.Workload.CoreEditor" IncludeComponents="Required" />
+        <Include ID="Microsoft.VisualStudio.Workload.ManagedDesktop" IncludeComponents="Required" />
+        <Include ID="Microsoft.VisualStudio.Workload.NativeCrossPlat" IncludeComponents="Required" />
+        <Include ID="Microsoft.VisualStudio.Workload.NativeDesktop" IncludeComponents="Required" />
+        <Include ID="Microsoft.VisualStudio.Workload.NetWeb" IncludeComponents="Required" />
+        <Include ID="Microsoft.VisualStudio.Workload.Office" IncludeComponents="Required" />
+        <Include ID="Microsoft.VisualStudio.Workload.Universal" IncludeComponents="Required" />
+        <Include ID="Microsoft.VisualStudio.Workload.VisualStudioExtension" IncludeComponents="Required" />
+        <Include ID="Microsoft.VisualStudio.Workload.Webcrossplat" IncludeComponents="Required" />
+      </Workloads>
+    </InstallationUnderTest>
+  </VisualStudioConfiguration>
+
 </RunSettings>

@@ -1,0 +1,26 @@
+steps:
+
+  # Create VS bootstrapper.
+  # This is essentially a "main" build of VS with the Python workload (that we just built) installed.
+
+  # It will be created under $(Build.StagingDirectory)\release, which is uploaded (in a later step) to a vsts drop.
+  # The URI to the uploaded bootstrapper is contained in the bootstrapper.json, which is consumed by the
+  # integration tests on lab machines.
+  - task: MicroBuildBuildVSBootstrapper@2
+    displayName: 'Build Bootstrapper.json'
+    condition: notin(variables['Build.Reason'], 'PullRequest')
+    inputs:
+      channelName: 'int.main'
+      vsMajorVersion: '17'
+      bootstrapperCoreFeedSource: 'https://devdiv.pkgs.visualstudio.com/_packaging/Setup/nuget/v3/index.json'
+      bootstrapperCoreDependenciesFeedSource: 'https://devdiv.pkgs.visualstudio.com/_packaging/Setup-Dependencies/nuget/v3/index.json'
+      nugetOrgPublicFeedSource: 'https://api.nuget.org/v3/index.json'
+      outputFolder: $(Build.StagingDirectory)\release
+      manifests: $(Build.StagingDirectory)\release\Microsoft.PythonTools.vsman
+
+  # Publish Bootstrapper.json as a build artifact so test pipelines can consume it
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: $(Build.StagingDirectory)\MicroBuild\Output
+      ArtifactName: MicroBuildOutputs
+    displayName: 'Publish Artifact: MicroBuildOutputs (Bootstrapper.json)'

@@ -29,10 +29,10 @@ using Newtonsoft.Json;
 
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
-    /// Detects interpreters in user-created conda environments.
+    /// Detects interpreters and versions in user-created conda environments.
     /// </summary>
     /// <remarks>
-    /// Uses %HOMEPATH%/.conda/environments.txt and `conda info --envs`.
+    /// Uses %HOMEPATH%/.conda/environments.txt, `conda info --envs`, and `conda list -n env_name python`.
     /// </remarks>
     [InterpreterFactoryId(FactoryProviderName)]
     [Export(typeof(IPythonInterpreterFactoryProvider))]
@@ -289,6 +289,42 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
+        // Gets the python package version installed in a specified conda environment
+        internal async static Task<Version> ExecuteCondaListAsync(string condaPath, string envName) {
+            Version version = null;
+
+            var activationVars = await CondaUtils.GetActivationEnvironmentVariablesForRootAsync(condaPath).ConfigureAwait(false);
+            var envVars = activationVars.Union(UnbufferedEnv).ToArray();
+
+            // command looks like `conda list -n <envName> python --json`
+            var args = new[] { "list", "-n", envName, "python", "--json" };
+            using (var output = ProcessOutput.Run(condaPath, args, null, envVars, false, null)) {
+                output.Wait();
+
+                 // if there's an error, we're done
+                if (output.ExitCode != 0) {
+                    return version;
+                }
+
+                // get the json from the conda output
+                var json = string.Join(Environment.NewLine, output.StandardOutputLines);
+
+                try {
+                    // deserialize the json into an object and return the version
+                    var result = JsonConvert.DeserializeObject<CondaListResult>(json);
+                    if (result != null && result.Any()) {
+                        version = new Version(result.First().Version);
+                    }
+                    
+                } catch (JsonException ex) {
+                    Debug.WriteLine("Failed to parse: {0}".FormatInvariant(ex.Message));
+                    Debug.WriteLine(json);
+                }
+
+                return version;
+            }
+        }
+
         internal class CondaInfoResult {
             [JsonProperty("envs")]
             public string[] EnvironmentFolders = null;
@@ -300,8 +336,22 @@ namespace Microsoft.PythonTools.Interpreter {
             public string RootPrefixFolder = null;
         }
 
+
+        internal class CondaListResult : List<CondaListItem> {
+
+        }
+
+        internal class CondaListItem {
+            [JsonProperty("version")]
+            public string Version { get; set; }
+        }
+
+        private string GetCondaExecutablePath() {
+            return _condaLocatorProvider?.FindLocator()?.CondaExecutablePath;
+        }
+
         private async Task<IReadOnlyList<PythonInterpreterInformation>> FindCondaEnvironments() {
-            var mainCondaExePath = _condaLocatorProvider?.FindLocator()?.CondaExecutablePath;
+            var mainCondaExePath = GetCondaExecutablePath();
             if (!string.IsNullOrEmpty(mainCondaExePath)) {
                 return await FindCondaEnvironments(mainCondaExePath);
             }
@@ -309,27 +359,39 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private async Task<IReadOnlyList<PythonInterpreterInformation>> FindCondaEnvironments(string condaPath) {
+
             // Make sure to run this on a background thread as it can take a long time.
-            var condaInfoResult = await System.Threading.Tasks.Task.Run(() => ExecuteCondaInfoAsync(condaPath));
-            if (condaInfoResult != null) {
-                // We skip the root to avoid duplicate entries, root is
-                // discovered by CPythonInterpreterFactoryProvider already.
-                // Older versions of `conda info` used to not return the root.
-                return condaInfoResult.EnvironmentFolders
-                    .AsParallel()
-                    .Where(folder =>
-                        Directory.Exists(folder) &&
-                        !PathUtils.IsSameDirectory(folder, condaInfoResult.RootPrefixFolder)
-                    )
-                    .Select(folder => CreateEnvironmentInfo(folder))
-                    .Where(env => env != null)
-                    .ToList();
+            var condaInfoResult = await Task.Run(() => ExecuteCondaInfoAsync(condaPath));
+
+            // if there is no conda info, we're done
+            if (condaInfoResult == null) {
+                return Enumerable.Empty<PythonInterpreterInformation>().ToList();
             }
 
-            return Enumerable.Empty<PythonInterpreterInformation>().ToList();
+            var condaEnvironments = new List<PythonInterpreterInformation>();
+            foreach (var folder in condaInfoResult.EnvironmentFolders) {
+
+                // if the folder doesn't exist, skip it
+                if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder)) {
+                    continue;
+                }
+
+                // skip the root to avoid duplicate entries, root is
+                // discovered by CPythonInterpreterFactoryProvider already.
+                if (PathUtils.IsSameDirectory(folder, condaInfoResult.RootPrefixFolder)) {
+                    continue;
+                }
+
+                var environmentInfo = await CreateEnvironmentInfo(folder, condaPath);
+                if (environmentInfo != null) {
+                    condaEnvironments.Add(environmentInfo);
+                }
+            }
+
+            return condaEnvironments;
         }
 
-        private static PythonInterpreterInformation CreateEnvironmentInfo(string prefixPath) {
+        private static async Task<PythonInterpreterInformation> CreateEnvironmentInfo(string prefixPath, string condaPath) {
             var name = Path.GetFileName(prefixPath);
             var description = name;
             var vendor = Strings.CondaEnvironmentDescription;
@@ -343,7 +405,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             var arch = CPythonInterpreterFactoryProvider.ArchitectureFromExe(interpreterPath);
-            var version = CPythonInterpreterFactoryProvider.VersionFromSysVersionInfo(interpreterPath);
+            var version = await ExecuteCondaListAsync(condaPath, name);
 
             var config = new VisualStudioInterpreterConfiguration(
                 CondaEnvironmentFactoryConstants.GetInterpreterId(CondaEnvironmentFactoryProvider.EnvironmentCompanyName, name),
