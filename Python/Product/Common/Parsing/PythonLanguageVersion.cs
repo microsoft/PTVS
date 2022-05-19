@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Diagnostics;
 using Microsoft.PythonTools.Common.Core;
 using Microsoft.PythonTools.Common.Core.Extensions;
 
@@ -60,6 +61,7 @@ namespace Microsoft.PythonTools.Common.Parsing {
                 return (PythonLanguageVersion)value;
             }
             else {
+                Trace.WriteLine(Strings.PythonVersionNotSupportedTraceText.FormatUI(version));
                 return PythonLanguageVersion.None;
             }
         }
