@@ -94,7 +94,7 @@ namespace Microsoft.PythonTools.Commands {
                     foreach (var file in fileInfo) {
                         var factory = GetFactory(_serviceProvider, file.Filename);
                         version = factory?.Configuration.Version.ToLanguageVersion();
-                        if (version.HasValue) {
+                        if (version.HasValue && version != PythonLanguageVersion.None) {
                             break;
                         }
                     }

@@ -33,12 +33,7 @@ namespace Microsoft.PythonTools.Interpreter {
         ) {
             Configuration = config ?? throw new ArgumentNullException(nameof(config));
             CreationOptions = options ?? new InterpreterFactoryCreationOptions();
-            try {
-                LanguageVersion = Configuration.Version.ToLanguageVersion();
-            } catch (InvalidOperationException ex) {
-                throw new ArgumentException(ex.Message, ex);
-            }
-
+            LanguageVersion = Configuration.Version.ToLanguageVersion();
             _useDefaultDatabase = useDefaultDatabase;
         }
 

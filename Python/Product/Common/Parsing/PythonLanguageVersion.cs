@@ -59,8 +59,9 @@ namespace Microsoft.PythonTools.Common.Parsing {
             if (Enum.IsDefined(typeof(PythonLanguageVersion), value)) {
                 return (PythonLanguageVersion)value;
             }
-            throw new InvalidOperationException("Unsupported Python version: {0}".FormatInvariant(version));
+            else {
+                return PythonLanguageVersion.None;
+            }
         }
-
     }
 }
