@@ -188,9 +188,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 return null; // Python 2.x is no longer supported.
             }
 
-            try {
-                sysVersion.ToLanguageVersion();
-            } catch (InvalidOperationException) {
+            if (sysVersion.ToLanguageVersion() == PythonLanguageVersion.None) {
                 sysVersion = new Version(0, 0);
             }
 

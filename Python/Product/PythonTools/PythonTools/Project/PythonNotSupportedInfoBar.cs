@@ -52,7 +52,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             _interpreterTriggeredInfoBar = activeInterpreter;
-            var infoBarTextSpanMessage = new InfoBarTextSpan(Strings.PythonVersionNotSupportedInfoBarText.FormatUI(_interpreterTriggeredInfoBar.Configuration.Version));
+            var infoBarTextSpanMessage = new InfoBarTextSpan(Strings.PythonVersionNotSupportedInfoBarText.FormatUI(_interpreterTriggeredInfoBar.Configuration.Description));
             var infoBarMessage = new List<IVsInfoBarTextSpan> { infoBarTextSpanMessage };
             var actionItems = new List<InfoBarActionItem> {
                 // TODO (Dev17) - link to Python 2.7 support deprecation page.
