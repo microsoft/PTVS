@@ -12,8 +12,9 @@ resources:
     branch: main # This is only used for manual runs of this pipeline
     trigger:
       branches:
-      - main
-      - release/*
+        include:
+          - main
+          - release/*
 
   - pipeline: DartLab
     project: DevDiv
