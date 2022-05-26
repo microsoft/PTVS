@@ -237,7 +237,8 @@ namespace Microsoft.PythonTools.Interpreter {
             var found = new List<PythonInterpreterInformation>();
 
             try {
-                found.AddRange(await FindCondaEnvironments());
+                var condaEnvs = await FindCondaEnvironments();
+                found.AddRange(condaEnvs.Where(i => i != null && i.Configuration != null));
             } catch (ObjectDisposedException) {
                 // We are aborting, so silently return with no results.
                 return;
