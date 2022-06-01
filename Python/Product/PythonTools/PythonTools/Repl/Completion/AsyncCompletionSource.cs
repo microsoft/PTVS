@@ -126,18 +126,17 @@ namespace Microsoft.PythonTools.Repl.Completion {
                 var content = protocolItem.Documentation.Value.Match(
                     s => s,
                     markupContent => {
-                        switch (markupContent.Kind) {
-                            case LSP.MarkupKind.Markdown:
-                                var codeBlocks = MarkdownUtil.ExtractCodeBlocks(markupContent.Value);
-                                var joinedBlocks = string.Join(Environment.NewLine, codeBlocks);
-                                if (string.IsNullOrEmpty(joinedBlocks)) {
-                                    return null;
-                                }
+                        if (markupContent.Kind == LSP.MarkupKind.Markdown) {
+                            var codeBlocks = MarkdownUtil.ExtractCodeBlocks(markupContent.Value);
+                            var joinedBlocks = string.Join(Environment.NewLine, codeBlocks);
+                            if (string.IsNullOrEmpty(joinedBlocks)) {
+                                return null;
+                            }
 
-                                return joinedBlocks;
-                            case LSP.MarkupKind.PlainText:
-                            default:
-                                return markupContent.Value;
+                            return joinedBlocks;
+                        }
+                        else {
+                            return markupContent.Value;
                         }
                     });
 
