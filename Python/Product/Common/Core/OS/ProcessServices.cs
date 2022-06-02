@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -40,23 +39,18 @@ namespace Microsoft.PythonTools.Common.Core.OS {
 
         public async Task<string> ExecuteAndCaptureOutputAsync(ProcessStartInfo startInfo, CancellationToken cancellationToken = default) {
             var output = string.Empty;
-            try {
-                using (var process = Start(startInfo)) {
+            using (var process = Start(startInfo)) {
 
-                    if (startInfo.RedirectStandardError && process is PlatformProcess p) {
-                        p.Process.ErrorDataReceived += (s, e) => { };
-                        p.Process.BeginErrorReadLine();
-                    }
-
-                    try {
-                        output = await process.StandardOutput.ReadToEndAsync();
-                        await process.WaitForExitAsync(30000, cancellationToken);
-                    } catch (IOException) { } catch (OperationCanceledException) { }
-
-                    return output;
+                if (startInfo.RedirectStandardError && process is PlatformProcess p) {
+                    p.Process.ErrorDataReceived += (s, e) => { };
+                    p.Process.BeginErrorReadLine();
                 }
-            // Handle the case when trying to call python from the Microsoft store and we get access denied
-            } catch (Win32Exception) {
+
+                try {
+                    output = await process.StandardOutput.ReadToEndAsync();
+                    await process.WaitForExitAsync(30000, cancellationToken);
+                } catch (IOException) { } catch (OperationCanceledException) { }
+
                 return output;
             }
         }

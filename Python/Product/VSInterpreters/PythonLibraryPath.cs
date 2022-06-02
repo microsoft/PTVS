@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -176,9 +177,12 @@ namespace Microsoft.PythonTools {
                 RedirectStandardOutput = true
             };
 
+            var output = string.Empty;
 
-            var output = await ps.ExecuteAndCaptureOutputAsync(startInfo, cancellationToken);
-            if (string.IsNullOrEmpty(output)) {
+            try {
+                output = await ps.ExecuteAndCaptureOutputAsync(startInfo, cancellationToken);
+            } catch (Win32Exception) {
+                // this can happen when calling into a Microsoft store install of python
                 return noSearchPaths;
             }
 
