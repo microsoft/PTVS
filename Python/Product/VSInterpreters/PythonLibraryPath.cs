@@ -155,11 +155,13 @@ namespace Microsoft.PythonTools {
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>A list of search paths for the interpreter.</returns>
         public static async Task<ImmutableArray<PythonLibraryPath>> GetSearchPathsFromInterpreterAsync(string interpreter, IFileSystem fs, IProcessServices ps, CancellationToken cancellationToken = default) {
+            var noSearchPaths = new ImmutableArray<PythonLibraryPath>();
+
             // sys.path will include the working directory, so we make an empty
             // path that we can filter out later
             var getSearchPathScript = Infrastructure.PythonToolsInstallPath.TryGetFile("get_search_paths.py");
             if (getSearchPathScript == null) {
-                return new ImmutableArray<PythonLibraryPath>();
+                return noSearchPaths;
             }
 
             var startInfo = new ProcessStartInfo(
@@ -174,7 +176,12 @@ namespace Microsoft.PythonTools {
                 RedirectStandardOutput = true
             };
 
+
             var output = await ps.ExecuteAndCaptureOutputAsync(startInfo, cancellationToken);
+            if (string.IsNullOrEmpty(output)) {
+                return noSearchPaths;
+            }
+
             return output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(s => {
                     try {
