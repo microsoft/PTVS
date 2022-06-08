@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private readonly Func<StreamData, Tuple<StreamData, bool>> _serverSendHandler;
 
         public LanguageServer(
-            IServiceProvider site, 
+            IServiceProvider site,
             JoinableTaskContext joinableTaskContext,
             Func<StreamData, Tuple<StreamData, bool>> serverSendHandler) {
             _site = site ?? throw new ArgumentNullException(nameof(site));
@@ -78,23 +78,23 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             var process = new Process {
                 StartInfo = info
             };
+            process.ErrorDataReceived += (sender, e) => {
+                var outputWindow = OutputWindowRedirector.GetGeneral(_site);
+                outputWindow.WriteLine(e.Data);
+            };
 
             if (process.Start()) {
+                process.BeginErrorReadLine();
                 if (isDebugging) {
                     System.Diagnostics.Debug.WriteLine($"Attach to {process.Id} for pylance debugging");
                     // During debugging give us time to attach
                     await Task.Delay(5000);
                 }
 
-                // Write to output if we can't launch for some reason
-                if (process.HasExited) {
-                    string output = process.StandardError.ReadToEnd();
-                    var outputWindow = OutputWindowRedirector.GetGeneral(_site);
-                    outputWindow.WriteLine(output);
-                } else {
-                    // Otherwise create a connection where we wrap the stdin stream so that we can intercept all messages
+                if (!process.HasExited) {
+                    // Create a connection where we wrap the stdin stream so that we can intercept all messages
                     return new Connection(
-                        process.StandardOutput.BaseStream, 
+                        process.StandardOutput.BaseStream,
                         new StreamIntercepter(process.StandardInput.BaseStream, _serverSendHandler, (a) => { }));
                 }
             }
