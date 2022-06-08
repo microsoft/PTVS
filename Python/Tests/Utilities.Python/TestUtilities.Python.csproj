@@ -12,6 +12,13 @@
     <RootNamespace>TestUtilities.Python</RootNamespace>
     <AssemblyName>TestUtilities.Python</AssemblyName>
     <FileAlignment>512</FileAlignment>
+    <UseCodebase>true</UseCodebase>
+    <UseVSSDK>true</UseVSSDK>
+    <CreateVsixContainer>true</CreateVsixContainer>
+    <DeployExtension>$(BuildingInsideVisualStudio)</DeployExtension>
+    <IsProductComponent>true</IsProductComponent>
+    <ExtensionInstallationRoot>Extensions</ExtensionInstallationRoot>
+    <ExtensionInstallationFolder>Microsoft\PythonTests\TestUtilities</ExtensionInstallationFolder>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -51,6 +58,15 @@
     <Reference Include="UIAutomationTypes" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
+
+  <!-- Include all project reference outputs in the vsix for this project -->
+  <!-- You can also use <IncludeInVsix> under the <ProjectReference> element to override this value -->
+  <ItemDefinitionGroup>
+    <ProjectReference>
+      <IncludeInVsix>true</IncludeInVsix>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+
   <ItemGroup>
     <ProjectReference Include="$(BuildRoot)\Common\Tests\MockVsTests\MockVsTests.csproj">
       <Project>{a390e1c0-0d90-4a9e-8413-3e959bb07292}</Project>
