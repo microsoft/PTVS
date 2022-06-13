@@ -150,7 +150,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             WorkspaceService.OnActiveWorkspaceChanged += OnWorkspaceOpening;
 
             _disposables.Add(() => {
-                _clientContexts.ForEach(c => c.InterpreterChanged -= OnSettingsChanged);
+                _clientContexts.ForEach(c => {
+                    c.InterpreterChanged -= OnSettingsChanged;
+                    c.SearchPathsChanged -= OnSettingsChanged;
+                    c.ReanalyzeProjectChanged -= OnReanalyze;
+                    });
                 _analysisOptions.Changed -= OnSettingsChanged;
                 _advancedEditorOptions.Changed -= OnSettingsChanged;
                 _clientContexts.ForEach(c => c.Dispose());
@@ -329,6 +333,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             _clientContexts.Add(context);
             context.InterpreterChanged += OnSettingsChanged;
             context.SearchPathsChanged += OnSettingsChanged;
+            context.ReanalyzeProjectChanged += OnReanalyze;
         }
 
         public Task InvokeTextDocumentDidOpenAsync(LSP.DidOpenTextDocumentParams request)
@@ -388,6 +393,13 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private void OnSettingsChanged(object sender, EventArgs e) => InvokeDidChangeConfigurationAsync(new LSP.DidChangeConfigurationParams() {
+            // If we pass null settings and workspace.configuration is supported, Pylance will ask
+            // us for per workspace configuration settings. Otherwise we can send
+            // global settings here.
+            Settings = null
+        }).DoNotWait();
+
+        private void OnReanalyze(object sender, EventArgs e) => InvokeDidChangeConfigurationAsync(new LSP.DidChangeConfigurationParams() {
             // If we pass null settings and workspace.configuration is supported, Pylance will ask
             // us for per workspace configuration settings. Otherwise we can send
             // global settings here.

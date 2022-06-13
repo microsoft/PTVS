@@ -23,6 +23,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public event EventHandler InterpreterChanged { add { } remove { } }
         public event EventHandler SearchPathsChanged { add { } remove { } }
         public event EventHandler Closed { add { } remove { } }
+        public event EventHandler ReanalyzeProjectChanged { add { } remove { } }
+
 
         public PythonLanguageClientContextFixed(
             InterpreterConfiguration configuration,
