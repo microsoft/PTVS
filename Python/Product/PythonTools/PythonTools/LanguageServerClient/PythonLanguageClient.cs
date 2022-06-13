@@ -448,6 +448,13 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             Settings = null
         }).DoNotWait();
 
+        private void OnReanalyze(object sender, EventArgs e) => InvokeDidChangeConfigurationAsync(new LSP.DidChangeConfigurationParams() {
+            // If we pass null settings and workspace.configuration is supported, Pylance will ask
+            // us for per workspace configuration settings. Otherwise we can send
+            // global settings here.
+            Settings = null
+        }).DoNotWait();
+
         private void OnAnalysisComplete(object sender, EventArgs e) {
             // Used by test code to know when it's okay to try and use intellisense
             _readyTcs.TrySetResult(0);
