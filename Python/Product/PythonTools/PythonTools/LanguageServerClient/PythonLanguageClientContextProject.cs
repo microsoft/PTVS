@@ -28,6 +28,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public event EventHandler InterpreterChanged;
         public event EventHandler SearchPathsChanged;
         public event EventHandler Closed;
+        public event EventHandler ReanalyzeProjectChanged;
 
         public PythonLanguageClientContextProject(PythonProjectNode project) {
             _project = project ?? throw new ArgumentNullException(nameof(project));
@@ -35,9 +36,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
             _project.LanguageServerInterpreterChanged += OnInterpreterChanged;
             _project.LanguageServerSearchPathsChanged += OnSearchPathsChanged;
+            _project.ReanalyzeProject_Notify += OnReanalyzeProject;
             _disposables.Add(() => {
                 _project.LanguageServerInterpreterChanged -= OnInterpreterChanged;
                 _project.LanguageServerSearchPathsChanged -= OnSearchPathsChanged;
+                _project.ReanalyzeProject_Notify -= OnReanalyzeProject;
             });
 
             _project.AddActionOnClose(this, (obj) => Closed?.Invoke(this, EventArgs.Empty));
@@ -50,6 +53,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         private void OnInterpreterChanged(object sender, EventArgs e) => InterpreterChanged?.Invoke(this, EventArgs.Empty);
         private void OnSearchPathsChanged(object sender, EventArgs e) => SearchPathsChanged?.Invoke(this, EventArgs.Empty);
+
+        private void OnReanalyzeProject(object sender, EventArgs e) => ReanalyzeProjectChanged?.Invoke(this, EventArgs.Empty);
 
         public void Dispose() => _disposables.TryDispose();
     }

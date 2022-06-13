@@ -381,6 +381,7 @@ namespace PythonToolsTests {
             public event EventHandler TestSettingChanged;
             public event EventHandler IsTrustedChanged;
             public event EventHandler IsTrustedQueried;
+            public event EventHandler ReanalyzeWorkspaceChanged;
 #pragma warning restore CS0067
 
             public void Dispose() {

@@ -87,7 +87,9 @@ namespace Microsoft.PythonTools.Interpreter {
         public event EventHandler InterpreterSettingChanged;
         public event EventHandler SearchPathsSettingChanged;
         public event EventHandler TestSettingChanged;
-
+#pragma warning disable CS0067
+        public event EventHandler ReanalyzeWorkspaceChanged;
+#pragma warning restore CS0067
         /// <summary>
         /// <see cref="IsTrusted"/> has changed.
         /// </summary>
@@ -104,6 +106,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// global interpreter change when the workspace relies on the default.
         /// </summary>
         public event EventHandler ActiveInterpreterChanged;
+        
 
         public string WorkspaceName => _workspace.GetName();
 
