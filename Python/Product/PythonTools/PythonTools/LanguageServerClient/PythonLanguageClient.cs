@@ -416,6 +416,12 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 }
             }
 
+        
+        private void OnAnalysisComplete(object sender, EventArgs e) {
+            // Used by test code to know when it's okay to try and use intellisense
+            _readyTcs.TrySetResult(0);
+        }
+
         private LanguageServerSettings.PythonSettings GetSettings(Uri scopeUri = null)
         {
             IPythonLanguageClientContext context = null;
