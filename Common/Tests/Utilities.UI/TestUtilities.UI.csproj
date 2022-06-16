@@ -135,6 +135,10 @@
       <Project>{D092D54E-FF29-4D32-9AEE-4EF704C92F67}</Project>
       <Name>TestUtilities</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\Python\Product\VSCommon\VSCommon.csproj">
+      <Project>{a52ac77f-6df9-4387-bb08-8ded3fd95a0f}</Project>
+      <Name>VSCommon</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\Python\Tests\TestRunnerInterop\TestRunnerInterop.csproj">
       <Project>{3e8c485b-905a-4dbc-b059-161ccb1ad591}</Project>
       <Name>TestRunnerInterop</Name>

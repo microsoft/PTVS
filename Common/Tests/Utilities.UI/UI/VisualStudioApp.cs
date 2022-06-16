@@ -33,6 +33,8 @@ using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.Threading;
+using Microsoft.VisualStudioTools;
 using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 using Task = System.Threading.Tasks.Task;
 
@@ -834,6 +836,7 @@ namespace TestUtilities.UI {
         private static IEnumerable<IVsProject> EnumerateLoadedProjects(IVsSolution solution) {
             IEnumHierarchies hierarchies;
             Guid guid = Guid.Empty;
+
             ErrorHandler.ThrowOnFailure((solution.GetProjectEnum(
                 (uint)(__VSENUMPROJFLAGS.EPF_ALLINSOLUTION),
                 ref guid,
@@ -888,45 +891,63 @@ namespace TestUtilities.UI {
             bool setStartupItem = true,
             Func<AutomationDialog, bool> onDialog = null
         ) {
+            // NOTE: In general, everything from the IVs* APIs need to run on the UI thread
+            // See the RunOnUIThread() and CreateTaskOnUIThread() helper methods
             var solution = GetService<IVsSolution>(typeof(SVsSolution));
             var solution4 = solution as IVsSolution4;
             Assert.IsNotNull(solution, "Failed to obtain SVsSolution service");
             Assert.IsNotNull(solution4, "Failed to obtain IVsSolution4 interface");
 
-            // Close any open solution
-            if (ErrorHandler.Succeeded(solution.GetSolutionInfo(out _, out string slnFile, out _))) {
-                Console.WriteLine("Closing {0}", slnFile);
-                solution.CloseSolutionElement(0, null, 0);
-            }
+            RunOnUIThread(() =>
+            {
+                // Close any open solution
+                if (ErrorHandler.Succeeded(solution.GetSolutionInfo(out _, out string slnFile, out _)))
+                {
+                    if (!string.IsNullOrEmpty(slnFile)) { 
+                        Console.WriteLine("Closing {0}", slnFile);
+                        solution.CloseSolutionElement(0, null, 0);
+                    }
+                }
+            });
 
             string fullPath = TestData.GetPath(projName);
-            if (!File.Exists(fullPath)) {
+            if (!File.Exists(fullPath))
+            {
                 Assert.Fail("Cannot find " + fullPath);
             }
 
             Console.WriteLine("Opening {0}", fullPath);
 
             // If there is a .suo file, delete that so that there is no state carried over from another test.
-            for (int i = 10; i <= 15; ++i) {
+            for (int i = 10; i <= 15; ++i)
+            {
                 string suoPath = Path.ChangeExtension(fullPath, ".v" + i + ".suo");
-                if (File.Exists(suoPath)) {
+                if (File.Exists(suoPath))
+                {
                     File.Delete(suoPath);
                 }
             }
             var dotVsPath = Path.Combine(Path.GetDirectoryName(fullPath), ".vs");
-            if (Directory.Exists(dotVsPath)) {
-                foreach (var suoPath in FileUtils.EnumerateFiles(dotVsPath, ".vso")) {
+            if (Directory.Exists(dotVsPath))
+            {
+                foreach (var suoPath in FileUtils.EnumerateFiles(dotVsPath, ".vso"))
+                {
                     File.Delete(suoPath);
                 }
             }
 
             Task t;
-            if (fullPath.EndsWith(".sln", StringComparison.OrdinalIgnoreCase)) {
-                t = Task.Run(() => {
+            if (fullPath.EndsWith(".sln", StringComparison.OrdinalIgnoreCase))
+            {
+                t = CreateTaskOnUIThread(async () =>
+                {
                     ErrorHandler.ThrowOnFailure(solution.OpenSolutionFile((uint)0, fullPath));
                 });
-            } else {
-                t = Task.Run(() => {
+            }
+            else
+            {
+                t = CreateTaskOnUIThread(async () =>
+                {
                     Guid guidNull = Guid.Empty;
                     Guid iidUnknown = Guid.Empty;
                     IntPtr projPtr;
@@ -943,18 +964,26 @@ namespace TestUtilities.UI {
                     ));
                 });
             }
-            using (var cts = System.Diagnostics.Debugger.IsAttached ? new CancellationTokenSource() : new CancellationTokenSource(30000)) {
-                try {
-                    if (!t.Wait(1000, cts.Token)) {
+
+            using (var cts = System.Diagnostics.Debugger.IsAttached ? new CancellationTokenSource() : new CancellationTokenSource(30000))
+            {
+                try
+                {
+                    if (!t.Wait(1000, cts.Token))
+                    {
                         // Load has taken a while, start checking whether a dialog has
                         // appeared
                         IVsUIShell uiShell = GetService<IVsUIShell>(typeof(IVsUIShell));
                         IntPtr hwnd;
-                        while (!t.Wait(1000, cts.Token)) {
+                        while (!t.Wait(1000, cts.Token))
+                        {
                             ErrorHandler.ThrowOnFailure(uiShell.GetDialogOwnerHwnd(out hwnd));
-                            if (hwnd != _mainWindowHandle) {
-                                using (var dlg = new AutomationDialog(this, AutomationElement.FromHandle(hwnd))) {
-                                    if (onDialog == null || onDialog(dlg) == false) {
+                            if (hwnd != _mainWindowHandle)
+                            {
+                                using (var dlg = new AutomationDialog(this, AutomationElement.FromHandle(hwnd)))
+                                {
+                                    if (onDialog == null || onDialog(dlg) == false)
+                                    {
                                         Console.WriteLine("Unexpected dialog");
                                         DumpElement(dlg.Element);
                                         Assert.Fail("Unexpected dialog while loading project");
@@ -963,73 +992,102 @@ namespace TestUtilities.UI {
                             }
                         }
                     }
-                } catch (OperationCanceledException) {
+                }
+                catch (OperationCanceledException)
+                {
                     Assert.Fail("Failed to open project quickly enough");
                 }
             }
 
-            var projects = EnumerateLoadedProjects(solution).ToList();
+            IEnumerable<IVsProject> projects = new List<IVsProject>();
+            RunOnUIThread(() => 
+            {
+                projects = EnumerateLoadedProjects(solution).ToList();
+            
+                if (expectedProjects != null && expectedProjects.Value != projects.Count())
+                {
+                    // if we have other files open we can end up with a bonus project...
+                    Assert.AreEqual(
+                        expectedProjects,
+                        projects.Count(p =>
+                        {
+                            string mk;
+                            return ErrorHandler.Succeeded(solution.GetUniqueNameOfProject((IVsHierarchy)p, out mk)) &&
+                                mk != "Miscellaneous Files";
+                        }),
+                        "Wrong number of loaded projects"
+                    );
+                }
+            });
 
-            if (expectedProjects != null && expectedProjects.Value != projects.Count) {
-                // if we have other files open we can end up with a bonus project...
-                Assert.AreEqual(
-                    expectedProjects,
-                    projects.Count(p => {
+            IVsHierarchy vsProject = null;
+            RunOnUIThread(() =>
+            {
+                vsProject = string.IsNullOrEmpty(projectName) ?
+                    projects.OfType<IVsHierarchy>().FirstOrDefault() :
+                    projects.OfType<IVsHierarchy>().FirstOrDefault(p =>
+                    {
                         string mk;
-                        return ErrorHandler.Succeeded(solution.GetUniqueNameOfProject((IVsHierarchy)p, out mk)) &&
-                            mk != "Miscellaneous Files";
-                    }),
-                    "Wrong number of loaded projects"
-                );
-            }
-
-
-            var vsProject = string.IsNullOrEmpty(projectName) ?
-                projects.OfType<IVsHierarchy>().FirstOrDefault() :
-                projects.OfType<IVsHierarchy>().FirstOrDefault(p => {
-                    string mk;
-                    if (ErrorHandler.Failed(solution.GetUniqueNameOfProject(p, out mk))) {
-                        return false;
-                    }
-                    Console.WriteLine(mk);
-                    return Path.GetFileNameWithoutExtension(mk) == projectName;
-                });
+                        if (ErrorHandler.Failed(solution.GetUniqueNameOfProject(p, out mk)))
+                        {
+                            return false;
+                        }
+                        Console.WriteLine(mk);
+                        return Path.GetFileNameWithoutExtension(mk) == projectName;
+                    });
+            });
 
             string outputText = "(unable to get Solution output)";
-            try {
+            try
+            {
                 outputText = GetOutputWindowText("Solution");
-            } catch (Exception) {
+            }
+            catch (Exception)
+            {
             }
             Assert.IsNotNull(vsProject, "No project loaded: " + outputText);
 
-            Guid projGuid;
-            ErrorHandler.ThrowOnFailure(solution.GetGuidOfProject(vsProject, out projGuid));
+            Guid projGuid = Guid.Empty;
+            RunOnUIThread(() =>
+            {
+                ErrorHandler.ThrowOnFailure(solution.GetGuidOfProject(vsProject, out projGuid));
+            });
 
             object o;
             ErrorHandler.ThrowOnFailure(vsProject.GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_ExtObject, out o));
             var project = (Project)o;
 
-            if (project.Properties == null) {
-                ErrorHandler.ThrowOnFailure(solution4.ReloadProject(ref projGuid));
+            if (project.Properties == null)
+            {
+                RunOnUIThread(() =>
+                {
+                    ErrorHandler.ThrowOnFailure(solution4.ReloadProject(ref projGuid));
+                });
             }
 
             // HACK: Testing whether Properties is just slow to initialize
-            for (int retries = 10; retries > 0 && project.Properties == null; --retries) {
+            for (int retries = 10; retries > 0 && project.Properties == null; --retries)
+            {
                 Trace.TraceWarning("Waiting for project.Properties to become non-null");
                 System.Threading.Thread.Sleep(250);
             }
             Assert.IsNotNull(project.Properties, "No project properties: " + outputText);
             Assert.IsTrue(project.Properties.GetEnumerator().MoveNext(), "No items in project properties: " + outputText);
 
-            if (startItem != null && setStartupItem) {
+            if (startItem != null && setStartupItem)
+            {
                 project.SetStartupFile(startItem);
-                for (var i = 0; i < 20; i++) {
+                for (var i = 0; i < 20; i++)
+                {
                     //Wait for the startupItem to be set before returning from the project creation
-                    try {
-                        if (((string)project.Properties.Item("StartupFile").Value) == startItem) {
+                    try
+                    {
+                        if (((string)project.Properties.Item("StartupFile").Value) == startItem)
+                        {
                             break;
                         }
-                    } catch { }
+                    }
+                    catch { }
                     System.Threading.Thread.Sleep(250);
                 }
             }
@@ -1119,6 +1177,38 @@ namespace TestUtilities.UI {
         internal ProjectItem AddItem(Project project, string language, string template, string filename) {
             var fullTemplate = ((Solution2)project.DTE.Solution).GetProjectItemTemplate(template, language);
             return project.ProjectItems.AddFromTemplate(fullTemplate, filename);
+        }
+
+        private static void RunOnUIThread(Action action) {
+
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
+            {
+                // switch to the UI thread if we need to
+                if (!ThreadHelper.CheckAccess()) {
+                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                }
+
+                // now that we're on the UI thread, run the specified code
+                action();
+            });
+        }
+
+        private static Task CreateTaskOnUIThread(Func<Task> task)
+        {
+            var t = ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            {
+                // switch to the UI thread if we need to
+                if (!ThreadHelper.CheckAccess())
+                {
+                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                }
+
+                // now that we're on the UI thread, run the specified code
+                await task.Invoke();
+
+            }).Task;
+
+            return t;
         }
     }
 }
