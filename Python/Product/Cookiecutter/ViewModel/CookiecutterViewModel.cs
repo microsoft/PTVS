@@ -843,6 +843,9 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                     CloningStatus = OperationStatus.Failed;
 
                     _outputWindow.WriteErrorLine(ex.Message);
+                    if (ex.GetType().Name == "FileNotFoundException") {
+                        _outputWindow.WriteLine(Strings.GitNotFoundError);
+                    }
                     _outputWindow.WriteLine(Strings.CloningTemplateFailed.FormatUI(selection.DisplayName));
 
                     ReportTemplateEvent(CookiecutterTelemetry.TelemetryArea.Template, CookiecutterTelemetry.TemplateEvents.Clone, selection, ex);

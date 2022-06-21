@@ -317,6 +317,15 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Git.exe is not found. Please install Git, add it to PATH and try again..
+        /// </summary>
+        public static string GitNotFoundError {
+            get {
+                return ResourceManager.GetString("GitNotFoundError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cookiecutter makes it easy to generate code from a template..
         /// </summary>
         public static string InfoBarMessage {

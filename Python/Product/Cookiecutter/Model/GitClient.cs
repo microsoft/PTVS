@@ -52,6 +52,9 @@ namespace Microsoft.CookiecutterTools.Model {
             }
 
             var arguments = new string[] { "clone", repoUrl };
+            if (!ExistsOnPath(_gitExeFilePath)) {
+                throw new FileNotFoundException();
+            }
             using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, targetParentFolderPath, GetEnvironment(), false, redirector)) {
                 await output;
 
@@ -80,6 +83,23 @@ namespace Microsoft.CookiecutterTools.Model {
 
                 return localTemplateFolder;
             }
+        }   
+        
+        public bool ExistsOnPath(string fileName) {
+            return GetFullPath(fileName) != null;
+        }
+
+        public string GetFullPath(string fileName) {
+            if (File.Exists(fileName)) {
+                return Path.GetFullPath(fileName);
+            }
+            var values = Environment.GetEnvironmentVariable("PATH");
+            foreach (var path in values.Split(Path.PathSeparator)) {
+                var fullPath = Path.Combine(path, fileName);
+                if (File.Exists(fullPath))
+                    return fullPath;
+            }
+            return null;
         }
 
         public async Task<string> GetRemoteOriginAsync(string repoFolderPath) {
