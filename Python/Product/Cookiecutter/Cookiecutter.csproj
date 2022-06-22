@@ -79,6 +79,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Model\CookiecutterSessionStartInfo.cs" />
+    <Compile Include="Model\GitRunException.cs" />
     <Compile Include="Model\KnownValueSources.cs" />
     <Compile Include="ProjectResources.cs" />
     <Compile Include="Attributes.cs" />

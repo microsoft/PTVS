@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -52,8 +53,13 @@ namespace Microsoft.CookiecutterTools.Model {
             }
 
             var arguments = new string[] { "clone", repoUrl };
-            if (!ExistsOnPath(_gitExeFilePath)) {
-                throw new FileNotFoundException();
+            try {
+                // check if it's actually git
+                if(!canRunGit(_gitExeFilePath)) {
+                    throw new GitRunException(Strings.GitFailedToRunError);
+                }
+            } catch (Exception) {
+                throw new GitRunException(Strings.GitFailedToRunError);
             }
             using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, targetParentFolderPath, GetEnvironment(), false, redirector)) {
                 await output;
@@ -83,25 +89,31 @@ namespace Microsoft.CookiecutterTools.Model {
 
                 return localTemplateFolder;
             }
-        }   
-        
-        public bool ExistsOnPath(string fileName) {
-            return GetFullPath(fileName) != null;
         }
 
-        public string GetFullPath(string fileName) {
-            if (File.Exists(fileName)) {
-                return Path.GetFullPath(fileName);
-            }
-            var values = Environment.GetEnvironmentVariable("PATH");
-            foreach (var path in values.Split(Path.PathSeparator)) {
-                var fullPath = Path.Combine(path, fileName);
-                if (File.Exists(fullPath))
-                    return fullPath;
-            }
-            return null;
-        }
+        public bool canRunGit(string exe) {
+            var process = new Process {
+                StartInfo = new ProcessStartInfo {
+                    FileName = exe,
+                    Arguments = "--version",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true,
+                }
+            };
 
+            process.Start();
+            process.WaitForExit();
+            
+            var output = process.StandardOutput.ReadLine();
+
+            if (output != null && output.StartsWith("git version")) {
+                return true;
+            }
+            return false;
+        }
+    
         public async Task<string> GetRemoteOriginAsync(string repoFolderPath) {
             var arguments = new string[] { "remote", "-v" };
             using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, GetEnvironment(), false, null)) {
