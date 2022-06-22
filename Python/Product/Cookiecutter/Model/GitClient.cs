@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -52,6 +53,14 @@ namespace Microsoft.CookiecutterTools.Model {
             }
 
             var arguments = new string[] { "clone", repoUrl };
+            try {
+                // check if it's actually git
+                if(!CanRunGit(_gitExeFilePath)) {
+                    throw new GitRunException(Strings.GitFailedToRunError);
+                }
+            } catch (Exception ex) {
+                throw new GitRunException(Strings.GitFailedToRunError, ex);
+            }
             using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, targetParentFolderPath, GetEnvironment(), false, redirector)) {
                 await output;
 
@@ -82,6 +91,29 @@ namespace Microsoft.CookiecutterTools.Model {
             }
         }
 
+        private static bool CanRunGit(string exe) {
+            using (var process = new Process {
+                StartInfo = new ProcessStartInfo {
+                    FileName = exe,
+                    Arguments = "--version",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true,
+                }
+            }) {
+                process.Start();
+                process.WaitForExit();
+
+                var output = process.StandardOutput.ReadLine();
+
+                if (output != null && output.StartsWith("git version")) {
+                    return true;
+                }
+            }   
+            return false;
+        }
+    
         public async Task<string> GetRemoteOriginAsync(string repoFolderPath) {
             var arguments = new string[] { "remote", "-v" };
             using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, GetEnvironment(), false, null)) {
