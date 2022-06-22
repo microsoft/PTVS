@@ -55,11 +55,11 @@ namespace Microsoft.CookiecutterTools.Model {
             var arguments = new string[] { "clone", repoUrl };
             try {
                 // check if it's actually git
-                if(!canRunGit(_gitExeFilePath)) {
+                if(!CanRunGit(_gitExeFilePath)) {
                     throw new GitRunException(Strings.GitFailedToRunError);
                 }
-            } catch (Exception) {
-                throw new GitRunException(Strings.GitFailedToRunError);
+            } catch (Exception ex) {
+                throw new GitRunException(Strings.GitFailedToRunError, ex);
             }
             using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, targetParentFolderPath, GetEnvironment(), false, redirector)) {
                 await output;
@@ -91,8 +91,8 @@ namespace Microsoft.CookiecutterTools.Model {
             }
         }
 
-        public bool canRunGit(string exe) {
-            var process = new Process {
+        private static bool CanRunGit(string exe) {
+            using (var process = new Process {
                 StartInfo = new ProcessStartInfo {
                     FileName = exe,
                     Arguments = "--version",
@@ -101,16 +101,16 @@ namespace Microsoft.CookiecutterTools.Model {
                     RedirectStandardError = true,
                     CreateNoWindow = true,
                 }
-            };
+            }) {
+                process.Start();
+                process.WaitForExit();
 
-            process.Start();
-            process.WaitForExit();
-            
-            var output = process.StandardOutput.ReadLine();
+                var output = process.StandardOutput.ReadLine();
 
-            if (output != null && output.StartsWith("git version")) {
-                return true;
-            }
+                if (output != null && output.StartsWith("git version")) {
+                    return true;
+                }
+            }   
             return false;
         }
     
