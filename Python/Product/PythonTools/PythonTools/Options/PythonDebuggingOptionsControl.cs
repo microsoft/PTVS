@@ -26,7 +26,9 @@ namespace Microsoft.PythonTools.Options {
             // set allowed values for the variable presentation options
             var varPresComboBoxes = new List<ComboBox> { _showVariablesClassComboBox, _showVariablesFunctionComboBox, _showVariablesProtectedComboBox, _showVariablesSpecialComboBox };
             foreach (var varPresComboBox in varPresComboBoxes) {
-                varPresComboBox.DataSource = Enum.GetValues(typeof(PresentationMode));
+                varPresComboBox.Items.Add(Strings.VariablePresentation_Group);
+                varPresComboBox.Items.Add(Strings.VariablePresentation_Hide);
+                varPresComboBox.Items.Add(Strings.VariablePresentation_Inline);
             }
         }
 
@@ -40,10 +42,47 @@ namespace Microsoft.PythonTools.Options {
             _showFunctionReturnValue.Checked = pyService.DebuggerOptions.ShowFunctionReturnValue;
 
             // variable presentation
-            _showVariablesClassComboBox.SelectedItem = pyService.DebuggerOptions.VariablePresentationForClasses;
-            _showVariablesFunctionComboBox.SelectedItem = pyService.DebuggerOptions.VariablePresentationForFunctions;
-            _showVariablesProtectedComboBox.SelectedItem = pyService.DebuggerOptions.VariablePresentationForProtected;
-            _showVariablesSpecialComboBox.SelectedItem = pyService.DebuggerOptions.VariablePresentationForSpecial;
+            if (pyService.DebuggerOptions.VariablePresentationForClasses == PresentationMode.Group) {
+                _showVariablesClassComboBox.SelectedIndex = 0;
+            } else if (pyService.DebuggerOptions.VariablePresentationForClasses == PresentationMode.Hide) {
+                _showVariablesClassComboBox.SelectedIndex = 1;
+            } else if (pyService.DebuggerOptions.VariablePresentationForClasses == PresentationMode.Inline) {
+                _showVariablesClassComboBox.SelectedIndex = 2;
+            } else {
+                _showVariablesClassComboBox.SelectedIndex = 0;
+            }
+
+            if (pyService.DebuggerOptions.VariablePresentationForFunctions == PresentationMode.Group) {
+                _showVariablesFunctionComboBox.SelectedIndex = 0;
+            } else if (pyService.DebuggerOptions.VariablePresentationForFunctions == PresentationMode.Hide) {
+                _showVariablesFunctionComboBox.SelectedIndex = 1;
+            } else if (pyService.DebuggerOptions.VariablePresentationForFunctions == PresentationMode.Inline) {
+                _showVariablesFunctionComboBox.SelectedIndex = 2;
+            } else {
+                _showVariablesFunctionComboBox.SelectedIndex = 0;
+            }
+
+            if (pyService.DebuggerOptions.VariablePresentationForProtected == PresentationMode.Group) {
+                _showVariablesProtectedComboBox.SelectedIndex = 0;
+            } else if (pyService.DebuggerOptions.VariablePresentationForProtected == PresentationMode.Hide) {
+                _showVariablesProtectedComboBox.SelectedIndex = 1;
+            } else if (pyService.DebuggerOptions.VariablePresentationForProtected == PresentationMode.Inline) {
+                _showVariablesProtectedComboBox.SelectedIndex = 2;
+            } else {
+                _showVariablesProtectedComboBox.SelectedIndex = 0;
+            }
+
+            if (pyService.DebuggerOptions.VariablePresentationForSpecial == PresentationMode.Group) {
+                _showVariablesSpecialComboBox.SelectedIndex = 0;
+            } else if (pyService.DebuggerOptions.VariablePresentationForSpecial == PresentationMode.Hide) {
+                _showVariablesSpecialComboBox.SelectedIndex = 1;
+            } else if (pyService.DebuggerOptions.VariablePresentationForSpecial == PresentationMode.Inline) {
+                _showVariablesSpecialComboBox.SelectedIndex = 2;
+            } else {
+                _showVariablesSpecialComboBox.SelectedIndex = 0;
+            }
+
+
         }
 
         internal void SyncPageWithControlSettings(PythonToolsService pyService) {
@@ -56,10 +95,53 @@ namespace Microsoft.PythonTools.Options {
             pyService.DebuggerOptions.ShowFunctionReturnValue = _showFunctionReturnValue.Checked;
 
             // variable presentation
-            pyService.DebuggerOptions.VariablePresentationForClasses = (PresentationMode)_showVariablesClassComboBox.SelectedItem;
-            pyService.DebuggerOptions.VariablePresentationForFunctions = (PresentationMode)_showVariablesFunctionComboBox.SelectedItem;
-            pyService.DebuggerOptions.VariablePresentationForProtected = (PresentationMode)_showVariablesProtectedComboBox.SelectedItem;
-            pyService.DebuggerOptions.VariablePresentationForSpecial = (PresentationMode)_showVariablesSpecialComboBox.SelectedItem;
+            switch (_showVariablesClassComboBox.SelectedIndex) {
+                case 0:
+                    pyService.DebuggerOptions.VariablePresentationForClasses = PresentationMode.Group;
+                    break;
+                case 1:
+                    pyService.DebuggerOptions.VariablePresentationForClasses = PresentationMode.Hide;
+                    break;
+                case 2:
+                    pyService.DebuggerOptions.VariablePresentationForClasses = PresentationMode.Inline;
+                    break;
+            }
+
+            switch (_showVariablesFunctionComboBox.SelectedIndex) {
+                case 0:
+                    pyService.DebuggerOptions.VariablePresentationForFunctions = PresentationMode.Group;
+                    break;
+                case 1:
+                    pyService.DebuggerOptions.VariablePresentationForFunctions = PresentationMode.Hide;
+                    break;
+                case 2:
+                    pyService.DebuggerOptions.VariablePresentationForFunctions = PresentationMode.Inline;
+                    break;
+            }
+
+            switch (_showVariablesProtectedComboBox.SelectedIndex) {
+                case 0:
+                    pyService.DebuggerOptions.VariablePresentationForProtected = PresentationMode.Group;
+                    break;
+                case 1:
+                    pyService.DebuggerOptions.VariablePresentationForProtected = PresentationMode.Hide;
+                    break;
+                case 2:
+                    pyService.DebuggerOptions.VariablePresentationForProtected = PresentationMode.Inline;
+                    break;
+            }
+
+            switch (_showVariablesSpecialComboBox.SelectedIndex) {
+                case 0:
+                    pyService.DebuggerOptions.VariablePresentationForSpecial = PresentationMode.Group;
+                    break;
+                case 1:
+                    pyService.DebuggerOptions.VariablePresentationForSpecial = PresentationMode.Hide;
+                    break;
+                case 2:
+                    pyService.DebuggerOptions.VariablePresentationForSpecial = PresentationMode.Inline;
+                    break;
+            }
         }
     }
 }

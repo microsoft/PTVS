@@ -3419,4 +3419,13 @@ Please specify at least one package.</value>
     <value>Environment detected using Python version {0}. Some features might not work as expected since Visual Studio does not officially support this version.</value>
     <comment>{0} is the Python version</comment>
   </data>
+  <data name="VariablePresentation_Group" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="VariablePresentation_Hide" xml:space="preserve">
+    <value>Hide</value>
+  </data>
+  <data name="VariablePresentation_Inline" xml:space="preserve">
+    <value>Inline</value>
+  </data>
 </root>
