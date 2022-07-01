@@ -22,10 +22,10 @@ namespace Microsoft.PythonTools.Options {
     public partial class PythonDebuggingOptionsControl : UserControl {
         public PythonDebuggingOptionsControl() {
             InitializeComponent();
-            var presentationModes = new List<KeyValuePair<PresentationMode, string>>() {
-                new KeyValuePair<PresentationMode, string>(PresentationMode.Group, Strings.VariablePresentation_Group),
-                new KeyValuePair<PresentationMode, string>(PresentationMode.Hide, Strings.VariablePresentation_Hide),
-                new KeyValuePair<PresentationMode, string>(PresentationMode.Inline, Strings.VariablePresentation_Inline),
+            var presentationModes = new Dictionary<PresentationMode, string> {
+                { PresentationMode.Group, Strings.VariablePresentation_Group },
+                { PresentationMode.Hide, Strings.VariablePresentation_Hide },
+                { PresentationMode.Inline, Strings.VariablePresentation_Inline },
             };
 
             // set allowed values for the variable presentation options
