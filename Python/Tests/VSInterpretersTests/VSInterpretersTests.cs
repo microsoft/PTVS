@@ -30,23 +30,17 @@ namespace VSInterpretersTests {
 
         [TestMethod, Priority(UnitTestPriority.P0)]
         public void InvalidInterpreterVersion() {
-            try {
-                var lv = new Version(1, 0).ToLanguageVersion();
-                Assert.Fail("Expected InvalidOperationException");
-            } catch (InvalidOperationException) {
-            }
 
-            try {
-                InterpreterFactoryCreator.CreateInterpreterFactory(new VisualStudioInterpreterConfiguration(
+                var lv = new Version(1, 0).ToLanguageVersion();
+                Assert.AreEqual(PythonLanguageVersion.None, lv);
+
+                var factory = InterpreterFactoryCreator.CreateInterpreterFactory(new VisualStudioInterpreterConfiguration(
                     Guid.NewGuid().ToString(),
                     "Test Interpreter",
                     version: new Version(1, 0)
                 ));
-                Assert.Fail("Expected ArgumentException");
-            } catch (ArgumentException ex) {
-                // Expect version number in message
-                AssertUtil.Contains(ex.Message, "1.0");
-            }
+
+                Assert.AreEqual(PythonLanguageVersion.None, factory.Configuration.Version.ToLanguageVersion());
         }
     }
 }

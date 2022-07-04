@@ -6474,13 +6474,22 @@
       </Item>
       <Item ItemId=";PythonVersionNotSupportedInfoBarText" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[You're using Python {0}. Some features might not work as expected since Visual Studio no longer supports this version.]]></Val>
+          <Val><![CDATA[You're using {0}. Some features might not work as expected since Visual Studio does not officially support this version.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Вы используете Python версии {0}. Так как Visual Studio больше не поддерживает эту версию, некоторые функции могут работать неправильно.]]></Val>
+            <Val><![CDATA[Вы используете {0}. Так как Visual Studio не поддерживает эту версию официально, некоторые функции могут работать неправильно.]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[You're using Python {0}. Some new features might not work as expected until Visual Studio officially supports this version.]]></Val>
+            <Val><![CDATA[You're using Python {0}. Some features might not work as expected since Visual Studio no longer supports this version.]]></Val>
           </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PythonVersionNotSupportedTraceText" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Environment detected using Python version {0}. Some features might not work as expected since Visual Studio does not officially support this version.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Обнаружено, что среда использует Python версии {0}. Так как Visual Studio не поддерживает эту версию официально, некоторые функции могут работать неправильно.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>

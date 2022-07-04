@@ -23,6 +23,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Common.Infrastructure;
+using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -223,7 +224,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     ?? _analysisOptions.TypeCheckingMode;
 
                 var ver3 = new Version(3, 0);
-                if (context.InterpreterConfiguration.Version < ver3) {
+                var version = context.InterpreterConfiguration.Version;
+                // show a warning if the python version is not supported
+                if (version.ToLanguageVersion() == PythonLanguageVersion.None) {
+                    MessageBox.ShowWarningMessage(Site, Strings.PythonVersionNotSupportedInfoBarText.FormatUI(context.InterpreterConfiguration.Description));
+                } else if (context.InterpreterConfiguration.Version < ver3) {
                     MessageBox.ShowWarningMessage(Site, Strings.WarningPython2NotSupported);
                 }
 

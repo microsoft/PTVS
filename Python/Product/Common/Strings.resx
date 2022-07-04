@@ -2968,8 +2968,8 @@ Please specify at least one package.</value>
     <value>Don't show this message again</value>
   </data>
   <data name="PythonVersionNotSupportedInfoBarText" xml:space="preserve">
-    <value>You're using Python {0}. Some features might not work as expected since Visual Studio no longer supports this version.</value>
-    <comment>{0} is the Python version</comment>
+    <value>You're using {0}. Some features might not work as expected since Visual Studio does not officially support this version.</value>
+    <comment>{0} is the Python description</comment>
   </data>
   <data name="PythonVersionNotSupportMoreInfo" xml:space="preserve">
     <value>More info</value>
@@ -3157,262 +3157,266 @@ Please specify at least one package.</value>
   <data name="AsRequiresPython2dot6OrlaterErrorMsg" xml:space="preserve">
     <value>'as' requires Python 2.6 or later</value>
   </data>
-	<data name="BackslashFStringExpressionErrorMsg" xml:space="preserve">
+  <data name="BackslashFStringExpressionErrorMsg" xml:space="preserve">
     <value>f-string expression part cannot include a backslash</value>
   </data>
-	<data name="BreakOustideLoopErrorMsg" xml:space="preserve">
+  <data name="BreakOustideLoopErrorMsg" xml:space="preserve">
     <value>'break' outside loop</value>
   </data>
-	<data name="CantUseStarredExpErrorMsg" xml:space="preserve">
+  <data name="CantUseStarredExpErrorMsg" xml:space="preserve">
     <value>can't use starred expression here</value>
   </data>
-	<data name="ClassDecoratorsRequireTwodotSixErrorMsg" xml:space="preserve">
+  <data name="ClassDecoratorsRequireTwodotSixErrorMsg" xml:space="preserve">
     <value>invalid syntax, class decorators require 2.6 or later.</value>
   </data>
-	<data name="ClosingParensNotMatchFStringErrorMsg" xml:space="preserve">
+  <data name="ClosingParensNotMatchFStringErrorMsg" xml:space="preserve">
     <value>f-string: closing parenthesis '{0}' does not match opening parenthesis '{1}'</value>
   </data>
-	<data name="ContinueNotInLoopErrorMsg" xml:space="preserve">
+  <data name="ContinueNotInLoopErrorMsg" xml:space="preserve">
     <value>'continue' not properly in loop</value>
   </data>
-	<data name="ContinueNotSupportedInsideFinallyErrorMsg" xml:space="preserve">
+  <data name="ContinueNotSupportedInsideFinallyErrorMsg" xml:space="preserve">
     <value>'continue' not supported inside 'finally' clause</value>
   </data>
-	<data name="DefaultExceptMustBeLastErrorMsg" xml:space="preserve">
+  <data name="DefaultExceptMustBeLastErrorMsg" xml:space="preserve">
     <value>default 'except' must be last</value>
   </data>
-	<data name="DefaultValueMustBeSpecifiedErrorMsg" xml:space="preserve">
+  <data name="DefaultValueMustBeSpecifiedErrorMsg" xml:space="preserve">
     <value>default value must be specified here</value>
   </data>
-	<data name="DuplicateArgsDoubleArgumentErrorMsg" xml:space="preserve">
+  <data name="DuplicateArgsDoubleArgumentErrorMsg" xml:space="preserve">
     <value>duplicate ** args arguments</value>
   </data>
-	<data name="DuplicateArgsSingleArgumentErrorMsg" xml:space="preserve">
+  <data name="DuplicateArgsSingleArgumentErrorMsg" xml:space="preserve">
     <value>duplicate * args arguments</value>
   </data>
-	<data name="DuplicateArgumentInFunctionDefinitionErrorMsg" xml:space="preserve">
+  <data name="DuplicateArgumentInFunctionDefinitionErrorMsg" xml:space="preserve">
     <value>duplicate argument '{0}' in function definition</value>
   </data>
-	<data name="DuplicateArgumentInFunctionErrorMsg" xml:space="preserve">
+  <data name="DuplicateArgumentInFunctionErrorMsg" xml:space="preserve">
     <value>duplicate argument '{0}' in function definition</value>
   </data>
-	<data name="DuplicateKeywordArgumentErrorMsg" xml:space="preserve">
+  <data name="DuplicateKeywordArgumentErrorMsg" xml:space="preserve">
     <value>duplicate keyword argument</value>
   </data>
-	<data name="EmptyExpressionFStringErrorMsg" xml:space="preserve">
+  <data name="EmptyExpressionFStringErrorMsg" xml:space="preserve">
     <value>f-string: empty expression not allowed</value>
   </data>
-	<data name="ExpectedColonErrorMsg" xml:space="preserve">
+  <data name="ExpectedColonErrorMsg" xml:space="preserve">
     <value>expected ':'</value>
   </data>
-	<data name="ExpectedExpressionAfterDelErrorMsg" xml:space="preserve">
+  <data name="ExpectedExpressionAfterDelErrorMsg" xml:space="preserve">
     <value>expected expression after del</value>
   </data>
-	<data name="ExpectedExpressionToBePrintedErrorMsg" xml:space="preserve">
+  <data name="ExpectedExpressionToBePrintedErrorMsg" xml:space="preserve">
     <value>print statement expected expression to be printed</value>
   </data>
-	<data name="ExpectedIndentedBlockErrorMsg" xml:space="preserve">
+  <data name="ExpectedIndentedBlockErrorMsg" xml:space="preserve">
     <value>expected an indented block</value>
   </data>
-	<data name="ExpectedNameErrorMsg" xml:space="preserve">
+  <data name="ExpectedNameErrorMsg" xml:space="preserve">
     <value>expected name</value>
   </data>
-	<data name="ExpectingCharButFoundFStringErrorMsg" xml:space="preserve">
+  <data name="ExpectingCharButFoundFStringErrorMsg" xml:space="preserve">
     <value>f-string: expecting '{0}' but found '{1}'</value>
   </data>
-	<data name="ExpectingCharFStringErrorMsg" xml:space="preserve">
+  <data name="ExpectingCharFStringErrorMsg" xml:space="preserve">
     <value>f-string: expecting '{0}'</value>
   </data>
-	<data name="FromCauseNotAllowedIn2XErrorMsg" xml:space="preserve">
+  <data name="FromCauseNotAllowedIn2XErrorMsg" xml:space="preserve">
     <value>invalid syntax, from cause not allowed in 2.x.</value>
   </data>
-	<data name="FutureFeatureNotDefinedErrorMsg" xml:space="preserve">
+  <data name="FutureFeatureNotDefinedErrorMsg" xml:space="preserve">
     <value>future feature is not defined: </value>
   </data>
-	<data name="FutureImportsMustOccorAtBeginningOfFileErrorMsg" xml:space="preserve">
+  <data name="FutureImportsMustOccorAtBeginningOfFileErrorMsg" xml:space="preserve">
     <value>from __future__ imports must occur at the beginning of the file</value>
   </data>
-	<data name="FutureStatementDoesNotSupportImportErrorMsg" xml:space="preserve">
+  <data name="FutureStatementDoesNotSupportImportErrorMsg" xml:space="preserve">
     <value>future statement does not support import *</value>
   </data>
-	<data name="IllegalTargetAnnotationErrorMsg" xml:space="preserve">
+  <data name="IllegalTargetAnnotationErrorMsg" xml:space="preserve">
     <value>illegal target for annotation</value>
   </data>
-	<data name="ImportOnlyAllowedAtModuleErrorMsg" xml:space="preserve">
+  <data name="ImportOnlyAllowedAtModuleErrorMsg" xml:space="preserve">
     <value>import * only allowed at module level</value>
   </data>
-	<data name="IncorrectStartLocationErrorMsg" xml:space="preserve">
+  <data name="IncorrectStartLocationErrorMsg" xml:space="preserve">
     <value>Start location was not set correctly</value>
   </data>
-	<data name="InvalidConversionCharacterExpectedFStringErrorMsg" xml:space="preserve">
+  <data name="InvalidConversionCharacterExpectedFStringErrorMsg" xml:space="preserve">
     <value>f-string: invalid conversion character: {0} expected 's', 'r', or 'a'</value>
   </data>
-	<data name="InvalidConversionCharacterFStringErrorMsg" xml:space="preserve">
+  <data name="InvalidConversionCharacterFStringErrorMsg" xml:space="preserve">
     <value>f-string: invalid conversion character: expected 's', 'r', or 'a'</value>
   </data>
-	<data name="InvalidExpressionFStringErrorMsg" xml:space="preserve">
+  <data name="InvalidExpressionFStringErrorMsg" xml:space="preserve">
     <value>f-string: invalid expression</value>
   </data>
-	<data name="InvalidParameterErrorMsg" xml:space="preserve">
+  <data name="InvalidParameterErrorMsg" xml:space="preserve">
     <value>invalid parameter</value>
   </data>
-	<data name="InvalidSublistParameterErrorMsg" xml:space="preserve">
+  <data name="InvalidSublistParameterErrorMsg" xml:space="preserve">
     <value>invalid sublist parameter</value>
   </data>
-	<data name="InvalidSyntaxAllowedInVersion3XErrorMsg" xml:space="preserve">
+  <data name="InvalidSyntaxAllowedInVersion3XErrorMsg" xml:space="preserve">
     <value>invalid syntax, only exception value is allowed in 3.x.</value>
   </data>
-	<data name="InvalidSyntaxErrorMsg" xml:space="preserve">
+  <data name="InvalidSyntaxErrorMsg" xml:space="preserve">
     <value>invalid syntax</value>
   </data>
-	<data name="IterableArgumentFollowsKeywordArgumentErrorMsg" xml:space="preserve">
+  <data name="IterableArgumentFollowsKeywordArgumentErrorMsg" xml:space="preserve">
     <value>iterable argument unpacking follows keyword argument unpacking</value>
   </data>
-	<data name="IterableUnpackingErrorMsg" xml:space="preserve">
+  <data name="IterableUnpackingErrorMsg" xml:space="preserve">
     <value>iterable unpacking cannot be used in comprehension</value>
   </data>
-	<data name="KeywordsMustComeBeforeArgsErrorMsg" xml:space="preserve">
+  <data name="KeywordsMustComeBeforeArgsErrorMsg" xml:space="preserve">
     <value>keywords must come before ** args</value>
   </data>
-	<data name="LambdaParenthesesFstringErrorMsg" xml:space="preserve">
+  <data name="LambdaParenthesesFstringErrorMsg" xml:space="preserve">
     <value>f-string: lambda must be inside parentheses</value>
   </data>
-	<data name="MisplacedYieldErrorMsg" xml:space="preserve">
+  <data name="MisplacedYieldErrorMsg" xml:space="preserve">
     <value>misplaced yield</value>
   </data>
-	<data name="MissingModuleNameErrorMsg" xml:space="preserve">
+  <data name="MissingModuleNameErrorMsg" xml:space="preserve">
     <value>missing module name</value>
   </data>
-	<data name="MixingBytesAndNonBytesErrorMsg" xml:space="preserve">
+  <data name="MixingBytesAndNonBytesErrorMsg" xml:space="preserve">
     <value>cannot mix bytes and nonbytes literals</value>
   </data>
-	<data name="NamedArgumentsMustFollowBareErrorMsg" xml:space="preserve">
+  <data name="NamedArgumentsMustFollowBareErrorMsg" xml:space="preserve">
     <value>named arguments must follow bare *</value>
   </data>
-	<data name="NamedAssignmentWithErrorMsg" xml:space="preserve">
+  <data name="NamedAssignmentWithErrorMsg" xml:space="preserve">
     <value>cannot use named assignment with {0}</value>
   </data>
-	<data name="NamedExpressionCtxtErrorMsg" xml:space="preserve">
+  <data name="NamedExpressionCtxtErrorMsg" xml:space="preserve">
     <value>named expression must be parenthesized in this context</value>
   </data>
-	<data name="NamedExpressionInClassBodyErrorMsg" xml:space="preserve">
+  <data name="NamedExpressionInClassBodyErrorMsg" xml:space="preserve">
     <value>assignment expression within a comprehension cannot be used in a class body</value>
   </data>
-	<data name="NamedExpressionInComprehensionIteratorErrorMsg" xml:space="preserve">
+  <data name="NamedExpressionInComprehensionIteratorErrorMsg" xml:space="preserve">
     <value>assignment expression cannot be used in a comprehension iterable expression</value>
   </data>
-	<data name="NamedExpressionIteratorRebindsNamedErrorMsg" xml:space="preserve">
+  <data name="NamedExpressionIteratorRebindsNamedErrorMsg" xml:space="preserve">
     <value>comprehension inner loop cannot rebind assignment expression target '{0}'</value>
   </data>
-	<data name="NamedExpressionRebindIteratorErrorMsg" xml:space="preserve">
+  <data name="NamedExpressionRebindIteratorErrorMsg" xml:space="preserve">
     <value>assignment expression cannot rebind comprehension iteration variable '{0}'</value>
   </data>
-	<data name="NonKeywordArgAfterKeywordArgErrorMsg" xml:space="preserve">
+  <data name="NonKeywordArgAfterKeywordArgErrorMsg" xml:space="preserve">
     <value>non-keyword arg after keyword arg</value>
   </data>
-	<data name="NonLocalDeclarationAtModuleErrorMsg" xml:space="preserve">
+  <data name="NonLocalDeclarationAtModuleErrorMsg" xml:space="preserve">
     <value>nonlocal declaration not allowed at module level</value>
   </data>
-	<data name="NotAChanceErrorMsg" xml:space="preserve">
+  <data name="NotAChanceErrorMsg" xml:space="preserve">
     <value>not a chance</value>
   </data>
-	<data name="NumberSignFStringExpressionErrorMsg" xml:space="preserve">
+  <data name="NumberSignFStringExpressionErrorMsg" xml:space="preserve">
     <value>f-string expression part cannot include '#'</value>
   </data>
-	<data name="OnlyOneAllowedDoubleErrorMsg" xml:space="preserve">
+  <data name="OnlyOneAllowedDoubleErrorMsg" xml:space="preserve">
     <value>only one ** allowed</value>
   </data>
-	<data name="OnlyOneAllowedSingleErrorMsg" xml:space="preserve">
+  <data name="OnlyOneAllowedSingleErrorMsg" xml:space="preserve">
     <value>only one * allowed</value>
   </data>
-	<data name="ParameterAnnotationsRequire3dotXErrorMsg" xml:space="preserve">
+  <data name="ParameterAnnotationsRequire3dotXErrorMsg" xml:space="preserve">
     <value>invalid syntax, parameter annotations require 3.x</value>
   </data>
-	<data name="ParsingAlreadyStartedErrorMsg" xml:space="preserve">
+  <data name="ParsingAlreadyStartedErrorMsg" xml:space="preserve">
     <value>Parsing already started. Use Restart to start again.</value>
   </data>
-	<data name="PositionalArgumentKeywardArgumentErrorMsg" xml:space="preserve">
+  <data name="PositionalArgumentKeywardArgumentErrorMsg" xml:space="preserve">
     <value>positional argument follows keyword argument</value>
   </data>
-	<data name="PositionalArgumentKeywardArgumentUnpackingErrorMsg" xml:space="preserve">
+  <data name="PositionalArgumentKeywardArgumentUnpackingErrorMsg" xml:space="preserve">
     <value>positional argument follows keyword argument unpacking</value>
   </data>
-	<data name="PositionalOnlyMarkerAfterDictArgsErrorMsg" xml:space="preserve">
+  <data name="PositionalOnlyMarkerAfterDictArgsErrorMsg" xml:space="preserve">
     <value>positional only marker after ** args not allowed</value>
   </data>
-	<data name="PositionalOnlyMarkerAfterListArgsErrorMsg" xml:space="preserve">
+  <data name="PositionalOnlyMarkerAfterListArgsErrorMsg" xml:space="preserve">
     <value>positional only marker after * args not allowed</value>
   </data>
-	<data name="PositionalOnlyMarkerAnnotationErrorMsg" xml:space="preserve">
+  <data name="PositionalOnlyMarkerAnnotationErrorMsg" xml:space="preserve">
     <value>positional only marker may not have annotation</value>
   </data>
-	<data name="PositionalOnlyMarkerDefaultErrorMsg" xml:space="preserve">
+  <data name="PositionalOnlyMarkerDefaultErrorMsg" xml:space="preserve">
     <value>positional only marker may not have default</value>
   </data>
-	<data name="PositionalOnlyMarkerDuplicateErrorMsg" xml:space="preserve">
+  <data name="PositionalOnlyMarkerDuplicateErrorMsg" xml:space="preserve">
     <value>duplicate positional only marker</value>
   </data>
-	<data name="PositionalOnlyMarkerFirstParamErrorMessage" xml:space="preserve">
+  <data name="PositionalOnlyMarkerFirstParamErrorMessage" xml:space="preserve">
     <value>positional only marker may not be first parameter</value>
   </data>
-	<data name="PositionalParameterNotAllowedErrorMsg" xml:space="preserve">
+  <data name="PositionalParameterNotAllowedErrorMsg" xml:space="preserve">
     <value>positional parameter after * args not allowed</value>
   </data>
-	<data name="ReturnAnnotationsRequire3dotXErrorMsg" xml:space="preserve">
+  <data name="ReturnAnnotationsRequire3dotXErrorMsg" xml:space="preserve">
     <value>invalid syntax, return annotations require 3.x</value>
   </data>
-	<data name="ReturnOutsideFunctionErrorMsg" xml:space="preserve">
+  <data name="ReturnOutsideFunctionErrorMsg" xml:space="preserve">
     <value>'return' outside function</value>
   </data>
-	<data name="ReturnWithArgumentInGeneratorErrorMsg" xml:space="preserve">
+  <data name="ReturnWithArgumentInGeneratorErrorMsg" xml:space="preserve">
     <value>'return' with argument inside generator</value>
   </data>
-	<data name="SetLiteralsRequirePython2dot7ErrorMsg" xml:space="preserve">
+  <data name="SetLiteralsRequirePython2dot7ErrorMsg" xml:space="preserve">
     <value>invalid syntax, set literals require Python 2.7 or later.</value>
   </data>
-	<data name="SingleClosedBraceFStringErrorMsg" xml:space="preserve">
+  <data name="SingleClosedBraceFStringErrorMsg" xml:space="preserve">
     <value>f-string: single '}' is not allowed</value>
   </data>
-	<data name="SingleTargetCanBeAnnotatedErrorMsg" xml:space="preserve">
+  <data name="SingleTargetCanBeAnnotatedErrorMsg" xml:space="preserve">
     <value>only single target (not tuple) can be annotated</value>
   </data>
-	<data name="SublistParametersNotSupported3dotXErrorMsg" xml:space="preserve">
+  <data name="SublistParametersNotSupported3dotXErrorMsg" xml:space="preserve">
     <value>sublist parameters are not supported in 3.x</value>
   </data>
-	<data name="SyntaxErrorMsg" xml:space="preserve">
+  <data name="SyntaxErrorMsg" xml:space="preserve">
     <value>syntax error</value>
   </data>
-	<data name="TwoStarredExpressionErrorMsg" xml:space="preserve">
+  <data name="TwoStarredExpressionErrorMsg" xml:space="preserve">
     <value>two starred expressions in assignment</value>
   </data>
-	<data name="UnexpectedEndOfFileErrorMsg" xml:space="preserve">
+  <data name="UnexpectedEndOfFileErrorMsg" xml:space="preserve">
     <value>unexpected end of file</value>
   </data>
-	<data name="UnexpectedEndOfFileWhileParsingErrorMsg" xml:space="preserve">
+  <data name="UnexpectedEndOfFileWhileParsingErrorMsg" xml:space="preserve">
     <value>unexpected EOF while parsing</value>
   </data>
-	<data name="UnexpectedIndentErrorMsg" xml:space="preserve">
+  <data name="UnexpectedIndentErrorMsg" xml:space="preserve">
     <value>unexpected indent</value>
   </data>
-	<data name="UnexpectedTokenErrorMsg" xml:space="preserve">
+  <data name="UnexpectedTokenErrorMsg" xml:space="preserve">
     <value>unexpected token '{0}'</value>
   </data>
-	<data name="UnhandledStringTokenErrorMsg" xml:space="preserve">
+  <data name="UnhandledStringTokenErrorMsg" xml:space="preserve">
     <value>Unhandled string token</value>
   </data>
-	<data name="UnknownEncodingErrorMsg" xml:space="preserve">
+  <data name="UnknownEncodingErrorMsg" xml:space="preserve">
     <value>encoding problem: unknown encoding (line {0})</value>
   </data>
-	<data name="UnmatchedFStringErrorMsg" xml:space="preserve">
+  <data name="UnmatchedFStringErrorMsg" xml:space="preserve">
     <value>f-string: unmatched '{0}'</value>
   </data>
-	<data name="Utf8EncodingErrorMsg" xml:space="preserve">
+  <data name="Utf8EncodingErrorMsg" xml:space="preserve">
     <value>file has both Unicode marker and PEP-263 file encoding.  You must use \"utf-8\" as the encoding name when a BOM is present.</value>
   </data>
-	<data name="VariableIn3dotXErrorMsg" xml:space="preserve">
+  <data name="VariableIn3dotXErrorMsg" xml:space="preserve">
     <value>", variable" not allowed in 3.x - use "as variable" instead.</value>
   </data>
-	<data name="YieldInsideAsyncErrorMsg" xml:space="preserve">
+  <data name="YieldInsideAsyncErrorMsg" xml:space="preserve">
     <value>'yield' inside async function</value>
+  </data>
+  <data name="PythonVersionNotSupportedTraceText" xml:space="preserve">
+    <value>Environment detected using Python version {0}. Some features might not work as expected since Visual Studio does not officially support this version.</value>
+    <comment>{0} is the Python version</comment>
   </data>
 </root>

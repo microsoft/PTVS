@@ -554,4 +554,7 @@ Please delete the installed template and try again.</value>
     <value>Found redirected environment at '{0}'</value>
     <comment>{0} is a folder path</comment>
   </data>
+  <data name="GitFailedToRunError" xml:space="preserve">
+    <value>Git.exe failed to run. Please install Git, add it to PATH and try again.</value>
+  </data>
 </root>

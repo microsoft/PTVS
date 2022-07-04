@@ -6523,11 +6523,20 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to You&apos;re using Python {0}. Some features might not work as expected since Visual Studio no longer supports this version..
+        ///   Looks up a localized string similar to You&apos;re using {0}. Some features might not work as expected since Visual Studio does not officially support this version..
         /// </summary>
         public static string PythonVersionNotSupportedInfoBarText {
             get {
                 return ResourceManager.GetString("PythonVersionNotSupportedInfoBarText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Environment detected using Python version {0}. Some features might not work as expected since Visual Studio does not officially support this version..
+        /// </summary>
+        public static string PythonVersionNotSupportedTraceText {
+            get {
+                return ResourceManager.GetString("PythonVersionNotSupportedTraceText", resourceCulture);
             }
         }
         
