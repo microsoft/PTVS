@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Diagnostics;
 using Microsoft.PythonTools.Common.Core;
 using Microsoft.PythonTools.Common.Core.Extensions;
 
@@ -59,8 +60,10 @@ namespace Microsoft.PythonTools.Common.Parsing {
             if (Enum.IsDefined(typeof(PythonLanguageVersion), value)) {
                 return (PythonLanguageVersion)value;
             }
-            throw new InvalidOperationException("Unsupported Python version: {0}".FormatInvariant(version));
+            else {
+                Trace.WriteLine(Strings.PythonVersionNotSupportedTraceText.FormatUI(version));
+                return PythonLanguageVersion.None;
+            }
         }
-
     }
 }

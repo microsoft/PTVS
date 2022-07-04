@@ -6474,13 +6474,22 @@
       </Item>
       <Item ItemId=";PythonVersionNotSupportedInfoBarText" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[You're using Python {0}. Some features might not work as expected since Visual Studio no longer supports this version.]]></Val>
+          <Val><![CDATA[You're using {0}. Some features might not work as expected since Visual Studio does not officially support this version.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Používáte Python {0}. Některé funkce možná nebudou fungovat podle očekávání, protože sada Visual Studio už tuto verzi oficiálně nepodporuje.]]></Val>
+            <Val><![CDATA[Používáte {0}. Některé funkce možná nebudou fungovat podle očekávání, protože sada Visual Studio už tuto verzi oficiálně nepodporuje.]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[You're using Python {0}. Some new features might not work as expected until Visual Studio officially supports this version.]]></Val>
+            <Val><![CDATA[You're using Python {0}. Some features might not work as expected since Visual Studio no longer supports this version.]]></Val>
           </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PythonVersionNotSupportedTraceText" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Environment detected using Python version {0}. Some features might not work as expected since Visual Studio does not officially support this version.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Zjistilo se prostředí používající verzi Pythonu {0}. Některé funkce možná nebudou fungovat podle očekávání, protože sada Visual Studio už tuto verzi oficiálně nepodporuje.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>

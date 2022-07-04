@@ -308,6 +308,15 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Git.exe failed to run. Please install Git, add it to PATH and try again..
+        /// </summary>
+        public static string GitFailedToRunError {
+            get {
+                return ResourceManager.GetString("GitFailedToRunError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not retrieve results from GitHub.
         /// </summary>
         public static string GitHubSearchError {

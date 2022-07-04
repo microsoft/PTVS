@@ -12,6 +12,13 @@
     <RootNamespace>TestUtilities.Python</RootNamespace>
     <AssemblyName>TestUtilities.Python</AssemblyName>
     <FileAlignment>512</FileAlignment>
+    <UseCodebase>true</UseCodebase>
+    <UseVSSDK>true</UseVSSDK>
+    <CreateVsixContainer>true</CreateVsixContainer>
+    <DeployExtension>$(BuildingInsideVisualStudio)</DeployExtension>
+    <IsProductComponent>true</IsProductComponent>
+    <ExtensionInstallationRoot>Extensions</ExtensionInstallationRoot>
+    <ExtensionInstallationFolder>Microsoft\PythonTests\TestUtilities</ExtensionInstallationFolder>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -51,10 +58,12 @@
     <Reference Include="UIAutomationTypes" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="$(BuildRoot)\Common\Tests\MockVsTests\MockVsTests.csproj">
       <Project>{a390e1c0-0d90-4a9e-8413-3e959bb07292}</Project>
       <Name>MockVsTests</Name>
+      <IncludeInVsix>true</IncludeInVsix>
     </ProjectReference>
     <ProjectReference Include="$(BuildRoot)\Common\Tests\SccPackage\TestSccPackage.csproj">
       <Project>{e75e5db1-0ea0-4247-a830-fe467c016816}</Project>
@@ -71,14 +80,17 @@
     <ProjectReference Include="$(BuildRoot)\Common\Tests\Utilities.UI\TestUtilities.UI.csproj">
       <Project>{E8150EBC-6B62-40BF-BF91-1DC60149B530}</Project>
       <Name>TestUtilities.UI</Name>
+      <IncludeInVsix>true</IncludeInVsix>
     </ProjectReference>
     <ProjectReference Include="$(BuildRoot)\Common\Tests\Utilities\TestUtilities.csproj">
       <Project>{d092d54e-ff29-4d32-9aee-4ef704c92f67}</Project>
       <Name>TestUtilities</Name>
+      <IncludeInVsix>true</IncludeInVsix>
     </ProjectReference>
     <ProjectReference Include="..\Utilities.Python.Analysis\TestUtilities.Python.Analysis.csproj">
       <Project>{a731c4c3-3741-4080-a946-c47574c1f3bf}</Project>
       <Name>TestUtilities.Python.Analysis</Name>
+      <IncludeInVsix>true</IncludeInVsix>
     </ProjectReference>
     <ProjectReference Include="..\..\Product\Common\Common.csproj">
       <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>

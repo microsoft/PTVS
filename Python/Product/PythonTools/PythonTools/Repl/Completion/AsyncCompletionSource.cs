@@ -126,18 +126,17 @@ namespace Microsoft.PythonTools.Repl.Completion {
                 var content = protocolItem.Documentation.Value.Match(
                     s => s,
                     markupContent => {
-                        switch (markupContent.Kind) {
-                            case LSP.MarkupKind.Markdown:
-                                var codeBlocks = MarkdownUtil.ExtractCodeBlocks(markupContent.Value);
-                                var joinedBlocks = string.Join(Environment.NewLine, codeBlocks);
-                                if (string.IsNullOrEmpty(joinedBlocks)) {
-                                    return null;
-                                }
+                        if (markupContent.Kind == LSP.MarkupKind.Markdown) {
+                            var codeBlocks = MarkdownUtil.ExtractCodeBlocks(markupContent.Value);
+                            var joinedBlocks = string.Join(Environment.NewLine, codeBlocks);
+                            if (string.IsNullOrEmpty(joinedBlocks)) {
+                                return null;
+                            }
 
-                                return joinedBlocks;
-                            case LSP.MarkupKind.PlainText:
-                            default:
-                                return markupContent.Value;
+                            return joinedBlocks;
+                        }
+                        else {
+                            return markupContent.Value;
                         }
                     });
 
@@ -454,7 +453,7 @@ namespace Microsoft.PythonTools.Repl.Completion {
 
             // See if this is from a text edit
             if (item?.TextEdit != null) {
-                result = item.TextEdit.Range.ToSnapshotSpan(applicablePoint.Snapshot);
+                result = item.TextEdit.Range.ToSnapshotSpan(owningSnapshot);
             } else {
                 // Fallback to extent of word. At least, it will be a zero-length span at the trigger pointzero-
                 // walk left and right until we reach the end of the word
@@ -477,7 +476,7 @@ namespace Microsoft.PythonTools.Repl.Completion {
             }
 
             // If the original snapshot is a projection snapshot, map up to it
-            if (owningSnapshot is IProjectionSnapshot projectionSnapshot) {
+            if (owningSnapshot is IProjectionSnapshot projectionSnapshot && result.Snapshot != owningSnapshot) {
                 var spans = projectionSnapshot.MapFromSourceSnapshot(result);
                 if (spans != null && spans.Count > 0) {
                     result = new SnapshotSpan(projectionSnapshot, spans[0]);

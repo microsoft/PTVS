@@ -316,9 +316,7 @@ namespace Microsoft.PythonTools.Interpreter {
             var arch = CPythonInterpreterFactoryProvider.ArchitectureFromExe(interpreterPath);
             var version = CPythonInterpreterFactoryProvider.VersionFromSysVersionInfo(interpreterPath);
 
-            try {
-                version.ToLanguageVersion();
-            } catch (InvalidOperationException) {
+            if (version.ToLanguageVersion() == PythonLanguageVersion.None) {
                 version = new Version(0, 0);
             }
 
