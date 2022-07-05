@@ -22,11 +22,18 @@ namespace Microsoft.PythonTools.Options {
     public partial class PythonDebuggingOptionsControl : UserControl {
         public PythonDebuggingOptionsControl() {
             InitializeComponent();
+            var presentationModes = new Dictionary<PresentationMode, string> {
+                { PresentationMode.Group, Strings.VariablePresentation_Group },
+                { PresentationMode.Hide, Strings.VariablePresentation_Hide },
+                { PresentationMode.Inline, Strings.VariablePresentation_Inline },
+            };
 
             // set allowed values for the variable presentation options
             var varPresComboBoxes = new List<ComboBox> { _showVariablesClassComboBox, _showVariablesFunctionComboBox, _showVariablesProtectedComboBox, _showVariablesSpecialComboBox };
-            foreach (var varPresComboBox in varPresComboBoxes) {
-                varPresComboBox.DataSource = Enum.GetValues(typeof(PresentationMode));
+            foreach(var varPresComboBox in varPresComboBoxes) {
+                varPresComboBox.DataSource = new BindingSource(presentationModes, null);
+                varPresComboBox.ValueMember = "Key";
+                varPresComboBox.DisplayMember = "Value";
             }
         }
 
@@ -40,10 +47,10 @@ namespace Microsoft.PythonTools.Options {
             _showFunctionReturnValue.Checked = pyService.DebuggerOptions.ShowFunctionReturnValue;
 
             // variable presentation
-            _showVariablesClassComboBox.SelectedItem = pyService.DebuggerOptions.VariablePresentationForClasses;
-            _showVariablesFunctionComboBox.SelectedItem = pyService.DebuggerOptions.VariablePresentationForFunctions;
-            _showVariablesProtectedComboBox.SelectedItem = pyService.DebuggerOptions.VariablePresentationForProtected;
-            _showVariablesSpecialComboBox.SelectedItem = pyService.DebuggerOptions.VariablePresentationForSpecial;
+            _showVariablesClassComboBox.SelectedValue = pyService.DebuggerOptions.VariablePresentationForClasses;
+            _showVariablesFunctionComboBox.SelectedValue = pyService.DebuggerOptions.VariablePresentationForFunctions;
+            _showVariablesProtectedComboBox.SelectedValue = pyService.DebuggerOptions.VariablePresentationForProtected;
+            _showVariablesSpecialComboBox.SelectedValue = pyService.DebuggerOptions.VariablePresentationForSpecial;
         }
 
         internal void SyncPageWithControlSettings(PythonToolsService pyService) {
@@ -56,10 +63,10 @@ namespace Microsoft.PythonTools.Options {
             pyService.DebuggerOptions.ShowFunctionReturnValue = _showFunctionReturnValue.Checked;
 
             // variable presentation
-            pyService.DebuggerOptions.VariablePresentationForClasses = (PresentationMode)_showVariablesClassComboBox.SelectedItem;
-            pyService.DebuggerOptions.VariablePresentationForFunctions = (PresentationMode)_showVariablesFunctionComboBox.SelectedItem;
-            pyService.DebuggerOptions.VariablePresentationForProtected = (PresentationMode)_showVariablesProtectedComboBox.SelectedItem;
-            pyService.DebuggerOptions.VariablePresentationForSpecial = (PresentationMode)_showVariablesSpecialComboBox.SelectedItem;
+            pyService.DebuggerOptions.VariablePresentationForClasses = (PresentationMode)_showVariablesClassComboBox.SelectedValue;
+            pyService.DebuggerOptions.VariablePresentationForFunctions = (PresentationMode)_showVariablesFunctionComboBox.SelectedValue;
+            pyService.DebuggerOptions.VariablePresentationForProtected = (PresentationMode)_showVariablesProtectedComboBox.SelectedValue;
+            pyService.DebuggerOptions.VariablePresentationForSpecial = (PresentationMode)_showVariablesSpecialComboBox.SelectedValue;
         }
     }
 }

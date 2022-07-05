@@ -8778,6 +8778,33 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Group.
+        /// </summary>
+        public static string VariablePresentation_Group {
+            get {
+                return ResourceManager.GetString("VariablePresentation_Group", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hide.
+        /// </summary>
+        public static string VariablePresentation_Hide {
+            get {
+                return ResourceManager.GetString("VariablePresentation_Hide", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Inline.
+        /// </summary>
+        public static string VariablePresentation_Inline {
+            get {
+                return ResourceManager.GetString("VariablePresentation_Inline", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to create or add the virtual environment. See the Output window for details..
         /// </summary>
         public static string VirtualEnvAddFailed {
