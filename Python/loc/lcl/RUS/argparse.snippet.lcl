@@ -8,7 +8,7 @@
   <Settings Name="@SettingsPath@\default.lss" Type="Lss" />
   <Item ItemId=";&lt;Description&gt;" ItemType="0" PsrId="210" Leaf="false">
     <Disp Icon="Str" Disp="true" LocTbl="false" />
-    <Item ItemId="0;efc9719c9afe3a8265e2a7e511a1cdc6" ItemType="42;XML:Text" PsrId="210" Leaf="true">
+    <Item ItemId="0;efc9719c9afe3a8265e2a7e511a1cdc6" ItemType="42;XML:Text" PsrId="210" Leaf="True">
       <Str Cat="AppData">
         <Val><![CDATA[Code snippet for a function to parse arguments using argparse]]></Val>
         <Tgt Cat="AppData" Stat="Loc" Orig="New">
