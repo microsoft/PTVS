@@ -207,7 +207,7 @@ actual inspection and introspection."""
                 except timeout_exc_types: 
                     r, w, x = select.select([], [], [self.conn], 0)
                     if x:
-                        # an exception event has occured on the socket...
+                        # an exception event has occurred on the socket...
                         raise
                     continue
 
@@ -423,7 +423,7 @@ actual inspection and introspection."""
             write_string(self.conn, os.getcwd())
 
     def send_error(self):
-        """reports that an error occured to the interactive window"""
+        """reports that an error occurred to the interactive window"""
         with self.send_lock:
             write_bytes(self.conn, ReplBackend._ERRE)
 

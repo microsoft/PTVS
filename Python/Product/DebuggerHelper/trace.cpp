@@ -130,7 +130,7 @@ struct DebuggerString {
     }
 };
 
-// Information about active breakpoints, communucated by debugger to be used by TraceFunc.
+// Information about active breakpoints, communicated by debugger to be used by TraceFunc.
 struct BreakpointData {
     // Highest line number for which there is a breakpoint (and therefore an element in lineNumbers).
     int32_t maxLineNumber;
@@ -234,7 +234,7 @@ __declspec(dllexport)
 volatile uint64_t evalLoopExcStr; // pointer to str(exc_value)
 
 __declspec(dllexport)
-volatile uint32_t evalLoopSEHCode; // if a structured exception occured during eval, the return value of GetExceptionCode
+volatile uint32_t evalLoopSEHCode; // if a structured exception occurred during eval, the return value of GetExceptionCode
 
 #pragma pack(pop)
 
