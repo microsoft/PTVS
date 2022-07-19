@@ -103,7 +103,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                 LogInfo(Strings.PythonTestDiscovererStartedMessage.FormatUI(PythonConstants.PytestText, sources.ToArray()[0], Strings.SourceText, settings.DiscoveryWaitTimeInSeconds));
                 foreach (var tc in testcases) {
                     // Note: Test Explorer will show a key not found exception if we use a source path that doesn't match a test container's source.
-                        if (tc.CodeFilePath == sources.ToArray()[0] && settings.TestContainerSources.TryGetValue(tc.CodeFilePath, out _)) {
+                    if (tc.CodeFilePath == sources.ToArray()[0] && settings.TestContainerSources.TryGetValue(tc.CodeFilePath, out _)) {
                         discoverySink.SendTestCase(tc);
                     }
                 }

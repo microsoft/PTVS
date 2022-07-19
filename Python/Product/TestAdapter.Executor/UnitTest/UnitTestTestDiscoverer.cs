@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
             var env = InitializeEnvironment(sources, settings);
             var outputFilePath = Path.GetTempFileName();
             var arguments = GetArguments(sources, settings, outputFilePath);
-            
+
             //LogInfo("cd " + settings.WorkingDirectory);
             //LogInfo("set " + settings.PathEnv + "=" + env[settings.PathEnv]);
             //LogInfo($"{settings.InterpreterPath} {string.Join(" ", arguments)}");

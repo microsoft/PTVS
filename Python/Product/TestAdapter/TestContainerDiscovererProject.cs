@@ -152,7 +152,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             _testFilesUpdateWatcher = new TestFilesUpdateWatcher();
             _testFilesUpdateWatcher.FileChangedEvent += OnProjectItemChanged;
             oldTestFilesUpdateWatcher?.Dispose();
-            
+
             try {
                 // add all source files
                 var solution = (IVsSolution)_serviceProvider.GetService(typeof(SVsSolution));
@@ -317,7 +317,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         public void UpdateContainersAndListeners(IEnumerable<string> sources, ProjectInfo projInfo, bool isAdd) {
             if (projInfo == null)
                 return;
-          
+
             foreach (var path in sources) {
                 if (isAdd) {
                     projInfo.AddTestContainer(this, path);
