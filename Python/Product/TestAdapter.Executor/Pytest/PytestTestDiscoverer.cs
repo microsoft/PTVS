@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             
         }
 
-        public override void DiscoverTests(
+        public override void DiscoverTestsForProject(
             IEnumerable<string> sources,
             PythonProjectSettings settings,
             IMessageLogger logger,
@@ -59,16 +59,16 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
 
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            var workspaceText = settings.IsWorkspace ? Strings.WorkspaceText : Strings.ProjectText;
-            LogInfo(Strings.PythonTestDiscovererStartedMessage.FormatUI(PythonConstants.PytestText, settings.ProjectName, workspaceText, settings.DiscoveryWaitTimeInSeconds));
+            //var workspaceText = settings.IsWorkspace ? Strings.WorkspaceText : Strings.ProjectText;
+            //LogInfo(Strings.PythonTestDiscovererStartedMessage.FormatUI(PythonConstants.PytestText, settings.ProjectName, workspaceText, settings.DiscoveryWaitTimeInSeconds));
 
             var env = InitializeEnvironment(sources, settings);
             var outputFilePath = Path.GetTempFileName();
             var arguments = GetArguments(sources, settings, outputFilePath);
 
-            LogInfo("cd " + settings.WorkingDirectory);
-            LogInfo("set " + settings.PathEnv + "=" + env[settings.PathEnv]);
-            LogInfo($"{settings.InterpreterPath} {string.Join(" ", arguments)}");
+            //LogInfo("cd " + settings.WorkingDirectory);
+            //LogInfo("set " + settings.PathEnv + "=" + env[settings.PathEnv]);
+            //LogInfo($"{settings.InterpreterPath} {string.Join(" ", arguments)}");
 
             try {
                 var stdout = ProcessExecute.RunWithTimeout(
@@ -100,10 +100,10 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             try {
                 var results = JsonConvert.DeserializeObject<List<PytestDiscoveryResults>>(json);
                 var testcases = ParseDiscoveryResults(results, settings.ProjectHome);
-
+                LogInfo(Strings.PythonTestDiscovererStartedMessage.FormatUI(PythonConstants.PytestText, sources.ToArray()[0], Strings.SourceText, settings.DiscoveryWaitTimeInSeconds));
                 foreach (var tc in testcases) {
                     // Note: Test Explorer will show a key not found exception if we use a source path that doesn't match a test container's source.
-                    if (settings.TestContainerSources.TryGetValue(tc.CodeFilePath, out _)) {
+                        if (tc.CodeFilePath == sources.ToArray()[0] && settings.TestContainerSources.TryGetValue(tc.CodeFilePath, out _)) {
                         discoverySink.SendTestCase(tc);
                     }
                 }

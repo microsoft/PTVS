@@ -73,7 +73,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                 try {
                     var discovery = new PytestTestDiscoverer();
-                    discovery.DiscoverTests(testGroup, settings, frameworkHandle, testCollection);
+                    discovery.DiscoverTestsForProject(testGroup, settings, frameworkHandle, testCollection);
                 } catch (Exception ex) {
                     frameworkHandle.SendMessage(TestMessageLevel.Error, ex.Message);
                 }

@@ -3428,4 +3428,7 @@ Please specify at least one package.</value>
   <data name="VariablePresentation_Inline" xml:space="preserve">
     <value>Inline</value>
   </data>
+  <data name="SourceText" xml:space="preserve">
+    <value>source</value>
+  </data>
 </root>

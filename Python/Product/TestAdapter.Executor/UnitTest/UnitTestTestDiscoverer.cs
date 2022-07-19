@@ -41,7 +41,7 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
         public UnittestTestDiscoverer() : base(TestFrameworkType.UnitTest) {
         }
 
-        public override void DiscoverTests(
+        public override void DiscoverTestsForProject(
             IEnumerable<string> sources,
             PythonProjectSettings settings,
             IMessageLogger logger,
@@ -57,16 +57,16 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
 
             _logger = logger ?? throw new ArgumentNullException(nameof(logger)); 
 
-            var workspaceText = settings.IsWorkspace ? Strings.WorkspaceText : Strings.ProjectText;
-            LogInfo(Strings.PythonTestDiscovererStartedMessage.FormatUI(PythonConstants.UnitTestText, settings.ProjectName, workspaceText, settings.DiscoveryWaitTimeInSeconds));
+            // var workspaceText = settings.IsWorkspace ? Strings.WorkspaceText : Strings.ProjectText;
+            // LogInfo(Strings.PythonTestDiscovererStartedMessage.FormatUI(PythonConstants.UnitTestText, settings.ProjectName, workspaceText, settings.DiscoveryWaitTimeInSeconds));
 
             var env = InitializeEnvironment(sources, settings);
             var outputFilePath = Path.GetTempFileName();
             var arguments = GetArguments(sources, settings, outputFilePath);
-
-            LogInfo("cd " + settings.WorkingDirectory);
-            LogInfo("set " + settings.PathEnv + "=" + env[settings.PathEnv]);
-            LogInfo($"{settings.InterpreterPath} {string.Join(" ", arguments)}");
+            
+            //LogInfo("cd " + settings.WorkingDirectory);
+            //LogInfo("set " + settings.PathEnv + "=" + env[settings.PathEnv]);
+            //LogInfo($"{settings.InterpreterPath} {string.Join(" ", arguments)}");
 
             try {
                 var stdout = ProcessExecute.RunWithTimeout(
@@ -101,7 +101,7 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
 
                 foreach (var tc in testcases) {
                     // Note: Test Explorer will show a key not found exception if we use a source path that doesn't match a test container's source.
-                    if (settings.TestContainerSources.TryGetValue(tc.CodeFilePath, out _)) {
+                    if (tc.CodeFilePath == sources.ToArray()[0] && settings.TestContainerSources.TryGetValue(tc.CodeFilePath, out _)) {
                         discoverySink.SendTestCase(tc);
                     }
                 }
@@ -138,16 +138,22 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
 
         public string[] GetArguments(IEnumerable<string> sources, PythonProjectSettings settings, string outputfilename) {
             var arguments = new List<string>();
-            arguments.Add(DiscoveryAdapterPath);
-            arguments.Add("discover");
-            arguments.Add("unittest");
-            arguments.Add("--output-file");
-            arguments.Add(outputfilename);
-            //Note unittest specific options go after this separator
-            arguments.Add("--");
-            arguments.Add(settings.UnitTestRootDir);
-            arguments.Add(settings.UnitTestPattern);
-
+            foreach (var source in sources.ToArray()) {
+                var testRootDir = PathUtils.GetAbsoluteDirectoryPath(settings.ProjectHome, settings.UnitTestRootDir);
+                // only return valid arguments when source is a subpath of test root directory
+                if (PathUtils.IsSamePath(PathUtils.GetParent(source), testRootDir)) {
+                    arguments.Add(DiscoveryAdapterPath);
+                    arguments.Add("discover");
+                    arguments.Add("unittest");
+                    arguments.Add("--output-file");
+                    arguments.Add(outputfilename);
+                    //Note unittest specific options go after this separator
+                    arguments.Add("--");
+                    arguments.Add(settings.UnitTestRootDir);
+                    arguments.Add(settings.UnitTestPattern);
+                    break;
+                }
+            }
             return arguments.ToArray();
         }
 

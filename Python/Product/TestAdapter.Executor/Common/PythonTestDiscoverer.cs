@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             _frameworkType = frameworkType;
         }
 
-        abstract public void DiscoverTests(
+        abstract public void DiscoverTestsForProject(
            IEnumerable<string> sources,
            PythonProjectSettings settings,
            IMessageLogger logger,
@@ -77,7 +77,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
 
             try {
-                DiscoverTests(testGroup, settings, logger, discoverySink);
+                DiscoverTestsForProject(testGroup, settings, logger, discoverySink);
             } catch (Exception ex) {
                 logger.SendMessage(TestMessageLevel.Error, ex.Message);
             }

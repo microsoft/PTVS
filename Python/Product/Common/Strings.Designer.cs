@@ -7759,6 +7759,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to source.
+        /// </summary>
+        public static string SourceText {
+            get {
+                return ResourceManager.GetString("SourceText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to If checked, a space is added before and after &apos;-&gt;&apos; operators in function definitions. If unchecked, spaces are removed. Otherwise, spaces are not modified..
         /// </summary>
         public static string SpaceAroundAnnotationArrowLong {
