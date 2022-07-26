@@ -176,17 +176,29 @@
                         Command="{x:Static l:AddEnvironmentDialog.MoreInfo}"/>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button
-                            Style="{DynamicResource {x:Static ptwpf:ModernStyles.ThemedDialogButtonStyleKey}}"
                             IsDefault="True"
                             MinWidth="90"
                             MinHeight="29"
                             Margin="0"
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Center"
-                            IsEnabled="{Binding Path=PagesView/IsAcceptEnabled}"
                             Click="OkClick"
                             AutomationProperties.Name="{Binding Path=PagesView/AcceptAutomationName}"
                             AutomationProperties.AutomationId="AddButton">
+                            <Button.Style>
+                                <Style TargetType="{x:Type Button}">
+                                    <Setter Property="IsEnabled" Value="false" />
+                                    <Style.Triggers>
+                                        <MultiDataTrigger>
+                                            <MultiDataTrigger.Conditions>
+                                                <Condition Binding="{Binding Path=PagesView/IsAcceptEnabled}" Value="true" PresentationTraceSources.TraceLevel="High"/>
+                                                <Condition Binding="{Binding ElementName=EnvNameTextBox, Path=(Validation.HasError)}" Value="false" PresentationTraceSources.TraceLevel="High"/>
+                                            </MultiDataTrigger.Conditions>
+                                            <Setter Property="IsEnabled" Value="true" />
+                                        </MultiDataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
                             <Button.Content>
                                 <StackPanel Orientation="Horizontal">
                                     <Image

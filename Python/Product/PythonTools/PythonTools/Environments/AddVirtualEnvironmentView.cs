@@ -22,6 +22,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.PlatformUI;
@@ -293,7 +294,7 @@ namespace Microsoft.PythonTools.Environments {
                 WillCreateVirtualEnv = false;
                 CannotCreateVirtualEnv = false;
                 NoInterpretersInstalled = true;
-            } else if (!IsValidVirtualEnvPath(path) || BaseInterpreter == null || IsFolderNotEmpty(path) || IsInvalidDescription()) {
+            } else if (!PathUtils.IsValidFile(VirtualEnvName) || !IsValidVirtualEnvPath(path) || BaseInterpreter == null || IsFolderNotEmpty(path) || IsInvalidDescription()) {
                 WillCreateVirtualEnv = false;
                 CannotCreateVirtualEnv = true;
                 NoInterpretersInstalled = false;
@@ -333,9 +334,8 @@ namespace Microsoft.PythonTools.Environments {
             CanInstallRequirementsTxt = File.Exists(RequirementsPath);
             WillInstallRequirementsTxt = CanInstallRequirementsTxt && WillCreateVirtualEnv;
             WillRegisterGlobally = IsRegisterCustomEnv && canRegisterGlobally && WillCreateVirtualEnv;
-
-            // For now, we enable but prompt when they click accept
-            //IsAcceptEnabled = WillCreateVirtualEnv && !Progress.IsProgressDisplayed;
+            
+            // Otherwise, enable the button and possibly prompt when they click accept
             IsAcceptEnabled = !Progress.IsProgressDisplayed;
             AcceptCaption = Strings.AddEnvironmentCreateButton;
             AcceptAutomationName = Strings.AddEnvironmentCreateButtonAutomationName;

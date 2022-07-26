@@ -3428,4 +3428,8 @@ Please specify at least one package.</value>
   <data name="VariablePresentation_Inline" xml:space="preserve">
     <value>Inline</value>
   </data>
+  <data name="AddVirtualEnvironmentNameInvalid" xml:space="preserve">
+    <value>Virtual environment name can't contain any of the following characters: {0}</value>
+    <comment>{0} is a list of invalid path characters, space-delimited.</comment>
+  </data>
 </root>
