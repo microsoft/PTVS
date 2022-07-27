@@ -29,6 +29,7 @@ using Microsoft.VisualStudio.PlatformUI;
 namespace Microsoft.PythonTools.Environments {
     sealed class AddVirtualEnvironmentView : EnvironmentViewBase {
         private readonly SemaphoreSlim _ready = new SemaphoreSlim(1);
+        private static readonly string InvalidPrintableFileCharsString = GetInvalidPrintableFileChars();
 
         public AddVirtualEnvironmentView(
             IServiceProvider serviceProvider,
@@ -293,7 +294,7 @@ namespace Microsoft.PythonTools.Environments {
                 WillCreateVirtualEnv = false;
                 CannotCreateVirtualEnv = false;
                 NoInterpretersInstalled = true;
-            } else if (!IsValidVirtualEnvPath(path) || BaseInterpreter == null || IsFolderNotEmpty(path) || IsInvalidDescription()) {
+            } else if (!PathUtils.IsValidFile(VirtualEnvName) || !IsValidVirtualEnvPath(path) || BaseInterpreter == null || IsFolderNotEmpty(path) || IsInvalidDescription()) {
                 WillCreateVirtualEnv = false;
                 CannotCreateVirtualEnv = true;
                 NoInterpretersInstalled = false;
@@ -306,6 +307,8 @@ namespace Microsoft.PythonTools.Environments {
 
             if (string.IsNullOrEmpty(VirtualEnvName.Trim())) {
                 SetError(nameof(VirtualEnvName), Strings.AddVirtualEnvironmentNameEmpty);
+            }  else if (!PathUtils.IsValidFile(VirtualEnvName)) {
+                SetError(nameof(VirtualEnvName), Strings.AddVirtualEnvironmentNameInvalid.FormatUI(InvalidPrintableFileCharsString));
             } else if (!IsValidVirtualEnvPath(path)) {
                 SetError(nameof(VirtualEnvName), Strings.AddVirtualEnvironmentLocationInvalid.FormatUI(path));
             } else if (IsFolderNotEmpty(path)) {
@@ -333,10 +336,10 @@ namespace Microsoft.PythonTools.Environments {
             CanInstallRequirementsTxt = File.Exists(RequirementsPath);
             WillInstallRequirementsTxt = CanInstallRequirementsTxt && WillCreateVirtualEnv;
             WillRegisterGlobally = IsRegisterCustomEnv && canRegisterGlobally && WillCreateVirtualEnv;
-
-            // For now, we enable but prompt when they click accept
-            //IsAcceptEnabled = WillCreateVirtualEnv && !Progress.IsProgressDisplayed;
-            IsAcceptEnabled = !Progress.IsProgressDisplayed;
+            
+            // Enable the Create button only if there are no validation errors,
+            // and if progress is not already being displayed
+            IsAcceptEnabled = !HasErrors && !Progress.IsProgressDisplayed;
             AcceptCaption = Strings.AddEnvironmentCreateButton;
             AcceptAutomationName = Strings.AddEnvironmentCreateButtonAutomationName;
         }
@@ -423,6 +426,14 @@ namespace Microsoft.PythonTools.Environments {
         private void UpdateInterpreter(InterpreterView interpreterView) {
             UpdateInterpreterAsync(interpreterView).HandleAllExceptions(Site, GetType()).DoNotWait();
         }
+
+        // returns a space-delimited string containing invalid chars for a filename
+        private static string GetInvalidPrintableFileChars() {
+            var invalidChars = Path.GetInvalidFileNameChars();
+            var invalidPrintableChars = invalidChars.Where(c => !char.IsControl(c));
+            return string.Join(" ", invalidPrintableChars);
+        }
+
 
         internal async Task UpdateInterpreterAsync(InterpreterView interpreterView) {
             if (!Dispatcher.CheckAccess()) {

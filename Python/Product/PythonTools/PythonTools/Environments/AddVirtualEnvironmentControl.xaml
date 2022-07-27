@@ -142,10 +142,11 @@
                                     Converter={StaticResource ScreenAdjustingConverter}, 
                                     ConverterParameter=249}"
                                 HorizontalAlignment="Left"
-                                Text="{Binding Path=VirtualEnvName,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
+                                Text="{Binding Path=VirtualEnvName,UpdateSourceTrigger=PropertyChanged}"
                                 AutomationProperties.AutomationId="EnvName"
                                 AutomationProperties.IsRequiredForForm="True"
-                                AutomationProperties.LabeledBy="{Binding ElementName=EnvNameLabel}"/>
+                                AutomationProperties.LabeledBy="{Binding ElementName=EnvNameLabel}">
+                            </TextBox>
                             <!--Base interpreter-->
                             <Label
                                 x:Name="BaseInterpreterLabel"

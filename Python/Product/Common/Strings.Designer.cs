@@ -830,6 +830,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Virtual environment name can&apos;t contain any of the following characters: {0}.
+        /// </summary>
+        public static string AddVirtualEnvironmentNameInvalid {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentNameInvalid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to _Name.
         /// </summary>
         public static string AddVirtualEnvironmentNameLabel {

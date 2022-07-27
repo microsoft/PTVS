@@ -24,6 +24,7 @@ using System.Text;
 namespace Microsoft.PythonTools.Infrastructure {
     static class PathUtils {
         private static readonly char[] InvalidPathChars = GetInvalidPathChars();
+        private static readonly char[] InvalidFileChars = Path.GetInvalidFileNameChars();
 
         private static readonly char[] DirectorySeparators = new[] {
             Path.DirectorySeparatorChar,
@@ -535,6 +536,11 @@ namespace Microsoft.PythonTools.Infrastructure {
         public static bool IsValidPath(string path) {
             return !string.IsNullOrEmpty(path) &&
                 path.IndexOfAny(InvalidPathChars) < 0;
+        }
+
+        public static bool IsValidFile(string file) {
+            return !string.IsNullOrWhiteSpace(file) &&
+                file.IndexOfAny(InvalidFileChars) < 0;
         }
 
         /// <summary>
