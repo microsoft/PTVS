@@ -177,13 +177,13 @@
                     <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button
                             Style="{DynamicResource {x:Static ptwpf:ModernStyles.ThemedDialogButtonStyleKey}}"
-                            IsEnabled="{Binding Path=PagesView/IsAcceptEnabled}"
                             IsDefault="True"
                             MinWidth="90"
                             MinHeight="29"
                             Margin="0"
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Center"
+                            IsEnabled="{Binding Path=PagesView/IsAcceptEnabled}"
                             Click="OkClick"
                             AutomationProperties.Name="{Binding Path=PagesView/AcceptAutomationName}"
                             AutomationProperties.AutomationId="AddButton">
