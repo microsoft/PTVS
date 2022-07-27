@@ -22,7 +22,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.PlatformUI;
@@ -30,6 +29,7 @@ using Microsoft.VisualStudio.PlatformUI;
 namespace Microsoft.PythonTools.Environments {
     sealed class AddVirtualEnvironmentView : EnvironmentViewBase {
         private readonly SemaphoreSlim _ready = new SemaphoreSlim(1);
+        private static readonly string InvalidPrintableFileCharsString = GetInvalidPrintableFileChars();
 
         public AddVirtualEnvironmentView(
             IServiceProvider serviceProvider,
@@ -307,6 +307,8 @@ namespace Microsoft.PythonTools.Environments {
 
             if (string.IsNullOrEmpty(VirtualEnvName.Trim())) {
                 SetError(nameof(VirtualEnvName), Strings.AddVirtualEnvironmentNameEmpty);
+            }  else if (!PathUtils.IsValidFile(VirtualEnvName)) {
+                SetError(nameof(VirtualEnvName), Strings.AddVirtualEnvironmentNameInvalid.FormatUI(InvalidPrintableFileCharsString));
             } else if (!IsValidVirtualEnvPath(path)) {
                 SetError(nameof(VirtualEnvName), Strings.AddVirtualEnvironmentLocationInvalid.FormatUI(path));
             } else if (IsFolderNotEmpty(path)) {
@@ -335,8 +337,9 @@ namespace Microsoft.PythonTools.Environments {
             WillInstallRequirementsTxt = CanInstallRequirementsTxt && WillCreateVirtualEnv;
             WillRegisterGlobally = IsRegisterCustomEnv && canRegisterGlobally && WillCreateVirtualEnv;
             
-            // Otherwise, enable the button and possibly prompt when they click accept
-            IsAcceptEnabled = !Progress.IsProgressDisplayed;
+            // Enable the Create button only if there are no validation errors,
+            // and if progress is not already being displayed
+            IsAcceptEnabled = !HasErrors && !Progress.IsProgressDisplayed;
             AcceptCaption = Strings.AddEnvironmentCreateButton;
             AcceptAutomationName = Strings.AddEnvironmentCreateButtonAutomationName;
         }
@@ -423,6 +426,14 @@ namespace Microsoft.PythonTools.Environments {
         private void UpdateInterpreter(InterpreterView interpreterView) {
             UpdateInterpreterAsync(interpreterView).HandleAllExceptions(Site, GetType()).DoNotWait();
         }
+
+        // returns a space-delimited string containing invalid chars for a filename
+        private static string GetInvalidPrintableFileChars() {
+            var invalidChars = Path.GetInvalidFileNameChars();
+            var invalidPrintableChars = invalidChars.Where(c => !char.IsControl(c));
+            return string.Join(" ", invalidPrintableChars);
+        }
+
 
         internal async Task UpdateInterpreterAsync(InterpreterView interpreterView) {
             if (!Dispatcher.CheckAccess()) {

@@ -240,7 +240,6 @@
     <Compile Include="PythonTools\Editor\Formatting\PythonFormatterYapf.cs" />
     <Compile Include="PythonTools\Editor\Formatting\PythonFormatter.cs" />
     <Compile Include="PythonTools\Editor\Formatting\LspDiffTextEditFactory.cs" />
-    <Compile Include="PythonTools\Environments\AddVirtualEnvironmentEnvNameRule.cs" />
     <Compile Include="PythonTools\Environments\LandscapePortraitConverter.cs" />
     <Compile Include="PythonTools\Environments\ScreenAdjustingConverter.cs" />
     <Compile Include="PythonTools\LanguageServerClient\CustomCancellationStrategy.cs" />

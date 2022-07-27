@@ -146,11 +146,7 @@
                                 AutomationProperties.IsRequiredForForm="True"
                                 AutomationProperties.LabeledBy="{Binding ElementName=EnvNameLabel}">
                                 <TextBox.Text>
-                                    <Binding Path="VirtualEnvName" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged" ValidatesOnNotifyDataErrors="False" >
-                                        <Binding.ValidationRules>
-                                            <l:AddVirtualEnvironmentEnvNameRule />
-                                        </Binding.ValidationRules>
-                                    </Binding>
+                                    <Binding Path="VirtualEnvName" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged" ValidatesOnNotifyDataErrors="True" />
                                 </TextBox.Text>
                             </TextBox>
                             <!--Base interpreter-->
