@@ -165,6 +165,8 @@ steps:
 # https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/prefast-build-task
 - task: SDLNativeRules@3
   displayName: Run PREfast SDL Native Rules for MSBuild
+  inputs:	
+    msBuildVersion: $(MsBuildVersion)
   condition: succeededOrFailed()
   continueOnError: True
 
