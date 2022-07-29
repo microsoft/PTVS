@@ -166,7 +166,7 @@ steps:
 - task: SDLNativeRules@3
   displayName: Run PREfast SDL Native Rules for MSBuild
   inputs:	
-    msBuildVersion: $(MsBuildVersion)
+    userProvideBuildInfo: auto
   condition: succeededOrFailed()
   continueOnError: True
 
