@@ -1,6 +1,5 @@
 # This pipeline is used to perform policy and compliance tasks on the PTVS codebase.
-# For more information about the suite of tools used, see 
-# https://www.1eswiki.com/wiki/Secure_Development_Tools_Extension_For_Azure_DevOps
+# For more information about the suite of tools used, see https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/secure-development-tools-extension-for-azure-devops
 
 parameters:
 - name: pylanceVersion
@@ -41,7 +40,7 @@ variables:
     value: false
 
   # PTVS variable group
-  # This contains variables shared between the PTVS "product" pipeline and the PTVS "policy" pipeline.
+  # This contains variables shared between various PTVS pipelines
   - group: PTVS-Dev17
 
 steps:
@@ -66,18 +65,26 @@ steps:
   displayName: Clean guardian temp files
   continueOnError: true
 
+# Update node
+# See https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/tool/node-js?view=azure-devops
+- task: NodeTool@0
+  displayName: Update node
+  inputs:
+    versionSpec: '14.x'
+
+
 # Build and publish logs
 - template: Build/templates/build.yml
 
-# Anti-Malware Scan of build sources and/or artifacts
-# See https://www.1eswiki.com/wiki/AntiMalware_Scan_Build_Task for more info
-- task: AntiMalware@3
+  # Anti-Malware Scan of build sources and/or artifacts
+  # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/antimalware-scan-build-task
+- task: AntiMalware@4
   displayName: 'Run Antivirus on Source'
   inputs:
     FileDirPath: $(Build.SourcesDirectory)
   condition: succeededOrFailed()
   continueOnError: True
-- task: AntiMalware@3
+- task: AntiMalware@4
   displayName: Run Antivirus on Binaries
   inputs:
     FileDirPath: $(Build.BinariesDirectory)
@@ -128,52 +135,36 @@ steps:
   condition: succeededOrFailed()
   continueOnError: True
 
-# Analyze source and build output text files for credentials
-# See https://www.1eswiki.com/wiki/CredScan_Azure_DevOps_Build_Task for more info
+  # Analyze source and build output text files for credentials
+  # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/credscan-azure-devops-build-task
 - task: CredScan@2
   displayName: Run CredScan
   inputs:
     toolMajorVersion: V2
-    suppressionsFile: $(Build.SourcesDirectory)\Build\CredScanSuppressions.json
-    debugMode: true
-    folderSuppression: true
   condition: succeededOrFailed()
   continueOnError: True
 
-# Scan text elements including code, code comments, and content/web pages, for sensitive terms based on legal, cultural, or geopolitical reasons
-# See https://www.1eswiki.com/wiki/PoliCheck_Build_Task for more info
-- task: PoliCheck@1
+  # Scan text elements including code, code comments, and content/web pages, for sensitive terms based on legal, cultural, or geopolitical reasons
+  # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/policheck-build-task
+- task: PoliCheck@2
   displayName: Run PoliCheck
   inputs:
-    importEx: 0
-    optionsFC: 1
+    optionsFC: 1 # Enables scanning of comments
     optionsUEPATH: $(Build.SourcesDirectory)\Build\PoliCheckExclusions.xml
   condition: succeededOrFailed()
   continueOnError: True
 
 # Analyze managed C#/VB code (.NET framework and .NET Core) for security vulnerabilities
-# See https://www.1eswiki.com/wiki/Roslyn_Analyzers_Build_Task for more info
+# https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/roslyn-analyzers-build-task
 - task: RoslynAnalyzers@2
-  displayName: Run Roslyn Analyzers. {Required and Recommended}
-  inputs:
-    internalAnalyzersVersion: 2.6.2
-    microsoftAnalyzersVersion: 2.9.4
+  displayName: Run Roslyn Analyzers
   condition: succeededOrFailed()
   continueOnError: True
 
 # Analyze unmanaged C/C++ code for security vulnerabilities
-# See https://www.1eswiki.com/wiki/SDL_Native_Rules_Build_Task for more info
-- task: SDLNativeRules@2
+# https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/prefast-build-task
+- task: SDLNativeRules@3
   displayName: Run PREfast SDL Native Rules for MSBuild
-  inputs:
-    msBuildVersion: $(MsBuildVersion)
-  condition: succeededOrFailed()
-  continueOnError: True
-
-# No idea what this does, it's not listed anywhere on https://www.1eswiki.com/wiki/Secure_Development_Tools_Extension_For_Azure_DevOps
-# But it was here already, so I'm leaving it in for now
-- task: VulnerabilityAssessment@0
-  displayName: Run Vulnerability Assessment
   condition: succeededOrFailed()
   continueOnError: True
 
@@ -182,7 +173,7 @@ steps:
   continueOnError: True
 
 # Generate security analysis report
-# See https://www.1eswiki.com/wiki/Security_Analysis_Report_Build_Task for more info
+# See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/security-analysis-report-build-task
 - task: SdtReport@1
   displayName: Create Security Analysis Report
   inputs:
@@ -213,19 +204,12 @@ steps:
     PathtoPublish: $(Build.StagingDirectory)
 
 # Upload results to TSA
-# See https://www.1eswiki.com/wiki/TSAUpload_VSTS_Build_Task for more info
-- task: TSAUpload@1
+# See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/tsa-upload-build-task
+- task: TSAUpload@2
   displayName: TSA Upload
   inputs:
-    tsaVersion: TsaV2
-    codebase: NewOrUpdate
-    codeBaseName: Python VS IDE PTVS
-    notificationAlias: pyvs@microsoft.com
-    codeBaseAdmins: redmond\advolker;redmond\judej
-    instanceUrlForTsaV2: DEVDIV
-    projectNameDEVDIV: DevDiv
-    areaPath: DevDiv\Python and AI Tools\Python\VS IDE
-    iterationPath: DevDiv
+    GdnPublishTsaOnboard: True
+    GdnPublishTsaConfigFile: $(Build.SourcesDirectory)\TsaConfig.json
 
 # Index and analyze sources for code search (only if UseCodex == true)
 - task: Ref12.ref12-analyze-task.ref12-analyze-task.Ref12Analyze@0
