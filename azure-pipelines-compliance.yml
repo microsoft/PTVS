@@ -163,10 +163,8 @@ steps:
 
 # Analyze unmanaged C/C++ code for security vulnerabilities
 # https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/prefast-build-task
-- task: SDLNativeRules@3
+- task: SDLNativeRules@2
   displayName: Run PREfast SDL Native Rules for MSBuild
-  inputs:	
-    userProvideBuildInfo: auto
   condition: succeededOrFailed()
   continueOnError: True
 
