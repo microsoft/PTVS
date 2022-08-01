@@ -39,6 +39,13 @@ variables:
   - name: CopyTestData
     value: false
 
+  # Variables needed for ApiScan
+  # There is one more called ApiScanSecret which is is a secret stored in the PTVS variable group imported below
+  - name: ApiScanClientId
+    value: d6864429-d32d-4a0a-88ad-450ba89b8d74
+  - name: ApiScanTenant
+    value: 72f988bf-86f1-41af-91ab-2d7cd011db47
+
   # PTVS variable group
   # This contains variables shared between various PTVS pipelines
   - group: PTVS-Dev17
@@ -91,38 +98,34 @@ steps:
   condition: succeededOrFailed()
   continueOnError: True
 
-# APIScan only works on prem now, so comment this out until we figure out where to run it
-
 # Copy files for APIScan
 #- task: CopyFiles@2
 #  displayName: 'Copy Files for APIScan'
 #  inputs:
 #    SourceFolder: $(Build.BinariesDirectory)
 #    Contents: |
+#      layout\Microsoft.CookiecutterTools\Microsoft.CookiecutterTools.*
 #      layout\Microsoft.PythonTools.Core\Microsoft.PythonTools.*
-#      layout\Microsoft.PythonTools.Core\Microsoft.Python.*
 #      layout\Microsoft.PythonTools.Core\PyDebugAttach*.*
 #      layout\Microsoft.PythonTools.Django\Microsoft.PythonTools.*
 #      layout\Microsoft.PythonTools.Profiling\Microsoft.PythonTools.*
-#      layout\Microsoft.PythonTools.IronPython\Microsoft.PythonTools.*
-#      layout\Microsoft.PythonTools.IronPython\Microsoft.IronPythonTools.*
-#      layout\Microsoft.PythonTools.Miniconda\Microsoft.PythonTools.*
-#      layout\Microsoft.PythonTools.LiveShare\Microsoft.PythonTools.*
-#      layout\Microsoft.CookiecutterTools\Microsoft.CookiecutterTools.*
 #    TargetFolder: $(Agent.TempDirectory)\APIScanFiles
 
-# Verify that your software complies with the API Usage Standard of the Interoperability Policy
-# See https://microsoft.sharepoint.com/teams/apiscan/Content/Home.aspx for more info
+# Run APIScan
+# See the following links for more info:
+#   https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/apiscan-build-task
+#   https://devdiv.visualstudio.com/DevDiv/_wiki/wikis/DevDiv.wiki/25351/APIScan-step-by-step-guide-to-setting-up-a-Pipeline
+#   https://microsoft.sharepoint.com/teams/apiscan/APIScan%20User%20Wiki/authentication_using_AAD_identities.aspx
 #- task: APIScan@1
 #  displayName: Run APIScan
 #  inputs:
 #    softwareFolder: $(Agent.TempDirectory)\APIScanFiles
 #    softwareName: PTVS
-#    softwareVersionNum: 16.0
-#    isLargeApp: false
-#    toolVersion: LatestPreRelease
+#    softwareVersionNum: $(Build.BuildNumber)
 #  condition: succeededOrFailed()
 #  continueOnError: True
+#  env:
+#    AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanClientId);TenantId=$(ApiScanTenant);AppKey=$(ApiScanSecret)
 
 # Run component governance detection
 # See http://aka.ms/cgdocs for more info
