@@ -99,33 +99,36 @@ steps:
   continueOnError: True
 
 # Copy files for APIScan
-#- task: CopyFiles@2
-#  displayName: 'Copy Files for APIScan'
-#  inputs:
-#    SourceFolder: $(Build.BinariesDirectory)
-#    Contents: |
-#      layout\Microsoft.CookiecutterTools\Microsoft.CookiecutterTools.*
-#      layout\Microsoft.PythonTools.Core\Microsoft.PythonTools.*
-#      layout\Microsoft.PythonTools.Core\PyDebugAttach*.*
-#      layout\Microsoft.PythonTools.Django\Microsoft.PythonTools.*
-#      layout\Microsoft.PythonTools.Profiling\Microsoft.PythonTools.*
-#    TargetFolder: $(Agent.TempDirectory)\APIScanFiles
+- task: CopyFiles@2
+  displayName: 'Copy Files for APIScan'
+  inputs:
+    SourceFolder: $(Build.BinariesDirectory)
+    Contents: |
+      layout\Microsoft.CookiecutterTools\Microsoft.CookiecutterTools.*
+      layout\Microsoft.PythonTools.Core\Microsoft.PythonTools.*
+      layout\Microsoft.PythonTools.Core\PyDebugAttach*.*
+      layout\Microsoft.PythonTools.Django\Microsoft.PythonTools.*
+      layout\Microsoft.PythonTools.Profiling\Microsoft.PythonTools.*
+    TargetFolder: $(Agent.TempDirectory)\APIScanFiles
 
 # Run APIScan
 # See the following links for more info:
 #   https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/apiscan-build-task
 #   https://devdiv.visualstudio.com/DevDiv/_wiki/wikis/DevDiv.wiki/25351/APIScan-step-by-step-guide-to-setting-up-a-Pipeline
 #   https://microsoft.sharepoint.com/teams/apiscan/APIScan%20User%20Wiki/authentication_using_AAD_identities.aspx
-#- task: APIScan@1
-#  displayName: Run APIScan
-#  inputs:
-#    softwareFolder: $(Agent.TempDirectory)\APIScanFiles
-#    softwareName: PTVS
-#    softwareVersionNum: $(Build.BuildNumber)
-#  condition: succeededOrFailed()
-#  continueOnError: True
-#  env:
-#    AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanClientId);TenantId=$(ApiScanTenant);AppKey=$(ApiScanSecret)
+- task: APIScan@2
+  displayName: Run APIScan
+  inputs:
+    softwareFolder: $(Agent.TempDirectory)\APIScanFiles
+    softwareName: PTVS
+    softwareVersionNum: $(Build.BuildNumber)
+  # This connection string is required for APIScan to run. The links above explain what each value is.
+  # If the APIScanSecret (read from the PTVS-Dev17 variable group) expires, you will need to renew it or create a new one using the Azure App Registration 
+  # which is at https://ms.portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/d6864429-d32d-4a0a-88ad-450ba89b8d74/objectId/94663872-d317-4e7c-9333-a57cad0ed612/isMSAApp~/false/defaultBlade/Overview/appSignInAudience/AzureADMyOrg/servicePrincipalCreated~/true
+  env:
+    AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanClientId);TenantId=$(ApiScanTenant);AppKey=$(ApiScanSecret)
+  condition: succeededOrFailed()
+  continueOnError: True
 
 # Run component governance detection
 # See http://aka.ms/cgdocs for more info
