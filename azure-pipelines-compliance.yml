@@ -116,7 +116,7 @@ steps:
 #   https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/apiscan-build-task
 #   https://devdiv.visualstudio.com/DevDiv/_wiki/wikis/DevDiv.wiki/25351/APIScan-step-by-step-guide-to-setting-up-a-Pipeline
 #   https://microsoft.sharepoint.com/teams/apiscan/APIScan%20User%20Wiki/authentication_using_AAD_identities.aspx
-- task: APIScan@2
+- task: APIScan@3
   displayName: Run APIScan
   inputs:
     softwareFolder: $(Agent.TempDirectory)\APIScanFiles
