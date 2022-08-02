@@ -30,7 +30,7 @@ schedules:
 
 jobs:
 
-- job: Compliance Job
+- job: Compliance
   timeoutInMinutes: 0   # maximum timeout, some compliance tasks take a long time to run
 
   # The agent pool the build will run on
