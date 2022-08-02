@@ -136,6 +136,15 @@ jobs:
     condition: succeededOrFailed()
     continueOnError: True
 
+  # Analyze binaries for security vulnerabilities
+  # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/binskim-build-task
+  - task: BinSkim@4
+    displayName: Run BinSkim
+    inputs:
+      AnalyzeTargetGlob: $(Build.ArtifactStagingDirectory)\**.dll;$(Build.ArtifactStagingDirectory)\**.exe;
+    condition: succeededOrFailed()
+    continueOnError: True
+
   # Run component governance detection
   # See http://aka.ms/cgdocs for more info
   - task: ComponentGovernanceComponentDetection@0
