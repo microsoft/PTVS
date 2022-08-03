@@ -142,7 +142,7 @@ jobs:
   - task: BinSkim@4
     displayName: Run BinSkim
     inputs:
-      AnalyzeTargetGlob: $(Build.ArtifactStagingDirectory)\**.dll;$(Build.ArtifactStagingDirectory)\**.exe;
+      AnalyzeTargetGlob: '$(Build.BinariesDirectory)\layout\**\*.dll;$(Build.BinariesDirectory)\layout\**\*.exe'
     condition: succeededOrFailed()
     continueOnError: True
 
