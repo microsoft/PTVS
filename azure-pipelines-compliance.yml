@@ -145,13 +145,12 @@ jobs:
     inputs:
       # Include all dll/exe files under the layout directory, except things under "debugpy" or "pylance" directories
       # The single and double quotes are REQUIRED!
-      AnalyzeTargetGlob: >
-        '"
+      AnalyzeTargetGlob: 
         +:f|$(Build.BinariesDirectory)\layout\**\*.dll;
         +:f|$(Build.BinariesDirectory)\layout\**\*.exe;
         -:f|**\debugpy\**\*.*;
         -:f|**\pylance\**\*.*;
-        "'
+
     condition: succeededOrFailed()
     continueOnError: True
 
