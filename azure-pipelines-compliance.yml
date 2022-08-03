@@ -122,6 +122,7 @@ jobs:
   #   https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/apiscan-build-task
   #   https://devdiv.visualstudio.com/DevDiv/_wiki/wikis/DevDiv.wiki/25351/APIScan-step-by-step-guide-to-setting-up-a-Pipeline
   #   https://microsoft.sharepoint.com/teams/apiscan/APIScan%20User%20Wiki/authentication_using_AAD_identities.aspx
+  # In order to see ApiScan result details, you need to do the steps at https://microsoft.sharepoint.com/teams/apiscan/Content/RequirementsToRunAPIScan.aspx.
   - task: APIScan@2
     displayName: Run APIScan
     inputs:
