@@ -133,7 +133,8 @@ jobs:
     # which is at https://ms.portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/d6864429-d32d-4a0a-88ad-450ba89b8d74/objectId/94663872-d317-4e7c-9333-a57cad0ed612/isMSAApp~/false/defaultBlade/Overview/appSignInAudience/AzureADMyOrg/servicePrincipalCreated~/true
     env:
       AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanClientId);TenantId=$(ApiScanTenant);AppKey=$(ApiScanSecret)
-    condition: succeededOrFailed()
+    condition: false  # TODO: This is temporarily disabled to save build time. Re-enable when done adding other tasks.
+    #condition: succeededOrFailed()
     continueOnError: True
 
   # Analyze binaries for security vulnerabilities
