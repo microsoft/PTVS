@@ -143,7 +143,12 @@ jobs:
   - task: BinSkim@4
     displayName: Run BinSkim
     inputs:
-      AnalyzeTargetGlob: '$(Build.BinariesDirectory)\layout\**\*.dll;$(Build.BinariesDirectory)\layout\**\*.exe'
+      # Include all dll/exe files under the layout directory, except things under "debugpy" or "pylance" directories
+      AnalyzeTargetGlob: >
+        +:f|$(Build.BinariesDirectory)\layout\**\*.dll;
+        +:f|$(Build.BinariesDirectory)\layout\**\*.exe;
+        -:f|**\debugpy\**\*.*;
+        -:f|**\pylance\**\*.*;
     condition: succeededOrFailed()
     continueOnError: True
 
