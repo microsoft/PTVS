@@ -4,25 +4,31 @@ steps:
   displayName: 'Use Python 3.x'
 
 - task: Semmle@1
-  displayName: 'Run CodeQL for Python'
+  displayName: 'Run CodeQL (Semmle) for Python'
   inputs:
-    sourceCodeDirectory: $(Build.SourcesDirectory)\Python\Product
     language: python
+    sourceCodeDirectory: $(Build.SourcesDirectory)\Python\Product
   continueOnError: true
   condition: succeededOrFailed()
 
 - task: Semmle@1
-  displayName: 'Run CodeQL for C#'
+  displayName: 'Run CodeQL (Semmle) for C#'
   inputs:
     language: csharp
-    # todo: add build command?
+    # The build command is constructed by examining build.yml. Force a clean build since we don't want incremental.
+    buildCommandsString: >
+      '"%ProgramFiles(x86)%\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsMSBuildCmd.bat" &&
+      msbuild $(Build.SourcesDirectory)/Python/Product/dirs.proj /p:VSTarget=$(VSTarget) /t:Clean,Build"'
   continueOnError: true
   condition: succeededOrFailed()
 
 - task: Semmle@1
-  displayName: 'Run CodeQL for C++'
+  displayName: 'Run CodeQL (Semmle) for C++'
   inputs:
     language: cpp
-    # todo: add build command?
+    # Same build command as above, since this produces both managed AND native binaries
+    buildCommandsString: >
+      '"%ProgramFiles(x86)%\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsMSBuildCmd.bat" &&
+      msbuild $(Build.SourcesDirectory)/Python/Product/dirs.proj /p:VSTarget=$(VSTarget) /t:Clean,Build"'
   continueOnError: true
   condition: succeededOrFailed()
