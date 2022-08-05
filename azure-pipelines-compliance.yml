@@ -94,13 +94,15 @@ jobs:
     displayName: 'Run Antivirus on Source'
     inputs:
       FileDirPath: $(Build.SourcesDirectory)
-    condition: succeededOrFailed()
+    condition: false  # TODO: This is temporarily disabled to save build time. Re-enable when done adding other tasks.
+    #condition: succeededOrFailed()
     continueOnError: True
   - task: AntiMalware@4
     displayName: Run Antivirus on Binaries
     inputs:
       FileDirPath: $(Build.BinariesDirectory)
-    condition: succeededOrFailed()
+    condition: false  # TODO: This is temporarily disabled to save build time. Re-enable when done adding other tasks.
+    #condition: succeededOrFailed()
     continueOnError: True
 
   # Copy files for Scanning
@@ -149,7 +151,8 @@ jobs:
       AnalyzeTargetBinskim: |
         $(Agent.TempDirectory)\FilesToScan\*.dll 
         $(Agent.TempDirectory)\FilesToScan\*.exe;
-    condition: succeededOrFailed()
+    condition: false  # TODO: This is temporarily disabled to save build time. Re-enable when done adding other tasks.
+    #condition: succeededOrFailed()
     continueOnError: True
 
   # Run component governance detection
@@ -160,7 +163,8 @@ jobs:
       scanType: 'Register'
       verbosity: 'Verbose'
       alertWarningLevel: 'High'
-    condition: succeededOrFailed()
+    condition: false  # TODO: This is temporarily disabled to save build time. Re-enable when done adding other tasks.
+    #condition: succeededOrFailed()
     continueOnError: True
 
     # Analyze source and build output text files for credentials
@@ -169,7 +173,8 @@ jobs:
     displayName: Run CredScan
     inputs:
       toolMajorVersion: V2
-    condition: succeededOrFailed()
+    condition: false  # TODO: This is temporarily disabled to save build time. Re-enable when done adding other tasks.
+    #condition: succeededOrFailed()
     continueOnError: True
 
     # Scan text elements including code, code comments, and content/web pages, for sensitive terms based on legal, cultural, or geopolitical reasons
@@ -179,21 +184,24 @@ jobs:
     inputs:
       optionsFC: 1 # Enables scanning of comments
       optionsUEPATH: $(Build.SourcesDirectory)\Build\PoliCheckExclusions.xml
-    condition: succeededOrFailed()
+    condition: false  # TODO: This is temporarily disabled to save build time. Re-enable when done adding other tasks.
+    #condition: succeededOrFailed()
     continueOnError: True
 
   # Analyze managed C#/VB code (.NET framework and .NET Core) for security vulnerabilities
   # https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/roslyn-analyzers-build-task
   - task: RoslynAnalyzers@2
     displayName: Run Roslyn Analyzers
-    condition: succeededOrFailed()
+    condition: false  # TODO: This is temporarily disabled to save build time. Re-enable when done adding other tasks.
+    #condition: succeededOrFailed()
     continueOnError: True
 
   # Analyze unmanaged C/C++ code for security vulnerabilities
   # https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/prefast-build-task
   - task: SDLNativeRules@2
     displayName: Run PREfast SDL Native Rules for MSBuild
-    condition: succeededOrFailed()
+    condition: false  # TODO: This is temporarily disabled to save build time. Re-enable when done adding other tasks.
+    #condition: succeededOrFailed()
     continueOnError: True
 
   - task: MicroBuildCleanup@1
