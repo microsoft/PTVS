@@ -113,8 +113,10 @@ jobs:
         layout\Microsoft.CookiecutterTools\Microsoft.CookiecutterTools.*
         layout\Microsoft.PythonTools.Core\Microsoft.PythonTools.*
         layout\Microsoft.PythonTools.Core\PyDebugAttach*.*
+        layout\Microsoft.PythonTools.Debugger.VCLauncher\Microsoft.PythonTools.*
         layout\Microsoft.PythonTools.Django\Microsoft.PythonTools.*
         layout\Microsoft.PythonTools.Profiling\Microsoft.PythonTools.*
+        layout\Microsoft.PythonTools.Profiling\VsPyProf*.*
       TargetFolder: $(Agent.TempDirectory)\FilesToScan
 
   # Run APIScan
