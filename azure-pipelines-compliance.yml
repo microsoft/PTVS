@@ -85,7 +85,6 @@ jobs:
     inputs:
       versionSpec: '14.x'
 
-
   # Build and publish logs
   - template: Build/templates/build.yml
 
@@ -118,9 +117,6 @@ jobs:
         layout\Microsoft.PythonTools.Profiling\Microsoft.PythonTools.*
         layout\Microsoft.PythonTools.Profiling\VsPyProf*.*
       TargetFolder: $(Agent.TempDirectory)\FilesToScan
-
-  # print contents of filesToScan
-  - powershell: Get-ChildItem -Path $(Agent.TempDirectory)\FilesToScan -recurse
 
   # Run APIScan
   # See the following links for more info:
