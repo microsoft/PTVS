@@ -199,14 +199,8 @@ jobs:
   # Static analysis and security vulnerability scan
   # See https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/codeql/codeql-semmle and
   # https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/codeql-build-task
-  - task: Semmle@1
-    displayName: 'Run CodeQL'
-    inputs:
-      sourceCodeDirectory: '$(Build.SourcesDirectory)'
-      language: tsandjs
-      querySuite: Recommended
-    continueOnError: true
-    condition: succeededOrFailed()
+  # Use a template, since each language requires a separate scan
+  - template: Build/templates/run_codeQL.yml
 
   # Analyze unmanaged C/C++ code for security vulnerabilities
   # https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/prefast-build-task

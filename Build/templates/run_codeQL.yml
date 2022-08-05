@@ -1,0 +1,27 @@
+steps:
+
+- task: UsePythonVersion@0
+  displayName: 'Use Python 3.x'
+
+- task: Semmle@1
+  displayName: 'Run CodeQL for Python'
+  inputs:
+    language: python
+  continueOnError: true
+  condition: succeededOrFailed()
+
+- task: Semmle@1
+  displayName: 'Run CodeQL for C#'
+  inputs:
+    language: csharp
+    # todo: add build command?
+  continueOnError: true
+  condition: succeededOrFailed()
+
+- task: Semmle@1
+  displayName: 'Run CodeQL for C++'
+  inputs:
+    language: cpp
+    # todo: add build command?
+  continueOnError: true
+  condition: succeededOrFailed()
