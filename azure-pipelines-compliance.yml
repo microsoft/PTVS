@@ -119,6 +119,9 @@ jobs:
         layout\Microsoft.PythonTools.Profiling\VsPyProf*.*
       TargetFolder: $(Agent.TempDirectory)\FilesToScan
 
+  # print contents of filesToScan
+  - powershell: Get-ChildItem -Path $(Agent.TempDirectory)\FilesToScan -recurse
+
   # Run APIScan
   # See the following links for more info:
   #   https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/apiscan-build-task
