@@ -150,7 +150,7 @@ jobs:
       # Include all dll/exe files under the layout directory, except things under "debugpy" or "pylance" directories
       # This string is white-space-sensitive, so unfortunately it can't be multi-line
       AnalyzeTargetGlob: > 
-        '"+:f|$(Build.BinariesDirectory)\layout\**\*.dll;+:f|$(Build.BinariesDirectory)\layout\**\*.exe;-:f|**\debugpy\**\*.*;-:f|**\pylance\**\*.*;"'
+        "+:f|$(Build.BinariesDirectory)\layout\**\*.dll;+:f|$(Build.BinariesDirectory)\layout\**\*.exe;-:f|**\debugpy\**\*.*;-:f|**\pylance\**\*.*;"
     condition: succeededOrFailed()
     continueOnError: True
 
