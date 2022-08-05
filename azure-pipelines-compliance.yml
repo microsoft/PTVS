@@ -149,7 +149,10 @@ jobs:
     displayName: Run BinSkim
     inputs:
       # Use the same files copied for ApiScan
-      AnalyzeTargetGlob: $(Agent.TempDirectory)\FilesToScan\*.dll;$(Agent.TempDirectory)\FilesToScan\*.exe;
+      TargetPattern: binskimPattern
+      AnalyzeTargetBinskim: |
+        $(Agent.TempDirectory)\FilesToScan\*.dll 
+        $(Agent.TempDirectory)\FilesToScan\*.exe;
     condition: succeededOrFailed()
     continueOnError: True
 
