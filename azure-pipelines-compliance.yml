@@ -104,9 +104,9 @@ jobs:
     condition: succeededOrFailed()
     continueOnError: True
 
-  # Copy files for APIScan
+  # Copy files for Scanning
   - task: CopyFiles@2
-    displayName: 'Copy Files for APIScan'
+    displayName: 'Copy Files for Scanning'
     inputs:
       SourceFolder: $(Build.BinariesDirectory)
       Contents: |
@@ -115,7 +115,7 @@ jobs:
         layout\Microsoft.PythonTools.Core\PyDebugAttach*.*
         layout\Microsoft.PythonTools.Django\Microsoft.PythonTools.*
         layout\Microsoft.PythonTools.Profiling\Microsoft.PythonTools.*
-      TargetFolder: $(Agent.TempDirectory)\APIScanFiles
+      TargetFolder: $(Agent.TempDirectory)\FilesToScan
 
   # Run APIScan
   # See the following links for more info:
@@ -126,7 +126,7 @@ jobs:
   - task: APIScan@2
     displayName: Run APIScan
     inputs:
-      softwareFolder: $(Agent.TempDirectory)\APIScanFiles
+      softwareFolder: $(Agent.TempDirectory)\FilesToScan
       softwareName: PTVS
       softwareVersionNum: $(Build.BuildNumber)
     # This connection string is required for APIScan to run. The links above explain what each value is.
@@ -143,10 +143,8 @@ jobs:
   - task: BinSkim@4
     displayName: Run BinSkim
     inputs:
-      # Include all dll/exe files under the layout directory, except things under "debugpy" or "pylance" directories
-      # This string is white-space-sensitive, so unfortunately it can't be multi-line
-      AnalyzeTargetGlob: > 
-        "+:f|$(Build.BinariesDirectory)\layout\**\*.dll;+:f|$(Build.BinariesDirectory)\layout\**\*.exe;-:f|**\debugpy\**\*.*;-:f|**\pylance\**\*.*;"
+      # Use the same files copied for ApiScan
+      AnalyzeTargetGlob: $(Agent.TempDirectory)\FilesToScan\*.dll;$(Agent.TempDirectory)\FilesToScan\*.exe;
     condition: succeededOrFailed()
     continueOnError: True
 
