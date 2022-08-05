@@ -6,6 +6,7 @@ steps:
 - task: Semmle@1
   displayName: 'Run CodeQL for Python'
   inputs:
+    sourceCodeDirectory: $(Build.SourcesDirectory)\Python\Product
     language: python
   continueOnError: true
   condition: succeededOrFailed()
