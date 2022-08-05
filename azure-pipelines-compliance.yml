@@ -150,7 +150,7 @@ jobs:
       TargetPattern: binskimPattern
       AnalyzeTargetBinskim: |
         $(Agent.TempDirectory)\FilesToScan\*.dll 
-        $(Agent.TempDirectory)\FilesToScan\*.exe;
+        $(Agent.TempDirectory)\FilesToScan\*.exe
     condition: false  # TODO: This is temporarily disabled to save build time. Re-enable when done adding other tasks.
     #condition: succeededOrFailed()
     continueOnError: True
@@ -195,6 +195,18 @@ jobs:
     condition: false  # TODO: This is temporarily disabled to save build time. Re-enable when done adding other tasks.
     #condition: succeededOrFailed()
     continueOnError: True
+
+  # Static analysis and security vulnerability scan
+  # See https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/codeql/codeql-semmle and
+  # https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/codeql-build-task
+  - task: Semmle@1
+    displayName: 'Run CodeQL'
+    inputs:
+      sourceCodeDirectory: '$(Build.SourcesDirectory)'
+      language: tsandjs
+      querySuite: Recommended
+    continueOnError: true
+    condition: succeededOrFailed()
 
   # Analyze unmanaged C/C++ code for security vulnerabilities
   # https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/prefast-build-task
