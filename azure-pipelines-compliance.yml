@@ -56,10 +56,6 @@ jobs:
     # This contains variables shared between various PTVS pipelines
     - group: PTVS-Dev17
 
-    # TODO: REMOVE THIS
-    - name: System.Debug
-      value: True
-
   steps:
 
   # Check out code clean from source control
