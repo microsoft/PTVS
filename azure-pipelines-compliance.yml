@@ -148,7 +148,8 @@ jobs:
     inputs:
       targetsType: banditPattern
       targetsBandit: '$(Build.SourcesDirectory)\Python\Product'
-    condition: succeededOrFailed()
+    condition: false  # TODO: This is temporarily disabled to save build time. Re-enable when done adding other tasks.
+    #condition: succeededOrFailed()
     continueOnError: True
 
   # Analyze binaries for security vulnerabilities
