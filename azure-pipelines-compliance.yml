@@ -178,8 +178,8 @@ jobs:
     #condition: succeededOrFailed()
     continueOnError: True
 
-    # Analyze source and build output text files for credentials
-    # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/credscan-azure-devops-build-task
+  # Analyze source and build output text files for credentials
+  # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/credscan-azure-devops-build-task
   - task: CredScan@2
     displayName: Run CredScan
     inputs:
@@ -188,8 +188,14 @@ jobs:
     #condition: succeededOrFailed()
     continueOnError: True
 
-    # Scan text elements including code, code comments, and content/web pages, for sensitive terms based on legal, cultural, or geopolitical reasons
-    # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/policheck-build-task
+  # Scan C/C++ for security vulnerabilities
+  - task: Flawfinder@2
+    displayName: 'Run Flawfinder'
+    condition: succeededOrFailed()
+    continueOnError: True
+
+  # Scan text elements including code, code comments, and content/web pages, for sensitive terms based on legal, cultural, or geopolitical reasons
+  # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/policheck-build-task
   - task: PoliCheck@2
     displayName: Run PoliCheck
     inputs:
