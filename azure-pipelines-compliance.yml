@@ -141,6 +141,16 @@ jobs:
     #condition: succeededOrFailed()
     continueOnError: True
 
+  # Analyze python files for common vulnerabilities
+  # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/bandit-build-task
+  - task: Bandit@1
+    displayName: 'Run Bandit'
+    inputs:
+      targetsType: banditPattern
+      targetsBandit: '$(Build.SourcesDirectory)\Python\Product'
+    condition: succeededOrFailed()
+    continueOnError: True
+
   # Analyze binaries for security vulnerabilities
   # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/binskim-build-task
   - task: BinSkim@4
