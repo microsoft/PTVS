@@ -85,6 +85,9 @@ jobs:
     inputs:
       versionSpec: '14.x'
 
+  - task: UsePythonVersion@0
+    displayName: 'Use Python 3.x'
+
   # Build and publish logs
   - template: Build/templates/build.yml
 
@@ -94,15 +97,13 @@ jobs:
     displayName: 'Run Antivirus on Source'
     inputs:
       FileDirPath: $(Build.SourcesDirectory)
-    condition: false  # TODO: This is temporarily disabled to save build time. Re-enable when done adding other tasks.
-    #condition: succeededOrFailed()
+    condition: succeededOrFailed()
     continueOnError: True
   - task: AntiMalware@4
     displayName: Run Antivirus on Binaries
     inputs:
       FileDirPath: $(Build.BinariesDirectory)
-    condition: false  # TODO: This is temporarily disabled to save build time. Re-enable when done adding other tasks.
-    #condition: succeededOrFailed()
+    condition: succeededOrFailed()
     continueOnError: True
 
   # Copy files for Scanning
@@ -137,8 +138,7 @@ jobs:
     # which is at https://ms.portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/d6864429-d32d-4a0a-88ad-450ba89b8d74/objectId/94663872-d317-4e7c-9333-a57cad0ed612/isMSAApp~/false/defaultBlade/Overview/appSignInAudience/AzureADMyOrg/servicePrincipalCreated~/true
     env:
       AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanClientId);TenantId=$(ApiScanTenant);AppKey=$(ApiScanSecret)
-    condition: false  # TODO: This is temporarily disabled to save build time. Re-enable when done adding other tasks.
-    #condition: succeededOrFailed()
+    condition: succeededOrFailed()
     continueOnError: True
 
   # Analyze python files for common vulnerabilities
@@ -148,8 +148,7 @@ jobs:
     inputs:
       targetsType: banditPattern
       targetsBandit: '$(Build.SourcesDirectory)\Python\Product'
-    condition: false  # TODO: This is temporarily disabled to save build time. Re-enable when done adding other tasks.
-    #condition: succeededOrFailed()
+    condition: succeededOrFailed()
     continueOnError: True
 
   # Analyze binaries for security vulnerabilities
@@ -162,8 +161,7 @@ jobs:
       AnalyzeTargetBinskim: |
         $(Agent.TempDirectory)\FilesToScan\*.dll 
         $(Agent.TempDirectory)\FilesToScan\*.exe
-    condition: false  # TODO: This is temporarily disabled to save build time. Re-enable when done adding other tasks.
-    #condition: succeededOrFailed()
+    condition: succeededOrFailed()
     continueOnError: True
 
   # Run component governance detection
@@ -174,8 +172,7 @@ jobs:
       scanType: 'Register'
       verbosity: 'Verbose'
       alertWarningLevel: 'High'
-    condition: false  # TODO: This is temporarily disabled to save build time. Re-enable when done adding other tasks.
-    #condition: succeededOrFailed()
+    condition: succeededOrFailed()
     continueOnError: True
 
   # Analyze source and build output text files for credentials
@@ -184,8 +181,7 @@ jobs:
     displayName: Run CredScan
     inputs:
       toolMajorVersion: V2
-    condition: false  # TODO: This is temporarily disabled to save build time. Re-enable when done adding other tasks.
-    #condition: succeededOrFailed()
+    condition: succeededOrFailed()
     continueOnError: True
 
   # Scan C/C++ for security vulnerabilities
@@ -201,16 +197,14 @@ jobs:
     inputs:
       optionsFC: 1 # Enables scanning of comments
       optionsUEPATH: $(Build.SourcesDirectory)\Build\PoliCheckExclusions.xml
-    condition: false  # TODO: This is temporarily disabled to save build time. Re-enable when done adding other tasks.
-    #condition: succeededOrFailed()
+    condition: succeededOrFailed()
     continueOnError: True
 
   # Analyze managed C#/VB code (.NET framework and .NET Core) for security vulnerabilities
   # https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/roslyn-analyzers-build-task
   - task: RoslynAnalyzers@2
     displayName: Run Roslyn Analyzers
-    condition: false  # TODO: This is temporarily disabled to save build time. Re-enable when done adding other tasks.
-    #condition: succeededOrFailed()
+    condition: succeededOrFailed()
     continueOnError: True
 
   # Static analysis and security vulnerability scan
@@ -223,8 +217,7 @@ jobs:
   # https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/prefast-build-task
   - task: SDLNativeRules@2
     displayName: Run PREfast SDL Native Rules for MSBuild
-    condition: false  # TODO: This is temporarily disabled to save build time. Re-enable when done adding other tasks.
-    #condition: succeededOrFailed()
+    condition: succeededOrFailed()
     continueOnError: True
 
   - task: MicroBuildCleanup@1
