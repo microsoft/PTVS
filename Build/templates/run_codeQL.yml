@@ -1,5 +1,6 @@
 steps:
 
+# See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/codeql-build-task
 - task: Semmle@1
   displayName: 'Run CodeQL (Semmle) for Python'
   inputs:

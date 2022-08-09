@@ -164,6 +164,12 @@ jobs:
     condition: succeededOrFailed()
     continueOnError: True
 
+  # Static analysis and security vulnerability scan
+  # See https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/codeql/codeql-semmle and
+  # https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/codeql-build-task
+  # Use a template, since each language requires a separate scan
+  - template: Build/templates/run_codeQL.yml
+
   # Run component governance detection
   # See http://aka.ms/cgdocs for more info
   - task: ComponentGovernanceComponentDetection@0
@@ -185,6 +191,7 @@ jobs:
     continueOnError: True
 
   # Scan C/C++ for security vulnerabilities
+  # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/flawfinder-build-task
   - task: Flawfinder@2
     displayName: 'Run Flawfinder'
     condition: succeededOrFailed()
@@ -206,12 +213,6 @@ jobs:
     displayName: Run Roslyn Analyzers
     condition: succeededOrFailed()
     continueOnError: True
-
-  # Static analysis and security vulnerability scan
-  # See https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/codeql/codeql-semmle and
-  # https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/codeql-build-task
-  # Use a template, since each language requires a separate scan
-  - template: Build/templates/run_codeQL.yml
 
   # Analyze unmanaged C/C++ code for security vulnerabilities
   # https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/prefast-build-task
