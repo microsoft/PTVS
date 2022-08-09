@@ -1,0 +1,278 @@
+# This pipeline is used to perform policy and compliance tasks on the PTVS codebase.
+# For more information about the suite of tools used, see https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/secure-development-tools-extension-for-azure-devops
+
+parameters:
+- name: pylanceVersion
+  displayName: Pylance Version
+  type: string
+  default: latest
+- name: debugpyVersion
+  displayName: Debugpy Version
+  type: string
+  default: latest
+
+# Build number format
+name: $(date:yy)$(DayOfYear)$(rev:.r)
+
+# Don't trigger ci or pr builds
+trigger: none
+pr: none
+
+# Trigger builds on a nightly schedule, as long as there are changes
+# Ignore the azure-pipelines.yml, since that's a different pipeline
+# All times are in UTC, so 8AM = Midnight PST
+schedules:
+- cron: "0 8 * * *"
+  displayName: Nightly build
+  branches:
+    include:
+    - main
+
+jobs:
+
+- job: Compliance
+  timeoutInMinutes: 0   # maximum timeout, some compliance tasks take a long time to run
+
+  # The agent pool the build will run on
+  pool:
+    name: VSEngSS-MicroBuild2022-1ES
+    demands: 
+    - msbuild
+    - VisualStudio_17.0
+
+  # Job variables
+  variables:
+    - name: CopyTestData
+      value: false
+
+    # Variables needed for ApiScan
+    # There is one more called ApiScanSecret which is is a secret stored in the PTVS variable group imported below
+    - name: ApiScanClientId
+      value: d6864429-d32d-4a0a-88ad-450ba89b8d74
+    - name: ApiScanTenant
+      value: 72f988bf-86f1-41af-91ab-2d7cd011db47
+
+    # PTVS variable group
+    # This contains variables shared between various PTVS pipelines
+    - group: PTVS-Dev17
+
+  steps:
+
+  # Check out code clean from source control
+  - checkout: self
+    clean: true
+
+  # Install plugins needed for swixproj/vsmanproj and signing
+  # We don't use Build/templates/install_microbuild_plugins.yml here because this project doesn't need to real sign
+  - task: MicroBuildSwixPlugin@3
+    displayName: 'Install microbuild swix plugin'
+
+  # Restore packages and install dependencies (pylance, debugpy)
+  - template: Build/templates/restore_packages.yml
+    parameters:
+      pylanceVersion: ${{ parameters.pylanceVersion }}
+      debugpyVersion: ${{ parameters.debugpyVersion }}
+
+  # Clean the Guardian temp files
+  - powershell: Get-ChildItem -Path $env:TEMP -Filter 'MpCmdRun.*' -Recurse -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force
+    displayName: Clean guardian temp files
+    continueOnError: true
+
+  # Update node
+  # See https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/tool/node-js?view=azure-devops
+  - task: NodeTool@0
+    displayName: Update node
+    inputs:
+      versionSpec: '14.x'
+
+  - task: UsePythonVersion@0
+    displayName: 'Use Python 3.x'
+
+  # Build and publish logs
+  - template: Build/templates/build.yml
+
+    # Anti-Malware Scan of build sources and/or artifacts
+    # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/antimalware-scan-build-task
+  - task: AntiMalware@4
+    displayName: 'Run Antivirus on Source'
+    inputs:
+      FileDirPath: $(Build.SourcesDirectory)
+    condition: succeededOrFailed()
+    continueOnError: True
+  - task: AntiMalware@4
+    displayName: Run Antivirus on Binaries
+    inputs:
+      FileDirPath: $(Build.BinariesDirectory)
+    condition: succeededOrFailed()
+    continueOnError: True
+
+  # Copy files for Scanning
+  - task: CopyFiles@2
+    displayName: 'Copy Files for Scanning'
+    inputs:
+      SourceFolder: $(Build.BinariesDirectory)
+      Contents: |
+        layout\Microsoft.CookiecutterTools\Microsoft.CookiecutterTools.*
+        layout\Microsoft.PythonTools.Core\Microsoft.PythonTools.*
+        layout\Microsoft.PythonTools.Core\PyDebugAttach*.*
+        layout\Microsoft.PythonTools.Debugger.VCLauncher\Microsoft.PythonTools.*
+        layout\Microsoft.PythonTools.Django\Microsoft.PythonTools.*
+        layout\Microsoft.PythonTools.Profiling\Microsoft.PythonTools.*
+        layout\Microsoft.PythonTools.Profiling\VsPyProf*.*
+      TargetFolder: $(Agent.TempDirectory)\FilesToScan
+
+  # Run APIScan
+  # See the following links for more info:
+  #   https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/apiscan-build-task
+  #   https://devdiv.visualstudio.com/DevDiv/_wiki/wikis/DevDiv.wiki/25351/APIScan-step-by-step-guide-to-setting-up-a-Pipeline
+  #   https://microsoft.sharepoint.com/teams/apiscan/APIScan%20User%20Wiki/authentication_using_AAD_identities.aspx
+  # In order to see ApiScan result details, you need to do the steps at https://microsoft.sharepoint.com/teams/apiscan/Content/RequirementsToRunAPIScan.aspx.
+  - task: APIScan@2
+    displayName: Run APIScan
+    inputs:
+      softwareFolder: $(Agent.TempDirectory)\FilesToScan
+      softwareName: PTVS
+      softwareVersionNum: $(Build.BuildNumber)
+    # This connection string is required for APIScan to run. The links above explain what each value is.
+    # If the APIScanSecret (read from the PTVS-Dev17 variable group) expires, you will need to renew it or create a new one using the Azure App Registration 
+    # which is at https://ms.portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/d6864429-d32d-4a0a-88ad-450ba89b8d74/objectId/94663872-d317-4e7c-9333-a57cad0ed612/isMSAApp~/false/defaultBlade/Overview/appSignInAudience/AzureADMyOrg/servicePrincipalCreated~/true
+    env:
+      AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanClientId);TenantId=$(ApiScanTenant);AppKey=$(ApiScanSecret)
+    condition: succeededOrFailed()
+    continueOnError: True
+
+  # Analyze python files for common vulnerabilities
+  # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/bandit-build-task
+  - task: Bandit@1
+    displayName: 'Run Bandit'
+    inputs:
+      targetsType: banditPattern
+      targetsBandit: '$(Build.SourcesDirectory)\Python\Product'
+    condition: succeededOrFailed()
+    continueOnError: True
+
+  # Analyze binaries for security vulnerabilities
+  # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/binskim-build-task
+  - task: BinSkim@4
+    displayName: Run BinSkim
+    inputs:
+      # Use the same files copied for ApiScan
+      TargetPattern: binskimPattern
+      AnalyzeTargetBinskim: |
+        $(Agent.TempDirectory)\FilesToScan\*.dll 
+        $(Agent.TempDirectory)\FilesToScan\*.exe
+    condition: succeededOrFailed()
+    continueOnError: True
+
+  # Static analysis and security vulnerability scan
+  # See https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/codeql/codeql-semmle and
+  # https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/codeql-build-task
+  # Use a template, since each language requires a separate scan
+  - template: Build/templates/run_codeQL.yml
+
+  # Run component governance detection
+  # See http://aka.ms/cgdocs for more info
+  - task: ComponentGovernanceComponentDetection@0
+    displayName: Run Component Detection
+    inputs:
+      scanType: 'Register'
+      verbosity: 'Verbose'
+      alertWarningLevel: 'High'
+    condition: succeededOrFailed()
+    continueOnError: True
+
+  # Analyze source and build output text files for credentials
+  # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/credscan-azure-devops-build-task
+  - task: CredScan@2
+    displayName: Run CredScan
+    inputs:
+      toolMajorVersion: V2
+    condition: succeededOrFailed()
+    continueOnError: True
+
+  # Scan C/C++ for security vulnerabilities
+  # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/flawfinder-build-task
+  - task: Flawfinder@2
+    displayName: 'Run Flawfinder'
+    condition: succeededOrFailed()
+    continueOnError: True
+
+  # Scan text elements including code, code comments, and content/web pages, for sensitive terms based on legal, cultural, or geopolitical reasons
+  # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/policheck-build-task
+  - task: PoliCheck@2
+    displayName: Run PoliCheck
+    inputs:
+      optionsFC: 1 # Enables scanning of comments
+      optionsUEPATH: $(Build.SourcesDirectory)\Build\PoliCheckExclusions.xml
+    condition: succeededOrFailed()
+    continueOnError: True
+
+  # Analyze managed C#/VB code (.NET framework and .NET Core) for security vulnerabilities
+  # https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/roslyn-analyzers-build-task
+  - task: RoslynAnalyzers@2
+    displayName: Run Roslyn Analyzers
+    condition: succeededOrFailed()
+    continueOnError: True
+
+  # Analyze unmanaged C/C++ code for security vulnerabilities
+  # https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/prefast-build-task
+  - task: SDLNativeRules@2
+    displayName: Run PREfast SDL Native Rules for MSBuild
+    condition: succeededOrFailed()
+    continueOnError: True
+
+  - task: MicroBuildCleanup@1
+    displayName: MicroBuild cleanup
+    continueOnError: True
+
+  # Generate security analysis report
+  # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/security-analysis-report-build-task
+  - task: SdtReport@1
+    displayName: Create Security Analysis Report
+    inputs:
+      AllTools: true
+      BinSkimBreakOn: WarningAbove
+      PoliCheckBreakOn: Severity4Above
+      RoslynAnalyzersBreakOn: WarningAbove
+    condition: succeededOrFailed()
+    continueOnError: True
+
+  # Publish security analysis logs
+  - task: PublishSecurityAnalysisLogs@2
+    displayName: Publish Security Analysis Logs
+    condition: succeededOrFailed()
+    continueOnError: True
+
+  # Copy sdt logs for publishing
+  - task: CopyFiles@2
+    displayName: Save SDT logs to Staging Directory
+    inputs:
+      SourceFolder: $(Agent.BuildDirectory)\_sdt
+      TargetFolder: $(Build.StagingDirectory)
+
+  # Publish staging artifacts
+  - task: PublishBuildArtifacts@1
+    displayName: Publish Staging Directory
+    inputs:
+      PathtoPublish: $(Build.StagingDirectory)
+
+  # Upload results to TSA
+  # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/tsa-upload-build-task
+  - task: TSAUpload@2
+    displayName: TSA Upload
+    inputs:
+      GdnPublishTsaOnboard: True
+      GdnPublishTsaConfigFile: $(Build.SourcesDirectory)\TsaConfig.json
+
+  # Index and analyze sources for code search (only if UseCodex == true)
+  - task: Ref12.ref12-analyze-task.ref12-analyze-task.Ref12Analyze@0
+    displayName: Index source code for code search
+    inputs:
+      codexoutputroot: '$(Build.StagingDirectory)/Codex'
+      workflowArguments: |
+        /sourcesDirectory:$(Build.SourcesDirectory)
+        /codexRepoUrl:$(Build.Repository.Uri)
+        /repoName:$(Build.Repository.Name)
+        /additionalCodexArguments:-bld
+        /additionalCodexArguments: $(Build.SourcesDirectory)\logs
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['UseCodex'], 'true'))
