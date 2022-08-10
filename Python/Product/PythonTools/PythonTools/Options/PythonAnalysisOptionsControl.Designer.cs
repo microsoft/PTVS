@@ -76,8 +76,8 @@
             tableLayoutPanel1.Controls.Add(this._searchPaths, 1, 5);
             tableLayoutPanel1.Controls.Add(this._typeShedPathsLabel, 0, 6);
             tableLayoutPanel1.Controls.Add(this._typeshedPaths, 1, 6);
-            tableLayoutPanel1.Controls.Add(this._autoSearchPath, 0, 7);
             tableLayoutPanel1.Controls.Add(this.importFormatLabel, 0, 3);
+            tableLayoutPanel1.Controls.Add(this._autoSearchPath, 0, 7);
             tableLayoutPanel1.Controls.Add(this._indexing, 0, 8);
             tableLayoutPanel1.Name = "tableLayoutPanel1";
             // 

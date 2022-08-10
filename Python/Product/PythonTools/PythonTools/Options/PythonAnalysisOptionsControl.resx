@@ -325,10 +325,13 @@
     <value>5</value>
   </data>
   <data name="_importFormatCombo.Location" type="System.Drawing.Point, System.Drawing">
-    <value>118, 78</value>
+    <value>117, 77</value>
+  </data>
+  <data name="_importFormatCombo.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
   </data>
   <data name="_importFormatCombo.Size" type="System.Drawing.Size, System.Drawing">
-    <value>252, 21</value>
+    <value>253, 21</value>
   </data>
   <data name="_importFormatCombo.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -358,7 +361,7 @@
     <value>NoControl</value>
   </data>
   <data name="stubsPathsLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 107</value>
+    <value>3, 105</value>
   </data>
   <data name="stubsPathsLabel.Size" type="System.Drawing.Size, System.Drawing">
     <value>61, 13</value>
@@ -385,7 +388,7 @@
     <value>7</value>
   </data>
   <data name="_stubsPath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>117, 104</value>
+    <value>117, 102</value>
   </data>
   <data name="_stubsPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -415,7 +418,7 @@
     <value>NoControl</value>
   </data>
   <data name="_searchPathsLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 129</value>
+    <value>3, 127</value>
   </data>
   <data name="_searchPathsLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 3, 3, 0</value>
@@ -445,7 +448,7 @@
     <value>9</value>
   </data>
   <data name="_searchPaths.Location" type="System.Drawing.Point, System.Drawing">
-    <value>117, 128</value>
+    <value>117, 126</value>
   </data>
   <data name="_searchPaths.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -478,7 +481,7 @@
     <value>NoControl</value>
   </data>
   <data name="_typeShedPathsLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 184</value>
+    <value>3, 182</value>
   </data>
   <data name="_typeShedPathsLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 3, 3, 0</value>
@@ -508,7 +511,7 @@
     <value>11</value>
   </data>
   <data name="_typeshedPaths.Location" type="System.Drawing.Point, System.Drawing">
-    <value>117, 183</value>
+    <value>117, 181</value>
   </data>
   <data name="_typeshedPaths.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -534,42 +537,6 @@
   <data name="&gt;&gt;_typeshedPaths.ZOrder" xml:space="preserve">
     <value>12</value>
   </data>
-  <data name="_autoSearchPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left</value>
-  </data>
-  <data name="_autoSearchPath.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="_autoSearchPath.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="_autoSearchPath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 242</value>
-  </data>
-  <data name="_autoSearchPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 6, 6, 3</value>
-  </data>
-  <data name="_autoSearchPath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>256, 17</value>
-  </data>
-  <data name="_autoSearchPath.TabIndex" type="System.Int32, mscorlib">
-    <value>14</value>
-  </data>
-  <data name="_autoSearchPath.Text" xml:space="preserve">
-    <value>&amp;Automatically add common search paths like 'src'</value>
-  </data>
-  <data name="&gt;&gt;_autoSearchPath.Name" xml:space="preserve">
-    <value>_autoSearchPath</value>
-  </data>
-  <data name="&gt;&gt;_autoSearchPath.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;_autoSearchPath.Parent" xml:space="preserve">
-    <value>tableLayoutPanel1</value>
-  </data>
-  <data name="&gt;&gt;_autoSearchPath.ZOrder" xml:space="preserve">
-    <value>13</value>
-  </data>
   <data name="importFormatLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left</value>
   </data>
@@ -577,7 +544,7 @@
     <value>True</value>
   </data>
   <data name="importFormatLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 82</value>
+    <value>3, 81</value>
   </data>
   <data name="importFormatLabel.Size" type="System.Drawing.Size, System.Drawing">
     <value>71, 13</value>
@@ -601,10 +568,40 @@
     <value>tableLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;importFormatLabel.ZOrder" xml:space="preserve">
+    <value>13</value>
+  </data>
+  <data name="_autoSearchPath.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_autoSearchPath.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="_autoSearchPath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 240</value>
+  </data>
+  <data name="_autoSearchPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 6, 6, 3</value>
+  </data>
+  <data name="_autoSearchPath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>256, 17</value>
+  </data>
+  <data name="_autoSearchPath.TabIndex" type="System.Int32, mscorlib">
     <value>14</value>
   </data>
-  <data name="_indexing.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left</value>
+  <data name="_autoSearchPath.Text" xml:space="preserve">
+    <value>&amp;Automatically add common search paths like 'src'</value>
+  </data>
+  <data name="&gt;&gt;_autoSearchPath.Name" xml:space="preserve">
+    <value>_autoSearchPath</value>
+  </data>
+  <data name="&gt;&gt;_autoSearchPath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_autoSearchPath.Parent" xml:space="preserve">
+    <value>tableLayoutPanel1</value>
+  </data>
+  <data name="&gt;&gt;_autoSearchPath.ZOrder" xml:space="preserve">
+    <value>14</value>
   </data>
   <data name="_indexing.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -613,13 +610,13 @@
     <value>TopLeft</value>
   </data>
   <data name="_indexing.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 268</value>
+    <value>6, 266</value>
   </data>
   <data name="_indexing.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>6, 6, 6, 3</value>
   </data>
   <data name="_indexing.Size" type="System.Drawing.Size, System.Drawing">
-    <value>351, 19</value>
+    <value>351, 21</value>
   </data>
   <data name="_indexing.TabIndex" type="System.Int32, mscorlib">
     <value>15</value>
@@ -668,7 +665,7 @@ such as auto-import, add import, workspace symbols and etc.</value>
     <value>0</value>
   </data>
   <data name="tableLayoutPanel1.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="diagnosticModeLabel" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_diagnosticsModeCombo" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="logLevelLabel" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_logLevelCombo" Row="1" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="typeCheckingModeLabel" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_typeCheckingMode" Row="2" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_importFormatCombo" Row="3" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="stubsPathsLabel" Row="4" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_stubsPath" Row="4" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_searchPathsLabel" Row="5" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_searchPaths" Row="5" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_typeShedPathsLabel" Row="6" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_typeshedPaths" Row="6" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_autoSearchPath" Row="7" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="importFormatLabel" Row="3" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_indexing" Row="8" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,100,Absolute,266" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,Absolute,20" /&gt;&lt;/TableLayoutSettings&gt;</value>
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="diagnosticModeLabel" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_diagnosticsModeCombo" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="logLevelLabel" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_logLevelCombo" Row="1" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="typeCheckingModeLabel" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_typeCheckingMode" Row="2" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_importFormatCombo" Row="3" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="stubsPathsLabel" Row="4" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_stubsPath" Row="4" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_searchPathsLabel" Row="5" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_searchPaths" Row="5" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_typeShedPathsLabel" Row="6" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_typeshedPaths" Row="6" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="importFormatLabel" Row="3" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_autoSearchPath" Row="7" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_indexing" Row="8" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,100,Absolute,266" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,Absolute,20" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
   <metadata name="_diagnosticModeToolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>190, 17</value>
