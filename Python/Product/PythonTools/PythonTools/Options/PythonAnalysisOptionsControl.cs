@@ -45,6 +45,10 @@ namespace Microsoft.PythonTools.Options {
 
             _typeshedPathsToolTip.SetToolTip(_typeshedPaths, Strings.TypeshedPathsToolTip);
             _typeshedPathsLabelToolTip.SetToolTip(_typeShedPathsLabel, Strings.TypeshedPathsToolTip);
+
+            _importFormatCombo.Items.Add(Strings.ImportFormatAbsolute);
+            _importFormatCombo.Items.Add(Strings.ImportFormatRelative);
+            _importFormatToolTip.SetToolTip(_importFormatCombo, Strings.ImportFormatToolTip);
         }
 
         internal void SyncControlWithPageSettings(PythonToolsService pyService) {
@@ -54,8 +58,11 @@ namespace Microsoft.PythonTools.Options {
             _typeshedPaths.Lines = pyService.AnalysisOptions.TypeshedPaths ?? Array.Empty<string>();
 
             _autoSearchPath.Checked = pyService.AnalysisOptions.AutoSearchPaths;
+            _indexing.Checked = pyService.AnalysisOptions.Indexing;
             _diagnosticsModeCombo.SelectedIndex =
                 pyService.AnalysisOptions.DiagnosticMode == PylanceDiagnosticMode.OpenFilesOnly ? 0 : 1;
+            _importFormatCombo.SelectedIndex =
+                pyService.AnalysisOptions.ImportFormat == PylanceImportFormat.Absolute ? 0 : 1;
 
             if (pyService.AnalysisOptions.TypeCheckingMode == PylanceTypeCheckingMode.Off) {
                 _typeCheckingMode.SelectedIndex = 0;
@@ -90,8 +97,11 @@ namespace Microsoft.PythonTools.Options {
                 .Split(pathsSeparators, StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
 
             pyService.AnalysisOptions.AutoSearchPaths = _autoSearchPath.Checked;
+            pyService.AnalysisOptions.Indexing = _indexing.Checked;
             pyService.AnalysisOptions.DiagnosticMode = _diagnosticsModeCombo.SelectedIndex == 0 ?
                 PylanceDiagnosticMode.OpenFilesOnly : PylanceDiagnosticMode.Workspace;
+            pyService.AnalysisOptions.ImportFormat = _importFormatCombo.SelectedIndex == 0 ?
+                PylanceImportFormat.Absolute : PylanceImportFormat.Relative;
 
             switch (_typeCheckingMode.SelectedIndex) {
                 case 0:

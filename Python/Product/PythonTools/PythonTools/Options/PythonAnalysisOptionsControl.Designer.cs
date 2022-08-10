@@ -33,12 +33,15 @@
             this._diagnosticsModeCombo = new System.Windows.Forms.ComboBox();
             this._logLevelCombo = new System.Windows.Forms.ComboBox();
             this._typeCheckingMode = new System.Windows.Forms.ComboBox();
+            this._importFormatCombo = new System.Windows.Forms.ComboBox();
             this._stubsPath = new System.Windows.Forms.TextBox();
             this._searchPathsLabel = new System.Windows.Forms.Label();
             this._searchPaths = new System.Windows.Forms.TextBox();
             this._typeShedPathsLabel = new System.Windows.Forms.Label();
             this._typeshedPaths = new System.Windows.Forms.TextBox();
             this._autoSearchPath = new System.Windows.Forms.CheckBox();
+            this.importFormatLabel = new System.Windows.Forms.Label();
+            this._indexing = new System.Windows.Forms.CheckBox();
             this._diagnosticModeToolTip = new System.Windows.Forms.ToolTip(this.components);
             this._logLevelToolTip = new System.Windows.Forms.ToolTip(this.components);
             this._typeCheckingToolTip = new System.Windows.Forms.ToolTip(this.components);
@@ -48,6 +51,7 @@
             this._commonSearchPathsToolTip = new System.Windows.Forms.ToolTip(this.components);
             this._searchPathsLabelToolTip = new System.Windows.Forms.ToolTip(this.components);
             this._typeshedPathsLabelToolTip = new System.Windows.Forms.ToolTip(this.components);
+            this._importFormatToolTip = new System.Windows.Forms.ToolTip(this.components);
             tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             diagnosticModeLabel = new System.Windows.Forms.Label();
             logLevelLabel = new System.Windows.Forms.Label();
@@ -65,13 +69,16 @@
             tableLayoutPanel1.Controls.Add(this._logLevelCombo, 1, 1);
             tableLayoutPanel1.Controls.Add(typeCheckingModeLabel, 0, 2);
             tableLayoutPanel1.Controls.Add(this._typeCheckingMode, 1, 2);
-            tableLayoutPanel1.Controls.Add(stubsPathsLabel, 0, 3);
-            tableLayoutPanel1.Controls.Add(this._stubsPath, 1, 3);
-            tableLayoutPanel1.Controls.Add(this._searchPathsLabel, 0, 4);
-            tableLayoutPanel1.Controls.Add(this._searchPaths, 1, 4);
-            tableLayoutPanel1.Controls.Add(this._typeShedPathsLabel, 0, 5);
-            tableLayoutPanel1.Controls.Add(this._typeshedPaths, 1, 5);
+            tableLayoutPanel1.Controls.Add(this._importFormatCombo, 1, 3);
+            tableLayoutPanel1.Controls.Add(stubsPathsLabel, 0, 4);
+            tableLayoutPanel1.Controls.Add(this._stubsPath, 1, 4);
+            tableLayoutPanel1.Controls.Add(this._searchPathsLabel, 0, 5);
+            tableLayoutPanel1.Controls.Add(this._searchPaths, 1, 5);
+            tableLayoutPanel1.Controls.Add(this._typeShedPathsLabel, 0, 6);
+            tableLayoutPanel1.Controls.Add(this._typeshedPaths, 1, 6);
             tableLayoutPanel1.Controls.Add(this._autoSearchPath, 0, 7);
+            tableLayoutPanel1.Controls.Add(this.importFormatLabel, 0, 3);
+            tableLayoutPanel1.Controls.Add(this._indexing, 0, 8);
             tableLayoutPanel1.Name = "tableLayoutPanel1";
             // 
             // diagnosticModeLabel
@@ -109,6 +116,14 @@
             this._typeCheckingMode.FormattingEnabled = true;
             resources.ApplyResources(this._typeCheckingMode, "_typeCheckingMode");
             this._typeCheckingMode.Name = "_typeCheckingMode";
+            // 
+            // _importFormatCombo
+            // 
+            this._importFormatCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this._importFormatCombo.DropDownWidth = 253;
+            this._importFormatCombo.FormattingEnabled = true;
+            resources.ApplyResources(this._importFormatCombo, "_importFormatCombo");
+            this._importFormatCombo.Name = "_importFormatCombo";
             // 
             // stubsPathsLabel
             // 
@@ -149,6 +164,18 @@
             this._autoSearchPath.Name = "_autoSearchPath";
             this._autoSearchPath.UseVisualStyleBackColor = true;
             // 
+            // importFormatLabel
+            // 
+            resources.ApplyResources(this.importFormatLabel, "importFormatLabel");
+            this.importFormatLabel.Name = "importFormatLabel";
+            // 
+            // _indexing
+            // 
+            resources.ApplyResources(this._indexing, "_indexing");
+            tableLayoutPanel1.SetColumnSpan(this._indexing, 2);
+            this._indexing.Name = "_indexing";
+            this._indexing.UseVisualStyleBackColor = true;
+            // 
             // PythonAnalysisOptionsControl
             // 
             resources.ApplyResources(this, "$this");
@@ -177,9 +204,13 @@
         private System.Windows.Forms.ToolTip _typeshedPathsToolTip;
         private System.Windows.Forms.ToolTip _commonSearchPathsToolTip;
         private System.Windows.Forms.CheckBox _autoSearchPath;
+        private System.Windows.Forms.CheckBox _indexing;
         private System.Windows.Forms.ToolTip _searchPathsLabelToolTip;
         private System.Windows.Forms.ToolTip _typeshedPathsLabelToolTip;
         private System.Windows.Forms.Label _typeShedPathsLabel;
+        private System.Windows.Forms.ToolTip _importFormatToolTip;
         private System.Windows.Forms.Label _searchPathsLabel;
+        private System.Windows.Forms.ComboBox _importFormatCombo;
+        private System.Windows.Forms.Label importFormatLabel;
     }
 }
