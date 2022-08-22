@@ -4580,6 +4580,33 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Absolute.
+        /// </summary>
+        public static string ImportFormatAbsolute {
+            get {
+                return ResourceManager.GetString("ImportFormatAbsolute", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Relative.
+        /// </summary>
+        public static string ImportFormatRelative {
+            get {
+                return ResourceManager.GetString("ImportFormatRelative", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Defines the default format for import module..
+        /// </summary>
+        public static string ImportFormatToolTip {
+            get {
+                return ResourceManager.GetString("ImportFormatToolTip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to import * only allowed at module level.
         /// </summary>
         public static string ImportOnlyAllowedAtModuleErrorMsg {

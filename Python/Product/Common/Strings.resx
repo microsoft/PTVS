@@ -3432,4 +3432,13 @@ Please specify at least one package.</value>
     <value>Virtual environment name can't contain any of the following characters: {0}</value>
     <comment>{0} is a list of invalid path characters, space-delimited.</comment>
   </data>
+  <data name="ImportFormatAbsolute" xml:space="preserve">
+    <value>Absolute</value>
+  </data>
+  <data name="ImportFormatRelative" xml:space="preserve">
+    <value>Relative</value>
+  </data>
+  <data name="ImportFormatToolTip" xml:space="preserve">
+    <value>Defines the default format for import module.</value>
+  </data>
 </root>

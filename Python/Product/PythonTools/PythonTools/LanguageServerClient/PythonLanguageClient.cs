@@ -245,7 +245,14 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                         typeCheckingMode = typeCheckingMode,
                         useLibraryCodeForTypes = true,
                         completeFunctionParens = _advancedEditorOptions.CompleteFunctionParens,
-                        autoImportCompletions = _advancedEditorOptions.AutoImportCompletions
+                        autoImportCompletions = _advancedEditorOptions.AutoImportCompletions,
+                        indexing = _analysisOptions.Indexing,
+                        extraCommitChars = false,
+                        importFormat = _analysisOptions.ImportFormat,
+                        inlayHints = new LanguageServerSettings.PythonSettings.PythonAnalysisSettings.PythonAnalysisInlayHintsSettings {
+                            variableTypes = false,
+                            functionReturnTypes = false
+                        }
                     }
                 };
 
