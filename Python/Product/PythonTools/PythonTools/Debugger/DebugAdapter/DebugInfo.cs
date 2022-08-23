@@ -137,7 +137,8 @@ namespace Microsoft.PythonTools.Debugger {
 
             Class = DefaultPresentationMode;
             Function = DefaultPresentationMode;
-            Protected = DefaultPresentationMode;
+            // vscode uses inline presentation for Protected variables
+            Protected = PresentationMode.Inline;
             Special = DefaultPresentationMode;
         }
     }

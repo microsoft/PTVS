@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Options {
             // variable presentation
             VariablePresentationForClasses = _service.LoadEnum<PresentationMode>(VariablePresentationForClassesSetting, Category) ?? VariablePresentation.DefaultPresentationMode;
             VariablePresentationForFunctions = _service.LoadEnum<PresentationMode>(VariablePresentationForFunctionsSetting, Category) ?? VariablePresentation.DefaultPresentationMode;
-            VariablePresentationForProtected = _service.LoadEnum<PresentationMode>(VariablePresentationForProtectedSetting, Category) ?? VariablePresentation.DefaultPresentationMode;
+            VariablePresentationForProtected = _service.LoadEnum<PresentationMode>(VariablePresentationForProtectedSetting, Category) ?? PresentationMode.Inline;
             VariablePresentationForSpecial = _service.LoadEnum<PresentationMode>(VariablePresentationForSpecialSetting, Category) ?? VariablePresentation.DefaultPresentationMode;
 
             Changed?.Invoke(this, EventArgs.Empty);
@@ -93,7 +93,7 @@ namespace Microsoft.PythonTools.Options {
             // variable presentation
             VariablePresentationForClasses = VariablePresentation.DefaultPresentationMode;
             VariablePresentationForFunctions = VariablePresentation.DefaultPresentationMode;
-            VariablePresentationForProtected = VariablePresentation.DefaultPresentationMode;
+            VariablePresentationForProtected = PresentationMode.Inline;
             VariablePresentationForSpecial = VariablePresentation.DefaultPresentationMode;
 
             Changed?.Invoke(this, EventArgs.Empty);
