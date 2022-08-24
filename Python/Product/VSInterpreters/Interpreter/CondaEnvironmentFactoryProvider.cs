@@ -313,9 +313,18 @@ namespace Microsoft.PythonTools.Interpreter {
                 try {
                     // deserialize the json into an object and return the version
                     var result = JsonConvert.DeserializeObject<CondaListResult>(json);
-                    if (result != null && result.Any()) {
-                        version = new Version(result.First().Version);
+                    if (result == null) {
+                        return version;
                     }
+
+                    // look for a package named "python"
+                    var pythonResult = result.FirstOrDefault(x => x.Name == "python");
+                    if (pythonResult == null) {
+                        return version;
+                    }
+
+                    // get the version from this package
+                    version = new Version(pythonResult.Version);
                     
                 } catch (JsonException ex) {
                     Debug.WriteLine("Failed to parse: {0}".FormatInvariant(ex.Message));
@@ -345,6 +354,9 @@ namespace Microsoft.PythonTools.Interpreter {
         internal class CondaListItem {
             [JsonProperty("version")]
             public string Version { get; set; }
+
+            [JsonProperty("name")]
+            public string Name { get; set; }
         }
 
         private string GetCondaExecutablePath() {
