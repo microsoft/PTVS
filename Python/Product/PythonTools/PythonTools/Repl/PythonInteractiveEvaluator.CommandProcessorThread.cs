@@ -440,6 +440,8 @@ namespace Microsoft.PythonTools.Repl {
 
                 _eval.InvokeAsync(() => {
                     try {
+                        // This can potentially instantiate any random subclass of FrameworkElement,
+                        // but that's OK and expected.
                         var fe = XamlReader.Load(new MemoryStream(buffer)) as FrameworkElement;
                         if (fe != null) {
                             _eval.WriteFrameworkElement(fe, fe.DesiredSize);
