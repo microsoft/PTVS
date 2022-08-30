@@ -244,6 +244,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             try {
+                ServicePointManager.CheckCertificateRevocationList = true;
                 using (var client = new WebClient()) {
                     Stream data;
                     client.Headers[HttpRequestHeader.UserAgent] = UserAgent;

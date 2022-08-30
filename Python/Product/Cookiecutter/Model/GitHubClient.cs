@@ -78,6 +78,7 @@ namespace Microsoft.CookiecutterTools.Model {
         }
 
         private static WebClient CreateClient() {
+            ServicePointManager.CheckCertificateRevocationList = true;
             var wc = new WebClient();
             wc.Encoding = Encoding.UTF8;
             wc.Headers.Add(HttpRequestHeader.UserAgent, UserAgent);
