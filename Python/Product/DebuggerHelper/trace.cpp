@@ -481,7 +481,7 @@ static void TraceLine(void* frame) {
 
     void* f_code = ReadField<void*>(frame, fieldOffsets.PyFrameObject.f_code);
     void* co_filename = ReadField<void*>(f_code, fieldOffsets.PyCodeObject.co_filename);
-    if (co_filename == NULL) {
+    if (co_filename == nullptr) {
         return;
     }
 
