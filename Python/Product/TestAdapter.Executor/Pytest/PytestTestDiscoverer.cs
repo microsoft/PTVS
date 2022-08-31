@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.TestAdapter.Config;
 using Microsoft.PythonTools.TestAdapter.Services;
@@ -33,7 +34,8 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
     /// Note even though we specify  [DefaultExecutorUri(PythonConstants.PytestExecutorUriString)] we still get all .py source files
     /// from all testcontainers.  
     /// </summary>
-    [FileExtension(".py")]
+    // [FileExtension(".py")]
+    [DirectoryBasedTestDiscoverer]
     [DefaultExecutorUri(PythonConstants.PytestExecutorUriString)]
     public class PytestTestDiscoverer : PythonTestDiscoverer {
         private IMessageLogger _logger;
@@ -96,14 +98,14 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             if (string.IsNullOrEmpty(json)) {
                 return;
             }
-
+            MessageBox.Show("Hello: " + Process.GetCurrentProcess().Id);
             try {
                 var results = JsonConvert.DeserializeObject<List<PytestDiscoveryResults>>(json);
                 var testcases = ParseDiscoveryResults(results, settings.ProjectHome);
 
                 foreach (var tc in testcases) {
                     // Note: Test Explorer will show a key not found exception if we use a source path that doesn't match a test container's source.
-                    if (settings.TestContainerSources.TryGetValue(tc.CodeFilePath, out _)) {
+                    if (settings.TestContainerSources.TryGetValue(tc.Source, out _)) {
                         discoverySink.SendTestCase(tc);
                     }
                 }
@@ -132,6 +134,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
         private TestCase TryCreateVsTestCase(PytestTest test, string projectHome) {
             try {
                 TestCase tc = test.ToVsTestCase(projectHome);
+                tc.Source = projectHome;
                 return tc;
             } catch (Exception ex) {
                 Error(ex.Message);

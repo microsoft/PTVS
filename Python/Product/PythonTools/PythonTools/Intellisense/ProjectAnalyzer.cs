@@ -288,7 +288,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 lso.Changed += OnOptionsChanged;
                 _analysisOptions.typeStubPaths = GetTypeStubPaths(lso);
             }
-
+            
             var go = _services.Python?.GeneralOptions;
             if (go != null) {
                 go.Changed += OnOptionsChanged;

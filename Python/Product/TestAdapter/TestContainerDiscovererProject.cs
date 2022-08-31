@@ -318,12 +318,12 @@ namespace Microsoft.PythonTools.TestAdapter {
             if (projInfo == null)
                 return;
 
+            projInfo.RemoveTestContainer(projInfo.ProjectHome);
+            projInfo.AddTestContainer(this, projInfo.ProjectHome);
             foreach (var path in sources) {
                 if (isAdd) {
-                    projInfo.AddTestContainer(this, path);
                     _testFilesUpdateWatcher.AddWatch(path);
                 } else {
-                    projInfo.RemoveTestContainer(path);
                     _testFilesUpdateWatcher.RemoveWatch(path);
                 }
             }

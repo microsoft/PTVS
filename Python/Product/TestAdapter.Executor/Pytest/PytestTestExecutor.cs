@@ -21,6 +21,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Windows.Forms;
 using System.Xml.XPath;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.TestAdapter.Config;
@@ -54,6 +55,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         public void RunTests(IEnumerable<string> sources, IRunContext runContext, IFrameworkHandle frameworkHandle) {
+            MessageBox.Show("Hello: " + Process.GetCurrentProcess().Id);
             if (sources == null) {
                 throw new ArgumentNullException(nameof(sources));
             }
@@ -65,7 +67,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
 
             _cancelRequested.Reset();
-
+            
             var sourceToProjSettings = RunSettingsUtil.GetSourceToProjSettings(runContext.RunSettings, filterType:TestFrameworkType.Pytest);
             var testCollection = new TestCollection();
             foreach (var testGroup in sources.GroupBy(x => sourceToProjSettings[x])) {
