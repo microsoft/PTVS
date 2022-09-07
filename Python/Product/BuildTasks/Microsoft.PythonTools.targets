@@ -35,7 +35,6 @@ permissions and limitations under the License.
   -->
   <PropertyGroup>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <TargetFrameworkMoniker>.NETFramework,Version=$(TargetFrameworkVersion)</TargetFrameworkMoniker>
   </PropertyGroup>
 
   <!-- Creates a command object that will be displayed in the IDE.
