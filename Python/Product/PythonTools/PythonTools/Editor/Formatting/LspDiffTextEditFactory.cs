@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using DiffMatchPatch;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
@@ -45,12 +46,15 @@ namespace Microsoft.PythonTools.Editor.Formatting {
                 if (startIndex >= 0) {
                     diffOutputText = diffOutputText.Substring(startIndex);
                 }
-
-                // TODO: needed?
-                // Remove the text added by unified_diff
-                // # Work around missing newline (http://bugs.python.org/issue2142).
-                //patch = patch.replace(/\\ No newline at end of file[\r\n] /, '');
             }
+
+            // When there is no newline at the end of the file,
+            // formatters like black and autopep8 insert the following into the diff:
+            //      "\ No newline at end of file"
+            // See http://bugs.python.org/issue2142
+            // Remove that line since it causes errors when generating the patch
+            var regex = new Regex("\\\\ No newline at end of file[\r\n]");
+            diffOutputText = regex.Replace(diffOutputText, "");
 
             var patches = new diff_match_patch().patch_fromText(diffOutputText);
 
@@ -78,7 +82,8 @@ namespace Microsoft.PythonTools.Editor.Formatting {
             var start = new Position(line, character);
 
             for (int i = 0; i < diffs.Count; i++) {
-                switch (diffs[i].operation) {
+                var diff = diffs[i];
+                switch (diff.operation) {
                     case Operation.DELETE:
                         if (edit == null) {
                             edit = new TextEdit() {
