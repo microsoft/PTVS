@@ -34,7 +34,17 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
     /// Note even though we specify  [DefaultExecutorUri(PythonConstants.PytestExecutorUriString)] we still get all .py source files
     /// from all testcontainers.  
     /// </summary>
-    // [FileExtension(".py")]
+
+    // 1. If an ITestDiscoverer only includes one or more [FileExtension] attributes, then it will only be invoked for sources that are 
+    // files with the specified extensions (and that exist on disk at the specified path)
+    // 2. If an ITestDiscoverer only includes a [DirectoryBasedTestDiscoverer] attribute, then it will only be invoked for sources that 
+    // are directories (and that exist on disk at the specified path)
+    // 3. If an ITestDiscoverer includes both [FileExtension] and [DirectoryBasedTestDiscoverer] attributes then it will be invoked for 
+    // sources that exist on disk and that are either files matching the specified extensions OR directories.
+    // 4. If an ITestDiscoverer includes neither [FileExtension] nor [DirectoryBasedTestDiscoverer] attributes it will be invoked for all 
+    // test container sources that exist on disk (regardless of the file extensions of these sources, and regardless of whether the source 
+    // is a directory). For example, if your ITestDiscoverer omits both attributes, it will end up being called for .dll files for any C# 
+    // test projects that are included in the user's solution.
     [DirectoryBasedTestDiscoverer]
     [DefaultExecutorUri(PythonConstants.PytestExecutorUriString)]
     public class PytestTestDiscoverer : PythonTestDiscoverer {
@@ -98,7 +108,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             if (string.IsNullOrEmpty(json)) {
                 return;
             }
-            MessageBox.Show("Hello: " + Process.GetCurrentProcess().Id);
+
             try {
                 var results = JsonConvert.DeserializeObject<List<PytestDiscoveryResults>>(json);
                 var testcases = ParseDiscoveryResults(results, settings.ProjectHome);

@@ -16,9 +16,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Windows.Forms;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
@@ -55,7 +53,6 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                 String.IsNullOrWhiteSpace(test.Id)) {
                 throw new FormatException(test.ToString());
             }
-            // MessageBox.Show("Hello: " + Process.GetCurrentProcess().Id);
             (string parsedSource, int line) = test.ParseSourceAndLine();
             // Note: we use _settings.ProjectHome and not result.root since it is being lowercased
             var sourceFullPath = Path.IsPathRooted(parsedSource) ? parsedSource : PathUtils.GetAbsoluteFilePath(projectHome, parsedSource);

@@ -62,7 +62,7 @@
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.TemplateWizardInterface" />
     <Reference Include="Microsoft.VisualStudio.TestPlatform.ObjectModel">
-      <HintPath>$(DevEnvDir)CommonExtensions\Microsoft\TestWindow\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll</HintPath>
+      <HintPath>$(DevEnvDir)\Extensions\TestPlatform\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.TestWindow.Interfaces">
