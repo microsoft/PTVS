@@ -60,10 +60,6 @@ namespace Microsoft.PythonTools.Editor.Formatting {
 
             var patches = new diff_match_patch().patch_fromText(diffOutputText);
             foreach (var patch in patches ) {
-                //foreach (var diff in patch.diffs) {
-                //    diff.text += Environment.NewLine;
-                //}
-
                 var edits = GetEdits(documentText, patch.diffs, patch.start1);
                 textEdits.AddRange(edits);
             }
@@ -121,7 +117,6 @@ namespace Microsoft.PythonTools.Editor.Formatting {
                         // of the document, so inserts should reset the current line/character
                         // position to the start.
                         line = start.Line;
-                        //character = start.Character;
 
                         //only add newline before text if not inserting at begining of file
                         bool isPatchStart = (line == startLine) && (edit.Range.Start.Character == 0);
