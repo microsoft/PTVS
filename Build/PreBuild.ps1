@@ -1,10 +1,36 @@
-param ($vstarget, $outdir, $pylanceVersion, $debugpyVersion)
+<#
+    This script installs dependencies for PTVS, including pylance, debugpy, and all nuget packages.
+
+    PTVS consumes a public azure feed, defined in nuget.config.
+    However, the feed needs to be populated (once) when upgrading to new package versions, and feed population requires authentication.
+    See https://github.com/microsoft/PTVS/wiki/Build-and-Debug-Instructions-for-PTVS for instructions on how to authenticate.
+#>
+
+param (
+    # The visual studio major version we are targeting, defaults to 17.0
+    [Parameter()]
+    [string] $vstarget = "17.0",
+
+    # The directory where packages should be restored to, defaults to the root of the repo
+    [Parameter()]
+    [string] $outdir, 
+    
+    # The version of pylance we should download, defaults to "latest"
+    [Parameter()]
+    [string] $pylanceVersion = "latest", 
+    
+    # The version of debugpy we should download, defaults to "latest"
+    [Parameter()]
+    [string] $debugpyVersion = "latest", 
+    
+    # Run in interactive mode for azure feed authentication, defaults to false
+    [Parameter()]
+    [switch] $interactive
+)
 
 $ErrorActionPreference = "Stop"
 
-if (-not $vstarget) {
-    $vstarget = "17.0"
-} elseif ($vstarget.ToString() -match "^\d\d$") {
+if ($vstarget.ToString() -match "^\d\d$") {
     $vstarget = "$vstarget.0"
 }
 
@@ -27,14 +53,6 @@ $need_symlink = @(
     "Newtonsoft.Json",
     $microBuildCorePackageName
 )
-
-if (-not $pylanceVersion) {
-    $pylanceVersion = "latest"
-}
-
-if (-not $debugpyVersion) {
-    $debugpyVersion = "latest"
-}
 
 $buildroot = $MyInvocation.MyCommand.Definition | Split-Path -Parent | Split-Path -Parent
 
@@ -69,7 +87,7 @@ try {
     }
 
     # install pylance
-    npm install
+     npm install
 
     # print out the installed version
     $npmLsOutput = & npm ls @pylance/pylance
@@ -82,7 +100,11 @@ try {
 
     "-----"
     "Restoring Packages"
-    $arglist = "restore", "$vstarget\packages.config", "-OutputDirectory", "`"$outdir`"", "-Config", "nuget.config", "-NonInteractive"
+    # If you have authentication errors here, try passing -interactive on the command line
+    $arglist = "restore", "$vstarget\packages.config", "-OutputDirectory", "`"$outdir`"", "-Config", "nuget.config"
+    if (-not $interactive) {
+        $arglist += "-NonInteractive"
+    }
     $nuget = Get-Command nuget.exe -EA 0
     if (-not $nuget) {
         $nuget = Get-Command .\nuget.exe
