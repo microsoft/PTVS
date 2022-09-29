@@ -87,7 +87,13 @@ try {
     }
 
     # install pylance
-     npm install
+    npm install
+
+    # exit on error
+    if ($LASTEXITCODE -ne 0) {
+        "npm returned non-zero, exiting..."
+        exit 1
+    }
 
     # print out the installed version
     $npmLsOutput = & npm ls @pylance/pylance
