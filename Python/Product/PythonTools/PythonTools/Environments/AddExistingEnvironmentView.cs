@@ -51,16 +51,8 @@ namespace Microsoft.PythonTools.Environments {
         };
 
         public static IList<string> VersionNames { get; } = new[] {
-            "2.5",
-            "2.6",
-            "2.7",
-            "3.0",
-            "3.1",
-            "3.2",
-            "3.3",
-            "3.4",
-            "3.5",
-            "3.6",
+            // we only support creating environments of offically supported versions
+            // see https://devguide.python.org/versions/
             "3.7",
             "3.8",
             "3.9",
