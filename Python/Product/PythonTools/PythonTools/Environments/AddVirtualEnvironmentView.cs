@@ -104,6 +104,12 @@ namespace Microsoft.PythonTools.Environments {
         public static readonly DependencyProperty WillRegisterGloballyProperty =
             WillRegisterGloballyPropertyKey.DependencyProperty;
 
+        private static readonly DependencyPropertyKey IsUsingGlobalDefaultEnvPropertyKey =
+            DependencyProperty.RegisterReadOnly(nameof(IsUsingGlobalDefaultEnv), typeof(bool), typeof(AddVirtualEnvironmentView), new PropertyMetadata(false));
+
+        public static readonly DependencyProperty IsUsingGlobalDefaultEnvProperty =
+            IsUsingGlobalDefaultEnvPropertyKey.DependencyProperty;
+
         private static readonly DependencyPropertyKey InterpretersPropertyKey =
             DependencyProperty.RegisterReadOnly(nameof(Interpreters), typeof(ObservableCollection<InterpreterView>), typeof(AddVirtualEnvironmentView), new PropertyMetadata());
 
@@ -212,6 +218,11 @@ namespace Microsoft.PythonTools.Environments {
         public bool WillRegisterGlobally {
             get { return (bool)GetValue(WillRegisterGloballyProperty); }
             private set { SetValue(WillRegisterGloballyPropertyKey, value); }
+        }
+
+        public bool IsUsingGlobalDefaultEnv {
+            get { return (bool)GetValue(IsUsingGlobalDefaultEnvProperty); }
+            private set { SetValue(IsUsingGlobalDefaultEnvPropertyKey, value); }
         }
 
         public ObservableCollection<InterpreterView> Interpreters {
@@ -336,6 +347,10 @@ namespace Microsoft.PythonTools.Environments {
             CanInstallRequirementsTxt = File.Exists(RequirementsPath);
             WillInstallRequirementsTxt = CanInstallRequirementsTxt && WillCreateVirtualEnv;
             WillRegisterGlobally = IsRegisterCustomEnv && canRegisterGlobally && WillCreateVirtualEnv;
+            IsUsingGlobalDefaultEnv = true;
+            if (SelectedProject != null && SelectedProject.Node != null && SelectedProject.Node.IsActiveInterpreterGlobalDefault) {
+                IsUsingGlobalDefaultEnv = false;
+            }
             
             // Enable the Create button only if there are no validation errors,
             // and if progress is not already being displayed
@@ -454,6 +469,7 @@ namespace Microsoft.PythonTools.Environments {
                 WillInstallPip = false;
                 WillInstallVirtualEnv = false;
                 WillRegisterGlobally = false;
+                IsUsingGlobalDefaultEnv = false;
                 UseVEnv = false;
                 UseVirtualEnv = false;
                 IsAcceptShieldVisible = false;
