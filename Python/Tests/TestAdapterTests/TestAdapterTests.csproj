@@ -53,9 +53,10 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.VisualStudio.TestPlatform.ObjectModel">
+    <!-- <Reference Include="Microsoft.VisualStudio.TestPlatform.ObjectModel">
       <HintPath>$(DevEnvDir)\Extensions\TestPlatform\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll</HintPath>
-    </Reference>
+    </Reference> -->
+    <Reference Include="Microsoft.VisualStudio.TestPlatform.ObjectModel" />
     <Reference Include="Microsoft.VisualStudio.TestWindow.Interfaces">
       <HintPath>$(DevEnvDir)\CommonExtensions\Microsoft\TestWindow\Microsoft.VisualStudio.TestWindow.Interfaces.dll</HintPath>
     </Reference>
