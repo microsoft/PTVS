@@ -122,7 +122,8 @@ namespace Microsoft.PythonTools.Environments {
                     baseInterp,
                     _registerAsCustomEnv,
                     _customEnvName,
-                    _useVEnv
+                    _useVEnv,
+                    _setAsCurrent
                 );
 
                 if (factory != null) {
