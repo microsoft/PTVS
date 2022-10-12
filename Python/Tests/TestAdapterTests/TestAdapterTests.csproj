@@ -56,7 +56,10 @@
     <!-- <Reference Include="Microsoft.VisualStudio.TestPlatform.ObjectModel">
       <HintPath>$(DevEnvDir)\Extensions\TestPlatform\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll</HintPath>
     </Reference> -->
-    <Reference Include="Microsoft.VisualStudio.TestPlatform.ObjectModel" />
+    <Reference Include="Microsoft.TestPlatform.ObjectModel">
+      <HintPath>$(PackagesPath)\Microsoft.TestPlatform.ObjectModel.17.4.0-preview-20221003-03\lib\net462\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.TestWindow.Interfaces">
       <HintPath>$(DevEnvDir)\CommonExtensions\Microsoft\TestWindow\Microsoft.VisualStudio.TestWindow.Interfaces.dll</HintPath>
     </Reference>
