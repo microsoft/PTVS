@@ -211,7 +211,7 @@
                     <CheckBox
                         Margin="0 0 0 10"
                         IsChecked="{Binding Path=SetAsCurrent}"
-                        IsEnabled="{Binding Path=SelectedProject, Converter={x:Static wpf:Converters.NullIsFalse}}"
+                        IsEnabled="{Binding Path=IsUsingGlobalDefaultEnv}"
                         Content="{x:Static common:Strings.AddEnvironmentSetAsCurrentLabel}"
                         AutomationProperties.AutomationId="SetAsCurrent"
                         AutomationProperties.Name="{x:Static common:Strings.AddEnvironmentSetAsCurrentLabel}"/>
