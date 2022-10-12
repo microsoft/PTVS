@@ -56,6 +56,7 @@ namespace Microsoft.CookiecutterTools.Model {
             _cache = new List<Template>();
 
             try {
+                ServicePointManager.CheckCertificateRevocationList = true;
                 var client = new WebClient();
                 var feed = await client.DownloadStringTaskAsync(_feedLocation);
                 var feedUrls = feed.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);

@@ -32,6 +32,7 @@ namespace Microsoft.PythonTools.Debugger.Transports {
             // of inactivity, making it impossible to attach. So before trying to connect to the debugger, "ping" the website
             // via HTTP to ensure that we have something to connect to.
             try {
+                ServicePointManager.CheckCertificateRevocationList = true;
                 var httpRequest = WebRequest.Create(new UriBuilder(uri) { Scheme = "http", Port = -1, Path = "/" }.Uri);
                 httpRequest.Method = WebRequestMethods.Http.Head;
                 httpRequest.Timeout = 5000;

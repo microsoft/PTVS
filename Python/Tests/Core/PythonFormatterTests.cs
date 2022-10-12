@@ -25,37 +25,39 @@ using Microsoft.PythonTools.Common.Parsing;
 namespace PythonToolsTests {
     [TestClass]
     public class PythonFormatterTests {
+
+        private const string FileContentsWithoutNewline = @"
+#########this is a comment
+import os,sys;
+spam( ham [ 1 ], { eggs : 2 } )
+def foo         ():pass
+x=1;y       =2;
+y = 2
+#comment no newline";
+        private const string FileContentsWithNewline = FileContentsWithoutNewline + "\n";
+
         [TestMethod, Priority(0)]
         public async Task FormatDocumentYapf() {
             var formatter = new PythonFormatterYapf();
-            var interpreterExePath = CreateVirtualEnv(formatter);
+            await FormatDocument(formatter, FileContentsWithNewline);
+        }
 
-            var contents = @"a  = [0,  2, 3  ]
-b =100 *2
-";
-            var filePath = CreateDocument(contents);
-
-            var actual = await formatter.FormatDocumentAsync(interpreterExePath, filePath, contents, null, new string[0]);
-
-            // We don't need to check correct formatting (as it changes with version) but rather
-            // that it made any changes
-            Assert.IsTrue(actual.Length > 0, "No actual edits performed by Yapf");
+        [TestMethod, Priority(0)]
+        public async Task FormatDocumentYapfNoNewline() {
+            var formatter = new PythonFormatterYapf();
+            await FormatDocument(formatter, FileContentsWithoutNewline);
         }
 
         [TestMethod, Priority(0)]
         public async Task FormatDocumentAutopep8() {
             var formatter = new PythonFormatterAutopep8();
-            var interpreterExePath = CreateVirtualEnv(formatter);
+            await FormatDocument(formatter, FileContentsWithNewline);
+        }
 
-            var contents = @"a  = [0,  2, 3  ]
-b =100 *2
-";
-            var filePath = CreateDocument(contents);
-
-            var actual = await formatter.FormatDocumentAsync(interpreterExePath, filePath, contents, null, new string[0]);
-            // We don't need to check correct formatting (as it changes with version) but rather
-            // that it made any changes
-            Assert.IsTrue(actual.Length > 0, "No actual edits performed by Autopep8");
+        [TestMethod, Priority(0)]
+        public async Task FormatDocumentAutopep8NoNewline() {
+            var formatter = new PythonFormatterAutopep8();
+            await FormatDocument(formatter, FileContentsWithoutNewline);
         }
 
         [TestMethod, Priority(0)]
@@ -65,38 +67,32 @@ b =100 *2
                 // Black requires 37 or newer
                 Assert.Inconclusive("Black formatting requires 37 or later");
             }
-
             var formatter = new PythonFormatterBlack();
-            var interpreterExePath = CreateVirtualEnv(formatter);
+            await FormatDocument(formatter, FileContentsWithNewline);
+        }
 
-            var contents = @"a  = [0,  2, 3  ]
-b =100 *2
-";
-            var filePath = CreateDocument(contents);
-
-            var actual = await formatter.FormatDocumentAsync(interpreterExePath, filePath, contents, null, new string[0]);
-            // We don't need to check correct formatting (as it changes with version) but rather
-            // that it made any changes
-            Assert.IsTrue(actual.Length > 0, "No actual edits performed by Black");
+        [TestMethod, Priority(0)]
+        public async Task FormatDocumentBlackNoNewline() {
+            var python = PythonPaths.LatestVersion;
+            if (python.Version < PythonLanguageVersion.V37) {
+                // Black requires 37 or newer
+                Assert.Inconclusive("Black formatting requires 37 or later");
+            }
+            var formatter = new PythonFormatterBlack();
+            await FormatDocument(formatter, FileContentsWithoutNewline);
         }
 
         [TestMethod, Priority(0)]
         [ExpectedException(typeof(PythonFormatterRangeNotSupportedException))]
         public async Task FormatSelectionBlack() {
             var formatter = new PythonFormatterBlack();
-            var interpreterExePath = CreateVirtualEnv(formatter);
-
-            var contents = @"a  = [0,  2, 3  ]
-b =100 *2
-";
-            var filePath = CreateDocument(contents);
 
             var range = new Range() {
                 Start = new Position(0, 0),
                 End = new Position(1, 0),
             };
 
-            await formatter.FormatDocumentAsync(interpreterExePath, filePath, contents, range, new string[0]);
+            await FormatDocument(formatter, FileContentsWithNewline, range);
         }
 
         private static string CreateDocument(string contents) {
@@ -116,6 +112,17 @@ b =100 *2
                 $"Cannot find {installedPath} in virtual env");
 
             return Path.Combine(envPath, "scripts", "python.exe");
+        }
+
+        private async static Task FormatDocument(PythonFormatter formatter, string contents, Range range = null) {
+            var interpreterExePath = CreateVirtualEnv(formatter);
+            var filePath = CreateDocument(contents);
+
+            var actual = await formatter.FormatDocumentAsync(interpreterExePath, filePath, contents, range, new string[0]);
+            
+            // The actual formatting can change between formatter versions, so just
+            // check that the formatter made some changes.
+            Assert.IsTrue(actual.Length > 0, $"No actual edits performed by {formatter.DisplayName}");
         }
     }
 }

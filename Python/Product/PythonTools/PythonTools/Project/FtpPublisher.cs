@@ -61,6 +61,7 @@ namespace Microsoft.PythonTools.Project {
             EnsureDirectoryExists(rootPath, destinationDir);
 
             // upload the file
+            ServicePointManager.CheckCertificateRevocationList = true;
             FtpWebRequest request = (FtpWebRequest)WebRequest.Create(new Uri(newLoc));
             request.Method = WebRequestMethods.Ftp.UploadFile;
             byte[] buffer = new byte[1024];
