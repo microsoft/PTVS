@@ -621,6 +621,15 @@ namespace Microsoft.PythonTools {
                 return ResourceManager.GetString("AddInstalledEnvironmentDescription", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The following versions of Python are installed:.
+        /// </summary>
+        public static string AddInstalledEnvironmentVersions {
+            get {
+                return ResourceManager.GetString("AddInstalledEnvironmentVersions", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Python.

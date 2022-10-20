@@ -16,11 +16,13 @@
                 <ResourceDictionary>
                     <DataTemplate x:Key="NoneTemplate" DataType="{x:Type l:SetupPackageNoneView}">
                         <TextBlock
+                            Focusable="True"
                             Text="{Binding Path=Text}"
                             Margin="0 0 0 20"/>
                     </DataTemplate>
                     <DataTemplate x:Key="InstalledTemplate" DataType="{x:Type l:SetupPackageView}">
                         <TextBlock
+                            Focusable="True"
                             Text="{Binding Path=Title}"
                             Margin="0 0 0 10"/>
                     </DataTemplate>
@@ -45,11 +47,13 @@
     </UserControl.Resources>
     <StackPanel Margin="0 7 0 0">
         <Label
+            Focusable="True"
             Content="{x:Static common:Strings.AddInstalledEnvironmentInstallationLabel}"
             Style="{StaticResource ModernLabel}"/>
 
         <!-- Available -->
         <TextBlock
+            Focusable="True"
             Text="{x:Static common:Strings.AddInstalledEnvironmentDescription}"
             Margin="0 0 0 20"/>
 
@@ -61,8 +65,14 @@
 
         <!-- Installed -->
         <Label
+            Focusable="True"
             Content="{x:Static common:Strings.AddInstalledEnvironmentInstalledLabel}"
             Style="{StaticResource ModernLabel}"/>
+        
+        <TextBlock
+            Focusable="True"
+            Text="{x:Static common:Strings.AddInstalledEnvironmentVersions}"
+            Margin="0 0 0 20"/>
 
         <ItemsControl
             ItemsSource="{Binding Path=InstalledPackages}"
