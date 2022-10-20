@@ -168,9 +168,8 @@ namespace Microsoft.PythonTools.TestAdapter {
                 Predicate<string> testFileFilter = (x) => PythonConstants.TestFileExtensionRegex.IsMatch(PathUtils.GetFileOrDirectoryName(x));
 
                 var projInfo = new ProjectInfo(workspace);
-                foreach (var file in _workspaceContextProvider.Workspace.EnumerateUserFiles(testFileFilter)) {
-                    projInfo.AddTestContainer(this, file);
-                }
+                // only supply the root folder as the source
+                projInfo.AddTestContainer(this, projInfo.ProjectHome);
 
                 _projectMap[projInfo.ProjectHome] = projInfo;
             } catch (Exception ex) when (!ex.IsCriticalException()) {
@@ -276,22 +275,27 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             switch (e.ChangedReason) {
                 case TestFileChangedReason.Added:
-                    projInfo.AddTestContainer(this, e.File);
+                    RefreshTestContainer(projInfo);
                     break;
                 case TestFileChangedReason.Changed:
-                    projInfo.AddTestContainer(this, e.File);
+                    RefreshTestContainer(projInfo);
                     break;
                 case TestFileChangedReason.Removed:
-                    projInfo.RemoveTestContainer(e.File);
+                    RefreshTestContainer(projInfo);
                     break;
                 case TestFileChangedReason.Renamed:
-                    projInfo.RemoveTestContainer(e.OldFile);
-                    projInfo.AddTestContainer(this, e.File);
+                    RefreshTestContainer(projInfo);
                     break;
                 default:
                     break;
             }
             NotifyContainerChanged();
+        }
+
+        private void RefreshTestContainer(ProjectInfo projInfo) {
+            // refresh test container so that test explorer can auto refresh discovery result without reloading the solution
+            projInfo.RemoveTestContainer(projInfo.ProjectHome);
+            projInfo.AddTestContainer(this, projInfo.ProjectHome);
         }
 
         private bool IsFileExcluded(ProjectInfo projectInfo, string filePath) {
