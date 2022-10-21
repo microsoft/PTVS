@@ -720,6 +720,7 @@
                         <Trigger Property="IsSelected" Value="True">
                             <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ListBoxItemSelectedKey}}" />
                             <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.ListBoxItemSelectedTextKey}}" />
+                            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
