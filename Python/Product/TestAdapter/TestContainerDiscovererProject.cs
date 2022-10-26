@@ -317,13 +317,13 @@ namespace Microsoft.PythonTools.TestAdapter {
         public void UpdateContainersAndListeners(IEnumerable<string> sources, ProjectInfo projInfo, bool isAdd) {
             if (projInfo == null)
                 return;
-
+            // refresh test container so that test explorer can auto refresh discovery result without reloading the solution
+            projInfo.RemoveTestContainer(projInfo.ProjectHome);
+            projInfo.AddTestContainer(this, projInfo.ProjectHome);
             foreach (var path in sources) {
                 if (isAdd) {
-                    projInfo.AddTestContainer(this, path);
                     _testFilesUpdateWatcher.AddWatch(path);
                 } else {
-                    projInfo.RemoveTestContainer(path);
                     _testFilesUpdateWatcher.RemoveWatch(path);
                 }
             }

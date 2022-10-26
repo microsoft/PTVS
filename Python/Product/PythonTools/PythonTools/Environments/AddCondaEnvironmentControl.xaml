@@ -161,6 +161,7 @@
     <Grid Margin="0 7 0 0">
         <Grid Visibility="{Binding Path=IsCondaMissing, Converter={x:Static wpf:Converters.FalseIsHidden}}">
             <TextBlock
+                Focusable="True"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Text="{x:Static common:Strings.CondaNotFoundError}"

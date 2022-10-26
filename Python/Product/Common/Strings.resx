@@ -2320,6 +2320,9 @@ Expand selection to the full expression?</value>
   <data name="AddInstalledEnvironmentDescription" xml:space="preserve">
     <value>The Visual Studio Installer supports the following versions of Python. Select one or more to install:</value>
   </data>
+  <data name="AddInstalledEnvironmentVersions" xml:space="preserve">
+    <value>The following versions of Python are installed:</value>
+  </data>
   <data name="AddInstalledEnvironmentLabel" xml:space="preserve">
     <value>Python installation</value>
   </data>

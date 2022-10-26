@@ -33,10 +33,10 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 namespace Microsoft.PythonTools.TestAdapter {
 
-    [ExtensionUri(PythonConstants.PytestExecutorUriString)]
-
+    
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
         Justification = "object owned by VS")]
+    [ExtensionUri(PythonConstants.PytestExecutorUriString)]
     public class PytestTestExecutor : ITestExecutor {
         private static readonly Guid PythonRemoteDebugPortSupplierUnsecuredId = new Guid("{FEB76325-D127-4E02-B59D-B16D93D46CF5}");
         private static readonly Guid PythonDebugEngineGuid = new Guid("EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9");
@@ -65,7 +65,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
 
             _cancelRequested.Reset();
-
+ 
             var sourceToProjSettings = RunSettingsUtil.GetSourceToProjSettings(runContext.RunSettings, filterType:TestFrameworkType.Pytest);
             var testCollection = new TestCollection();
             foreach (var testGroup in sources.GroupBy(x => sourceToProjSettings[x])) {
@@ -108,7 +108,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         ) {
             var sourceToProjSettings = RunSettingsUtil.GetSourceToProjSettings(runContext.RunSettings, filterType:TestFrameworkType.Pytest);
 
-            foreach (var testGroup in tests.GroupBy(t => sourceToProjSettings.TryGetValue(t.CodeFilePath ?? String.Empty, out PythonProjectSettings proj) ? proj : null)) {
+            foreach (var testGroup in tests.GroupBy(t => sourceToProjSettings.TryGetValue(t.Source ?? String.Empty, out PythonProjectSettings proj) ? proj : null)) {
                 if (testGroup.Key == null) {
                     Debug.WriteLine("Missing projectSettings for TestCases:");
                     Debug.WriteLine(String.Join(",\n", testGroup));

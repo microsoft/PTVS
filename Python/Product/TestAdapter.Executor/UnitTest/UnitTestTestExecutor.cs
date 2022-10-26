@@ -94,8 +94,6 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         public void RunTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle) {
 
-            //MessageBox.Show("Hello1: " + Process.GetCurrentProcess().Id);
-
             if (tests == null) {
                 throw new ArgumentNullException(nameof(tests));
             }
@@ -126,7 +124,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             // .py file path -> project settings
             var sourceToSettings = RunSettingsUtil.GetSourceToProjSettings(runContext.RunSettings, filterType:TestFrameworkType.UnitTest);
 
-            foreach (var testGroup in tests.GroupBy(x => sourceToSettings[x.CodeFilePath])) {
+            foreach (var testGroup in tests.GroupBy(x => sourceToSettings[x.Source])) {
                 if (_cancelRequested.WaitOne(0)) {
                     break;
                 }

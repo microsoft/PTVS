@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.TestAdapter.Config;
 using Microsoft.PythonTools.TestAdapter.Services;
@@ -33,7 +34,18 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
     /// Note even though we specify  [DefaultExecutorUri(PythonConstants.PytestExecutorUriString)] we still get all .py source files
     /// from all testcontainers.  
     /// </summary>
-    [FileExtension(".py")]
+
+    // 1. If an ITestDiscoverer only includes one or more [FileExtension] attributes, then it will only be invoked for sources that are 
+    // files with the specified extensions (and that exist on disk at the specified path)
+    // 2. If an ITestDiscoverer only includes a [DirectoryBasedTestDiscoverer] attribute, then it will only be invoked for sources that 
+    // are directories (and that exist on disk at the specified path)
+    // 3. If an ITestDiscoverer includes both [FileExtension] and [DirectoryBasedTestDiscoverer] attributes then it will be invoked for 
+    // sources that exist on disk and that are either files matching the specified extensions OR directories.
+    // 4. If an ITestDiscoverer includes neither [FileExtension] nor [DirectoryBasedTestDiscoverer] attributes it will be invoked for all 
+    // test container sources that exist on disk (regardless of the file extensions of these sources, and regardless of whether the source 
+    // is a directory). For example, if your ITestDiscoverer omits both attributes, it will end up being called for .dll files for any C# 
+    // test projects that are included in the user's solution.
+    [DirectoryBasedTestDiscoverer]
     [DefaultExecutorUri(PythonConstants.PytestExecutorUriString)]
     public class PytestTestDiscoverer : PythonTestDiscoverer {
         private IMessageLogger _logger;
@@ -103,7 +115,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
 
                 foreach (var tc in testcases) {
                     // Note: Test Explorer will show a key not found exception if we use a source path that doesn't match a test container's source.
-                    if (settings.TestContainerSources.TryGetValue(tc.CodeFilePath, out _)) {
+                    if (settings.TestContainerSources.TryGetValue(tc.Source, out _)) {
                         discoverySink.SendTestCase(tc);
                     }
                 }
@@ -132,6 +144,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
         private TestCase TryCreateVsTestCase(PytestTest test, string projectHome) {
             try {
                 TestCase tc = test.ToVsTestCase(projectHome);
+                tc.Source = projectHome;
                 return tc;
             } catch (Exception ex) {
                 Error(ex.Message);
