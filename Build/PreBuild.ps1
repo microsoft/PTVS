@@ -73,7 +73,6 @@ try {
     # Install pylance version specified in package.json
     # If this doesn't work, you probably need to set up your .npmrc file or you need permissions to the feed.
     # See https://microsoft.sharepoint.com/teams/python/_layouts/15/Doc.aspx?sourcedoc=%7B30d33826-9f98-4d3e-890e-b7d198bbbcbe%7D&action=edit&wd=target(Python%20VS%2FDev%20Docs.one%7Cd7206ce2-cf40-437b-8ce9-1e55f4bc2f44%2FPylance%20in%20VS%7C6000d391-4e62-4a4d-89d2-7f7c1f005639%2F)&share=IgEmONMwmJ8-TYkOt9GYu7y-AeCM6R8r8Myty0Lj8CeOs4E
-    # Note that this will modify your package-lock.json file if the version was updated. This file should be committed into source control.
     "Installing Pylance"
 
     # overwrite the pylance version in the package.json with the specified version
@@ -86,8 +85,8 @@ try {
         $packageJson | ConvertTo-Json -depth 8 | Set-Content $packageJsonFile
     }
 
-    # install pylance
-    npm install
+    # force install latest pylance, always grab latest even if a lower version is already installed
+    npm install --force
 
     # exit on error
     if ($LASTEXITCODE -ne 0) {
