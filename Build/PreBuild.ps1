@@ -85,8 +85,14 @@ try {
         $packageJson | ConvertTo-Json -depth 8 | Set-Content $packageJsonFile
     }
 
-    # force install latest pylance, always grab latest even if a lower version is already installed
-    npm install --force
+    # delete pylance install folder to make sure we always get latest
+    $nodeModulesPath = Join-Path $buildroot "node_modules"
+    if (Test-Path -Path $nodeModulesPath) {
+        Remove-Item -Recurse -Force $nodeModulesPath
+    }
+
+    # install latest pylance
+    npm install
 
     # exit on error
     if ($LASTEXITCODE -ne 0) {
