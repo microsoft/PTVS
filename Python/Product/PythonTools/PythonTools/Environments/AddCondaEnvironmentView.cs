@@ -73,6 +73,12 @@ namespace Microsoft.PythonTools.Environments {
         public static readonly DependencyProperty CondaPreviewProperty =
             DependencyProperty.Register(nameof(CondaPreview), typeof(CondaEnvironmentPreview), typeof(AddCondaEnvironmentView));
 
+        private static readonly DependencyPropertyKey IsProjUsingGlobalDefaultEnvPropertyKey =
+            DependencyProperty.RegisterReadOnly(nameof(IsProjUsingGlobalDefaultEnv), typeof(bool), typeof(AddVirtualEnvironmentView), new PropertyMetadata(false));
+
+        public static readonly DependencyProperty IsProjUsingGlobalDefaultEnvProperty =
+            IsProjUsingGlobalDefaultEnvPropertyKey.DependencyProperty;
+            
         public bool IsCondaMissing { get; }
 
         public IEnumerable<PackageSpec> PackagesSpecs {
@@ -114,6 +120,11 @@ namespace Microsoft.PythonTools.Environments {
             set { SetValue(CondaPreviewProperty, value); }
         }
 
+        public bool IsProjUsingGlobalDefaultEnv {
+            get { return (bool)GetValue(IsProjUsingGlobalDefaultEnvProperty); }
+            private set { SetValue(IsProjUsingGlobalDefaultEnvPropertyKey, value); }
+        }
+
         private static void EnvParameter_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e) {
             ((AddCondaEnvironmentView)d).EnvParameterChanged();
         }
@@ -152,6 +163,11 @@ namespace Microsoft.PythonTools.Environments {
                 SetError(nameof(SelectedEnvFilePath), Strings.AddCondaEnvironmentFileInvalid.FormatUI(SelectedEnvFilePath ?? string.Empty));
             } else {
                 ClearErrors(nameof(SelectedEnvFilePath));
+            }
+
+            IsProjUsingGlobalDefaultEnv = true;
+            if (SelectedProject != null && SelectedProject.Node != null && SelectedProject.Node.IsActiveInterpreterGlobalDefault) {
+                IsProjUsingGlobalDefaultEnv = false;
             }
 
             TriggerDelayedPreview();
