@@ -37,6 +37,7 @@ using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Threading;
@@ -232,6 +233,18 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     MessageBox.ShowWarningMessage(Site, Strings.WarningPython2NotSupported);
                 }
 
+                // get task list tokens from options
+                var taskListTokens = new List<LanguageServerSettings.PythonSettings.PythonAnalysisSettings.TaskListToken>();
+                var taskListService = Site.GetService<SVsTaskList, ITaskList>();
+                if (taskListService != null) {
+                    foreach (var commentToken in taskListService.CommentTokens) {
+                        taskListTokens.Add(new LanguageServerSettings.PythonSettings.PythonAnalysisSettings.TaskListToken() {
+                            text = commentToken.Text,
+                            priority = commentToken.Priority.ToString()
+                        });
+                    }
+                }
+
                 var settings = new LanguageServerSettings.PythonSettings {
                     pythonPath = context.InterpreterConfiguration.InterpreterPath,
                     venvPath = string.Empty,
@@ -252,7 +265,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                         inlayHints = new LanguageServerSettings.PythonSettings.PythonAnalysisSettings.PythonAnalysisInlayHintsSettings {
                             variableTypes = false,
                             functionReturnTypes = false
-                        }
+                        },
+                        taskListTokens = taskListTokens.ToArray()
                     }
                 };
 

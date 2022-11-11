@@ -122,6 +122,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
                 public string importFormat;
 
+                /// <summary>
+                /// Tokens that identify comments that should show up in the task list pane
+                /// </summary>
+                public TaskListToken[] taskListTokens;
+
                 public class PythonAnalysisInlayHintsSettings {
 
                     /// <summary>
@@ -133,6 +138,20 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     /// Enable/disable inlay hints for function return types:\n```python\ndef foo(x:int) ' -> int ':\n\treturn x\n```\n"
                     /// </summary>
                     public bool functionReturnTypes;
+                }
+
+                public class TaskListToken {
+
+                    /// <summary>
+                    /// The text of the token.
+                    /// </summary>
+                    public string text;
+
+                    /// <summary>
+                    /// The priority of the token.
+                    /// This comes from the CommentTaskPriority enum in Microsoft.VisualStudio.Shell
+                    /// </summary>
+                    public string priority;
                 }
 
             }
