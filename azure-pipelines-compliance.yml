@@ -88,11 +88,30 @@ jobs:
   - task: UsePythonVersion@0
     displayName: 'Use Python 3.x'
 
+  # Initialize CodeQL before the build
+  # See https://devdiv.visualstudio.com/DevDiv/_wiki/wikis/DevDiv.wiki/1761/Static-Analysis and
+  # https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/codeql/configuring-codeql3000-ado-pipelines
+  - task: CodeQL3000Init@0
+    displayName: Initialize CodeQL
+    inputs:
+      Enabled: true
+      Language: python,csharp,cpp
+      TSAEnabled: true
+      TSAOptionsPath: $(Build.SourcesDirectory)\TsaConfig.json
+    condition: succeededOrFailed()
+    continueOnError: True
+
   # Build and publish logs
   - template: Build/templates/build.yml
 
-    # Anti-Malware Scan of build sources and/or artifacts
-    # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/antimalware-scan-build-task
+  # Finalize CodeQL after the build
+  - task: CodeQL3000Finalize@0
+    displayName: Finalize CodeQL
+    condition: succeededOrFailed()
+    continueOnError: True
+
+  # Anti-Malware Scan of build sources and/or artifacts
+  # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/antimalware-scan-build-task
   - task: AntiMalware@4
     displayName: 'Run Antivirus on Source'
     inputs:
@@ -164,12 +183,6 @@ jobs:
     condition: succeededOrFailed()
     continueOnError: True
 
-  # Static analysis and security vulnerability scan
-  # See https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/codeql/codeql-semmle and
-  # https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/codeql-build-task
-  # Use a template, since each language requires a separate scan
-  - template: Build/templates/run_codeQL.yml
-
   # Run component governance detection
   # See http://aka.ms/cgdocs for more info
   - task: ComponentGovernanceComponentDetection@0
@@ -204,13 +217,6 @@ jobs:
     inputs:
       optionsFC: 1 # Enables scanning of comments
       optionsUEPATH: $(Build.SourcesDirectory)\Build\PoliCheckExclusions.xml
-    condition: succeededOrFailed()
-    continueOnError: True
-
-  # Analyze managed C#/VB code (.NET framework and .NET Core) for security vulnerabilities
-  # https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/roslyn-analyzers-build-task
-  - task: RoslynAnalyzers@2
-    displayName: Run Roslyn Analyzers
     condition: succeededOrFailed()
     continueOnError: True
 
