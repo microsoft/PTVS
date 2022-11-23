@@ -199,7 +199,7 @@ Files and folders cannot be:
 - Empty strings 
 - System reserved names, including 'CON', 'AUX', PRN', 'COM1' or 'LPT2' 
 - contain only '.'
-- have any of the following characters: / ? : &amp;  \ * " &lt; &gt; | # %</value>
+- have any of the following characters: / ? : \ * " &lt; &gt; |</value>
   </data>
   <data name="ErrorInvalidProjectName" xml:space="preserve">
     <value>The name you provided is not a valid project name.</value>
