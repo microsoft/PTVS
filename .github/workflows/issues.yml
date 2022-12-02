@@ -23,10 +23,3 @@ jobs:
         if: ${{ steps.no-labels.outcome == 'skipped' && join(github.event.issue.labels.*.name, ',') != 'needs triage' }}
         with:
           remove-labels: 'needs triage'
-
-      - name: If triage-needed, add to scrum board
-        uses: actions/add-to-project@v0.3.0
-        if: ${{ steps.no-labels.outcome == 'success' }}
-        with:
-          github-token: ${{ secrets.PROJECT_BOARD_ACTIONS_TOKEN }}
-          project-url: https://github.com/orgs/microsoft/projects/145/views/17
