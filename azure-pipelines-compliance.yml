@@ -78,6 +78,9 @@ jobs:
     displayName: Clean guardian temp files
     continueOnError: true
 
+  - powershell: npm i -g npm@8
+    displayName: downgrade npm
+ 
   # Update node
   # See https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/tool/node-js?view=azure-devops
   - task: NodeTool@0
