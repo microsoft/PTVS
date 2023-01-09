@@ -324,6 +324,46 @@
   <data name="&gt;&gt;_typeCheckingMode.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
+  <metadata name="importFormatLabel.GenerateMember" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>False</value>
+  </metadata>
+  <data name="importFormatLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="importFormatLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="importFormatLabel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="importFormatLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 81</value>
+  </data>
+  <data name="importFormatLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>71, 13</value>
+  </data>
+  <data name="importFormatLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="importFormatLabel.Text" xml:space="preserve">
+    <value>&amp;Import format:</value>
+  </data>
+  <data name="importFormatLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="&gt;&gt;importFormatLabel.Name" xml:space="preserve">
+    <value>importFormatLabel</value>
+  </data>
+  <data name="&gt;&gt;importFormatLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;importFormatLabel.Parent" xml:space="preserve">
+    <value>tableLayoutPanel1</value>
+  </data>
+  <data name="&gt;&gt;importFormatLabel.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
   <data name="_importFormatCombo.Location" type="System.Drawing.Point, System.Drawing">
     <value>117, 77</value>
   </data>
@@ -334,7 +374,7 @@
     <value>253, 21</value>
   </data>
   <data name="_importFormatCombo.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>9</value>
   </data>
   <data name="&gt;&gt;_importFormatCombo.Name" xml:space="preserve">
     <value>_importFormatCombo</value>
@@ -346,7 +386,7 @@
     <value>tableLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;_importFormatCombo.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <metadata name="stubsPathsLabel.GenerateMember" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>False</value>
@@ -367,7 +407,7 @@
     <value>61, 13</value>
   </data>
   <data name="stubsPathsLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>10</value>
   </data>
   <data name="stubsPathsLabel.Text" xml:space="preserve">
     <value>&amp;Stubs path:</value>
@@ -385,7 +425,7 @@
     <value>tableLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;stubsPathsLabel.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="_stubsPath.Location" type="System.Drawing.Point, System.Drawing">
     <value>117, 102</value>
@@ -397,7 +437,7 @@
     <value>253, 20</value>
   </data>
   <data name="_stubsPath.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>11</value>
   </data>
   <data name="&gt;&gt;_stubsPath.Name" xml:space="preserve">
     <value>_stubsPath</value>
@@ -409,7 +449,7 @@
     <value>tableLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;_stubsPath.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="_searchPathsLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -427,7 +467,7 @@
     <value>73, 13</value>
   </data>
   <data name="_searchPathsLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>12</value>
   </data>
   <data name="_searchPathsLabel.Text" xml:space="preserve">
     <value>S&amp;earch paths:</value>
@@ -445,7 +485,7 @@
     <value>tableLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;_searchPathsLabel.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>10</value>
   </data>
   <data name="_searchPaths.Location" type="System.Drawing.Point, System.Drawing">
     <value>117, 126</value>
@@ -460,7 +500,7 @@
     <value>253, 51</value>
   </data>
   <data name="_searchPaths.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+    <value>13</value>
   </data>
   <data name="&gt;&gt;_searchPaths.Name" xml:space="preserve">
     <value>_searchPaths</value>
@@ -472,7 +512,7 @@
     <value>tableLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;_searchPaths.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>11</value>
   </data>
   <data name="_typeShedPathsLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -490,7 +530,7 @@
     <value>86, 13</value>
   </data>
   <data name="_typeShedPathsLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
+    <value>14</value>
   </data>
   <data name="_typeShedPathsLabel.Text" xml:space="preserve">
     <value>Types&amp;hed paths:</value>
@@ -508,7 +548,7 @@
     <value>tableLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;_typeShedPathsLabel.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>12</value>
   </data>
   <data name="_typeshedPaths.Location" type="System.Drawing.Point, System.Drawing">
     <value>117, 181</value>
@@ -523,7 +563,7 @@
     <value>253, 51</value>
   </data>
   <data name="_typeshedPaths.TabIndex" type="System.Int32, mscorlib">
-    <value>13</value>
+    <value>15</value>
   </data>
   <data name="&gt;&gt;_typeshedPaths.Name" xml:space="preserve">
     <value>_typeshedPaths</value>
@@ -535,39 +575,6 @@
     <value>tableLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;_typeshedPaths.ZOrder" xml:space="preserve">
-    <value>12</value>
-  </data>
-  <data name="importFormatLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left</value>
-  </data>
-  <data name="importFormatLabel.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="importFormatLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 81</value>
-  </data>
-  <data name="importFormatLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>71, 13</value>
-  </data>
-  <data name="importFormatLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
-  </data>
-  <data name="importFormatLabel.Text" xml:space="preserve">
-    <value>&amp;Import format:</value>
-  </data>
-  <data name="importFormatLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
-    <value>MiddleLeft</value>
-  </data>
-  <data name="&gt;&gt;importFormatLabel.Name" xml:space="preserve">
-    <value>importFormatLabel</value>
-  </data>
-  <data name="&gt;&gt;importFormatLabel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;importFormatLabel.Parent" xml:space="preserve">
-    <value>tableLayoutPanel1</value>
-  </data>
-  <data name="&gt;&gt;importFormatLabel.ZOrder" xml:space="preserve">
     <value>13</value>
   </data>
   <data name="_autoSearchPath.AutoSize" type="System.Boolean, mscorlib">
@@ -586,7 +593,7 @@
     <value>256, 17</value>
   </data>
   <data name="_autoSearchPath.TabIndex" type="System.Int32, mscorlib">
-    <value>14</value>
+    <value>16</value>
   </data>
   <data name="_autoSearchPath.Text" xml:space="preserve">
     <value>&amp;Automatically add common search paths like 'src'</value>
@@ -619,7 +626,7 @@
     <value>351, 21</value>
   </data>
   <data name="_indexing.TabIndex" type="System.Int32, mscorlib">
-    <value>15</value>
+    <value>17</value>
   </data>
   <data name="_indexing.Text" xml:space="preserve">
     <value>&amp;Index installed third party libraries and user files for language features 
