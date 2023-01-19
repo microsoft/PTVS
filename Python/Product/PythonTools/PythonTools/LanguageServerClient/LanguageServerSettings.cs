@@ -36,6 +36,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public const string Strict = "strict";
     }
 
+    internal static class PylanceImportFormat {
+        public const string Absolute = "absolute";
+        public const string Relative = "relative";
+    }
+
     [Serializable]
     internal sealed class LanguageServerSettings {
         [Serializable]
@@ -102,6 +107,53 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 /// Offer auto-import completions.
                 /// </summary>
                 public bool autoImportCompletions;
+
+                /// <summary>
+                /// Index installed third party libraries and user files for language features such as auto-import, add import, workspace symbols and etc.
+                /// </summary>
+                public bool? indexing;
+
+                /// <summary>
+                /// Allow using '.', '(' as commit characters when applicable.
+                /// </summary>
+                public bool? extraCommitChars;
+
+                public PythonAnalysisInlayHintsSettings inlayHints;
+
+                public string importFormat;
+
+                /// <summary>
+                /// Tokens that identify comments that should show up in the task list pane
+                /// </summary>
+                public TaskListToken[] taskListTokens;
+
+                public class PythonAnalysisInlayHintsSettings {
+
+                    /// <summary>
+                    /// Enable/disable inlay hints for variable types:\n```python\nfoo ' :list[str] ' = [\"a\"]\n \n```\n
+                    /// </summary>
+                    public bool variableTypes;
+
+                    /// <summary>
+                    /// Enable/disable inlay hints for function return types:\n```python\ndef foo(x:int) ' -> int ':\n\treturn x\n```\n"
+                    /// </summary>
+                    public bool functionReturnTypes;
+                }
+
+                public class TaskListToken {
+
+                    /// <summary>
+                    /// The text of the token.
+                    /// </summary>
+                    public string text;
+
+                    /// <summary>
+                    /// The priority of the token.
+                    /// This comes from the CommentTaskPriority enum in Microsoft.VisualStudio.Shell
+                    /// </summary>
+                    public string priority;
+                }
+
             }
             /// <summary>
             /// Analysis settings.

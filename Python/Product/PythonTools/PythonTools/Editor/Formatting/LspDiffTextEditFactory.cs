@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using DiffMatchPatch;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
@@ -45,22 +46,29 @@ namespace Microsoft.PythonTools.Editor.Formatting {
                 if (startIndex >= 0) {
                     diffOutputText = diffOutputText.Substring(startIndex);
                 }
-
-                // TODO: needed?
-                // Remove the text added by unified_diff
-                // # Work around missing newline (http://bugs.python.org/issue2142).
-                //patch = patch.replace(/\\ No newline at end of file[\r\n] /, '');
             }
 
-            var patches = new diff_match_patch().patch_fromText(diffOutputText);
+            // When there is no newline at the end of the file,
+            // formatters like black and autopep8 insert the following into the diff:
+            //      "\ No newline at end of file"
+            // See http://bugs.python.org/issue2142
+            // Remove that line since it causes errors when generating the patch
+            var regex = new Regex("\\\\ No newline at end of file[\r\n]*");
+            diffOutputText = regex.Replace(diffOutputText, "");
 
-            var edits = patches.SelectMany(p => GetEdits(documentText, p));
-            return edits.ToArray();
+            var textEdits = new List<TextEdit>();
+
+            var patches = new diff_match_patch().patch_fromText(diffOutputText);
+            foreach (var patch in patches ) {
+                var edits = GetEdits(documentText, patch.diffs, patch.start1);
+                textEdits.AddRange(edits);
+            }
+
+            return textEdits.ToArray();
         }
 
-        private static IEnumerable<TextEdit> GetEdits(string before, Patch patch) {
-            var line = patch.start1;
-            var diffs = patch.diffs;
+        private static IEnumerable<TextEdit> GetEdits(string before, List<Diff> diffs, int startLine) {
+            var line = startLine;
             int character = 0;
             if (line > 0) {
                 var beforeLines = before
@@ -74,11 +82,10 @@ namespace Microsoft.PythonTools.Editor.Formatting {
 
             TextEdit edit = null;
             var action = Action.Unknown;
-
             var start = new Position(line, character);
 
-            for (int i = 0; i < diffs.Count; i++) {
-                switch (diffs[i].operation) {
+            foreach (var diff in diffs) { 
+                switch (diff.operation) {
                     case Operation.DELETE:
                         if (edit == null) {
                             edit = new TextEdit() {
@@ -91,7 +98,7 @@ namespace Microsoft.PythonTools.Editor.Formatting {
                         } else if (action == Action.Insert || action == Action.Replace) {
                             throw new FormatException("patch parsing error");
                         }
-                        edit.Range.End = new Position(line, diffs[i].text.Length);
+                        edit.Range.End = new Position(line, diff.text.Length);
                         break;
 
                     case Operation.INSERT:
@@ -112,12 +119,12 @@ namespace Microsoft.PythonTools.Editor.Formatting {
                         line = start.Line;
 
                         //only add newline before text if not inserting at begining of file
-                        bool isPatchStart = (line == patch.start1) && (edit.Range.Start.Character == 0);
+                        bool isPatchStart = (line == startLine) && (edit.Range.Start.Character == 0);
                         if (!isPatchStart) {
                             edit.NewText += Environment.NewLine;
                         }
 
-                        edit.NewText += diffs[i].text;
+                        edit.NewText += diff.text;
                         break;
 
                     case Operation.EQUAL:
@@ -141,7 +148,7 @@ namespace Microsoft.PythonTools.Editor.Formatting {
 
                 // Find the end of the current line and append the next change to this position
                 // because the editor wont allow you to add lines that are outside the original document.
-                character = diffs[i].text.Length;
+                character = diff.text.Length;
                 start = new Position(line, character);
                 line++;
             }

@@ -959,6 +959,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Options\PythonAnalysisOptionsControl.resx">
       <DependentUpon>PythonAnalysisOptionsControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Options\PythonAdvancedEditorOptionsControl.resx">
       <DependentUpon>PythonAdvancedEditorOptionsControl.cs</DependentUpon>

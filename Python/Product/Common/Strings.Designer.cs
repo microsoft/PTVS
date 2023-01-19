@@ -621,6 +621,15 @@ namespace Microsoft.PythonTools {
                 return ResourceManager.GetString("AddInstalledEnvironmentDescription", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The following versions of Python are installed:.
+        /// </summary>
+        public static string AddInstalledEnvironmentVersions {
+            get {
+                return ResourceManager.GetString("AddInstalledEnvironmentVersions", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Python.
@@ -826,6 +835,15 @@ namespace Microsoft.PythonTools {
         public static string AddVirtualEnvironmentNameEmpty {
             get {
                 return ResourceManager.GetString("AddVirtualEnvironmentNameEmpty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Virtual environment name can&apos;t contain any of the following characters: {0}.
+        /// </summary>
+        public static string AddVirtualEnvironmentNameInvalid {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentNameInvalid", resourceCulture);
             }
         }
         
@@ -4567,6 +4585,33 @@ namespace Microsoft.PythonTools {
         public static string ImportCoverageCommandFileFilter {
             get {
                 return ResourceManager.GetString("ImportCoverageCommandFileFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Absolute.
+        /// </summary>
+        public static string ImportFormatAbsolute {
+            get {
+                return ResourceManager.GetString("ImportFormatAbsolute", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Relative.
+        /// </summary>
+        public static string ImportFormatRelative {
+            get {
+                return ResourceManager.GetString("ImportFormatRelative", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Defines the default format for import module..
+        /// </summary>
+        public static string ImportFormatToolTip {
+            get {
+                return ResourceManager.GetString("ImportFormatToolTip", resourceCulture);
             }
         }
         
@@ -8774,6 +8819,33 @@ namespace Microsoft.PythonTools {
         public static string VariableIn3dotXErrorMsg {
             get {
                 return ResourceManager.GetString("VariableIn3dotXErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Group.
+        /// </summary>
+        public static string VariablePresentation_Group {
+            get {
+                return ResourceManager.GetString("VariablePresentation_Group", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hide.
+        /// </summary>
+        public static string VariablePresentation_Hide {
+            get {
+                return ResourceManager.GetString("VariablePresentation_Hide", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Inline.
+        /// </summary>
+        public static string VariablePresentation_Inline {
+            get {
+                return ResourceManager.GetString("VariablePresentation_Inline", resourceCulture);
             }
         }
         

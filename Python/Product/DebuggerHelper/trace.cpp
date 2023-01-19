@@ -130,7 +130,7 @@ struct DebuggerString {
     }
 };
 
-// Information about active breakpoints, communucated by debugger to be used by TraceFunc.
+// Information about active breakpoints, communicated by debugger to be used by TraceFunc.
 struct BreakpointData {
     // Highest line number for which there is a breakpoint (and therefore an element in lineNumbers).
     int32_t maxLineNumber;
@@ -234,7 +234,7 @@ __declspec(dllexport)
 volatile uint64_t evalLoopExcStr; // pointer to str(exc_value)
 
 __declspec(dllexport)
-volatile uint32_t evalLoopSEHCode; // if a structured exception occured during eval, the return value of GetExceptionCode
+volatile uint32_t evalLoopSEHCode; // if a structured exception occurred during eval, the return value of GetExceptionCode
 
 #pragma pack(pop)
 
@@ -481,6 +481,9 @@ static void TraceLine(void* frame) {
 
     void* f_code = ReadField<void*>(frame, fieldOffsets.PyFrameObject.f_code);
     void* co_filename = ReadField<void*>(f_code, fieldOffsets.PyCodeObject.co_filename);
+    if (co_filename == nullptr) {
+        return;
+    }
 
     auto fileNamesOffsets = reinterpret_cast<const int32_t*>(bpData.fileNamesOffsets);
     auto strings = reinterpret_cast<const char*>(bpData.strings);

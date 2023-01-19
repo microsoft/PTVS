@@ -70,7 +70,8 @@ namespace Microsoft.PythonTools.Environments {
             IPythonInterpreterFactory baseInterp,
             bool registerAsCustomEnv,
             string customEnvName,
-            bool preferVEnv = false
+            bool preferVEnv = false,
+            bool setAsCurrent = true
         ) {
             if (site == null) {
                 throw new ArgumentNullException(nameof(site));
@@ -132,7 +133,9 @@ namespace Microsoft.PythonTools.Environments {
                     var workspaceFactoryProvider = site.GetComponentModel().GetService<WorkspaceInterpreterFactoryProvider>();
                     using (workspaceFactoryProvider?.SuppressDiscoverFactories(forceDiscoveryOnDispose: true)) {
                         var relativeInterpExe = PathUtils.GetRelativeFilePath(workspace.Location, interpExe);
-                        await workspace.SetInterpreterAsync(relativeInterpExe);
+                        if (setAsCurrent) {
+                            await workspace.SetInterpreterAsync(relativeInterpExe);
+                        }         
                     }
 
                     var factory = workspaceFactoryProvider?

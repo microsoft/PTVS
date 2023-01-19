@@ -53,35 +53,36 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         internal static void ApplyTextEdits(IEnumerable<TextEdit> textEdits, ITextSnapshot snapshot, ITextBuffer textBuffer) {
-            var vsTextEdit = textBuffer.CreateEdit();
-            foreach (var textEdit in textEdits) {
-                if (string.IsNullOrEmpty(textEdit.NewText)) {
-                    var startPosition = snapshot.GetSnapshotPositionFromProtocolPosition(textEdit.Range.Start);
-                    var endPosition = snapshot.GetSnapshotPositionFromProtocolPosition(textEdit.Range.End);
-                    var difference = endPosition - startPosition;
-                    if (startPosition > -1 && endPosition > -1 && difference > 0) {
-                        var span = GetTranslatedSpan(startPosition, difference, snapshot, vsTextEdit.Snapshot);
-                        vsTextEdit.Delete(span);
-                    }
-                } else if (textEdit.Range.Start == textEdit.Range.End) {
-                    var position = snapshot.GetSnapshotPositionFromProtocolPosition(textEdit.Range.Start);
-                    if (position > -1) {
-                        var span = GetTranslatedSpan(position, 0, snapshot, vsTextEdit.Snapshot);
-                        vsTextEdit.Insert(span.Start, textEdit.NewText);
-                    }
-                } else {
-                    var startPosition = snapshot.GetSnapshotPositionFromProtocolPosition(textEdit.Range.Start);
-                    var endPosition = snapshot.GetSnapshotPositionFromProtocolPosition(textEdit.Range.End);
-                    var difference = endPosition - startPosition;
+            using (var vsTextEdit = textBuffer.CreateEdit()) {
+                foreach (var textEdit in textEdits) {
+                    if (string.IsNullOrEmpty(textEdit.NewText)) {
+                        var startPosition = snapshot.GetSnapshotPositionFromProtocolPosition(textEdit.Range.Start);
+                        var endPosition = snapshot.GetSnapshotPositionFromProtocolPosition(textEdit.Range.End);
+                        var difference = endPosition - startPosition;
+                        if (startPosition > -1 && endPosition > -1 && difference > 0) {
+                            var span = GetTranslatedSpan(startPosition, difference, snapshot, vsTextEdit.Snapshot);
+                            vsTextEdit.Delete(span);
+                        }
+                    } else if (textEdit.Range.Start == textEdit.Range.End) {
+                        var position = snapshot.GetSnapshotPositionFromProtocolPosition(textEdit.Range.Start);
+                        if (position > -1) {
+                            var span = GetTranslatedSpan(position, 0, snapshot, vsTextEdit.Snapshot);
+                            vsTextEdit.Insert(span.Start, textEdit.NewText);
+                        }
+                    } else {
+                        var startPosition = snapshot.GetSnapshotPositionFromProtocolPosition(textEdit.Range.Start);
+                        var endPosition = snapshot.GetSnapshotPositionFromProtocolPosition(textEdit.Range.End);
+                        var difference = endPosition - startPosition;
 
-                    if (startPosition > -1 && endPosition > -1 && difference > 0) {
-                        var span = GetTranslatedSpan(startPosition, difference, snapshot, vsTextEdit.Snapshot);
-                        vsTextEdit.Replace(span, textEdit.NewText);
+                        if (startPosition > -1 && endPosition > -1 && difference > 0) {
+                            var span = GetTranslatedSpan(startPosition, difference, snapshot, vsTextEdit.Snapshot);
+                            vsTextEdit.Replace(span, textEdit.NewText);
+                        }
                     }
                 }
-            }
 
-            vsTextEdit.Apply();
+                vsTextEdit.Apply();
+            }
         }
 
         internal static void ApplyTextEdit(TextEdit textEdit, ITextSnapshot snapshot, ITextBuffer textBuffer) {

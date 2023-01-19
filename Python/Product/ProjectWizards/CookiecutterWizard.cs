@@ -143,6 +143,7 @@ namespace Microsoft.PythonTools.ProjectWizards {
                 return uri;
             }
 
+            ServicePointManager.CheckCertificateRevocationList = true;
             var req = WebRequest.CreateHttp(uri);
             req.Method = "HEAD";
             req.AllowAutoRedirect = false;

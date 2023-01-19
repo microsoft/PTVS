@@ -97,7 +97,8 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         public void AddTestContainer(ITestContainerDiscoverer discoverer, string path) {
-            if (!Path.GetExtension(path).Equals(PythonConstants.FileExtension, StringComparison.OrdinalIgnoreCase))
+            // check if the directory that's supplied as the ITestContainer.Source from ITestContainerDiscoverer exists or not.
+            if (!Directory.Exists(path))
                 return;
 
             _containers[path] = new TestContainer(

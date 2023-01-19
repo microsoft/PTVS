@@ -161,6 +161,7 @@
     <Grid Margin="0 7 0 0">
         <Grid Visibility="{Binding Path=IsCondaMissing, Converter={x:Static wpf:Converters.FalseIsHidden}}">
             <TextBlock
+                Focusable="True"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Text="{x:Static common:Strings.CondaNotFoundError}"
@@ -282,7 +283,7 @@
                     <CheckBox
                         Margin="0 0 0 10"
                         IsChecked="{Binding Path=SetAsCurrent}"
-                        IsEnabled="{Binding Path=SelectedProject, Converter={x:Static wpf:Converters.NullIsFalse}}"
+                        IsEnabled="{Binding Path=IsProjUsingGlobalDefaultEnv}"
                         Content="{x:Static common:Strings.AddEnvironmentSetAsCurrentLabel}"
                         AutomationProperties.AutomationId="SetAsCurrent"
                         AutomationProperties.Name="{x:Static common:Strings.AddEnvironmentSetAsCurrentLabel}"/>

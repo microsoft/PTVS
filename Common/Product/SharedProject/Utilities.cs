@@ -511,7 +511,7 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         private const string _reservedName = "(\\b(nul|con|aux|prn)\\b)|(\\b((com|lpt)[0-9])\\b)";
-        private const string _invalidChars = "([\\/:*?\"<>|#%])";
+        private const string _invalidChars = "([\\/:*?\"<>|])";
         private const string _regexToUseForFileName = _reservedName + "|" + _invalidChars;
         private static Regex _unsafeFileNameCharactersRegex = new Regex(_regexToUseForFileName, RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
         private static Regex _unsafeCharactersRegex = new Regex(_invalidChars, RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
@@ -535,7 +535,7 @@ namespace Microsoft.VisualStudioTools.Project {
             try {
                 extension = Path.GetExtension(filePart);
             }
-            // We catch the ArgumentException because we want this method to return true if the filename is not valid. FilePart could be for example #¤&%"¤&"% and that would throw ArgumentException on GetExtension
+            // We catch the ArgumentException because we want this method to return true if the filename is not valid. FilePart could be for example #Â¤&%"Â¤&"% and that would throw ArgumentException on GetExtension
             catch (ArgumentException) {
                 return true;
             }

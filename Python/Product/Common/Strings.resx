@@ -2320,6 +2320,9 @@ Expand selection to the full expression?</value>
   <data name="AddInstalledEnvironmentDescription" xml:space="preserve">
     <value>The Visual Studio Installer supports the following versions of Python. Select one or more to install:</value>
   </data>
+  <data name="AddInstalledEnvironmentVersions" xml:space="preserve">
+    <value>The following versions of Python are installed:</value>
+  </data>
   <data name="AddInstalledEnvironmentLabel" xml:space="preserve">
     <value>Python installation</value>
   </data>
@@ -3418,5 +3421,27 @@ Please specify at least one package.</value>
   <data name="PythonVersionNotSupportedTraceText" xml:space="preserve">
     <value>Environment detected using Python version {0}. Some features might not work as expected since Visual Studio does not officially support this version.</value>
     <comment>{0} is the Python version</comment>
+  </data>
+  <data name="VariablePresentation_Group" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="VariablePresentation_Hide" xml:space="preserve">
+    <value>Hide</value>
+  </data>
+  <data name="VariablePresentation_Inline" xml:space="preserve">
+    <value>Inline</value>
+  </data>
+  <data name="AddVirtualEnvironmentNameInvalid" xml:space="preserve">
+    <value>Virtual environment name can't contain any of the following characters: {0}</value>
+    <comment>{0} is a list of invalid path characters, space-delimited.</comment>
+  </data>
+  <data name="ImportFormatAbsolute" xml:space="preserve">
+    <value>Absolute</value>
+  </data>
+  <data name="ImportFormatRelative" xml:space="preserve">
+    <value>Relative</value>
+  </data>
+  <data name="ImportFormatToolTip" xml:space="preserve">
+    <value>Defines the default format for import module.</value>
   </data>
 </root>

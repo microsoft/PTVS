@@ -32,6 +32,8 @@ namespace Microsoft.PythonTools.Options {
         public string[] TypeshedPaths { get; set; }
         public bool UseLibraryCodeForTypes { get; set; }
         public string[] ExtraPaths { get; set; }
+        public bool Indexing { get; set; }
+        public string ImportFormat { get; set; }
 
         internal PythonAnalysisOptions(PythonToolsService service) {
             _service = service;
@@ -88,6 +90,18 @@ namespace Microsoft.PythonTools.Options {
                 changed = true;
             }
 
+            var indexing = _service.LoadBool(nameof(Indexing), Category) ?? false;
+            if (Indexing != indexing) {
+                Indexing = indexing;
+                changed = true;
+            }
+
+            var importFormat = _service.LoadString(nameof(ImportFormat), Category) ?? PylanceImportFormat.Absolute;
+            if (ImportFormat != importFormat) {
+                ImportFormat = importFormat;
+                changed = true;
+            }
+
             if (changed) {
                 Changed?.Invoke(this, EventArgs.Empty);
             }
@@ -102,6 +116,8 @@ namespace Microsoft.PythonTools.Options {
             changed |= _service.SaveMultilineString(nameof(TypeshedPaths), Category, TypeshedPaths);
             changed |= _service.SaveMultilineString(nameof(ExtraPaths), Category, ExtraPaths);
             changed |= _service.SaveBool(nameof(UseLibraryCodeForTypes), Category, UseLibraryCodeForTypes);
+            changed |= _service.SaveBool(nameof(Indexing), Category, Indexing);
+            changed |= _service.SaveString(nameof(ImportFormat), Category, ImportFormat);
             if (changed) {
                 Changed?.Invoke(this, EventArgs.Empty);
             }
@@ -115,6 +131,8 @@ namespace Microsoft.PythonTools.Options {
             TypeCheckingMode = PylanceTypeCheckingMode.Basic;
             TypeshedPaths = null;
             UseLibraryCodeForTypes = true;
+            Indexing = false;
+            ImportFormat = PylanceImportFormat.Absolute;
             Changed?.Invoke(this, EventArgs.Empty);
         }
 

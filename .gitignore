@@ -12,6 +12,7 @@ TestResults/
 *.ipch
 .hg
 .vs
+.vscode
 Python/Product/PythonTools/Templates/Files/*/*RoleConfiguration.mht
 Python/Product/PythonTools/Templates/Projects/*/*RoleConfiguration.mht
 Python/Product/PythonTools/Templates/Files/*/ConfigureCloudService.ps1

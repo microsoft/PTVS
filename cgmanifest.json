@@ -1,12 +1,16 @@
 {
-    "Registrations": [
-        {
-            "Component": {
-                "Type": "pip",
-                "pip": { "Name": "debugpy", "Version": "1.4.3" }
-            },
-            "DevelopmentDependency": false
+  "$schema": "https://json.schemastore.org/component-detection-manifest.json",
+  "Registrations": [
+    {
+      "Component": {
+        "Type": "pip",
+        "pip": {
+          "Name": "debugpy",
+          "Version": "1.4.3"
         }
-    ],
-    "Version": 1
+      },
+      "DevelopmentDependency": false
+    }
+  ],
+  "Version": 1
 }

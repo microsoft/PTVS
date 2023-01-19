@@ -1,10 +1,36 @@
-param ($vstarget, $outdir, $pylanceVersion, $debugpyVersion)
+<#
+    This script installs dependencies for PTVS, including pylance, debugpy, and all nuget packages.
+
+    PTVS consumes a public azure feed, defined in nuget.config.
+    However, the feed needs to be populated (once) when upgrading to new package versions, and feed population requires authentication.
+    See https://github.com/microsoft/PTVS/wiki/Build-and-Debug-Instructions-for-PTVS for instructions on how to authenticate.
+#>
+
+param (
+    # The visual studio major version we are targeting, defaults to 17.0
+    [Parameter()]
+    [string] $vstarget = "17.0",
+
+    # The directory where packages should be restored to, defaults to the root of the repo
+    [Parameter()]
+    [string] $outdir, 
+    
+    # The version of pylance we should download, defaults to "latest"
+    [Parameter()]
+    [string] $pylanceVersion = "latest", 
+    
+    # The version of debugpy we should download, defaults to "latest"
+    [Parameter()]
+    [string] $debugpyVersion = "latest", 
+    
+    # Run in interactive mode for azure feed authentication, defaults to false
+    [Parameter()]
+    [switch] $interactive
+)
 
 $ErrorActionPreference = "Stop"
 
-if (-not $vstarget) {
-    $vstarget = "17.0"
-} elseif ($vstarget.ToString() -match "^\d\d$") {
+if ($vstarget.ToString() -match "^\d\d$") {
     $vstarget = "$vstarget.0"
 }
 
@@ -28,14 +54,6 @@ $need_symlink = @(
     $microBuildCorePackageName
 )
 
-if (-not $pylanceVersion) {
-    $pylanceVersion = "latest"
-}
-
-if (-not $debugpyVersion) {
-    $debugpyVersion = "latest"
-}
-
 $buildroot = $MyInvocation.MyCommand.Definition | Split-Path -Parent | Split-Path -Parent
 
 if (-not $outdir) {
@@ -55,7 +73,6 @@ try {
     # Install pylance version specified in package.json
     # If this doesn't work, you probably need to set up your .npmrc file or you need permissions to the feed.
     # See https://microsoft.sharepoint.com/teams/python/_layouts/15/Doc.aspx?sourcedoc=%7B30d33826-9f98-4d3e-890e-b7d198bbbcbe%7D&action=edit&wd=target(Python%20VS%2FDev%20Docs.one%7Cd7206ce2-cf40-437b-8ce9-1e55f4bc2f44%2FPylance%20in%20VS%7C6000d391-4e62-4a4d-89d2-7f7c1f005639%2F)&share=IgEmONMwmJ8-TYkOt9GYu7y-AeCM6R8r8Myty0Lj8CeOs4E
-    # Note that this will modify your package-lock.json file if the version was updated. This file should be committed into source control.
     "Installing Pylance"
 
     # overwrite the pylance version in the package.json with the specified version
@@ -68,8 +85,20 @@ try {
         $packageJson | ConvertTo-Json -depth 8 | Set-Content $packageJsonFile
     }
 
-    # install pylance
+    # delete pylance install folder to make sure we always get latest
+    $nodeModulesPath = Join-Path $buildroot "node_modules"
+    if (Test-Path -Path $nodeModulesPath) {
+        Remove-Item -Recurse -Force $nodeModulesPath
+    }
+
+    # install latest pylance
     npm install
+
+    # exit on error
+    if ($LASTEXITCODE -ne 0) {
+        "npm returned non-zero, exiting..."
+        exit 1
+    }
 
     # print out the installed version
     $npmLsOutput = & npm ls @pylance/pylance
@@ -82,7 +111,11 @@ try {
 
     "-----"
     "Restoring Packages"
-    $arglist = "restore", "$vstarget\packages.config", "-OutputDirectory", "`"$outdir`"", "-Config", "nuget.config", "-NonInteractive"
+    # If you have authentication errors here, try passing -interactive on the command line
+    $arglist = "restore", "$vstarget\packages.config", "-OutputDirectory", "`"$outdir`"", "-Config", "nuget.config"
+    if (-not $interactive) {
+        $arglist += "-NonInteractive"
+    }
     $nuget = Get-Command nuget.exe -EA 0
     if (-not $nuget) {
         $nuget = Get-Command .\nuget.exe

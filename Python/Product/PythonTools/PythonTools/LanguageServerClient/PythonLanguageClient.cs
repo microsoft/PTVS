@@ -37,6 +37,7 @@ using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Threading;
@@ -232,6 +233,18 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     MessageBox.ShowWarningMessage(Site, Strings.WarningPython2NotSupported);
                 }
 
+                // get task list tokens from options
+                var taskListTokens = new List<LanguageServerSettings.PythonSettings.PythonAnalysisSettings.TaskListToken>();
+                var taskListService = Site.GetService<SVsTaskList, ITaskList>();
+                if (taskListService != null) {
+                    foreach (var commentToken in taskListService.CommentTokens) {
+                        taskListTokens.Add(new LanguageServerSettings.PythonSettings.PythonAnalysisSettings.TaskListToken() {
+                            text = commentToken.Text,
+                            priority = commentToken.Priority.ToString()
+                        });
+                    }
+                }
+
                 var settings = new LanguageServerSettings.PythonSettings {
                     pythonPath = context.InterpreterConfiguration.InterpreterPath,
                     venvPath = string.Empty,
@@ -245,7 +258,15 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                         typeCheckingMode = typeCheckingMode,
                         useLibraryCodeForTypes = true,
                         completeFunctionParens = _advancedEditorOptions.CompleteFunctionParens,
-                        autoImportCompletions = _advancedEditorOptions.AutoImportCompletions
+                        autoImportCompletions = _advancedEditorOptions.AutoImportCompletions,
+                        indexing = _analysisOptions.Indexing,
+                        extraCommitChars = false,
+                        importFormat = _analysisOptions.ImportFormat,
+                        inlayHints = new LanguageServerSettings.PythonSettings.PythonAnalysisSettings.PythonAnalysisInlayHintsSettings {
+                            variableTypes = false,
+                            functionReturnTypes = false
+                        },
+                        taskListTokens = taskListTokens.ToArray()
                     }
                 };
 
@@ -353,7 +374,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 });
                    
             // If we send workspace folder updates, we have to resend document opens
-            await SendDocumentOpensAsync();
+            // await SendDocumentOpensAsync();
         }
 
         public Task<object> InvokeTextDocumentCompletionAsync(LSP.CompletionParams request, CancellationToken cancellationToken = default)
@@ -399,39 +420,39 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             _readyTcs.TrySetResult(0);
         }
 
-        private async Task SendDocumentOpensAsync() {
-            // This should be handled by the VSSDK if they ever support workspace folder change notifications
-            // Meaning we shouldn't need to do this if they do it for us.
-            await JoinableTaskContext.Factory.SwitchToMainThreadAsync();
-            IComponentModel componentModel = Site.GetService(typeof(SComponentModel)) as IComponentModel;
+        //private async Task SendDocumentOpensAsync() {
+        //    This should be handled by the VSSDK if they ever support workspace folder change notifications
+        //     Meaning we shouldn't need to do this if they do it for us.
+        //    await JoinableTaskContext.Factory.SwitchToMainThreadAsync();
+        //    IComponentModel componentModel = Site.GetService(typeof(SComponentModel)) as IComponentModel;
 
-            SVsServiceProvider syncServiceProvider = componentModel.GetService<SVsServiceProvider>();
-            RunningDocumentTable rdt = new RunningDocumentTable(syncServiceProvider);
-            var tasks = new List<Task>();
+        //    SVsServiceProvider syncServiceProvider = componentModel.GetService<SVsServiceProvider>();
+        //    RunningDocumentTable rdt = new RunningDocumentTable(syncServiceProvider);
+        //    var tasks = new List<Task>();
 
-            foreach (RunningDocumentInfo info in rdt) {
-                if (this.TryGetOpenedDocumentData(info, out ITextBuffer textBuffer, out string filePath)
-                    && textBuffer != null
-                    && textBuffer.IsPythonContent()) {
+        //    foreach (RunningDocumentInfo info in rdt) {
+        //        if (this.TryGetOpenedDocumentData(info, out ITextBuffer textBuffer, out string filePath)
+        //            && textBuffer != null
+        //            && textBuffer.IsPythonContent()) {
 
-                    var textDocumentItem = new TextDocumentItem {
-                        Uri = new Uri(filePath),
-                        Version = textBuffer.CurrentSnapshot.Version.VersionNumber,
-                        LanguageId = textBuffer.ContentType.DisplayName,
-                    };
+        //            var textDocumentItem = new TextDocumentItem {
+        //                Uri = new Uri(filePath),
+        //                Version = textBuffer.CurrentSnapshot.Version.VersionNumber,
+        //                LanguageId = textBuffer.ContentType.DisplayName,
+        //            };
 
-                    var param = new DidOpenTextDocumentParams {
-                        TextDocument = textDocumentItem,
-                    };
-                    param.TextDocument.Text = textBuffer.CurrentSnapshot.GetText();
+        //            var param = new DidOpenTextDocumentParams {
+        //                TextDocument = textDocumentItem,
+        //            };
+        //            param.TextDocument.Text = textBuffer.CurrentSnapshot.GetText();
 
-                    tasks.Add(InvokeTextDocumentDidOpenAsync(param));
-                }
-            }
+        //            tasks.Add(InvokeTextDocumentDidOpenAsync(param));
+        //        }
+        //    }
 
-            // Let all the tasks execute in parallel
-            await Task.WhenAll(tasks);
-        }
+        //    Let all the tasks execute in parallel
+        //   await Task.WhenAll(tasks);
+        //}
 
         private bool TryGetOpenedDocumentData(RunningDocumentInfo info, out ITextBuffer textBuffer, out string filePath) {
             textBuffer = null;

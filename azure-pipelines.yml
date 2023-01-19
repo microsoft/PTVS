@@ -23,11 +23,10 @@ trigger:
       - release/*
   paths:
     exclude:
-      - 'azure-pipelines-policy.yml'
-      - 'azure-pipelines-integration-tests.yml'
+      - 'azure-pipelines-*.yml'
 
 # Trigger pr builds for commits into master and any release branches
-# Ignore the policy.yml file, since that's a different pipeline
+# Ignore changes to other yml files, since they are for different pipelines
 # Also ignore draft PR's
 pr:
   branches:
@@ -36,7 +35,7 @@ pr:
       - release/*
   paths:
     exclude:
-      - 'azure-pipelines-policy.yml'
+      - 'azure-pipelines-*.yml'
   drafts: false
 
 # The agent pool the build will run on

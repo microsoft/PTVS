@@ -125,7 +125,7 @@ namespace Microsoft.PythonTools.Environments {
                             if (_setAsCurrent) {
                                 _project.SetInterpreterFactory(factory);
                             }
-                        } else if (_workspace != null) {
+                        } else if (_workspace != null && _setAsCurrent) {
                             await _workspace.SetInterpreterFactoryAsync(factory);
                         }
 

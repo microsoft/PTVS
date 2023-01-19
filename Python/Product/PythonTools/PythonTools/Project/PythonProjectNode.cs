@@ -887,7 +887,7 @@ namespace Microsoft.PythonTools.Project {
 
         private void SearchPaths_Changed(object sender, EventArgs e) {
             // Update solution explorer
-            RefreshSearchPaths();
+            Site.GetUIThread().Invoke(() => RefreshSearchPaths());
 
             LanguageServerSearchPathsChanged?.Invoke(this, EventArgs.Empty);
         }
