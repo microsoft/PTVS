@@ -1,5 +1,4 @@
-# This pipeline is used to build the PTVS product and installer.
-# A seperate release pipeline is used to create insertion PR's into Visual Studio.
+# change from source 1
 
 parameters:
 - name: pylanceVersion
