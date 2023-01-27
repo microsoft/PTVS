@@ -22,4 +22,4 @@ jobs:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
         close-issue-message: 'This issue was closed because it has been stalled for 30 days with no activity. If the issue still persists, please reopen with the information requested. Thanks.'
         days-before-issue-close: 30
-        only-labels: 'waiting for response'
+        any-of-labels: 'waiting for response'
