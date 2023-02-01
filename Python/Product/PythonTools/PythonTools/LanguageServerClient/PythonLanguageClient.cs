@@ -142,6 +142,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             _advancedEditorOptions = Site.GetPythonToolsService().AdvancedEditorOptions;
             _analysisOptions.Changed += OnSettingsChanged;
             _advancedEditorOptions.Changed += OnSettingsChanged;
+            var taskListService = Site.GetService<SVsTaskList, ITaskList>();
+            taskListService.PropertyChanged += OnSettingsChanged;
             var dte = (EnvDTE80.DTE2)Site.GetService(typeof(EnvDTE.DTE));
             var solutionEvents = dte.Events.SolutionEvents;
             solutionEvents.Opened += OnSolutionOpened;
@@ -154,6 +156,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 _clientContexts.ForEach(c => c.InterpreterChanged -= OnSettingsChanged);
                 _analysisOptions.Changed -= OnSettingsChanged;
                 _advancedEditorOptions.Changed -= OnSettingsChanged;
+                var taskListService = Site.GetService<SVsTaskList, ITaskList>();
+                taskListService.PropertyChanged -= OnSettingsChanged;
                 _clientContexts.ForEach(c => c.Dispose());
                 _clientContexts.Clear();
                 solutionEvents.Opened -= OnSolutionOpened;
