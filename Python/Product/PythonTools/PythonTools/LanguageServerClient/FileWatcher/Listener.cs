@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
         private JsonRpc _rpc;
         private JsonRpcWrapper _rpcWrapper;
         private System.IO.FileSystemWatcher _solutionWatcher;
-        private Microsoft.Extensions.FileSystemGlobbing.Matcher _matcher = new Microsoft.Extensions.FileSystemGlobbing.Matcher(StringComparison.InvariantCultureIgnoreCase);
+        private Microsoft.Extensions.FileSystemGlobbing.Matcher _matcher = new Microsoft.Extensions.FileSystemGlobbing.Matcher(StringComparison.OrdinalIgnoreCase);
         private bool disposedValue;
         private string _root;
 
