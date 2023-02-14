@@ -18,10 +18,15 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
+using System.IO.Packaging;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
+using System.Security.Cryptography;
+using System.Security.Policy;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Documents;
 using Microsoft.PythonTools.Common.Infrastructure;
 using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.PythonTools.Infrastructure;
@@ -168,7 +173,13 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     });
                 _analysisOptions.Changed -= OnSettingsChanged;
                 _advancedEditorOptions.Changed -= OnSettingsChanged;
-                _taskListService.PropertyChanged -= OnSettingsChanged;
+
+                try {
+                    var taskListService = Site.GetService<SVsTaskList, ITaskList>();
+                    taskListService.PropertyChanged -= OnSettingsChanged;
+                } catch (ServiceUnavailableException) {
+                }
+                
                 _clientContexts.ForEach(c => c.Dispose());
                 _clientContexts.Clear();
                 solutionEvents.Opened -= OnSolutionOpened;
@@ -358,6 +369,52 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
             await _rpcWrapper.NotifyWithParameterObjectAsync(request, parameters).ConfigureAwait(false);
         }
+
+        private LanguageServerSettings.PythonSettings GetSettings(Uri scopeUri = null) {
+            // Find the matching context for the item
+            var context = scopeUri != null ? _clientContexts.Find(c => scopeUri != null && PathUtils.IsSamePath(c.RootPath, scopeUri.LocalPath)) : _clientContexts.First();
+            if (context == null) { 
+                return null;
+            }
+       
+            Debug.Assert(_analysisOptions != null);
+
+            var extraPaths = UserSettings.GetStringSetting(
+                PythonConstants.ExtraPathsSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)?.Split(';')
+                ?? _analysisOptions.ExtraPaths;
+
+            // Add search paths to extraPaths for pylance to look through
+            var searchPaths = context.SearchPaths.ToArray();
+            extraPaths = extraPaths == null ? searchPaths : extraPaths.Concat(searchPaths).ToArray();
+
+            var stubPath = UserSettings.GetStringSetting(
+                PythonConstants.StubPathSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)
+                ?? _analysisOptions.StubPath;
+
+            var typeCheckingMode = UserSettings.GetStringSetting(
+                PythonConstants.TypeCheckingModeSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)
+                ?? _analysisOptions.TypeCheckingMode;
+
+            var ver3 = new Version(3, 0);
+            var version = context.InterpreterConfiguration.Version;
+            // show a warning if the python version is not supported
+            if (version.ToLanguageVersion() == PythonLanguageVersion.None) {
+                MessageBox.ShowWarningMessage(Site, Strings.PythonVersionNotSupportedInfoBarText.FormatUI(context.InterpreterConfiguration.Description));
+            } else if (context.InterpreterConfiguration.Version < ver3) {
+                MessageBox.ShowWarningMessage(Site, Strings.WarningPython2NotSupported);
+            }
+
+            // get task list tokens from options
+            var taskListTokens = new List<LanguageServerSettings.PythonSettings.PythonAnalysisSettings.TaskListToken>();
+            var taskListService = Site.GetService<SVsTaskList, ITaskList>();
+            if (taskListService != null) {
+                foreach (var commentToken in taskListService.CommentTokens) {
+                    taskListTokens.Add(new LanguageServerSettings.PythonSettings.PythonAnalysisSettings.TaskListToken() {
+                        text = commentToken.Text,
+                        priority = commentToken.Priority.ToString()
+                    });
+                }
+            }
 
         private LanguageServerSettings.PythonSettings GetSettings(Uri scopeUri = null)
         {
@@ -562,7 +619,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                                     capabilities["workspace"] = JToken.FromObject(new { });
                                 }
                                 capabilities["workspace"]["workspaceFolders"] = true;
-                                capabilities["workspace"]["didChangeWatchedFiles"]["dynamicRegistration"] = true;
+                                //                    capabilities["workspace"]["didChangeWatchedFiles"]["dynamicRegistration"] = true;
                                 capabilities["workspace"]["configuration"] = true;
 
                                 // Root path and root URI should not be sent. They're deprecated and will
