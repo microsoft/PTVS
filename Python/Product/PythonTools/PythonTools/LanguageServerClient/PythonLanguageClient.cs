@@ -18,10 +18,15 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
+using System.IO.Packaging;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
+using System.Security.Cryptography;
+using System.Security.Policy;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Documents;
 using Microsoft.PythonTools.Common.Infrastructure;
 using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.PythonTools.Editor.Core;
@@ -114,7 +119,15 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         // Called by Microsoft.VisualStudio.LanguageServer.Client.RemoteLanguageServiceBroker.UpdateClientsWithConfigurationSettingsAsync
         // Used to send LS WorkspaceDidChangeConfiguration notification
         public IEnumerable<string> ConfigurationSections => Enumerable.Repeat("python", 1);
-        public object InitializationOptions { get; private set; }
+        public object InitializationOptions {
+            get {
+                return new {
+                    vsSupport = true,
+                };
+            }
+            
+        }
+        
 
         public IEnumerable<string> FilesToWatch => null;
         public object MiddleLayer => null;
@@ -136,7 +149,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             }
             await JoinableTaskContext.Factory.SwitchToMainThreadAsync();
             CreateClientContexts();
-
+         
 
             _analysisOptions = Site.GetPythonToolsService().AnalysisOptions;
             _advancedEditorOptions = Site.GetPythonToolsService().AdvancedEditorOptions;
@@ -160,8 +173,13 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     });
                 _analysisOptions.Changed -= OnSettingsChanged;
                 _advancedEditorOptions.Changed -= OnSettingsChanged;
-                var taskListService = Site.GetService<SVsTaskList, ITaskList>();
-                taskListService.PropertyChanged -= OnSettingsChanged;
+
+                try {
+                    var taskListService = Site.GetService<SVsTaskList, ITaskList>();
+                    taskListService.PropertyChanged -= OnSettingsChanged;
+                } catch (ServiceUnavailableException) {
+                }
+                
                 _clientContexts.ForEach(c => c.Dispose());
                 _clientContexts.Clear();
                 solutionEvents.Opened -= OnSolutionOpened;
@@ -186,7 +204,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             // Client context cannot be created here since the is no workspace yet
             // and hence we don't know if this is workspace or a loose files case.
             _server = new LanguageServer(Site, JoinableTaskContext, this.OnSendToServer);
-            InitializationOptions = null;
+            
             var customTarget = new PythonLanguageClientCustomTarget(Site, JoinableTaskContext);
             CustomMessageTarget = customTarget;
             customTarget.WatchedFilesRegistered += WatchedFilesRegistered;
@@ -202,87 +220,22 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             // We return the language server settings as a response
             List<object> result = new List<object>();
 
+            await JoinableTaskContext.Factory.SwitchToMainThreadAsync();
+
             // Return the matching results
             foreach (var item in args.requestParams.items) {
-                // Find the matching context for the item
-                var context = _clientContexts.Find(c => item.scopeUri != null && PathUtils.IsSamePath(c.RootPath, item.scopeUri.LocalPath));
-                if (context == null)
+
+                var pythonSetting = GetSettings(item.scopeUri);
+
+                if(pythonSetting == null) {
                     continue;
-
-                if (context is PythonLanguageClientContextProject) {
-                    // Project interactions are main thread only.
-                    await JoinableTaskContext.Factory.SwitchToMainThreadAsync();
                 }
-
-                Debug.Assert(_analysisOptions != null);
-
-                var extraPaths = UserSettings.GetStringSetting(
-                    PythonConstants.ExtraPathsSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)?.Split(';')
-                    ?? _analysisOptions.ExtraPaths;
-
-                // Add search paths to extraPaths for pylance to look through
-                var searchPaths = context.SearchPaths.ToArray();
-                extraPaths = extraPaths == null ? searchPaths : extraPaths.Concat(searchPaths).ToArray();
-
-                var stubPath = UserSettings.GetStringSetting(
-                    PythonConstants.StubPathSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)
-                    ?? _analysisOptions.StubPath;
-
-                var typeCheckingMode = UserSettings.GetStringSetting(
-                    PythonConstants.TypeCheckingModeSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)
-                    ?? _analysisOptions.TypeCheckingMode;
-
-                var ver3 = new Version(3, 0);
-                var version = context.InterpreterConfiguration.Version;
-                // show a warning if the python version is not supported
-                if (version.ToLanguageVersion() == PythonLanguageVersion.None) {
-                    MessageBox.ShowWarningMessage(Site, Strings.PythonVersionNotSupportedInfoBarText.FormatUI(context.InterpreterConfiguration.Description));
-                } else if (context.InterpreterConfiguration.Version < ver3) {
-                    MessageBox.ShowWarningMessage(Site, Strings.WarningPython2NotSupported);
-                }
-
-                // get task list tokens from options
-                var taskListTokens = new List<LanguageServerSettings.PythonSettings.PythonAnalysisSettings.TaskListToken>();
-                var taskListService = Site.GetService<SVsTaskList, ITaskList>();
-                if (taskListService != null) {
-                    foreach (var commentToken in taskListService.CommentTokens) {
-                        taskListTokens.Add(new LanguageServerSettings.PythonSettings.PythonAnalysisSettings.TaskListToken() {
-                            text = commentToken.Text,
-                            priority = commentToken.Priority.ToString()
-                        });
-                    }
-                }
-
-                var settings = new LanguageServerSettings.PythonSettings {
-                    pythonPath = context.InterpreterConfiguration.InterpreterPath,
-                    venvPath = string.Empty,
-                    analysis = new LanguageServerSettings.PythonSettings.PythonAnalysisSettings {
-                        logLevel = _analysisOptions.LogLevel,
-                        autoSearchPaths = _analysisOptions.AutoSearchPaths,
-                        diagnosticMode = _analysisOptions.DiagnosticMode,
-                        extraPaths = extraPaths,
-                        stubPath = stubPath,
-                        typeshedPaths = _analysisOptions.TypeshedPaths,
-                        typeCheckingMode = typeCheckingMode,
-                        useLibraryCodeForTypes = true,
-                        completeFunctionParens = _advancedEditorOptions.CompleteFunctionParens,
-                        autoImportCompletions = _advancedEditorOptions.AutoImportCompletions,
-                        indexing = _analysisOptions.Indexing,
-                        extraCommitChars = false,
-                        importFormat = _analysisOptions.ImportFormat,
-                        inlayHints = new LanguageServerSettings.PythonSettings.PythonAnalysisSettings.PythonAnalysisInlayHintsSettings {
-                            variableTypes = false,
-                            functionReturnTypes = false
-                        },
-                        taskListTokens = taskListTokens.ToArray()
-                    }
-                };
 
                 // Add to our results based on the section asked for
                 if (item.section == "python") {
-                    result.Add(settings);
+                    result.Add(pythonSetting);
                 } else if (item.section == "python.analysis") {
-                    result.Add(settings.analysis);
+                    result.Add(pythonSetting.analysis);
                 }
             }
 
@@ -417,18 +370,98 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             await _rpcWrapper.NotifyWithParameterObjectAsync(request, parameters).ConfigureAwait(false);
         }
 
+        private LanguageServerSettings.PythonSettings GetSettings(Uri scopeUri = null) {
+            // Find the matching context for the item
+            var context = scopeUri != null ? _clientContexts.Find(c => scopeUri != null && PathUtils.IsSamePath(c.RootPath, scopeUri.LocalPath)) : _clientContexts.First();
+            if (context == null) { 
+                return null;
+            }
+       
+            Debug.Assert(_analysisOptions != null);
+
+            var extraPaths = UserSettings.GetStringSetting(
+                PythonConstants.ExtraPathsSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)?.Split(';')
+                ?? _analysisOptions.ExtraPaths;
+
+            // Add search paths to extraPaths for pylance to look through
+            var searchPaths = context.SearchPaths.ToArray();
+            extraPaths = extraPaths == null ? searchPaths : extraPaths.Concat(searchPaths).ToArray();
+
+            var stubPath = UserSettings.GetStringSetting(
+                PythonConstants.StubPathSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)
+                ?? _analysisOptions.StubPath;
+
+            var typeCheckingMode = UserSettings.GetStringSetting(
+                PythonConstants.TypeCheckingModeSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)
+                ?? _analysisOptions.TypeCheckingMode;
+
+            var ver3 = new Version(3, 0);
+            var version = context.InterpreterConfiguration.Version;
+            // show a warning if the python version is not supported
+            if (version.ToLanguageVersion() == PythonLanguageVersion.None) {
+                MessageBox.ShowWarningMessage(Site, Strings.PythonVersionNotSupportedInfoBarText.FormatUI(context.InterpreterConfiguration.Description));
+            } else if (context.InterpreterConfiguration.Version < ver3) {
+                MessageBox.ShowWarningMessage(Site, Strings.WarningPython2NotSupported);
+            }
+
+            // get task list tokens from options
+            var taskListTokens = new List<LanguageServerSettings.PythonSettings.PythonAnalysisSettings.TaskListToken>();
+            var taskListService = Site.GetService<SVsTaskList, ITaskList>();
+            if (taskListService != null) {
+                foreach (var commentToken in taskListService.CommentTokens) {
+                    taskListTokens.Add(new LanguageServerSettings.PythonSettings.PythonAnalysisSettings.TaskListToken() {
+                        text = commentToken.Text,
+                        priority = commentToken.Priority.ToString()
+                    });
+                }
+            }
+
+            var settings = new LanguageServerSettings.PythonSettings {
+                pythonPath = context.InterpreterConfiguration.InterpreterPath,
+                venvPath = string.Empty,
+                analysis = new LanguageServerSettings.PythonSettings.PythonAnalysisSettings {
+                    logLevel = _analysisOptions.LogLevel,
+                    autoSearchPaths = _analysisOptions.AutoSearchPaths,
+                    diagnosticMode = _analysisOptions.DiagnosticMode,
+                    extraPaths = extraPaths,
+                    stubPath = stubPath,
+                    typeshedPaths = _analysisOptions.TypeshedPaths,
+                    typeCheckingMode = typeCheckingMode,
+                    useLibraryCodeForTypes = true,
+                    completeFunctionParens = _advancedEditorOptions.CompleteFunctionParens,
+                    autoImportCompletions = _advancedEditorOptions.AutoImportCompletions,
+                    indexing = _analysisOptions.Indexing,
+                    extraCommitChars = false,
+                    importFormat = _analysisOptions.ImportFormat,
+                    inlayHints = new LanguageServerSettings.PythonSettings.PythonAnalysisSettings.PythonAnalysisInlayHintsSettings {
+                        variableTypes = false,
+                        functionReturnTypes = false
+                    },
+                    taskListTokens = taskListTokens.ToArray()
+                }
+
+            };
+
+            return settings;
+        }
+
         private void OnSettingsChanged(object sender, EventArgs e) => InvokeDidChangeConfigurationAsync(new LSP.DidChangeConfigurationParams() {
             // If we pass null settings and workspace.configuration is supported, Pylance will ask
             // us for per workspace configuration settings. Otherwise we can send
             // global settings here.
-            Settings = null
+            
+            Settings = new LanguageServerSettings {
+                python = GetSettings()
+            }
         }).DoNotWait();
 
         private void OnReanalyze(object sender, EventArgs e) => InvokeDidChangeConfigurationAsync(new LSP.DidChangeConfigurationParams() {
             // If we pass null settings and workspace.configuration is supported, Pylance will ask
             // us for per workspace configuration settings. Otherwise we can send
             // global settings here.
-            Settings = null
+            Settings = new LanguageServerSettings {
+                python = GetSettings()
+            }
         }).DoNotWait();
 
         private void OnAnalysisComplete(object sender, EventArgs e) {
@@ -546,7 +579,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                                     capabilities["workspace"] = JToken.FromObject(new { });
                                 }
                                 capabilities["workspace"]["workspaceFolders"] = true;
-                                capabilities["workspace"]["didChangeWatchedFiles"]["dynamicRegistration"] = true;
+                                //                    capabilities["workspace"]["didChangeWatchedFiles"]["dynamicRegistration"] = true;
                                 capabilities["workspace"]["configuration"] = true;
 
                                 // Root path and root URI should not be sent. They're deprecated and will
@@ -583,6 +616,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private void OnSolutionClosing() {
+            this._clientContexts.Clear();
             if (_workspaceFoldersSupported && IsInitialized && _sentInitialWorkspaceFolders) {
                 JoinableTaskContext.Factory.RunAsync(async () => {
                     // If workspace folders are supported, then send our workspace folders
