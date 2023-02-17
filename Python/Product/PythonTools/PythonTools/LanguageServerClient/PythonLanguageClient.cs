@@ -18,18 +18,12 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
-using System.IO.Packaging;
 using System.Linq;
-using System.Numerics;
 using System.Reflection;
-using System.Security.Cryptography;
-using System.Security.Policy;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Documents;
 using Microsoft.PythonTools.Common.Infrastructure;
 using Microsoft.PythonTools.Common.Parsing;
-using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.LanguageServerClient.FileWatcher;
@@ -38,9 +32,7 @@ using Microsoft.PythonTools.LanguageServerClient.WorkspaceFolderChanged;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Utility;
-using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.LanguageServer.Client;
-using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
@@ -315,7 +307,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         public Task InvokeTextDocumentDidOpenAsync(LSP.DidOpenTextDocumentParams request)
-            => NotifyWithParametersAsync("textDocument/didOpen", request);
+                => NotifyWithParametersAsync("textDocument/didOpen", request);
 
         public Task InvokeTextDocumentDidChangeAsync(LSP.DidChangeTextDocumentParams request)
             => NotifyWithParametersAsync("textDocument/didChange", request);
@@ -372,7 +364,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         private LanguageServerSettings.PythonSettings GetSettings(Uri scopeUri = null) {
             // Find the matching context for the item
-            var context = scopeUri != null ? _clientContexts.Find(c => scopeUri != null && PathUtils.IsSamePath(c.RootPath, scopeUri.LocalPath)) : _clientContexts.First();
+            var context = scopeUri != null ? _clientContexts.Find(c => scopeUri != null && PathUtils.IsSamePath(c.RootPath.ToLower(), scopeUri.LocalPath.ToLower())) : _clientContexts.First();
             if (context == null) { 
                 return null;
             }
@@ -449,19 +441,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             // If we pass null settings and workspace.configuration is supported, Pylance will ask
             // us for per workspace configuration settings. Otherwise we can send
             // global settings here.
-            
-            Settings = new LanguageServerSettings {
-                python = GetSettings()
-            }
-        }).DoNotWait();
-
-        private void OnReanalyze(object sender, EventArgs e) => InvokeDidChangeConfigurationAsync(new LSP.DidChangeConfigurationParams() {
-            // If we pass null settings and workspace.configuration is supported, Pylance will ask
-            // us for per workspace configuration settings. Otherwise we can send
-            // global settings here.
-            Settings = new LanguageServerSettings {
-                python = GetSettings()
-            }
+            Settings = null    
         }).DoNotWait();
 
         private void OnReanalyze(object sender, EventArgs e) => InvokeDidChangeConfigurationAsync(new LSP.DidChangeConfigurationParams() {
@@ -471,44 +451,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             Settings = null
         }).DoNotWait();
 
+     
         private void OnAnalysisComplete(object sender, EventArgs e) {
             // Used by test code to know when it's okay to try and use intellisense
             _readyTcs.TrySetResult(0);
         }
-
-        //private async Task SendDocumentOpensAsync() {
-        //    This should be handled by the VSSDK if they ever support workspace folder change notifications
-        //     Meaning we shouldn't need to do this if they do it for us.
-        //    await JoinableTaskContext.Factory.SwitchToMainThreadAsync();
-        //    IComponentModel componentModel = Site.GetService(typeof(SComponentModel)) as IComponentModel;
-
-        //    SVsServiceProvider syncServiceProvider = componentModel.GetService<SVsServiceProvider>();
-        //    RunningDocumentTable rdt = new RunningDocumentTable(syncServiceProvider);
-        //    var tasks = new List<Task>();
-
-        //    foreach (RunningDocumentInfo info in rdt) {
-        //        if (this.TryGetOpenedDocumentData(info, out ITextBuffer textBuffer, out string filePath)
-        //            && textBuffer != null
-        //            && textBuffer.IsPythonContent()) {
-
-        //            var textDocumentItem = new TextDocumentItem {
-        //                Uri = new Uri(filePath),
-        //                Version = textBuffer.CurrentSnapshot.Version.VersionNumber,
-        //                LanguageId = textBuffer.ContentType.DisplayName,
-        //            };
-
-        //            var param = new DidOpenTextDocumentParams {
-        //                TextDocument = textDocumentItem,
-        //            };
-        //            param.TextDocument.Text = textBuffer.CurrentSnapshot.GetText();
-
-        //            tasks.Add(InvokeTextDocumentDidOpenAsync(param));
-        //        }
-        //    }
-
-        //    Let all the tasks execute in parallel
-        //   await Task.WhenAll(tasks);
-        //}
 
         private bool TryGetOpenedDocumentData(RunningDocumentInfo info, out ITextBuffer textBuffer, out string filePath) {
             textBuffer = null;
@@ -586,7 +533,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                                     capabilities["workspace"] = JToken.FromObject(new { });
                                 }
                                 capabilities["workspace"]["workspaceFolders"] = true;
-                                //                    capabilities["workspace"]["didChangeWatchedFiles"]["dynamicRegistration"] = true;
+                                capabilities["workspace"]["didChangeWatchedFiles"]["dynamicRegistration"] = true;
                                 capabilities["workspace"]["configuration"] = true;
 
                                 // Root path and root URI should not be sent. They're deprecated and will
