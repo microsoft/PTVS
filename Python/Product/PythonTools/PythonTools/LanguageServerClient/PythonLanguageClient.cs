@@ -92,6 +92,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private List<IPythonLanguageClientContext> _clientContexts = new List<IPythonLanguageClientContext>();
         private PythonAnalysisOptions _analysisOptions;
         private PythonAdvancedEditorOptions _advancedEditorOptions;
+        private ITaskList _taskListService; 
         private LanguageServer _server;
         private JsonRpc _rpc;
         private JsonRpcWrapper _rpcWrapper;
@@ -102,6 +103,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private static TaskCompletionSource<int> _readyTcs = new System.Threading.Tasks.TaskCompletionSource<int>();
         private bool _modifiedInitialize = false;
         private bool _loaded = false;
+        private Timer _deferredSettingsChangedTimer;
 
         public PythonLanguageClient() {
             _disposables = new Common.Core.Disposables.DisposableBag(GetType().Name);
@@ -137,13 +139,13 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             await JoinableTaskContext.Factory.SwitchToMainThreadAsync();
             CreateClientContexts();
 
-
+            _deferredSettingsChangedTimer = _deferredSettingsChangedTimer = new Timer(OnDeferredSettingsChanged, state: null, Timeout.Infinite, Timeout.Infinite);
             _analysisOptions = Site.GetPythonToolsService().AnalysisOptions;
             _advancedEditorOptions = Site.GetPythonToolsService().AdvancedEditorOptions;
             _analysisOptions.Changed += OnSettingsChanged;
             _advancedEditorOptions.Changed += OnSettingsChanged;
-            var taskListService = Site.GetService<SVsTaskList, ITaskList>();
-            taskListService.PropertyChanged += OnSettingsChanged;
+            _taskListService = Site.GetService<SVsTaskList, ITaskList>();
+            _taskListService.PropertyChanged += OnSettingsChanged;
             var dte = (EnvDTE80.DTE2)Site.GetService(typeof(EnvDTE.DTE));
             var solutionEvents = dte.Events.SolutionEvents;
             solutionEvents.Opened += OnSolutionOpened;
@@ -156,8 +158,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 _clientContexts.ForEach(c => c.InterpreterChanged -= OnSettingsChanged);
                 _analysisOptions.Changed -= OnSettingsChanged;
                 _advancedEditorOptions.Changed -= OnSettingsChanged;
-                var taskListService = Site.GetService<SVsTaskList, ITaskList>();
-                taskListService.PropertyChanged -= OnSettingsChanged;
+                _taskListService.PropertyChanged -= OnSettingsChanged;
                 _clientContexts.ForEach(c => c.Dispose());
                 _clientContexts.Clear();
                 solutionEvents.Opened -= OnSolutionOpened;
@@ -165,6 +166,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 solutionEvents.ProjectRemoved -= OnProjectRemoved;
                 solutionEvents.BeforeClosing -= OnSolutionClosing;
                 WorkspaceService.OnActiveWorkspaceChanged -= OnWorkspaceOpening;
+                _deferredSettingsChangedTimer.Dispose();
             });
 
             return await _server.ActivateAsync();
@@ -249,7 +251,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     }
                 }
 
-                var settings = new LanguageServerSettings.PythonSettings {
+                var pythonSettings = new LanguageServerSettings.PythonSettings {
                     pythonPath = context.InterpreterConfiguration.InterpreterPath,
                     venvPath = string.Empty,
                     analysis = new LanguageServerSettings.PythonSettings.PythonAnalysisSettings {
@@ -274,11 +276,12 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     }
                 };
 
+
                 // Add to our results based on the section asked for
                 if (item.section == "python") {
-                    result.Add(settings);
+                    result.Add(pythonSettings);
                 } else if (item.section == "python.analysis") {
-                    result.Add(settings.analysis);
+                    result.Add(pythonSettings.analysis);
                 }
             }
 
@@ -412,52 +415,31 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             await _rpcWrapper.NotifyWithParameterObjectAsync(request, parameters).ConfigureAwait(false);
         }
 
-        private void OnSettingsChanged(object sender, EventArgs e) => InvokeDidChangeConfigurationAsync(new LSP.DidChangeConfigurationParams() {
-            // If we pass null settings and workspace.configuration is supported, Pylance will ask
-            // us for per workspace configuration settings. Otherwise we can send
-            // global settings here.
-            Settings = null
-        }).DoNotWait();
+        private void OnSettingsChanged(object sender, EventArgs e) {
+            try {
+                System.Diagnostics.Debug.WriteLine("recieved Settings Changed");
+                _deferredSettingsChangedTimer.Change(5000, Timeout.Infinite);
+            } catch (ObjectDisposedException) {
+            }
+        }
+
+        private void OnDeferredSettingsChanged(object state) {
+            System.Diagnostics.Debug.WriteLine("deferred Settings Changed");
+            InvokeDidChangeConfigurationAsync(new LSP.DidChangeConfigurationParams() {
+                // If we pass null settings and workspace.configuration is supported, Pylance will ask
+                // us for per workspace configuration settings. Otherwise we can send
+                // global settings here.
+                Settings = null
+            }).DoNotWait();
+
+        }
 
         private void OnAnalysisComplete(object sender, EventArgs e) {
             // Used by test code to know when it's okay to try and use intellisense
             _readyTcs.TrySetResult(0);
         }
 
-        //private async Task SendDocumentOpensAsync() {
-        //    This should be handled by the VSSDK if they ever support workspace folder change notifications
-        //     Meaning we shouldn't need to do this if they do it for us.
-        //    await JoinableTaskContext.Factory.SwitchToMainThreadAsync();
-        //    IComponentModel componentModel = Site.GetService(typeof(SComponentModel)) as IComponentModel;
-
-        //    SVsServiceProvider syncServiceProvider = componentModel.GetService<SVsServiceProvider>();
-        //    RunningDocumentTable rdt = new RunningDocumentTable(syncServiceProvider);
-        //    var tasks = new List<Task>();
-
-        //    foreach (RunningDocumentInfo info in rdt) {
-        //        if (this.TryGetOpenedDocumentData(info, out ITextBuffer textBuffer, out string filePath)
-        //            && textBuffer != null
-        //            && textBuffer.IsPythonContent()) {
-
-        //            var textDocumentItem = new TextDocumentItem {
-        //                Uri = new Uri(filePath),
-        //                Version = textBuffer.CurrentSnapshot.Version.VersionNumber,
-        //                LanguageId = textBuffer.ContentType.DisplayName,
-        //            };
-
-        //            var param = new DidOpenTextDocumentParams {
-        //                TextDocument = textDocumentItem,
-        //            };
-        //            param.TextDocument.Text = textBuffer.CurrentSnapshot.GetText();
-
-        //            tasks.Add(InvokeTextDocumentDidOpenAsync(param));
-        //        }
-        //    }
-
-        //    Let all the tasks execute in parallel
-        //   await Task.WhenAll(tasks);
-        //}
-
+    
         private bool TryGetOpenedDocumentData(RunningDocumentInfo info, out ITextBuffer textBuffer, out string filePath) {
             textBuffer = null;
             filePath = string.Empty;
