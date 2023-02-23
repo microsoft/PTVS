@@ -139,7 +139,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             await JoinableTaskContext.Factory.SwitchToMainThreadAsync();
             CreateClientContexts();
 
-            _deferredSettingsChangedTimer = _deferredSettingsChangedTimer = new Timer(OnDeferredSettingsChanged, state: null, Timeout.Infinite, Timeout.Infinite);
+            _deferredSettingsChangedTimer = new Timer(OnDeferredSettingsChanged, state: null, Timeout.Infinite, Timeout.Infinite);
             _analysisOptions = Site.GetPythonToolsService().AnalysisOptions;
             _advancedEditorOptions = Site.GetPythonToolsService().AdvancedEditorOptions;
             _analysisOptions.Changed += OnSettingsChanged;
