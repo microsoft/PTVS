@@ -47,7 +47,9 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
 
             // Ignore files that end with ~ or TMP
             _matcher.AddExclude("**/*~");
+            _matcher.AddExclude("**/~*");
             _matcher.AddExclude("**/*TMP");
+            _matcher.AddExclude("**/__pycache__");
 
             // Depending upon if this is a workspace or a solution, listen to different change events.
             if (workspaceService != null && workspaceService.CurrentWorkspace != null) {
@@ -169,20 +171,7 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
                 if (didChangeParams.Changes.Any()) {
                     await _rpcWrapper.NotifyWithParameterObjectAsync(Methods.WorkspaceDidChangeWatchedFiles.Name, didChangeParams);
 
-                    if (renamedArgs != null) {
-                        var textDocumentIdentifier = new TextDocumentIdentifier();
-                        textDocumentIdentifier.Uri = new Uri(renamedArgs.OldFullPath);
-
-                        var closeParam = new DidCloseTextDocumentParams();
-                        closeParam.TextDocument = textDocumentIdentifier;
-                        await _rpcWrapper.NotifyWithParameterObjectAsync(Methods.TextDocumentDidClose.Name, closeParam);
-
-                        var textDocumentItem = new TextDocumentItem();
-                        textDocumentItem.Uri = new Uri(renamedArgs.FullPath);
-                        var openParam = new DidOpenTextDocumentParams();
-                        openParam.TextDocument = textDocumentItem;
-                        await _rpcWrapper.NotifyWithParameterObjectAsync(Methods.TextDocumentDidOpen.Name, openParam);
-                    }
+                    
                 }
             }
         }
