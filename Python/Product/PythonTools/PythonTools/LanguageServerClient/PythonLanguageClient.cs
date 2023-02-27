@@ -412,6 +412,35 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     });
                 }
             }
+
+            var settings = new LanguageServerSettings.PythonSettings {
+                pythonPath = context.InterpreterConfiguration.InterpreterPath,
+                venvPath = string.Empty,
+                analysis = new LanguageServerSettings.PythonSettings.PythonAnalysisSettings {
+                    logLevel = _analysisOptions.LogLevel,
+                    autoSearchPaths = _analysisOptions.AutoSearchPaths,
+                    diagnosticMode = _analysisOptions.DiagnosticMode,
+                    extraPaths = extraPaths,
+                    stubPath = stubPath,
+                    typeshedPaths = _analysisOptions.TypeshedPaths,
+                    typeCheckingMode = typeCheckingMode,
+                    useLibraryCodeForTypes = true,
+                    completeFunctionParens = _advancedEditorOptions.CompleteFunctionParens,
+                    autoImportCompletions = _advancedEditorOptions.AutoImportCompletions,
+                    indexing = _analysisOptions.Indexing,
+                    extraCommitChars = false,
+                    importFormat = _analysisOptions.ImportFormat,
+                    inlayHints = new LanguageServerSettings.PythonSettings.PythonAnalysisSettings.PythonAnalysisInlayHintsSettings {
+                        variableTypes = false,
+                        functionReturnTypes = false
+                    },
+                    taskListTokens = taskListTokens.ToArray()
+                }
+
+            };
+
+            return settings;
+
         }
 
         private void OnSettingsChanged(object sender, EventArgs e) {
