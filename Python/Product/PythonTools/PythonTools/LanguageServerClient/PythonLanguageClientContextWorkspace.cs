@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.PythonTools.Common.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
     internal sealed class PythonLanguageClientContextWorkspace : IPythonLanguageClientContext {
@@ -47,7 +48,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         public InterpreterConfiguration InterpreterConfiguration => _pythonWorkspace.CurrentFactory?.Configuration;
         
-        public string RootPath => _pythonWorkspace.Location;
+        public string RootPath => CommonUtils.NormalizeDirectoryPath(_pythonWorkspace.Location);
         public IEnumerable<string> SearchPaths => _pythonWorkspace.GetAbsoluteSearchPaths();
 
         private void OnInterpreterChanged(object sender, EventArgs e) => InterpreterChanged?.Invoke(this, EventArgs.Empty);

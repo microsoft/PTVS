@@ -29313,42 +29313,6 @@
       <Link>pylance\dist\typeshed-fallback\stubs\tabulate\tabulate\__init__.pyi</Link>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="D:\dev\bschnurr\ptvs\Python\Product\Core\..\..\..\node_modules\%40pylance\pylance\dist\typeshed-fallback\stubs\tensorflow\METADATA.toml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>pylance\dist\typeshed-fallback\stubs\tensorflow\\METADATA.toml</TargetPath>
-      <Link>pylance\dist\typeshed-fallback\stubs\tensorflow\METADATA.toml</Link>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="D:\dev\bschnurr\ptvs\Python\Product\Core\..\..\..\node_modules\%40pylance\pylance\dist\typeshed-fallback\stubs\tensorflow\tensorflow\core\framework\variable_pb2.pyi">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>pylance\dist\typeshed-fallback\stubs\tensorflow\tensorflow\core\framework\\variable_pb2.pyi</TargetPath>
-      <Link>pylance\dist\typeshed-fallback\stubs\tensorflow\tensorflow\core\framework\variable_pb2.pyi</Link>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="D:\dev\bschnurr\ptvs\Python\Product\Core\..\..\..\node_modules\%40pylance\pylance\dist\typeshed-fallback\stubs\tensorflow\tensorflow\dtypes.pyi">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>pylance\dist\typeshed-fallback\stubs\tensorflow\tensorflow\\dtypes.pyi</TargetPath>
-      <Link>pylance\dist\typeshed-fallback\stubs\tensorflow\tensorflow\dtypes.pyi</Link>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="D:\dev\bschnurr\ptvs\Python\Product\Core\..\..\..\node_modules\%40pylance\pylance\dist\typeshed-fallback\stubs\tensorflow\tensorflow\math.pyi">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>pylance\dist\typeshed-fallback\stubs\tensorflow\tensorflow\\math.pyi</TargetPath>
-      <Link>pylance\dist\typeshed-fallback\stubs\tensorflow\tensorflow\math.pyi</Link>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="D:\dev\bschnurr\ptvs\Python\Product\Core\..\..\..\node_modules\%40pylance\pylance\dist\typeshed-fallback\stubs\tensorflow\tensorflow\sparse.pyi">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>pylance\dist\typeshed-fallback\stubs\tensorflow\tensorflow\\sparse.pyi</TargetPath>
-      <Link>pylance\dist\typeshed-fallback\stubs\tensorflow\tensorflow\sparse.pyi</Link>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="D:\dev\bschnurr\ptvs\Python\Product\Core\..\..\..\node_modules\%40pylance\pylance\dist\typeshed-fallback\stubs\tensorflow\tensorflow\__init__.pyi">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>pylance\dist\typeshed-fallback\stubs\tensorflow\tensorflow\\__init__.pyi</TargetPath>
-      <Link>pylance\dist\typeshed-fallback\stubs\tensorflow\tensorflow\__init__.pyi</Link>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
     <Content Include="D:\dev\bschnurr\ptvs\Python\Product\Core\..\..\..\node_modules\%40pylance\pylance\dist\typeshed-fallback\stubs\termcolor\METADATA.toml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <TargetPath>pylance\dist\typeshed-fallback\stubs\termcolor\\METADATA.toml</TargetPath>

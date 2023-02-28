@@ -40,6 +40,7 @@ using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
+using Microsoft.VisualStudioTools;
 using Newtonsoft.Json.Linq;
 using StreamJsonRpc;
 using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
@@ -163,7 +164,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 _clientContexts.ForEach(c => {
                     c.InterpreterChanged -= OnSettingsChanged;
                     c.SearchPathsChanged -= OnSettingsChanged;
-                    c.ReanalyzeProjectChanged -= OnReanalyze;
+                    c.ReanalyzeProjectChanged -= OnReanalyzeProjectChanged;
                     });
                 _analysisOptions.Changed -= OnSettingsChanged;
                 _advancedEditorOptions.Changed -= OnSettingsChanged;
@@ -223,9 +224,9 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
                 // Add to our results based on the section asked for
                 if (item.section == "python") {
-                    result.Add(pythonSettings);
+                    result.Add(pythonSetting);
                 } else if (item.section == "python.analysis") {
-                    result.Add(pythonSettings.analysis);
+                    result.Add(pythonSetting.analysis);
                 }
             }
 
@@ -301,7 +302,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             _clientContexts.Add(context);
             context.InterpreterChanged += OnSettingsChanged;
             context.SearchPathsChanged += OnSettingsChanged;
-            context.ReanalyzeProjectChanged += OnReanalyze;
+            context.ReanalyzeProjectChanged += OnReanalyzeProjectChanged;
         }
 
         public Task InvokeTextDocumentDidOpenAsync(LSP.DidOpenTextDocumentParams request)
@@ -362,9 +363,21 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         private LanguageServerSettings.PythonSettings GetSettings(Uri scopeUri = null)
         {
-            // Find the matching context for the item
-            var context = scopeUri != null ? _clientContexts.Find(c => scopeUri != null && PathUtils.IsSamePath(c.RootPath.ToLower(), scopeUri.LocalPath.ToLower())) : _clientContexts.First();
-            if (context == null) { 
+            IPythonLanguageClientContext context = null;
+            if (scopeUri == null) {
+                // REPL context has null RootPath
+                context = _clientContexts.Find(c => c.RootPath == null);
+                if (context == null) {                  
+                    return null;
+                }
+            }else {
+                var pathFromScopeUri = CommonUtils.NormalizeDirectoryPath(scopeUri.LocalPath).ToLower();
+                // Find the matching context for the item
+                context = _clientContexts.Find(c => scopeUri != null && PathUtils.IsSamePath(c.RootPath.ToLower(), pathFromScopeUri));
+            }
+
+            if (context == null) {
+                Debug.WriteLine(String.Format("GetSettings() scopeUri not found: {0}", scopeUri));
                 return null;
             }
 
@@ -445,14 +458,14 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         private void OnSettingsChanged(object sender, EventArgs e) {
             try {
-                System.Diagnostics.Debug.WriteLine("recieved Settings Changed");
+                System.Diagnostics.Debug.WriteLine("Settings Changed");
                 _deferredSettingsChangedTimer.Change(5000, Timeout.Infinite);
             } catch (ObjectDisposedException) {
             }
         }
 
         private void OnDeferredSettingsChanged(object state) {
-            System.Diagnostics.Debug.WriteLine("deferred Settings Changed");
+            Debug.WriteLine("deferred Settings Changed");
             InvokeDidChangeConfigurationAsync(new LSP.DidChangeConfigurationParams() {
                 // If we pass null settings and workspace.configuration is supported, Pylance will ask
                 // us for per workspace configuration settings. Otherwise we can send
@@ -462,19 +475,18 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         }
 
-        private void OnReanalyze(object sender, EventArgs e) => InvokeDidChangeConfigurationAsync(new LSP.DidChangeConfigurationParams() {
-            // If we pass null settings and workspace.configuration is supported, Pylance will ask
-            // us for per workspace configuration settings. Otherwise we can send
-            // global settings here.
-            Settings = null
-        }).DoNotWait();
+        private void OnReanalyzeProjectChanged(object sender, EventArgs e) {
+            try {
+                Debug.WriteLine("Reanalyze Changed");
+                _deferredSettingsChangedTimer.Change(5000, Timeout.Infinite);
+            } catch (ObjectDisposedException) {
+            }
+        }
 
-     
         private void OnAnalysisComplete(object sender, EventArgs e) {
             // Used by test code to know when it's okay to try and use intellisense
             _readyTcs.TrySetResult(0);
         }
-
     
         private bool TryGetOpenedDocumentData(RunningDocumentInfo info, out ITextBuffer textBuffer, out string filePath) {
             textBuffer = null;
