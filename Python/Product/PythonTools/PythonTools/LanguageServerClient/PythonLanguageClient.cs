@@ -221,7 +221,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     continue;
                 }
 
-
                 // Add to our results based on the section asked for
                 if (item.section == "python") {
                     result.Add(pythonSetting);
