@@ -126,7 +126,7 @@ namespace Microsoft.PythonTools.Project {
             _packageInstallInfoBar = new PackageInstallProjectInfoBar(Site, this);
             _testFrameworkInfoBar = new TestFrameworkProjectInfoBar(Site, this);
             _pythonVersionNotSupportedInfoBar = new PythonNotSupportedInfoBar(Site, InfoBarContexts.Project, () => ActiveInterpreter);
-            _reanalyzeProjectNotification = new System.Threading.Timer(OnReanalyzeProject_Notify);
+            _reanalyzeProjectNotification = new System.Threading.Timer(OnReanalyzeProject_Notify, state: null, Timeout.Infinite, Timeout.Infinite);
         }
 
         private static KeyValuePair<string, string>[] outputGroupNames = {
@@ -285,9 +285,8 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void PackageManager_InstalledFilesChanged(object sender, EventArgs e) {
-            // TODO: Pylance
             try {
-                _reanalyzeProjectNotification.Change(2000, Timeout.Infinite);
+                _reanalyzeProjectNotification.Change(500, Timeout.Infinite);
             } catch (ObjectDisposedException) {
             }
         }
