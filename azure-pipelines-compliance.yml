@@ -272,16 +272,3 @@ jobs:
     inputs:
       GdnPublishTsaOnboard: True
       GdnPublishTsaConfigFile: $(Build.SourcesDirectory)\TsaConfig.json
-
-  # Index and analyze sources for code search (only if UseCodex == true)
-  - task: Ref12.ref12-analyze-task.ref12-analyze-task.Ref12Analyze@0
-    displayName: Index source code for code search
-    inputs:
-      codexoutputroot: '$(Build.StagingDirectory)/Codex'
-      workflowArguments: |
-        /sourcesDirectory:$(Build.SourcesDirectory)
-        /codexRepoUrl:$(Build.Repository.Uri)
-        /repoName:$(Build.Repository.Name)
-        /additionalCodexArguments:-bld
-        /additionalCodexArguments: $(Build.SourcesDirectory)\logs
-    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['UseCodex'], 'true'))
