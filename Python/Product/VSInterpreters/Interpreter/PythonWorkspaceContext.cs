@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Common.Core.Extensions;
 using Microsoft.PythonTools.Infrastructure;
@@ -41,6 +42,8 @@ namespace Microsoft.PythonTools.Interpreter {
         private readonly IInterpreterRegistryService _registryService;
         private readonly IWorkspaceSettingsManager _workspaceSettingsMgr;
         private Dictionary<object, Action<object>> _actionsOnClose;
+        private IReadOnlyList<IPackageManager> _activePackageManagers;
+        private readonly System.Threading.Timer _reanalyzeProjectNotification;
 
         private bool _isDisposed;
         private bool? _isTrusted;
@@ -68,7 +71,7 @@ namespace Microsoft.PythonTools.Interpreter {
             _registryService = registryService ?? throw new ArgumentNullException(nameof(registryService));
             _workspaceSettingsMgr = _workspace.GetSettingsManager();
             _propertyEvaluatorService = workspacePropertyEvaluator;
-            
+            _reanalyzeProjectNotification = new System.Threading.Timer(OnReanalyzeProject_Notify, state: null, Timeout.Infinite, Timeout.Infinite);
 
             // Initialization in 2 phases (Constructor + Initialize) is needed to
             // break a circular dependency.
@@ -87,9 +90,8 @@ namespace Microsoft.PythonTools.Interpreter {
         public event EventHandler InterpreterSettingChanged;
         public event EventHandler SearchPathsSettingChanged;
         public event EventHandler TestSettingChanged;
-#pragma warning disable CS0067
         public event EventHandler ReanalyzeWorkspaceChanged;
-#pragma warning restore CS0067
+
         /// <summary>
         /// <see cref="IsTrusted"/> has changed.
         /// </summary>
@@ -106,7 +108,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// global interpreter change when the workspace relies on the default.
         /// </summary>
         public event EventHandler ActiveInterpreterChanged;
-        
+        public event EventHandler ReanalyzeProject_Notify;
 
         public string WorkspaceName => _workspace.GetName();
 
@@ -164,9 +166,16 @@ namespace Microsoft.PythonTools.Interpreter {
                 action?.Invoke(key);
             }
 
+            foreach (var pm in EnumerableExtensions.MaybeEnumerate(_activePackageManagers)) {
+                pm.InstalledFilesChanged -= PackageManager_InstalledFilesChanged;
+            }
+
+            _reanalyzeProjectNotification.Dispose();
+
             _workspaceSettingsMgr.OnWorkspaceSettingsChanged -= OnSettingsChanged;
             _optionsService.DefaultInterpreterChanged -= OnDefaultInterpreterChanged;
             _registryService.InterpretersChanged -= OnInterpretersChanged;
+
         }
 
         public string MakeRooted(string path) => _workspace.MakeRooted(path);
@@ -308,6 +317,9 @@ namespace Microsoft.PythonTools.Interpreter {
             if (!_isDisposed) {
                 // The environment referenced by the interpreter setting may no longer exist.
                 ReloadInterpreterSetting();
+
+
+
             }
         }
 
@@ -333,12 +345,26 @@ namespace Microsoft.PythonTools.Interpreter {
                 _interpreter = ReadInterpreterSetting();
             }
 
+            var oldPms = _activePackageManagers;
+            _activePackageManagers = null;
+
+            foreach (var pm in EnumerableExtensions.MaybeEnumerate(oldPms)) {
+                pm.InstalledFilesChanged -= PackageManager_InstalledFilesChanged;
+            }
+
             RefreshCurrentFactory();
 
             IPythonInterpreterFactory newFactory;
             lock (_cacheLock) {
                 newFactory = _factory;
             }
+
+            _activePackageManagers = _optionsService.GetPackageManagers(newFactory).ToArray();
+            foreach (var pm in _activePackageManagers) {
+                pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
+                pm.EnableNotifications();
+            }
+
 
             if (oldFactory?.Configuration.Id != newFactory?.Configuration.Id) {
                 ActiveInterpreterChanged?.Invoke(this, EventArgs.Empty);
@@ -421,5 +447,18 @@ namespace Microsoft.PythonTools.Interpreter {
                 _actionsOnClose[key] = action;
             }
         }
+
+        private void PackageManager_InstalledFilesChanged(object sender, EventArgs e) {
+            try {
+                _reanalyzeProjectNotification.Change(500, Timeout.Infinite);
+            } catch (ObjectDisposedException) {
+            }
+        }
+
+        private void OnReanalyzeProject_Notify(object state) {
+         
+            ReanalyzeProject_Notify?.Invoke(this, EventArgs.Empty);
+        }
+
     }
 }
