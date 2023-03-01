@@ -102,6 +102,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private bool _modifiedInitialize = false;
         private bool _loaded = false;
         private Timer _deferredSettingsChangedTimer;
+        private const int _defaultSettingsDelayMS = 2000;
 
         public PythonLanguageClient() {
             _disposables = new Common.Core.Disposables.DisposableBag(GetType().Name);
@@ -114,15 +115,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         // Called by Microsoft.VisualStudio.LanguageServer.Client.RemoteLanguageServiceBroker.UpdateClientsWithConfigurationSettingsAsync
         // Used to send LS WorkspaceDidChangeConfiguration notification
         public IEnumerable<string> ConfigurationSections => Enumerable.Repeat("python", 1);
-        public object InitializationOptions {
-            get {
-                return new {
-                    vsSupport = true,
-                };
-            }
-            
-        }
-        
+        public object InitializationOptions { get; private set; }
 
         public IEnumerable<string> FilesToWatch => null;
         public object MiddleLayer => null;
@@ -200,7 +193,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             // Client context cannot be created here since the is no workspace yet
             // and hence we don't know if this is workspace or a loose files case.
             _server = new LanguageServer(Site, JoinableTaskContext, this.OnSendToServer);
-            
+            InitializationOptions = null;
+
             var customTarget = new PythonLanguageClientCustomTarget(Site, JoinableTaskContext);
             CustomMessageTarget = customTarget;
             customTarget.WatchedFilesRegistered += WatchedFilesRegistered;
@@ -515,7 +509,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private void OnSettingsChanged(object sender, EventArgs e) {
             try {
                 System.Diagnostics.Debug.WriteLine("Settings Changed");
-                _deferredSettingsChangedTimer.Change(5000, Timeout.Infinite);
+                _deferredSettingsChangedTimer.Change(_defaultSettingsDelayMS, Timeout.Infinite);
             } catch (ObjectDisposedException) {
             }
         }
@@ -534,7 +528,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private void OnReanalyzeProjectChanged(object sender, EventArgs e) {
             try {
                 Debug.WriteLine("Reanalyze Changed");
-                _deferredSettingsChangedTimer.Change(5000, Timeout.Infinite);
+                _deferredSettingsChangedTimer.Change(_defaultSettingsDelayMS, Timeout.Infinite);
             } catch (ObjectDisposedException) {
             }
         }
