@@ -28,6 +28,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         event EventHandler InterpreterChanged;
         event EventHandler SearchPathsChanged;
         event EventHandler Closed;
-        event EventHandler ReanalyzeProjectChanged;
+        event EventHandler ReanalyzeChanged;
     }
 }

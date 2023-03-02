@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 #pragma warning disable CS0067
         public event EventHandler SearchPathsChanged;
         public event EventHandler Closed;
-        public event EventHandler ReanalyzeProjectChanged;
+        public event EventHandler ReanalyzeChanged;
 #pragma warning restore CS0067
 
         public PythonLanguageClientContextGlobal(IInterpreterOptionsService optionsService) {

@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private readonly IWorkspaceSettingsManager _workspaceSettingsMgr;
         private Dictionary<object, Action<object>> _actionsOnClose;
         private IReadOnlyList<IPackageManager> _activePackageManagers;
-        private readonly System.Threading.Timer _reanalyzeProjectNotification;
+        private readonly Timer _reanalyzeWorkspaceNotification;
 
         private bool _isDisposed;
         private bool? _isTrusted;
@@ -71,7 +71,7 @@ namespace Microsoft.PythonTools.Interpreter {
             _registryService = registryService ?? throw new ArgumentNullException(nameof(registryService));
             _workspaceSettingsMgr = _workspace.GetSettingsManager();
             _propertyEvaluatorService = workspacePropertyEvaluator;
-            _reanalyzeProjectNotification = new System.Threading.Timer(OnReanalyzeProject_Notify, state: null, Timeout.Infinite, Timeout.Infinite);
+            _reanalyzeWorkspaceNotification = new System.Threading.Timer(OnReanalyzeWorkspace_Notify, state: null, Timeout.Infinite, Timeout.Infinite);
 
             // Initialization in 2 phases (Constructor + Initialize) is needed to
             // break a circular dependency.
@@ -87,6 +87,12 @@ namespace Microsoft.PythonTools.Interpreter {
             _unitTestPattern = GetStringProperty(UnitTestPatternProperty);
         }
 
+        /// <summary>
+        /// The effective interpreter for this workspace has changed.
+        /// This can be due to an interpreter setting change in the json or a
+        /// global interpreter change when the workspace relies on the default.
+        /// </summary>
+        public event EventHandler ActiveInterpreterChanged;
         public event EventHandler InterpreterSettingChanged;
         public event EventHandler SearchPathsSettingChanged;
         public event EventHandler TestSettingChanged;
@@ -101,14 +107,6 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <see cref="IsTrusted"/> was queried, and its value is unknown.
         /// </summary>
         public event EventHandler IsTrustedQueried;
-
-        /// <summary>
-        /// The effective interpreter for this workspace has changed.
-        /// This can be due to an interpreter setting change in the json or a
-        /// global interpreter change when the workspace relies on the default.
-        /// </summary>
-        public event EventHandler ActiveInterpreterChanged;
-        public event EventHandler ReanalyzeProject_Notify;
 
         public string WorkspaceName => _workspace.GetName();
 
@@ -151,6 +149,12 @@ namespace Microsoft.PythonTools.Interpreter {
             _workspaceSettingsMgr.OnWorkspaceSettingsChanged += OnSettingsChanged;
             _optionsService.DefaultInterpreterChanged += OnDefaultInterpreterChanged;
             _registryService.InterpretersChanged += OnInterpretersChanged;
+
+            _activePackageManagers = _optionsService.GetPackageManagers(_factory).ToArray();
+            foreach (var pm in _activePackageManagers) {
+                pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
+                pm.EnableNotifications();
+            }
         }
 
         public void Dispose() {
@@ -170,7 +174,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 pm.InstalledFilesChanged -= PackageManager_InstalledFilesChanged;
             }
 
-            _reanalyzeProjectNotification.Dispose();
+            _reanalyzeWorkspaceNotification.Dispose();
 
             _workspaceSettingsMgr.OnWorkspaceSettingsChanged -= OnSettingsChanged;
             _optionsService.DefaultInterpreterChanged -= OnDefaultInterpreterChanged;
@@ -450,14 +454,14 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private void PackageManager_InstalledFilesChanged(object sender, EventArgs e) {
             try {
-                _reanalyzeProjectNotification.Change(500, Timeout.Infinite);
+                _reanalyzeWorkspaceNotification.Change(500, Timeout.Infinite);
             } catch (ObjectDisposedException) {
             }
         }
 
-        private void OnReanalyzeProject_Notify(object state) {
-         
-            ReanalyzeProject_Notify?.Invoke(this, EventArgs.Empty);
+        private void OnReanalyzeWorkspace_Notify(object state) {
+
+            ReanalyzeWorkspaceChanged?.Invoke(this, EventArgs.Empty);
         }
 
     }
