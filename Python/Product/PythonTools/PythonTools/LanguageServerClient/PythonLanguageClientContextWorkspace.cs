@@ -28,7 +28,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public event EventHandler InterpreterChanged;
         public event EventHandler SearchPathsChanged;
         public event EventHandler Closed;
-        public event EventHandler ReanalyzeProjectChanged;
+        public event EventHandler ReanalyzeChanged;
 
         public PythonLanguageClientContextWorkspace(IPythonWorkspaceContext pythonWorkspace) {
             _pythonWorkspace = pythonWorkspace ?? throw new ArgumentNullException(nameof(pythonWorkspace));
@@ -36,11 +36,12 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
             _pythonWorkspace.ActiveInterpreterChanged += OnInterpreterChanged;
             _pythonWorkspace.SearchPathsSettingChanged += OnSearchPathsChanged;
-            _pythonWorkspace.ReanalyzeWorkspaceChanged += OnReanalyzeProjectChanged;
+            _pythonWorkspace.ReanalyzeWorkspaceChanged += OnReanalyzeChanged;
 
             _disposables.Add(() => {
                 _pythonWorkspace.ActiveInterpreterChanged -= OnInterpreterChanged;
                 _pythonWorkspace.SearchPathsSettingChanged -= OnSearchPathsChanged;
+                _pythonWorkspace.ReanalyzeWorkspaceChanged -= OnReanalyzeChanged;
             });
 
             _pythonWorkspace.AddActionOnClose(this, (obj) => Closed?.Invoke(this, EventArgs.Empty));
@@ -54,7 +55,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private void OnInterpreterChanged(object sender, EventArgs e) => InterpreterChanged?.Invoke(this, EventArgs.Empty);
         private void OnSearchPathsChanged(object sender, EventArgs e) => SearchPathsChanged?.Invoke(this, EventArgs.Empty);
 
-        private void OnReanalyzeProjectChanged(object sender, EventArgs e) => ReanalyzeProjectChanged?.Invoke(this, EventArgs.Empty);
+        private void OnReanalyzeChanged(object sender, EventArgs e) => ReanalyzeChanged?.Invoke(this, EventArgs.Empty);
 
         public void Dispose() => _disposables.TryDispose();
     }

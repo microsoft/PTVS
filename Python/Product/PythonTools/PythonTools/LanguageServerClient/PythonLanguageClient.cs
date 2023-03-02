@@ -157,7 +157,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 _clientContexts.ForEach(c => {
                     c.InterpreterChanged -= OnSettingsChanged;
                     c.SearchPathsChanged -= OnSettingsChanged;
-                    c.ReanalyzeProjectChanged -= OnReanalyzeProjectChanged;
+                    c.ReanalyzeChanged -= OnReanalyzeChanged;
                     });
                 _analysisOptions.Changed -= OnSettingsChanged;
                 _advancedEditorOptions.Changed -= OnSettingsChanged;
@@ -300,7 +300,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             _clientContexts.Add(context);
             context.InterpreterChanged += OnSettingsChanged;
             context.SearchPathsChanged += OnSettingsChanged;
-            context.ReanalyzeProjectChanged += OnReanalyzeProjectChanged;
+            context.ReanalyzeChanged += OnReanalyzeChanged;
         }
 
         public Task InvokeTextDocumentDidOpenAsync(LSP.DidOpenTextDocumentParams request)
@@ -525,7 +525,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         }
 
-        private void OnReanalyzeProjectChanged(object sender, EventArgs e) {
+        private void OnReanalyzeChanged(object sender, EventArgs e) {
             try {
                 Debug.WriteLine("Reanalyze Changed");
                 _deferredSettingsChangedTimer.Change(_defaultSettingsDelayMS, Timeout.Infinite);
