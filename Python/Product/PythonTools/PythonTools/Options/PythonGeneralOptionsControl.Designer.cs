@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.Options {
             this._promptForPackageInstallation = new System.Windows.Forms.CheckBox();
             this._promptForPytestEnableAndInstall = new System.Windows.Forms.CheckBox();
             this._elevatePip = new System.Windows.Forms.CheckBox();
-            this._clearGlobalPythonPath = new System.Windows.Forms.CheckBox();
+            //this._clearGlobalPythonPath = new System.Windows.Forms.CheckBox();
             this._resetSuppressDialog = new System.Windows.Forms.Button();
             this.tableLayoutPanel3.SuspendLayout();
             this.SuspendLayout();
@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.Options {
             this.tableLayoutPanel3.Controls.Add(this._promptForPackageInstallation, 0, 3);
             this.tableLayoutPanel3.Controls.Add(this._promptForPytestEnableAndInstall, 0, 4);
             this.tableLayoutPanel3.Controls.Add(this._elevatePip, 0, 5);
-            this.tableLayoutPanel3.Controls.Add(this._clearGlobalPythonPath, 0, 6);
+            //this.tableLayoutPanel3.Controls.Add(this._clearGlobalPythonPath, 0, 6);
             this.tableLayoutPanel3.Controls.Add(this._resetSuppressDialog, 0, 11);
             this.tableLayoutPanel3.Name = "tableLayoutPanel3";
             // 
@@ -93,11 +93,11 @@ namespace Microsoft.PythonTools.Options {
             // 
             // _clearGlobalPythonPath
             // 
-            resources.ApplyResources(this._clearGlobalPythonPath, "_clearGlobalPythonPath");
+        /*    resources.ApplyResources(this._clearGlobalPythonPath, "_clearGlobalPythonPath");
             this._clearGlobalPythonPath.AutoEllipsis = true;
             this.tableLayoutPanel3.SetColumnSpan(this._clearGlobalPythonPath, 2);
             this._clearGlobalPythonPath.Name = "_clearGlobalPythonPath";
-            this._clearGlobalPythonPath.UseVisualStyleBackColor = true;
+            this._clearGlobalPythonPath.UseVisualStyleBackColor = true;*/
             // 
             // _resetSuppressDialog
             // 
@@ -129,7 +129,7 @@ namespace Microsoft.PythonTools.Options {
         private System.Windows.Forms.CheckBox _promptForPackageInstallation;
         private System.Windows.Forms.CheckBox _promptForPytestEnableAndInstall;
         private System.Windows.Forms.CheckBox _elevatePip;
-        private System.Windows.Forms.CheckBox _clearGlobalPythonPath;
+        //private System.Windows.Forms.CheckBox _clearGlobalPythonPath;
         private System.Windows.Forms.Button _resetSuppressDialog;
     }
 }

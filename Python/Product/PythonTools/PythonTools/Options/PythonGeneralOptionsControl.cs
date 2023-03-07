@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.Options {
             _promptForPackageInstallation.Checked = pyService.GeneralOptions.PromptForPackageInstallation;
             _promptForPytestEnableAndInstall.Checked = pyService.GeneralOptions.PromptForTestFrameWorkInfoBar;
             _elevatePip.Checked = pyService.GeneralOptions.ElevatePip;
-            _clearGlobalPythonPath.Checked = pyService.GeneralOptions.ClearGlobalPythonPath;
+            //_clearGlobalPythonPath.Checked = pyService.GeneralOptions.ClearGlobalPythonPath;
         }
 
         internal void SyncPageWithControlSettings(PythonToolsService pyService) {
@@ -41,7 +41,7 @@ namespace Microsoft.PythonTools.Options {
             pyService.GeneralOptions.PromptForPackageInstallation = _promptForPackageInstallation.Checked;
             pyService.GeneralOptions.PromptForTestFrameWorkInfoBar = _promptForPytestEnableAndInstall.Checked;
             pyService.GeneralOptions.ElevatePip = _elevatePip.Checked;
-            pyService.GeneralOptions.ClearGlobalPythonPath = _clearGlobalPythonPath.Checked;
+            //pyService.GeneralOptions.ClearGlobalPythonPath = _clearGlobalPythonPath.Checked;
         }
 
         private void _resetSuppressDialog_Click(object sender, EventArgs e) {
