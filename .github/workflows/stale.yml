@@ -7,19 +7,19 @@ name: Close stale 'waiting for response' issues
 
 on:
   schedule:
-  - cron: '0 0 * * *'
+    - cron: "*/5 * * * *"
 
 jobs:
   stale:
-
     runs-on: ubuntu-latest
     permissions:
       issues: write
 
     steps:
-    - uses: actions/stale@v5
-      with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
-        close-issue-message: 'This issue was closed because it has been stalled for 30 days with no activity. If the issue still persists, please reopen with the information requested. Thanks.'
-        days-before-issue-close: 30
-        any-of-labels: 'waiting for response'
+      - uses: actions/stale@v5
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          days-before-issue-stale: 30
+          days-before-issue-close: 0
+          close-issue-message: "This issue was closed because it has been stalled for 30 days with no activity. If the issue still persists, please reopen with the information requested. Thanks."
+          any-of-labels: "waiting for response"
