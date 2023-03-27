@@ -568,7 +568,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private void OnSolutionOpened() {
-            //if (IsInitialized && !_sentInitialWorkspaceFolders) {
             if (_workspaceFoldersSupported && IsInitialized && !_sentInitialWorkspaceFolders) {
                 _sentInitialWorkspaceFolders = true;
                 JoinableTaskContext.Factory.RunAsync(async () => {
