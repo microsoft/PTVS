@@ -291,9 +291,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         public async Task OnServerInitializedAsync() {
             IsInitialized = true;
-
-            // Send to either workspace open or solution open
-            OnWorkspaceOrSolutionOpened();
+            // Set _workspaceFoldersSupported to true and send to either workspace open or solution open
+            OnWorkspaceFolderWatched(this, EventArgs.Empty);
         }
 
         public Task OnServerInitializeFailedAsync(Exception e) {
@@ -569,6 +568,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private void OnSolutionOpened() {
+            //if (IsInitialized && !_sentInitialWorkspaceFolders) {
             if (_workspaceFoldersSupported && IsInitialized && !_sentInitialWorkspaceFolders) {
                 _sentInitialWorkspaceFolders = true;
                 JoinableTaskContext.Factory.RunAsync(async () => {
