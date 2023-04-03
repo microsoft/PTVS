@@ -1,2 +1,2 @@
-Flask>=1.1
+Flask>=2.2.3
 pyjade<5
