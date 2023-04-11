@@ -90,6 +90,7 @@ namespace Microsoft.PythonTools.Project {
         private readonly PythonNotSupportedInfoBar _pythonVersionNotSupportedInfoBar;
 
         private readonly SemaphoreSlim _recreatingAnalyzer = new SemaphoreSlim(1);
+        private bool _isRefreshingInterpreters = false;
 
         public event EventHandler LanguageServerInterpreterChanged;
 
@@ -224,36 +225,32 @@ namespace Microsoft.PythonTools.Project {
                 Debug.Assert(this.FileName != null);
                 var oldActive = _active;
 
+                // stop listening for installed files changed
                 var oldPms = _activePackageManagers;
                 _activePackageManagers = null;
-
                 foreach (var pm in oldPms.MaybeEnumerate()) {
                     pm.InstalledFilesChanged -= PackageManager_InstalledFilesChanged;
                 }
 
                 lock (_validFactories) {
-                    if (_validFactories.Count == 0) {
-                        // No factories, so we must use the global default.
+                    // if there are no valid factories,
+                    // or the specified factory isn't in the valid list,
+                    // use the global default
+                    if (_validFactories.Count == 0 || value == null || !_validFactories.Contains(value.Configuration.Id)) {
                         _active = null;
-                    } else if (value == null || !_validFactories.Contains(value.Configuration.Id)) {
-                        // Choose a factory and make it our default.
-                        // TODO: We should have better ordering than this...
-                        var compModel = Site.GetComponentModel();
-
-                        _active = InterpreterRegistry.FindInterpreter(
-                                _validFactories.ToList().OrderBy(f => f).LastOrDefault()
-                        );
                     } else {
                         _active = value;
                     }
                 }
 
+                // start listening for package changes on the active interpreter again
                 _activePackageManagers = InterpreterOptions.GetPackageManagers(_active).ToArray();
                 foreach (var pm in _activePackageManagers) {
                     pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
                     pm.EnableNotifications();
                 }
 
+                // update the InterpreterId element in the pyproj with the new active interpreter
                 if (_active != oldActive) {
                     if (_active != null) {
                         BuildProject.SetProperty(
@@ -780,81 +777,96 @@ namespace Microsoft.PythonTools.Project {
         // OnInterpreterFactoriesChanged is triggered, which calls this method.
         private void RefreshInterpreters(bool alwaysCollapse = false) {
 
-            // if the project is closed, we're done
-            if (IsClosed) {
+            // This method is re-entrant the first time it's called because GetInterpreterConfigurations() calls EnsureInitialized(),
+            // which triggers the OnInterpreterFactoriesChanged event. So only allow this method to run if it's not already running
+            if (_isRefreshingInterpreters) {
                 return;
             }
+            _isRefreshingInterpreters = true;
 
-            // if the "Python Environments" node doesn't exist, we're done
-            var pythonEnvironmentsNode = _interpretersContainer;
-            if (pythonEnvironmentsNode == null) {
-                return;
-            }
+            try {
 
-            // clear out all interpreter nodes since we're going to re-add them
-            var interpreterNodes = pythonEnvironmentsNode.AllChildren.OfType<InterpretersNode>().ToList();
-            interpreterNodes.ForEach(pythonEnvironmentsNode.RemoveChild);
+                // if the project is closed, we're done
+                if (IsClosed) {
+                    return;
+                }
 
-            // if we have no interpreter factories, and the active interpreter is the global default,
-            // add a node for it
-            if (InterpreterFactories.Count() == 0 && IsActiveInterpreterGlobalDefault && ActiveInterpreter.IsRunnable()) {
-                var newNode = new InterpretersNode(
-                    this,
-                    ActiveInterpreter,
-                    isInterpreterReference: true,
-                    canDelete: false,
-                    isGlobalDefault: true
+                // if the "Python Environments" node doesn't exist, we're done
+                var pythonEnvironmentsNode = _interpretersContainer;
+                if (pythonEnvironmentsNode == null) {
+                    return;
+                }
+
+                // clear out all interpreter nodes since we're going to re-add them
+                var interpreterNodes = pythonEnvironmentsNode.AllChildren.OfType<InterpretersNode>().ToList();
+                interpreterNodes.ForEach(pythonEnvironmentsNode.RemoveChild);
+
+                // if we have no interpreter factories, and the active interpreter is the global default,
+                // add a node for it
+                if (InterpreterFactories.Count() == 0 && IsActiveInterpreterGlobalDefault && ActiveInterpreter.IsRunnable()) {
+                    var newNode = new InterpretersNode(
+                        this,
+                        ActiveInterpreter,
+                        isInterpreterReference: true,
+                        canDelete: false,
+                        isGlobalDefault: true
+                        );
+
+                    pythonEnvironmentsNode.AddChild(newNode);
+                }
+
+                // add all the factories we have
+                foreach (var interpreterFactory in InterpreterFactories) {
+                    var isProjectSpecific = _vsProjectContext.IsProjectSpecific(interpreterFactory.Configuration);
+                    var canRemove = !this.IsAppxPackageableProject(); // Do not allow change python environment for UWP
+                    var canDelete = isProjectSpecific && Directory.Exists(interpreterFactory.Configuration.GetPrefixPath());
+
+                    var newNode = new InterpretersNode(
+                        this,
+                        interpreterFactory,
+                        isInterpreterReference: !isProjectSpecific,
+                        canDelete,
+                        isGlobalDefault: false,
+                        canRemove
                     );
+
+                    pythonEnvironmentsNode.AddChild(newNode);
+                }
+
+                // If the project is referencing interpreters that we can't find, add dummy nodes for them.
+                // This can include virtual environments that have been deleted, interpreters that have been uninstalled,
+                // or conda environments that are still being discovered asynchronously.
+                foreach (var id in InvalidInterpreterIds) {
+                    pythonEnvironmentsNode.AddChild(InterpretersNode.CreateAbsentInterpreterNode(this, id));
+                }
+
+                // Handle the expand/collapse state of the container node, plus each interpreter node
+                // TODO: Is this still needed? We cleared out all the previous nodes so the previous expanded info is gone?
+                if (alwaysCollapse || ParentHierarchy == null) {
+                    OnInvalidateItems(pythonEnvironmentsNode);
+                } else {
+                    bool wasExpanded = pythonEnvironmentsNode.GetIsExpanded();
+                    var expandAfter = pythonEnvironmentsNode.AllChildren.Where(n => n.GetIsExpanded()).ToArray();
+                    OnInvalidateItems(pythonEnvironmentsNode);
+                    if (wasExpanded) {
+                        pythonEnvironmentsNode.ExpandItem(EXPANDFLAGS.EXPF_ExpandFolder);
+                    }
+                    foreach (var child in expandAfter) {
+                        child.ExpandItem(EXPANDFLAGS.EXPF_ExpandFolder);
+                    }
+                }
+
+                // update the active interpreter based on the "InterpreterId" element in the pyproj
+                UpdateActiveInterpreter();
+
+                // finally, bold the active environment
+                BoldActiveEnvironment();
+
+            } finally {
                 
-                pythonEnvironmentsNode.AddChild(newNode);
+                // allow the method to run again
+                _isRefreshingInterpreters = false;
             }
-
-            // add all the factories we have
-            foreach (var interpreterFactory in InterpreterFactories) {
-                var isProjectSpecific = _vsProjectContext.IsProjectSpecific(interpreterFactory.Configuration);
-                var canRemove = !this.IsAppxPackageableProject(); // Do not allow change python environment for UWP
-                var canDelete = isProjectSpecific && Directory.Exists(interpreterFactory.Configuration.GetPrefixPath());
-
-                var newNode = new InterpretersNode(
-                    this,
-                    interpreterFactory,
-                    isInterpreterReference: !isProjectSpecific,
-                    canDelete,
-                    isGlobalDefault: false,
-                    canRemove
-                );
-
-                pythonEnvironmentsNode.AddChild(newNode);
-            }
-
-            // If the project is referencing interpreters that we can't find, add dummy nodes for them.
-            // This can include virtual environments that have been deleted, interpreters that have been uninstalled,
-            // or conda environments that are still being discovered asynchronously.
-            foreach (var id in InvalidInterpreterIds) {
-                pythonEnvironmentsNode.AddChild(InterpretersNode.CreateAbsentInterpreterNode(this, id));
-            }
-
-            // Handle the expand/collapse state of the container node, plus each interpreter node
-            // TODO: Is this still needed? We cleared out all the previous nodes so the previous expanded info is gone?
-            if (alwaysCollapse || ParentHierarchy == null) {
-                OnInvalidateItems(pythonEnvironmentsNode);
-            } else {
-                bool wasExpanded = pythonEnvironmentsNode.GetIsExpanded();
-                var expandAfter = pythonEnvironmentsNode.AllChildren.Where(n => n.GetIsExpanded()).ToArray();
-                OnInvalidateItems(pythonEnvironmentsNode);
-                if (wasExpanded) {
-                    pythonEnvironmentsNode.ExpandItem(EXPANDFLAGS.EXPF_ExpandFolder);
-                }
-                foreach (var child in expandAfter) {
-                    child.ExpandItem(EXPANDFLAGS.EXPF_ExpandFolder);
-                }
-            }
-
-            // update the active interpreter based on the "InterpreterId" element in the pyproj
-            UpdateActiveInterpreter();
-
-            // finally, bold the active environment
-            BoldActiveEnvironment();
         }
 
         private void BoldActiveEnvironment() {
