@@ -321,7 +321,6 @@
                      Focusable="False"
                      Visibility="{Binding IsListRefreshing,Converter={StaticResource VisibilityOrHidden}}" />
 
-
         <Button Style="{StaticResource NavigationButton}"
                 Grid.Row="3"
                 Margin="3"
