@@ -315,11 +315,12 @@
         </Grid>
 
         <ProgressBar Grid.Row="2"
-                     IsIndeterminate="True"
+                     IsIndeterminate="{Binding RelativeSource={RelativeSource Self}, Path=IsVisible}"
                      HorizontalAlignment="Stretch"
                      Height="3"
                      Focusable="False"
                      Visibility="{Binding IsListRefreshing,Converter={StaticResource VisibilityOrHidden}}" />
+
 
         <Button Style="{StaticResource NavigationButton}"
                 Grid.Row="3"
