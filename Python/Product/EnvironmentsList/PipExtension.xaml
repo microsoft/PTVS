@@ -315,7 +315,7 @@
         </Grid>
 
         <ProgressBar Grid.Row="2"
-                     IsIndeterminate="True"
+                     IsIndeterminate="{Binding RelativeSource={RelativeSource Self}, Path=IsVisible}"
                      HorizontalAlignment="Stretch"
                      Height="3"
                      Focusable="False"
