@@ -124,6 +124,10 @@ namespace TestUtilities.Python {
         }
 
         public event EventHandler DefaultInterpreterChanged;
+        public event EventHandler InterpreterDiscoveryCompleted {
+            add { }
+            remove { }
+        }
 
         public bool IsInterpreterGeneratingDatabase(IPythonInterpreterFactory interpreter) {
             throw new NotImplementedException();

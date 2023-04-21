@@ -83,6 +83,7 @@ namespace Microsoft.PythonTools.Project {
         private readonly PythonProject _pythonProject;
 
         private bool _infoBarCheckTriggered = false;
+        private bool _asyncInfoBarCheckTriggered = false;
         private readonly CondaEnvCreateInfoBar _condaEnvCreateInfoBar;
         private readonly VirtualEnvCreateInfoBar _virtualEnvCreateInfoBar;
         private readonly PackageInstallInfoBar _packageInstallInfoBar;
@@ -114,6 +115,7 @@ namespace Microsoft.PythonTools.Project {
             // hooked up.
             InterpreterOptions.DefaultInterpreterChanged += GlobalDefaultInterpreterChanged;
             InterpreterRegistry.InterpretersChanged += OnInterpreterRegistryChanged;
+            InterpreterRegistry.InterpreterDiscoveryCompleted += OnInterpreterDiscoveryCompleted;
             _pythonProject = new VsPythonProject(this);
 
             _condaEnvCreateInfoBar = new CondaEnvCreateProjectInfoBar(Site, this);
@@ -198,6 +200,16 @@ namespace Microsoft.PythonTools.Project {
 
         private void OnInterpreterFactoriesChanged(object sender, EventArgs e) {
             Site.GetUIThread().Invoke(() => RefreshInterpreters());
+        }
+
+        // Called once all async interpreter factories have finished discovering interpreters
+        private void OnInterpreterDiscoveryCompleted(object sender, EventArgs e) {
+            if (!_asyncInfoBarCheckTriggered) {
+                _asyncInfoBarCheckTriggered = true;
+
+                // Check for any missing environments and show info bars for them
+                _condaEnvCreateInfoBar.CheckAsync().HandleAllExceptions(Site, typeof(PythonProjectNode)).DoNotWait();
+            }
         }
 
         private void OnInterpreterRegistryChanged(object sender, EventArgs e) {
@@ -686,7 +698,6 @@ namespace Microsoft.PythonTools.Project {
 
         private async Task TriggerInfoBarsAsync() {
             await Task.WhenAll(
-                _condaEnvCreateInfoBar.CheckAsync(),
                 _virtualEnvCreateInfoBar.CheckAsync(),
                 _packageInstallInfoBar.CheckAsync(),
                 _testFrameworkInfoBar.CheckAsync(),

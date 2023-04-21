@@ -36,6 +36,9 @@ namespace Microsoft.PythonTools.Interpreter {
         private readonly Lazy<IInterpreterLog>[] _loggers;
         private const string InterpreterFactoryIdMetadata = "InterpreterFactoryId";
 
+        private int _asyncInterpreterDiscoveryCompletedCount;
+        private int _asyncProviderCount;
+
         [ImportingConstructor]
         public InterpreterRegistryService([ImportMany]Lazy<IPythonInterpreterFactoryProvider, IDictionary<string, object>>[] providers, [ImportMany]Lazy<IInterpreterLog>[] loggers) {
             _providers = providers;
@@ -72,18 +75,42 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
+        public event EventHandler InterpreterDiscoveryCompleted;
+
         private void EnsureFactoryChangesWatched() {
+
             if (!_factoryChangesWatched) {
                 BeginSuppressInterpretersChangedEvent();
                 try {
                     foreach (var provider in GetProviders()) {
                         provider.InterpreterFactoriesChanged += Provider_InterpreterFactoriesChanged;
+
+                        // if the provider is async, listen for the completed event
+                        if (provider is IPythonInterpreterFactoryProviderAsync asyncProvider) {
+                            _asyncProviderCount++;
+                            asyncProvider.InterpreterDiscoveryCompleted += Provider_InterpreterDiscoveryCompleted;
+                        }
                     }
                 } finally {
                     EndSuppressInterpretersChangedEvent();
                 }
                 _factoryChangesWatched = true;
             }
+        }
+
+        // Called when a single async interpreter factory provider finishes discovering interpreters
+        private void Provider_InterpreterDiscoveryCompleted(object sender, EventArgs e) {
+
+            // Since we know how many async providers we have, keep track of how many times this callback is hit.
+            // Once the number of calls == the number of providers, we know all async interpreter discovery is done.
+            _asyncInterpreterDiscoveryCompletedCount++;
+
+            if (_asyncInterpreterDiscoveryCompletedCount < _asyncProviderCount) {
+                return;
+            }
+
+            // if we get here, interpreter discovery is finished
+            InterpreterDiscoveryCompleted?.Invoke(this, EventArgs.Empty);
         }
 
         public void BeginSuppressInterpretersChangedEvent() {

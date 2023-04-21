@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Interpreter {
     [Export(typeof(IPythonInterpreterFactoryProvider))]
     [Export(typeof(CondaEnvironmentFactoryProvider))]
     [PartCreationPolicy(CreationPolicy.Shared)]
-    class CondaEnvironmentFactoryProvider : IPythonInterpreterFactoryProvider, IDisposable {
+    class CondaEnvironmentFactoryProvider : IPythonInterpreterFactoryProvider, IPythonInterpreterFactoryProviderAsync, IDisposable {
         private readonly Dictionary<string, PythonInterpreterInformation> _factories = new Dictionary<string, PythonInterpreterInformation>();
         internal const string FactoryProviderName = "CondaEnv";
         internal const string EnvironmentCompanyName = "CondaEnv";
@@ -62,6 +62,7 @@ namespace Microsoft.PythonTools.Interpreter {
         };
 
         internal event EventHandler DiscoveryStarted;
+        public event EventHandler InterpreterDiscoveryCompleted;
 
         [ImportingConstructor]
         public CondaEnvironmentFactoryProvider(
@@ -267,6 +268,8 @@ namespace Microsoft.PythonTools.Interpreter {
             if (anyChanged) {
                 OnInterpreterFactoriesChanged();
             }
+
+            InterpreterDiscoveryCompleted?.Invoke(this, EventArgs.Empty);
         }
 
         internal async static Task<CondaInfoResult> ExecuteCondaInfoAsync(string condaPath) {
