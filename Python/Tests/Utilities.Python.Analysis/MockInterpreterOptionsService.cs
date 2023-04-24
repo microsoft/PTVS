@@ -124,7 +124,7 @@ namespace TestUtilities.Python {
         }
 
         public event EventHandler DefaultInterpreterChanged;
-        public event EventHandler InterpreterDiscoveryCompleted {
+        public event EventHandler AsyncInterpreterDiscoveryCompleted {
             add { }
             remove { }
         }

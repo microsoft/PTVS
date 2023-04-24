@@ -75,7 +75,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        public event EventHandler InterpreterDiscoveryCompleted;
+        public event EventHandler AsyncInterpreterDiscoveryCompleted;
 
         private void EnsureFactoryChangesWatched() {
 
@@ -88,7 +88,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         // if the provider is async, listen for the completed event
                         if (provider is IPythonInterpreterFactoryProviderAsync asyncProvider) {
                             _asyncProviderCount++;
-                            asyncProvider.InterpreterDiscoveryCompleted += Provider_InterpreterDiscoveryCompleted;
+                            asyncProvider.InterpreterDiscoveryCompleted += Provider_AsyncInterpreterDiscoveryCompleted;
                         }
                     }
                 } finally {
@@ -99,7 +99,7 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         // Called when a single async interpreter factory provider finishes discovering interpreters
-        private void Provider_InterpreterDiscoveryCompleted(object sender, EventArgs e) {
+        private void Provider_AsyncInterpreterDiscoveryCompleted(object sender, EventArgs e) {
 
             // Since we know how many async providers we have, keep track of how many times this callback is hit.
             // Once the number of calls == the number of providers, we know all async interpreter discovery is done.
@@ -110,7 +110,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             // if we get here, interpreter discovery is finished
-            InterpreterDiscoveryCompleted?.Invoke(this, EventArgs.Empty);
+            AsyncInterpreterDiscoveryCompleted?.Invoke(this, EventArgs.Empty);
         }
 
         public void BeginSuppressInterpretersChangedEvent() {

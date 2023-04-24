@@ -115,7 +115,7 @@ namespace Microsoft.PythonTools.Project {
             // hooked up.
             InterpreterOptions.DefaultInterpreterChanged += GlobalDefaultInterpreterChanged;
             InterpreterRegistry.InterpretersChanged += OnInterpreterRegistryChanged;
-            InterpreterRegistry.InterpreterDiscoveryCompleted += OnInterpreterDiscoveryCompleted;
+            InterpreterRegistry.AsyncInterpreterDiscoveryCompleted += OnInterpreterDiscoveryCompleted;
             _pythonProject = new VsPythonProject(this);
 
             _condaEnvCreateInfoBar = new CondaEnvCreateProjectInfoBar(Site, this);

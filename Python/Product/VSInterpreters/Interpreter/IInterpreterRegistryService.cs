@@ -64,7 +64,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <summary>
         /// Raised when all async interpreter factory providers have completed discovering interpreters
         /// </summary>
-        event EventHandler InterpreterDiscoveryCompleted;
+        event EventHandler AsyncInterpreterDiscoveryCompleted;
 
         /// <summary>
         /// Called to suppress the <see cref="InterpretersChanged"/> event while
