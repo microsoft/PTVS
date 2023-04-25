@@ -37,6 +37,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private const string InterpreterFactoryIdMetadata = "InterpreterFactoryId";
 
         private int _asyncInterpreterDiscoveryCompletedCount;
+        private readonly object _asyncInterpreterDiscoveryCompletedCountLock = new object();
         private int _asyncProviderCount;
 
         [ImportingConstructor]
@@ -101,12 +102,14 @@ namespace Microsoft.PythonTools.Interpreter {
         // Called when a single async interpreter factory provider finishes discovering interpreters
         private void Provider_AsyncInterpreterDiscoveryCompleted(object sender, EventArgs e) {
 
-            // Since we know how many async providers we have, keep track of how many times this callback is hit.
-            // Once the number of calls == the number of providers, we know all async interpreter discovery is done.
-            _asyncInterpreterDiscoveryCompletedCount++;
+            lock (_asyncInterpreterDiscoveryCompletedCountLock) {
+                // Since we know how many async providers we have, keep track of how many times this callback is hit.
+                // Once the number of calls == the number of providers, we know all async interpreter discovery is done.
+                _asyncInterpreterDiscoveryCompletedCount++;
 
-            if (_asyncInterpreterDiscoveryCompletedCount < _asyncProviderCount) {
-                return;
+                if (_asyncInterpreterDiscoveryCompletedCount < _asyncProviderCount) {
+                    return;
+                }
             }
 
             // if we get here, interpreter discovery is finished
