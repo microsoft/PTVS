@@ -814,7 +814,7 @@ namespace Microsoft.PythonTools.Project {
 
                 // if we have no interpreter factories, and the active interpreter is the global default,
                 // add a node for it
-                if (InterpreterFactories.Count() == 0 && IsActiveInterpreterGlobalDefault && ActiveInterpreter.IsRunnable()) {
+                if (!InterpreterFactories.Any() && IsActiveInterpreterGlobalDefault && ActiveInterpreter.IsRunnable()) {
                     var newNode = new InterpretersNode(
                         this,
                         ActiveInterpreter,
