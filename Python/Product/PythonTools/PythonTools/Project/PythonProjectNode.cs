@@ -851,21 +851,11 @@ namespace Microsoft.PythonTools.Project {
                     pythonEnvironmentsNode.AddChild(InterpretersNode.CreateAbsentInterpreterNode(this, id));
                 }
 
-                // Handle the expand/collapse state of the container node, plus each interpreter node
-                // TODO: Is this still needed? We cleared out all the previous nodes so the previous expanded info is gone?
-                if (alwaysCollapse || ParentHierarchy == null) {
-                    OnInvalidateItems(pythonEnvironmentsNode);
-                } else {
-                    bool wasExpanded = pythonEnvironmentsNode.GetIsExpanded();
-                    var expandAfter = pythonEnvironmentsNode.AllChildren.Where(n => n.GetIsExpanded()).ToArray();
-                    OnInvalidateItems(pythonEnvironmentsNode);
-                    if (wasExpanded) {
-                        pythonEnvironmentsNode.ExpandItem(EXPANDFLAGS.EXPF_ExpandFolder);
-                    }
-                    foreach (var child in expandAfter) {
-                        child.ExpandItem(EXPANDFLAGS.EXPF_ExpandFolder);
-                    }
-                }
+                // Expand the Python Environments node, if appropriate
+                OnInvalidateItems(pythonEnvironmentsNode);
+                if (!alwaysCollapse && ParentHierarchy != null) {
+                    pythonEnvironmentsNode.ExpandItem(EXPANDFLAGS.EXPF_ExpandFolder);
+                } 
 
                 // update the active interpreter based on the "InterpreterId" element in the pyproj
                 UpdateActiveInterpreter();
