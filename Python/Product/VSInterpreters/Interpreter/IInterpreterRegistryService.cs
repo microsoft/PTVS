@@ -62,6 +62,11 @@ namespace Microsoft.PythonTools.Interpreter {
         event EventHandler InterpretersChanged;
 
         /// <summary>
+        /// Raised when all async interpreter factory providers have completed discovering interpreters
+        /// </summary>
+        event EventHandler AsyncInterpreterDiscoveryCompleted;
+
+        /// <summary>
         /// Called to suppress the <see cref="InterpretersChanged"/> event while
         /// making changes to the registry. If the event is triggered while
         /// suppressed, it will not be raised until suppression is lifted.
