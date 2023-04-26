@@ -111,7 +111,7 @@ namespace Microsoft.PythonTools.Editor {
 
                     Debug.Assert(curLine.Length >= minColumn);
 
-                    edit.Insert(curLine.Start.Position + minColumn, "#");
+                    edit.Insert(curLine.Start.Position + minColumn, "# ");
                 }
 
                 edit.Apply();
@@ -166,6 +166,9 @@ namespace Microsoft.PythonTools.Editor {
                 if (!Char.IsWhiteSpace(text[j])) {
                     if (text[j] == '#') {
                         edit.Delete(curLine.Start.Position + j, 1);
+                        if (j + 1 < text.Length && text[j + 1] == ' ') {
+                            edit.Delete(curLine.Start.Position + j + 1, 1);
+                        }
                     }
                     break;
                 }
