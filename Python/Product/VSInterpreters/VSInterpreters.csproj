@@ -108,6 +108,7 @@
     </Compile>
     <Compile Include="Interpreter\InterpreterUIMode.cs" />
     <Compile Include="Interpreter\IPythonInterpreterFactory.cs" />
+    <Compile Include="Interpreter\IPythonInterpreterFactoryProviderAsync.cs" />
     <Compile Include="Interpreter\LaunchConfiguration.cs" />
     <Compile Include="Interpreter\NoInterpretersException.cs" />
     <Compile Include="Interpreter\LaunchConfigurationUtils.cs" />
