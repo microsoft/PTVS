@@ -36,10 +36,6 @@ namespace Microsoft.PythonTools.Interpreter {
         private readonly Lazy<IInterpreterLog>[] _loggers;
         private const string InterpreterFactoryIdMetadata = "InterpreterFactoryId";
 
-        private int _asyncInterpreterDiscoveryCompletedCount;
-        private readonly object _asyncInterpreterDiscoveryCompletedCountLock = new object();
-        private int _asyncProviderCount;
-
         [ImportingConstructor]
         public InterpreterRegistryService([ImportMany]Lazy<IPythonInterpreterFactoryProvider, IDictionary<string, object>>[] providers, [ImportMany]Lazy<IInterpreterLog>[] loggers) {
             _providers = providers;
@@ -76,7 +72,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        public event EventHandler AsyncInterpreterDiscoveryCompleted;
+        public event EventHandler CondaInterpreterDiscoveryCompleted;
 
         private void EnsureFactoryChangesWatched() {
 
@@ -86,10 +82,9 @@ namespace Microsoft.PythonTools.Interpreter {
                     foreach (var provider in GetProviders()) {
                         provider.InterpreterFactoriesChanged += Provider_InterpreterFactoriesChanged;
 
-                        // if the provider is async, listen for the completed event
-                        if (provider is IPythonInterpreterFactoryProviderAsync asyncProvider) {
-                            _asyncProviderCount++;
-                            asyncProvider.InterpreterDiscoveryCompleted += Provider_AsyncInterpreterDiscoveryCompleted;
+                        // if the provider is conda, listen for the completed event
+                        if (provider is CondaEnvironmentFactoryProvider condaProvider) {
+                            condaProvider.InterpreterDiscoveryCompleted += Provider_CondaInterpreterDiscoveryCompleted;
                         }
                     }
                 } finally {
@@ -99,21 +94,9 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        // Called when a single async interpreter factory provider finishes discovering interpreters
-        private void Provider_AsyncInterpreterDiscoveryCompleted(object sender, EventArgs e) {
-
-            lock (_asyncInterpreterDiscoveryCompletedCountLock) {
-                // Since we know how many async providers we have, keep track of how many times this callback is hit.
-                // Once the number of calls == the number of providers, we know all async interpreter discovery is done.
-                _asyncInterpreterDiscoveryCompletedCount++;
-
-                if (_asyncInterpreterDiscoveryCompletedCount < _asyncProviderCount) {
-                    return;
-                }
-            }
-
-            // if we get here, interpreter discovery is finished
-            AsyncInterpreterDiscoveryCompleted?.Invoke(this, EventArgs.Empty);
+        // Called when the conda factory provider finishes discovering interpreters
+        private void Provider_CondaInterpreterDiscoveryCompleted(object sender, EventArgs e) {
+            CondaInterpreterDiscoveryCompleted?.Invoke(this, EventArgs.Empty);
         }
 
         public void BeginSuppressInterpretersChangedEvent() {

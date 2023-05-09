@@ -62,9 +62,9 @@ namespace Microsoft.PythonTools.Interpreter {
         event EventHandler InterpretersChanged;
 
         /// <summary>
-        /// Raised when all async interpreter factory providers have completed discovering interpreters
+        /// Raised when the conda factory provider has completed discovering interpreters
         /// </summary>
-        event EventHandler AsyncInterpreterDiscoveryCompleted;
+        event EventHandler CondaInterpreterDiscoveryCompleted;
 
         /// <summary>
         /// Called to suppress the <see cref="InterpretersChanged"/> event while
