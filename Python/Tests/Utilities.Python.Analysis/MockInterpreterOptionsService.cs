@@ -124,7 +124,7 @@ namespace TestUtilities.Python {
         }
 
         public event EventHandler DefaultInterpreterChanged;
-        public event EventHandler AsyncInterpreterDiscoveryCompleted {
+        public event EventHandler CondaInterpreterDiscoveryCompleted {
             add { }
             remove { }
         }
