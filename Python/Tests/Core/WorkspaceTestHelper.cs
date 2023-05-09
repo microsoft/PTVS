@@ -126,7 +126,7 @@ namespace PythonToolsTests {
             public IPythonInterpreterFactory NoInterpretersValue => throw new NotImplementedException();
 
             public event EventHandler InterpretersChanged;
-            public event EventHandler AsyncInterpreterDiscoveryCompleted {
+            public event EventHandler CondaInterpreterDiscoveryCompleted {
                 add { }
                 remove { }
             }

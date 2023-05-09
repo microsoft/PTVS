@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Interpreter {
     [Export(typeof(IPythonInterpreterFactoryProvider))]
     [Export(typeof(CondaEnvironmentFactoryProvider))]
     [PartCreationPolicy(CreationPolicy.Shared)]
-    class CondaEnvironmentFactoryProvider : IPythonInterpreterFactoryProvider, IPythonInterpreterFactoryProviderAsync, IDisposable {
+    class CondaEnvironmentFactoryProvider : IPythonInterpreterFactoryProvider, IDisposable {
         private readonly Dictionary<string, PythonInterpreterInformation> _factories = new Dictionary<string, PythonInterpreterInformation>();
         internal const string FactoryProviderName = "CondaEnv";
         internal const string EnvironmentCompanyName = "CondaEnv";
