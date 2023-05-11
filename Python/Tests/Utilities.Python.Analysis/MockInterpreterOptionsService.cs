@@ -202,5 +202,6 @@ namespace TestUtilities.Python {
                 return Enumerable.Empty<IPackageManager>();
             }
         }
+        public void DiscoverCondaInterpreterFactoriesAfterPythonInstall() => throw new NotImplementedException();
     }
 }

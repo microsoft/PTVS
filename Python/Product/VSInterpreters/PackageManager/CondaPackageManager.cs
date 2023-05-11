@@ -23,8 +23,13 @@ using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.OLE.Interop;
+using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using IServiceProvider = System.IServiceProvider;
+using Microsoft.PythonTools;
 
 namespace Microsoft.PythonTools.Interpreter {
     sealed class CondaPackageManager : IPackageManager, IDisposable {
@@ -42,6 +47,8 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private int _suppressCount;
         private bool _isDisposed;
+        // private IInterpreterRegistryService _interpreterRegistry = null;
+        private IServiceProvider _serviceProvider;
 
         // Prevent too many concurrent executions to avoid exhausting disk IO
         private static readonly SemaphoreSlim _concurrencyLock = new SemaphoreSlim(4);
@@ -52,12 +59,17 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public CondaPackageManager(
             IPythonInterpreterFactory factory,
-            string condaPath
+            string condaPath,
+            IServiceProvider serviceProvider
         ) {
             _factory = factory;
             _installedPackages = new List<PackageSpec>();
             _availablePackages = new List<PackageSpec>();
             _condaPath = condaPath ?? CondaUtils.GetCondaExecutablePath(factory.Configuration.GetPrefixPath());
+            //if (serviceProvider != null ) {
+            //    _interpreterRegistry = (IInterpreterRegistryService)serviceProvider.GetService(typeof(IInterpreterRegistryService));
+            //}
+            _serviceProvider = serviceProvider;
             if (!File.Exists(_condaPath)) {
                 throw new NotSupportedException();
             }
@@ -292,6 +304,13 @@ namespace Microsoft.PythonTools.Interpreter {
                     ui?.OnOutputTextReceived(this, msg.FormatUI(name));
                     ui?.OnOperationFinished(this, operation, success);
                     await CacheInstalledPackagesAsync(true, false, cancellationToken);
+
+                    // Run Conda interpreter factories discovery after updating/installing python package
+                    if (success && package.Name == "python" && _serviceProvider != null) {
+                        var _interpreterRegistry = (IInterpreterRegistryService)_serviceProvider.GetService(typeof(IInterpreterRegistryService));
+                        _interpreterRegistry = (IInterpreterRegistryService)((IComponentModel)_serviceProvider.GetService(typeof(SComponentModel))).GetService<IInterpreterRegistryService>();
+                        _interpreterRegistry.DiscoverCondaInterpreterFactoriesAfterPythonInstall();
+                    }
                 }
             }
         }

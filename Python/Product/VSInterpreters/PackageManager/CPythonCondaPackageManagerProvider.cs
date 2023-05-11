@@ -78,7 +78,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             try {
-                return new CondaPackageManager(factory, condaPath);
+                return new CondaPackageManager(factory, condaPath, _site);
             } catch (NotSupportedException) {
                 return null;
             }

@@ -84,5 +84,11 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <see cref="BeginSuppressInterpretersChangedEvent"/>.
         /// </summary>
         void EndSuppressInterpretersChangedEvent();
+
+        /// <summary>
+        /// Discovers Conda interpreter factories after updating or installing 
+        /// a Python package.
+        /// </summary>
+        void DiscoverCondaInterpreterFactoriesAfterPythonInstall();
     }
 }
