@@ -14,6 +14,19 @@ parameters:
 # build number format 
 name: $(date:yy)$(DayOfYear)$(rev:.r)
 
+# Weekly schedule. This always runs even if there are no changes, because a pylance release
+# does not generate commits in this repo.
+# Pylance releases on Wednesdays, so we build on Thursdays at 6pm so we can pull in the latest
+# pylance and get the VS insertion going so we can hopefully merge it in on Fridays.
+# All times are in UTC, so 8AM = Midnight PST
+schedules:
+- cron: "0 18 * * Thu"
+  displayName: Weekly build
+  branches:
+    include:
+    - main
+  always: true
+
 # Trigger ci builds for commits into master and any release branches
 # Ignore changes to other yml files, since they are for different pipelines
 trigger:
