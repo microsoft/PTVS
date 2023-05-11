@@ -24,12 +24,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.ComponentModelHost;
-using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using IServiceProvider = System.IServiceProvider;
-using Microsoft.PythonTools;
 
 namespace Microsoft.PythonTools.Interpreter {
     sealed class CondaPackageManager : IPackageManager, IDisposable {
