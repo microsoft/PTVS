@@ -47,7 +47,6 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private int _suppressCount;
         private bool _isDisposed;
-        // private IInterpreterRegistryService _interpreterRegistry = null;
         private IServiceProvider _serviceProvider;
 
         // Prevent too many concurrent executions to avoid exhausting disk IO
@@ -66,9 +65,6 @@ namespace Microsoft.PythonTools.Interpreter {
             _installedPackages = new List<PackageSpec>();
             _availablePackages = new List<PackageSpec>();
             _condaPath = condaPath ?? CondaUtils.GetCondaExecutablePath(factory.Configuration.GetPrefixPath());
-            //if (serviceProvider != null ) {
-            //    _interpreterRegistry = (IInterpreterRegistryService)serviceProvider.GetService(typeof(IInterpreterRegistryService));
-            //}
             _serviceProvider = serviceProvider;
             if (!File.Exists(_condaPath)) {
                 throw new NotSupportedException();
@@ -307,8 +303,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
                     // Run Conda interpreter factories discovery after updating/installing python package
                     if (success && package.Name == "python" && _serviceProvider != null) {
-                        var _interpreterRegistry = (IInterpreterRegistryService)_serviceProvider.GetService(typeof(IInterpreterRegistryService));
-                        _interpreterRegistry = (IInterpreterRegistryService)((IComponentModel)_serviceProvider.GetService(typeof(SComponentModel))).GetService<IInterpreterRegistryService>();
+                        var _interpreterRegistry = ((IComponentModel)_serviceProvider.GetService(typeof(SComponentModel))).GetService<IInterpreterRegistryService>();
                         _interpreterRegistry.DiscoverCondaInterpreterFactoriesAfterPythonInstall();
                     }
                 }
