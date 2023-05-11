@@ -66,7 +66,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 UpdateEnvironments();
             }
 
-            private void EnvironmentsView_CurrentChanged(object sender, EventArgs e) {
+        private void EnvironmentsView_CurrentChanged(object sender, EventArgs e) {
             var item = _environmentsView.View.CurrentItem as EnvironmentView;
             if (item == null) {
                 lock (_extensions) {
