@@ -18,9 +18,9 @@ name: $(date:yy)$(DayOfYear)$(rev:.r)
 # does not generate commits in this repo.
 # Pylance releases on Wednesdays, so we build on Thursdays at 6pm so we can pull in the latest
 # pylance and get the VS insertion going so we can hopefully merge it in on Fridays.
-# All times are in UTC, so 8AM = Midnight PST
+# All times are in UTC, 1AM UTC on Friday = 6pm PDT on THURSDAY NIGHT (PDT is 7 hours behind)
 schedules:
-- cron: "0 18 * * Thu"
+- cron: "0 1 * * Fri"
   displayName: Weekly build
   branches:
     include:
