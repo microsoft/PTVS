@@ -662,7 +662,7 @@ permissions and limitations under the License.
         </Strings>
       </Button>
 
-      <!--<Button guid="guidPythonToolsCmdSet" id="cmdIdAddPythonPathToSearchPath" priority="0x0303" type="Button">
+      <!-- Disable until Pylance supports <Button guid="guidPythonToolsCmdSet" id="cmdIdAddPythonPathToSearchPath" priority="0x0303" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="SearchPathCommandsGroup"/>
         <CommandFlag>CommandWellOnly</CommandFlag>
         <Strings>

@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.Options {
             this._promptForPackageInstallation = new System.Windows.Forms.CheckBox();
             this._promptForPytestEnableAndInstall = new System.Windows.Forms.CheckBox();
             this._elevatePip = new System.Windows.Forms.CheckBox();
-            //this._clearGlobalPythonPath = new System.Windows.Forms.CheckBox();
+            // Disable until Pylance supports: this._clearGlobalPythonPath = new System.Windows.Forms.CheckBox();
             this._resetSuppressDialog = new System.Windows.Forms.Button();
             this.tableLayoutPanel3.SuspendLayout();
             this.SuspendLayout();
