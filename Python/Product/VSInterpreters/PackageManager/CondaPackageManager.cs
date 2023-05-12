@@ -302,7 +302,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     // Run Conda interpreter factories discovery after updating/installing python package
                     if (success && package.Name == "python" && _serviceProvider != null) {
                         var _interpreterRegistry = ((IComponentModel)_serviceProvider.GetService(typeof(SComponentModel))).GetService<IInterpreterRegistryService>();
-                        _interpreterRegistry.DiscoverCondaInterpreterFactoriesAfterPythonInstall();
+                        _interpreterRegistry.RefreshCondaInterpreterFactories();
                     }
                 }
             }

@@ -74,7 +74,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public event EventHandler CondaInterpreterDiscoveryCompleted;
 
-        public async void DiscoverCondaInterpreterFactoriesAfterPythonInstall() {
+        public async void RefreshCondaInterpreterFactories() {
             foreach (var provider in GetProviders()) {
 
                 // if the provider is conda, force discover conda interpreter factories

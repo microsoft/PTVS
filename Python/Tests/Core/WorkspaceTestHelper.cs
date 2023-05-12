@@ -135,7 +135,7 @@ namespace PythonToolsTests {
                 throw new NotImplementedException();
             }
 
-            public void DiscoverCondaInterpreterFactoriesAfterPythonInstall() => throw new NotImplementedException();
+            public void RefreshCondaInterpreterFactories() => throw new NotImplementedException();
 
             public void EndSuppressInterpretersChangedEvent() {
                 throw new NotImplementedException();
