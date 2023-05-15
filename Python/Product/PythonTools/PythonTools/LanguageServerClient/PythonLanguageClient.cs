@@ -359,51 +359,51 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             await _rpcWrapper.NotifyWithParameterObjectAsync(request, parameters).ConfigureAwait(false);
         }
 
-        private LanguageServerSettings.PythonSettings GetSettings(Uri scopeUri = null) {
-            // Find the matching context for the item
-            var context = scopeUri != null ? _clientContexts.Find(c => scopeUri != null && PathUtils.IsSamePath(c.RootPath.ToLower(), scopeUri.LocalPath.ToLower())) : _clientContexts.First();
-            if (context == null) { 
-                return null;
-            }
+        //private LanguageServerSettings.PythonSettings GetSettings(Uri scopeUri = null) {
+        //    // Find the matching context for the item
+        //    var context = scopeUri != null ? _clientContexts.Find(c => scopeUri != null && PathUtils.IsSamePath(c.RootPath.ToLower(), scopeUri.LocalPath.ToLower())) : _clientContexts.First();
+        //    if (context == null) { 
+        //        return null;
+        //    }
        
-            Debug.Assert(_analysisOptions != null);
+        //    Debug.Assert(_analysisOptions != null);
 
-            var extraPaths = UserSettings.GetStringSetting(
-                PythonConstants.ExtraPathsSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)?.Split(';')
-                ?? _analysisOptions.ExtraPaths;
+        //    var extraPaths = UserSettings.GetStringSetting(
+        //        PythonConstants.ExtraPathsSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)?.Split(';')
+        //        ?? _analysisOptions.ExtraPaths;
 
-            // Add search paths to extraPaths for pylance to look through
-            var searchPaths = context.SearchPaths.ToArray();
-            extraPaths = extraPaths == null ? searchPaths : extraPaths.Concat(searchPaths).ToArray();
+        //    // Add search paths to extraPaths for pylance to look through
+        //    var searchPaths = context.SearchPaths.ToArray();
+        //    extraPaths = extraPaths == null ? searchPaths : extraPaths.Concat(searchPaths).ToArray();
 
-            var stubPath = UserSettings.GetStringSetting(
-                PythonConstants.StubPathSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)
-                ?? _analysisOptions.StubPath;
+        //    var stubPath = UserSettings.GetStringSetting(
+        //        PythonConstants.StubPathSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)
+        //        ?? _analysisOptions.StubPath;
 
-            var typeCheckingMode = UserSettings.GetStringSetting(
-                PythonConstants.TypeCheckingModeSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)
-                ?? _analysisOptions.TypeCheckingMode;
+        //    var typeCheckingMode = UserSettings.GetStringSetting(
+        //        PythonConstants.TypeCheckingModeSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)
+        //        ?? _analysisOptions.TypeCheckingMode;
 
-            var ver3 = new Version(3, 0);
-            var version = context.InterpreterConfiguration.Version;
-            // show a warning if the python version is not supported
-            if (version.ToLanguageVersion() == PythonLanguageVersion.None) {
-                MessageBox.ShowWarningMessage(Site, Strings.PythonVersionNotSupportedInfoBarText.FormatUI(context.InterpreterConfiguration.Description));
-            } else if (context.InterpreterConfiguration.Version < ver3) {
-                MessageBox.ShowWarningMessage(Site, Strings.WarningPython2NotSupported);
-            }
+        //    var ver3 = new Version(3, 0);
+        //    var version = context.InterpreterConfiguration.Version;
+        //    // show a warning if the python version is not supported
+        //    if (version.ToLanguageVersion() == PythonLanguageVersion.None) {
+        //        MessageBox.ShowWarningMessage(Site, Strings.PythonVersionNotSupportedInfoBarText.FormatUI(context.InterpreterConfiguration.Description));
+        //    } else if (context.InterpreterConfiguration.Version < ver3) {
+        //        MessageBox.ShowWarningMessage(Site, Strings.WarningPython2NotSupported);
+        //    }
 
-            // get task list tokens from options
-            var taskListTokens = new List<LanguageServerSettings.PythonSettings.PythonAnalysisSettings.TaskListToken>();
-            var taskListService = Site.GetService<SVsTaskList, ITaskList>();
-            if (taskListService != null) {
-                foreach (var commentToken in taskListService.CommentTokens) {
-                    taskListTokens.Add(new LanguageServerSettings.PythonSettings.PythonAnalysisSettings.TaskListToken() {
-                        text = commentToken.Text,
-                        priority = commentToken.Priority.ToString()
-                    });
-                }
-            }
+        //    // get task list tokens from options
+        //    var taskListTokens = new List<LanguageServerSettings.PythonSettings.PythonAnalysisSettings.TaskListToken>();
+        //    var taskListService = Site.GetService<SVsTaskList, ITaskList>();
+        //    if (taskListService != null) {
+        //        foreach (var commentToken in taskListService.CommentTokens) {
+        //            taskListTokens.Add(new LanguageServerSettings.PythonSettings.PythonAnalysisSettings.TaskListToken() {
+        //                text = commentToken.Text,
+        //                priority = commentToken.Priority.ToString()
+        //            });
+        //        }
+        //    }
 
         
         private void OnAnalysisComplete(object sender, EventArgs e) {
@@ -531,11 +531,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 _deferredSettingsChangedTimer.Change(_defaultSettingsDelayMS, Timeout.Infinite);
             } catch (ObjectDisposedException) {
             }
-        }
-
-        private void OnAnalysisComplete(object sender, EventArgs e) {
-            // Used by test code to know when it's okay to try and use intellisense
-            _readyTcs.TrySetResult(0);
         }
     
         private bool TryGetOpenedDocumentData(RunningDocumentInfo info, out ITextBuffer textBuffer, out string filePath) {
