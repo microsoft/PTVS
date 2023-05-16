@@ -304,13 +304,12 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         public Task InvokeTextDocumentDidOpenAsync(LSP.DidOpenTextDocumentParams request)
-                => NotifyWithParametersAsync("textDocument/didOpen", request);
+            => NotifyWithParametersAsync("textDocument/didOpen", request);
 
         public Task InvokeTextDocumentDidChangeAsync(LSP.DidChangeTextDocumentParams request)
             => NotifyWithParametersAsync("textDocument/didChange", request);
 
         public Task InvokeDidChangeConfigurationAsync(LSP.DidChangeConfigurationParams request) {
-
             return _rpcWrapper.NotifyWithParameterObjectAsync("workspace/didChangeConfiguration", request);
         }
 
@@ -357,58 +356,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             await _readyTcs.Task.ConfigureAwait(false);
 
             await _rpcWrapper.NotifyWithParameterObjectAsync(request, parameters).ConfigureAwait(false);
-        }
-
-        //private LanguageServerSettings.PythonSettings GetSettings(Uri scopeUri = null) {
-        //    // Find the matching context for the item
-        //    var context = scopeUri != null ? _clientContexts.Find(c => scopeUri != null && PathUtils.IsSamePath(c.RootPath.ToLower(), scopeUri.LocalPath.ToLower())) : _clientContexts.First();
-        //    if (context == null) { 
-        //        return null;
-        //    }
-       
-        //    Debug.Assert(_analysisOptions != null);
-
-        //    var extraPaths = UserSettings.GetStringSetting(
-        //        PythonConstants.ExtraPathsSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)?.Split(';')
-        //        ?? _analysisOptions.ExtraPaths;
-
-        //    // Add search paths to extraPaths for pylance to look through
-        //    var searchPaths = context.SearchPaths.ToArray();
-        //    extraPaths = extraPaths == null ? searchPaths : extraPaths.Concat(searchPaths).ToArray();
-
-        //    var stubPath = UserSettings.GetStringSetting(
-        //        PythonConstants.StubPathSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)
-        //        ?? _analysisOptions.StubPath;
-
-        //    var typeCheckingMode = UserSettings.GetStringSetting(
-        //        PythonConstants.TypeCheckingModeSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)
-        //        ?? _analysisOptions.TypeCheckingMode;
-
-        //    var ver3 = new Version(3, 0);
-        //    var version = context.InterpreterConfiguration.Version;
-        //    // show a warning if the python version is not supported
-        //    if (version.ToLanguageVersion() == PythonLanguageVersion.None) {
-        //        MessageBox.ShowWarningMessage(Site, Strings.PythonVersionNotSupportedInfoBarText.FormatUI(context.InterpreterConfiguration.Description));
-        //    } else if (context.InterpreterConfiguration.Version < ver3) {
-        //        MessageBox.ShowWarningMessage(Site, Strings.WarningPython2NotSupported);
-        //    }
-
-        //    // get task list tokens from options
-        //    var taskListTokens = new List<LanguageServerSettings.PythonSettings.PythonAnalysisSettings.TaskListToken>();
-        //    var taskListService = Site.GetService<SVsTaskList, ITaskList>();
-        //    if (taskListService != null) {
-        //        foreach (var commentToken in taskListService.CommentTokens) {
-        //            taskListTokens.Add(new LanguageServerSettings.PythonSettings.PythonAnalysisSettings.TaskListToken() {
-        //                text = commentToken.Text,
-        //                priority = commentToken.Priority.ToString()
-        //            });
-        //        }
-        //    }
-
-        
-        private void OnAnalysisComplete(object sender, EventArgs e) {
-            // Used by test code to know when it's okay to try and use intellisense
-            _readyTcs.TrySetResult(0);
         }
 
         private LanguageServerSettings.PythonSettings GetSettings(Uri scopeUri = null)
@@ -523,6 +470,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 Settings = null
             }).DoNotWait();
 
+        }
+
+        private void OnAnalysisComplete(object sender, EventArgs e) {
+            // Used by test code to know when it's okay to try and use intellisense
+            _readyTcs.TrySetResult(0);
         }
 
         private void OnReanalyzeChanged(object sender, EventArgs e) {

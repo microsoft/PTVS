@@ -417,6 +417,10 @@ namespace Microsoft.PythonTools.Interpreter {
                 // by unregistering from events that could raise that event.
                 _optionsService.DefaultInterpreterChanged -= OnDefaultInterpreterChanged;
                 _registryService.InterpretersChanged -= OnInterpretersChanged;
+                foreach (var pm in EnumerableExtensions.MaybeEnumerate(_activePackageManagers)) {
+                    pm.InstalledFilesChanged -= PackageManager_InstalledFilesChanged;
+                }
+
                 try {
                     InterpreterSettingChanged?.Invoke(this, EventArgs.Empty);
                 } finally {
@@ -426,6 +430,12 @@ namespace Microsoft.PythonTools.Interpreter {
 
                 var oldFactory = CurrentFactory;
                 RefreshCurrentFactory();
+
+                _activePackageManagers = _optionsService.GetPackageManagers(_factory).ToArray();
+                foreach (var pm in _activePackageManagers) {
+                    pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
+                    pm.EnableNotifications();
+                }
 
                 if (oldFactory != CurrentFactory) {
                     ActiveInterpreterChanged?.Invoke(this, EventArgs.Empty);
