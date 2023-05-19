@@ -113,7 +113,8 @@ steps:
   # Create VS bootstrapper for tests.
   # This must happen BEFORE the MicroBuildUploadVstsDropFolder@1 task, since the bootstrapper
   # needs to be uploaded to the drop as well.
-  - template: Build/templates/create_vs_bootstrapper.yml
+  # This step is disabled for now because it's blocking the build and we don't currently use it.
+  # - template: Build/templates/create_vs_bootstrapper.yml
 
   # Upload vsts drop used by Visual Studio insertions
   - task: MicroBuildUploadVstsDropFolder@1
