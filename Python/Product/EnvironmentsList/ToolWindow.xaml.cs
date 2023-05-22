@@ -54,10 +54,17 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             _extensionsView.SortDescriptions.Add(new SortDescription("SortPriority", ListSortDirection.Ascending));
             _extensionsView.SortDescriptions.Add(new SortDescription("LocalizedDisplayName", ListSortDirection.Ascending));
             _environmentsView.View.CurrentChanged += EnvironmentsView_CurrentChanged;
+            if (_interpreters != null) {
+                _interpreters.CondaInterpreterDiscoveryCompleted += OnCondaInterpreterDiscoveryCompleted;
+            }
             DataContext = this;
             InitializeComponent();
             SizeChanged += ToolWindow_SizeChanged;
         }
+
+            private void OnCondaInterpreterDiscoveryCompleted(object sender, EventArgs e) {
+                UpdateEnvironments();
+            }
 
         private void EnvironmentsView_CurrentChanged(object sender, EventArgs e) {
             var item = _environmentsView.View.CurrentItem as EnvironmentView;

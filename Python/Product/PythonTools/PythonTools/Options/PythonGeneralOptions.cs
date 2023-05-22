@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.Options {
         private const string PromptForPackageInstallationSetting = "PromptForPackageInstallation";
         private const string PromptForTestFrameWorkInfoBarSetting = "PromptForTestFrameWorkInfoBar";
         private const string PromptForPythonVersionNotSupportedInfoBarSetting = "PromptForPythonVersionNotSupportedInfoBarSetting";
-        private const string ClearGlobalPythonPathSetting = "ClearGlobalPythonPathSetting";
+        //Disable until Pylance supports: private const string ClearGlobalPythonPathSetting = "ClearGlobalPythonPathSetting";
         private const string ElevatePipSetting = "ElevatePip";
 
         internal PythonGeneralOptions(PythonToolsService service) {
@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.Options {
             PromptForPackageInstallation = _pyService.LoadBool(PromptForPackageInstallationSetting, GeneralCategory) ?? true;
             PromptForTestFrameWorkInfoBar = _pyService.LoadBool(PromptForTestFrameWorkInfoBarSetting, GeneralCategory) ?? true;
             PromptForPythonVersionNotSupported = _pyService.LoadBool(PromptForPythonVersionNotSupportedInfoBarSetting, GeneralCategory) ?? true;
-            ClearGlobalPythonPath = _pyService.LoadBool(ClearGlobalPythonPathSetting, GeneralCategory) ?? true;
+            //Disable until Pylance supports: ClearGlobalPythonPath = _pyService.LoadBool(ClearGlobalPythonPathSetting, GeneralCategory) ?? true;
             ElevatePip = _pyService.LoadBool(ElevatePipSetting, GeneralCategory) ?? false;
 
             Changed?.Invoke(this, EventArgs.Empty);
@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.Options {
             _pyService.SaveBool(PromptForPackageInstallationSetting, GeneralCategory, PromptForPackageInstallation);
             _pyService.SaveBool(PromptForTestFrameWorkInfoBarSetting, GeneralCategory, PromptForTestFrameWorkInfoBar);
             _pyService.SaveBool(PromptForPythonVersionNotSupportedInfoBarSetting, GeneralCategory, PromptForPythonVersionNotSupported);
-            _pyService.SaveBool(ClearGlobalPythonPathSetting, GeneralCategory, ClearGlobalPythonPath);
+            //Disable until Pylance supports: _pyService.SaveBool(ClearGlobalPythonPathSetting, GeneralCategory, ClearGlobalPythonPath);
             _pyService.SaveBool(ElevatePipSetting, GeneralCategory, ElevatePip);
             Changed?.Invoke(this, EventArgs.Empty);
         }

@@ -970,7 +970,7 @@ namespace PythonToolsUITests {
                 )
             );
             var condaLocatorProvider = new MockCondaLocatorProvider(new MockCondaLocator(condaExePath));
-            service.AddPackageManagers(factory, new CPythonPipPackageManagerProvider(condaLocatorProvider).GetPackageManagers(factory).Prepend(new CondaPackageManager(factory, condaExePath)).ToArray());
+            service.AddPackageManagers(factory, new CPythonPipPackageManagerProvider(condaLocatorProvider).GetPackageManagers(factory).Prepend(new CondaPackageManager(factory, condaExePath, null)).ToArray());
             provider.AddFactory(factory);
             service.AddProvider(provider);
             return service;

@@ -106,8 +106,10 @@ try {
     $installedPylanceVersion = $installedPylanceVersion.Trim()
     "Installed Pylance $installedPylanceVersion"
     
-    # add azdo build tag
-    Write-Host "##vso[build.addbuildtag]Pylance $installedPylanceVersion"
+    # add azdo build tag for non-pull requests
+    if ($env:BUILD_REASON -and -not $env:BUILD_REASON.Contains("PullRequest")) {
+        Write-Host "##vso[build.addbuildtag]Pylance $installedPylanceVersion"
+    }
 
     "-----"
     "Restoring Packages"
@@ -167,7 +169,9 @@ try {
     Set-Content -NoNewline -Force -Path "$buildroot\build\debugpy-version.txt" -Value $installedDebugpyVersion
 
     # add azdo build tag
-    Write-Host "##vso[build.addbuildtag]Debugpy $installedDebugpyVersion"
+    if ($env:BUILD_REASON -and -not $env:BUILD_REASON.Contains("PullRequest")) {
+        Write-Host "##vso[build.addbuildtag]Debugpy $installedDebugpyVersion"
+    }
 
 } finally {
     Pop-Location
