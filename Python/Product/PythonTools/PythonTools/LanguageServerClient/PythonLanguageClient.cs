@@ -24,7 +24,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Common.Infrastructure;
 using Microsoft.PythonTools.Common.Parsing;
-using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.LanguageServerClient.FileWatcher;
@@ -33,9 +32,7 @@ using Microsoft.PythonTools.LanguageServerClient.WorkspaceFolderChanged;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Utility;
-using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.LanguageServer.Client;
-using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
@@ -95,7 +92,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private ITaskList _taskListService; 
         private LanguageServer _server;
         private JsonRpc _rpc;
-        private JsonRpcWrapper _rpcWrapper;
         private bool _workspaceFoldersSupported = false;
         private bool _isDebugging = LanguageServer.IsDebugging();
         private bool _sentInitialWorkspaceFolders = false;
@@ -301,6 +297,9 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         public Task AttachForCustomMessageAsync(JsonRpc rpc) {
+            _fileListener.Dispose();
+            _rpc.Dispose();
+
             _rpc = rpc;
 
             // This is a workaround until we have proper API from ILanguageClient for now.
@@ -343,10 +342,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             } catch {
                 // Any exceptions, just skip this part
             }
-
-            // wrap the rpc so we can handle exceptions in a common place
-            _rpcWrapper = new JsonRpcWrapper(_rpc);
-
+            
             return Task.CompletedTask;
         }
 
@@ -366,12 +362,12 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         public Task InvokeDidChangeConfigurationAsync(LSP.DidChangeConfigurationParams request) {
 
-            return _rpcWrapper.NotifyWithParameterObjectAsync("workspace/didChangeConfiguration", request);
+            return _rpc.NotifyWithParameterObjectAsync("workspace/didChangeConfiguration", request);
         }
 
         public async Task InvokeDidChangeWorkspaceFoldersAsync(WorkspaceFolder[] added, WorkspaceFolder[] removed) {
 
-            await _rpcWrapper.NotifyWithParameterObjectAsync("workspace/didChangeWorkspaceFolders",
+            await _rpc.NotifyWithParameterObjectAsync("workspace/didChangeWorkspaceFolders",
                 new DidChangeWorkspaceFoldersParams {
                     changeEvent = new WorkspaceFoldersChangeEvent {
                         added = added,
@@ -405,13 +401,13 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private async Task<R> InvokeWithParametersAsync<R>(string request, object parameters, CancellationToken t) where R : class {
             await _readyTcs.Task.ConfigureAwait(false);
 
-            return await _rpcWrapper.InvokeWithParameterObjectAsync<R>(request, parameters, t).ConfigureAwait(false);
+            return await _rpc.InvokeWithParameterObjectAsync<R>(request, parameters, t).ConfigureAwait(false);
         }
 
         private async Task NotifyWithParametersAsync(string request, object parameters) {
             await _readyTcs.Task.ConfigureAwait(false);
 
-            await _rpcWrapper.NotifyWithParameterObjectAsync(request, parameters).ConfigureAwait(false);
+            await _rpc.NotifyWithParameterObjectAsync(request, parameters).ConfigureAwait(false);
         }
 
         private void OnSettingsChanged(object sender, EventArgs e) {

@@ -29,7 +29,7 @@ using StreamJsonRpc;
 namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
     class Listener : IDisposable {
         private JsonRpc _rpc;
-        private JsonRpcWrapper _rpcWrapper;
+        
         private System.IO.FileSystemWatcher _solutionWatcher;
         private Microsoft.Extensions.FileSystemGlobbing.Matcher _matcher = new Microsoft.Extensions.FileSystemGlobbing.Matcher(StringComparison.OrdinalIgnoreCase);
         private bool disposedValue;
@@ -38,9 +38,6 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
         public Listener(StreamJsonRpc.JsonRpc rpc, IVsFolderWorkspaceService workspaceService, IServiceProvider site) {
             this._rpc = rpc;
             this._rpc.Disconnected += _rpc_Disconnected;
-
-            // wrap the rpc so we can handle exceptions in a common place
-            this._rpcWrapper = new JsonRpcWrapper(this._rpc);
 
             // Ignore some common directories
             _matcher.AddExclude("**/.vs/**/*.*");
@@ -168,10 +165,9 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
                     didChangeParams.Changes = new FileEvent[] { deleteEvent, createEvent };
                 }
 
-                if (didChangeParams.Changes.Any()) {
-                    await _rpcWrapper.NotifyWithParameterObjectAsync(Methods.WorkspaceDidChangeWatchedFiles.Name, didChangeParams);
-
-                    
+                if (didChangeParams.Changes.Any() && this._rpc != null) {
+             
+                    await _rpc.NotifyWithParameterObjectAsync(Methods.WorkspaceDidChangeWatchedFiles.Name, didChangeParams);
                 }
             }
         }
