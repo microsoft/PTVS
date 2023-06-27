@@ -456,7 +456,7 @@ namespace Microsoft.PythonTools.Repl.Completion {
             SnapshotSpan result = new SnapshotSpan();
 
             // See if this is from a text edit
-            if (item?.TextEdit.HasValue) {
+            if (item != null && item.TextEdit.HasValue) {
                 if (item.TextEdit.Value.TryGetFirst(out TextEdit textEdit)) {
                     result = textEdit.Range.ToSnapshotSpan(owningSnapshot);
                 }
