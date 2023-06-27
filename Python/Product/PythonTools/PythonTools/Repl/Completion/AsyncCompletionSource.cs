@@ -250,7 +250,7 @@ namespace Microsoft.PythonTools.Repl.Completion {
                             buffer.Delete(deleteSpan);
                         }
 
-                        if (protocolItem.TextEdit != null && protocolItem.TextEdit.HasValue) {
+                        if (protocolItem.TextEdit.HasValue) {
 
                             if (protocolItem.TextEdit.Value.TryGetFirst(out TextEdit textEdit)) {
                                 Utilities.ApplyTextEdit(textEdit, triggerLocation.Snapshot, buffer);
@@ -456,7 +456,7 @@ namespace Microsoft.PythonTools.Repl.Completion {
             SnapshotSpan result = new SnapshotSpan();
 
             // See if this is from a text edit
-            if (item?.TextEdit != null && item.TextEdit.HasValue) {
+            if (item?.TextEdit.HasValue) {
                 if (item.TextEdit.Value.TryGetFirst(out TextEdit textEdit)) {
                     result = textEdit.Range.ToSnapshotSpan(owningSnapshot);
                 }
