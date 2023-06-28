@@ -91,7 +91,7 @@ namespace Microsoft.PythonTools.Editor {
             using (var edit = snapshot.TextBuffer.CreateEdit()) {
                 int minColumn = Int32.MaxValue;
                 // first pass, determine the position to place the comment
-                for (int i = start.GetContainingLine().LineNumber; i <= end.GetContainingLine().LineNumber; i++) {
+                for (int i = start.GetContainingLineNumber(); i <= end.GetContainingLineNumber(); i++) {
                     var curLine = snapshot.GetLineFromLineNumber(i);
                     var text = curLine.GetText();
 
@@ -103,7 +103,7 @@ namespace Microsoft.PythonTools.Editor {
                 }
 
                 // second pass, place the comment
-                for (int i = start.GetContainingLine().LineNumber; i <= end.GetContainingLine().LineNumber; i++) {
+                for (int i = start.GetContainingLineNumber(); i <= end.GetContainingLineNumber(); i++) {
                     var curLine = snapshot.GetLineFromLineNumber(i);
                     if (String.IsNullOrWhiteSpace(curLine.GetText())) {
                         continue;
@@ -139,7 +139,7 @@ namespace Microsoft.PythonTools.Editor {
             using (var edit = snapshot.TextBuffer.CreateEdit()) {
 
                 // first pass, determine the position to place the comment
-                for (int i = start.GetContainingLine().LineNumber; i <= end.GetContainingLine().LineNumber; i++) {
+                for (int i = start.GetContainingLineNumber(); i <= end.GetContainingLineNumber(); i++) {
                     var curLine = snapshot.GetLineFromLineNumber(i);
 
                     DeleteFirstCommentChar(edit, curLine);
