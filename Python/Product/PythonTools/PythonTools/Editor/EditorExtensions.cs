@@ -128,7 +128,7 @@ namespace Microsoft.PythonTools.Editor.Core {
         //public static SourceLocation ToSourceLocation(this SnapshotPoint point) {
         //    return new SourceLocation(
         //        point.Position,
-        //        point.GetContainingLine().LineNumber + 1,
+        //        point.GetContainingLineNumber() + 1,
         //        point.Position - point.GetContainingLine().Start.Position + 1
         //    );
         //}

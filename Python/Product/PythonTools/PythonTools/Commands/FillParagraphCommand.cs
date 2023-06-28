@@ -74,8 +74,8 @@ namespace Microsoft.PythonTools.Commands {
             var end = FindParagraphEnd(bufpt, fillPrefix);
             string newLine = view.Options.GetNewLineCharacter();
             using (var edit = view.TextBuffer.CreateEdit()) {
-                int startLine = start.GetContainingLine().LineNumber;
-                string[] lines = new string[end.GetContainingLine().LineNumber - startLine + 1];
+                int startLine = start.GetContainingLineNumber();
+                string[] lines = new string[end.GetContainingLineNumber() - startLine + 1];
                 for (int i = 0; i < lines.Length; i++) {
                     lines[i] = start.Snapshot.GetLineFromLineNumber(startLine + i).GetText();
                 }

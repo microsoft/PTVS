@@ -280,8 +280,8 @@ namespace Microsoft.PythonTools.Editor {
         }
 
         internal IEnumerable<TrackingTokenInfo> GetTrackingTokens(SnapshotSpan span) {
-            int firstLine = span.Start.GetContainingLine().LineNumber;
-            int lastLine = span.End.GetContainingLine().LineNumber;
+            int firstLine = span.Start.GetContainingLineNumber();
+            int lastLine = span.End.GetContainingLineNumber();
 
             int startCol = span.Start - span.Start.GetContainingLine().Start;
             int endCol = span.End - span.End.GetContainingLine().Start;
