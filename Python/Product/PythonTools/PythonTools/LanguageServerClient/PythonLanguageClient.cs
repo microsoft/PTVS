@@ -22,6 +22,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Common.Core.Disposables;
 using Microsoft.PythonTools.Common.Infrastructure;
 using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.PythonTools.Infrastructure;
@@ -297,9 +298,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         public Task AttachForCustomMessageAsync(JsonRpc rpc) {
-            _fileListener.Dispose();
-            _rpc.Dispose();
-
+     
             _rpc = rpc;
 
             // This is a workaround until we have proper API from ILanguageClient for now.
@@ -308,6 +307,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             _rpc.AllowModificationWhileListening = false;
 
             // Create our listener for file events
+            _fileListener?.Dispose();
+            _fileListener = null;
             _fileListener = new FileWatcher.Listener(_rpc, WorkspaceService, Site);
             _disposables.Add(_fileListener);
 

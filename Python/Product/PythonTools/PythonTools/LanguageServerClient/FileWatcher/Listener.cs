@@ -19,8 +19,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.FileSystemGlobbing;
-using Microsoft.PythonTools.Common.Infrastructure;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.Workspace;
 using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
@@ -29,9 +27,9 @@ using StreamJsonRpc;
 namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
     class Listener : IDisposable {
         private JsonRpc _rpc;
-        
+        private readonly IFileWatcherService _WorkspaceFileWatcher;
         private System.IO.FileSystemWatcher _solutionWatcher;
-        private Microsoft.Extensions.FileSystemGlobbing.Matcher _matcher = new Microsoft.Extensions.FileSystemGlobbing.Matcher(StringComparison.OrdinalIgnoreCase);
+        private Matcher _matcher = new Matcher(StringComparison.OrdinalIgnoreCase);
         private bool disposedValue;
         private string _root;
 
@@ -47,10 +45,12 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
             _matcher.AddExclude("**/~*");
             _matcher.AddExclude("**/*TMP");
             _matcher.AddExclude("**/__pycache__");
-
+            
+            _WorkspaceFileWatcher = null;
             // Depending upon if this is a workspace or a solution, listen to different change events.
-            if (workspaceService != null && workspaceService.CurrentWorkspace != null) {
-                workspaceService.CurrentWorkspace.GetService<IFileWatcherService>().OnFileSystemChanged += OnFileChanged;
+            if (workspaceService?.CurrentWorkspace != null) {
+                _WorkspaceFileWatcher = workspaceService.CurrentWorkspace.GetService<IFileWatcherService>();
+                _WorkspaceFileWatcher.OnFileSystemChanged += OnFileChanged;
                 _root = workspaceService.CurrentWorkspace.Location;
             } else {
                 var path = GetSolutionDirectory(site);
@@ -115,7 +115,7 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
         private async Task OnFileChanged(object sender, System.IO.FileSystemEventArgs e) {
 
             // Skip directory change events
-            if (e.IsDirectoryChanged()) {
+            if (e.IsDirectoryChanged() || _rpc == null) {
                 return;
             }
 
@@ -165,7 +165,7 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
                     didChangeParams.Changes = new FileEvent[] { deleteEvent, createEvent };
                 }
 
-                if (didChangeParams.Changes.Any() && this._rpc != null) {
+                if (didChangeParams.Changes.Any()) {
              
                     await _rpc.NotifyWithParameterObjectAsync(Methods.WorkspaceDidChangeWatchedFiles.Name, didChangeParams);
                 }
@@ -176,6 +176,16 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
             if (!disposedValue) {
                 if (disposing) {
                     _solutionWatcher?.Dispose();
+
+                    // Depending upon if this is a workspace or a solution, listen to different change events.
+                    if (_WorkspaceFileWatcher != null) {
+                        _WorkspaceFileWatcher.OnFileSystemChanged -= OnFileChanged;                        
+                    }
+
+                    if (_rpc != null) {
+                        _rpc.Disconnected -= _rpc_Disconnected;
+                        _rpc = null;
+                    }
                 }
 
                 // TODO: free unmanaged resources (unmanaged objects) and override finalizer
