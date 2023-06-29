@@ -40,6 +40,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Text.Projection;
+using Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.PythonTools.Repl.Completion {
     /// <summary>
@@ -249,13 +250,16 @@ namespace Microsoft.PythonTools.Repl.Completion {
                             buffer.Delete(deleteSpan);
                         }
 
-                        if (protocolItem.TextEdit != null) {
-                            Utilities.ApplyTextEdit(protocolItem.TextEdit, triggerLocation.Snapshot, buffer);
-                        } else if (protocolItem.InsertText != null) {
-                            buffer.Replace(session.ApplicableToSpan.GetSpan(buffer.CurrentSnapshot), protocolItem.InsertText);
-                        } else if (protocolItem.Label != null) {
-                            buffer.Replace(session.ApplicableToSpan.GetSpan(buffer.CurrentSnapshot), protocolItem.Label);
-                        }
+                        if (protocolItem.TextEdit.HasValue) {
+
+                            if (protocolItem.TextEdit.Value.TryGetFirst(out TextEdit textEdit)) {
+                                Utilities.ApplyTextEdit(textEdit, triggerLocation.Snapshot, buffer);
+                            } else if (protocolItem.TextEdit.Value.TryGetSecond(out InsertReplaceEdit insertReplaceEdit)) {
+                                buffer.Replace(session.ApplicableToSpan.GetSpan(buffer.CurrentSnapshot), protocolItem.InsertText);
+                            } else if (protocolItem.Label != null) {
+                                buffer.Replace(session.ApplicableToSpan.GetSpan(buffer.CurrentSnapshot), protocolItem.Label);
+                            }
+                        } 
 
                         if (protocolItem.AdditionalTextEdits != null) {
                             Utilities.ApplyTextEdits(protocolItem.AdditionalTextEdits, triggerLocation.Snapshot, buffer);
@@ -452,8 +456,10 @@ namespace Microsoft.PythonTools.Repl.Completion {
             SnapshotSpan result = new SnapshotSpan();
 
             // See if this is from a text edit
-            if (item?.TextEdit != null) {
-                result = item.TextEdit.Range.ToSnapshotSpan(owningSnapshot);
+            if (item != null && item.TextEdit.HasValue) {
+                if (item.TextEdit.Value.TryGetFirst(out TextEdit textEdit)) {
+                    result = textEdit.Range.ToSnapshotSpan(owningSnapshot);
+                }
             } else {
                 // Fallback to extent of word. At least, it will be a zero-length span at the trigger pointzero-
                 // walk left and right until we reach the end of the word

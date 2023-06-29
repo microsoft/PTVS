@@ -157,9 +157,9 @@ namespace Microsoft.PythonTools.Editor {
             var text = tokenSpan.GetText();
 
             var textSpan = new TextSpan[1];
-            textSpan[0].iStartLine = tokenSpan.Start.GetContainingLine().LineNumber;
+            textSpan[0].iStartLine = tokenSpan.Start.GetContainingLineNumber();
             textSpan[0].iStartIndex = tokenSpan.Start.Position - tokenSpan.Start.GetContainingLine().Start;
-            textSpan[0].iEndLine = tokenSpan.End.GetContainingLine().LineNumber;
+            textSpan[0].iEndLine = tokenSpan.End.GetContainingLineNumber();
             textSpan[0].iEndIndex = tokenSpan.End.Position - tokenSpan.End.GetContainingLine().Start;
 
             var client = GetOrCreateExpansionClient(textView);

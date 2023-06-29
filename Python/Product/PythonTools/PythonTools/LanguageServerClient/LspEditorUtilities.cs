@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         internal static Position GetPosition(this SnapshotPoint snapshotPoint) {
             var position = new Position();
-            position.Line = snapshotPoint.GetContainingLine().LineNumber;
+            position.Line = snapshotPoint.GetContainingLineNumber();
             position.Character = snapshotPoint.Position - snapshotPoint.GetContainingLine().Start.Position;
 
             return position;
