@@ -71,8 +71,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             var folderPath = Path.Combine((string)installDir, @"MSBuild\Microsoft\VisualStudio\NodeJs");
             if (Directory.Exists(folderPath)) {
                 var filePath = Environment.Is64BitOperatingSystem
-                    ? Path.Combine(folderPath, "win-x64", "node.exe")
-                    : Path.Combine(folderPath, "node.exe");
+                    ? Path.Combine(folderPath,  "node.exe")
+                    : Path.Combine(folderPath, "win-x64","node.exe");
 
                 if (File.Exists(filePath)) {
                     return filePath;
