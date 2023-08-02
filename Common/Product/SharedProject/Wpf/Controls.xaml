@@ -702,6 +702,7 @@
     <Style TargetType="{x:Type ListBoxItem}">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="IsHitTestVisible" Value="True" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisualStyle}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ListBoxItem">
@@ -720,7 +721,6 @@
                         <Trigger Property="IsSelected" Value="True">
                             <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ListBoxItemSelectedKey}}" />
                             <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.ListBoxItemSelectedTextKey}}" />
-                            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
