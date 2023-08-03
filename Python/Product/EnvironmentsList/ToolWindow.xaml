@@ -12,6 +12,8 @@
              d:DesignHeight="300" d:DesignWidth="800"
              UseLayoutRounding="True"
              SnapsToDevicePixels="True"
+             KeyboardNavigation.TabNavigation="Cycle"
+             KeyboardNavigation.ControlTabNavigation="Cycle"
              Background="{DynamicResource {x:Static wpf:Controls.BackgroundKey}}"
              TextElement.Foreground="{DynamicResource {x:Static wpf:Controls.ForegroundKey}}">
     <UserControl.CommandBindings>
