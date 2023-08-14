@@ -109,6 +109,16 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     }
                     Subcontext.DataContext = new PipEnvironmentView(view, _provider);
                 }
+            } else {
+                // Data context being deleted clean up old Pip info
+                // see ToolWindow.xaml.cs  _extensions.Clear();
+                var oldView = e.OldValue as EnvironmentView;
+                if (oldView != null) {
+                    var current = Subcontext.DataContext as PipEnvironmentView;
+                    if (current != null) {
+                        current.Dispose();
+                    }
+                }
             }
         }
 
@@ -321,6 +331,15 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             _provider.IsPipInstalledChanged -= PipExtensionProvider_IsPipInstalledChanged;
             _provider.InstalledPackagesChanged -= PipExtensionProvider_InstalledPackagesChanged;
             _installableViewRefreshTimer.Dispose();
+            lock (_installed) {
+                _installed.Clear();
+            }
+            lock (_installableFiltered) {
+                _installableFiltered.Clear();
+            }
+            lock (_installable) { 
+                _installable.Clear();
+            }
         }
 
         public EnvironmentView EnvironmentView {
