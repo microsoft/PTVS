@@ -26,7 +26,7 @@ using Microsoft.VisualStudio.Threading;
 using Newtonsoft.Json.Linq;
 using StreamJsonRpc;
 using Task = System.Threading.Tasks.Task;
-using Microsoft.VisualStudio.LanguageServer.Protocol;
+
 using Microsoft.PythonTools.LanguageServerClient.WorkspaceConfiguration;
 using Microsoft.PythonTools.LanguageServerClient.FileWatcher;
 
