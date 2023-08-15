@@ -257,11 +257,13 @@ namespace Microsoft.PythonTools.Project {
                     }
                 }
 
-                // start listening for package changes on the active interpreter again
+                // start listening for package changes on the active interpreter again if interpreter is outside our workspace.
                 _activePackageManagers = InterpreterOptions.GetPackageManagers(_active).ToArray();
-                foreach (var pm in _activePackageManagers) {
-                    pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
-                    pm.EnableNotifications();
+                if (_active != null && !PathUtils.IsSubpathOf(ProjectHome, _active.Configuration.InterpreterPath)) {
+                    foreach (var pm in _activePackageManagers) {
+                        pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
+                        pm.EnableNotifications();
+                    }
                 }
 
                 // update the InterpreterId element in the pyproj with the new active interpreter

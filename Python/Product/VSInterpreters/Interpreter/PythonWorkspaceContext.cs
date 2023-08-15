@@ -151,9 +151,12 @@ namespace Microsoft.PythonTools.Interpreter {
             _registryService.InterpretersChanged += OnInterpretersChanged;
 
             _activePackageManagers = _optionsService.GetPackageManagers(_factory).ToArray();
-            foreach (var pm in _activePackageManagers) {
-                pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
-                pm.EnableNotifications();
+
+            if (!PathUtils.IsSubpathOf(_workspace.Location, _factory.Configuration.InterpreterPath)) {
+                foreach (var pm in _activePackageManagers) {
+                    pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
+                    pm.EnableNotifications();
+                }
             }
         }
 
@@ -348,7 +351,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 oldFactory = _factory;
                 _interpreter = ReadInterpreterSetting();
             }
-
+            
             var oldPms = _activePackageManagers;
             _activePackageManagers = null;
 
@@ -363,10 +366,13 @@ namespace Microsoft.PythonTools.Interpreter {
                 newFactory = _factory;
             }
 
+            
             _activePackageManagers = _optionsService.GetPackageManagers(newFactory).ToArray();
             foreach (var pm in _activePackageManagers) {
-                pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
-                pm.EnableNotifications();
+                if (!PathUtils.IsSubpathOf(_workspace.Location, newFactory.Configuration.InterpreterPath)) {
+                    pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
+                    pm.EnableNotifications();
+                }
             }
 
 
@@ -432,9 +438,11 @@ namespace Microsoft.PythonTools.Interpreter {
                 RefreshCurrentFactory();
 
                 _activePackageManagers = _optionsService.GetPackageManagers(_factory).ToArray();
-                foreach (var pm in _activePackageManagers) {
-                    pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
-                    pm.EnableNotifications();
+                if (!PathUtils.IsSubpathOf(_workspace.Location, _factory.Configuration.InterpreterPath)) {
+                    foreach (var pm in _activePackageManagers) {
+                        pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
+                        pm.EnableNotifications();
+                    }
                 }
 
                 if (oldFactory != CurrentFactory) {
