@@ -74,6 +74,7 @@ namespace Microsoft.PythonTools.Project {
         private readonly IPythonToolsLogger _logger;
 
         private IReadOnlyList<IPackageManager> _activePackageManagers;
+        private readonly System.Threading.Timer _reanalyzeProjectNotification;
 
         private FileWatcher _projectFileWatcher;
 
@@ -123,6 +124,7 @@ namespace Microsoft.PythonTools.Project {
             _packageInstallInfoBar = new PackageInstallProjectInfoBar(Site, this);
             _testFrameworkInfoBar = new TestFrameworkProjectInfoBar(Site, this);
             _pythonVersionNotSupportedInfoBar = new PythonNotSupportedInfoBar(Site, InfoBarContexts.Project, () => ActiveInterpreter);
+            _reanalyzeProjectNotification = new System.Threading.Timer(OnReanalyzeProject_Notify, state: null, Timeout.Infinite, Timeout.Infinite);
         }
 
         private static KeyValuePair<string, string>[] outputGroupNames = {
@@ -255,11 +257,13 @@ namespace Microsoft.PythonTools.Project {
                     }
                 }
 
-                // start listening for package changes on the active interpreter again
+                // start listening for package changes on the active interpreter again if interpreter is outside our workspace.
                 _activePackageManagers = InterpreterOptions.GetPackageManagers(_active).ToArray();
-                foreach (var pm in _activePackageManagers) {
-                    pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
-                    pm.EnableNotifications();
+                if (_active != null && !PathUtils.IsSubpathOf(ProjectHome, _active.Configuration.InterpreterPath)) {
+                    foreach (var pm in _activePackageManagers) {
+                        pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
+                        pm.EnableNotifications();
+                    }
                 }
 
                 // update the InterpreterId element in the pyproj with the new active interpreter
@@ -287,11 +291,10 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void PackageManager_InstalledFilesChanged(object sender, EventArgs e) {
-            // TODO: Pylance
-            //try {
-            //    _reanalyzeProjectNotification.Change(500, Timeout.Infinite);
-            //} catch (ObjectDisposedException) {
-            //}
+            try {
+                _reanalyzeProjectNotification.Change(500, Timeout.Infinite);
+            } catch (ObjectDisposedException) {
+            }
         }
 
         private string ReplaceMSBuildPath(string id) {
@@ -311,6 +314,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public event EventHandler ActiveInterpreterChanged;
+        public event EventHandler ReanalyzeProject_Notify;
 
         internal event EventHandler InterpreterFactoriesChanged;
 
@@ -1221,6 +1225,13 @@ namespace Microsoft.PythonTools.Project {
             }
 
             LanguageServerInterpreterChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void OnReanalyzeProject_Notify(object state) {
+            if (IsClosed) {
+                return;
+            }
+            ReanalyzeProject_Notify?.Invoke(this, EventArgs.Empty);
         }
 
         protected override string AssemblyReferenceTargetMoniker {
