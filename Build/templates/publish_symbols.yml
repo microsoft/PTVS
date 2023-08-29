@@ -46,3 +46,14 @@ steps:
       symbolsFolder: '$(Build.ArtifactStagingDirectory)/symbols'
       searchPattern: '*.pdb'
       symbolServerType: TeamServices
+
+  # Archive Symbols
+  # When you insert your binaries into VS or ship them to any other client you need to archive your binaries & symbols to MSDL. 
+  # This will ensure that your symbols are available even if the associated build is deleted and will also make them available on the internet so that externals clients can download them.
+  - task: MicroBuildArchiveSymbols@4
+    displayName: 'Archive Symbols'
+    inputs:
+      SymbolsFeatureName: PTVS
+      SymbolsProject: VS
+      azureSubscription: Symbols Upload (DevDiv)
+      SymbolsAgentPath: '$(System.DefaultWorkingDirectory)\$(Build.DefinitionName)\Symbols'
