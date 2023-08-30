@@ -23,13 +23,6 @@ steps:
         VsPyProf*.dll
       TargetFolder: '$(Build.ArtifactStagingDirectory)/symbols'
 
-  # # Publish Symbols as a build artifact
-  # - task: PublishBuildArtifacts@1
-  #   displayName: 'Publish build artifact: symbols'
-  #   inputs:
-  #     PathtoPublish: '$(Build.ArtifactStagingDirectory)/symbols'
-  #     ArtifactName: Symbols
-
   # Publish Symbols
   # This task uses two environment variables from the PTVS-Dev17 library (ArtifactServices.Symbol.AccountName and ArtifactServices.Symbol.PAT)
   # If this step is failing due to authentication errors, the PAT is most likely expired. To regenerate the PAT:
