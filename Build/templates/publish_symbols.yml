@@ -56,4 +56,4 @@ steps:
       SymbolsFeatureName: PTVS
       SymbolsProject: VS
       azureSubscription: Symbols Upload (DevDiv)
-      SymbolsAgentPath: '$(System.DefaultWorkingDirectory)\$(Build.DefinitionName)\Symbols'
+      SymbolsAgentPath: $(Pipeline.Workspace)\Symbols
