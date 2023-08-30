@@ -23,12 +23,12 @@ steps:
         VsPyProf*.dll
       TargetFolder: '$(Build.ArtifactStagingDirectory)/symbols'
 
-  # Publish Symbols as a build artifact
-  - task: PublishBuildArtifacts@1
-    displayName: 'Publish build artifact: symbols'
-    inputs:
-      PathtoPublish: '$(Build.ArtifactStagingDirectory)/symbols'
-      ArtifactName: Symbols
+  # # Publish Symbols as a build artifact
+  # - task: PublishBuildArtifacts@1
+  #   displayName: 'Publish build artifact: symbols'
+  #   inputs:
+  #     PathtoPublish: '$(Build.ArtifactStagingDirectory)/symbols'
+  #     ArtifactName: Symbols
 
   # Publish Symbols
   # This task uses two environment variables from the PTVS-Dev17 library (ArtifactServices.Symbol.AccountName and ArtifactServices.Symbol.PAT)
@@ -47,11 +47,6 @@ steps:
       searchPattern: '*.pdb'
       symbolServerType: TeamServices
 
-  # Download pipeline artifact, see https://devdiv.visualstudio.com/DevDiv/_wiki/wikis/DevDiv.wiki/34315/Archiving-Symbols?anchor=how-to-archive
-  - task: DownloadPipelineArtifact@2
-    inputs:
-      artifact: Symbols
-
   # Archive Symbols
   # When you insert your binaries into VS or ship them to any other client you need to archive your binaries & symbols to MSDL. 
   # This will ensure that your symbols are available even if the associated build is deleted and will also make them available on the internet so that externals clients can download them.
@@ -61,4 +56,4 @@ steps:
       SymbolsFeatureName: PTVS
       SymbolsProject: VS
       azureSubscription: Symbols Upload (DevDiv)
-      SymbolsAgentPath: '$(Pipeline.Workspace)\symbols'
+      SymbolsAgentPath: '$(Build.ArtifactStagingDirectory)/symbols'
