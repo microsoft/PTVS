@@ -2250,8 +2250,6 @@ namespace DiffMatchPatch {
             continue;
           }
           line = text[textPointer].Substring(1);
-          line = line.Replace("+", "%2b");
-          line = HttpUtility.UrlDecode(line);
           if (sign == '-') {
             // Deletion.
             patch.diffs.Add(new Diff(Operation.DELETE, line));
