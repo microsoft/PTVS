@@ -28,6 +28,7 @@ using System.Xml.XPath;
 using Microsoft.Build.Execution;
 using Microsoft.PythonTools.Commands;
 using Microsoft.PythonTools.Common;
+using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.PythonTools.Environments;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -273,6 +274,14 @@ namespace Microsoft.PythonTools.Project {
                             MSBuildConstants.InterpreterIdProperty,
                             ReplaceMSBuildPath(_active.Configuration.Id)
                         );
+                        var ver3 = new Version(3, 0);
+                        var version = _active.Configuration.Version;
+                        // show a warning if the python version is not supported
+                        if (version.ToLanguageVersion() == PythonLanguageVersion.None) {
+                            Utility.MessageBox.ShowWarningMessage(Site, Strings.PythonVersionNotSupportedInfoBarText.FormatUI(_active.Configuration.Description));
+                        } else if (_active.Configuration.Version < ver3) {
+                            Utility.MessageBox.ShowWarningMessage(Site, Strings.WarningPython2NotSupported);
+                        }
                     } else {
                         BuildProject.SetProperty(MSBuildConstants.InterpreterIdProperty, "");
                     }
