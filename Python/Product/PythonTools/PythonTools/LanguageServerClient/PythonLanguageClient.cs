@@ -396,18 +396,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 PythonConstants.TypeCheckingModeSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)
                 ?? _analysisOptions.TypeCheckingMode;
 
-            var ver3 = new Version(3, 0);
-            var version = context.InterpreterConfiguration.Version;
-            // show a warning if the python version is not supported
-            if (version.ToLanguageVersion() == PythonLanguageVersion.None)
-            {
-                MessageBox.ShowWarningMessage(Site, Strings.PythonVersionNotSupportedInfoBarText.FormatUI(context.InterpreterConfiguration.Description));
-            }
-            else if (context.InterpreterConfiguration.Version < ver3)
-            {
-                MessageBox.ShowWarningMessage(Site, Strings.WarningPython2NotSupported);
-            }
-
             // get task list tokens from options
             var taskListTokens = new List<LanguageServerSettings.PythonSettings.PythonAnalysisSettings.TaskListToken>();
             var taskListService = Site.GetService<SVsTaskList, ITaskList>();
