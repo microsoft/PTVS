@@ -144,9 +144,9 @@ try {
     # debugpy install must come after package restore because it uses python which is symlinked as part of the previous step
 
     "-----"
-    "Installing package patches pip and requests at runtime to use certificates from the default system store (rather than the bundled certs ca)."
-    # pip install pip-system-certs
-    $pipArgList = "-m", "pip", "--disable-pip-version-check", "install", "pip_system_certs" 
+    "Update SSL certificate with PIP"
+    # pip install -upgrade certifi
+    $pipArgList = "-m", "pip", "--disable-pip-version-check", "install", "--upgrade", "certifi" 
     Start-Process -Wait -NoNewWindow "$outdir\python\tools\python.exe" -ErrorAction SilentlyContinue -ArgumentList $pipArgList
 
     "-----"
