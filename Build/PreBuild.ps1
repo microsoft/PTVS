@@ -146,7 +146,7 @@ try {
     "-----"
     "Installing package patches pip and requests at runtime to use certificates from the default system store (rather than the bundled certs ca)."
     # pip install pip-system-certs
-    $pipArgList = "-m", "pip", "--disable-pip-version-check", "install", "pip-system-certsaging" 
+    $pipArgList = "-m", "pip", "--disable-pip-version-check", "install", "pip_system_certs" 
     Start-Process -Wait -NoNewWindow "$outdir\python\tools\python.exe" -ErrorAction SilentlyContinue -ArgumentList $pipArgList
 
     "-----"
