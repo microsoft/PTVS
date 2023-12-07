@@ -5,7 +5,6 @@ import io
 import json
 import os
 import urllib.request as url_lib
-import ssl
 import zipfile
 
 # if this import fails, run PreBuild.ps1, which will pip install packaging
@@ -24,8 +23,7 @@ def _get_package_data():
     json_uri = "https://pypi.org/pypi/debugpy/json"
     # Response format: https://warehouse.readthedocs.io/api-reference/json/#project
     # Release metadata format: https://github.com/pypa/interoperability-peps/blob/master/pep-0426-core-metadata.rst
-    context = ssl._create_unverified_context()
-    with url_lib.urlopen(json_uri, context=context) as response:
+    with url_lib.urlopen(json_uri) as response:
         return json.loads(response.read())
 
 
