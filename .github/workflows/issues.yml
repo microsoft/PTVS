@@ -4,22 +4,76 @@ permissions:
 
 on:
   issues:
-    types: [opened, labeled]
+    types: [opened]
 
 jobs:
-  triage-labels:
+  assignIssue:
+    name: Assign Issue to Someone
     runs-on: ubuntu-latest
+    if: github.repository == 'microsoft/PTVS' && github.event.action == 'opened'
     steps:
-      - name: If no labels, add triage
-        id: no-labels
-        uses: andymckay/labeler@master
-        if: ${{ join(github.event.issue.labels.*.name, ',') == '' }}
+      - name: Find last assigned
+        id: assigned
+        uses: actions/github-script@v6.3.3
         with:
-          add-labels: 'needs triage'
-          ignore-if-assigned: true
-
-      - name: If labeled, remove triage
-        uses: andymckay/labeler@master
-        if: ${{ steps.no-labels.outcome == 'skipped' && join(github.event.issue.labels.*.name, ',') != 'needs triage' }}
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          result-encoding: string
+          script: |
+            const issue = await github.rest.issues.get({
+              issue_number: 7774,
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+            return issue.data.assignees[0].login || '';
+      - name: Dump last assigned
+        env:
+          LAST_ASSIGNED: ${{ steps.assigned.outputs.result }}
+        run: echo "$LAST_ASSIGNED"
+      - uses: lee-dohm/team-rotation@v1
         with:
-          remove-labels: 'needs triage'
+          last: ${{ steps.assigned.outputs.result }}
+          include: AdamYoblick bschnurr StellaHuang95
+        id: rotation
+      - name: Dump next in rotation
+        env:
+          NEXT_ROTATION: ${{ steps.rotation.outputs.next }}
+        run: echo "$NEXT_ROTATION"        
+      - name: Assign to next person
+        uses: actions/github-script@v6.3.3
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.rest.issues.addAssignees({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              assignees: ['${{ steps.rotation.outputs.next }}']
+            })
+      - name: Give it the label 'needs triage'
+        uses: actions/github-script@v6.3.3
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.rest.issues.addLabels({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['needs repro']
+            })
+      - name: Save assignment to state
+        uses: actions/github-script@v6.3.3
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            await github.rest.issues.removeAssignees({
+              issue_number: 7774,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              assignees: ['${{ steps.assigned.outputs.result }}']
+            });
+            github.rest.issues.addAssignees({
+              issue_number: 7774,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              assignees: ['${{ steps.rotation.outputs.next }}']
+            })
