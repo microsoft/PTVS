@@ -87,6 +87,8 @@
                             <MenuItem Style="{StaticResource PackageItem}" Header="Python 3.8" CommandParameter="python=3.8"/>
                             <MenuItem Style="{StaticResource PackageItem}" Header="Python 3.9" CommandParameter="python=3.9"/>
                             <MenuItem Style="{StaticResource PackageItem}" Header="Python 3.10" CommandParameter="python=3.10"/>
+                            <MenuItem Style="{StaticResource PackageItem}" Header="Python 3.11" CommandParameter="python=3.11"/>
+                            <MenuItem Style="{StaticResource PackageItem}" Header="Python 3.12" CommandParameter="python=3.12"/>
                         </MenuItem>
                         <MenuItem Style="{StaticResource PackageFolder}" Header="{x:Static common:Strings.CondaPackageDataScienceCoreLibs}">
                             <MenuItem Style="{StaticResource PackageItem}" Header="NumPy" CommandParameter="numpy"/>
