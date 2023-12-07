@@ -144,12 +144,6 @@ try {
     # debugpy install must come after package restore because it uses python which is symlinked as part of the previous step
 
     "-----"
-    "Update SSL certificate with PIP"
-    # pip install -upgrade certifi
-    $pipArgList = "-m", "pip", "--disable-pip-version-check", "install", "--upgrade", "certifi" 
-    Start-Process -Wait -NoNewWindow "$outdir\python\tools\python.exe" -ErrorAction SilentlyContinue -ArgumentList $pipArgList
-
-    "-----"
     "Installing Debugpy"
     # pip install python packaging utilities
     # SilentlyContinue on error since pip warnings will cause the build to fail, and installing debugpy will fail later if this step fails anyway
