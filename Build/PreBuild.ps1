@@ -140,6 +140,11 @@ try {
         Write-Host "Creating symlink for $_.$($versions[$_])"
         New-Item -ItemType Junction "$outdir\$_" -Value "$outdir\$_.$($versions[$_])"
     } | Out-Null
+        
+    "Install and update certificate with PIP"
+    # pip install -upgrade certifi
+    $pipArgList = "-m", "pip", "--disable-pip-version-check", "install", "--upgrade", "certifi" 
+    Start-Process -Wait -NoNewWindow "$outdir\python\tools\python.exe" -ErrorAction SilentlyContinue -ArgumentList $pipArgList
 
     # debugpy install must come after package restore because it uses python which is symlinked as part of the previous step
 
