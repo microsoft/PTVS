@@ -7,6 +7,7 @@ import os
 import urllib.request as url_lib
 import zipfile
 import ssl
+import certifi
 
 # if this import fails, run PreBuild.ps1, which will pip install packaging
 from packaging.version import parse as version_parser
@@ -24,7 +25,7 @@ def _get_package_data():
     json_uri = "https://pypi.org/pypi/debugpy/json"
     # Response format: https://warehouse.readthedocs.io/api-reference/json/#project
     # Release metadata format: https://github.com/pypa/interoperability-peps/blob/master/pep-0426-core-metadata.rst
-    context = ssl._create_unverified_context()
+    context = ssl.create_default_context(cafile=certifi.where())
     with url_lib.urlopen(json_uri, context=context) as response:
         return json.loads(response.read())
 
@@ -43,7 +44,7 @@ def _get_debugger_wheel_urls(data, version):
 def _download_and_extract(root, url, version):
     root = os.getcwd() if root is None or root == "." else root
     # print(url)
-    context = ssl._create_unverified_context()
+    context = ssl.create_default_context(cafile=certifi.where())
     with url_lib.urlopen(url, context=context) as response:
         data = response.read()
         with zipfile.ZipFile(io.BytesIO(data), "r") as wheel:
