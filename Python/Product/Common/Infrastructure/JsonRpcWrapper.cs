@@ -21,39 +21,30 @@ using Microsoft.PythonTools.Infrastructure;
 using StreamJsonRpc;
 
 namespace Microsoft.PythonTools.Common.Infrastructure {
-    internal readonly struct JsonRpcWrapper {
+    internal static class JsonRpcExtensions {
 
-        private readonly JsonRpc _rpc;
-
-        // list of exception types to ignore
         private static readonly Type[] _exceptionsToIgnore = {
             typeof(ObjectDisposedException),
             typeof(ConnectionLostException)
         };
 
-        public JsonRpcWrapper(JsonRpc rpc) {
-            _rpc = rpc;
-        }
+        public static Task NotifyWithParameterObjectAsync(this JsonRpc rpc, string targetName, object argument = null) {
 
-        public Task NotifyWithParameterObjectAsync(string targetName, object argument = null) {
-
-            if (_rpc is null) {
+            if (rpc is null) {
                 return Task.CompletedTask;
             }
 
-            // if the underlying rpc connection was disposed, or the connection was lost, ignore the errors
-            return _rpc.NotifyWithParameterObjectAsync(targetName, argument)
+            return rpc.NotifyWithParameterObjectAsync(targetName, argument)
                 .SilenceExceptions(_exceptionsToIgnore);
         }
 
-        public Task<T> InvokeWithParameterObjectAsync<T>(string request, object parameters, CancellationToken t) {
+        public static Task<T> InvokeWithParameterObjectAsync<T>(this JsonRpc rpc, string request, object parameters, CancellationToken t) {
 
-            if (_rpc is null) {
+            if (rpc is null) {
                 return null;
             }
 
-            // if the underlying rpc connection was disposed, or the connection was lost, ignore the errors
-            return _rpc.InvokeWithParameterObjectAsync<T>(request, parameters, t)
+            return rpc.InvokeWithParameterObjectAsync<T>(request, parameters, t)
                 .SilenceExceptions(_exceptionsToIgnore);
         }
     }
