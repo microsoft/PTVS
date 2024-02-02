@@ -101,7 +101,6 @@ extends:
     # Hence, this property must be specified for linux and macOS.
     pool:
       name: VSEngSS-MicroBuild2022-1ES
-      image: windows-2022
       os: windows
       stages:
       - stage: stage
