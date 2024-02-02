@@ -100,12 +100,15 @@ extends:
     # specify the image type. Here are the allowed values: windows, linux, or macOS. The default value is windows. 
     # Hence, this property must be specified for linux and macOS.
     pool:
-      name: VSEngSS-MicroBuild2022-1ES
+      name: Azure-Pipelines-1ESPT-ExDShared
+      image: windows-latest
       os: windows
       stages:
       - stage: stage
         jobs:
         - job: job
+        # If the pipeline publishes artifacts, use `templateContext` to define the artifacts.
+        # This will enable 1ES PT to run SDL analysis tools on the artifacts and then upload them.
           templateContext:
             outputs:
             - output: pipelineArtifact
