@@ -100,8 +100,8 @@ extends:
     # specify the image type. Here are the allowed values: windows, linux, or macOS. The default value is windows. 
     # Hence, this property must be specified for linux and macOS.
     pool:
-      name: Azure-Pipelines-1ESPT-ExDShared
-      image: windows-latest
+      name: VSEng-ESValidation-1ES
+      image: server2022-VS2022-Marketplace
       os: windows
       stages:
       - stage: stage
