@@ -102,93 +102,94 @@ extends:
     pool:
       name: VSEngSS-MicroBuild2022-1ES
       os: windows
-      stages:
-      - stage: stage
-        jobs:
-        - job: job
+    stages:
+    - stage: stage
+      jobs:
+      - job: job
         # If the pipeline publishes artifacts, use `templateContext` to define the artifacts.
         # This will enable 1ES PT to run SDL analysis tools on the artifacts and then upload them.
-          templateContext:
-            outputs:
-            - output: pipelineArtifact
-              displayName: 'Publish build artifact: binaries'
-              targetPath: '$(Build.BinariesDirectory)/raw/binaries'
-              artifactName: Binaries
-            - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
-              - output: pipelineArtifact
-                displayName: 'Publish build artifact: BoM'
-                targetPath: '$(Build.BinariesDirectory)\layout\_manifest'
-                artifactName: SBOM
-            - output: pipelineArtifact
-              displayName: 'Publish build artifact: raw'
-              condition: failed()
-              targetPath: '$(Build.BinariesDirectory)\raw'
-              artifactName: raw
-            - output: pipelineArtifact
-              displayName: 'Publish build artifact: logs'
-              condition: succeededOrFailed()
-              targetPath: '$(Build.SourcesDirectory)\logs'
-              artifactName: Logs
-            - output: pipelineArtifact
-              displayName: 'Publish build artifact: TestData'
-              targetPath: '$(Build.ArtifactStagingDirectory)/TestData.zip'
-              artifactName: 'TestData'
-            - output: pipelineArtifact
-              displayName: 'Publish build artifact: RunSettings'
-              targetPath: '$(Build.SourcesDirectory)/Python/Tests/TestData/default.runsettings'
-              artifactName: 'RunSettings'
-          steps:
-
-          # check out code clean from source control
-          - checkout: self
-            clean: true
-
-          # Non-PR steps  
+        templateContext:
+          outputs:
+          - output: pipelineArtifact
+            displayName: 'Publish build artifact: binaries'
+            targetPath: '$(Build.BinariesDirectory)/raw/binaries'
+            artifactName: Binaries
           - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
-
-            # add VSTarget build tag
-            - powershell: 'Write-Host "##vso[build.addbuildtag]$env:VSTarget"'
-              displayName: 'Add vstarget build tag'
-
-            # install microbuild plugins used for swixproj/vsmanproj, signing, and localization
-            - template: /Build/templates/install_microbuild_plugins.yml@self
-
-          # Restore packages and install dependencies (pylance, debugpy)  
-          - template: /Build/templates/restore_packages.yml@self
-            parameters:
-              pylanceVersion: ${{ parameters.pylanceVersion }}
-              debugpyVersion: ${{ parameters.debugpyVersion }}
-
-          # Build and publish logs    
-          - template: /Build/templates/build.yml@self
-
-          # Non-PR steps
-          - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
-
-            # Create VS bootstrapper for tests.
-            # This must happen BEFORE the MicroBuildUploadVstsDropFolder@1 task, since the bootstrapper
-            # needs to be uploaded to the drop as well.
-            # This step is disabled for now because it's blocking the build and we don't currently use it.
-            # - template: Build/templates/create_vs_bootstrapper.yml
-
-            # Upload vsts drop used by Visual Studio insertions
-            - task: MicroBuildUploadVstsDropFolder@1
-              displayName: 'Upload vsts drop'
-              inputs:
-                DropFolder: '$(Build.StagingDirectory)\release'
-                DropServiceUri: 'https://devdiv.artifacts.visualstudio.com/DefaultCollection'
-                VSDropServiceUri: 'https://vsdrop.corp.microsoft.com/file/v1'
-                AccessToken: '$(System.AccessToken)'
-
-            # publish symbols
-            - template: /Build/templates/publish_symbols.yml@self
-
-          # MicroBuild cleanup
-          - task: MicroBuildCleanup@1
-            displayName: 'Execute cleanup tasks'
+            - output: pipelineArtifact
+              displayName: 'Publish build artifact: BoM'
+              targetPath: '$(Build.BinariesDirectory)\layout\_manifest'
+              artifactName: SBOM
+          - output: pipelineArtifact
+            displayName: 'Publish build artifact: raw'
+            condition: failed()
+            targetPath: '$(Build.BinariesDirectory)\raw'
+            artifactName: raw
+          - output: pipelineArtifact
+            displayName: 'Publish build artifact: logs'
             condition: succeededOrFailed()
+            targetPath: '$(Build.SourcesDirectory)\logs'
+            artifactName: Logs
+          - output: pipelineArtifact
+            displayName: 'Publish build artifact: TestData'
+            targetPath: '$(Build.ArtifactStagingDirectory)/TestData.zip'
+            artifactName: 'TestData'
+          - output: pipelineArtifact
+            displayName: 'Publish build artifact: RunSettings'
+            targetPath: '$(Build.SourcesDirectory)/Python/Tests/TestData/default.runsettings'
+            artifactName: 'RunSettings'
 
-          # Publish test data
-          - template: /Build/templates/publish_test_data.yml@self
+        steps:
+
+        # check out code clean from source control
+        - checkout: self
+          clean: true
+
+        # Non-PR steps  
+        - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
+
+          # add VSTarget build tag
+          - powershell: 'Write-Host "##vso[build.addbuildtag]$env:VSTarget"'
+            displayName: 'Add vstarget build tag'
+
+          # install microbuild plugins used for swixproj/vsmanproj, signing, and localization
+          - template: /Build/templates/install_microbuild_plugins.yml@self
+
+        # Restore packages and install dependencies (pylance, debugpy)  
+        - template: /Build/templates/restore_packages.yml@self
+          parameters:
+            pylanceVersion: ${{ parameters.pylanceVersion }}
+            debugpyVersion: ${{ parameters.debugpyVersion }}
+
+        # Build and publish logs    
+        - template: /Build/templates/build.yml@self
+
+        # Non-PR steps
+        - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
+
+          # Create VS bootstrapper for tests.
+          # This must happen BEFORE the MicroBuildUploadVstsDropFolder@1 task, since the bootstrapper
+          # needs to be uploaded to the drop as well.
+          # This step is disabled for now because it's blocking the build and we don't currently use it.
+          # - template: Build/templates/create_vs_bootstrapper.yml
+
+          # Upload vsts drop used by Visual Studio insertions
+          - task: MicroBuildUploadVstsDropFolder@1
+            displayName: 'Upload vsts drop'
+            inputs:
+              DropFolder: '$(Build.StagingDirectory)\release'
+              DropServiceUri: 'https://devdiv.artifacts.visualstudio.com/DefaultCollection'
+              VSDropServiceUri: 'https://vsdrop.corp.microsoft.com/file/v1'
+              AccessToken: '$(System.AccessToken)'
+
+          # publish symbols
+          - template: /Build/templates/publish_symbols.yml@self
+
+        # MicroBuild cleanup
+        - task: MicroBuildCleanup@1
+          displayName: 'Execute cleanup tasks'
+          condition: succeededOrFailed()
+
+        # Publish test data
+        - template: /Build/templates/publish_test_data.yml@self
 
 
