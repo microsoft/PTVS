@@ -167,13 +167,13 @@ extends:
         - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
 
           # Create VS bootstrapper for tests.
-          # This must happen BEFORE the MicroBuildUploadVstsDropFolder@1 task, since the bootstrapper
+          # This must happen BEFORE the 1ES.MicroBuildVstsDrop@1 task, since the bootstrapper
           # needs to be uploaded to the drop as well.
           # This step is disabled for now because it's blocking the build and we don't currently use it.
           # - template: Build/templates/create_vs_bootstrapper.yml
 
           # Upload vsts drop used by Visual Studio insertions
-          - task: MicroBuildUploadVstsDropFolder@1
+          - task: 1ES.MicroBuildVstsDrop@1
             displayName: 'Upload vsts drop'
             inputs:
               DropFolder: '$(Build.StagingDirectory)\release'
