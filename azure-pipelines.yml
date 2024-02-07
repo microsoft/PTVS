@@ -176,10 +176,10 @@ extends:
           - task: 1ES.MicroBuildVstsDrop@1
             displayName: 'Upload vsts drop'
             inputs:
-              DropFolder: '$(Build.StagingDirectory)\release'
-              DropServiceUri: 'https://devdiv.artifacts.visualstudio.com/DefaultCollection'
-              VSDropServiceUri: 'https://vsdrop.corp.microsoft.com/file/v1'
-              AccessToken: '$(System.AccessToken)'
+              dropFolder: '$(Build.StagingDirectory)\release'
+              dropServiceUri: 'https://devdiv.artifacts.visualstudio.com/DefaultCollection'
+              vsDropServiceUri: 'https://vsdrop.corp.microsoft.com/file/v1'
+              accessToken: '$(System.AccessToken)'
 
           # publish symbols
           - template: /Build/templates/publish_symbols.yml@self
