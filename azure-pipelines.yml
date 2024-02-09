@@ -124,10 +124,10 @@ extends:
             condition: succeededOrFailed()
             targetPath: '$(Build.SourcesDirectory)\logs'
             artifactName: Logs
-          - output: pipelineArtifact
-            displayName: 'Publish build artifact: TestData'
-            targetPath: '$(Build.ArtifactStagingDirectory)/TestData.zip'
-            artifactName: 'TestData'
+          # - output: pipelineArtifact
+          #   displayName: 'Publish build artifact: TestData'
+          #   targetPath: '$(Build.ArtifactStagingDirectory)/TestData.zip'
+          #   artifactName: 'TestData'
           - output: pipelineArtifact
             displayName: 'Publish build artifact: RunSettings'
             targetPath: '$(Build.SourcesDirectory)/Python/Tests/TestData/default.runsettings'
