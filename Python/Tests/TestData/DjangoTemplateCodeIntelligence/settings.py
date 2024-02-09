@@ -83,8 +83,7 @@ STATICFILES_FINDERS = (
 )
 
 # Make this unique, and don't share it with anybody.
-# Comment out for now to get rid of the "Credential Scanner: Rule: Found General Password." warning
-# SECRET_KEY = '^28avlv8e$sky_08pu926q^+b5&4&5&+ob7ma%v(tn$bg#=&k4'
+# Get rid of the SECRET_KEY for now to get rid of the "Credential Scanner: Rule: Found General Password." warning
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
