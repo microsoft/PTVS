@@ -117,7 +117,7 @@ extends:
           - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
             - output: pipelineArtifact
               displayName: 'Publish build artifact: BoM'
-              targetPath: '$(Build.BinariesDirectory)\layout\_manifest'
+              targetPath: '$(Build.BinariesDirectory)\raw\_manifest'
               artifactName: SBOM
           - output: pipelineArtifact
             displayName: 'Publish build artifact: raw'
