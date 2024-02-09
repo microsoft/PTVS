@@ -5,7 +5,7 @@ steps:
     inputs:
       dropName: 'Products/$(System.TeamProject)/$(Build.Repository.Name)/$(Build.SourceBranchName)/$(Build.BuildNumber)'
 
-  - task: MicroBuildSigningPlugin@3
+  - task: MicroBuildSigningPlugin@4
     displayName: 'Install microbuild signing plugin'
     inputs:
       signType: 'Real'
