@@ -136,6 +136,7 @@ extends:
             - output: pipelineArtifact
               displayName: 'Publish build artifact: BoM'
               targetPath: '$(Build.BinariesDirectory)\layout\_manifest'
+              sbomBuildDropPath: '$(Build.BinariesDirectory)\layout'
               artifactName: SBOM
 
         steps:
