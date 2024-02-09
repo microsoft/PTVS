@@ -11,7 +11,7 @@ steps:
       signType: 'Real'
       zipSources: false
       
-  - task: MicroBuildLocalizationPlugin@3
+  - task: MicroBuildLocalizationPlugin@4
     displayName: 'Install localization plugin'
     inputs:
       type: 'Full'
