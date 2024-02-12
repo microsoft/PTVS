@@ -127,11 +127,11 @@ extends:
             targetPath: '$(Build.SourcesDirectory)/Python/Tests/TestData/default.runsettings'
             sbomBuildDropPath: '$(Build.SourcesDirectory)/Python/Tests/TestData'
             artifactName: 'RunSettings'
-          # - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
-          #   - output: pipelineArtifact
-          #     displayName: 'Publish build artifact: BoM'
-          #     targetPath: '$(Build.BinariesDirectory)\layout'
-          #     artifactName: SBOM
+          - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
+            - output: pipelineArtifact
+              displayName: 'Publish build artifact: BoM'
+              targetPath: '$(Build.BinariesDirectory)\layout'
+              artifactName: SBOM
 
         steps:
 
