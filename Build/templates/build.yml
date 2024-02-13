@@ -1,5 +1,8 @@
 steps:
 
+  - task: MicroBuildSbomPlugin@1
+    displayName: Install MicroBuild Sbom Plugin
+
   # Build the product
   - task: MSBuild@1
     displayName: 'Build product'

@@ -154,7 +154,7 @@ extends:
           parameters:
             pylanceVersion: ${{ parameters.pylanceVersion }}
             debugpyVersion: ${{ parameters.debugpyVersion }}
-
+        
         # Build and publish logs    
         - template: /Build/templates/build.yml@self
 
