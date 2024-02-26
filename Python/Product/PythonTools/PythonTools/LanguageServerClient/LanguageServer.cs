@@ -31,16 +31,19 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private readonly NodeEnvironmentProvider _nodeEnvironmentProvider;
         private readonly IServiceProvider _site;
         private readonly Func<StreamData, Tuple<StreamData, bool>> _serverSendHandler;
+        private readonly Func<StreamData, int> _processOutputReadHandler;
 
         public LanguageServer(
             IServiceProvider site,
             JoinableTaskContext joinableTaskContext,
-            Func<StreamData, Tuple<StreamData, bool>> serverSendHandler) {
+            Func<StreamData, Tuple<StreamData, bool>> serverSendHandler,
+            Func<StreamData, int> processOutputReadHandler) {
             _site = site ?? throw new ArgumentNullException(nameof(site));
             _joinableTaskContext = joinableTaskContext ?? throw new ArgumentNullException(nameof(joinableTaskContext));
             _nodeEnvironmentProvider = new NodeEnvironmentProvider(site, joinableTaskContext);
             CancellationFolderName = Guid.NewGuid().ToString().Replace("-", "");
             _serverSendHandler = serverSendHandler;
+            _processOutputReadHandler = processOutputReadHandler;
         }
 
         public string CancellationFolderName { get; }
@@ -94,8 +97,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 if (!process.HasExited) {
                     // Create a connection where we wrap the stdin stream so that we can intercept all messages
                     return new Connection(
-                        process.StandardOutput.BaseStream,
-                        new StreamIntercepter(process.StandardInput.BaseStream, _serverSendHandler, (a) => { }));
+                        new StreamIntercepter(process.StandardOutput.BaseStream, (a) => { return Tuple.Create(a, false); } ,_processOutputReadHandler),
+                        new StreamIntercepter(process.StandardInput.BaseStream, _serverSendHandler, (a) => { return a.count; }));
                 }
             }
             return null;

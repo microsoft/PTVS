@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -192,7 +193,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
             // Client context cannot be created here since the is no workspace yet
             // and hence we don't know if this is workspace or a loose files case.
-            _server = new LanguageServer(Site, JoinableTaskContext, this.OnSendToServer);
+            _server = new LanguageServer(Site, JoinableTaskContext, this.OnSendToServer, this.OnReceiveFromServer);
             InitializationOptions = null;
 
             var customTarget = new PythonLanguageClientCustomTarget(Site, JoinableTaskContext);
@@ -574,6 +575,35 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             // Return the tuple that indicates if we need to keep listening or not
             // We need to keep listening if debugging or haven't modified initialize yet
             return Tuple.Create(data, !_modifiedInitialize || _isDebugging);
+        }
+
+        // This is a short term fix to parse escaped characters in URIs sent back from Pylance.
+        // Eventually it should be fixed on VS client side, see https://devdiv.visualstudio.com/DevDiv/_workitems/edit/1975760
+        private int OnReceiveFromServer(StreamData data) {
+            var message = MessageParser.Deserialize(data);
+            if (message != null) {
+                if (_isDebugging) {
+                    System.Diagnostics.Debug.WriteLine($"*** Receiving from pylance: {message.ToString()}");
+                }
+                try {
+                    if (message.Value<string>("method") == "workspace/configuration") {
+                        if (message.TryGetValue("params", out JToken messageParams)) {
+                            var uri = messageParams["items"];
+                            if (uri != null && uri[0] != null && uri[0]["scopeUri"] != null) {
+                                uri[0]["scopeUri"] = new JValue("file:///c:/Users/stellahuang/source/repos/PythonApplication2");
+                                var modifiedData = MessageParser.Serialize(message);
+                                var newData = new StreamData { bytes = modifiedData.bytes, offset = modifiedData.offset, count = modifiedData.count };
+                                // Copy modified data back to the original StreamData object
+                                Array.Copy(newData.bytes, newData.offset, data.bytes, data.offset, newData.count);
+                                return newData.count;
+                            }
+                        }
+                    }
+                } catch {
+                    // Don't care if this happens. Just skip the message
+                }
+            }
+            return data.count;
         }
 
         private async Task OnWorkspaceOpening(object sende, EventArgs e) {

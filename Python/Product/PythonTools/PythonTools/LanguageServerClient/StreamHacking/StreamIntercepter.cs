@@ -24,9 +24,9 @@ namespace Microsoft.PythonTools.LanguageServerClient.StreamHacking {
     class StreamIntercepter : Stream {
         private Stream baseStream;
         private Func<StreamData, Tuple<StreamData, bool>> writeHandler;
-        private Action<StreamData> readHandler;
+        private Func<StreamData, int> readHandler;
 
-        public StreamIntercepter(Stream stream, Func<StreamData, Tuple<StreamData, bool>> writeHandler, Action<StreamData> readHandler) {
+        public StreamIntercepter(Stream stream, Func<StreamData, Tuple<StreamData, bool>> writeHandler, Func<StreamData, int> readHandler) {
             this.baseStream = stream;
             this.readHandler = readHandler;
             this.writeHandler = writeHandler;
@@ -44,10 +44,17 @@ namespace Microsoft.PythonTools.LanguageServerClient.StreamHacking {
 
         public override void Flush() => baseStream.Flush();
         public override int Read(byte[] buffer, int offset, int count) {
-            var result = baseStream.Read(buffer, offset, count);
-            var args = new StreamData { bytes = buffer, offset = offset, count = result };
-            readHandler.Invoke(args);
-            return result;
+            var bytesRead = baseStream.Read(buffer, offset, count);
+            var args = new StreamData { bytes = buffer, offset = offset, count = bytesRead };
+            var newBytesRead = readHandler.Invoke(args);
+
+            if (newBytesRead != bytesRead) {
+                byte[] newBuffer = new byte[newBytesRead];
+                Array.Copy(args.bytes, args.offset, newBuffer, 0, newBytesRead);
+                buffer = newBuffer;
+            }
+
+            return newBytesRead;
         }
         public override long Seek(long offset, SeekOrigin origin) => baseStream.Seek(offset, origin);
         public override void SetLength(long value) => baseStream.SetLength(value);
