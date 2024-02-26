@@ -49,9 +49,7 @@ namespace Microsoft.PythonTools.LanguageServerClient.StreamHacking {
             var newBytesRead = readHandler.Invoke(args);
 
             if (newBytesRead != bytesRead) {
-                byte[] newBuffer = new byte[newBytesRead];
-                Array.Copy(args.bytes, args.offset, newBuffer, 0, newBytesRead);
-                buffer = newBuffer;
+                Array.Copy(args.bytes, args.offset, buffer, offset, newBytesRead);
             }
 
             return newBytesRead;
