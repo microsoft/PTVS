@@ -21,6 +21,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Common.Core.Disposables;
@@ -580,26 +582,33 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         // This is a short term fix to parse escaped characters in URIs sent back from Pylance.
         // Eventually it should be fixed on VS client side, see https://devdiv.visualstudio.com/DevDiv/_workitems/edit/1975760
         private int OnReceiveFromServer(StreamData data) {
-            var message = MessageParser.Deserialize(data);
-            if (message != null) {
+            if (data.count <= data.offset) {
+                return data.count;
+            }
+            byte[] buffer = new byte[data.count - data.offset];
+            Array.Copy(data.bytes, data.offset, buffer, 0, buffer.Length);
+            var dataString = System.Text.Encoding.UTF8.GetString(buffer);
+            if (dataString != null) {
                 if (_isDebugging) {
-                    System.Diagnostics.Debug.WriteLine($"*** Receiving from pylance: {message.ToString()}");
+                    System.Diagnostics.Debug.WriteLine($"*** Receiving from pylance: {dataString}");
                 }
                 try {
-                    if (message.Value<string>("method") == "workspace/configuration") {
-                        if (message.TryGetValue("params", out JToken messageParams)) {
-                            var uri = messageParams["items"];
-                            if (uri != null && uri[0] != null && uri[0]["scopeUri"] != null) {
-                                uri[0]["scopeUri"] = new JValue("file:///c:/Users/stellahuang/source/repos/PythonApplication2");
-                                var modifiedData = MessageParser.Serialize(message);
-                                var newData = new StreamData { bytes = modifiedData.bytes, offset = modifiedData.offset, count = modifiedData.count };
-                                // Copy modified data back to the original StreamData object
-                                Array.Copy(newData.bytes, newData.offset, data.bytes, data.offset, newData.count);
-                                return newData.count;
-                            }
-                        }
+                    string pattern = @"file:///[^""]*";
+                    MatchCollection matches = Regex.Matches(dataString, pattern);
+
+                    // Iterate over matches and replace each with the unescaped version
+                    foreach (Match match in matches) {
+                        string matchedString = match.Value;
+                        string unescapedString = Uri.UnescapeDataString(matchedString);
+                        dataString = dataString.Replace(matchedString, unescapedString);
                     }
-                } catch {
+
+                    byte[] newBytes = Encoding.UTF8.GetBytes(dataString);
+                    //Array.Copy(newBytes, 0, data.bytes, data.offset, newBytes.Length);
+                    //return newBytes.Length;
+                    return data.count;
+                }
+                catch {
                     // Don't care if this happens. Just skip the message
                 }
             }

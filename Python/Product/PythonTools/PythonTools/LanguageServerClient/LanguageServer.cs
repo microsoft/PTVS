@@ -97,7 +97,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 if (!process.HasExited) {
                     // Create a connection where we wrap the stdin stream so that we can intercept all messages
                     return new Connection(
-                        new StreamIntercepter(process.StandardOutput.BaseStream, (a) => { return Tuple.Create(a, false); } ,_processOutputReadHandler),
+                        //new StreamIntercepter(process.StandardOutput.BaseStream, (a) => { return Tuple.Create(a, true); } ,_processOutputReadHandler),
+                        process.StandardOutput.BaseStream,
                         new StreamIntercepter(process.StandardInput.BaseStream, _serverSendHandler, (a) => { return a.count; }));
                 }
             }

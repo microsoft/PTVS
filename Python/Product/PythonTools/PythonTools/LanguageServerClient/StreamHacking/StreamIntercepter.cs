@@ -46,13 +46,9 @@ namespace Microsoft.PythonTools.LanguageServerClient.StreamHacking {
         public override int Read(byte[] buffer, int offset, int count) {
             var bytesRead = baseStream.Read(buffer, offset, count);
             var args = new StreamData { bytes = buffer, offset = offset, count = bytesRead };
-            var newBytesRead = readHandler.Invoke(args);
-
-            if (newBytesRead != bytesRead) {
-                Array.Copy(args.bytes, args.offset, buffer, offset, newBytesRead);
-            }
-
-            return newBytesRead;
+            //var newBytesRead = readHandler.Invoke(args);
+            //return newBytesRead;
+            return bytesRead;
         }
         public override long Seek(long offset, SeekOrigin origin) => baseStream.Seek(offset, origin);
         public override void SetLength(long value) => baseStream.SetLength(value);
