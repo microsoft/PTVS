@@ -369,7 +369,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     return null;
                 }
             }else {
-                var pathFromScopeUri = CommonUtils.NormalizeDirectoryPath(scopeUri.LocalPath).ToLower();
+                var pathFromScopeUri = CommonUtils.NormalizeDirectoryPath(scopeUri.LocalPath).ToLower().TrimStart('\\');
                 // Find the matching context for the item
                 context = _clientContexts.Find(c => scopeUri != null && PathUtils.IsSamePath(c.RootPath.ToLower(), pathFromScopeUri));
             }
