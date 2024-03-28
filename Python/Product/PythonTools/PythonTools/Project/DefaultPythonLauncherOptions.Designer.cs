@@ -78,18 +78,21 @@ namespace Microsoft.PythonTools.Project {
             this._envVars.Name = "_envVars";
             this._toolTip.SetToolTip(this._envVars, resources.GetString("_envVars.ToolTip"));
             this._envVars.TextChanged += new System.EventHandler(this._envVars_TextChanged);
+            this._envVars.AccessibleDescription = resources.GetString("_envVars.ToolTip");
             // 
             // _envVarsLabel
             // 
             resources.ApplyResources(this._envVarsLabel, "_envVarsLabel");
             this._envVarsLabel.Name = "_envVarsLabel";
             this._toolTip.SetToolTip(this._envVarsLabel, resources.GetString("_envVarsLabel.ToolTip"));
+            this._envVarsLabel.AccessibleDescription = resources.GetString("_envVarsLabel.ToolTip");
             // 
             // _searchPathLabel
             // 
             resources.ApplyResources(this._searchPathLabel, "_searchPathLabel");
             this._searchPathLabel.Name = "_searchPathLabel";
             this._toolTip.SetToolTip(this._searchPathLabel, resources.GetString("_searchPathLabel.ToolTip"));
+            this._searchPathLabel.AccessibleDescription = resources.GetString("_searchPathLabel.ToolTip");
             // 
             // _searchPaths
             // 
@@ -97,12 +100,14 @@ namespace Microsoft.PythonTools.Project {
             this._searchPaths.Name = "_searchPaths";
             this._toolTip.SetToolTip(this._searchPaths, resources.GetString("_searchPaths.ToolTip"));
             this._searchPaths.TextChanged += new System.EventHandler(this.SearchPathsTextChanged);
+            this._searchPaths.AccessibleDescription = resources.GetString("_searchPaths.ToolTip");
             // 
             // _argumentsLabel
             // 
             resources.ApplyResources(this._argumentsLabel, "_argumentsLabel");
             this._argumentsLabel.Name = "_argumentsLabel";
             this._toolTip.SetToolTip(this._argumentsLabel, resources.GetString("_argumentsLabel.ToolTip"));
+            this._argumentsLabel.AccessibleDescription = resources.GetString("_argumentsLabel.ToolTip");
             // 
             // _arguments
             // 
@@ -110,12 +115,14 @@ namespace Microsoft.PythonTools.Project {
             this._arguments.Name = "_arguments";
             this._toolTip.SetToolTip(this._arguments, resources.GetString("_arguments.ToolTip"));
             this._arguments.TextChanged += new System.EventHandler(this.ArgumentsTextChanged);
+            this._arguments.AccessibleDescription = resources.GetString("_arguments.ToolTip");
             // 
             // _interpArgsLabel
             // 
             resources.ApplyResources(this._interpArgsLabel, "_interpArgsLabel");
             this._interpArgsLabel.Name = "_interpArgsLabel";
             this._toolTip.SetToolTip(this._interpArgsLabel, resources.GetString("_interpArgsLabel.ToolTip"));
+            this._interpArgsLabel.AccessibleDescription = resources.GetString("_interpArgsLabel.ToolTip");
             // 
             // _interpArgs
             // 
@@ -123,6 +130,7 @@ namespace Microsoft.PythonTools.Project {
             this._interpArgs.Name = "_interpArgs";
             this._toolTip.SetToolTip(this._interpArgs, resources.GetString("_interpArgs.ToolTip"));
             this._interpArgs.TextChanged += new System.EventHandler(this.InterpreterArgumentsTextChanged);
+            this._interpArgs.AccessibleDescription = resources.GetString("_interpArgs.ToolTip");
             // 
             // _interpreterPath
             // 
@@ -130,12 +138,14 @@ namespace Microsoft.PythonTools.Project {
             this._interpreterPath.Name = "_interpreterPath";
             this._toolTip.SetToolTip(this._interpreterPath, resources.GetString("_interpreterPath.ToolTip"));
             this._interpreterPath.TextChanged += new System.EventHandler(this.InterpreterPathTextChanged);
+            this._interpreterPath.AccessibleDescription = resources.GetString("_interpreterPath.ToolTip");
             // 
             // _interpreterPathLabel
             // 
             resources.ApplyResources(this._interpreterPathLabel, "_interpreterPathLabel");
             this._interpreterPathLabel.Name = "_interpreterPathLabel";
             this._toolTip.SetToolTip(this._interpreterPathLabel, resources.GetString("_interpreterPathLabel.ToolTip"));
+            this._interpreterPathLabel.AccessibleDescription = resources.GetString("_interpreterPathLabel.ToolTip");
             // 
             // tableLayoutPanel1
             // 
