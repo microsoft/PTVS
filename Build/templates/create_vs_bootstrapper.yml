@@ -1,10 +1,5 @@
 steps:
 
-  # create bootstrapper output directory
-  - script: |
-      mkdir $(Build.StagingDirectory)\bootstrapper
-    displayName: 'Create bootstrapper dir'
-
   # Create VS bootstrapper
   # See https://devdiv.visualstudio.com/DevDiv/_wiki/wikis/DevDiv.wiki/643/How-to-Build-a-Bootstrapper for more details.
   # This is the latest IntPreview build of VS with the Python workload (that we just built) installed.
@@ -16,7 +11,7 @@ steps:
       bootstrapperCoreFeedSource: 'https://devdiv.pkgs.visualstudio.com/_packaging/Setup/nuget/v3/index.json'
       bootstrapperCoreDependenciesFeedSource: 'https://devdiv.pkgs.visualstudio.com/_packaging/Setup-Dependencies/nuget/v3/index.json'
       nugetOrgPublicFeedSource: 'https://api.nuget.org/v3/index.json'
-      outputFolder: $(Build.StagingDirectory)\bootstrapper
+      outputFolder: $(Build.StagingDirectory)
       manifests: $(Build.StagingDirectory)\release\Microsoft.PythonTools.vsman
 
   # Publish the bootstrapper as a build artifact.
