@@ -7,11 +7,11 @@ steps:
 
   # Create VS bootstrapper
   # See https://devdiv.visualstudio.com/DevDiv/_wiki/wikis/DevDiv.wiki/643/How-to-Build-a-Bootstrapper for more details.
-  # This is the latest int main build of VS with the Python workload (that we just built) installed.
+  # This is the latest IntPreview build of VS with the Python workload (that we just built) installed.
   - task: MicroBuildBuildVSBootstrapper@2
     displayName: 'Build Bootstrapper'
     inputs:
-      channelName: 'int.main'
+      channelName: 'IntPreview'
       vsMajorVersion: '17'
       bootstrapperCoreFeedSource: 'https://devdiv.pkgs.visualstudio.com/_packaging/Setup/nuget/v3/index.json'
       bootstrapperCoreDependenciesFeedSource: 'https://devdiv.pkgs.visualstudio.com/_packaging/Setup-Dependencies/nuget/v3/index.json'
