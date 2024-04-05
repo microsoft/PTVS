@@ -8,7 +8,7 @@ steps:
   # Create VS bootstrapper
   # See https://devdiv.visualstudio.com/DevDiv/_wiki/wikis/DevDiv.wiki/643/How-to-Build-a-Bootstrapper for more details.
   # This is the latest IntPreview build of VS with the Python workload (that we just built) installed.
-  - task: MicroBuildBuildVSBootstrapper@2
+  - task: MicroBuildBuildVSBootstrapper@3
     displayName: 'Build Bootstrapper'
     inputs:
       channelName: 'IntPreview'
