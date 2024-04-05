@@ -3,7 +3,7 @@ steps:
   # create bootstrapper output directory
   - script: |
       mkdir $(Build.StagingDirectory)\bootstrapper
-    displayName: 'Create bootstrapper output directory'
+    displayName: 'Create bootstrapper dir'
 
   # Create VS bootstrapper
   # See https://devdiv.visualstudio.com/DevDiv/_wiki/wikis/DevDiv.wiki/643/How-to-Build-a-Bootstrapper for more details.
