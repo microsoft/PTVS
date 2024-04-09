@@ -11,6 +11,7 @@ steps:
       bootstrapperCoreFeedSource: 'https://devdiv.pkgs.visualstudio.com/_packaging/Setup/nuget/v3/index.json'
       bootstrapperCoreDependenciesFeedSource: 'https://devdiv.pkgs.visualstudio.com/_packaging/Setup-Dependencies/nuget/v3/index.json'
       nugetOrgPublicFeedSource: 'https://api.nuget.org/v3/index.json'
+      # this outputFolder must match the "dropFolder" in the 1ES.MicroBuildVstsDrop@1 task in azure-pipelines.yml
       outputFolder: $(Build.StagingDirectory)\release
       manifests: $(Build.StagingDirectory)\release\Microsoft.PythonTools.vsman
 
