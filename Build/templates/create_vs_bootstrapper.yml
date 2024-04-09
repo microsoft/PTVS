@@ -1,26 +1,25 @@
 steps:
 
-  # Create VS bootstrapper.
-  # This is essentially a "main" build of VS with the Python workload (that we just built) installed.
-
-  # It will be created under $(Build.StagingDirectory)\release, which is uploaded (in a later step) to a vsts drop.
-  # The URI to the uploaded bootstrapper is contained in the bootstrapper.json, which is consumed by the
-  # integration tests on lab machines.
-  - task: MicroBuildBuildVSBootstrapper@2
-    displayName: 'Build Bootstrapper.json'
-    condition: notin(variables['Build.Reason'], 'PullRequest')
+  # Create VS bootstrapper
+  # See https://devdiv.visualstudio.com/DevDiv/_wiki/wikis/DevDiv.wiki/643/How-to-Build-a-Bootstrapper for more details.
+  # This is the latest IntPreview build of VS with the Python workload (that we just built) installed.
+  - task: MicroBuildBuildVSBootstrapper@3
+    displayName: 'Build Bootstrapper'
     inputs:
-      channelName: 'int.main'
+      channelName: 'IntPreview'
       vsMajorVersion: '17'
       bootstrapperCoreFeedSource: 'https://devdiv.pkgs.visualstudio.com/_packaging/Setup/nuget/v3/index.json'
       bootstrapperCoreDependenciesFeedSource: 'https://devdiv.pkgs.visualstudio.com/_packaging/Setup-Dependencies/nuget/v3/index.json'
       nugetOrgPublicFeedSource: 'https://api.nuget.org/v3/index.json'
+      # this outputFolder must match the "dropFolder" in the 1ES.MicroBuildVstsDrop@1 task in azure-pipelines.yml
       outputFolder: $(Build.StagingDirectory)\release
       manifests: $(Build.StagingDirectory)\release\Microsoft.PythonTools.vsman
 
-  # Publish Bootstrapper.json as a build artifact so test pipelines can consume it
-  - task: PublishBuildArtifacts@1
+  # Publish the bootstrapper as a build artifact.
+  # We do this manually instead of using the templateContext outputs because we don't need sbom generation.
+  - task: 1ES.PublishBuildArtifacts@1
+    displayName: 'Publish Artifact: bootstrapper'
     inputs:
-      PathtoPublish: $(Build.StagingDirectory)\MicroBuild\Output
-      ArtifactName: MicroBuildOutputs
-    displayName: 'Publish Artifact: MicroBuildOutputs (Bootstrapper.json)'
+      PathtoPublish: $(Build.StagingDirectory)\release\bootstrapper
+      ArtifactName: bootstrapper
+      sbomEnabled: false
