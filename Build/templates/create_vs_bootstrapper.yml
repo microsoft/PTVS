@@ -11,7 +11,7 @@ steps:
       bootstrapperCoreFeedSource: 'https://devdiv.pkgs.visualstudio.com/_packaging/Setup/nuget/v3/index.json'
       bootstrapperCoreDependenciesFeedSource: 'https://devdiv.pkgs.visualstudio.com/_packaging/Setup-Dependencies/nuget/v3/index.json'
       nugetOrgPublicFeedSource: 'https://api.nuget.org/v3/index.json'
-      outputFolder: $(Build.StagingDirectory)
+      outputFolder: $(Build.StagingDirectory)\release
       manifests: $(Build.StagingDirectory)\release\Microsoft.PythonTools.vsman
 
   # Publish the bootstrapper as a build artifact.
@@ -19,6 +19,6 @@ steps:
   - task: 1ES.PublishBuildArtifacts@1
     displayName: 'Publish Artifact: bootstrapper'
     inputs:
-      PathtoPublish: $(Build.StagingDirectory)\bootstrapper
+      PathtoPublish: $(Build.StagingDirectory)\release\bootstrapper
       ArtifactName: bootstrapper
       sbomEnabled: false
