@@ -99,7 +99,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private bool _sentInitialWorkspaceFolders = false;
         private FileWatcher.Listener _fileListener;
         private static TaskCompletionSource<int> _readyTcs = new System.Threading.Tasks.TaskCompletionSource<int>();
-        private bool _modifiedInitialize = false;
         private bool _loaded = false;
         private Timer _deferredSettingsChangedTimer;
         private const int _defaultSettingsDelayMS = 2000;
@@ -561,9 +560,20 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                                 messageParams["rootUri"] = "";
 
                                 // Need to rewrite the message now. 
-                                _modifiedInitialize = true;
-                                return Tuple.Create(MessageParser.Serialize(message), false);
+                                return Tuple.Create(MessageParser.Serialize(message), true);
                             }
+                        }
+                    } else if (message.Value<string>("method") == "textDocument/codeAction") {
+                        if (message.TryGetValue("params", out JToken messageParams)) {
+                            if (messageParams != null && messageParams["range"] != null 
+                                && messageParams["context"] != null 
+                                && messageParams["context"]["_vs_selectionRange"] != null) {
+                                var selectionRange = messageParams["context"]["_vs_selectionRange"];
+                                messageParams["range"]["start"] = selectionRange["start"];
+                                messageParams["range"]["end"] = selectionRange["end"];
+                                return Tuple.Create(MessageParser.Serialize(message), true);
+                            }
+                                
                         }
                     }
                 } catch {
@@ -572,8 +582,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             }
 
             // Return the tuple that indicates if we need to keep listening or not
-            // We need to keep listening if debugging or haven't modified initialize yet
-            return Tuple.Create(data, !_modifiedInitialize || _isDebugging);
+            // For now we will keep listening since code action requests can be sent multiple times
+            return Tuple.Create(data, true);
         }
 
         private async Task OnWorkspaceOpening(object sende, EventArgs e) {
