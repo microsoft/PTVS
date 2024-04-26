@@ -312,12 +312,13 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             }
         }
 
-        private Int32Proxy GetTracingPossible(PythonRuntimeInfo pyrtInfo, DkmProcess process) =>
+        private IEnumerable<Int32Proxy> GetTracingPossible(PythonRuntimeInfo pyrtInfo, DkmProcess process) =>
             pyrtInfo.LanguageVersion switch {
                 PythonLanguageVersion.V37 or PythonLanguageVersion.V38 =>
-                    _pyrtInfo.GetRuntimeState().ceval.tracing_possible,
+                    new[] { _pyrtInfo.GetRuntimeState().ceval.tracing_possible },
                 PythonLanguageVersion.V39 =>
-                    PyInterpreterState.GetInterpreterStates(process).First().ceval.tracing_possible,
+                    from interp in PyInterpreterState.GetInterpreterStates(process)
+                    select interp.ceval.tracing_possible,
                 _ =>
                     throw new InvalidOperationException($"Unsupported Python version: {pyrtInfo.LanguageVersion}")
             };
@@ -339,8 +340,9 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         public unsafe void RegisterTracing(PyThreadState tstate) {
             tstate.use_tracing.Write(1);
             tstate.c_tracefunc.Write(_traceFunc.GetPointer());
-            var pyTracingPossible = GetTracingPossible(_pyrtInfo, _process);
-            pyTracingPossible.Write(pyTracingPossible.Read() + 1);
+            foreach (var pyTracingPossible in GetTracingPossible(_pyrtInfo, _process)) {
+                pyTracingPossible.Write(pyTracingPossible.Read() + 1);
+            }
             _isTracing.Write(1);
         }
 
