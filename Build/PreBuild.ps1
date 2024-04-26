@@ -106,9 +106,20 @@ try {
     $installedPylanceVersion = $installedPylanceVersion.Trim()
     "Installed Pylance $installedPylanceVersion"
     
-    # add azdo build tag for non-pull requests
+    # add azdo build tags for non-pull requests
     if ($env:BUILD_REASON -and -not $env:BUILD_REASON.Contains("PullRequest")) {
+
+        # add build tag for pylance version being used
         Write-Host "##vso[build.addbuildtag]Pylance $installedPylanceVersion"
+
+        # If the patch version is < 100, this is a stable pylance release. Otherwise, it's a pre-release.
+        # The "Pylance Stable" tag is used to trigger releases when the build is successful
+        $patchVersion = $installedPylanceVersion.Split(".")[2]
+        if ($patchVersion -lt 100) {
+            Write-Host "##vso[build.addbuildtag]Pylance Stable"
+        } else {
+            Write-Host "##vso[build.addbuildtag]Pylance Pre-Release"
+        }
     }
 
     "-----"
