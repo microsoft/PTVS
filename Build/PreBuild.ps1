@@ -16,8 +16,16 @@ param (
     [string] $outdir, 
     
     # The version of pylance we should download, defaults to "latest"
+    # If "latest" is specified, the script will find the latest release of type $pylanceReleaseType (defaults to "stable")
+    # If an explicit version is specified, the script will always look for that specific version
     [Parameter()]
     [string] $pylanceVersion = "latest", 
+
+    # The type of pylance release we should download, defaults to "stable".
+    # This input is ignored if an explicit version is specified in $pylanceVersion.
+    [Parameter()]
+    [ValidateSet("stable", "pre-release")]
+    [string] $pylanceReleaseType = "stable", 
     
     # The version of debugpy we should download, defaults to "latest"
     [Parameter()]
@@ -70,10 +78,42 @@ $outdir = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPat
 Push-Location "$buildroot\Build"
 try {
 
-    # Install pylance version specified in package.json
+    "Installing Pylance"
+
+    # Install the specified pylance version.
+    # See https://github.com/microsoft/pyrx/wiki/Pylance-release-process#versioning for info about how pylance is versioned and released.
+
     # If this doesn't work, you probably need to set up your .npmrc file or you need permissions to the feed.
     # See https://microsoft.sharepoint.com/teams/python/_layouts/15/Doc.aspx?sourcedoc=%7B30d33826-9f98-4d3e-890e-b7d198bbbcbe%7D&action=edit&wd=target(Python%20VS%2FDev%20Docs.one%7Cd7206ce2-cf40-437b-8ce9-1e55f4bc2f44%2FPylance%20in%20VS%7C6000d391-4e62-4a4d-89d2-7f7c1f005639%2F)&share=IgEmONMwmJ8-TYkOt9GYu7y-AeCM6R8r8Myty0Lj8CeOs4E
-    "Installing Pylance"
+
+    # If the specified version is "latest", find the latest release of pylance based on the specified release type.
+    if ($pylanceVersion -eq "latest") {
+        
+        "Pylance version = $pylanceVersion"
+        "Pylance release type = $pylanceReleaseType"
+
+        # Get all the versions in the feed in descending order
+        $versions = npm view @pylance/pylance versions --json | ConvertFrom-Json
+        [array]::Reverse($versions)
+
+        # Find the highest version with an appropriate patch number.
+        # Stable releases have patch numbers < 100, while pre-releases have patch numbers >= 100.
+        foreach ($version in $versions) {
+            $patchVersion = $version.Split(".")[2]
+
+            if ($patchVersion -lt 100 -and $pylanceReleaseType -eq "stable") {
+                $pylanceVersion = $version
+                "Latest stable Pylance version found: $pylanceVersion"
+                break
+            }
+
+            if ($patchVersion -ge 100 -and $pylanceReleaseType -eq "pre-release") {
+                $pylanceVersion = $version
+                "Latest pre-release Pylance version found: $pylanceVersion"
+                break
+            }
+        }
+    }
 
     # overwrite the pylance version in the package.json with the specified version
     $packageJsonFile = Join-Path $buildroot "package.json"
@@ -85,13 +125,13 @@ try {
         $packageJson | ConvertTo-Json -depth 8 | Set-Content $packageJsonFile
     }
 
-    # delete pylance install folder to make sure we always get latest
+    # delete pylance install folder to blow away local changes
     $nodeModulesPath = Join-Path $buildroot "node_modules"
     if (Test-Path -Path $nodeModulesPath) {
         Remove-Item -Recurse -Force $nodeModulesPath
-    }
+    }  
 
-    # install latest pylance
+    # Install pylance version specified in package.json
     npm install
 
     # exit on error
@@ -115,11 +155,11 @@ try {
         # If the patch version is < 100, this is a stable pylance release. Otherwise, it's a pre-release.
         # The "Pylance Stable" tag is used to trigger releases when the build is successful
         $patchVersion = $installedPylanceVersion.Split(".")[2]
-        $pylanceReleaseType = "Pre-Release"
+        $installedPylanceReleaseType = "Pre-Release"
         if ($patchVersion -lt 100) {
-            $pylanceReleaseType = "Stable"
+            $installedPylanceReleaseType = "Stable"
         }
-        Write-Host "##vso[build.addbuildtag]Pylance $pylanceReleaseType"
+        Write-Host "##vso[build.addbuildtag]Pylance $installedPylanceReleaseType"
     }
 
     "-----"
