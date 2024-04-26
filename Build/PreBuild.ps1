@@ -115,11 +115,11 @@ try {
         # If the patch version is < 100, this is a stable pylance release. Otherwise, it's a pre-release.
         # The "Pylance Stable" tag is used to trigger releases when the build is successful
         $patchVersion = $installedPylanceVersion.Split(".")[2]
+        $pylanceReleaseType = "Pre-Release"
         if ($patchVersion -lt 100) {
-            Write-Host "##vso[build.addbuildtag]Pylance Stable"
-        } else {
-            Write-Host "##vso[build.addbuildtag]Pylance Pre-Release"
+            $pylanceReleaseType = "Stable"
         }
+        Write-Host "##vso[build.addbuildtag]Pylance $pylanceReleaseType"
     }
 
     "-----"
