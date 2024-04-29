@@ -99,7 +99,7 @@ try {
         # Find the highest version with an appropriate patch number.
         # Stable releases have patch numbers < 100, while preview releases have patch numbers >= 100.
         foreach ($version in $versions) {
-            $patchVersion = $version.Split(".")[2]
+            [int] $patchVersion = $version.Split(".")[2]
 
             if ($patchVersion -lt 100 -and $pylanceReleaseType -eq "stable") {
                 $pylanceVersion = $version
@@ -154,7 +154,7 @@ try {
 
         # If the patch version is >= 100, this is a preview release.
         # The "Pylance Stable" tag is used to trigger releases when the build is successful
-        $patchVersion = $installedPylanceVersion.Split(".")[2]
+        [int] $patchVersion = $installedPylanceVersion.Split(".")[2]
         $installedPylanceReleaseType = "Stable"
         if ($patchVersion -ge 100) {
             $installedPylanceReleaseType = "Preview"
