@@ -27,7 +27,7 @@ steps:
   # When you insert your binaries into VS or ship them to any other client you need to archive your binaries & symbols to MSDL. 
   # This will ensure that your symbols are available even if the associated build is deleted and will also make them available 
   # on the internet so that external clients can download them.
-  - task: MicroBuildArchiveSymbols@4
+  - task: MicroBuildArchiveSymbols@5
     displayName: 'Archive Symbols'
     inputs:
       SymbolsFeatureName: PTVS
