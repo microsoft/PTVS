@@ -146,8 +146,8 @@ try {
     $installedPylanceVersion = $installedPylanceVersion.Trim()
     "Installed Pylance $installedPylanceVersion"
     
-    # add azdo build tags for non-pull requests
-    if ($env:BUILD_REASON -and -not $env:BUILD_REASON.Contains("PullRequest")) {
+    # add build tag when running from azdo
+    if ($env:BUILD_REASON) {
 
         # add build tag for pylance version being used
         Write-Host "##vso[build.addbuildtag]Pylance $installedPylanceVersion"
@@ -224,8 +224,8 @@ try {
     # write debugpy version out to $buildroot\build\debugpy-version.txt, since that file is used by Debugger.csproj and various other classes
     Set-Content -NoNewline -Force -Path "$buildroot\build\debugpy-version.txt" -Value $installedDebugpyVersion
 
-    # add azdo build tag
-    if ($env:BUILD_REASON -and -not $env:BUILD_REASON.Contains("PullRequest")) {
+    # add build tag when running from azdo
+    if ($env:BUILD_REASON) {
         Write-Host "##vso[build.addbuildtag]Debugpy $installedDebugpyVersion"
     }
 
