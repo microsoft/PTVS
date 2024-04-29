@@ -8,6 +8,13 @@ parameters:
   displayName: Pylance Version
   type: string
   default: latest
+- name: pylanceReleaseType
+  displayName: Pylance Release Type
+  type: string
+  default: stable
+  values:
+    - stable
+    - preview
 - name: debugpyVersion
   displayName: Debugpy Version
   type: string
@@ -153,6 +160,7 @@ extends:
         - template: /Build/templates/restore_packages.yml@self
           parameters:
             pylanceVersion: ${{ parameters.pylanceVersion }}
+            pylanceReleaseType: ${{ parameters.pylanceReleaseType }}
             debugpyVersion: ${{ parameters.debugpyVersion }}
         
         # Build and publish logs    

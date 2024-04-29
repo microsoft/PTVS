@@ -24,7 +24,7 @@ param (
     # The type of pylance release we should download, defaults to "stable".
     # This input is ignored if an explicit version is specified in $pylanceVersion.
     [Parameter()]
-    [ValidateSet("stable", "pre-release")]
+    [ValidateSet("stable", "preview")]
     [string] $pylanceReleaseType = "stable", 
     
     # The version of debugpy we should download, defaults to "latest"
@@ -97,7 +97,7 @@ try {
         [array]::Reverse($versions)
 
         # Find the highest version with an appropriate patch number.
-        # Stable releases have patch numbers < 100, while pre-releases have patch numbers >= 100.
+        # Stable releases have patch numbers < 100, while preview releases have patch numbers >= 100.
         foreach ($version in $versions) {
             $patchVersion = $version.Split(".")[2]
 
@@ -107,9 +107,9 @@ try {
                 break
             }
 
-            if ($patchVersion -ge 100 -and $pylanceReleaseType -eq "pre-release") {
+            if ($patchVersion -ge 100 -and $pylanceReleaseType -eq "preview") {
                 $pylanceVersion = $version
-                "Latest pre-release Pylance version found: $pylanceVersion"
+                "Latest preview Pylance version found: $pylanceVersion"
                 break
             }
         }
@@ -152,12 +152,12 @@ try {
         # add build tag for pylance version being used
         Write-Host "##vso[build.addbuildtag]Pylance $installedPylanceVersion"
 
-        # If the patch version is < 100, this is a stable pylance release. Otherwise, it's a pre-release.
+        # If the patch version is >= 100, this is a preview release.
         # The "Pylance Stable" tag is used to trigger releases when the build is successful
         $patchVersion = $installedPylanceVersion.Split(".")[2]
-        $installedPylanceReleaseType = "Pre-Release"
-        if ($patchVersion -lt 100) {
-            $installedPylanceReleaseType = "Stable"
+        $installedPylanceReleaseType = "Stable"
+        if ($patchVersion -ge 100) {
+            $installedPylanceReleaseType = "Preview"
         }
         Write-Host "##vso[build.addbuildtag]Pylance $installedPylanceReleaseType"
     }
