@@ -649,6 +649,9 @@ such as auto-import, add import, workspace symbols and etc.</value>
   <data name="&gt;&gt;_indexing.ZOrder" xml:space="preserve">
     <value>15</value>
   </data>
+  <data name="_inlayHintsVariableTypes.AccessibleName" xml:space="preserve">
+    <value>Enable/disable inlay hints for variable types.</value>
+  </data>
   <data name="_inlayHintsVariableTypes.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -665,7 +668,7 @@ such as auto-import, add import, workspace symbols and etc.</value>
     <value>16</value>
   </data>
   <data name="_inlayHintsVariableTypes.Text" xml:space="preserve">
-    <value>&amp;Enable inlay hints for variable types</value>
+    <value>Ena&amp;ble inlay hints for variable types</value>
   </data>
   <data name="&gt;&gt;_inlayHintsVariableTypes.Name" xml:space="preserve">
     <value>_inlayHintsVariableTypes</value>
@@ -678,6 +681,9 @@ such as auto-import, add import, workspace symbols and etc.</value>
   </data>
   <data name="&gt;&gt;_inlayHintsVariableTypes.ZOrder" xml:space="preserve">
     <value>16</value>
+  </data>
+  <data name="_inlayHintsFunctionReturnTypes.AccessibleName" xml:space="preserve">
+    <value>Enable/disable inlay hints for function return types.</value>
   </data>
   <data name="_inlayHintsFunctionReturnTypes.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -695,7 +701,7 @@ such as auto-import, add import, workspace symbols and etc.</value>
     <value>16</value>
   </data>
   <data name="_inlayHintsFunctionReturnTypes.Text" xml:space="preserve">
-    <value>&amp;Enable inlay hints for function return types</value>
+    <value>E&amp;nable inlay hints for function return types</value>
   </data>
   <data name="&gt;&gt;_inlayHintsFunctionReturnTypes.Name" xml:space="preserve">
     <value>_inlayHintsFunctionReturnTypes</value>
@@ -740,34 +746,40 @@ such as auto-import, add import, workspace symbols and etc.</value>
     <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="diagnosticModeLabel" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_diagnosticsModeCombo" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="logLevelLabel" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_logLevelCombo" Row="1" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="typeCheckingModeLabel" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_typeCheckingMode" Row="2" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_importFormatCombo" Row="3" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="stubsPathsLabel" Row="4" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_stubsPath" Row="4" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_searchPathsLabel" Row="5" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_searchPaths" Row="5" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_typeShedPathsLabel" Row="6" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_typeshedPaths" Row="6" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="importFormatLabel" Row="3" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_autoSearchPath" Row="7" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_indexing" Row="8" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_inlayHintsVariableTypes" Row="9" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_inlayHintsFunctionReturnTypes" Row="10" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;/Controls&gt;&lt;Columns Styles="AutoSize,0,AutoSize,0" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
   <metadata name="_diagnosticModeToolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>190, 17</value>
+    <value>664, 17</value>
   </metadata>
   <metadata name="_logLevelToolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>376, 17</value>
+    <value>847, 17</value>
   </metadata>
   <metadata name="_typeCheckingToolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>518, 17</value>
+    <value>988, 17</value>
   </metadata>
   <metadata name="_stubsPathToolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>689, 17</value>
+    <value>17, 54</value>
   </metadata>
   <metadata name="_searchPathsToolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>840, 17</value>
+    <value>166, 54</value>
   </metadata>
   <metadata name="_typeshedPathsToolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>1002, 17</value>
+    <value>326, 54</value>
   </metadata>
   <metadata name="_commonSearchPathsToolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>1179, 17</value>
+    <value>500, 54</value>
   </metadata>
   <metadata name="_searchPathsLabelToolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 56</value>
+    <value>710, 54</value>
   </metadata>
   <metadata name="_typeshedPathsLabelToolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>208, 56</value>
+    <value>898, 54</value>
   </metadata>
   <metadata name="_importFormatToolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>493, 17</value>
+  </metadata>
+  <metadata name="_inlayHintsVariableTypesToolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
+  </metadata>
+  <metadata name="_inlayHintsFunctionReturnTypeToolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>237, 17</value>
   </metadata>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -839,6 +851,18 @@ such as auto-import, add import, workspace symbols and etc.</value>
     <value>_importFormatToolTip</value>
   </data>
   <data name="&gt;&gt;_importFormatToolTip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_inlayHintsVariableTypesToolTip.Name" xml:space="preserve">
+    <value>_inlayHintsVariableTypesToolTip</value>
+  </data>
+  <data name="&gt;&gt;_inlayHintsVariableTypesToolTip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_inlayHintsFunctionReturnTypeToolTip.Name" xml:space="preserve">
+    <value>_inlayHintsFunctionReturnTypeToolTip</value>
+  </data>
+  <data name="&gt;&gt;_inlayHintsFunctionReturnTypeToolTip.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
