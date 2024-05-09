@@ -621,7 +621,7 @@ namespace Microsoft.PythonTools {
                 return ResourceManager.GetString("AddInstalledEnvironmentDescription", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to The following versions of Python are installed:.
         /// </summary>
@@ -4918,6 +4918,24 @@ namespace Microsoft.PythonTools {
         public static string IncorrectStartLocationErrorMsg {
             get {
                 return ResourceManager.GetString("IncorrectStartLocationErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enable/disable inlay hints for function return types..
+        /// </summary>
+        public static string InlayHintsFunctionReturnTypesToolTip {
+            get {
+                return ResourceManager.GetString("InlayHintsFunctionReturnTypesToolTip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enable/disable inlay hints for variable types..
+        /// </summary>
+        public static string InlayHintsVariableTypeToolTip {
+            get {
+                return ResourceManager.GetString("InlayHintsVariableTypeToolTip", resourceCulture);
             }
         }
         

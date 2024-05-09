@@ -42,6 +42,8 @@
             this._typeshedPaths = new System.Windows.Forms.TextBox();
             this._autoSearchPath = new System.Windows.Forms.CheckBox();
             this._indexing = new System.Windows.Forms.CheckBox();
+            this._inlayHintsVariableTypes = new System.Windows.Forms.CheckBox();
+            this._inlayHintsFunctionReturnTypes = new System.Windows.Forms.CheckBox();
             this._diagnosticModeToolTip = new System.Windows.Forms.ToolTip(this.components);
             this._logLevelToolTip = new System.Windows.Forms.ToolTip(this.components);
             this._typeCheckingToolTip = new System.Windows.Forms.ToolTip(this.components);
@@ -52,6 +54,8 @@
             this._searchPathsLabelToolTip = new System.Windows.Forms.ToolTip(this.components);
             this._typeshedPathsLabelToolTip = new System.Windows.Forms.ToolTip(this.components);
             this._importFormatToolTip = new System.Windows.Forms.ToolTip(this.components);
+            this._inlayHintsVariableTypesToolTip = new System.Windows.Forms.ToolTip(this.components);
+            this._inlayHintsFunctionReturnTypeToolTip = new System.Windows.Forms.ToolTip(this.components);
             tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             diagnosticModeLabel = new System.Windows.Forms.Label();
             logLevelLabel = new System.Windows.Forms.Label();
@@ -80,6 +84,8 @@
             tableLayoutPanel1.Controls.Add(importFormatLabel, 0, 3);
             tableLayoutPanel1.Controls.Add(this._autoSearchPath, 0, 7);
             tableLayoutPanel1.Controls.Add(this._indexing, 0, 8);
+            tableLayoutPanel1.Controls.Add(this._inlayHintsVariableTypes, 0, 9);
+            tableLayoutPanel1.Controls.Add(this._inlayHintsFunctionReturnTypes, 0, 10);
             tableLayoutPanel1.Name = "tableLayoutPanel1";
             // 
             // diagnosticModeLabel
@@ -117,11 +123,6 @@
             this._typeCheckingMode.FormattingEnabled = true;
             resources.ApplyResources(this._typeCheckingMode, "_typeCheckingMode");
             this._typeCheckingMode.Name = "_typeCheckingMode";
-            // 
-            // importFormatLabel
-            // 
-            resources.ApplyResources(importFormatLabel, "importFormatLabel");
-            importFormatLabel.Name = "importFormatLabel";
             // 
             // _importFormatCombo
             // 
@@ -163,6 +164,11 @@
             resources.ApplyResources(this._typeshedPaths, "_typeshedPaths");
             this._typeshedPaths.Name = "_typeshedPaths";
             // 
+            // importFormatLabel
+            // 
+            resources.ApplyResources(importFormatLabel, "importFormatLabel");
+            importFormatLabel.Name = "importFormatLabel";
+            // 
             // _autoSearchPath
             // 
             resources.ApplyResources(this._autoSearchPath, "_autoSearchPath");
@@ -176,6 +182,20 @@
             tableLayoutPanel1.SetColumnSpan(this._indexing, 2);
             this._indexing.Name = "_indexing";
             this._indexing.UseVisualStyleBackColor = true;
+            // 
+            // _inlayHintsVariableTypes
+            // 
+            resources.ApplyResources(this._inlayHintsVariableTypes, "_inlayHintsVariableTypes");
+            tableLayoutPanel1.SetColumnSpan(this._inlayHintsVariableTypes, 2);
+            this._inlayHintsVariableTypes.Name = "_inlayHintsVariableTypes";
+            this._inlayHintsVariableTypes.UseVisualStyleBackColor = true;
+            // 
+            // _inlayHintsFunctionReturnTypes
+            // 
+            resources.ApplyResources(this._inlayHintsFunctionReturnTypes, "_inlayHintsFunctionReturnTypes");
+            tableLayoutPanel1.SetColumnSpan(this._inlayHintsFunctionReturnTypes, 2);
+            this._inlayHintsFunctionReturnTypes.Name = "_inlayHintsFunctionReturnTypes";
+            this._inlayHintsFunctionReturnTypes.UseVisualStyleBackColor = true;
             // 
             // PythonAnalysisOptionsControl
             // 
@@ -206,10 +226,14 @@
         private System.Windows.Forms.ToolTip _commonSearchPathsToolTip;
         private System.Windows.Forms.CheckBox _autoSearchPath;
         private System.Windows.Forms.CheckBox _indexing;
+        private System.Windows.Forms.CheckBox _inlayHintsVariableTypes;
+        private System.Windows.Forms.CheckBox _inlayHintsFunctionReturnTypes;
         private System.Windows.Forms.ToolTip _searchPathsLabelToolTip;
         private System.Windows.Forms.ToolTip _typeshedPathsLabelToolTip;
         private System.Windows.Forms.Label _typeShedPathsLabel;
         private System.Windows.Forms.ToolTip _importFormatToolTip;
+        private System.Windows.Forms.ToolTip _inlayHintsVariableTypesToolTip;
+        private System.Windows.Forms.ToolTip _inlayHintsFunctionReturnTypeToolTip;
         private System.Windows.Forms.Label _searchPathsLabel;
         private System.Windows.Forms.ComboBox _importFormatCombo;
     }

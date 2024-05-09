@@ -49,6 +49,9 @@ namespace Microsoft.PythonTools.Options {
             _importFormatCombo.Items.Add(Strings.ImportFormatAbsolute);
             _importFormatCombo.Items.Add(Strings.ImportFormatRelative);
             _importFormatToolTip.SetToolTip(_importFormatCombo, Strings.ImportFormatToolTip);
+
+            _inlayHintsVariableTypesToolTip.SetToolTip(_inlayHintsVariableTypes, Strings.InlayHintsVariableTypeToolTip);
+            _inlayHintsFunctionReturnTypeToolTip.SetToolTip(_inlayHintsFunctionReturnTypes, Strings.InlayHintsFunctionReturnTypesToolTip);
         }
 
         internal void SyncControlWithPageSettings(PythonToolsService pyService) {
@@ -59,6 +62,8 @@ namespace Microsoft.PythonTools.Options {
 
             _autoSearchPath.Checked = pyService.AnalysisOptions.AutoSearchPaths;
             _indexing.Checked = pyService.AnalysisOptions.Indexing;
+            _inlayHintsVariableTypes.Checked = pyService.AnalysisOptions.InlayHintsVariableTypes;
+            _inlayHintsFunctionReturnTypes.Checked = pyService.AnalysisOptions.InlayHintsFunctionReturnTypes;
             _diagnosticsModeCombo.SelectedIndex =
                 pyService.AnalysisOptions.DiagnosticMode == PylanceDiagnosticMode.OpenFilesOnly ? 0 : 1;
             _importFormatCombo.SelectedIndex =
@@ -98,6 +103,8 @@ namespace Microsoft.PythonTools.Options {
 
             pyService.AnalysisOptions.AutoSearchPaths = _autoSearchPath.Checked;
             pyService.AnalysisOptions.Indexing = _indexing.Checked;
+            pyService.AnalysisOptions.InlayHintsVariableTypes = _inlayHintsVariableTypes.Checked;
+            pyService.AnalysisOptions.InlayHintsFunctionReturnTypes = _inlayHintsFunctionReturnTypes.Checked;
             pyService.AnalysisOptions.DiagnosticMode = _diagnosticsModeCombo.SelectedIndex == 0 ?
                 PylanceDiagnosticMode.OpenFilesOnly : PylanceDiagnosticMode.Workspace;
             pyService.AnalysisOptions.ImportFormat = _importFormatCombo.SelectedIndex == 0 ?
