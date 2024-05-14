@@ -1,5 +1,11 @@
 # used for testing stuff in azdo
 
+parameters:
+- name: pylanceVersion
+  displayName: Pylance Version
+  type: string
+  default: latest
+
 trigger:
   none
 
@@ -16,7 +22,7 @@ variables:
   ORGANIZATION: 'DevDiv'
   PROJECT: 'DevDiv'
   PIPELINE_ID: 14121
-  RUNTIME_PARAMS: 'pylanceVersion:12345'
+  RUNTIME_PARAMS: 'pylanceVersion:${{ parameters.pylanceVersion }}'
 
 steps:
 
