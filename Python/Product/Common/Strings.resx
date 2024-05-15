@@ -3444,4 +3444,10 @@ Please specify at least one package.</value>
   <data name="ImportFormatToolTip" xml:space="preserve">
     <value>Defines the default format for import module.</value>
   </data>
+  <data name="InlayHintsFunctionReturnTypesToolTip" xml:space="preserve">
+    <value>Toggle inlay hints for function return types.</value>
+  </data>
+  <data name="InlayHintsVariableTypeToolTip" xml:space="preserve">
+    <value>Toggle inlay hints for variable types.</value>
+  </data>
 </root>

@@ -621,15 +621,6 @@ namespace Microsoft.PythonTools {
                 return ResourceManager.GetString("AddInstalledEnvironmentDescription", resourceCulture);
             }
         }
-
-        /// <summary>
-        ///   Looks up a localized string similar to The following versions of Python are installed:.
-        /// </summary>
-        public static string AddInstalledEnvironmentVersions {
-            get {
-                return ResourceManager.GetString("AddInstalledEnvironmentVersions", resourceCulture);
-            }
-        }
         
         /// <summary>
         ///   Looks up a localized string similar to Python.
@@ -700,6 +691,15 @@ namespace Microsoft.PythonTools {
         public static string AddInstalledEnvironmentTabHeader {
             get {
                 return ResourceManager.GetString("AddInstalledEnvironmentTabHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The following versions of Python are installed:.
+        /// </summary>
+        public static string AddInstalledEnvironmentVersions {
+            get {
+                return ResourceManager.GetString("AddInstalledEnvironmentVersions", resourceCulture);
             }
         }
         
@@ -4918,6 +4918,24 @@ namespace Microsoft.PythonTools {
         public static string IncorrectStartLocationErrorMsg {
             get {
                 return ResourceManager.GetString("IncorrectStartLocationErrorMsg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Toggle inlay hints for function return types..
+        /// </summary>
+        public static string InlayHintsFunctionReturnTypesToolTip {
+            get {
+                return ResourceManager.GetString("InlayHintsFunctionReturnTypesToolTip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Toggle inlay hints for variable types..
+        /// </summary>
+        public static string InlayHintsVariableTypeToolTip {
+            get {
+                return ResourceManager.GetString("InlayHintsVariableTypeToolTip", resourceCulture);
             }
         }
         

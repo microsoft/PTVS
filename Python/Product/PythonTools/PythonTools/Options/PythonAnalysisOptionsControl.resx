@@ -121,6 +121,13 @@
     <value>False</value>
   </metadata>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="tableLayoutPanel1.AutoScroll" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="tableLayoutPanel1.AutoScrollMinSize" type="System.Drawing.Size, System.Drawing">
+    <value>5, 5</value>
+  </data>
   <data name="tableLayoutPanel1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -143,7 +150,6 @@
   <data name="diagnosticModeLabel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="diagnosticModeLabel.Location" type="System.Drawing.Point, System.Drawing">
     <value>3, 6</value>
   </data>
@@ -175,7 +181,7 @@
     <value>True</value>
   </metadata>
   <data name="_diagnosticsModeCombo.Location" type="System.Drawing.Point, System.Drawing">
-    <value>117, 2</value>
+    <value>97, 2</value>
   </data>
   <data name="_diagnosticsModeCombo.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -238,7 +244,7 @@
     <value>2</value>
   </data>
   <data name="_logLevelCombo.Location" type="System.Drawing.Point, System.Drawing">
-    <value>117, 27</value>
+    <value>97, 27</value>
   </data>
   <data name="_logLevelCombo.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -301,7 +307,7 @@
     <value>4</value>
   </data>
   <data name="_typeCheckingMode.Location" type="System.Drawing.Point, System.Drawing">
-    <value>117, 52</value>
+    <value>97, 52</value>
   </data>
   <data name="_typeCheckingMode.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -324,48 +330,8 @@
   <data name="&gt;&gt;_typeCheckingMode.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
-  <metadata name="importFormatLabel.GenerateMember" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>False</value>
-  </metadata>
-  <data name="importFormatLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left</value>
-  </data>
-  <data name="importFormatLabel.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="importFormatLabel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="importFormatLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 81</value>
-  </data>
-  <data name="importFormatLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>71, 13</value>
-  </data>
-  <data name="importFormatLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
-  </data>
-  <data name="importFormatLabel.Text" xml:space="preserve">
-    <value>&amp;Import format:</value>
-  </data>
-  <data name="importFormatLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
-    <value>MiddleLeft</value>
-  </data>
-  <data name="&gt;&gt;importFormatLabel.Name" xml:space="preserve">
-    <value>importFormatLabel</value>
-  </data>
-  <data name="&gt;&gt;importFormatLabel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;importFormatLabel.Parent" xml:space="preserve">
-    <value>tableLayoutPanel1</value>
-  </data>
-  <data name="&gt;&gt;importFormatLabel.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
   <data name="_importFormatCombo.Location" type="System.Drawing.Point, System.Drawing">
-    <value>117, 77</value>
+    <value>97, 77</value>
   </data>
   <data name="_importFormatCombo.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -386,7 +352,7 @@
     <value>tableLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;_importFormatCombo.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>6</value>
   </data>
   <metadata name="stubsPathsLabel.GenerateMember" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>False</value>
@@ -425,10 +391,10 @@
     <value>tableLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;stubsPathsLabel.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>7</value>
   </data>
   <data name="_stubsPath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>117, 102</value>
+    <value>97, 102</value>
   </data>
   <data name="_stubsPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -449,7 +415,7 @@
     <value>tableLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;_stubsPath.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>8</value>
   </data>
   <data name="_searchPathsLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -485,10 +451,10 @@
     <value>tableLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;_searchPathsLabel.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>9</value>
   </data>
   <data name="_searchPaths.Location" type="System.Drawing.Point, System.Drawing">
-    <value>117, 126</value>
+    <value>97, 126</value>
   </data>
   <data name="_searchPaths.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -497,7 +463,7 @@
     <value>True</value>
   </data>
   <data name="_searchPaths.Size" type="System.Drawing.Size, System.Drawing">
-    <value>253, 51</value>
+    <value>253, 34</value>
   </data>
   <data name="_searchPaths.TabIndex" type="System.Int32, mscorlib">
     <value>13</value>
@@ -512,7 +478,7 @@
     <value>tableLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;_searchPaths.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>10</value>
   </data>
   <data name="_typeShedPathsLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -521,7 +487,7 @@
     <value>NoControl</value>
   </data>
   <data name="_typeShedPathsLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 182</value>
+    <value>3, 165</value>
   </data>
   <data name="_typeShedPathsLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 3, 3, 0</value>
@@ -548,10 +514,10 @@
     <value>tableLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;_typeShedPathsLabel.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>11</value>
   </data>
   <data name="_typeshedPaths.Location" type="System.Drawing.Point, System.Drawing">
-    <value>117, 181</value>
+    <value>97, 164</value>
   </data>
   <data name="_typeshedPaths.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -560,7 +526,7 @@
     <value>True</value>
   </data>
   <data name="_typeshedPaths.Size" type="System.Drawing.Size, System.Drawing">
-    <value>253, 51</value>
+    <value>253, 34</value>
   </data>
   <data name="_typeshedPaths.TabIndex" type="System.Int32, mscorlib">
     <value>15</value>
@@ -575,6 +541,45 @@
     <value>tableLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;_typeshedPaths.ZOrder" xml:space="preserve">
+    <value>12</value>
+  </data>
+  <metadata name="importFormatLabel.GenerateMember" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>False</value>
+  </metadata>
+  <data name="importFormatLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="importFormatLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="importFormatLabel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="importFormatLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 81</value>
+  </data>
+  <data name="importFormatLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>71, 13</value>
+  </data>
+  <data name="importFormatLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="importFormatLabel.Text" xml:space="preserve">
+    <value>&amp;Import format:</value>
+  </data>
+  <data name="importFormatLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="&gt;&gt;importFormatLabel.Name" xml:space="preserve">
+    <value>importFormatLabel</value>
+  </data>
+  <data name="&gt;&gt;importFormatLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;importFormatLabel.Parent" xml:space="preserve">
+    <value>tableLayoutPanel1</value>
+  </data>
+  <data name="&gt;&gt;importFormatLabel.ZOrder" xml:space="preserve">
     <value>13</value>
   </data>
   <data name="_autoSearchPath.AutoSize" type="System.Boolean, mscorlib">
@@ -584,7 +589,7 @@
     <value>NoControl</value>
   </data>
   <data name="_autoSearchPath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 240</value>
+    <value>6, 206</value>
   </data>
   <data name="_autoSearchPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>6, 6, 6, 3</value>
@@ -617,16 +622,16 @@
     <value>TopLeft</value>
   </data>
   <data name="_indexing.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 266</value>
+    <value>6, 232</value>
   </data>
   <data name="_indexing.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>6, 6, 6, 3</value>
   </data>
   <data name="_indexing.Size" type="System.Drawing.Size, System.Drawing">
-    <value>351, 21</value>
+    <value>351, 30</value>
   </data>
   <data name="_indexing.TabIndex" type="System.Int32, mscorlib">
-    <value>17</value>
+    <value>16</value>
   </data>
   <data name="_indexing.Text" xml:space="preserve">
     <value>&amp;Index installed third party libraries and user files for language features 
@@ -644,6 +649,72 @@ such as auto-import, add import, workspace symbols and etc.</value>
   <data name="&gt;&gt;_indexing.ZOrder" xml:space="preserve">
     <value>15</value>
   </data>
+  <data name="_inlayHintsVariableTypes.AccessibleName" xml:space="preserve">
+    <value>Enable/disable inlay hints for variable types.</value>
+  </data>
+  <data name="_inlayHintsVariableTypes.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_inlayHintsVariableTypes.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 271</value>
+  </data>
+  <data name="_inlayHintsVariableTypes.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 6, 6, 3</value>
+  </data>
+  <data name="_inlayHintsVariableTypes.Size" type="System.Drawing.Size, System.Drawing">
+    <value>195, 17</value>
+  </data>
+  <data name="_inlayHintsVariableTypes.TabIndex" type="System.Int32, mscorlib">
+    <value>16</value>
+  </data>
+  <data name="_inlayHintsVariableTypes.Text" xml:space="preserve">
+    <value>T&amp;urn on inlay hints for variable types</value>
+  </data>
+  <data name="&gt;&gt;_inlayHintsVariableTypes.Name" xml:space="preserve">
+    <value>_inlayHintsVariableTypes</value>
+  </data>
+  <data name="&gt;&gt;_inlayHintsVariableTypes.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_inlayHintsVariableTypes.Parent" xml:space="preserve">
+    <value>tableLayoutPanel1</value>
+  </data>
+  <data name="&gt;&gt;_inlayHintsVariableTypes.ZOrder" xml:space="preserve">
+    <value>16</value>
+  </data>
+  <data name="_inlayHintsFunctionReturnTypes.AccessibleName" xml:space="preserve">
+    <value>Enable/disable inlay hints for function return types.</value>
+  </data>
+  <data name="_inlayHintsFunctionReturnTypes.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_inlayHintsFunctionReturnTypes.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 297</value>
+  </data>
+  <data name="_inlayHintsFunctionReturnTypes.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 6, 6, 3</value>
+  </data>
+  <data name="_inlayHintsFunctionReturnTypes.Size" type="System.Drawing.Size, System.Drawing">
+    <value>226, 17</value>
+  </data>
+  <data name="_inlayHintsFunctionReturnTypes.TabIndex" type="System.Int32, mscorlib">
+    <value>16</value>
+  </data>
+  <data name="_inlayHintsFunctionReturnTypes.Text" xml:space="preserve">
+    <value>Tu&amp;rn on inlay hints for function return types</value>
+  </data>
+  <data name="&gt;&gt;_inlayHintsFunctionReturnTypes.Name" xml:space="preserve">
+    <value>_inlayHintsFunctionReturnTypes</value>
+  </data>
+  <data name="&gt;&gt;_inlayHintsFunctionReturnTypes.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_inlayHintsFunctionReturnTypes.Parent" xml:space="preserve">
+    <value>tableLayoutPanel1</value>
+  </data>
+  <data name="&gt;&gt;_inlayHintsFunctionReturnTypes.ZOrder" xml:space="preserve">
+    <value>17</value>
+  </data>
   <data name="tableLayoutPanel1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
@@ -654,7 +725,7 @@ such as auto-import, add import, workspace symbols and etc.</value>
     <value>9</value>
   </data>
   <data name="tableLayoutPanel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>381, 290</value>
+    <value>381, 392</value>
   </data>
   <data name="tableLayoutPanel1.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -672,37 +743,43 @@ such as auto-import, add import, workspace symbols and etc.</value>
     <value>0</value>
   </data>
   <data name="tableLayoutPanel1.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="diagnosticModeLabel" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_diagnosticsModeCombo" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="logLevelLabel" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_logLevelCombo" Row="1" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="typeCheckingModeLabel" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_typeCheckingMode" Row="2" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_importFormatCombo" Row="3" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="stubsPathsLabel" Row="4" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_stubsPath" Row="4" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_searchPathsLabel" Row="5" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_searchPaths" Row="5" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_typeShedPathsLabel" Row="6" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_typeshedPaths" Row="6" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="importFormatLabel" Row="3" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_autoSearchPath" Row="7" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_indexing" Row="8" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,100,Absolute,266" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,Absolute,20" /&gt;&lt;/TableLayoutSettings&gt;</value>
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="diagnosticModeLabel" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_diagnosticsModeCombo" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="logLevelLabel" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_logLevelCombo" Row="1" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="typeCheckingModeLabel" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_typeCheckingMode" Row="2" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_importFormatCombo" Row="3" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="stubsPathsLabel" Row="4" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_stubsPath" Row="4" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_searchPathsLabel" Row="5" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_searchPaths" Row="5" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_typeShedPathsLabel" Row="6" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_typeshedPaths" Row="6" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="importFormatLabel" Row="3" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_autoSearchPath" Row="7" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_indexing" Row="8" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_inlayHintsVariableTypes" Row="9" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_inlayHintsFunctionReturnTypes" Row="10" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;/Controls&gt;&lt;Columns Styles="AutoSize,0,AutoSize,0" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
   <metadata name="_diagnosticModeToolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>190, 17</value>
+    <value>664, 17</value>
   </metadata>
   <metadata name="_logLevelToolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>376, 17</value>
+    <value>847, 17</value>
   </metadata>
   <metadata name="_typeCheckingToolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>518, 17</value>
+    <value>988, 17</value>
   </metadata>
   <metadata name="_stubsPathToolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>689, 17</value>
+    <value>17, 54</value>
   </metadata>
   <metadata name="_searchPathsToolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>840, 17</value>
+    <value>166, 54</value>
   </metadata>
   <metadata name="_typeshedPathsToolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>1002, 17</value>
+    <value>326, 54</value>
   </metadata>
   <metadata name="_commonSearchPathsToolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>1179, 17</value>
+    <value>500, 54</value>
   </metadata>
   <metadata name="_searchPathsLabelToolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 56</value>
+    <value>710, 54</value>
   </metadata>
   <metadata name="_typeshedPathsLabelToolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>208, 56</value>
+    <value>898, 54</value>
   </metadata>
   <metadata name="_importFormatToolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>493, 17</value>
+  </metadata>
+  <metadata name="_inlayHintsVariableTypesToolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
+  </metadata>
+  <metadata name="_inlayHintsFunctionReturnTypeToolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>237, 17</value>
   </metadata>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -714,7 +791,7 @@ such as auto-import, add import, workspace symbols and etc.</value>
     <value>6, 8, 6, 8</value>
   </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
-    <value>381, 290</value>
+    <value>381, 392</value>
   </data>
   <data name="&gt;&gt;_diagnosticModeToolTip.Name" xml:space="preserve">
     <value>_diagnosticModeToolTip</value>
@@ -774,6 +851,18 @@ such as auto-import, add import, workspace symbols and etc.</value>
     <value>_importFormatToolTip</value>
   </data>
   <data name="&gt;&gt;_importFormatToolTip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_inlayHintsVariableTypesToolTip.Name" xml:space="preserve">
+    <value>_inlayHintsVariableTypesToolTip</value>
+  </data>
+  <data name="&gt;&gt;_inlayHintsVariableTypesToolTip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_inlayHintsFunctionReturnTypeToolTip.Name" xml:space="preserve">
+    <value>_inlayHintsFunctionReturnTypeToolTip</value>
+  </data>
+  <data name="&gt;&gt;_inlayHintsFunctionReturnTypeToolTip.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">

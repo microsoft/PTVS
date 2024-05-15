@@ -429,8 +429,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     extraCommitChars = false,
                     importFormat = _analysisOptions.ImportFormat,
                     inlayHints = new LanguageServerSettings.PythonSettings.PythonAnalysisSettings.PythonAnalysisInlayHintsSettings {
-                        variableTypes = false,
-                        functionReturnTypes = false
+                        variableTypes = _analysisOptions.InlayHintsVariableTypes,
+                        functionReturnTypes = _analysisOptions.InlayHintsFunctionReturnTypes
                     },
                     taskListTokens = taskListTokens.ToArray()
                 }

@@ -34,6 +34,8 @@ namespace Microsoft.PythonTools.Options {
         public string[] ExtraPaths { get; set; }
         public bool Indexing { get; set; }
         public string ImportFormat { get; set; }
+        public bool InlayHintsVariableTypes { get; set; }
+        public bool InlayHintsFunctionReturnTypes {get; set;}
 
         internal PythonAnalysisOptions(PythonToolsService service) {
             _service = service;
@@ -102,6 +104,18 @@ namespace Microsoft.PythonTools.Options {
                 changed = true;
             }
 
+            var inlayHintsVariableTypes = _service.LoadBool(nameof(InlayHintsVariableTypes), Category) ?? false;
+            if (InlayHintsVariableTypes != inlayHintsVariableTypes) { 
+                InlayHintsVariableTypes = inlayHintsVariableTypes;
+                changed = true;
+            }
+
+            var inlayHintsFunctionReturnTypes = _service.LoadBool(nameof(InlayHintsFunctionReturnTypes), Category) ?? false;
+            if (InlayHintsFunctionReturnTypes != inlayHintsFunctionReturnTypes) {
+                InlayHintsFunctionReturnTypes = inlayHintsFunctionReturnTypes;
+                changed = true;
+            }
+
             if (changed) {
                 Changed?.Invoke(this, EventArgs.Empty);
             }
@@ -118,6 +132,8 @@ namespace Microsoft.PythonTools.Options {
             changed |= _service.SaveBool(nameof(UseLibraryCodeForTypes), Category, UseLibraryCodeForTypes);
             changed |= _service.SaveBool(nameof(Indexing), Category, Indexing);
             changed |= _service.SaveString(nameof(ImportFormat), Category, ImportFormat);
+            changed |= _service.SaveBool(nameof(InlayHintsVariableTypes), Category, InlayHintsVariableTypes);
+            changed |= _service.SaveBool(nameof(InlayHintsFunctionReturnTypes), Category, InlayHintsFunctionReturnTypes);
             if (changed) {
                 Changed?.Invoke(this, EventArgs.Empty);
             }
@@ -133,6 +149,8 @@ namespace Microsoft.PythonTools.Options {
             UseLibraryCodeForTypes = true;
             Indexing = false;
             ImportFormat = PylanceImportFormat.Absolute;
+            InlayHintsVariableTypes = false;
+            InlayHintsFunctionReturnTypes = false;
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
