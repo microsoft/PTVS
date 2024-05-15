@@ -3445,9 +3445,9 @@ Please specify at least one package.</value>
     <value>Defines the default format for import module.</value>
   </data>
   <data name="InlayHintsFunctionReturnTypesToolTip" xml:space="preserve">
-    <value>Enable/disable inlay hints for function return types.</value>
+    <value>Toggle inlay hints for function return types.</value>
   </data>
   <data name="InlayHintsVariableTypeToolTip" xml:space="preserve">
-    <value>Enable/disable inlay hints for variable types.</value>
+    <value>Toggle inlay hints for variable types.</value>
   </data>
 </root>

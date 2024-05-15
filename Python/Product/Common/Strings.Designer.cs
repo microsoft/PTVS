@@ -623,15 +623,6 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The following versions of Python are installed:.
-        /// </summary>
-        public static string AddInstalledEnvironmentVersions {
-            get {
-                return ResourceManager.GetString("AddInstalledEnvironmentVersions", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Python.
         /// </summary>
         public static string AddInstalledEnvironmentInstallationLabel {
@@ -700,6 +691,15 @@ namespace Microsoft.PythonTools {
         public static string AddInstalledEnvironmentTabHeader {
             get {
                 return ResourceManager.GetString("AddInstalledEnvironmentTabHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The following versions of Python are installed:.
+        /// </summary>
+        public static string AddInstalledEnvironmentVersions {
+            get {
+                return ResourceManager.GetString("AddInstalledEnvironmentVersions", resourceCulture);
             }
         }
         
@@ -4922,7 +4922,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Enable/disable inlay hints for function return types..
+        ///   Looks up a localized string similar to Toggle inlay hints for function return types..
         /// </summary>
         public static string InlayHintsFunctionReturnTypesToolTip {
             get {
@@ -4931,7 +4931,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Enable/disable inlay hints for variable types..
+        ///   Looks up a localized string similar to Toggle inlay hints for variable types..
         /// </summary>
         public static string InlayHintsVariableTypeToolTip {
             get {

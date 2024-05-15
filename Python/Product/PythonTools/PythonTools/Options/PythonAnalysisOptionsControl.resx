@@ -662,13 +662,13 @@ such as auto-import, add import, workspace symbols and etc.</value>
     <value>6, 6, 6, 3</value>
   </data>
   <data name="_inlayHintsVariableTypes.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 17</value>
+    <value>195, 17</value>
   </data>
   <data name="_inlayHintsVariableTypes.TabIndex" type="System.Int32, mscorlib">
     <value>16</value>
   </data>
   <data name="_inlayHintsVariableTypes.Text" xml:space="preserve">
-    <value>Ena&amp;ble inlay hints for variable types</value>
+    <value>T&amp;urn on inlay hints for variable types</value>
   </data>
   <data name="&gt;&gt;_inlayHintsVariableTypes.Name" xml:space="preserve">
     <value>_inlayHintsVariableTypes</value>
@@ -695,13 +695,13 @@ such as auto-import, add import, workspace symbols and etc.</value>
     <value>6, 6, 6, 3</value>
   </data>
   <data name="_inlayHintsFunctionReturnTypes.Size" type="System.Drawing.Size, System.Drawing">
-    <value>222, 17</value>
+    <value>226, 17</value>
   </data>
   <data name="_inlayHintsFunctionReturnTypes.TabIndex" type="System.Int32, mscorlib">
     <value>16</value>
   </data>
   <data name="_inlayHintsFunctionReturnTypes.Text" xml:space="preserve">
-    <value>E&amp;nable inlay hints for function return types</value>
+    <value>Tu&amp;rn on inlay hints for function return types</value>
   </data>
   <data name="&gt;&gt;_inlayHintsFunctionReturnTypes.Name" xml:space="preserve">
     <value>_inlayHintsFunctionReturnTypes</value>
