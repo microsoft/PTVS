@@ -297,8 +297,8 @@ namespace Microsoft.PythonTools.Editor {
             }
 
             private void ApplyChanges(SnapshotSpan span, Lazy<Tokenizer> lazyTokenizer) {
-                var firstLine = span.Start.GetContainingLine().LineNumber;
-                var lastLine = span.End.GetContainingLine().LineNumber;
+                var firstLine = span.Start.GetContainingLineNumber();
+                var lastLine = span.End.GetContainingLineNumber();
 
                 AssertCapacity(firstLine);
 

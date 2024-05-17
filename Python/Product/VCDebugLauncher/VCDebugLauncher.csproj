@@ -203,13 +203,13 @@
   </ItemGroup>
   <ItemGroup>
     <XamlPropertyRule Include="VCTargets\Win32\ImportAfter\Microsoft.PythonTools.Debugger.VCDebugLauncher.xaml">
-      <VSIXSubPath>Microsoft\VC\v160\Platforms\Win32\ImportAfter</VSIXSubPath>
+      <VSIXSubPath>Microsoft\VC\$(VCTargetVersion)\Platforms\Win32\ImportAfter</VSIXSubPath>
       <InstallRoot>MSBuild</InstallRoot>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </XamlPropertyRule>
     <Content Include="VCTargets\x64\ImportAfter\Microsoft.PythonTools.Debugger.VCDebugLauncher.xaml">
-      <VSIXSubPath>Microsoft\VC\v160\Platforms\x64\ImportAfter</VSIXSubPath>
+      <VSIXSubPath>Microsoft\VC\$(VCTargetVersion)\Platforms\x64\ImportAfter</VSIXSubPath>
       <InstallRoot>MSBuild</InstallRoot>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -241,12 +241,12 @@
         <IncludeInVSIX>true</IncludeInVSIX>
       </LocContent>
       <LocContent Include="$(LocOutputPath)%(VSLanguages.Identity)\VCTargets\Win32\ImportAfter\Microsoft.PythonTools.Debugger.VCDebugLauncher.xaml">
-        <VSIXSubPath>Microsoft\VC\v160\Platforms\Win32\ImportAfter\%(VSLanguages.LCID)</VSIXSubPath>
+        <VSIXSubPath>Microsoft\VC\$(VCTargetVersion)\Platforms\Win32\ImportAfter\%(VSLanguages.LCID)</VSIXSubPath>
         <InstallRoot>MSBuild</InstallRoot>
         <IncludeInVSIX>true</IncludeInVSIX>
       </LocContent>
       <LocContent Include="$(LocOutputPath)%(VSLanguages.Identity)\VCTargets\x64\ImportAfter\Microsoft.PythonTools.Debugger.VCDebugLauncher.xaml">
-        <VSIXSubPath>Microsoft\VC\v160\Platforms\x64\ImportAfter\%(VSLanguages.LCID)</VSIXSubPath>
+        <VSIXSubPath>Microsoft\VC\$(VCTargetVersion)\Platforms\x64\ImportAfter\%(VSLanguages.LCID)</VSIXSubPath>
         <InstallRoot>MSBuild</InstallRoot>
         <IncludeInVSIX>true</IncludeInVSIX>
       </LocContent>

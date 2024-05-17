@@ -62,6 +62,7 @@ namespace Microsoft.PythonTools.Interpreter {
         };
 
         internal event EventHandler DiscoveryStarted;
+        public event EventHandler InterpreterDiscoveryCompleted;
 
         [ImportingConstructor]
         public CondaEnvironmentFactoryProvider(
@@ -267,10 +268,17 @@ namespace Microsoft.PythonTools.Interpreter {
             if (anyChanged) {
                 OnInterpreterFactoriesChanged();
             }
+
+            InterpreterDiscoveryCompleted?.Invoke(this, EventArgs.Empty);
         }
 
         internal async static Task<CondaInfoResult> ExecuteCondaInfoAsync(string condaPath) {
+
+            // Make sure we're on thread pool thread before synchronously blocking on Conda's output
+            await TaskScheduler.Default;
+
             var activationVars = await CondaUtils.GetActivationEnvironmentVariablesForRootAsync(condaPath);
+                        
             var envVars = activationVars.Union(UnbufferedEnv).ToArray();
 
             var args = new[] { "info", "--json" };
@@ -292,9 +300,13 @@ namespace Microsoft.PythonTools.Interpreter {
 
         // Gets the python package version installed in a specified conda environment
         internal async static Task<Version> ExecuteCondaListAsync(string condaPath, string envName) {
-            Version version = null;
+            
+            // Make sure we're on thread pool thread before synchronously blocking on Conda's output
+            await TaskScheduler.Default;
 
-            var activationVars = await CondaUtils.GetActivationEnvironmentVariablesForRootAsync(condaPath).ConfigureAwait(false);
+            Version version = null;
+            var activationVars = await CondaUtils.GetActivationEnvironmentVariablesForRootAsync(condaPath);
+
             var envVars = activationVars.Union(UnbufferedEnv).ToArray();
 
             // command looks like `conda list -n <envName> python --json`
@@ -373,8 +385,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private async Task<IReadOnlyList<PythonInterpreterInformation>> FindCondaEnvironments(string condaPath) {
 
-            // Make sure to run this on a background thread as it can take a long time.
-            var condaInfoResult = await Task.Run(() => ExecuteCondaInfoAsync(condaPath));
+            var condaInfoResult = await ExecuteCondaInfoAsync(condaPath);
 
             // if there is no conda info, we're done
             if (condaInfoResult == null) {

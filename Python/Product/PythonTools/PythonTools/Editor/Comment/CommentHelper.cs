@@ -91,7 +91,7 @@ namespace Microsoft.PythonTools.Editor {
             using (var edit = snapshot.TextBuffer.CreateEdit()) {
                 int minColumn = Int32.MaxValue;
                 // first pass, determine the position to place the comment
-                for (int i = start.GetContainingLine().LineNumber; i <= end.GetContainingLine().LineNumber; i++) {
+                for (int i = start.GetContainingLineNumber(); i <= end.GetContainingLineNumber(); i++) {
                     var curLine = snapshot.GetLineFromLineNumber(i);
                     var text = curLine.GetText();
 
@@ -103,7 +103,7 @@ namespace Microsoft.PythonTools.Editor {
                 }
 
                 // second pass, place the comment
-                for (int i = start.GetContainingLine().LineNumber; i <= end.GetContainingLine().LineNumber; i++) {
+                for (int i = start.GetContainingLineNumber(); i <= end.GetContainingLineNumber(); i++) {
                     var curLine = snapshot.GetLineFromLineNumber(i);
                     if (String.IsNullOrWhiteSpace(curLine.GetText())) {
                         continue;
@@ -111,7 +111,7 @@ namespace Microsoft.PythonTools.Editor {
 
                     Debug.Assert(curLine.Length >= minColumn);
 
-                    edit.Insert(curLine.Start.Position + minColumn, "#");
+                    edit.Insert(curLine.Start.Position + minColumn, "# ");
                 }
 
                 edit.Apply();
@@ -139,7 +139,7 @@ namespace Microsoft.PythonTools.Editor {
             using (var edit = snapshot.TextBuffer.CreateEdit()) {
 
                 // first pass, determine the position to place the comment
-                for (int i = start.GetContainingLine().LineNumber; i <= end.GetContainingLine().LineNumber; i++) {
+                for (int i = start.GetContainingLineNumber(); i <= end.GetContainingLineNumber(); i++) {
                     var curLine = snapshot.GetLineFromLineNumber(i);
 
                     DeleteFirstCommentChar(edit, curLine);
@@ -166,6 +166,9 @@ namespace Microsoft.PythonTools.Editor {
                 if (!Char.IsWhiteSpace(text[j])) {
                     if (text[j] == '#') {
                         edit.Delete(curLine.Start.Position + j, 1);
+                        if (j + 1 < text.Length && text[j + 1] == ' ') {
+                            edit.Delete(curLine.Start.Position + j + 1, 1);
+                        }
                     }
                     break;
                 }

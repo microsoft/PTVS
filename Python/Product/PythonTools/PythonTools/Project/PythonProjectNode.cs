@@ -22,17 +22,15 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.XPath;
 using Microsoft.Build.Execution;
 using Microsoft.PythonTools.Commands;
 using Microsoft.PythonTools.Common;
-using Microsoft.PythonTools.Editor;
+using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.PythonTools.Environments;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Projects;
@@ -43,8 +41,6 @@ using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TextManager.Interop;
-using Microsoft.VisualStudio.Utilities;
-using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using IServiceProvider = System.IServiceProvider;
@@ -79,6 +75,7 @@ namespace Microsoft.PythonTools.Project {
         private readonly IPythonToolsLogger _logger;
 
         private IReadOnlyList<IPackageManager> _activePackageManagers;
+        private readonly System.Threading.Timer _reanalyzeProjectNotification;
 
         private FileWatcher _projectFileWatcher;
 
@@ -88,6 +85,7 @@ namespace Microsoft.PythonTools.Project {
         private readonly PythonProject _pythonProject;
 
         private bool _infoBarCheckTriggered = false;
+        private bool _asyncInfoBarCheckTriggered = false;
         private readonly CondaEnvCreateInfoBar _condaEnvCreateInfoBar;
         private readonly VirtualEnvCreateInfoBar _virtualEnvCreateInfoBar;
         private readonly PackageInstallInfoBar _packageInstallInfoBar;
@@ -95,6 +93,7 @@ namespace Microsoft.PythonTools.Project {
         private readonly PythonNotSupportedInfoBar _pythonVersionNotSupportedInfoBar;
 
         private readonly SemaphoreSlim _recreatingAnalyzer = new SemaphoreSlim(1);
+        private bool _isRefreshingInterpreters = false;
 
         public event EventHandler LanguageServerInterpreterChanged;
 
@@ -118,6 +117,7 @@ namespace Microsoft.PythonTools.Project {
             // hooked up.
             InterpreterOptions.DefaultInterpreterChanged += GlobalDefaultInterpreterChanged;
             InterpreterRegistry.InterpretersChanged += OnInterpreterRegistryChanged;
+            InterpreterRegistry.CondaInterpreterDiscoveryCompleted += OnInterpreterDiscoveryCompleted;
             _pythonProject = new VsPythonProject(this);
 
             _condaEnvCreateInfoBar = new CondaEnvCreateProjectInfoBar(Site, this);
@@ -125,6 +125,7 @@ namespace Microsoft.PythonTools.Project {
             _packageInstallInfoBar = new PackageInstallProjectInfoBar(Site, this);
             _testFrameworkInfoBar = new TestFrameworkProjectInfoBar(Site, this);
             _pythonVersionNotSupportedInfoBar = new PythonNotSupportedInfoBar(Site, InfoBarContexts.Project, () => ActiveInterpreter);
+            _reanalyzeProjectNotification = new System.Threading.Timer(OnReanalyzeProject_Notify, state: null, Timeout.Infinite, Timeout.Infinite);
         }
 
         private static KeyValuePair<string, string>[] outputGroupNames = {
@@ -204,6 +205,16 @@ namespace Microsoft.PythonTools.Project {
             Site.GetUIThread().Invoke(() => RefreshInterpreters());
         }
 
+        // Called once all async interpreter factories have finished discovering interpreters
+        private void OnInterpreterDiscoveryCompleted(object sender, EventArgs e) {
+            if (!_asyncInfoBarCheckTriggered) {
+                _asyncInfoBarCheckTriggered = true;
+
+                // Check for any missing environments and show info bars for them
+                _condaEnvCreateInfoBar.CheckAsync().HandleAllExceptions(Site, typeof(PythonProjectNode)).DoNotWait();
+            }
+        }
+
         private void OnInterpreterRegistryChanged(object sender, EventArgs e) {
             Site.GetUIThread().Invoke(() => {
                 // Check whether the active interpreter factory has changed.
@@ -229,42 +240,48 @@ namespace Microsoft.PythonTools.Project {
                 Debug.Assert(this.FileName != null);
                 var oldActive = _active;
 
+                // stop listening for installed files changed
                 var oldPms = _activePackageManagers;
                 _activePackageManagers = null;
-
                 foreach (var pm in oldPms.MaybeEnumerate()) {
                     pm.InstalledFilesChanged -= PackageManager_InstalledFilesChanged;
                 }
 
                 lock (_validFactories) {
-                    if (_validFactories.Count == 0) {
-                        // No factories, so we must use the global default.
+                    // if there are no valid factories,
+                    // or the specified factory isn't in the valid list,
+                    // use the global default
+                    if (_validFactories.Count == 0 || value == null || !_validFactories.Contains(value.Configuration.Id)) {
                         _active = null;
-                    } else if (value == null || !_validFactories.Contains(value.Configuration.Id)) {
-                        // Choose a factory and make it our default.
-                        // TODO: We should have better ordering than this...
-                        var compModel = Site.GetComponentModel();
-
-                        _active = InterpreterRegistry.FindInterpreter(
-                                _validFactories.ToList().OrderBy(f => f).LastOrDefault()
-                        );
                     } else {
                         _active = value;
                     }
                 }
 
+                // start listening for package changes on the active interpreter again if interpreter is outside our workspace.
                 _activePackageManagers = InterpreterOptions.GetPackageManagers(_active).ToArray();
-                foreach (var pm in _activePackageManagers) {
-                    pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
-                    pm.EnableNotifications();
+                if (_active != null && !PathUtils.IsSubpathOf(ProjectHome, _active.Configuration.InterpreterPath)) {
+                    foreach (var pm in _activePackageManagers) {
+                        pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
+                        pm.EnableNotifications();
+                    }
                 }
 
+                // update the InterpreterId element in the pyproj with the new active interpreter
                 if (_active != oldActive) {
                     if (_active != null) {
                         BuildProject.SetProperty(
                             MSBuildConstants.InterpreterIdProperty,
                             ReplaceMSBuildPath(_active.Configuration.Id)
                         );
+                        var ver3 = new Version(3, 0);
+                        var version = _active.Configuration.Version;
+                        // show a warning if the python version is not supported
+                        if (version.ToLanguageVersion() == PythonLanguageVersion.None) {
+                            Utility.MessageBox.ShowWarningMessage(Site, Strings.PythonVersionNotSupportedInfoBarText.FormatUI(_active.Configuration.Description));
+                        } else if (_active.Configuration.Version < ver3) {
+                            Utility.MessageBox.ShowWarningMessage(Site, Strings.WarningPython2NotSupported);
+                        }
                     } else {
                         BuildProject.SetProperty(MSBuildConstants.InterpreterIdProperty, "");
                     }
@@ -283,11 +300,10 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void PackageManager_InstalledFilesChanged(object sender, EventArgs e) {
-            // TODO: Pylance
-            //try {
-            //    _reanalyzeProjectNotification.Change(500, Timeout.Infinite);
-            //} catch (ObjectDisposedException) {
-            //}
+            try {
+                _reanalyzeProjectNotification.Change(500, Timeout.Infinite);
+            } catch (ObjectDisposedException) {
+            }
         }
 
         private string ReplaceMSBuildPath(string id) {
@@ -307,6 +323,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public event EventHandler ActiveInterpreterChanged;
+        public event EventHandler ReanalyzeProject_Notify;
 
         internal event EventHandler InterpreterFactoriesChanged;
 
@@ -694,7 +711,6 @@ namespace Microsoft.PythonTools.Project {
 
         private async Task TriggerInfoBarsAsync() {
             await Task.WhenAll(
-                _condaEnvCreateInfoBar.CheckAsync(),
                 _virtualEnvCreateInfoBar.CheckAsync(),
                 _packageInstallInfoBar.CheckAsync(),
                 _testFrameworkInfoBar.CheckAsync(),
@@ -777,76 +793,94 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        private static bool RemoveFirst<T>(List<T> list, Func<T, bool> condition) {
-            for (int i = 0; i < list.Count; ++i) {
-                if (condition(list[i])) {
-                    list.RemoveAt(i);
-                    return true;
-                }
-            }
-            return false;
-        }
-
+        // Refresh the interpreters under the "Python Environments" node.
+        // This gets called from two places - once when the project loads,
+        // and any time interpreter factories are changed after that.
+        // For example, conda environments are discovered asynchronously and are
+        // not available when the project it loaded. So once they are enumerated,
+        // OnInterpreterFactoriesChanged is triggered, which calls this method.
         private void RefreshInterpreters(bool alwaysCollapse = false) {
-            if (IsClosed) {
+
+            // This method is re-entrant the first time it's called because GetInterpreterConfigurations() calls EnsureInitialized(),
+            // which triggers the OnInterpreterFactoriesChanged event. So only allow this method to run if it's not already running
+            if (_isRefreshingInterpreters) {
                 return;
             }
+            _isRefreshingInterpreters = true;
 
-            var node = _interpretersContainer;
-            if (node == null) {
-                return;
-            }
+            try {
 
-            var remaining = node.AllChildren.OfType<InterpretersNode>().ToList();
-
-            if (!IsActiveInterpreterGlobalDefault) {
-                foreach (var fact in InterpreterFactories) {
-                    if (!RemoveFirst(remaining, n => !n._isGlobalDefault && n._factory == fact)) {
-                        bool isProjectSpecific = _vsProjectContext.IsProjectSpecific(fact.Configuration);
-                        bool canRemove = !this.IsAppxPackageableProject(); // Do not allow change python enivronment for UWP
-                        node.AddChild(new InterpretersNode(
-                            this,
-                            fact,
-                            isInterpreterReference: !isProjectSpecific,
-                            canDelete:
-                                isProjectSpecific &&
-                                Directory.Exists(fact.Configuration.GetPrefixPath()),
-                            isGlobalDefault: false,
-                            canRemove: canRemove
-                        ));
-                    }
+                // if the project is closed, we're done
+                if (IsClosed) {
+                    return;
                 }
-            } else {
-                var fact = ActiveInterpreter;
-                if (fact.IsRunnable() && !RemoveFirst(remaining, n => n._isGlobalDefault && n._factory == fact)) {
-                    node.AddChild(new InterpretersNode(this, fact, true, false, true));
-                }
-            }
 
-            foreach (var id in InvalidInterpreterIds) {
-                if (!RemoveFirst(remaining, n => n._absentId == id)) {
-                    node.AddChild(InterpretersNode.CreateAbsentInterpreterNode(this, id));
+                // if the "Python Environments" node doesn't exist, we're done
+                var pythonEnvironmentsNode = _interpretersContainer;
+                if (pythonEnvironmentsNode == null) {
+                    return;
                 }
-            }
 
-            foreach (var child in remaining) {
-                node.RemoveChild(child);
-            }
+                // clear out all interpreter nodes since we're going to re-add them
+                var interpreterNodes = pythonEnvironmentsNode.AllChildren.OfType<InterpretersNode>().ToList();
+                interpreterNodes.ForEach(pythonEnvironmentsNode.RemoveChild);
 
-            if (alwaysCollapse || ParentHierarchy == null) {
-                OnInvalidateItems(node);
-            } else {
-                bool wasExpanded = node.GetIsExpanded();
-                var expandAfter = node.AllChildren.Where(n => n.GetIsExpanded()).ToArray();
-                OnInvalidateItems(node);
-                if (wasExpanded) {
-                    node.ExpandItem(EXPANDFLAGS.EXPF_ExpandFolder);
+                // if we have no interpreter factories, and the active interpreter is the global default,
+                // add a node for it
+                if (!InterpreterFactories.Any() && IsActiveInterpreterGlobalDefault && ActiveInterpreter.IsRunnable()) {
+                    var newNode = new InterpretersNode(
+                        this,
+                        ActiveInterpreter,
+                        isInterpreterReference: true,
+                        canDelete: false,
+                        isGlobalDefault: true
+                        );
+
+                    pythonEnvironmentsNode.AddChild(newNode);
                 }
-                foreach (var child in expandAfter) {
-                    child.ExpandItem(EXPANDFLAGS.EXPF_ExpandFolder);
+
+                // add all the factories we have
+                foreach (var interpreterFactory in InterpreterFactories) {
+                    var isProjectSpecific = _vsProjectContext.IsProjectSpecific(interpreterFactory.Configuration);
+                    var canRemove = !this.IsAppxPackageableProject(); // Do not allow change python environment for UWP
+                    var canDelete = isProjectSpecific && Directory.Exists(interpreterFactory.Configuration.GetPrefixPath());
+
+                    var newNode = new InterpretersNode(
+                        this,
+                        interpreterFactory,
+                        isInterpreterReference: !isProjectSpecific,
+                        canDelete,
+                        isGlobalDefault: false,
+                        canRemove
+                    );
+
+                    pythonEnvironmentsNode.AddChild(newNode);
                 }
+
+                // If the project is referencing interpreters that we can't find, add dummy nodes for them.
+                // This can include virtual environments that have been deleted, interpreters that have been uninstalled,
+                // or conda environments that are still being discovered asynchronously.
+                foreach (var id in InvalidInterpreterIds) {
+                    pythonEnvironmentsNode.AddChild(InterpretersNode.CreateAbsentInterpreterNode(this, id));
+                }
+
+                // Expand the Python Environments node, if appropriate
+                OnInvalidateItems(pythonEnvironmentsNode);
+                if (!alwaysCollapse && ParentHierarchy != null) {
+                    pythonEnvironmentsNode.ExpandItem(EXPANDFLAGS.EXPF_ExpandFolder);
+                } 
+
+                // update the active interpreter based on the "InterpreterId" element in the pyproj
+                UpdateActiveInterpreter();
+
+                // finally, bold the active environment
+                BoldActiveEnvironment();
+
+            } finally {
+                
+                // allow the method to run again
+                _isRefreshingInterpreters = false;
             }
-            BoldActiveEnvironment();
         }
 
         private void BoldActiveEnvironment() {
@@ -1200,6 +1234,13 @@ namespace Microsoft.PythonTools.Project {
             }
 
             LanguageServerInterpreterChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void OnReanalyzeProject_Notify(object state) {
+            if (IsClosed) {
+                return;
+            }
+            ReanalyzeProject_Notify?.Invoke(this, EventArgs.Empty);
         }
 
         protected override string AssemblyReferenceTargetMoniker {

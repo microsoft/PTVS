@@ -248,7 +248,7 @@ namespace Microsoft.PythonTools.Infrastructure {
                 );
             }
 
-            var psi = new ProcessStartInfo(filename);
+            var psi = new ProcessStartInfo(filename); // CodeQL [SM00406] Code ql is complaining, but this is a utility class that is called with many different file names.
             if (quoteArgs) {
                 psi.Arguments = string.Join(" ",
                     arguments.Where(a => a != null).Select(QuoteSingleArgument));

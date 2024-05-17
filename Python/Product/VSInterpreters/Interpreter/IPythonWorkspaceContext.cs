@@ -36,6 +36,11 @@ namespace Microsoft.PythonTools.Interpreter {
         event EventHandler ActiveInterpreterChanged;
 
         /// <summary>
+        /// Request to reanalyze workspace.
+        /// </summary>
+        event EventHandler ReanalyzeWorkspaceChanged;
+
+        /// <summary>
         /// Test settings for the workspace has changed.
         /// </summary>
         event EventHandler TestSettingChanged;

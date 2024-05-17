@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.PythonTools.Common.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
     internal sealed class PythonLanguageClientContextWorkspace : IPythonLanguageClientContext {
@@ -27,6 +28,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public event EventHandler InterpreterChanged;
         public event EventHandler SearchPathsChanged;
         public event EventHandler Closed;
+        public event EventHandler ReanalyzeChanged;
 
         public PythonLanguageClientContextWorkspace(IPythonWorkspaceContext pythonWorkspace) {
             _pythonWorkspace = pythonWorkspace ?? throw new ArgumentNullException(nameof(pythonWorkspace));
@@ -34,9 +36,12 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
             _pythonWorkspace.ActiveInterpreterChanged += OnInterpreterChanged;
             _pythonWorkspace.SearchPathsSettingChanged += OnSearchPathsChanged;
+            _pythonWorkspace.ReanalyzeWorkspaceChanged += OnReanalyzeChanged;
+
             _disposables.Add(() => {
                 _pythonWorkspace.ActiveInterpreterChanged -= OnInterpreterChanged;
                 _pythonWorkspace.SearchPathsSettingChanged -= OnSearchPathsChanged;
+                _pythonWorkspace.ReanalyzeWorkspaceChanged -= OnReanalyzeChanged;
             });
 
             _pythonWorkspace.AddActionOnClose(this, (obj) => Closed?.Invoke(this, EventArgs.Empty));
@@ -44,11 +49,13 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         public InterpreterConfiguration InterpreterConfiguration => _pythonWorkspace.CurrentFactory?.Configuration;
         
-        public string RootPath => _pythonWorkspace.Location;
+        public string RootPath => CommonUtils.NormalizeDirectoryPath(_pythonWorkspace.Location);
         public IEnumerable<string> SearchPaths => _pythonWorkspace.GetAbsoluteSearchPaths();
 
         private void OnInterpreterChanged(object sender, EventArgs e) => InterpreterChanged?.Invoke(this, EventArgs.Empty);
         private void OnSearchPathsChanged(object sender, EventArgs e) => SearchPathsChanged?.Invoke(this, EventArgs.Empty);
+
+        private void OnReanalyzeChanged(object sender, EventArgs e) => ReanalyzeChanged?.Invoke(this, EventArgs.Empty);
 
         public void Dispose() => _disposables.TryDispose();
     }

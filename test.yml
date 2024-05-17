@@ -1,0 +1,33 @@
+# used for testing stuff in azdo
+
+parameters:
+- name: pylanceVersion
+  displayName: Pylance Version
+  type: string
+  default: latest
+
+trigger:
+  none
+
+pr:
+  none
+
+pool:
+  name: VSEngSS-MicroBuild2022-1ES
+  demands: 
+  - msbuild
+  - VisualStudio_17.0
+
+variables:
+  ORGANIZATION: 'DevDiv'
+  PROJECT: 'DevDiv'
+  PIPELINE_ID: 14121
+  RUNTIME_PARAMS: 'pylanceVersion:${{ parameters.pylanceVersion }}'
+
+steps:
+
+- checkout: self
+
+- powershell: |
+    ./build/Run_Azdo_Pipeline.ps1 -organization $(ORGANIZATION) -project $(PROJECT) -pipelineId $(PIPELINE_ID) -runtimeParams $(RUNTIME_PARAMS) -token $(System.AccessToken)
+  displayName: 'Run Azure DevOps Pipeline'

@@ -72,18 +72,41 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
+        public event EventHandler CondaInterpreterDiscoveryCompleted;
+
+        public async void RefreshCondaInterpreterFactories() {
+            foreach (var provider in GetProviders()) {
+
+                // if the provider is conda, force discover conda interpreter factories
+                if (provider is CondaEnvironmentFactoryProvider condaProvider) {
+                    await condaProvider.ForceDiscoverInterpreterFactories();
+                }
+            }
+        }
+
         private void EnsureFactoryChangesWatched() {
+
             if (!_factoryChangesWatched) {
                 BeginSuppressInterpretersChangedEvent();
                 try {
                     foreach (var provider in GetProviders()) {
                         provider.InterpreterFactoriesChanged += Provider_InterpreterFactoriesChanged;
+
+                        // if the provider is conda, listen for the completed event
+                        if (provider is CondaEnvironmentFactoryProvider condaProvider) {
+                            condaProvider.InterpreterDiscoveryCompleted += Provider_CondaInterpreterDiscoveryCompleted;
+                        }
                     }
                 } finally {
                     EndSuppressInterpretersChangedEvent();
                 }
                 _factoryChangesWatched = true;
             }
+        }
+
+        // Called when the conda factory provider finishes discovering interpreters
+        private void Provider_CondaInterpreterDiscoveryCompleted(object sender, EventArgs e) {
+            CondaInterpreterDiscoveryCompleted?.Invoke(this, EventArgs.Empty);
         }
 
         public void BeginSuppressInterpretersChangedEvent() {

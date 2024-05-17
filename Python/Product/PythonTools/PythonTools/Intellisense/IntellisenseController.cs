@@ -1260,9 +1260,9 @@ namespace Microsoft.PythonTools.Intellisense {
                     var text = classification.First().Span.GetText();
 
                     TextSpan[] textSpan = new TextSpan[1];
-                    textSpan[0].iStartLine = clsSpan.Start.GetContainingLine().LineNumber;
+                    textSpan[0].iStartLine = clsSpan.Start.GetContainingLineNumber();
                     textSpan[0].iStartIndex = clsSpan.Start.Position - clsSpan.Start.GetContainingLine().Start;
-                    textSpan[0].iEndLine = clsSpan.End.GetContainingLine().LineNumber;
+                    textSpan[0].iEndLine = clsSpan.End.GetContainingLineNumber();
                     textSpan[0].iEndIndex = clsSpan.End.Position - clsSpan.End.GetContainingLine().Start;
 
                     string expansionPath, title;

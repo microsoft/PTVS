@@ -62,6 +62,11 @@ namespace Microsoft.PythonTools.Interpreter {
         event EventHandler InterpretersChanged;
 
         /// <summary>
+        /// Raised when the conda factory provider has completed discovering interpreters
+        /// </summary>
+        event EventHandler CondaInterpreterDiscoveryCompleted;
+
+        /// <summary>
         /// Called to suppress the <see cref="InterpretersChanged"/> event while
         /// making changes to the registry. If the event is triggered while
         /// suppressed, it will not be raised until suppression is lifted.
@@ -79,5 +84,11 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <see cref="BeginSuppressInterpretersChangedEvent"/>.
         /// </summary>
         void EndSuppressInterpretersChangedEvent();
+
+        /// <summary>
+        /// Refresh Conda interpreter factories after updating or installing 
+        /// a Python package.
+        /// </summary>
+        void RefreshCondaInterpreterFactories();
     }
 }

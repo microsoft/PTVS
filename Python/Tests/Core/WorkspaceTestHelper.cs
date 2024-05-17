@@ -126,10 +126,16 @@ namespace PythonToolsTests {
             public IPythonInterpreterFactory NoInterpretersValue => throw new NotImplementedException();
 
             public event EventHandler InterpretersChanged;
+            public event EventHandler CondaInterpreterDiscoveryCompleted {
+                add { }
+                remove { }
+            }
 
             public void BeginSuppressInterpretersChangedEvent() {
                 throw new NotImplementedException();
             }
+
+            public void RefreshCondaInterpreterFactories() => throw new NotImplementedException();
 
             public void EndSuppressInterpretersChangedEvent() {
                 throw new NotImplementedException();
@@ -381,6 +387,7 @@ namespace PythonToolsTests {
             public event EventHandler TestSettingChanged;
             public event EventHandler IsTrustedChanged;
             public event EventHandler IsTrustedQueried;
+            public event EventHandler ReanalyzeWorkspaceChanged;
 #pragma warning restore CS0067
 
             public void Dispose() {

@@ -160,7 +160,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     }
                 }
 
-                return _cache.Values.Select(p => p.Clone()).ToList();
+                return _cache.Values.ToList();
             } finally {
                 _cacheLock.Release();
             }

@@ -4380,7 +4380,7 @@ namespace Microsoft.VisualStudioTools.Project {
                         }
                     }
 
-                    var updatingNode = this.FindNodeByFullPath(file);
+                    var updatingNode = this.FindNodeByFullPath(newFileName);
                     if (updatingNode != null && updatingNode.IsLinkFile) {
                         // we just need to update the link to the new path.
                         linkedFile = updatingNode.ItemNode as MsBuildProjectElement;
