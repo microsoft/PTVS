@@ -67,13 +67,9 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
                 if (frame.ModuleInstance == pythonInfo.DLLs.Python) {
                     addr = pythonInfo.DLLs.Python.GetFunctionAddress("PyEval_EvalFrameEx");
                 }
-            } else if (pythonInfo.LanguageVersion < PythonLanguageVersion.V39) {
-                if (frame.ModuleInstance == pythonInfo.DLLs.DebuggerHelper) {
-                    addr = pythonInfo.DLLs.DebuggerHelper.GetFunctionAddress("EvalFrameFunc");
-                }
             } else {
                 if (frame.ModuleInstance == pythonInfo.DLLs.DebuggerHelper) {
-                    addr = pythonInfo.DLLs.DebuggerHelper.GetFunctionAddress("EvalFrameFunc_39");
+                    addr = pythonInfo.DLLs.DebuggerHelper.GetFunctionAddress("TraceFunc");
                 }
             }
 
@@ -109,9 +105,9 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
 
             ulong framePtr;
             try {
-                framePtr = cppEval.EvaluateUInt64("f");
+                framePtr = cppEval.EvaluateUInt64("frame");
             } catch (CppEvaluationException) {
-                Debug.Fail("Failed to evaluate the 'f' parameter to PyEval_EvalFrameEx while obtaining PyFrameObject from a native frame.");
+                Debug.Fail("Failed to evaluate the 'frame' parameter to PyEval_EvalFrameEx while obtaining PyFrameObject from a native frame.");
                 return null;
             }
 
