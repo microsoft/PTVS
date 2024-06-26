@@ -103,9 +103,11 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
                 return null;
             }
 
+            var pythonInfo = process.GetPythonRuntimeInfo();
             ulong framePtr;
-            try {
-                framePtr = cppEval.EvaluateUInt64("frame");
+            string frameVarName = pythonInfo.LanguageVersion <= PythonLanguageVersion.V35 ? "f" : "frame";
+                try {
+                framePtr = cppEval.EvaluateUInt64(frameVarName);
             } catch (CppEvaluationException) {
                 Debug.Fail("Failed to evaluate the 'frame' parameter to PyEval_EvalFrameEx while obtaining PyFrameObject from a native frame.");
                 return null;
