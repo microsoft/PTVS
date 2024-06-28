@@ -79,7 +79,12 @@ variables:
   - name: Packaging.EnableSBOMSigning
     value: false  # disabled for now because of known issue
 
-  # If the build was manually triggered, force pylance release type to stable
+  # If the build ran because of a nightly schedule, force pylance release type to preview
+  - name: pylanceReleaseTypeVar
+    ${{ if eq(variables['Build.Reason'], 'Schedule') }}:
+      value: preview
+    ${{ else }}:
+      value: ${{ parameters.pylanceReleaseType }}
   
   # Import variables from PTVS-Dev17 variable group
   - group: PTVS-Dev17
@@ -160,7 +165,7 @@ extends:
         - template: /Build/templates/restore_packages.yml@self
           parameters:
             pylanceVersion: ${{ parameters.pylanceVersion }}
-            pylanceReleaseType: ${{ parameters.pylanceReleaseType }}
+            pylanceReleaseType: $(pylanceReleaseTypeVar)
             debugpyVersion: ${{ parameters.debugpyVersion }}
         
         # Build and publish logs    
