@@ -47,6 +47,17 @@ pr:
       - 'azure-pipelines-*.yml'
   drafts: false
 
+# Trigger builds on a nightly schedule
+# Always run, even if there are no PTVS changes, because we want the latest changes from all dependencies
+# such as pylance, debugpy, and the latest VS int-preview bits pulled into our bootstrapper.
+schedules:
+- cron: "0 8 * * *"
+  displayName: Nightly build
+  branches:
+    include:
+    - main
+  always: true
+
 # Build variables
 # None of these are settable at build queue time. To do that, remove the variable from this list,
 # browse to the pipeline editor in AzDO, add the variable there, and make it settable at queue time.
