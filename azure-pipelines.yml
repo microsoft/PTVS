@@ -11,7 +11,7 @@ parameters:
 - name: pylanceReleaseType
   displayName: Pylance Release Type
   type: string
-  default: preview
+  default: stable
   values:
     - stable
     - preview
@@ -78,6 +78,8 @@ variables:
     value: false
   - name: Packaging.EnableSBOMSigning
     value: false  # disabled for now because of known issue
+
+  # If the build was manually triggered, force pylance release type to stable
   
   # Import variables from PTVS-Dev17 variable group
   - group: PTVS-Dev17
