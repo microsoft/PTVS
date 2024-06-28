@@ -11,7 +11,7 @@ parameters:
 - name: pylanceReleaseType
   displayName: Pylance Release Type
   type: string
-  default: stable
+  default: preview
   values:
     - stable
     - preview
