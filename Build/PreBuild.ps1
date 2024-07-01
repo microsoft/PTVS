@@ -75,6 +75,10 @@ if (-not $outdir) {
 # Wonderful hack because Resolve-Path fails if the path doesn't exist
 $outdir = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($outdir)
 
+# Azdo can't tag builds that come from forks of github repos, due to permissions.
+# So check if the build is coming from a fork, and if so, don't tag the build later.
+$skipBuildTagging = $env:BUILD_REASON -eq "PullRequest" -and $env:SYSTEM_PULLREQUEST_ISFORK -eq "True"
+
 Push-Location "$buildroot\Build"
 try {
 
@@ -150,16 +154,18 @@ try {
     if ($env:BUILD_REASON) {
 
         # add build tag for pylance version being used
-        Write-Host "##vso[build.addbuildtag]Pylance $installedPylanceVersion"
+        if (-not $skipBuildTagging) {
+            Write-Host "##vso[build.addbuildtag]Pylance $installedPylanceVersion"
 
-        # If the patch version is >= 100, this is a preview release.
-        # The "Pylance Stable" tag is used to trigger releases when the build is successful
-        [int] $patchVersion = $installedPylanceVersion.Split(".")[2]
-        $installedPylanceReleaseType = "Stable"
-        if ($patchVersion -ge 100) {
-            $installedPylanceReleaseType = "Preview"
+            # If the patch version is >= 100, this is a preview release.
+            # The "Pylance Stable" tag is used to trigger releases when the build is successful
+            [int] $patchVersion = $installedPylanceVersion.Split(".")[2]
+            $installedPylanceReleaseType = "Stable"
+            if ($patchVersion -ge 100) {
+                $installedPylanceReleaseType = "Preview"
+            }
+            Write-Host "##vso[build.addbuildtag]Pylance $installedPylanceReleaseType"
         }
-        Write-Host "##vso[build.addbuildtag]Pylance $installedPylanceReleaseType"
     }
 
     "-----"
@@ -226,7 +232,9 @@ try {
 
     # add build tag when running from azdo
     if ($env:BUILD_REASON) {
-        Write-Host "##vso[build.addbuildtag]Debugpy $installedDebugpyVersion"
+        if (-not $skipBuildTagging) {
+            Write-Host "##vso[build.addbuildtag]Debugpy $installedDebugpyVersion"
+        }
     }
 
 } finally {
