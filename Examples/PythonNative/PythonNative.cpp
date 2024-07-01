@@ -2,6 +2,7 @@
 #include <Python.h>
 #include <Windows.h>
 #include <iostream>
+#include <filesystem>
 
 DWORD WINAPI runner(LPVOID lpParam)
 {
@@ -9,13 +10,15 @@ DWORD WINAPI runner(LPVOID lpParam)
     Py_Initialize();
 
     std::cout << "Python version: " << PY_VERSION << std::endl;
+    std::filesystem::path cwd = std::filesystem::current_path();
+    std::filesystem::path startFile = cwd / "runner.py";
 
-    char startFile[] = "C:\\Users\\rchiodo\\source\\repos\\PythonNativeSeparateThread\\runner.py";
+    const char * startFileStr = startFile.string().c_str();
 
-    PyObject* startObj = Py_BuildValue("s", startFile);
+    PyObject* startObj = Py_BuildValue("s", startFileStr);
     FILE* file = _Py_fopen_obj(startObj, "r+");
     if (file != NULL) {
-        PyRun_SimpleFile(file, startFile);
+        PyRun_SimpleFile(file, startFileStr);
     }
 
     Py_Finalize();
