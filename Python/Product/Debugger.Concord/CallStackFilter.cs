@@ -30,6 +30,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
     internal class CallStackFilter : DkmDataItem {
         private class StackWalkContextData : DkmDataItem {
             public bool? IsLastFrameNative { get; set; }
+            public int? PythonFrameCount { get; set; }
         }
 
         private readonly DkmProcess _process;
@@ -45,7 +46,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             var nativeModuleInstance = nativeFrame.ModuleInstance;
             if (nativeModuleInstance == _pyrtInfo.DLLs.DebuggerHelper) {
                 if (_pyrtInfo.LanguageVersion < PythonLanguageVersion.V36 ||
-                    (pythonFrame = PyFrameObject.TryCreate(nativeFrame)) == null) {
+                    (pythonFrame = PyFrameObject.TryCreate(nativeFrame, null)) == null) {
                     return DebuggerOptions.ShowNativePythonFrames ? new[] { nativeFrame } : new DkmStackWalkFrame[0];
                 }
             }
@@ -78,7 +79,10 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                     }
                 }
 
-                pythonFrame = PyFrameObject.TryCreate(nativeFrame);
+                pythonFrame = PyFrameObject.TryCreate(nativeFrame, stackWalkData.PythonFrameCount);
+                if (pythonFrame != null) {
+                    stackWalkData.PythonFrameCount = stackWalkData.PythonFrameCount == null ? 1 : stackWalkData.PythonFrameCount.Value + 1;
+                }
             }
             if (pythonFrame == null) {
                 if (DebuggerOptions.ShowNativePythonFrames) {
@@ -86,7 +90,6 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 }
                 return result.ToArray();
             }
-
             PyCodeObject code = pythonFrame.f_code.Read();
             var loc = new SourceLocation(
                 code.co_filename.Read().ToStringOrNull(),
@@ -103,6 +106,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
             var encodedLocation = loc.Encode();
             var instrAddr = DkmCustomInstructionAddress.Create(pythonRuntime, pyModuleInstance, encodedLocation, 0, encodedLocation, null);
+            var inspectionSession = DkmInspectionSession.Create(_process, null);
             var frame = DkmStackWalkFrame.Create(
                 nativeFrame.Thread,
                 instrAddr,
@@ -111,7 +115,10 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 DkmStackWalkFrameFlags.None,
                 null,
                 nativeFrame.Registers,
-                nativeFrame.Annotations);
+                nativeFrame.Annotations,
+                null,
+                null,
+                DkmStackWalkFrameData.Create(inspectionSession, new StackFrameDataItem { FramePointerAddress = pythonFrame.Address }));
             result.Add(frame);
 
             if (DebuggerOptions.ShowNativePythonFrames) {

@@ -15,11 +15,16 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using Microsoft.PythonTools.Common.Core.OS;
 using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.CallStack;
 using Microsoft.VisualStudio.Debugger.Evaluation;
+using static Microsoft.VisualStudio.Threading.SingleThreadedSynchronizationContext;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
     [StructProxy(MaxVersion = PythonLanguageVersion.V38, StructName = "PyFrameObject")]
@@ -59,6 +64,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             CheckPyType<PyFrameObject>();
         }
 
+
         private static bool IsInEvalFrame(DkmStackWalkFrame frame) {
             var process = frame.Process;
             var pythonInfo = process.GetPythonRuntimeInfo();
@@ -67,13 +73,9 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
                 if (frame.ModuleInstance == pythonInfo.DLLs.Python) {
                     addr = pythonInfo.DLLs.Python.GetFunctionAddress("PyEval_EvalFrameEx");
                 }
-            } else if (pythonInfo.LanguageVersion < PythonLanguageVersion.V39) {
-                if (frame.ModuleInstance == pythonInfo.DLLs.DebuggerHelper) {
-                    addr = pythonInfo.DLLs.DebuggerHelper.GetFunctionAddress("EvalFrameFunc");
-                }
             } else {
-                if (frame.ModuleInstance == pythonInfo.DLLs.DebuggerHelper) {
-                    addr = pythonInfo.DLLs.DebuggerHelper.GetFunctionAddress("EvalFrameFunc_39");
+                if (frame.ModuleInstance == pythonInfo.DLLs.Python) {
+                    addr = pythonInfo.DLLs.Python.GetFunctionAddress("_PyEval_EvalFrameDefault");
                 }
             }
 
@@ -84,9 +86,8 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             return frame.InstructionAddress.IsInSameFunction(process.CreateNativeInstructionAddress(addr));
         }
 
-        public static unsafe PyFrameObject TryCreate(DkmStackWalkFrame frame) {
+        public static unsafe PyFrameObject TryCreate(DkmStackWalkFrame frame, int? previousFrameCount) {
             var process = frame.Process;
-
             if (frame.InstructionAddress == null) {
                 return null;
             } 
@@ -94,28 +95,11 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
                 return null;
             }
 
-            var cppLanguage = DkmLanguage.Create("C++", new DkmCompilerId(Guids.MicrosoftVendorGuid, Guids.CppLanguageGuid));
-            var inspectionSession = DkmInspectionSession.Create(process, null);
-            var inspectionContext = DkmInspectionContext.Create(inspectionSession, process.GetNativeRuntimeInstance(), frame.Thread, 0,
-                DkmEvaluationFlags.TreatAsExpression | DkmEvaluationFlags.NoSideEffects, DkmFuncEvalFlags.None, 10, cppLanguage, null);
-
-            CppExpressionEvaluator cppEval;
-            try {
-                cppEval = new CppExpressionEvaluator(inspectionContext, frame);
-            } catch (ArgumentException) {
-                Debug.Fail("Failed to create C++ expression evaluator while obtaining PyFrameObject from a native frame.");
-                return null;
+            var framePtrAddress = PyFrameObject.GetFramePtrAddress(frame, previousFrameCount);
+            if (framePtrAddress != 0) {
+                return new PyFrameObject(frame.Process, framePtrAddress);
             }
-
-            ulong framePtr;
-            try {
-                framePtr = cppEval.EvaluateUInt64("f");
-            } catch (CppEvaluationException) {
-                Debug.Fail("Failed to evaluate the 'f' parameter to PyEval_EvalFrameEx while obtaining PyFrameObject from a native frame.");
-                return null;
-            }
-
-            return new PyFrameObject(frame.Process, framePtr);
+            return null;
         }
 
         public PointerProxy<PyFrameObject> f_back {
@@ -142,5 +126,29 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             get { return GetFieldProxy((_fields as Fields_36)?.f_localsplus ?? (_fields as Fields_27_35)?.f_localsplus); }
         }
 
+        private static ulong GetFramePtrAddress(DkmStackWalkFrame frame, int? previousFrameCount) {
+            // Frame address may already be stored in the frame, check the data.
+            if (frame.Data != null && frame.Data.GetDataItem<StackFrameDataItem>() != null) {
+                return frame.Data.GetDataItem<StackFrameDataItem>().FramePointerAddress;
+            } else {
+                // Otherwise we can use the thread state to get the frame pointer.
+                var process = frame.Process;
+                var tid = frame.Thread.SystemPart.Id;
+                PyThreadState tstate = PyThreadState.GetThreadStates(process).FirstOrDefault(ts => ts.thread_id.Read() == tid);
+                PyFrameObject pyFrame = tstate.frame.Read();
+                if (pyFrame != null) {
+                    // This pyFrame should be the topmost frame. We need to go down the callstack
+                    // based on the number of previous frames that were already found.
+                    var numberBack = previousFrameCount != null ? previousFrameCount.Value : 0;
+                    while (numberBack > 0) {
+                        pyFrame = pyFrame.f_back.Read();
+                        numberBack--;
+                    }
+                    return pyFrame.Address;
+                }
+            }
+
+            return 0;
+        }
     }
 }
