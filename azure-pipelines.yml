@@ -167,7 +167,7 @@ extends:
         - template: /Build/templates/restore_packages.yml@self
           parameters:
             pylanceVersion: ${{ parameters.pylanceVersion }}
-            pylanceReleaseType: $ {{variables.pylanceReleaseTypeVar }}
+            pylanceReleaseType: ${{ variables.pylanceReleaseTypeVar }}
             debugpyVersion: ${{ parameters.debugpyVersion }}
         
         # Build and publish logs    
