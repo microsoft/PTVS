@@ -107,6 +107,8 @@ extends:
     pool:
       name: VSEngSS-MicroBuild2022-1ES
       os: windows
+    settings:
+      skipBuildTagsForGitHubPullRequests: true
     stages:
     - stage: stage
       jobs:

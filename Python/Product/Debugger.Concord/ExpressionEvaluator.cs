@@ -365,7 +365,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         }
 
         public void GetFrameLocals(DkmInspectionContext inspectionContext, DkmWorkList workList, DkmStackWalkFrame stackFrame, DkmCompletionRoutine<DkmGetFrameLocalsAsyncResult> completionRoutine) {
-            var pythonFrame = PyFrameObject.TryCreate(stackFrame);
+            var pythonFrame = PyFrameObject.TryCreate(stackFrame, null);
             if (pythonFrame == null) {
                 Debug.Fail("Non-Python frame passed to GetFrameLocals.");
                 throw new NotSupportedException();
@@ -665,7 +665,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 return;
             }
 
-            var pythonFrame = PyFrameObject.TryCreate(stackFrame);
+            var pythonFrame = PyFrameObject.TryCreate(stackFrame, null);
             if (pythonFrame == null) {
                 completionRoutine(new DkmEvaluateExpressionAsyncResult(DkmFailedEvaluationResult.Create(
                     inspectionContext, stackFrame, expression.Text, expression.Text,

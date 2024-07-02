@@ -123,6 +123,7 @@
     <Compile Include="Proxies\Structs\PySetObject.cs" />
     <Compile Include="Proxies\Structs\PyCellObject.cs" />
     <Compile Include="PythonRuntimeInfo.cs" />
+    <Compile Include="StackFrameDataItem.cs" />
     <Compile Include="ValueStore.cs" />
     <Compile Include="ModuleManager.cs" />
     <Compile Include="Proxies\Structs\PyMethodDef.cs" />
