@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows.Automation;
 
 namespace TestUtilities.UI {
@@ -92,7 +93,12 @@ namespace TestUtilities.UI {
         protected static AutomationElement FindNode(AutomationElementCollection nodes, string[] splitPath, int depth) {
             for (int i = 0; i < nodes.Count; i++) {
                 var node = nodes[i];
-                var name = node.GetCurrentPropertyValue(AutomationElement.NameProperty) as string;
+                var name = (node.GetCurrentPropertyValue(AutomationElement.NameProperty) as string);
+
+                // Sometimes AutomationElement.NameProperty contains non-printable characters that mess up the
+                // string compare, so get rid of those.
+                // See https://stackoverflow.com/questions/40564692/c-sharp-regex-to-remove-non-printable-characters-and-control-characters-in-a
+                name = Regex.Replace(name, @"\p{C}+", string.Empty).Trim();
 
                 if (name.Equals(splitPath[depth], StringComparison.CurrentCulture)) {
                     if (depth == splitPath.Length - 1) {
