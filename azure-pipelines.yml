@@ -47,6 +47,17 @@ pr:
       - 'azure-pipelines-*.yml'
   drafts: false
 
+# Trigger builds on a nightly schedule
+# Always run, even if there are no PTVS changes, because we want the latest changes from all dependencies
+# such as pylance, debugpy, and the latest VS int-preview bits pulled into our bootstrapper.
+schedules:
+- cron: "0 8 * * *"
+  displayName: Nightly build
+  branches:
+    include:
+    - main
+  always: true
+
 # Build variables
 # None of these are settable at build queue time. To do that, remove the variable from this list,
 # browse to the pipeline editor in AzDO, add the variable there, and make it settable at queue time.
@@ -67,6 +78,13 @@ variables:
     value: false
   - name: Packaging.EnableSBOMSigning
     value: false  # disabled for now because of known issue
+
+  # If the build ran because of a nightly schedule, force pylance release type to preview
+  - name: pylanceReleaseTypeVar
+    ${{ if eq(variables['Build.Reason'], 'Schedule') }}:
+      value: preview
+    ${{ else }}:
+      value: ${{ parameters.pylanceReleaseType }}
   
   # Import variables from PTVS-Dev17 variable group
   - group: PTVS-Dev17
@@ -149,7 +167,7 @@ extends:
         - template: /Build/templates/restore_packages.yml@self
           parameters:
             pylanceVersion: ${{ parameters.pylanceVersion }}
-            pylanceReleaseType: ${{ parameters.pylanceReleaseType }}
+            pylanceReleaseType: ${{ variables.pylanceReleaseTypeVar }}
             debugpyVersion: ${{ parameters.debugpyVersion }}
         
         # Build and publish logs    
@@ -159,7 +177,6 @@ extends:
         - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
 
           # Create VS bootstrapper for testing
-          # This step is disabled for now because it's blocking the build and we don't currently use it.
           - template: Build/templates/create_vs_bootstrapper.yml@self
 
           # Upload vsts drop used by Visual Studio insertions
