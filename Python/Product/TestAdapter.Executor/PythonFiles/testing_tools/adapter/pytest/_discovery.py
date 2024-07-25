@@ -9,27 +9,6 @@ import pytest
 from .. import util, discovery
 from ._pytest_item import parse_item
 
-#note: this must match testlauncher.py
-def patch_translate_non_printable():
-    import _pytest.compat
-    translate_non_printable =  getattr(_pytest.compat, "_translate_non_printable", None)
-
-    if translate_non_printable:
-        def _translate_non_printable_patched(s):
-            s = translate_non_printable(s)
-            s = s.replace(':', '/:')  # pytest testcase not found error and VS TestExplorer FQN parsing
-            s = s.replace('.', '_')   # VS TestExplorer FQN parsing
-            s = s.replace('\n', '/n') # pytest testcase not found error 
-            s = s.replace('\\', '/')  # pytest testcase not found error, fixes cases (actual backslash followed by n)
-            s = s.replace('\r', '/r') # pytest testcase not found error
-            return s
-
-        _pytest.compat._translate_non_printable = _translate_non_printable_patched
-    else:
-        print("ERROR: failed to patch pytest, _pytest.compat._translate_non_printable")
-
-patch_translate_non_printable()
-
 def discover(pytestargs=None, hidestdio=False,
              _pytest_main=pytest.main, _plugin=None, **_ignored):
     """Return the results of test discovery."""

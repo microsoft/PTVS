@@ -116,7 +116,6 @@ def run(testRunner, coverage_file, test_file, args):
 
         if testRunner == 'pytest':
             import pytest
-            patch_translate_non_printable()
             _plugin = TestCollector()
             pytest.main(args, [_plugin])
         else:
@@ -129,26 +128,6 @@ def run(testRunner, coverage_file, test_file, args):
             cov.stop()
             cov.save()
             cov.xml_report(outfile = coverage_file + '.xml', omit=__file__)
-
-#note: this must match adapter\pytest\_discovery.py
-def patch_translate_non_printable():
-    import _pytest.compat
-    translate_non_printable =  getattr(_pytest.compat, "_translate_non_printable")
-
-    if translate_non_printable:
-        def _translate_non_printable_patched(s):
-            s = translate_non_printable(s)
-            s = s.replace(':', '/:')  # pytest testcase not found error and VS TestExplorer FQN parsing
-            s = s.replace('.', '_')   # VS TestExplorer FQN parsing
-            s = s.replace('\n', '/n') # pytest testcase not found error 
-            s = s.replace('\\', '/')  # pytest testcase not found error, fixes cases (actual backslash followed by n)
-            s = s.replace('\r', '/r') # pytest testcase not found error
-            return s
-
-        _pytest.compat._translate_non_printable = _translate_non_printable_patched
-    else:
-        print("ERROR: failed to patch pytest, _pytest.compat._translate_non_printable")
-
 
 class TestCollector(object):
     """This is a pytest plugin that prevents notfound errors from ending execution of tests."""
