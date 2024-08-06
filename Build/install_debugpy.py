@@ -59,6 +59,12 @@ def _download_and_extract(root, url, version):
 def main(root, ver):
     data = _get_package_data()
 
+    # We don't yank individual files in our releases; either the whole release
+    # is yanked or it isn't. So go through all releases remove all yanked ones.
+    for release in list(data["releases"].keys()):
+        if any(r["yanked"] for r in data["releases"][release]):
+            del data["releases"][release]
+
     # if version is "latest", use the max version from the data
     if ver == "latest":
         ver = max(data["releases"].keys(), key=version_parser)
