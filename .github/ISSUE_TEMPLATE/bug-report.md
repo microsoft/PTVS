@@ -2,7 +2,7 @@
 name: Bug Report
 about: Create a bug report to help us improve your Python experience in Visual Studio
 title: ''
-labels: needs triage
+labels: needs repro
 assignees: ''
 
 ---
