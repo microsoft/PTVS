@@ -2,7 +2,7 @@
 name: Questions and Help
 about: Ask questions or request help
 title: ''
-labels: needs repro, question
+labels: ''
 assignees: ''
 
 ---
