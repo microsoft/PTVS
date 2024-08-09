@@ -140,7 +140,7 @@ class TestCollector(object):
         self.patch_collect_test_notfound(collector)
 
     def patch_collect_test_notfound(self, collector):
-        originalCollect = getattr(collector, "collect")
+        originalCollect = getattr(collector, "collect", None)
        
         if not originalCollect:
             print("ERROR: failed to patch pytest, collector.collect")
