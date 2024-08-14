@@ -30,6 +30,10 @@ param (
     # The version of debugpy we should download, defaults to "latest"
     [Parameter()]
     [string] $debugpyVersion = "latest", 
+
+    # The version of etwtrace we should download, defaults to "latest"
+    [Parameter()]
+    [string] $etwtraceVersion = "latest",
     
     # Run in interactive mode for azure feed authentication, defaults to false
     [Parameter()]
@@ -226,6 +230,9 @@ try {
         }
     }
     "Installed Debugpy $installedDebugpyVersion"
+
+    # TODO: download and install etwtrace (using $etwtraceVersion) and print out the installed version
+    # Once etwtrace is up on PyPi, refactor install_debugpy.py to work for any package
 
     # write debugpy version out to $buildroot\build\debugpy-version.txt, since that file is used by Debugger.csproj and various other classes
     Set-Content -NoNewline -Force -Path "$buildroot\build\debugpy-version.txt" -Value $installedDebugpyVersion

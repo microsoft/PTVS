@@ -128,6 +128,19 @@
       <FileWrites Include="@(DebugPyFiles)" />
     </ItemGroup>
   </Target>
+    <Target Name="_IncludeEtwTrace" BeforeTargets="AssignTargetPaths;GetVSIXSourceItems">
+    <ItemGroup>
+      <EtwTraceFiles Include="$(PackagesPath)etwtrace\**\*" />
+      <EtwTraceFiles>
+        <IncludeInVSIX>true</IncludeInVSIX>
+        <Link>etwtrace\%(RecursiveDir)%(Filename)%(Extension)</Link>
+        <VSIXSubPath>etwtrace\%(RecursiveDir)</VSIXSubPath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </EtwTraceFiles>
+      <Content Include="@(EtwTraceFiles)" />
+      <FileWrites Include="@(EtwTraceFiles)" />
+    </ItemGroup>
+  </Target>
   <Target Name="_UpdateDebugPyVersion" AfterTargets="PrepareForBuild" Condition="'$(Language)' == 'C#'" Inputs="$(BuildRoot)\Python\Product\Debugger\DebugPyVersion.cs" Outputs="$(IntermediateOutputPath)\DebugPyVersion.g.cs">
     <ItemGroup>
       <_DebugPyVersionOldItems Include="@(Compile)" Condition="'%(Filename)' == 'DebugPyVersion'" />
