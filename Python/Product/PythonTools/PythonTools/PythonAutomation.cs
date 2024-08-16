@@ -189,26 +189,6 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        string IPythonInteractiveOptions.CompletionMode {
-            get {
-                return CurrentOptions.CompletionMode.ToString();
-            }
-            set {
-                ReplIntellisenseMode mode;
-                if (Enum.TryParse(value, out mode)) {
-                    CurrentOptions.CompletionMode = mode;
-                    SaveSettingsToStorage();
-                } else {
-                    throw new InvalidOperationException(
-                        String.Format(
-                            "Bad intellisense mode, must be one of: {0}",
-                            String.Join(", ", Enum.GetNames(typeof(ReplIntellisenseMode)))
-                        )
-                    );
-                }
-            }
-        }
-
         string IPythonInteractiveOptions.StartupScripts {
             get {
                 return CurrentOptions.Scripts;
