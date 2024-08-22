@@ -41,10 +41,6 @@ namespace Microsoft.PythonTools.Options {
             try {
                 scriptsTextBox.Text = _options.Scripts;
                 useSmartHistoryCheckBox.Checked = _options.UseSmartHistory;
-                neverEvaluateButton.Checked = _options.CompletionMode == Repl.ReplIntellisenseMode.NeverEvaluate;
-                evaluateNoCallsButton.Checked = _options.CompletionMode == Repl.ReplIntellisenseMode.DontEvaluateCalls;
-                alwaysEvaluateButton.Checked = _options.CompletionMode == Repl.ReplIntellisenseMode.AlwaysEvaluate;
-                liveCompletionsOnlyCheckBox.Checked = _options.LiveCompletionsOnly;
             } finally {
                 _changing = false;
             }
@@ -59,21 +55,6 @@ namespace Microsoft.PythonTools.Options {
         private void UseSmartHistory_CheckedChanged(object sender, EventArgs e) {
             if (!_changing) {
                 _options.UseSmartHistory = ((CheckBox)sender).Checked;
-            }
-        }
-
-        private void CompletionMode_CheckedChanged(object sender, EventArgs e) {
-            if (!_changing) {
-                _options.CompletionMode =
-                    neverEvaluateButton.Checked ? Repl.ReplIntellisenseMode.NeverEvaluate :
-                    evaluateNoCallsButton.Checked ? Repl.ReplIntellisenseMode.DontEvaluateCalls :
-                    Repl.ReplIntellisenseMode.AlwaysEvaluate;
-            }
-        }
-
-        private void LiveCompletionsOnly_CheckedChanged(object sender, EventArgs e) {
-            if (!_changing) {
-                _options.LiveCompletionsOnly = ((CheckBox)sender).Checked;
             }
         }
 

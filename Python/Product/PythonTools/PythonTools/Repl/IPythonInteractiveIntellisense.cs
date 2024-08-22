@@ -25,7 +25,6 @@ using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.PythonTools.Repl {
     interface IPythonInteractiveIntellisense {
-        bool LiveCompletionsOnly { get; }
         IEnumerable<KeyValuePair<string, string>> GetAvailableScopesAndPaths();
         Task<CompletionResult[]> GetMemberNamesAsync(string text, CancellationToken ct);
         Task<OverloadDoc[]> GetSignatureDocumentationAsync(string text, CancellationToken ct);

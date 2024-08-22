@@ -77,11 +77,6 @@ namespace Microsoft.PythonTools.Options {
             set;
         }
 
-        string CompletionMode {
-            get;
-            set;
-        }
-
         string StartupScripts {
             get;
             set;
