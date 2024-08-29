@@ -97,6 +97,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private bool _workspaceFoldersSupported = false;
         private bool _isDebugging = LanguageServer.IsDebugging();
         private bool _sentInitialWorkspaceFolders = false;
+        private List<WorkspaceFolder> _workspaceFolders = new List<WorkspaceFolder>();
         private FileWatcher.Listener _fileListener;
         private static TaskCompletionSource<int> _readyTcs = new System.Threading.Tasks.TaskCompletionSource<int>();
         private bool _loaded = false;
@@ -200,6 +201,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             customTarget.WorkspaceFolderChangeRegistered += OnWorkspaceFolderWatched;
             customTarget.AnalysisComplete += OnAnalysisComplete;
             customTarget.WorkspaceConfiguration += OnWorkspaceConfiguration;
+            customTarget.WorkspaceFolders += OnWorkspaceFolders;
             await StartAsync.InvokeAsync(this, EventArgs.Empty);
         }
 
@@ -230,6 +232,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
             // Convert into an array for serialization
             args.requestResult = result.ToArray();
+        }
+
+        private async Task OnWorkspaceFolders(object sender, WorkspaceFolders.WorkspaceFoldersArgs args) {
+            // Return our current list of workspace folders
+            args.requestResult = this._workspaceFolders;
         }
 
         public async Task OnServerInitializedAsync() {
@@ -592,6 +599,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 // Send just this workspace folder. Assumption here is that the language client will be destroyed/recreated on
                 // each workspace open
                 var folder = new WorkspaceFolder { uri = new System.Uri(WorkspaceService.CurrentWorkspace.Location), name = WorkspaceService.CurrentWorkspace.GetName() };
+                this._workspaceFolders.Add(folder);
                 await InvokeDidChangeWorkspaceFoldersAsync(new WorkspaceFolder[] { folder }, new WorkspaceFolder[0]);
             }
         }
@@ -607,6 +615,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                         await InvokeDidChangeWorkspaceFoldersAsync(new WorkspaceFolder[0], folders.ToArray());
                     }
                 });
+                this._workspaceFolders.Clear();
                 _workspaceFoldersSupported = false;
                 IsInitialized = false;
                 _sentInitialWorkspaceFolders = false;
@@ -620,6 +629,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     // If workspace folders are supported, then send our workspace folders
                     var folders = from n in this.ProjectContextProvider.ProjectNodes
                                   select new WorkspaceFolder { uri = new System.Uri(n.BaseURI.Directory), name = n.Name };
+                    this._workspaceFolders = new List<WorkspaceFolder>(folders);
                     if (folders.Any()) {
                         await InvokeDidChangeWorkspaceFoldersAsync(folders.ToArray(), new WorkspaceFolder[0]);
                     }
