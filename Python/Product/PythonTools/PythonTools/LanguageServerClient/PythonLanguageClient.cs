@@ -640,9 +640,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private void OnProjectAdded(EnvDTE.Project project) {
             if (_workspaceFoldersSupported) {
                 JoinableTaskContext.Factory.RunAsync(async () => {
-                    var pythonProject = project as PythonProjectNode;
+                    var pythonProject = project.GetPythonProject() as PythonProjectNode;
                     if (pythonProject != null) {
                         var folder = new WorkspaceFolder { uri = new System.Uri(pythonProject.BaseURI.Directory), name = project.Name };
+                        this._workspaceFolders.Add(folder);
                         await InvokeDidChangeWorkspaceFoldersAsync(new WorkspaceFolder[] { folder }, new WorkspaceFolder[0]);
                     }
                 });
@@ -652,9 +653,13 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private void OnProjectRemoved(EnvDTE.Project project) {
             if (_workspaceFoldersSupported) {
                 JoinableTaskContext.Factory.RunAsync(async () => {
-                    var pythonProject = project as PythonProjectNode;
+                    var pythonProject = project.GetPythonProject() as PythonProjectNode;
                     if (pythonProject != null) {
                         var folder = new WorkspaceFolder { uri = new System.Uri(pythonProject.BaseURI.Directory), name = project.Name };
+                        var entry = this._workspaceFolders.Find((f) => f.uri.ToString() == folder.uri.ToString());
+                        if (entry != null) {
+                            this._workspaceFolders.Remove(entry);
+                        }
                         await InvokeDidChangeWorkspaceFoldersAsync(new WorkspaceFolder[0], new WorkspaceFolder[] { folder });
                     }
                 });
