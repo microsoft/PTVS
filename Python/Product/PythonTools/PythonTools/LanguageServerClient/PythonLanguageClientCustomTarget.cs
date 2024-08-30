@@ -29,6 +29,7 @@ using Task = System.Threading.Tasks.Task;
 
 using Microsoft.PythonTools.LanguageServerClient.WorkspaceConfiguration;
 using Microsoft.PythonTools.LanguageServerClient.FileWatcher;
+using Microsoft.PythonTools.LanguageServerClient.WorkspaceFolders;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
     internal class PythonLanguageClientCustomTarget {
@@ -88,6 +89,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         /// Event fired when pylance sends a workspace/configuration request
         /// </summary>
         internal event AsyncEventHandler<ConfigurationArgs> WorkspaceConfiguration;
+
+        /// <summary>
+        /// Event fired when pylance sends a workspace/workspaceFolders request
+        /// </summary>
+        internal event AsyncEventHandler<WorkspaceFoldersArgs> WorkspaceFolders;
 
         [JsonRpcMethod("telemetry/event")]
         public void OnTelemetryEvent(JToken arg) {
@@ -175,5 +181,23 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 return null;
             }
         }
+
+        [JsonRpcMethod("workspace/workspaceFolders")]
+        public async Task<object> OnWorkspaceFolders() {
+            try {
+                // Should be no arguments (see request here: https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workspace_workspaceFolders)
+                if (this.WorkspaceFolders != null) {
+                    var eventArgs = new WorkspaceFoldersArgs { requestResult = null };
+                    await this.WorkspaceFolders.InvokeAsync(this, eventArgs);
+                    return eventArgs.requestResult;
+                }
+                return null;
+            } catch {
+                return null;
+            }
+        }
+    }
+
+    internal class EmptyEventArgs {
     }
 }
