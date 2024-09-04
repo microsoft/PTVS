@@ -137,5 +137,18 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ProvideRawCodeBaseAttribute.cs" />
   </ItemGroup>
+  <Target Name="_IncludeEtwTrace" BeforeTargets="AssignTargetPaths;GetVSIXSourceItems">
+    <ItemGroup>
+      <EtwTraceFiles Include="$(PackagesPath)etwtrace\**\*" />
+      <EtwTraceFiles>
+        <IncludeInVSIX>true</IncludeInVSIX>
+        <Link>etwtrace\%(RecursiveDir)%(Filename)%(Extension)</Link>
+        <VSIXSubPath>etwtrace\%(RecursiveDir)</VSIXSubPath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </EtwTraceFiles>
+      <Content Include="@(EtwTraceFiles)" />
+      <FileWrites Include="@(EtwTraceFiles)" />
+    </ItemGroup>
+  </Target>
   <Import Project="..\ProjectAfter.settings" />
 </Project>
