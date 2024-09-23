@@ -23,4 +23,3 @@ steps:
       PathtoPublish: $(Build.StagingDirectory)\release\bootstrapper
       ArtifactName: bootstrapper
       sbomEnabled: false
-      codeSignValidationEnabled: false # disabled because we don't ship the bootstrapper, it's only for our test team
