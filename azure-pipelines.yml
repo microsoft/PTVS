@@ -116,6 +116,11 @@ extends:
         # If the pipeline publishes artifacts, use `templateContext` to define the artifacts.
         # This will enable 1ES PT to run SDL analysis tools on the artifacts and then upload them.
         templateContext:
+          # Disable code signing validation because we don't ship ANY of the artifacts that we publish.
+          # The only released artifacts are uploaded via the 1ES.MicroBuildVstsDrop@1 below.
+          sdl:
+            codeSignValidation:
+              enabled: false
           outputs:
           - output: pipelineArtifact
             displayName: 'Publish build artifact: binaries'
