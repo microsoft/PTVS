@@ -1,17 +1,21 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<LCX SchemaVersion="6.0" Name="D:\a\_work\1\b\raw\binaries\Snippets\Python\arg_switch.snippet" PsrId="210" SrcCul="en-US" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx" TgtCul="ko-KR">
+<LCX SchemaVersion="6.0" Name="E:\A\_work\21\b\raw\binaries\Snippets\Python\arg_switch.snippet" PsrId="210" FileType="1" SrcCul="en-US" TgtCul="ko-KR" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx">
   <OwnedComments>
     <Cmt Name="Dev" />
     <Cmt Name="LcxAdmin" />
     <Cmt Name="Rccx" />
   </OwnedComments>
+  <Settings Name="@SettingsPath@\default.lss" Type="Lss" />
   <Item ItemId=";&lt;Description&gt;" ItemType="0" PsrId="210" Leaf="false">
     <Disp Icon="Str" Disp="true" LocTbl="false" />
     <Item ItemId="0;cdf30125985a60ac677caefc318833e8" ItemType="42;XML:Text" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[Code snippet for a switch argument for an argparse parser.]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[argparse 파서의 스위치 인수에 대한 코드 조각입니다.]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="3" />
+      <Disp Icon="Str" />
     </Item>
   </Item>
   <Item ItemId=";&lt;Title&gt;" ItemType="0" PsrId="210" Leaf="false">
@@ -19,8 +23,11 @@
     <Item ItemId="0;277d72dbe38cd017f4b02e7448bf146e" ItemType="42;XML:Text" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[argparse switch argument]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[argparse 스위치 인수]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="1" />
+      <Disp Icon="Str" />
     </Item>
   </Item>
   <Item ItemId=";&lt;ToolTip&gt;" ItemType="0" PsrId="210" Leaf="false">
@@ -28,20 +35,29 @@
     <Item ItemId="0;69ee1bdf53fb0aeed761c52c8d49693d" ItemType="42;XML:Text" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[Short argument name, typically only a single letter.]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[짧은 인수 이름으로, 일반적으로 단일 문자만 사용됩니다.]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="5" />
+      <Disp Icon="Str" />
     </Item>
     <Item ItemId="0;75a55c928c79bdb03057db67af054e9e" ItemType="42;XML:Text" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[Long argument name, typically one or two words separated by a hyphen.]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[긴 인수 이름으로, 일반적으로 하이픈으로 구분된 하나 또는 두 개의 단어입니다.]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="7" />
+      <Disp Icon="Str" />
     </Item>
     <Item ItemId="0;e7b23931982c94194e3886cd424afb72" ItemType="42;XML:Text" PsrId="210" Leaf="true">
       <Str Cat="AppData">
         <Val><![CDATA[Description of the argument to display when called with --help/-h.]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[--help/-h를 사용하여 호출할 때 표시할 인수에 대한 설명입니다.]]></Val>
+        </Tgt>
       </Str>
-      <Disp Icon="Str" Order="9" />
+      <Disp Icon="Str" />
     </Item>
   </Item>
-<Settings Name="@SettingsPath@\default.lss" Type="Lss" /></LCX>
+</LCX>
