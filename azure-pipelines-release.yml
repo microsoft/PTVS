@@ -63,11 +63,11 @@ extends:
           displayName: 'Create Insertion PR'
           inputs:
             TargetBranch: $(VisualStudioBranch)
-            InsertionTopicBranch: 'dev/ptvs/insertions/$(VisualStudioBranch)-$(Build.SourceBranchName)-$(Build.BuildNumber)'
+            InsertionTopicBranch: 'dev/ptvs/insertions/$(VisualStudioBranch)-$(Build.SourceBranchName)-$(resources.pipeline.PTVS-Build.runName)'
             TeamName: PTVS
             TeamEmail: 'pyvs@microsoft.com'
-            ComponentJsonValues: 'Microsoft.PythonTools.vsman=https://vsdrop.corp.microsoft.com/file/v1/Products/DevDiv/microsoft/PTVS/$(Build.SourceBranchName)/$(Build.BuildNumber);Microsoft.PythonTools.vsman'
-            InsertionPayloadName: 'ptvs $(Build.SourceBranchName) $(Build.BuildNumber)'
+            ComponentJsonValues: 'Microsoft.PythonTools.vsman=https://vsdrop.corp.microsoft.com/file/v1/Products/DevDiv/microsoft/PTVS/$(Build.SourceBranchName)/$(resources.pipeline.PTVS-Build.runName);Microsoft.PythonTools.vsman'
+            InsertionPayloadName: 'ptvs $(Build.SourceBranchName) $(resources.pipeline.PTVS-Build.runName)'
             InsertionReviewers: 'pyvs@microsoft.com,plseng@microsoft.com,bschnurr@microsoft.com,advolker@microsoft.com,stellahuang@microsoft.com'
             InsertionBuildPolicy: 'Request Perf DDRITs'
             AutoCompletePR: true
