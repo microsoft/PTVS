@@ -1,0 +1,78 @@
+# This pipeline is used to release PTVS to Visual Studio via an insertion PR.
+# The pipeline extends v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates from 1esPipelines repository defined in resources section.
+
+parameters:
+# The Visual Studio branch we are inserting into.
+# This will almost always be main, but can be changed to a release branch if needed.
+- name: VisualStudioBranch
+  displayName: Visual Studio Branch
+  type: string
+  default: main
+
+# build number format 
+name: $(date:yy)$(DayOfYear)$(rev:.r)
+
+# disable CI and PR triggers
+trigger: none
+pr: none
+
+variables: 
+  - name: VisualStudioBranch
+    value: ${{ parameters.VisualStudioBranch }}
+
+  # https://devdiv.visualstudio.com/DevDiv/_library?itemType=VariableGroups&view=VariableGroupView&variableGroupId=381&path=PTVS-Dev17
+  - group: PTVS-Dev17
+
+resources:
+  repositories:
+  - repository: 1ESPipelineTemplates
+    type: git
+    name: 1ESPipelineTemplates/1ESPipelineTemplates
+    ref: refs/tags/release
+  
+  # Trigger this pipeline when the PTVS-Build pipeline completes.
+  pipelines:
+  - pipeline: PTVS-Build
+    source: PTVS-Build
+    trigger:
+      # Only trigger on builds from main or release/* branches
+      branches:
+        include:
+        - main
+        - release/*
+      # Only trigger on builds that are real signed AND consume pylance stable
+      tags:
+        - Real signed
+        - Pylance Stable
+
+extends:
+  template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
+  parameters:
+    pool:
+      name: VSEngSS-MicroBuild2022-1ES
+      os: windows
+    stages:
+    - stage: stage
+      jobs:
+      - job: job
+        steps:
+        # https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_wiki/wikis/DevDiv.wiki/629/Automated-VS-Insertion
+        - task: ms-vseng.MicroBuildShipTasks.55100717-a81d-45ea-a363-b8fe3ec375ad.MicroBuildInsertVsPayload@4
+          displayName: 'Create Insertion PR'
+          inputs:
+            TargetBranch: $(VisualStudioBranch)
+            InsertionTopicBranch: 'dev/ptvs/insertions/$(VisualStudioBranch)-$(Build.SourceBranchName)-$(Build.BuildNumber)'
+            TeamName: PTVS
+            TeamEmail: 'pyvs@microsoft.com'
+            # The payload below is uploaded by the PTVS-Build pipeline 
+            ComponentJsonValues: 'Microsoft.PythonTools.vsman=https://vsdrop.corp.microsoft.com/file/v1/Products/DevDiv/microsoft/PTVS/$(Build.SourceBranchName)/$(Build.BuildNumber);Microsoft.PythonTools.vsman'
+            InsertionPayloadName: 'ptvs $(Build.SourceBranchName) $(Build.BuildNumber)'
+            InsertionReviewers: 'pyvs@microsoft.com,plseng@microsoft.com,bschnurr@microsoft.com,advolker@microsoft.com,stellahuang@microsoft.com'
+            InsertionBuildPolicy: 'Request Perf DDRITs'
+            AutoCompletePR: true
+            AutoCompleteMergeStrategy: Squash
+            AddCommitsToPR: false
+            LinkWorkItemsToPR: false
+
+        
+
