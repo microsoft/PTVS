@@ -56,7 +56,9 @@ extends:
       jobs:
       - job: job
         steps:
-        # https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_wiki/wikis/DevDiv.wiki/629/Automated-VS-Insertion
+        # Insert the payload uploaded by the PTVS-Build pipeline into Visual Studio.
+        # We don't need to download pipeline artifacts here, because the payload is uploaded to a drop location.
+        # For more info, see https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_wiki/wikis/DevDiv.wiki/629/Automated-VS-Insertion.
         - task: ms-vseng.MicroBuildShipTasks.55100717-a81d-45ea-a363-b8fe3ec375ad.MicroBuildInsertVsPayload@4
           displayName: 'Create Insertion PR'
           inputs:
@@ -64,7 +66,6 @@ extends:
             InsertionTopicBranch: 'dev/ptvs/insertions/$(VisualStudioBranch)-$(Build.SourceBranchName)-$(Build.BuildNumber)'
             TeamName: PTVS
             TeamEmail: 'pyvs@microsoft.com'
-            # The payload below is uploaded by the PTVS-Build pipeline 
             ComponentJsonValues: 'Microsoft.PythonTools.vsman=https://vsdrop.corp.microsoft.com/file/v1/Products/DevDiv/microsoft/PTVS/$(Build.SourceBranchName)/$(Build.BuildNumber);Microsoft.PythonTools.vsman'
             InsertionPayloadName: 'ptvs $(Build.SourceBranchName) $(Build.BuildNumber)'
             InsertionReviewers: 'pyvs@microsoft.com,plseng@microsoft.com,bschnurr@microsoft.com,advolker@microsoft.com,stellahuang@microsoft.com'
