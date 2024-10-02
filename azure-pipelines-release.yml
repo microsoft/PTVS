@@ -44,7 +44,6 @@ resources:
     trigger:
       # Only trigger on builds from main. Builds from release are manually triggered.
       branches:
-        include:
         - main
       # Only trigger on builds with all of the following tags
       tags:
