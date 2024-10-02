@@ -65,6 +65,10 @@ extends:
         # we don't need to checkout any source code
         - checkout: none
 
+        # tag the release pipeline with the PTVS-Build build number that produced the artifacts that will be released
+        - script: echo "##vso[build.addbuildtag]PTVS-Build $(resources.pipeline.PTVS-Build.runName)"
+          displayName: 'Add PTVS-Build tag'
+
         # Insert the payload uploaded by the PTVS-Build pipeline into Visual Studio.
         # We don't need to download pipeline artifacts here, because the payload is uploaded to a drop location.
         # For more info, see https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_wiki/wikis/DevDiv.wiki/629/Automated-VS-Insertion.
