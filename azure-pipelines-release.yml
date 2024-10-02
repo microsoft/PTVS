@@ -57,16 +57,17 @@ extends:
       name: VSEngSS-MicroBuild2022-1ES
       os: windows
     stages:
-    - stage: stage
+    - stage: Release
       jobs:
-      - job: job
+      - job: Release
         steps:
 
         # we don't need to checkout any source code
         - checkout: none
 
         # tag the release pipeline with the PTVS-Build build number that produced the artifacts that will be released
-        - script: echo "##vso[build.addbuildtag]PTVS-Build $(resources.pipeline.PTVS-Build.runName)"
+        - script: |
+            echo ##vso[build.addbuildtag]PTVS-Build $(resources.pipeline.PTVS-Build.runName)
           displayName: 'Add PTVS-Build tag'
 
         # Insert the payload uploaded by the PTVS-Build pipeline into Visual Studio.
