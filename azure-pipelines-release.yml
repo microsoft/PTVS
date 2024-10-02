@@ -30,17 +30,24 @@ resources:
     name: 1ESPipelineTemplates/1ESPipelineTemplates
     ref: refs/tags/release
   
-  # Trigger this pipeline when the PTVS-Build pipeline completes.
+  # Add the PTVS-Build pipeline as a resource
   pipelines:
   - pipeline: PTVS-Build
     source: PTVS-Build
+
+    # When run manually, only consume builds with all of the following tags
+    tags:
+      - Real signed
+      - Pylance Stable
+
+    # Trigger this pipeline when the PTVS-Build pipeline completes.
     trigger:
       # Only trigger on builds from main or release/* branches
       branches:
         include:
         - main
         - release/*
-      # Only trigger on builds that are real signed AND consume pylance stable
+      # Only trigger on builds with all of the following tags
       tags:
         - Real signed
         - Pylance Stable
@@ -56,6 +63,10 @@ extends:
       jobs:
       - job: job
         steps:
+
+        # we don't need to checkout any source code
+        - checkout: none
+
         # Insert the payload uploaded by the PTVS-Build pipeline into Visual Studio.
         # We don't need to download pipeline artifacts here, because the payload is uploaded to a drop location.
         # For more info, see https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_wiki/wikis/DevDiv.wiki/629/Automated-VS-Insertion.
