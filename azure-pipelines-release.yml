@@ -42,11 +42,10 @@ resources:
 
     # Trigger this pipeline when the PTVS-Build pipeline completes.
     trigger:
-      # Only trigger on builds from main or release/* branches
+      # Only trigger on builds from main. Builds from release are manually triggered.
       branches:
         include:
         - main
-        - release/*
       # Only trigger on builds with all of the following tags
       tags:
         - Real signed
