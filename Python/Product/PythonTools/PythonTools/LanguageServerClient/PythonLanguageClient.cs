@@ -198,7 +198,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             var customTarget = new PythonLanguageClientCustomTarget(Site, JoinableTaskContext);
             CustomMessageTarget = customTarget;
             customTarget.WatchedFilesRegistered += WatchedFilesRegistered;
-            customTarget.WorkspaceFolderChangeRegistered += OnWorkspaceFolderWatched;
+            customTarget.WorkspaceFolderChangeRegistered += OnWorkspaceOrSolutionOpened;
             customTarget.AnalysisComplete += OnAnalysisComplete;
             customTarget.WorkspaceConfiguration += OnWorkspaceConfiguration;
             customTarget.WorkspaceFolders += OnWorkspaceFolders;
@@ -242,7 +242,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public async Task OnServerInitializedAsync() {
             IsInitialized = true;
             // Set _workspaceFoldersSupported to true and send to either workspace open or solution open
-            OnWorkspaceFolderWatched(this, EventArgs.Empty);
+            await OnWorkspaceOrSolutionOpened(this, EventArgs.Empty);
         }
 
         public Task OnServerInitializeFailedAsync(Exception e) {
@@ -464,7 +464,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 // global settings here.
                 Settings = null
             }).DoNotWait();
-
         }
 
         private void OnAnalysisComplete(object sender, EventArgs e) {
@@ -509,17 +508,13 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             return true;
         }
 
-        private void OnWorkspaceOrSolutionOpened() {
-            if (WorkspaceService.CurrentWorkspace != null) {
-                OnWorkspaceOpening(this, EventArgs.Empty).DoNotWait();
-            } else {
-                OnSolutionOpened();
-            }
-        }
-
-        private void OnWorkspaceFolderWatched(object sender, EventArgs e) {
+        private async Task OnWorkspaceOrSolutionOpened(object sender, EventArgs e) {
             _workspaceFoldersSupported = true;
-            OnWorkspaceOrSolutionOpened();
+            if (WorkspaceService.CurrentWorkspace != null) {
+                await OnWorkspaceOpening(this, EventArgs.Empty);
+            } else {
+                await OnSolutionOpenedAsync();
+            }
         }
 
         private void WatchedFilesRegistered(object sender, DidChangeWatchedFilesRegistrationOptions e) {
@@ -593,7 +588,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             return Tuple.Create(data, true);
         }
 
-        private async Task OnWorkspaceOpening(object sende, EventArgs e) {
+        private async Task OnWorkspaceOpening(object sender, EventArgs e) {
             if (_workspaceFoldersSupported && IsInitialized && !_sentInitialWorkspaceFolders && WorkspaceService.CurrentWorkspace != null) {
                 _sentInitialWorkspaceFolders = true;
                 // Send just this workspace folder. Assumption here is that the language client will be destroyed/recreated on
@@ -623,17 +618,19 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private void OnSolutionOpened() {
-            if (_workspaceFoldersSupported && IsInitialized && !_sentInitialWorkspaceFolders) {
-                _sentInitialWorkspaceFolders = true;
-                JoinableTaskContext.Factory.RunAsync(async () => {
-                    // If workspace folders are supported, then send our workspace folders
-                    var folders = from n in this.ProjectContextProvider.ProjectNodes
-                                  select new WorkspaceFolder { uri = new System.Uri(n.BaseURI.Directory), name = n.Name };
-                    this._workspaceFolders = new List<WorkspaceFolder>(folders);
-                    if (folders.Any()) {
-                        await InvokeDidChangeWorkspaceFoldersAsync(folders.ToArray(), new WorkspaceFolder[0]);
-                    }
-                });
+            if (_workspaceFoldersSupported && IsInitialized && !_sentInitialWorkspaceFolders) { 
+                JoinableTaskContext.Factory.RunAsync(OnSolutionOpenedAsync);
+            }
+        }
+
+        private async Task OnSolutionOpenedAsync() {
+            _sentInitialWorkspaceFolders = true;
+            // If workspace folders are supported, then send our workspace folders
+            var folders = from n in this.ProjectContextProvider.ProjectNodes
+                          select new WorkspaceFolder { uri = new System.Uri(n.BaseURI.Directory), name = n.Name };
+            this._workspaceFolders = new List<WorkspaceFolder>(folders);
+            if (folders.Any()) {
+                await InvokeDidChangeWorkspaceFoldersAsync(folders.ToArray(), new WorkspaceFolder[0]);
             }
         }
 

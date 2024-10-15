@@ -70,8 +70,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         /// Event fired when client/registerCapability didChangeWorkspaceFolders is called
         /// Has to be internal so JsonRpc doesn't register this as a method.
         /// </summary>
-        internal event EventHandler WorkspaceFolderChangeRegistered;
-
+        internal event AsyncEventHandler WorkspaceFolderChangeRegistered;
+        
         /// <summary>
         /// Event fired when client/registerCapability didChangeWatchedFiles is called.
         /// Has to be internal so JsonRpc doesn't register this as a method.
