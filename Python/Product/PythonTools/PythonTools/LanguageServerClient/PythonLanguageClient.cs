@@ -22,9 +22,6 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Common.Core.Disposables;
-using Microsoft.PythonTools.Common.Infrastructure;
-using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.LanguageServerClient.FileWatcher;
@@ -99,7 +96,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private bool _sentInitialWorkspaceFolders = false;
         private List<WorkspaceFolder> _workspaceFolders = new List<WorkspaceFolder>();
         private FileWatcher.Listener _fileListener;
-        private static TaskCompletionSource<int> _readyTcs = new System.Threading.Tasks.TaskCompletionSource<int>();
+        private static TaskCompletionSource<int> _readyTcs = new TaskCompletionSource<int>();
         private bool _loaded = false;
         private Timer _deferredSettingsChangedTimer;
         private const int _defaultSettingsDelayMS = 2000;
@@ -138,7 +135,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             await JoinableTaskContext.Factory.SwitchToMainThreadAsync();
             CreateClientContexts();
 
-            _deferredSettingsChangedTimer = new Timer(OnDeferredSettingsChanged, state: null, Timeout.Infinite, Timeout.Infinite);
+            _deferredSettingsChangedTimer = new Timer(state => TriggerWorkspaceUpdateConfig(), state: null, Timeout.Infinite, Timeout.Infinite);
             _analysisOptions = Site.GetPythonToolsService().AnalysisOptions;
             _advancedEditorOptions = Site.GetPythonToolsService().AdvancedEditorOptions;
             _analysisOptions.Changed += OnSettingsChanged;
@@ -242,7 +239,16 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public async Task OnServerInitializedAsync() {
             IsInitialized = true;
             // Set _workspaceFoldersSupported to true and send to either workspace open or solution open
-            OnWorkspaceFolderWatched(this, EventArgs.Empty);
+            await TriggerWorkspaceUpdateConfig();
+        }
+
+        private Task TriggerWorkspaceUpdateConfig() {
+            return InvokeDidChangeConfigurationAsync(new LSP.DidChangeConfigurationParams() {
+                // If we pass null settings and workspace.configuration is supported, Pylance will ask
+                // us for per workspace configuration settings. Otherwise we can send
+                // default workspace settings here.
+                Settings = GetSettings()
+            });
         }
 
         public Task OnServerInitializeFailedAsync(Exception e) {
@@ -454,17 +460,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 _deferredSettingsChangedTimer.Change(_defaultSettingsDelayMS, Timeout.Infinite);
             } catch (ObjectDisposedException) {
             }
-        }
-
-        private void OnDeferredSettingsChanged(object state) {
-            Debug.WriteLine("deferred Settings Changed");
-            InvokeDidChangeConfigurationAsync(new LSP.DidChangeConfigurationParams() {
-                // If we pass null settings and workspace.configuration is supported, Pylance will ask
-                // us for per workspace configuration settings. Otherwise we can send
-                // global settings here.
-                Settings = null
-            }).DoNotWait();
-
         }
 
         private void OnAnalysisComplete(object sender, EventArgs e) {
