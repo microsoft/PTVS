@@ -472,7 +472,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private void PackageManager_InstalledFilesChanged(object sender, EventArgs e) {
             try {
-                _reanalyzeWorkspaceNotification.Change(500, Timeout.Infinite);
+                _reanalyzeWorkspaceNotification.Change(60000, Timeout.Infinite);
             } catch (ObjectDisposedException) {
             }
         }

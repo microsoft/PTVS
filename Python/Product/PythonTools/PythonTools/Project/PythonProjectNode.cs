@@ -301,7 +301,7 @@ namespace Microsoft.PythonTools.Project {
 
         private void PackageManager_InstalledFilesChanged(object sender, EventArgs e) {
             try {
-                _reanalyzeProjectNotification.Change(500, Timeout.Infinite);
+                _reanalyzeProjectNotification.Change(60000, Timeout.Infinite);
             } catch (ObjectDisposedException) {
             }
         }
