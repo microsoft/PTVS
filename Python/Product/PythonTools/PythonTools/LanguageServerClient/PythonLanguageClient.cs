@@ -590,14 +590,14 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             return Tuple.Create(data, true);
         }
 
-        private IEnumerable<WorkspaceFolder> GetFolders() {
+        private List<WorkspaceFolder> GetFolders() {
             if (WorkspaceService.CurrentWorkspace != null) {
                 var folder = new WorkspaceFolder { uri = new System.Uri(WorkspaceService.CurrentWorkspace.Location), name = WorkspaceService.CurrentWorkspace.GetName() };
                 return [folder];
             } else {
                 var folders = from n in this.ProjectContextProvider.ProjectNodes
                        select new WorkspaceFolder { uri = new System.Uri(n.BaseURI.Directory), name = n.Name };
-                return folders;
+                return folders.ToList();
             }
         }
 
