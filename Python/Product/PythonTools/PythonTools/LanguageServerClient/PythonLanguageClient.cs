@@ -243,9 +243,9 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private Task TriggerWorkspaceUpdateConfig() {
+            Debug.WriteLine("Settings Changed");
             return InvokeDidChangeConfigurationAsync(new LSP.DidChangeConfigurationParams() {
-                // If we pass null settings and workspace.configuration is supported, Pylance will ask
-                // us for per workspace configuration settings. Otherwise we can send
+                // Pylance will ask us for per workspace configuration settings. We can send
                 // default workspace settings here.
                 Settings = GetSettings()
             });
