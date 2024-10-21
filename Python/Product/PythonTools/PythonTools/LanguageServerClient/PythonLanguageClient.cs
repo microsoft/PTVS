@@ -238,7 +238,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         public async Task OnServerInitializedAsync() {
             IsInitialized = true;
-            // Set _workspaceFoldersSupported to true and send to either workspace open or solution open
             await TriggerWorkspaceUpdateConfig();
         }
 
@@ -335,9 +334,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                         removed = removed
                     }
                 });
-                   
-            // If we send workspace folder updates, we have to resend document opens
-            // await SendDocumentOpensAsync();
         }
 
         public Task<object> InvokeTextDocumentCompletionAsync(LSP.CompletionParams request, CancellationToken cancellationToken = default)
@@ -553,6 +549,12 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                                 capabilities["workspace"]["workspaceFolders"] = true;
                                 capabilities["workspace"]["didChangeWatchedFiles"]["dynamicRegistration"] = true;
                                 capabilities["workspace"]["configuration"] = true;
+                                
+                                var folders = GetFolders();
+                                Debug.Assert(folders.Any(), "no workspace or projects found");
+                                messageParams["workspaceFolders"] = JToken.FromObject(folders.ToArray());
+                                _sentInitialWorkspaceFolders = true;
+                                _workspaceFoldersSupported = true;
 
                                 // Root path and root URI should not be sent. They're deprecated and will
                                 // just confuse pylance with respect to what is the root folder. 
@@ -588,24 +590,35 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             return Tuple.Create(data, true);
         }
 
-        private async Task OnWorkspaceOpening(object sende, EventArgs e) {
+        private IEnumerable<WorkspaceFolder> GetFolders() {
+            if (WorkspaceService.CurrentWorkspace != null) {
+                var folder = new WorkspaceFolder { uri = new System.Uri(WorkspaceService.CurrentWorkspace.Location), name = WorkspaceService.CurrentWorkspace.GetName() };
+                return [folder];
+            } else {
+                var folders = from n in this.ProjectContextProvider.ProjectNodes
+                       select new WorkspaceFolder { uri = new System.Uri(n.BaseURI.Directory), name = n.Name };
+                return folders;
+            }
+        }
+
+        private async Task OnWorkspaceOpening(object sender, EventArgs e) {
             if (_workspaceFoldersSupported && IsInitialized && !_sentInitialWorkspaceFolders && WorkspaceService.CurrentWorkspace != null) {
                 _sentInitialWorkspaceFolders = true;
                 // Send just this workspace folder. Assumption here is that the language client will be destroyed/recreated on
                 // each workspace open
-                var folder = new WorkspaceFolder { uri = new System.Uri(WorkspaceService.CurrentWorkspace.Location), name = WorkspaceService.CurrentWorkspace.GetName() };
-                this._workspaceFolders.Add(folder);
-                await InvokeDidChangeWorkspaceFoldersAsync(new WorkspaceFolder[] { folder }, new WorkspaceFolder[0]);
+                var folders = GetFolders();
+                this._workspaceFolders= folders.ToList();
+                await InvokeDidChangeWorkspaceFoldersAsync(folders.ToArray(), new WorkspaceFolder[0]);
             }
         }
-
+        
+        // Note this is called for both openFolder and openProject modes
         private void OnSolutionClosing() {
             this._clientContexts.Clear();
             if (_workspaceFoldersSupported && IsInitialized && _sentInitialWorkspaceFolders) {
                 JoinableTaskContext.Factory.RunAsync(async () => {
                     // If workspace folders are supported, then send our workspace folders
-                    var folders = from n in this.ProjectContextProvider.ProjectNodes
-                                  select new WorkspaceFolder { uri = new System.Uri(n.BaseURI.Directory), name = n.Name };
+                    var folders = GetFolders();
                     if (folders.Any()) {
                         await InvokeDidChangeWorkspaceFoldersAsync(new WorkspaceFolder[0], folders.ToArray());
                     }
@@ -622,9 +635,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 _sentInitialWorkspaceFolders = true;
                 JoinableTaskContext.Factory.RunAsync(async () => {
                     // If workspace folders are supported, then send our workspace folders
-                    var folders = from n in this.ProjectContextProvider.ProjectNodes
-                                  select new WorkspaceFolder { uri = new System.Uri(n.BaseURI.Directory), name = n.Name };
-                    this._workspaceFolders = new List<WorkspaceFolder>(folders);
+                    var folders = GetFolders();
+                    this._workspaceFolders = folders.ToList();
                     if (folders.Any()) {
                         await InvokeDidChangeWorkspaceFoldersAsync(folders.ToArray(), new WorkspaceFolder[0]);
                     }
