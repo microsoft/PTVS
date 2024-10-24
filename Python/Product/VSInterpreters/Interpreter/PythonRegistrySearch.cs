@@ -188,9 +188,6 @@ namespace Microsoft.PythonTools.Interpreter {
                 return null; // Python 2.x is no longer supported.
             }
 
-            if (sysVersion.ToLanguageVersion() == PythonLanguageVersion.None) {
-                sysVersion = new Version(0, 0);
-            }
 
             if (!InterpreterArchitecture.TryParse(tagKey.GetValue("SysArchitecture", null) as string, out var arch)) {
                 arch = assumedArch;
