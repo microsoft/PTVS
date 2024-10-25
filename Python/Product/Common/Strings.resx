@@ -227,6 +227,15 @@ No files will be deleted from disk.</value>
   <data name="VirtualEnvCreationSucceeded" xml:space="preserve">
     <value>Virtual environment was successfully created at '{0}'</value>
   </data>
+	<data name="VirtualEnvUpdateSucceeded" xml:space="preserve">
+    <value>Virtualenv was successfully updated</value>
+  </data>
+  <data name="VirtualEnvUpdateFailedExitCode" xml:space="preserve">
+    <value>Virtualenv was not updated. Exit code: {1}</value>
+  </data>
+  <data name="VirtualEnvUpdateFailed" xml:space="preserve">
+    <value>Virtualenv update failed</value>
+  </data>
   <data name="WarningAnalysisNotCurrent" xml:space="preserve">
     <value>Warning: the completion database is currently not up to date. Intellisense may be incomplete.</value>
   </data>

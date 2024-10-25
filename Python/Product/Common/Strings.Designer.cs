@@ -8985,6 +8985,33 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Virtualenv update failed.
+        /// </summary>
+        public static string VirtualEnvUpdateFailed {
+            get {
+                return ResourceManager.GetString("VirtualEnvUpdateFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Virtualenv was not updated. Exit code: {1}.
+        /// </summary>
+        public static string VirtualEnvUpdateFailedExitCode {
+            get {
+                return ResourceManager.GetString("VirtualEnvUpdateFailedExitCode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Virtualenv was successfully updated.
+        /// </summary>
+        public static string VirtualEnvUpdateSucceeded {
+            get {
+                return ResourceManager.GetString("VirtualEnvUpdateSucceeded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cancel.
         /// </summary>
         public static string WaitForCompleteAnalysisDialog_Cancel {
