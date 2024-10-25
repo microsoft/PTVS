@@ -227,7 +227,7 @@ No files will be deleted from disk.</value>
   <data name="VirtualEnvCreationSucceeded" xml:space="preserve">
     <value>Virtual environment was successfully created at '{0}'</value>
   </data>
-	<data name="VirtualEnvUpdateSucceeded" xml:space="preserve">
+  <data name="VirtualEnvUpdateSucceeded" xml:space="preserve">
     <value>Virtualenv was successfully updated</value>
   </data>
   <data name="VirtualEnvUpdateFailedExitCode" xml:space="preserve">
