@@ -30,3 +30,9 @@ __pycache__/
 /Python/*.VC.db
 /node_modules/*
 *.binlog
+*.dll
+*.obj
+*.ilk
+*.log
+*.pch
+*.tlog
