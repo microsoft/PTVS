@@ -1,0 +1,4 @@
+﻿  pch.cpp
+  dllmain.cpp
+     Creating library C:\Users\rchiodo\source\repos\PTVS\Examples\PythonCallingNative\x64\Debug\CppDll.lib and object C:\Users\rchiodo\source\repos\PTVS\Examples\PythonCallingNative\x64\Debug\CppDll.exp
+  CppDll.vcxproj -> C:\Users\rchiodo\source\repos\PTVS\Examples\PythonCallingNative\x64\Debug\CppDll.dll
