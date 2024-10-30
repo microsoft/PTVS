@@ -1,4 +1,4 @@
-﻿// Python Tools for Visual Studio
+// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -293,7 +293,9 @@ namespace Microsoft.PythonTools.Debugger {
             bool nativeDebug = config.GetLaunchOption(PythonConstants.EnableNativeCodeDebugging).IsTrue();
             var basePath = config.GetInterpreterPath();
 
-            // If native debug, use the debug version of python if it's available
+            // If native debug, use the debug version of python if it's available. This ensures 
+            // that mixed mode debugging works better because it can inspect non-optimized code. Optimized code
+            // can mess up frame walking and finding variables.
             if (nativeDebug) {
                 var debugPath = Path.Combine(Path.GetDirectoryName(basePath), Path.GetFileNameWithoutExtension(basePath) + "_d.exe");
                 if (File.Exists(debugPath)) {
