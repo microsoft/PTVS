@@ -68,29 +68,26 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         private static bool IsInEvalFrame(DkmStackWalkFrame frame) {
             var process = frame.Process;
             var pythonInfo = process.GetPythonRuntimeInfo();
+            var name = "PyEval_EvalFrameEx";
             ulong addr = 0;
-            if (pythonInfo.LanguageVersion <= PythonLanguageVersion.V35) {
-                if (frame.ModuleInstance == pythonInfo.DLLs.Python) {
-                    addr = pythonInfo.DLLs.Python.GetFunctionAddress("PyEval_EvalFrameEx");
-                }
-            } else {
-                if (frame.ModuleInstance == pythonInfo.DLLs.Python) {
-                    addr = pythonInfo.DLLs.Python.GetFunctionAddress("_PyEval_EvalFrameDefault");
-                }
+            if (pythonInfo.LanguageVersion > PythonLanguageVersion.V35) {
+                name = "_PyEval_EvalFrameDefault";
             }
-
+            addr = pythonInfo.DLLs.Python.GetFunctionAddress(name);
             if (addr == 0) {
                 return false;
             }
 
-            return frame.InstructionAddress.IsInSameFunction(process.CreateNativeInstructionAddress(addr));
+            var addressMatch = frame.InstructionAddress.IsInSameFunction(process.CreateNativeInstructionAddress(addr));
+            var nameMatch = frame.BasicSymbolInfo.MethodName == name;
+            return addressMatch || nameMatch;
         }
 
         public static unsafe PyFrameObject TryCreate(DkmStackWalkFrame frame, int? previousFrameCount) {
             var process = frame.Process;
             if (frame.InstructionAddress == null) {
                 return null;
-            } 
+            }
             if (frame.RuntimeInstance.Id.RuntimeType != Guids.PythonRuntimeTypeGuid && !IsInEvalFrame(frame)) {
                 return null;
             }
