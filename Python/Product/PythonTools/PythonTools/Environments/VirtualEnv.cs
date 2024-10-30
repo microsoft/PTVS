@@ -135,7 +135,7 @@ namespace Microsoft.PythonTools.Environments {
                         var relativeInterpExe = PathUtils.GetRelativeFilePath(workspace.Location, interpExe);
                         if (setAsCurrent) {
                             await workspace.SetInterpreterAsync(relativeInterpExe);
-                        }         
+                        }
                     }
 
                     var factory = workspaceFactoryProvider?
@@ -148,37 +148,9 @@ namespace Microsoft.PythonTools.Environments {
             }
         }
 
-        // Microsoft store python 3.10 was erroring when calling virtualenv without updating
-        private static async Task UpgradeVirtualEnv(IServiceProvider provider, IPythonInterpreterFactory factory, string path, Redirector output) {
-            var workspaceFactoryProvider = provider.GetComponentModel().GetService<WorkspaceInterpreterFactoryProvider>();
-            using (workspaceFactoryProvider?.SuppressDiscoverFactories(forceDiscoveryOnDispose: true)) {
-                var dir = System.IO.Path.GetDirectoryName(path);
-                using (var proc = ProcessOutput.Run(
-                    factory.Configuration.InterpreterPath,
-                    ["-m", "pip", "install", "virtualenv", "--use-pep517", "--upgrade"],
-                    dir,
-                UnbufferedEnv,
-                    false,
-                    output
-                )) {
-                    var exitCode = await proc;
-
-                    if (output != null) {
-                        if (exitCode == 0) {
-                            output.WriteLine(Strings.VirtualEnvUpdateSucceeded);
-                        } else {
-                            output.WriteLine(Strings.VirtualEnvUpdateFailedExitCode.FormatUI(exitCode));
-                        }
-                        
-                        output.Show();
-                    }
-                }
-            }
-        }
-
         private static async Task ContinueCreate(IServiceProvider provider, IPythonInterpreterFactory factory, string path, bool useVEnv, Redirector output) {
             path = PathUtils.TrimEndSeparator(path);
-            var name =Path.GetFileName(path);
+            var name = Path.GetFileName(path);
             var dir = Path.GetDirectoryName(path);
 
             if (output != null) {
@@ -190,12 +162,6 @@ namespace Microsoft.PythonTools.Environments {
                 }
             }
 
-            try {
-                if (!useVEnv) {
-                    await UpgradeVirtualEnv(provider, factory, path, output);
-                }
-            }catch (Exception) {
-            }
 
             var workspaceFactoryProvider = provider.GetComponentModel().GetService<WorkspaceInterpreterFactoryProvider>();
             using (workspaceFactoryProvider?.SuppressDiscoverFactories(forceDiscoveryOnDispose: true)) {
@@ -217,6 +183,12 @@ namespace Microsoft.PythonTools.Environments {
                             output.WriteLine(Strings.VirtualEnvCreationSucceeded.FormatUI(path));
                         } else {
                             output.WriteLine(Strings.VirtualEnvCreationFailedExitCode.FormatUI(path, exitCode));
+
+                            if (!useVEnv) {
+                                output.WriteLine("");
+                                output.WriteLine(Strings.VirtualEnvUpdateSuggestion);
+                                output.WriteLine(factory.Configuration.InterpreterPath + " -m pip install virtualenv --use-pep517 --upgrade");
+                            }
                         }
                         if (provider.GetPythonToolsService().GeneralOptions.ShowOutputWindowForVirtualEnvCreate) {
                             output.ShowAndActivate();
