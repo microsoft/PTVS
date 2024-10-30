@@ -181,7 +181,7 @@ namespace Microsoft.PythonTools.Debugger {
 
             try {
                 dti.Info.dlo = DEBUG_LAUNCH_OPERATION.DLO_CreateProcess;
-                dti.Info.bstrExe = config.GetInterpreterPath();
+                dti.Info.bstrExe = GetLaunchingPython(config);
                 dti.Info.bstrCurDir = string.IsNullOrEmpty(config.WorkingDirectory) ? PathUtils.GetParent(config.ScriptName) : config.WorkingDirectory;
 
                 dti.Info.bstrRemoteMachine = null;
@@ -287,6 +287,20 @@ namespace Microsoft.PythonTools.Debugger {
             }
 
             return psi;
+        }
+
+        private static string GetLaunchingPython(LaunchConfiguration config) {
+            bool nativeDebug = config.GetLaunchOption(PythonConstants.EnableNativeCodeDebugging).IsTrue();
+            var basePath = config.GetInterpreterPath();
+
+            // If native debug, use the debug version of python if it's available
+            if (nativeDebug) {
+                var debugPath = Path.Combine(Path.GetDirectoryName(basePath), Path.GetFileNameWithoutExtension(basePath) + "_d.exe");
+                if (File.Exists(debugPath)) {
+                    basePath = debugPath;
+                }
+            }
+            return basePath;
         }
     }
 
