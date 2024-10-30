@@ -227,6 +227,9 @@ No files will be deleted from disk.</value>
   <data name="VirtualEnvCreationSucceeded" xml:space="preserve">
     <value>Virtual environment was successfully created at '{0}'</value>
   </data>
+  <data name="VirtualEnvUpdateSuggestion" xml:space="preserve">
+    <value>Virtualenv might be outdated, try upgrading 'virtualEnv'.</value>
+  </data>
   <data name="WarningAnalysisNotCurrent" xml:space="preserve">
     <value>Warning: the completion database is currently not up to date. Intellisense may be incomplete.</value>
   </data>

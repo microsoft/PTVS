@@ -378,8 +378,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 }
             }else {
                 var pathFromScopeUri = CommonUtils.NormalizeDirectoryPath(scopeUri.LocalPath).ToLower().TrimStart('\\');
-                // Find the matching context for the item
-                context = _clientContexts.Find(c => scopeUri != null && PathUtils.IsSamePath(c.RootPath.ToLower(), pathFromScopeUri));
+                // Find the matching context for the item, but ignore interactive window where "RootPath" is null.
+                context = _clientContexts.Find(c => scopeUri != null && c.RootPath != null && PathUtils.IsSamePath(c.RootPath.ToLower(), pathFromScopeUri));
             }
 
             if (context == null) {

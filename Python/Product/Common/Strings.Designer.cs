@@ -8985,6 +8985,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Virtualenv might be outdated, try upgrading &apos;virtualEnv&apos;..
+        /// </summary>
+        public static string VirtualEnvUpdateSuggestion {
+            get {
+                return ResourceManager.GetString("VirtualEnvUpdateSuggestion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cancel.
         /// </summary>
         public static string WaitForCompleteAnalysisDialog_Cancel {
