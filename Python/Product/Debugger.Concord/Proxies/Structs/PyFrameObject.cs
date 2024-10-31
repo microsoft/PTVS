@@ -27,11 +27,9 @@ using Microsoft.VisualStudio.Debugger.Evaluation;
 using static Microsoft.VisualStudio.Threading.SingleThreadedSynchronizationContext;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
-    [StructProxy(MaxVersion = PythonLanguageVersion.V38, StructName = "PyFrameObject")]
     [StructProxy(MinVersion = PythonLanguageVersion.V39, StructName = "_frame")]
     internal class PyFrameObject : PyVarObject {
         internal class Fields {
-            [FieldProxy(MinVersion = PythonLanguageVersion.V36)]
             public StructField<PointerProxy<PyFrameObject>> f_back;
             public StructField<PointerProxy<PyCodeObject>> f_code;
             public StructField<PointerProxy<PyDictObject>> f_globals;

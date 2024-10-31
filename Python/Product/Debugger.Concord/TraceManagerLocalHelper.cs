@@ -100,25 +100,13 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
         // Layout of this struct must always remain in sync with DebuggerHelper/trace.cpp.
         [StructLayout(LayoutKind.Sequential, Pack = 8)]
-        private struct PyUnicodeObject27_FieldOffsets {
-            public readonly long length, str;
-
-            public PyUnicodeObject27_FieldOffsets(DkmProcess process) {
-                var fields = StructProxy.GetStructFields<PyUnicodeObject27, PyUnicodeObject27.Fields>(process);
-                length = fields.length.Offset;
-                str = fields.str.Offset;
-            }
-        }
-
-        // Layout of this struct must always remain in sync with DebuggerHelper/trace.cpp.
-        [StructLayout(LayoutKind.Sequential, Pack = 8)]
-        private struct PyUnicodeObject33_FieldOffsets {
+        private struct PyUnicodeObject_FieldOffsets {
             public readonly long sizeof_PyASCIIObject, sizeof_PyCompactUnicodeObject;
             public readonly long length, state, wstr, wstr_length, data;
 
-            public PyUnicodeObject33_FieldOffsets(DkmProcess process) {
+            public PyUnicodeObject_FieldOffsets(DkmProcess process) {
                 sizeof_PyASCIIObject = StructProxy.SizeOf<PyASCIIObject>(process);
-                sizeof_PyCompactUnicodeObject = StructProxy.SizeOf<PyUnicodeObject33>(process);
+                sizeof_PyCompactUnicodeObject = StructProxy.SizeOf<PyUnicodeObject>(process);
 
                 var asciiFields = StructProxy.GetStructFields<PyASCIIObject, PyASCIIObject.Fields>(process);
                 length = asciiFields.length.Offset;
@@ -128,7 +116,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 var compactFields = StructProxy.GetStructFields<PyCompactUnicodeObject, PyCompactUnicodeObject.Fields>(process);
                 wstr_length = compactFields.wstr_length.Offset;
 
-                var unicodeFields = StructProxy.GetStructFields<PyUnicodeObject33, PyUnicodeObject33.Fields>(process);
+                var unicodeFields = StructProxy.GetStructFields<PyUnicodeObject, PyUnicodeObject.Fields>(process);
                 data = unicodeFields.data.Offset;
             }
         }
@@ -141,23 +129,15 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             public PyFrameObject_FieldOffsets PyFrameObject;
             public PyCodeObject_FieldOffsets PyCodeObject;
             public PyBytesObject_FieldOffsets PyBytesObject;
-            public PyUnicodeObject27_FieldOffsets PyUnicodeObject27;
-            public PyUnicodeObject33_FieldOffsets PyUnicodeObject33;
+            public PyUnicodeObject_FieldOffsets PyUnicodeObject;
 
-            public FieldOffsets(DkmProcess process, PythonRuntimeInfo pyrtInfo) {
+            public FieldOffsets(DkmProcess process) {
                 PyObject = new PyObject_FieldOffsets(process);
                 PyVarObject = new PyVarObject_FieldOffsets(process);
                 PyFrameObject = new PyFrameObject_FieldOffsets(process);
                 PyCodeObject = new PyCodeObject_FieldOffsets(process);
                 PyBytesObject = new PyBytesObject_FieldOffsets(process);
-
-                if (pyrtInfo.LanguageVersion <= PythonLanguageVersion.V27) {
-                    PyUnicodeObject27 = new PyUnicodeObject27_FieldOffsets(process);
-                    PyUnicodeObject33 = new PyUnicodeObject33_FieldOffsets();
-                } else {
-                    PyUnicodeObject27 = new PyUnicodeObject27_FieldOffsets();
-                    PyUnicodeObject33 = new PyUnicodeObject33_FieldOffsets(process);
-                }
+                PyUnicodeObject = new PyUnicodeObject_FieldOffsets(process);
             }
         }
 
@@ -169,12 +149,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
             public Types(DkmProcess process, PythonRuntimeInfo pyrtInfo) {
                 PyBytes_Type = PyObject.GetPyType<PyBytesObject>(process).Address;
-
-                if (pyrtInfo.LanguageVersion <= PythonLanguageVersion.V27) {
-                    PyUnicode_Type = PyObject.GetPyType<PyUnicodeObject27>(process).Address;
-                } else {
-                    PyUnicode_Type = PyObject.GetPyType<PyUnicodeObject33>(process).Address;
-                }
+                PyUnicode_Type = PyObject.GetPyType<PyUnicodeObject>(process).Address;
             }
         }
 
@@ -258,20 +233,13 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
             if (kind == Kind.StepIn) {
                 var fieldOffsets = _pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<CliStructProxy<FieldOffsets>>("fieldOffsets");
-                fieldOffsets.Write(new FieldOffsets(process, _pyrtInfo));
+                fieldOffsets.Write(new FieldOffsets(process));
 
                 var types = _pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<CliStructProxy<Types>>("types");
                 types.Write(new Types(process, _pyrtInfo));
 
                 var functionPointers = _pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<CliStructProxy<FunctionPointers>>("functionPointers");
                 functionPointers.Write(new FunctionPointers(process, _pyrtInfo));
-
-                var stringEquals = _pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<PointerProxy>("stringEquals");
-                if (_pyrtInfo.LanguageVersion <= PythonLanguageVersion.V27) {
-                    stringEquals.Write(_pyrtInfo.DLLs.DebuggerHelper.GetExportedFunctionAddress("StringEquals27").GetPointer());
-                } else {
-                    stringEquals.Write(_pyrtInfo.DLLs.DebuggerHelper.GetExportedFunctionAddress("StringEquals33").GetPointer());
-                }
 
                 foreach (var interp in PyInterpreterState.GetInterpreterStates(process)) {
                     if (_pyrtInfo.LanguageVersion >= PythonLanguageVersion.V36) {
@@ -304,15 +272,8 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         }
 
         private IEnumerable<Int32Proxy> GetTracingPossible(PythonRuntimeInfo pyrtInfo, DkmProcess process) =>
-            pyrtInfo.LanguageVersion switch {
-                PythonLanguageVersion.V37 or PythonLanguageVersion.V38 =>
-                    new[] { _pyrtInfo.GetRuntimeState().ceval.tracing_possible },
-                PythonLanguageVersion.V39 =>
-                    from interp in PyInterpreterState.GetInterpreterStates(process)
-                    select interp.ceval.tracing_possible,
-                _ =>
-                    throw new InvalidOperationException($"Unsupported Python version: {pyrtInfo.LanguageVersion}")
-            };
+            from interp in PyInterpreterState.GetInterpreterStates(process)
+            select interp.ceval.tracing_possible;
 
         private void AddStepInGate(StepInGateHandler handler, DkmNativeModuleInstance module, string funcName, bool hasMultipleExitPoints) {
             var gate = new StepInGate {

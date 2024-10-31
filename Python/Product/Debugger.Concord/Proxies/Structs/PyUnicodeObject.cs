@@ -23,84 +23,9 @@ using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Evaluation;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
-    [StructProxy(MaxVersion = PythonLanguageVersion.V27, StructName = "PyUnicodeObject")]
-    [PyType(MaxVersion = PythonLanguageVersion.V27, VariableName = "PyUnicode_Type")]
-    internal class PyUnicodeObject27 : PyObject, IPyBaseStringObject {
-        internal class Fields {
-            public StructField<SSizeTProxy> length;
-            public StructField<PointerProxy<ArrayProxy<UInt16Proxy>>> str;
-        }
-
-        private readonly Fields _fields;
-
-        public PyUnicodeObject27(DkmProcess process, ulong address)
-            : base(process, address) {
-            InitializeStruct(this, out _fields);
-            CheckPyType<PyUnicodeObject27>();
-        }
-
-        public static PyUnicodeObject27 Create(DkmProcess process, string value) {
-            // Allocate string buffer together with the object itself in a single block.
-            var allocator = process.GetDataItem<PyObjectAllocator>();
-            Debug.Assert(allocator != null);
-
-            var result = allocator.Allocate<PyUnicodeObject27>(value.Length * 2);
-            result.length.Write(value.Length);
-
-            var str = result.Address.OffsetBy(StructProxy.SizeOf<PyUnicodeObject27>(process));
-            result.str.Raw.Write(str);
-
-            var buf = Encoding.Unicode.GetBytes(value);
-            process.WriteMemory(str, buf);
-
-            return result;
-        }
-
-        public SSizeTProxy length {
-            get { return GetFieldProxy(_fields.length); }
-        }
-
-        public PointerProxy<ArrayProxy<UInt16Proxy>> str {
-            get { return GetFieldProxy(_fields.str); }
-        }
-
-        public override unsafe string ToString() {
-            var length = this.length.Read();
-            if (length == 0) {
-                return "";
-            }
-
-            var buf = new byte[length * sizeof(char)];
-            Process.ReadMemory(str.Raw.Read(), DkmReadMemoryFlags.None, buf);
-            fixed (byte* p = buf) {
-                return new string((char*)p, 0, (int)length);
-            }
-        }
-
-        public override void Repr(ReprBuilder builder) {
-            builder.AppendLiteral(ToString());
-        }
-
-        public override IEnumerable<PythonEvaluationResult> GetDebugChildren(ReprOptions reprOptions) {
-            string s = ToString();
-
-            yield return new PythonEvaluationResult(new ValueStore<long>(s.Length), "len()") {
-                Category = DkmEvaluationResultCategory.Method
-            };
-
-            foreach (char c in s) {
-                yield return new PythonEvaluationResult(new ValueStore<string>(c.ToString()));
-            }
-        }
-
-        public static explicit operator string(PyUnicodeObject27 obj) {
-            return (object)obj == null ? null : obj.ToString();
-        }
-    }
-
-    [StructProxy(MinVersion = PythonLanguageVersion.V33, StructName = "PyUnicodeObject")]
-    [PyType(MinVersion = PythonLanguageVersion.V33, VariableName = "PyUnicode_Type")]
-    internal class PyUnicodeObject33 : PyVarObject, IPyBaseStringObject {
+    [StructProxy(MinVersion = PythonLanguageVersion.V39, StructName = "PyUnicodeObject")]
+    [PyType(MinVersion = PythonLanguageVersion.V39, VariableName = "PyUnicode_Type")]
+    internal class PyUnicodeObject : PyVarObject, IPyBaseStringObject {
         private static readonly Encoding _latin1 = Encoding.GetEncoding("Latin1");
 
         private enum PyUnicode_Kind {
@@ -172,20 +97,20 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         private readonly PyASCIIObject _asciiObject;
         private readonly PyCompactUnicodeObject _compactObject;
 
-        public PyUnicodeObject33(DkmProcess process, ulong address)
+        public PyUnicodeObject(DkmProcess process, ulong address)
             : base(process, address) {
             InitializeStruct(this, out _fields);
-            CheckPyType<PyUnicodeObject33>();
+            CheckPyType<PyUnicodeObject>();
 
             _asciiObject = new PyASCIIObject(process, address);
             _compactObject = new PyCompactUnicodeObject(process, address);
         }
 
-        public static PyUnicodeObject33 Create(DkmProcess process, string value) {
+        public static PyUnicodeObject Create(DkmProcess process, string value) {
             var allocator = process.GetDataItem<PyObjectAllocator>();
             Debug.Assert(allocator != null);
 
-            var result = allocator.Allocate<PyUnicodeObject33>(value.Length * sizeof(char));
+            var result = allocator.Allocate<PyUnicodeObject>(value.Length * sizeof(char));
 
             result._asciiObject.hash.Write(-1);
             result._asciiObject.length.Write(value.Length);
@@ -286,7 +211,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             }
         }
 
-        public static explicit operator string(PyUnicodeObject33 obj) {
+        public static explicit operator string(PyUnicodeObject obj) {
             return (object)obj == null ? null : obj.ToString();
         }
     }
