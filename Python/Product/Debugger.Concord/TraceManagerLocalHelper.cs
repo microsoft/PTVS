@@ -78,21 +78,12 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             public readonly long f_back, f_code, f_globals, f_locals, f_lineno;
 
             public PyFrameObject_FieldOffsets(DkmProcess process) {
-                if (process.GetPythonRuntimeInfo().LanguageVersion <= PythonLanguageVersion.V35) {
-                    var fields = StructProxy.GetStructFields<PyFrameObject, PyFrameObject.Fields_27_35>(process);
-                    f_back = -1;
-                    f_code = fields.f_code.Offset;
-                    f_globals = fields.f_globals.Offset;
-                    f_locals = fields.f_locals.Offset;
-                    f_lineno = fields.f_lineno.Offset;
-                } else {
-                    var fields = StructProxy.GetStructFields<PyFrameObject, PyFrameObject.Fields_36>(process);
-                    f_back = fields.f_back.Offset;
-                    f_code = fields.f_code.Offset;
-                    f_globals = fields.f_globals.Offset;
-                    f_locals = fields.f_locals.Offset;
-                    f_lineno = fields.f_lineno.Offset;
-                } 
+                var fields = StructProxy.GetStructFields<PyFrameObject, PyFrameObject.Fields>(process);
+                f_back = fields.f_back.Offset;
+                f_code = fields.f_code.Offset;
+                f_globals = fields.f_globals.Offset;
+                f_locals = fields.f_locals.Offset;
+                f_lineno = fields.f_lineno.Offset;
             }
         }
 
