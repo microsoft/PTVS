@@ -30,18 +30,8 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             public StructField<PointerProxy<PyObject>> curexc_type;
             public StructField<PointerProxy<PyObject>> curexc_value;
             public StructField<PointerProxy<PyObject>> curexc_traceback;
-            [FieldProxy(MaxVersion = PythonLanguageVersion.V36)]
-            public StructField<PointerProxy<PyObject>> exc_type;
-            [FieldProxy(MaxVersion = PythonLanguageVersion.V36)]
-            public StructField<PointerProxy<PyObject>> exc_value;
-            [FieldProxy(MaxVersion = PythonLanguageVersion.V36)]
-            public StructField<PointerProxy<PyObject>> exc_traceback;
-
-            [FieldProxy(MinVersion = PythonLanguageVersion.V37)]
             public StructField<PyErr_StackItem> exc_state;
-            [FieldProxy(MinVersion = PythonLanguageVersion.V37)]
             public StructField<PointerProxy<PyErr_StackItem>> exc_info;
-
             public StructField<Int32Proxy> thread_id;
         }
 
@@ -87,17 +77,14 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             get { return GetFieldProxy(_fields.curexc_traceback); }
         }
 
-        public PointerProxy<PyObject> exc_type(PythonLanguageVersion version) => version < PythonLanguageVersion.V37
-            ? GetFieldProxy(_fields.exc_type)
-            : GetFieldProxy(_fields.exc_state).exc_type;
+        public PointerProxy<PyObject> exc_type(PythonLanguageVersion version) => 
+            GetFieldProxy(_fields.exc_state).exc_type;
 
-        public PointerProxy<PyObject> exc_value(PythonLanguageVersion version) => version < PythonLanguageVersion.V37
-            ? GetFieldProxy(_fields.exc_value)
-            : GetFieldProxy(_fields.exc_state).exc_value;
+        public PointerProxy<PyObject> exc_value(PythonLanguageVersion version) => 
+            GetFieldProxy(_fields.exc_state).exc_value;
 
-        public PointerProxy<PyObject> exc_traceback(PythonLanguageVersion version) => version < PythonLanguageVersion.V37
-            ? GetFieldProxy(_fields.exc_traceback)
-            : GetFieldProxy(_fields.exc_state).exc_traceback;
+        public PointerProxy<PyObject> exc_traceback(PythonLanguageVersion version) => 
+            GetFieldProxy(_fields.exc_state).exc_traceback;
 
 
         public Int32Proxy thread_id {
@@ -111,7 +98,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         
     }
 
-    [StructProxy(MinVersion = PythonLanguageVersion.V37, StructName = "_PyErr_StackItem")]
+    [StructProxy(MinVersion = PythonLanguageVersion.V39, StructName = "_PyErr_StackItem")]
     class PyErr_StackItem : StructProxy {
         private class Fields {
             public StructField<PointerProxy<PyObject>> exc_type, exc_value, exc_traceback;

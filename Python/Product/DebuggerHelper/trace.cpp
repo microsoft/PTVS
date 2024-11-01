@@ -60,12 +60,9 @@ struct {
         int64_t ob_sval;
     } PyBytesObject;
     struct {
-        int64_t length, str;
-    } PyUnicodeObject27;
-    struct {
         int64_t PyAsciiObjectData, PyCompactUnicodeObjectData;
         int64_t length, state, wstr, wstr_length, data;
-    } PyUnicodeObject33;
+    } PyUnicodeObject;
 } fieldOffsets;
 
 // Addresses of various Py..._Type globals.
@@ -115,19 +112,11 @@ PyObject* PyObject_Str(PyObject* o) {
     return reinterpret_cast<decltype(&PyObject_Str)>(functionPointers.PyObject_Str)(o);
 }
 
-// A function to compare DebuggerString to a Python string object. This is set to either StringEquals27 or
-// to StringEquals33 by debugger, depending on the language version.
-__declspec(dllexport)
-bool (*stringEquals)(const struct DebuggerString* debuggerString, const void* pyString);
-
 // A string provided by the debugger (e.g. for file names). This is actually a variable-length struct,
 // with _countof(data) == length + 1 - the extra wchar_t is the null terminator.
 struct DebuggerString {
     int32_t length;
     wchar_t data[1];
-    bool Equals(const void* pyString) const {
-        return stringEquals(this, pyString);
-    }
 };
 
 // Information about active breakpoints, communicated by debugger to be used by TraceFunc.
@@ -239,42 +228,9 @@ volatile uint32_t evalLoopSEHCode; // if a structured exception occurred during 
 #pragma pack(pop)
 
 
-__declspec(dllexport)
-bool StringEquals27(const DebuggerString* debuggerString, const void* pyString) {
-    int32_t my_length = debuggerString->length;
-    const wchar_t* my_data = debuggerString->data;
-
-    // In 2.7, we have to be able to compare against either ASCII or Unicode strings, so check type and branch.
-    auto ob_type = ReadField<const void*>(pyString, fieldOffsets.PyObject.ob_type);
-    if (reinterpret_cast<uint64_t>(ob_type) == types.PyBytes_Type) {
-        auto ob_size = ReadField<SSIZE_T>(pyString, fieldOffsets.PyVarObject.ob_size);
-        if (ob_size != my_length) {
-            return false;
-        }
-
-        const char* data = reinterpret_cast<const char*>(pyString) + fieldOffsets.PyBytesObject.ob_sval;
-        for (int32_t i = 0; i < my_length; ++i) {
-            if (data[i] != my_data[i]) {
-                return false;
-            }
-        }
-        return true;
-    } else if (reinterpret_cast<uint64_t>(ob_type) == types.PyUnicode_Type) {
-        auto length = ReadField<SSIZE_T>(pyString, fieldOffsets.PyUnicodeObject27.length);
-        if (length != my_length) {
-            return false;
-        }
-
-        const wchar_t* data = ReadField<const wchar_t*>(pyString, fieldOffsets.PyUnicodeObject27.str);
-        return memcmp(data, my_data, my_length * static_cast<size_t>(2)) == 0;
-    } else {
-        return false;
-    }
-}
-
 
 __declspec(dllexport)
-bool StringEquals33(const DebuggerString* debuggerString, const void* pyString) {
+bool StringEquals(const DebuggerString* debuggerString, const void* pyString) {
     // In 3.x, we only need to support Unicode strings - bytes is no longer a string type.
     void* ob_type = ReadField<void*>(pyString, fieldOffsets.PyObject.ob_type);
     if (reinterpret_cast<uint64_t>(ob_type) != types.PyUnicode_Type) {
@@ -298,15 +254,15 @@ bool StringEquals33(const DebuggerString* debuggerString, const void* pyString) 
     };
 #pragma warning(pop)
 
-    state = ReadField<char>(pyString, fieldOffsets.PyUnicodeObject33.state);
+    state = ReadField<char>(pyString, fieldOffsets.PyUnicodeObject.state);
 
     if (!ready) {
-        auto wstr = ReadField<wchar_t*>(pyString, fieldOffsets.PyUnicodeObject33.wstr);
+        auto wstr = ReadField<wchar_t*>(pyString, fieldOffsets.PyUnicodeObject.wstr);
         if (!wstr) {
             return false;
         }
 
-        auto wstr_length = ReadField<uint32_t>(pyString, fieldOffsets.PyUnicodeObject33.wstr_length);
+        auto wstr_length = ReadField<uint32_t>(pyString, fieldOffsets.PyUnicodeObject.wstr_length);
         if (static_cast<int32_t>(wstr_length) != my_length) {
             return false;
         }
@@ -314,18 +270,18 @@ bool StringEquals33(const DebuggerString* debuggerString, const void* pyString) 
         return memcmp(wstr, my_data, my_length * static_cast<size_t>(2)) == 0;
     }
 
-    auto length = ReadField<SSIZE_T>(pyString, fieldOffsets.PyUnicodeObject33.length);
+    auto length = ReadField<SSIZE_T>(pyString, fieldOffsets.PyUnicodeObject.length);
     if (length != my_length) {
         return false;
     }
 
     const void* data;
     if (!compact) {
-        data = ReadField<void*>(pyString, fieldOffsets.PyUnicodeObject33.data);
+        data = ReadField<void*>(pyString, fieldOffsets.PyUnicodeObject.data);
     } else if (ascii) {
-        data = reinterpret_cast<const char*>(pyString) + fieldOffsets.PyUnicodeObject33.PyAsciiObjectData;
+        data = reinterpret_cast<const char*>(pyString) + fieldOffsets.PyUnicodeObject.PyAsciiObjectData;
     } else {
-        data = reinterpret_cast<const char*>(pyString) + fieldOffsets.PyUnicodeObject33.PyCompactUnicodeObjectData;
+        data = reinterpret_cast<const char*>(pyString) + fieldOffsets.PyUnicodeObject.PyCompactUnicodeObjectData;
     }
 
     if (kind == 2) {
@@ -490,7 +446,7 @@ static void TraceLine(void* frame) {
 
     for (const int32_t* pFileNameOffset = &fileNamesOffsets[fileNamesIndex]; *pFileNameOffset; ++pFileNameOffset) {
         const DebuggerString* fileName = reinterpret_cast<const DebuggerString*>(strings + *pFileNameOffset);
-        if (fileName->Equals(co_filename)) {
+        if (StringEquals(fileName,co_filename)) {
             currentSourceLocation.lineNumber = f_lineno;
             currentSourceLocation.fileName = reinterpret_cast<uint64_t>(fileName);
             EvalLoop(OnBreakpointHit);
@@ -584,30 +540,17 @@ int TraceFunc(void* obj, void* frame, int what, void* arg) {
     return 0;
 }
 
-typedef void* (*_PyFrameEvalFunction)(void*, int);
+// In Python 3.9 the eval function added the thread state. So
+// we need a new function def to accomodate that change.
+typedef void* (*_PyFrameEvalFunction)(void*,void*, int);
 __declspec(dllexport)
 _PyFrameEvalFunction DefaultEvalFrameFunc = nullptr;
 
 __declspec(dllexport)
-void *EvalFrameFunc(void* f, int throwFlag)
+void* EvalFrameFunc(void* ts, void* f, int throwFlag)
 {
     if (DefaultEvalFrameFunc)
-        return (*DefaultEvalFrameFunc)(f, throwFlag);
-
-    return nullptr;
-}
-
-// In Python 3.9 the eval function added the thread state. So
-// we need a new function def to accomodate that change.
-typedef void* (*_PyFrameEvalFunction_39)(void*,void*, int);
-__declspec(dllexport)
-_PyFrameEvalFunction_39 DefaultEvalFrameFunc_39 = nullptr;
-
-__declspec(dllexport)
-void* EvalFrameFunc_39(void* ts, void* f, int throwFlag)
-{
-    if (DefaultEvalFrameFunc_39)
-        return (*DefaultEvalFrameFunc_39)(ts, f, throwFlag);
+        return (*DefaultEvalFrameFunc)(ts, f, throwFlag);
 
     return nullptr;
 }

@@ -850,13 +850,9 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                     newObj = PyObject.None(process);
                 } else if (constExpr.Value is bool) {
                     // In 2.7, 'True' and 'False' are reported as identifiers, not literals, and are handled separately below.
-                    newObj = PyBoolObject33.Create(process, (bool)constExpr.Value);
+                    newObj = PyBoolObject.Create(process, (bool)constExpr.Value);
                 } else if (constExpr.Value is string) {
-                    if (pyrtInfo.LanguageVersion <= PythonLanguageVersion.V27) {
-                        newObj = PyUnicodeObject27.Create(process, (string)constExpr.Value);
-                    } else {
-                        newObj = PyUnicodeObject33.Create(process, (string)constExpr.Value);
-                    }
+                    newObj = PyUnicodeObject.Create(process, (string)constExpr.Value);
                 } else if (constExpr.Value is AsciiString) {
                     newObj = PyBytesObject.Create(process, (AsciiString)constExpr.Value);
                 }
@@ -868,11 +864,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                         if (constExpr.Value is BigInteger) {
                             newObj = PyLongObject.Create(process, (BigInteger)constExpr.Value * sign);
                         } else if (constExpr.Value is int) {
-                            if (pyrtInfo.LanguageVersion <= PythonLanguageVersion.V27) {
-                                newObj = PyIntObject.Create(process, (int)constExpr.Value * sign);
-                            } else {
-                                newObj = PyLongObject.Create(process, (int)constExpr.Value * sign);
-                            }
+                            newObj = PyLongObject.Create(process, (int)constExpr.Value * sign);
                         } else if (constExpr.Value is double) {
                             newObj = PyFloatObject.Create(process, (double)constExpr.Value * sign);
                         } else if (constExpr.Value is Complex) {
@@ -896,18 +888,6 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                                     double real = realVal.ToDouble(null) * realSign;
                                     double imag = imagVal.Value.Imaginary * imagSign * (binExpr.Operator == PythonOperator.Add ? 1 : -1);
                                     newObj = PyComplexObject.Create(process, new Complex(real, imag));
-                                }
-                            }
-                        }
-                    } else {
-                        if (pyrtInfo.LanguageVersion <= PythonLanguageVersion.V27) {
-                            // 'True' and 'False' are not literals in 2.x, but we want to treat them as such.
-                            var name = expr as NameExpression;
-                            if (name != null) {
-                                if (name.Name == "True") {
-                                    newObj = PyBoolObject27.Create(process, true);
-                                } else if (name.Name == "False") {
-                                    newObj = PyBoolObject27.Create(process, false);
                                 }
                             }
                         }

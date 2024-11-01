@@ -23,59 +23,26 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         bool ToBoolean();
     }
 
-    [StructProxy(MaxVersion = PythonLanguageVersion.V27, StructName = "PyIntObject")]
-    [PyType(MaxVersion = PythonLanguageVersion.V27, VariableName = "PyBool_Type")]
-    internal class PyBoolObject27 : PyIntObject, IPyBoolObject {
+    [StructProxy(MinVersion = PythonLanguageVersion.V39, StructName = "PyLongObject")]
+    [PyType(MinVersion = PythonLanguageVersion.V39, VariableName = "PyBool_Type")]
+    internal class PyBoolObject : PyLongObject, IPyBoolObject {
         private class ValuesHolder : DkmDataItem {
-            public readonly PyBoolObject27 False, True;
+            public readonly PyBoolObject False, True;
 
             public ValuesHolder(DkmProcess process) {
                 var pythonDll = process.GetPythonRuntimeInfo().DLLs.Python;
 
-                False = pythonDll.GetStaticVariable<PyBoolObject27>("_Py_ZeroStruct");
-                True = pythonDll.GetStaticVariable<PyBoolObject27>("_Py_TrueStruct");
+                False = pythonDll.GetStaticVariable<PyBoolObject>("_Py_FalseStruct");
+                True = pythonDll.GetStaticVariable<PyBoolObject>("_Py_TrueStruct");
             }
         }
 
-        public PyBoolObject27(DkmProcess process, ulong address)
+        public PyBoolObject(DkmProcess process, ulong address)
             : base(process, address, checkType: false) {
-            CheckPyType<PyBoolObject27>();
+            CheckPyType<PyBoolObject>();
         }
 
-        public static PyBoolObject27 Create(DkmProcess process, bool value) {
-            var values = process.GetOrCreateDataItem(() => new ValuesHolder(process));
-            return value ? values.True : values.False;
-        }
-
-        public bool ToBoolean() {
-            return ToInt32() != 0;
-        }
-
-        public override void Repr(ReprBuilder builder) {
-            builder.Append(ToBoolean() ? "True" : "False");
-        }
-    }
-
-    [StructProxy(MinVersion = PythonLanguageVersion.V33, StructName = "PyLongObject")]
-    [PyType(MinVersion = PythonLanguageVersion.V33, VariableName = "PyBool_Type")]
-    internal class PyBoolObject33 : PyLongObject, IPyBoolObject {
-        private class ValuesHolder : DkmDataItem {
-            public readonly PyBoolObject33 False, True;
-
-            public ValuesHolder(DkmProcess process) {
-                var pythonDll = process.GetPythonRuntimeInfo().DLLs.Python;
-
-                False = pythonDll.GetStaticVariable<PyBoolObject33>("_Py_FalseStruct");
-                True = pythonDll.GetStaticVariable<PyBoolObject33>("_Py_TrueStruct");
-            }
-        }
-
-        public PyBoolObject33(DkmProcess process, ulong address)
-            : base(process, address, checkType: false) {
-            CheckPyType<PyBoolObject33>();
-        }
-
-        public static PyBoolObject33 Create(DkmProcess process, bool value) {
+        public static PyBoolObject Create(DkmProcess process, bool value) {
             var values = process.GetOrCreateDataItem(() => new ValuesHolder(process));
             return value ? values.True : values.False;
         }

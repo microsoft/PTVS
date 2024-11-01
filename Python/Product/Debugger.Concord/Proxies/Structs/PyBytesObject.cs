@@ -24,10 +24,8 @@ using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Evaluation;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
-    [StructProxy(MaxVersion = PythonLanguageVersion.V27, StructName = "PyStringObject")]
-    [StructProxy(MinVersion = PythonLanguageVersion.V30)]
-    [PyType(MaxVersion = PythonLanguageVersion.V27, VariableName = "PyString_Type")]
-    [PyType(MinVersion = PythonLanguageVersion.V30)]
+    [StructProxy(MinVersion = PythonLanguageVersion.V39)]
+    [PyType(MinVersion = PythonLanguageVersion.V39)]
     internal class PyBytesObject : PyVarObject, IPyBaseStringObject {
         // Use Latin-1 here because it just zero-extends 8-bit characters to 16-bit, preserving their numerical values.
         // We display the higher 128 chars as \x## escape sequences anyway, so the actual glyphs don't matter.
@@ -93,15 +91,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             };
 
             foreach (var b in ob_sval.Take(count)) {
-                if (reprOptions.LanguageVersion <= PythonLanguageVersion.V27) {
-                    // In 2.x, bytes is a string type, so display characters in object expansion.
-                    byte[] bytes = new[] { b.Read() };
-                    string s = _latin1.GetString(bytes);
-                    yield return new PythonEvaluationResult(new ValueStore<AsciiString>(new AsciiString(bytes, s)));
-                } else {
-                    // In 3.x, it's supposed to be used for byte arrays only, so display numeric values in expansion.
-                    yield return new PythonEvaluationResult(b);
-                }
+                yield return new PythonEvaluationResult(b);
             }
         }
     }

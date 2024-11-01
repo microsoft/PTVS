@@ -108,13 +108,9 @@
     <Compile Include="ExpressionEvaluator.cs" />
     <Compile Include="LocalStackWalkingComponent.cs" />
     <Compile Include="Proxies\Structs\PyRuntimeState.cs" />
-    <Compile Include="Proxies\Structs\PyDictObject27.cs" />
-    <Compile Include="Proxies\Structs\PyDictObject36.cs" />
-    <Compile Include="Proxies\Structs\PyDictObject33.cs" />
     <Compile Include="Proxies\Structs\PyEllipsisObject.cs" />
     <Compile Include="Proxies\Structs\PyComplexObject.cs" />
     <Compile Include="Proxies\Structs\PyBaseExceptionObject.cs" />
-    <Compile Include="Proxies\Structs\PyIntObject.cs" />
     <Compile Include="Proxies\Structs\IPyBaseString.cs" />
     <Compile Include="Proxies\Structs\PyByteArrayObject.cs" />
     <Compile Include="Proxies\Structs\PyBytesObject.cs" />

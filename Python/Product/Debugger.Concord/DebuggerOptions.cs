@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
         public static bool ShowNativePythonFrames {
             get {
-                return _showNativePythonFrames;
+                return _showNativePythonFrames; // Enable this to show native (C++) frames including our trace helper
             }
             set {
                 _showNativePythonFrames = value;
@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
         public static bool UsePythonStepping {
             get {
-                return _usePythonStepping;
+                return _usePythonStepping; // Disable this to step through the TraceHelper dll in the launched VS
             }
             set {
                 _usePythonStepping = value;

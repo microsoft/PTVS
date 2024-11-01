@@ -27,18 +27,9 @@ using Microsoft.VisualStudio.Debugger.Evaluation;
 using static Microsoft.VisualStudio.Threading.SingleThreadedSynchronizationContext;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
-    [StructProxy(MaxVersion = PythonLanguageVersion.V38, StructName = "PyFrameObject")]
     [StructProxy(MinVersion = PythonLanguageVersion.V39, StructName = "_frame")]
     internal class PyFrameObject : PyVarObject {
-        public class Fields_27_35 {
-            public StructField<PointerProxy<PyCodeObject>> f_code;
-            public StructField<PointerProxy<PyDictObject>> f_globals;
-            public StructField<PointerProxy<PyDictObject>> f_locals;
-            public StructField<Int32Proxy> f_lineno;
-            public StructField<ArrayProxy<PointerProxy<PyObject>>> f_localsplus;
-        }
-
-        public class Fields_36 {
+        internal class Fields {
             public StructField<PointerProxy<PyFrameObject>> f_back;
             public StructField<PointerProxy<PyCodeObject>> f_code;
             public StructField<PointerProxy<PyDictObject>> f_globals;
@@ -47,20 +38,12 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             public StructField<ArrayProxy<PointerProxy<PyObject>>> f_localsplus;
         }
 
-        private readonly object _fields;
+        private readonly Fields _fields;
 
         public PyFrameObject(DkmProcess process, ulong address)
             : base(process, address) {
             var pythonInfo = process.GetPythonRuntimeInfo();
-            if (pythonInfo.LanguageVersion <= PythonLanguageVersion.V35) {
-                Fields_27_35 fields;
-                InitializeStruct(this, out fields);
-                _fields = fields;
-            } else {
-                Fields_36 fields;
-                InitializeStruct(this, out fields);
-                _fields = fields;
-            }
+            InitializeStruct(this, out _fields);
             CheckPyType<PyFrameObject>();
         }
 
@@ -100,27 +83,27 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         }
 
         public PointerProxy<PyFrameObject> f_back {
-            get { return GetFieldProxy((_fields as Fields_36)?.f_back); }
+            get { return GetFieldProxy(_fields.f_back); }
         }
 
         public PointerProxy<PyCodeObject> f_code {
-            get { return GetFieldProxy((_fields as Fields_36)?.f_code ?? (_fields as Fields_27_35)?.f_code); }
+            get { return GetFieldProxy(_fields.f_code); }
         }
 
         public PointerProxy<PyDictObject> f_globals {
-            get { return GetFieldProxy((_fields as Fields_36)?.f_globals ?? (_fields as Fields_27_35)?.f_globals); }
+            get { return GetFieldProxy(_fields.f_globals); }
         }
 
         public PointerProxy<PyDictObject> f_locals {
-            get { return GetFieldProxy((_fields as Fields_36)?.f_locals ?? (_fields as Fields_27_35)?.f_locals); }
+            get { return GetFieldProxy(_fields.f_locals); }
         }
 
         public Int32Proxy f_lineno {
-            get { return GetFieldProxy((_fields as Fields_36)?.f_lineno ?? (_fields as Fields_27_35)?.f_lineno); }
+            get { return GetFieldProxy(_fields.f_lineno); }
         }
 
         public ArrayProxy<PointerProxy<PyObject>> f_localsplus {
-            get { return GetFieldProxy((_fields as Fields_36)?.f_localsplus ?? (_fields as Fields_27_35)?.f_localsplus); }
+            get { return GetFieldProxy(_fields.f_localsplus); }
         }
 
         private static ulong GetFramePtrAddress(DkmStackWalkFrame frame, int? previousFrameCount) {
