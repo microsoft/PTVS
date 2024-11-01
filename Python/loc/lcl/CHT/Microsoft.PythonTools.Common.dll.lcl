@@ -8911,6 +8911,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";VirtualEnvUpdateSuggestion" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Virtualenv might be outdated, try upgrading 'virtualEnv'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Virtualenv 可能已過期，請嘗試升級 'virtualEnv'。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";WaitForCompleteAnalysisDialog_Cancel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cancel]]></Val>
