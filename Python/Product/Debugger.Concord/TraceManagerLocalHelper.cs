@@ -223,11 +223,9 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             _pyrtInfo = process.GetPythonRuntimeInfo();
 
             _traceFunc = _pyrtInfo.DLLs.DebuggerHelper.GetExportedFunctionAddress("TraceFunc");
-            _evalFrameFunc = _pyrtInfo.LanguageVersion >= PythonLanguageVersion.V39 ?
-                _pyrtInfo.DLLs.DebuggerHelper.GetExportedFunctionAddress("EvalFrameFunc_39"):
+            _evalFrameFunc = 
                 _pyrtInfo.DLLs.DebuggerHelper.GetExportedFunctionAddress("EvalFrameFunc");
-            _defaultEvalFrameFunc = _pyrtInfo.LanguageVersion >= PythonLanguageVersion.V39 ?
-                _pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<PointerProxy>("DefaultEvalFrameFunc_39") :
+            _defaultEvalFrameFunc =
                 _pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<PointerProxy>("DefaultEvalFrameFunc");
             _isTracing = _pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<ByteProxy>("isTracing");
 

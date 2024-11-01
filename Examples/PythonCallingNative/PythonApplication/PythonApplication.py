@@ -8,3 +8,5 @@ mylib = ctypes.CDLL('..\\x64\\Debug\\CppDll.dll')
 result = mylib.add(5, 10)
 
 print(f"Result from C++ DLL: {result}")
+
+print("After result is printed")

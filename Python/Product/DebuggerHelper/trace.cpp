@@ -540,30 +540,17 @@ int TraceFunc(void* obj, void* frame, int what, void* arg) {
     return 0;
 }
 
-typedef void* (*_PyFrameEvalFunction)(void*, int);
+// In Python 3.9 the eval function added the thread state. So
+// we need a new function def to accomodate that change.
+typedef void* (*_PyFrameEvalFunction)(void*,void*, int);
 __declspec(dllexport)
 _PyFrameEvalFunction DefaultEvalFrameFunc = nullptr;
 
 __declspec(dllexport)
-void *EvalFrameFunc(void* f, int throwFlag)
+void* EvalFrameFunc(void* ts, void* f, int throwFlag)
 {
     if (DefaultEvalFrameFunc)
-        return (*DefaultEvalFrameFunc)(f, throwFlag);
-
-    return nullptr;
-}
-
-// In Python 3.9 the eval function added the thread state. So
-// we need a new function def to accomodate that change.
-typedef void* (*_PyFrameEvalFunction_39)(void*,void*, int);
-__declspec(dllexport)
-_PyFrameEvalFunction_39 DefaultEvalFrameFunc_39 = nullptr;
-
-__declspec(dllexport)
-void* EvalFrameFunc_39(void* ts, void* f, int throwFlag)
-{
-    if (DefaultEvalFrameFunc_39)
-        return (*DefaultEvalFrameFunc_39)(ts, f, throwFlag);
+        return (*DefaultEvalFrameFunc)(ts, f, throwFlag);
 
     return nullptr;
 }
