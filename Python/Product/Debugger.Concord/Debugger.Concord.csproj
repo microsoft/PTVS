@@ -107,6 +107,7 @@
     <Compile Include="Proxies\DataProxy.cs" />
     <Compile Include="ExpressionEvaluator.cs" />
     <Compile Include="LocalStackWalkingComponent.cs" />
+    <Compile Include="Proxies\Structs\CFrameProxy.cs" />
     <Compile Include="Proxies\Structs\PyRuntimeState.cs" />
     <Compile Include="Proxies\Structs\PyEllipsisObject.cs" />
     <Compile Include="Proxies\Structs\PyComplexObject.cs" />

@@ -25,7 +25,10 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         private class Fields {
             public StructField<PointerProxy<PyThreadState>> next;
             public StructField<PointerProxy<PyFrameObject>> frame;
+            [FieldProxy(MaxVersion = PythonLanguageVersion.V39)]
             public StructField<Int32Proxy> use_tracing;
+            [FieldProxy(MinVersion = PythonLanguageVersion.V310)]
+            public StructField<PointerProxy<CFrameProxy>> cframe;
             public StructField<PointerProxy> c_tracefunc;
             public StructField<PointerProxy<PyObject>> curexc_type;
             public StructField<PointerProxy<PyObject>> curexc_value;
@@ -61,6 +64,10 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             get { return GetFieldProxy(_fields.use_tracing); }
         }
 
+        public PointerProxy<CFrameProxy> cframe {
+            get { return GetFieldProxy(_fields.cframe); }
+        }
+
         public PointerProxy c_tracefunc {
             get { return GetFieldProxy(_fields.c_tracefunc); }
         }
@@ -93,6 +100,17 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
 
         public static IEnumerable<PyThreadState> GetThreadStates(DkmProcess process) {
             return PyInterpreterState.GetInterpreterStates(process).SelectMany(interp => interp.GetThreadStates());
+        }
+
+        public void RegisterTracing(ulong traceFunc) {
+            if (_fields.use_tracing.Process != null) {
+                use_tracing.Write(1);
+            }
+            if (_fields.cframe.Process != null) {
+                var frame = cframe.Read();
+                frame.use_tracing.Write(1);
+            }
+            c_tracefunc.Write(traceFunc);
         }
 
         

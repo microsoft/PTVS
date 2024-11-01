@@ -269,9 +269,15 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             }
         }
 
-        private IEnumerable<Int32Proxy> GetTracingPossible(PythonRuntimeInfo pyrtInfo, DkmProcess process) =>
-            from interp in PyInterpreterState.GetInterpreterStates(process)
+        private IEnumerable<Int32Proxy> GetTracingPossible(PythonRuntimeInfo pyrtInfo, DkmProcess process) {
+            // On 3.10 and above the tracing_possible is determined on each thread by the cframe object, so we don't need to
+            // check the interpreter state (it's no longer set there).
+            if (pyrtInfo.LanguageVersion > PythonLanguageVersion.V39) {
+                return Enumerable.Empty<Int32Proxy>();
+            }
+            return from interp in PyInterpreterState.GetInterpreterStates(process)
             select interp.ceval.tracing_possible;
+        }
 
         private void AddStepInGate(StepInGateHandler handler, DkmNativeModuleInstance module, string funcName, bool hasMultipleExitPoints) {
             var gate = new StepInGate {
@@ -288,8 +294,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         }
 
         public unsafe void RegisterTracing(PyThreadState tstate) {
-            tstate.use_tracing.Write(1);
-            tstate.c_tracefunc.Write(_traceFunc.GetPointer());
+            tstate.RegisterTracing(_traceFunc.GetPointer());
             foreach (var pyTracingPossible in GetTracingPossible(_pyrtInfo, _process)) {
                 pyTracingPossible.Write(pyTracingPossible.Read() + 1);
             }
