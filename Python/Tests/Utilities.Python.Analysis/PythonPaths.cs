@@ -46,6 +46,9 @@ namespace TestUtilities {
         public static readonly PythonVersion Python38 = GetCPythonVersion(PythonLanguageVersion.V38, InterpreterArchitecture.x86);
         public static readonly PythonVersion Python39 = GetCPythonVersion(PythonLanguageVersion.V39, InterpreterArchitecture.x86);
         public static readonly PythonVersion Python310 = GetCPythonVersion(PythonLanguageVersion.V310, InterpreterArchitecture.x86);
+        public static readonly PythonVersion Python311 = GetCPythonVersion(PythonLanguageVersion.V311, InterpreterArchitecture.x86);
+        public static readonly PythonVersion Python312 = GetCPythonVersion(PythonLanguageVersion.V312, InterpreterArchitecture.x86);
+        public static readonly PythonVersion Python313 = GetCPythonVersion(PythonLanguageVersion.V313, InterpreterArchitecture.x86);
         public static readonly PythonVersion Python27_x64 = GetCPythonVersion(PythonLanguageVersion.V27, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python35_x64 = GetCPythonVersion(PythonLanguageVersion.V35, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python36_x64 = GetCPythonVersion(PythonLanguageVersion.V36, InterpreterArchitecture.x64);
@@ -53,6 +56,9 @@ namespace TestUtilities {
         public static readonly PythonVersion Python38_x64 = GetCPythonVersion(PythonLanguageVersion.V38, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python39_x64 = GetCPythonVersion(PythonLanguageVersion.V39, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python310_x64 = GetCPythonVersion(PythonLanguageVersion.V310, InterpreterArchitecture.x64);
+        public static readonly PythonVersion Python311_x64 = GetCPythonVersion(PythonLanguageVersion.V311, InterpreterArchitecture.x64);
+        public static readonly PythonVersion Python312_x64 = GetCPythonVersion(PythonLanguageVersion.V312, InterpreterArchitecture.x64);
+        public static readonly PythonVersion Python313_x64 = GetCPythonVersion(PythonLanguageVersion.V313, InterpreterArchitecture.x64);
         public static readonly PythonVersion Anaconda27 = GetAnacondaVersion(PythonLanguageVersion.V27, InterpreterArchitecture.x86);
         public static readonly PythonVersion Anaconda27_x64 = GetAnacondaVersion(PythonLanguageVersion.V27, InterpreterArchitecture.x64);
         public static readonly PythonVersion Anaconda36 = GetAnacondaVersion(PythonLanguageVersion.V36, InterpreterArchitecture.x86);

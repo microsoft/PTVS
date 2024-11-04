@@ -92,6 +92,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         public class ceval_state : StructProxy {
             private class Fields {
                 public StructField<Int32Proxy> recursion_limit;
+                [FieldProxy(MaxVersion = PythonLanguageVersion.V39)]
                 public StructField<Int32Proxy> tracing_possible;
             }
 
