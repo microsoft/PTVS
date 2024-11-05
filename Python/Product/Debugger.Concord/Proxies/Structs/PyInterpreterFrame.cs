@@ -12,9 +12,9 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
     internal class PyInterpreterFrame : StructProxy {
         internal class Fields {
             public StructField<PointerProxy<PyFunctionObject>> f_func;
-            public StructField<PointerProxy<PyObject>> f_globals;
-            public StructField<PointerProxy<PyObject>> f_builtins;
-            public StructField<PointerProxy<PyObject>> f_locals;
+            public StructField<PointerProxy<PyDictObject>> f_globals;
+            public StructField<PointerProxy<PyDictObject>> f_builtins;
+            public StructField<PointerProxy<PyDictObject>> f_locals;
             public StructField<PointerProxy<PyCodeObject>> f_code;
             public StructField<PointerProxy<PyFrameObject>> frame_obj;
             public StructField<PointerProxy<PyInterpreterFrame>> previous;
@@ -22,7 +22,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             public StructField<Int32Proxy> stacktop;
             public StructField<BoolProxy> is_entry;
             public StructField<CharProxy> owner;
-            public StructField<PointerProxy<ArrayProxy<PyObject>>> localsplus;
+            public StructField<ArrayProxy<PointerProxy<PyObject>>> localsplus;
         }
 
         private readonly Fields _fields;
@@ -31,5 +31,26 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             : base(process, address) {
             InitializeStruct(this, out _fields);
         }
+
+        public PointerProxy<PyCodeObject> f_code {
+            get { return GetFieldProxy(_fields.f_code); }
+        }
+
+        public PointerProxy<PyDictObject> f_globals {
+            get { return GetFieldProxy(_fields.f_globals); }
+        }
+
+        public PointerProxy<PyDictObject> f_locals {
+            get { return GetFieldProxy(_fields.f_locals); }
+        }
+
+        public ArrayProxy<PointerProxy<PyObject>> f_localsplus {
+            get { return GetFieldProxy(_fields.localsplus); }
+        }
+
+        public PointerProxy<PyFrameObject> frame_obj {
+            get { return GetFieldProxy(_fields.frame_obj); }
+        }
+
     }
 }

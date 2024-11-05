@@ -7,11 +7,14 @@ using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.VisualStudio.Debugger;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
-    [StructProxy(StructName = "_cframe", MinVersion = PythonLanguageVersion.V310)]
+    [StructProxy(StructName = "_cframe", MinVersion = PythonLanguageVersion.V310, MaxVersion = PythonLanguageVersion.V310)]
+    [StructProxy(StructName = "_PyCFrame", MinVersion = PythonLanguageVersion.V311)]
     internal class CFrameProxy : StructProxy {
         internal class Fields {
             public StructField<Int32Proxy> use_tracing;
             public StructField<PointerProxy<CFrameProxy>> previous;
+            [FieldProxy(MinVersion = PythonLanguageVersion.V311)]
+            public StructField<PointerProxy<PyInterpreterFrame>> current_frame;
         }
 
         private readonly Fields _fields;
@@ -24,5 +27,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         public Int32Proxy use_tracing {
             get { return GetFieldProxy(_fields.use_tracing); }
         }
+
+        public PointerProxy<PyInterpreterFrame> current_frame => GetFieldProxy(_fields.current_frame);
     }
 }

@@ -108,6 +108,10 @@
     <Compile Include="ExpressionEvaluator.cs" />
     <Compile Include="LocalStackWalkingComponent.cs" />
     <Compile Include="Proxies\Structs\CFrameProxy.cs" />
+    <Compile Include="Proxies\Structs\PyFrameObject310.cs" />
+    <Compile Include="Proxies\Structs\PyFrameObject311.cs" />
+    <Compile Include="Proxies\Structs\PyFunctionObject.cs" />
+    <Compile Include="Proxies\Structs\PyInterpreterFrame.cs" />
     <Compile Include="Proxies\Structs\PyRuntimeState.cs" />
     <Compile Include="Proxies\Structs\PyEllipsisObject.cs" />
     <Compile Include="Proxies\Structs\PyComplexObject.cs" />
@@ -119,6 +123,7 @@
     <Compile Include="Proxies\Structs\PyBoolObject.cs" />
     <Compile Include="Proxies\Structs\PySetObject.cs" />
     <Compile Include="Proxies\Structs\PyCellObject.cs" />
+    <Compile Include="Proxies\Structs\PyThreads.cs" />
     <Compile Include="PythonRuntimeInfo.cs" />
     <Compile Include="StackFrameDataItem.cs" />
     <Compile Include="ValueStore.cs" />

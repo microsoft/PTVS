@@ -24,7 +24,10 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
     internal class PyThreadState : StructProxy {
         private class Fields {
             public StructField<PointerProxy<PyThreadState>> next;
+            [FieldProxy(MaxVersion = PythonLanguageVersion.V310)]
             public StructField<PointerProxy<PyFrameObject>> frame;
+            [FieldProxy(MinVersion = PythonLanguageVersion.V311)]
+            public StructField<PointerProxy<PyInterpreterState>> interp;
             [FieldProxy(MaxVersion = PythonLanguageVersion.V39)]
             public StructField<Int32Proxy> use_tracing;
             [FieldProxy(MinVersion = PythonLanguageVersion.V310)]
@@ -57,7 +60,16 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         }
 
         public PointerProxy<PyFrameObject> frame {
-            get { return GetFieldProxy(_fields.frame); }
+            get {
+                if (_fields.frame.Process != null) {
+                    return GetFieldProxy(_fields.frame);
+                }
+
+                // In 3.11, the current frame was moved into the cframe
+                var cframe = GetFieldProxy(_fields.cframe).Read();
+                var interpFrame = cframe.current_frame.TryRead();
+                return interpFrame.frame_obj;
+            }
         }
 
         public Int32Proxy use_tracing {
@@ -99,7 +111,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         }
 
         public static IEnumerable<PyThreadState> GetThreadStates(DkmProcess process) {
-            return PyInterpreterState.GetInterpreterStates(process).SelectMany(interp => interp.GetThreadStates());
+            return PyInterpreterState.GetInterpreterStates(process).SelectMany(interp => interp.GetThreadStates(process));
         }
 
         public void RegisterTracing(ulong traceFunc) {
@@ -108,7 +120,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             }
             if (_fields.cframe.Process != null) {
                 var frame = cframe.Read();
-                frame.use_tracing.Write(1);
+                frame.use_tracing.Write(255); // In 3.11 this flag has to be zero or 255
             }
             c_tracefunc.Write(traceFunc);
         }

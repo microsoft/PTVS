@@ -27,24 +27,9 @@ using Microsoft.VisualStudio.Debugger.Evaluation;
 using static Microsoft.VisualStudio.Threading.SingleThreadedSynchronizationContext;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
-    [StructProxy(MinVersion = PythonLanguageVersion.V39, StructName = "_frame")]
-    internal class PyFrameObject : PyVarObject {
-        internal class Fields {
-            public StructField<PointerProxy<PyFrameObject>> f_back;
-            public StructField<PointerProxy<PyCodeObject>> f_code;
-            public StructField<PointerProxy<PyDictObject>> f_globals;
-            public StructField<PointerProxy<PyDictObject>> f_locals;
-            public StructField<Int32Proxy> f_lineno;
-            public StructField<ArrayProxy<PointerProxy<PyObject>>> f_localsplus;
-        }
-
-        private readonly Fields _fields;
-
+    internal abstract class PyFrameObject : PyVarObject {
         public PyFrameObject(DkmProcess process, ulong address)
             : base(process, address) {
-            var pythonInfo = process.GetPythonRuntimeInfo();
-            InitializeStruct(this, out _fields);
-            CheckPyType<PyFrameObject>();
         }
 
 
@@ -77,34 +62,26 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
 
             var framePtrAddress = PyFrameObject.GetFramePtrAddress(frame, previousFrameCount);
             if (framePtrAddress != 0) {
-                return new PyFrameObject(frame.Process, framePtrAddress);
+                var pythonInfo = process.GetPythonRuntimeInfo();
+                if (pythonInfo.LanguageVersion < PythonLanguageVersion.V311) {
+                    return new PyFrameObject310(frame.Process, framePtrAddress);
+                }
+                return new PyFrameObject311(frame.Process, framePtrAddress);
             }
             return null;
         }
 
-        public PointerProxy<PyFrameObject> f_back {
-            get { return GetFieldProxy(_fields.f_back); }
-        }
+        public abstract PointerProxy<PyFrameObject> f_back { get; }
 
-        public PointerProxy<PyCodeObject> f_code {
-            get { return GetFieldProxy(_fields.f_code); }
-        }
+        public abstract PointerProxy<PyCodeObject> f_code { get; }
 
-        public PointerProxy<PyDictObject> f_globals {
-            get { return GetFieldProxy(_fields.f_globals); }
-        }
+        public abstract PointerProxy<PyDictObject> f_globals { get; }
 
-        public PointerProxy<PyDictObject> f_locals {
-            get { return GetFieldProxy(_fields.f_locals); }
-        }
+        public abstract PointerProxy<PyDictObject> f_locals { get; }
 
-        public Int32Proxy f_lineno {
-            get { return GetFieldProxy(_fields.f_lineno); }
-        }
+        public abstract Int32Proxy f_lineno { get; }
 
-        public ArrayProxy<PointerProxy<PyObject>> f_localsplus {
-            get { return GetFieldProxy(_fields.f_localsplus); }
-        }
+        public abstract ArrayProxy<PointerProxy<PyObject>> f_localsplus { get; }
 
         private static ulong GetFramePtrAddress(DkmStackWalkFrame frame, int? previousFrameCount) {
             // Frame address may already be stored in the frame, check the data.
@@ -120,7 +97,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
                     // This pyFrame should be the topmost frame. We need to go down the callstack
                     // based on the number of previous frames that were already found.
                     var numberBack = previousFrameCount != null ? previousFrameCount.Value : 0;
-                    while (numberBack > 0) {
+                    while (numberBack > 0 && !pyFrame.f_back.IsNull) {
                         pyFrame = pyFrame.f_back.Read();
                         numberBack--;
                     }

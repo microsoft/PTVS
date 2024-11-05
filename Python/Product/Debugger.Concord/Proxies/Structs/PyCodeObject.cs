@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.VisualStudio.Debugger;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
@@ -21,8 +22,11 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         public class Fields {
             public StructField<Int32Proxy> co_nlocals;
             public StructField<PointerProxy<PyTupleObject>> co_names;
+            [FieldProxy(MaxVersion = PythonLanguageVersion.V310)]
             public StructField<PointerProxy<PyTupleObject>> co_varnames;
+            [FieldProxy(MaxVersion = PythonLanguageVersion.V310)]
             public StructField<PointerProxy<PyTupleObject>> co_freevars;
+            [FieldProxy(MaxVersion = PythonLanguageVersion.V310)]
             public StructField<PointerProxy<PyTupleObject>> co_cellvars;
             public StructField<PointerProxy<IPyBaseStringObject>> co_filename;
             public StructField<PointerProxy<IPyBaseStringObject>> co_name;

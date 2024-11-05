@@ -23,6 +23,8 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             public StructField<PointerProxy<PyObject>> func_weakreflist;
             public StructField<PointerProxy<PyObject>> func_module;
             public StructField<PointerProxy<PyObject>> func_annotations;
+            public StructField<PointerProxy<UInt64Proxy>> vectorcall;
+            public StructField<UInt32Proxy> func_version;
         }
 
         private readonly Fields _fields;
