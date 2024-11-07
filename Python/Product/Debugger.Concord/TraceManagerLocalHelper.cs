@@ -62,13 +62,18 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         // Layout of this struct must always remain in sync with DebuggerHelper/trace.cpp.
         [StructLayout(LayoutKind.Sequential, Pack = 8)]
         private struct PyCodeObject_FieldOffsets {
-            public readonly long co_varnames, co_filename, co_name;
+            public readonly long co_filename, co_name;
 
             public PyCodeObject_FieldOffsets(DkmProcess process) {
-                var fields = StructProxy.GetStructFields<PyCodeObject, PyCodeObject.Fields>(process);
-                co_varnames = fields.co_varnames.Offset;
-                co_filename = fields.co_filename.Offset;
-                co_name = fields.co_name.Offset;
+                if (process.GetPythonRuntimeInfo().LanguageVersion <= PythonLanguageVersion.V310) {
+                    var fields = StructProxy.GetStructFields<PyCodeObject310, PyCodeObject310.Fields>(process);
+                    co_filename = fields.co_filename.Offset;
+                    co_name = fields.co_name.Offset;
+                } else {
+                    var fields = StructProxy.GetStructFields<PyCodeObject311, PyCodeObject311.Fields>(process);
+                    co_filename = fields.co_filename.Offset;
+                    co_name = fields.co_name.Offset;
+                }
             }
         }
 
@@ -80,7 +85,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             public PyFrameObject_FieldOffsets(DkmProcess process) {
                 // For 310, these are on the _frame struct itself.
                 if (process.GetPythonRuntimeInfo().LanguageVersion <= PythonLanguageVersion.V310) {
-                    var fields = StructProxy.GetStructFields<PyFrameObject310, PyFrameObject310.Fields310>(process);
+                    var fields = StructProxy.GetStructFields<PyFrameObject310, PyFrameObject310.Fields>(process);
                     f_back = fields.f_back.Offset;
                     f_code = fields.f_code.Offset;
                     f_globals = fields.f_globals.Offset;
@@ -91,7 +96,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 }
 
                 // For 311 and higher, they are on the PyInterpreterFrame struct which is pointed to by the _frame struct.
-                var _frameFields = StructProxy.GetStructFields<PyFrameObject311, PyFrameObject311.Fields311>(process);
+                var _frameFields = StructProxy.GetStructFields<PyFrameObject311, PyFrameObject311.Fields>(process);
                 var _interpreterFields = StructProxy.GetStructFields<PyInterpreterFrame, PyInterpreterFrame.Fields>(process);
                 f_frame = _frameFields.f_frame.Offset;
                 f_back = _frameFields.f_back.Offset;

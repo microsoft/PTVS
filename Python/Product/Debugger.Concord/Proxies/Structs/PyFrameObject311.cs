@@ -11,7 +11,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
     [StructProxy(StructName = "_frame", MinVersion = PythonLanguageVersion.V311)]
     [PyType(MinVersion = PythonLanguageVersion.V311, VariableName = "PyFrame_Type")]
     internal class PyFrameObject311 : PyFrameObject {
-        internal class Fields311 {
+        internal class Fields {
             public StructField<PointerProxy<PyFrameObject>> f_back;
             public StructField<PointerProxy<PyInterpreterFrame>> f_frame;
             public StructField<PointerProxy<PyObject>> f_trace;
@@ -22,7 +22,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             public StructField<ArrayProxy<PointerProxy<PyObject>>> _f_frame_data;
         }
 
-        private readonly Fields311 _fields;
+        private readonly Fields _fields;
 
         public PyFrameObject311(DkmProcess process, ulong address)
             : base(process, address) {

@@ -7,7 +7,7 @@ using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.VisualStudio.Debugger;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
-    [StructProxy(StructName = "PyFunctionObject", MinVersion = PythonLanguageVersion.V311)]
+    [StructProxy(StructName = "PyFunctionObject", MinVersion = PythonLanguageVersion.V310)]
     internal class PyFunctionObject : PyObject {
         internal class Fields {
             public StructField<PointerProxy<PyObject>> func_globals;

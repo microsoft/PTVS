@@ -108,6 +108,10 @@
     <Compile Include="ExpressionEvaluator.cs" />
     <Compile Include="LocalStackWalkingComponent.cs" />
     <Compile Include="Proxies\Structs\CFrameProxy.cs" />
+    <Compile Include="Proxies\Structs\PyCodeObject310.cs" />
+    <Compile Include="Proxies\Structs\PyCodeObject311.cs" />
+    <Compile Include="Proxies\Structs\PyDictObject.cs" />
+    <Compile Include="Proxies\Structs\PyDictObject311.cs" />
     <Compile Include="Proxies\Structs\PyFrameObject310.cs" />
     <Compile Include="Proxies\Structs\PyFrameObject311.cs" />
     <Compile Include="Proxies\Structs\PyFunctionObject.cs" />
@@ -144,7 +148,7 @@
     <Compile Include="Proxies\Structs\PyInterpreterState.cs" />
     <Compile Include="Proxies\StructProxy.cs" />
     <Compile Include="Proxies\Structs\PyCodeObject.cs" />
-    <Compile Include="Proxies\Structs\PyDictObject.cs" />
+    <Compile Include="Proxies\Structs\PyDictObject310.cs" />
     <Compile Include="Proxies\Structs\PyFrameObject.cs" />
     <Compile Include="Proxies\Structs\PyListObject.cs" />
     <Compile Include="Proxies\Structs\PyLongObject.cs" />

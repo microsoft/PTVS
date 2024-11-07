@@ -54,7 +54,7 @@ struct {
         int64_t f_back, f_code, f_globals, f_locals, f_lineno, f_frame;
     } PyFrameObject;
     struct {
-        int64_t co_varnames, co_filename, co_name;
+        int64_t co_filename, co_name;
     } PyCodeObject;
     struct {
         int64_t ob_sval;

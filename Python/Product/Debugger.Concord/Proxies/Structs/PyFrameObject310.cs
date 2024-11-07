@@ -10,7 +10,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
     [StructProxy(StructName = "_frame", MaxVersion = PythonLanguageVersion.V310)]
     [PyType(MaxVersion = PythonLanguageVersion.V310, VariableName = "PyFrame_Type")]
     internal class PyFrameObject310 : PyFrameObject {
-        internal class Fields310 {
+        internal class Fields {
             public StructField<PointerProxy<PyFrameObject>> f_back;
             public StructField<PointerProxy<PyCodeObject>> f_code;
             public StructField<PointerProxy<PyDictObject>> f_globals;
@@ -20,7 +20,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             public StructField<ArrayProxy<PointerProxy<PyObject>>> f_localsplus;
         }
 
-        private readonly Fields310 _fields;
+        private readonly Fields _fields;
 
         public override PointerProxy<PyFrameObject> f_back => GetFieldProxy(_fields.f_back);
 
