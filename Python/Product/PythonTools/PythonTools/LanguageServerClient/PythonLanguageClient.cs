@@ -446,7 +446,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
         private void OnInterpreterChanged(object sender, EventArgs e) {
 
-            // By default Pylance will tell us to watch everything under the workspace
+            // By default Pylance will tell us to watch everything under the workspace with pattern "**/*"
             // we can exclude the interpreter directory because we already have package managers listening to them
             this._clientContexts.ForEach(context => {
 
