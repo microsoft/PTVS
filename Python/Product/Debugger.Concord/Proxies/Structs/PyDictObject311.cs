@@ -157,7 +157,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         public PointerProxy<PyObject> me_value { get; }
     }
 
-    [StructProxy(MinVersion = PythonLanguageVersion.V311)]
+    [StructProxy(MinVersion = PythonLanguageVersion.V311, StructName ="PyDictKeyEntry")]
     internal class PyDictKeyEntry311 : StructProxy, IDictKeyEntry {
         private class Fields {
             public StructField<PointerProxy<PyObject>> me_key;

@@ -101,14 +101,14 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             get { return GetFieldProxy(_fields.dk_nentries); }
         }
 
-        public IEnumerable<IDictKeyEntry> dk_entries {
+        public IEnumerable<PyDictKeyEntry310> dk_entries {
             get {
                 // dk_entries is located after dk_indices, which is
                 // variable length depending on the size of the table.
                 long size = dk_size.Read();
                 long offset = _fields.dk_indices.Offset;
                 if (size <= 0) {
-                    return default(ArrayProxy<IDictKeyEntry>);
+                    return default(ArrayProxy<PyDictKeyEntry310>);
                 } else if (size <= 0xFF) {
                     offset += size;
                 } else if (size <= 0xFFFF) {
@@ -119,7 +119,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
                     offset += size * 8;
                 }
 
-                return DataProxy.Create<ArrayProxy<PyDictKeyEntry311>>(
+                return DataProxy.Create<ArrayProxy<PyDictKeyEntry310>>(
                     Process,
                     Address.OffsetBy(offset)
                 );
@@ -132,7 +132,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         }
     }
 
-    [StructProxy(MinVersion = PythonLanguageVersion.V39)]
+    [StructProxy(MinVersion = PythonLanguageVersion.V39, StructName = "PyDictKeyEntry")]
     internal class PyDictKeyEntry310 : StructProxy {
         private class Fields {
             public StructField<PointerProxy<PyObject>> me_key;

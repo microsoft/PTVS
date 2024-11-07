@@ -24,6 +24,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             public StructField<PointerProxy<PyObject>> func_module;
             public StructField<PointerProxy<PyObject>> func_annotations;
             public StructField<PointerProxy<UInt64Proxy>> vectorcall;
+            [FieldProxy(MinVersion = PythonLanguageVersion.V311)]
             public StructField<UInt32Proxy> func_version;
         }
 
