@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.CookiecutterTools.Infrastructure;
 using Microsoft.Win32;
@@ -164,15 +165,18 @@ namespace Microsoft.CookiecutterTools.Interpreters {
                 }
             }
 
+            // The regex captures the major and minor version as a group.
+            var match = Regex.Match(tag, @"^(\d+\.\d+)");
+
             var version = tagKey.GetValue("Version") as string;
             if (pythonCoreCompatibility && string.IsNullOrEmpty(version) && tag.Length >= 3) {
-                version = (tag.Length > 3 && char.IsDigit(tag[3])) ? tag.Substring(0, 4) : tag.Substring(0, 3);
+                version = match.Success ? match.Groups[1].Value : "";
             }
 
             Version sysVersion;
             var sysVersionString = tagKey.GetValue("SysVersion") as string;
             if (pythonCoreCompatibility && string.IsNullOrEmpty(sysVersionString) && tag.Length >= 3) {
-                sysVersionString = (tag.Length > 3 && char.IsDigit(tag[3])) ? tag.Substring(0, 4) : tag.Substring(0, 3);
+                sysVersionString = match.Success ? match.Groups[1].Value : "";
             }
             if (string.IsNullOrEmpty(sysVersionString) || !Version.TryParse(sysVersionString, out sysVersion)) {
                 sysVersion = new Version(0, 0);
