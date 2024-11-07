@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.PythonTools.Infrastructure;
@@ -171,14 +172,17 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
             }
 
+            // The regex captures the major and minor version as a group.
+            var match = Regex.Match(tag, @"^(\d+\.\d+)");
+
             var version = tagKey.GetValue("Version") as string;
             if (pythonCoreCompatibility && string.IsNullOrEmpty(version) && tag.Length >= 3) {
-                version = tag.Substring(0, 3);
+                version = match.Success ? match.Groups[1].Value : "";
             }
 
             var sysVersionString = tagKey.GetValue("SysVersion") as string;
             if (pythonCoreCompatibility && string.IsNullOrEmpty(sysVersionString) && tag.Length >= 3) {
-                sysVersionString = tag.Substring(0, 3);
+                sysVersionString = match.Success ? match.Groups[1].Value : "";
             }
             if (string.IsNullOrEmpty(sysVersionString) || !Version.TryParse(sysVersionString, out var sysVersion)) {
                 sysVersion = new Version(0, 0);
