@@ -35,6 +35,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private const string TestFrameworkProperty = "TestFramework";
         private const string UnitTestRootDirectoryProperty = "UnitTestRootDirectory";
         private const string UnitTestPatternProperty = "UnitTestPattern";
+        private const int DebounceDelayMS = 10000;
 
         private readonly IWorkspace _workspace;
         private readonly IPropertyEvaluatorService _propertyEvaluatorService;
@@ -151,13 +152,12 @@ namespace Microsoft.PythonTools.Interpreter {
             _registryService.InterpretersChanged += OnInterpretersChanged;
 
             _activePackageManagers = _optionsService.GetPackageManagers(_factory).ToArray();
-
-            if (!PathUtils.IsSubpathOf(_workspace.Location, _factory.Configuration.InterpreterPath)) {
-                foreach (var pm in _activePackageManagers) {
-                    pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
-                    pm.EnableNotifications();
-                }
+           
+            foreach (var pm in _activePackageManagers) {
+                pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
+                pm.EnableNotifications();
             }
+            
         }
 
         public void Dispose() {
@@ -357,6 +357,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
             foreach (var pm in EnumerableExtensions.MaybeEnumerate(oldPms)) {
                 pm.InstalledFilesChanged -= PackageManager_InstalledFilesChanged;
+                pm.DisableNotifications();
             }
 
             RefreshCurrentFactory();
@@ -366,18 +367,16 @@ namespace Microsoft.PythonTools.Interpreter {
                 newFactory = _factory;
             }
 
-            
+            if (oldFactory?.Configuration.Id != newFactory?.Configuration.Id) {
+                ActiveInterpreterChanged?.Invoke(this, EventArgs.Empty);
+            }
+
             _activePackageManagers = _optionsService.GetPackageManagers(newFactory).ToArray();
             foreach (var pm in _activePackageManagers) {
                 if (!PathUtils.IsSubpathOf(_workspace.Location, newFactory.Configuration.InterpreterPath)) {
                     pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
                     pm.EnableNotifications();
                 }
-            }
-
-
-            if (oldFactory?.Configuration.Id != newFactory?.Configuration.Id) {
-                ActiveInterpreterChanged?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -425,6 +424,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 _registryService.InterpretersChanged -= OnInterpretersChanged;
                 foreach (var pm in EnumerableExtensions.MaybeEnumerate(_activePackageManagers)) {
                     pm.InstalledFilesChanged -= PackageManager_InstalledFilesChanged;
+                    pm.DisableNotifications();
                 }
 
                 try {
@@ -437,16 +437,16 @@ namespace Microsoft.PythonTools.Interpreter {
                 var oldFactory = CurrentFactory;
                 RefreshCurrentFactory();
 
+                if (oldFactory != CurrentFactory) {
+                    ActiveInterpreterChanged?.Invoke(this, EventArgs.Empty);
+                }
+
                 _activePackageManagers = _optionsService.GetPackageManagers(_factory).ToArray();
                 if (!PathUtils.IsSubpathOf(_workspace.Location, _factory.Configuration.InterpreterPath)) {
                     foreach (var pm in _activePackageManagers) {
                         pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
                         pm.EnableNotifications();
                     }
-                }
-
-                if (oldFactory != CurrentFactory) {
-                    ActiveInterpreterChanged?.Invoke(this, EventArgs.Empty);
                 }
             }
 
@@ -472,7 +472,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private void PackageManager_InstalledFilesChanged(object sender, EventArgs e) {
             try {
-                _reanalyzeWorkspaceNotification.Change(500, Timeout.Infinite);
+                _reanalyzeWorkspaceNotification.Change(DebounceDelayMS, Timeout.Infinite);
             } catch (ObjectDisposedException) {
             }
         }
