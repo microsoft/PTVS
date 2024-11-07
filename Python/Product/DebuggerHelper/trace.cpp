@@ -442,10 +442,10 @@ static void TraceLine(void* frame) {
         co_filename = ReadField<void*>(f_code, fieldOffsets.PyCodeObject.co_filename);
     }
     else {
-		// We're on 3.11 or later. f_frame (PyInterpreterFrame) is off of the frame. It has
-		// the f_code object.
-		void* f_frame = ReadField<void*>(frame, fieldOffsets.PyFrameObject.f_frame);
-		void* f_code = ReadField<void*>(f_frame, fieldOffsets.PyFrameObject.f_code);
+        // We're on 3.11 or later. f_frame (PyInterpreterFrame) is off of the frame. It has
+        // the f_code object.
+        void* f_frame = ReadField<void*>(frame, fieldOffsets.PyFrameObject.f_frame);
+        void* f_code = ReadField<void*>(f_frame, fieldOffsets.PyFrameObject.f_code);
         co_filename = ReadField<void*>(f_code, fieldOffsets.PyCodeObject.co_filename);
     }
     if (co_filename == nullptr) {
