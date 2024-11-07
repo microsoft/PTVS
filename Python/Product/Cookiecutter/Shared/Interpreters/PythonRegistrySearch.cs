@@ -166,13 +166,13 @@ namespace Microsoft.CookiecutterTools.Interpreters {
 
             var version = tagKey.GetValue("Version") as string;
             if (pythonCoreCompatibility && string.IsNullOrEmpty(version) && tag.Length >= 3) {
-                version = tag.Substring(0, 3);
+                version = (tag.Length > 3 && char.IsDigit(tag[3])) ? tag.Substring(0, 4) : tag.Substring(0, 3);
             }
 
             Version sysVersion;
             var sysVersionString = tagKey.GetValue("SysVersion") as string;
             if (pythonCoreCompatibility && string.IsNullOrEmpty(sysVersionString) && tag.Length >= 3) {
-                sysVersionString = tag.Substring(0, 3);
+                sysVersionString = (tag.Length > 3 && char.IsDigit(tag[3])) ? tag.Substring(0, 4) : tag.Substring(0, 3);
             }
             if (string.IsNullOrEmpty(sysVersionString) || !Version.TryParse(sysVersionString, out sysVersion)) {
                 sysVersion = new Version(0, 0);
