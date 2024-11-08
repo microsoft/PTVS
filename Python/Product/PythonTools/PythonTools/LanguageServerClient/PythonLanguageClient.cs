@@ -445,8 +445,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         }
         private void OnInterpreterChanged(object sender, EventArgs e) {
-
-            
             UpdateInterpreterExcludes();
             OnSettingsChanged(sender, e);
         }
@@ -518,7 +516,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             // Add the file globs to our listener. It will listen to the globs
             UpdateInterpreterExcludes();
             _fileListener?.AddPatterns(e.Watchers);
-           
+
         }
 
         // By default Pylance will tell us to watch everything under the workspace with pattern "**/*"
