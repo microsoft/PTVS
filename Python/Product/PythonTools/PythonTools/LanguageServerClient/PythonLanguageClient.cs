@@ -446,17 +446,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
         private void OnInterpreterChanged(object sender, EventArgs e) {
 
-            // By default Pylance will tell us to watch everything under the workspace with pattern "**/*"
-            // we can exclude the interpreter directory because we already have package managers listening to them
-            this._clientContexts.ForEach(context => {
-
-                if (PathUtils.IsSubpathOf(context.RootPath, context.InterpreterConfiguration.InterpreterPath)) {
-                    var pattern = CommonUtils.GetRelativeFilePath(context.RootPath, context.InterpreterConfiguration.GetPrefixPath()) + "/**/*";
-                    var watcher = new FileSystemWatcher() { GlobPattern = pattern };
-                    this._fileListener.AddExclude(watcher);
-                }
-
-            });
+            
+            UpdateInterpreterExcludes();
             OnSettingsChanged(sender, e);
         }
 
@@ -524,16 +515,24 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private void WatchedFilesRegistered(object sender, DidChangeWatchedFilesRegistrationOptions e) {
-            
-            //this._clientContexts.ForEach(context => {
+            // Add the file globs to our listener. It will listen to the globs
+            UpdateInterpreterExcludes();
+            _fileListener?.AddPatterns(e.Watchers);
+           
+        }
 
-            //    if (PathUtils.IsSubpathOf(context.RootPath, context.InterpreterConfiguration.InterpreterPath)) {
-            //        var pattern = CommonUtils.GetRelativeFilePath(context.RootPath, context.InterpreterConfiguration.GetPrefixPath()) + "/**/*";
-            //        var watcher = new FileSystemWatcher() { GlobPattern = pattern };
-            //        this._fileListener.AddExclude(watcher);
-            //    }
+        // By default Pylance will tell us to watch everything under the workspace with pattern "**/*"
+        // we can exclude the interpreter directory because we already have package managers listening to them
+        private void UpdateInterpreterExcludes() {
+            this._clientContexts.ForEach(context => {
 
-            //});
+                if (PathUtils.IsSubpathOf(context.RootPath, context.InterpreterConfiguration.InterpreterPath)) {
+                    var pattern = CommonUtils.GetRelativeFilePath(context.RootPath, context.InterpreterConfiguration.GetPrefixPath()).TrimEnd('\\') + "/**/*";
+                    var watcher = new FileSystemWatcher() { GlobPattern = pattern };
+                    this._fileListener.AddExclude(watcher);
+                }
+
+            });
         }
 
         private void CreateClientContexts() {
