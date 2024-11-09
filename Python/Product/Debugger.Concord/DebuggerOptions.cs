@@ -22,7 +22,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         // These are intentionally not implemented as auto-properties to enable easily changing them at runtime, including when stopped in native code.
         //
         // These show up in commands in the debugger watch window if you set the registry value:
-        // HKCU/Software/Microsoft/PythonTools/Debugger PythonDeveloper: DWORD = 1
+        // Key: HKCU/Software/Microsoft/PythonTools/Debugger - Value: PythonDeveloper: DWORD = 1
         private static bool _showNativePythonFrames;
         private static bool _usePythonStepping;
         private static bool _showCppViewNodes;

@@ -14,17 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using Microsoft.PythonTools.Common.Core.OS;
 using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.CallStack;
-using Microsoft.VisualStudio.Debugger.Evaluation;
-using static Microsoft.VisualStudio.Threading.SingleThreadedSynchronizationContext;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
     internal abstract class PyFrameObject : PyVarObject {
