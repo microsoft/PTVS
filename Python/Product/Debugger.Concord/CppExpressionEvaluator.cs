@@ -57,12 +57,11 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 DkmEvaluationFlags.TreatAsExpression | DkmEvaluationFlags.NoSideEffects, DkmFuncEvalFlags.None, inspectionContext.Radix, CppLanguage, null);
         }
 
-        public CppExpressionEvaluator(DkmThread thread, ulong frameBase, ulong vframe) {
+        public CppExpressionEvaluator(DkmThread thread, ulong frameBase, ulong vframe, DkmEvaluationFlags flags = DkmEvaluationFlags.TreatAsExpression | DkmEvaluationFlags.NoSideEffects) {
             _process = thread.Process;
-
             var inspectionSession = DkmInspectionSession.Create(_process, null);
             _cppInspectionContext = DkmInspectionContext.Create(inspectionSession, _process.GetNativeRuntimeInstance(), thread, Timeout,
-                DkmEvaluationFlags.TreatAsExpression | DkmEvaluationFlags.NoSideEffects, DkmFuncEvalFlags.None, 10, CppLanguage, null);
+                flags, DkmFuncEvalFlags.None, 10, CppLanguage, null);
 
             const int CV_ALLREG_VFRAME = 0x00007536;
             var vframeReg = DkmUnwoundRegister.Create(CV_ALLREG_VFRAME, new ReadOnlyCollection<byte>(BitConverter.GetBytes(vframe)));
@@ -79,8 +78,8 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             return expr;
         }
 
-        public DkmEvaluationResult TryEvaluate(string expr) {
-            using (var cppExpr = DkmLanguageExpression.Create(CppLanguage, DkmEvaluationFlags.NoSideEffects, expr, null)) {
+        public DkmEvaluationResult TryEvaluate(string expr, DkmEvaluationFlags flags = DkmEvaluationFlags.NoSideEffects) {
+            using (var cppExpr = DkmLanguageExpression.Create(CppLanguage, flags, expr, null)) {
                 DkmEvaluationResult cppEvalResult = null;
                 var cppWorkList = DkmWorkList.Create(null);
                 _cppInspectionContext.EvaluateExpression(cppWorkList, cppExpr, _nativeFrame, (result) => {

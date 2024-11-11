@@ -92,7 +92,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
                 var process = frame.Process;
                 var tid = frame.Thread.SystemPart.Id;
                 PyThreadState tstate = PyThreadState.GetThreadStates(process).FirstOrDefault(ts => ts.thread_id.Read() == tid);
-                PyFrameObject pyFrame = tstate.frame.Read();
+                PyFrameObject pyFrame = tstate.frame.TryRead();
                 if (pyFrame != null) {
                     // This pyFrame should be the topmost frame. We need to go down the callstack
                     // based on the number of previous frames that were already found.

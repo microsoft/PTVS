@@ -11,6 +11,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
     [StructProxy(StructName = "_PyCFrame", MinVersion = PythonLanguageVersion.V311)]
     internal class CFrameProxy : StructProxy {
         internal class Fields {
+            [FieldProxy(MaxVersion = PythonLanguageVersion.V311)]
             public StructField<Int32Proxy> use_tracing;
             public StructField<PointerProxy<CFrameProxy>> previous;
             [FieldProxy(MinVersion = PythonLanguageVersion.V311)]
