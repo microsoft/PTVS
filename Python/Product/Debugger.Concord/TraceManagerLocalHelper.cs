@@ -122,22 +122,43 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         [StructLayout(LayoutKind.Sequential, Pack = 8)]
         private struct PyUnicodeObject_FieldOffsets {
             public readonly long sizeof_PyASCIIObject, sizeof_PyCompactUnicodeObject;
-            public readonly long length, state, wstr, wstr_length, data;
+            public readonly long length, state, wstr, wstr_length, utf8, utf8_length, data;
 
             public PyUnicodeObject_FieldOffsets(DkmProcess process) {
-                sizeof_PyASCIIObject = StructProxy.SizeOf<PyASCIIObject>(process);
-                sizeof_PyCompactUnicodeObject = StructProxy.SizeOf<PyUnicodeObject>(process);
+                if (process.GetPythonRuntimeInfo().LanguageVersion <= PythonLanguageVersion.V311) {
+                    sizeof_PyASCIIObject = StructProxy.SizeOf<PyASCIIObject311>(process);
+                    sizeof_PyCompactUnicodeObject = StructProxy.SizeOf<PyCompactUnicodeObject311>(process);
 
-                var asciiFields = StructProxy.GetStructFields<PyASCIIObject, PyASCIIObject.Fields>(process);
-                length = asciiFields.length.Offset;
-                state = asciiFields.state.Offset;
-                wstr = asciiFields.wstr.Offset;
+                    var asciiFields = StructProxy.GetStructFields<PyASCIIObject311, PyASCIIObject311.Fields>(process);
+                    length = asciiFields.length.Offset;
+                    state = asciiFields.state.Offset;
+                    wstr = asciiFields.wstr.Offset;
+                    utf8 = 0;
+                    utf8_length = 0;
 
-                var compactFields = StructProxy.GetStructFields<PyCompactUnicodeObject, PyCompactUnicodeObject.Fields>(process);
-                wstr_length = compactFields.wstr_length.Offset;
+                    var compactFields = StructProxy.GetStructFields<PyCompactUnicodeObject311, PyCompactUnicodeObject311.Fields>(process);
+                    wstr_length = compactFields.wstr_length.Offset;
 
-                var unicodeFields = StructProxy.GetStructFields<PyUnicodeObject, PyUnicodeObject.Fields>(process);
-                data = unicodeFields.data.Offset;
+                    var unicodeFields = StructProxy.GetStructFields<PyUnicodeObject311, PyUnicodeObject311.Fields>(process);
+                    data = unicodeFields.data.Offset;
+                } else {
+                    sizeof_PyASCIIObject = StructProxy.SizeOf<PyASCIIObject312>(process);
+                    sizeof_PyCompactUnicodeObject = StructProxy.SizeOf<PyCompactUnicodeObject312>(process);
+
+                    var asciiFields = StructProxy.GetStructFields<PyASCIIObject312, PyASCIIObject312.Fields>(process);
+                    length = asciiFields.length.Offset;
+                    state = asciiFields.state.Offset;
+                    wstr = 0;
+
+                    var compactFields = StructProxy.GetStructFields<PyCompactUnicodeObject312, PyCompactUnicodeObject312.Fields>(process);
+                    wstr_length = 0;
+                    utf8_length = compactFields.utf8_length.Offset;
+                    utf8 = compactFields.utf8.Offset;
+
+                    var unicodeFields = StructProxy.GetStructFields<PyUnicodeObject312, PyUnicodeObject312.Fields>(process);
+                    data = unicodeFields.data.Offset;
+                }
+
             }
         }
 
@@ -169,7 +190,9 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
             public Types(DkmProcess process, PythonRuntimeInfo pyrtInfo) {
                 PyBytes_Type = PyObject.GetPyType<PyBytesObject>(process).Address;
-                PyUnicode_Type = PyObject.GetPyType<PyUnicodeObject>(process).Address;
+                PyUnicode_Type = process.GetPythonRuntimeInfo().LanguageVersion <= PythonLanguageVersion.V311 ?
+                    PyObject.GetPyType<PyUnicodeObject311>(process).Address :
+                    PyObject.GetPyType<PyUnicodeObject312>(process).Address;
             }
         }
 
@@ -183,6 +206,11 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             public ulong PyErr_Restore;
             public ulong PyErr_Occurred;
             public ulong PyObject_Str;
+            public ulong PyEval_SetTraceAllThreads;
+            public ulong PyGILState_Ensure;
+            public ulong PyGILState_Release;
+            public ulong Py_Initialize;
+            public ulong Py_Finalize;
 
             public FunctionPointers(DkmProcess process, PythonRuntimeInfo pyrtInfo) {
                 Py_DecRef = pyrtInfo.DLLs.Python.GetFunctionAddress("Py_DecRef");
@@ -192,6 +220,13 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 PyErr_Restore = pyrtInfo.DLLs.Python.GetFunctionAddress("PyErr_Restore");
                 PyErr_Occurred = pyrtInfo.DLLs.Python.GetFunctionAddress("PyErr_Occurred");
                 PyObject_Str = pyrtInfo.DLLs.Python.GetFunctionAddress("PyObject_Str");
+                PyEval_SetTraceAllThreads = pyrtInfo.LanguageVersion >= PythonLanguageVersion.V312 ?
+                    pyrtInfo.DLLs.Python.GetFunctionAddress("PyEval_SetTraceAllThreads") :
+                    0;
+                PyGILState_Ensure = pyrtInfo.DLLs.Python.GetFunctionAddress("PyGILState_Ensure");
+                PyGILState_Release = pyrtInfo.DLLs.Python.GetFunctionAddress("PyGILState_Release");
+                Py_Initialize = pyrtInfo.DLLs.Python.GetFunctionAddress("Py_Initialize");
+                Py_Finalize = pyrtInfo.DLLs.Python.GetFunctionAddress("Py_Finalize");
             }
         }
 
@@ -333,6 +368,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 // This means the eval_frame is set to the default. Write
                 // this as our _defaultEvalFrameFunc
                 _defaultEvalFrameFunc.Write(_pyEval_FrameDefault.GetPointer());
+                istate.eval_frame.Write(evalFrameAddr);
             } else if (current != evalFrameAddr) {
                 _defaultEvalFrameFunc.Write(current);
                 istate.eval_frame.Write(evalFrameAddr);
@@ -521,7 +557,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 _owner.OnPotentialRuntimeExit(thread, pProc);
             }
 
-            [StepInGate(MaxVersion = PythonLanguageVersion.V310)] // TODO: What's the side effect of this no longer working in 3.11? Seems step into won't work in some obscure cases.
+            [StepInGate(MaxVersion = PythonLanguageVersion.V310)] 
             public void call_function(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters) {
                 var process = thread.Process;
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
@@ -544,11 +580,11 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 _owner.OnPotentialRuntimeExit(thread, ml_meth);
             }
 
-            [StepInGate]
-            public void trace_call_function(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters) {
+            [StepInGate(MinVersion = PythonLanguageVersion.V311)]
+            public void PyObject_Vectorcall(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters) {
                 var process = thread.Process;
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
-                ulong func = cppEval.EvaluateUInt64(useRegisters ? "@rcx" : "func");
+                ulong func = cppEval.EvaluateUInt64(useRegisters ? "@rdx" : "callable");
                 var obj = PyObject.FromAddress(process, func);
                 ulong ml_meth = cppEval.EvaluateUInt64(
                     "((PyObject*){0})->ob_type == &PyCFunction_Type ? ((PyCFunctionObject*){0})->m_ml->ml_meth : 0",
