@@ -551,7 +551,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                                 capabilities["workspace"]["configuration"] = true;
                                 
                                 var folders = GetFolders();
-                                Debug.Assert(folders.Any(), "no workspace or projects found");
+                                // Debug.Assert(folders.Any(), "no workspace or projects found");
+                                // This is allowed with say a loose file.
                                 messageParams["workspaceFolders"] = JToken.FromObject(folders.ToArray());
                                 _sentInitialWorkspaceFolders = true;
                                 _workspaceFoldersSupported = true;

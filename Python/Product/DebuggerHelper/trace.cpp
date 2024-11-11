@@ -51,10 +51,10 @@ struct {
         int64_t ob_size;
     } PyVarObject;
     struct {
-        int64_t f_back, f_code, f_globals, f_locals, f_lineno;
+        int64_t f_back, f_code, f_globals, f_locals, f_lineno, f_frame;
     } PyFrameObject;
     struct {
-        int64_t co_varnames, co_filename, co_name;
+        int64_t co_filename, co_name;
     } PyCodeObject;
     struct {
         int64_t ob_sval;
@@ -435,8 +435,19 @@ static void TraceLine(void* frame) {
         return;
     }
 
-    void* f_code = ReadField<void*>(frame, fieldOffsets.PyFrameObject.f_code);
-    void* co_filename = ReadField<void*>(f_code, fieldOffsets.PyCodeObject.co_filename);
+    void* co_filename = nullptr;
+    if (fieldOffsets.PyFrameObject.f_frame == 0) {
+        // We're on 3.10 or earlier. f_code is directly off of the frame.
+        void* f_code = ReadField<void*>(frame, fieldOffsets.PyFrameObject.f_code);
+        co_filename = ReadField<void*>(f_code, fieldOffsets.PyCodeObject.co_filename);
+    }
+    else {
+        // We're on 3.11 or later. f_frame (PyInterpreterFrame) is off of the frame. It has
+        // the f_code object.
+        void* f_frame = ReadField<void*>(frame, fieldOffsets.PyFrameObject.f_frame);
+        void* f_code = ReadField<void*>(f_frame, fieldOffsets.PyFrameObject.f_code);
+        co_filename = ReadField<void*>(f_code, fieldOffsets.PyCodeObject.co_filename);
+    }
     if (co_filename == nullptr) {
         return;
     }

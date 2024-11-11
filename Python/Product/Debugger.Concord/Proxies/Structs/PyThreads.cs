@@ -18,27 +18,24 @@ using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.VisualStudio.Debugger;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
-    [StructProxy(StructName = "_cframe", MinVersion = PythonLanguageVersion.V310, MaxVersion = PythonLanguageVersion.V310)]
-    [StructProxy(StructName = "_PyCFrame", MinVersion = PythonLanguageVersion.V311)]
-    internal class CFrameProxy : StructProxy {
+    [StructProxy(StructName = "pythreads", MinVersion = PythonLanguageVersion.V311)]
+    internal class PyThreads: StructProxy {
         internal class Fields {
-            public StructField<Int32Proxy> use_tracing;
-            public StructField<PointerProxy<CFrameProxy>> previous;
-            [FieldProxy(MinVersion = PythonLanguageVersion.V311)]
-            public StructField<PointerProxy<PyInterpreterFrame>> current_frame;
+            public StructField<UInt64Proxy> next_unique_id;
+            public StructField<PointerProxy<PyThreadState>> head;
+            public StructField<Int64Proxy> count;
+            public StructField<UInt64Proxy> stacksize;
         }
 
         private readonly Fields _fields;
 
-        public CFrameProxy(DkmProcess process, ulong address)
+        public PyThreads(DkmProcess process, ulong address)
             : base(process, address) {
             InitializeStruct(this, out _fields);
         }
 
-        public Int32Proxy use_tracing {
-            get { return GetFieldProxy(_fields.use_tracing); }
+        public PointerProxy<PyThreadState> head {
+            get { return GetFieldProxy(_fields.head); }
         }
-
-        public PointerProxy<PyInterpreterFrame> current_frame => GetFieldProxy(_fields.current_frame);
     }
 }

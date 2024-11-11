@@ -62,28 +62,48 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         // Layout of this struct must always remain in sync with DebuggerHelper/trace.cpp.
         [StructLayout(LayoutKind.Sequential, Pack = 8)]
         private struct PyCodeObject_FieldOffsets {
-            public readonly long co_varnames, co_filename, co_name;
+            public readonly long co_filename, co_name;
 
             public PyCodeObject_FieldOffsets(DkmProcess process) {
-                var fields = StructProxy.GetStructFields<PyCodeObject, PyCodeObject.Fields>(process);
-                co_varnames = fields.co_varnames.Offset;
-                co_filename = fields.co_filename.Offset;
-                co_name = fields.co_name.Offset;
+                if (process.GetPythonRuntimeInfo().LanguageVersion <= PythonLanguageVersion.V310) {
+                    var fields = StructProxy.GetStructFields<PyCodeObject310, PyCodeObject310.Fields>(process);
+                    co_filename = fields.co_filename.Offset;
+                    co_name = fields.co_name.Offset;
+                } else {
+                    var fields = StructProxy.GetStructFields<PyCodeObject311, PyCodeObject311.Fields>(process);
+                    co_filename = fields.co_filename.Offset;
+                    co_name = fields.co_name.Offset;
+                }
             }
         }
 
         // Layout of this struct must always remain in sync with DebuggerHelper/trace.cpp.
         [StructLayout(LayoutKind.Sequential, Pack = 8)]
         private struct PyFrameObject_FieldOffsets {
-            public readonly long f_back, f_code, f_globals, f_locals, f_lineno;
+            public readonly long f_back, f_code, f_globals, f_locals, f_lineno, f_frame;
 
             public PyFrameObject_FieldOffsets(DkmProcess process) {
-                var fields = StructProxy.GetStructFields<PyFrameObject, PyFrameObject.Fields>(process);
-                f_back = fields.f_back.Offset;
-                f_code = fields.f_code.Offset;
-                f_globals = fields.f_globals.Offset;
-                f_locals = fields.f_locals.Offset;
-                f_lineno = fields.f_lineno.Offset;
+                // For 310, these are on the _frame struct itself.
+                if (process.GetPythonRuntimeInfo().LanguageVersion <= PythonLanguageVersion.V310) {
+                    var fields = StructProxy.GetStructFields<PyFrameObject310, PyFrameObject310.Fields>(process);
+                    f_back = fields.f_back.Offset;
+                    f_code = fields.f_code.Offset;
+                    f_globals = fields.f_globals.Offset;
+                    f_locals = fields.f_locals.Offset;
+                    f_lineno = fields.f_lineno.Offset;
+                    f_frame = 0;
+                    return;
+                }
+
+                // For 311 and higher, they are on the PyInterpreterFrame struct which is pointed to by the _frame struct.
+                var _frameFields = StructProxy.GetStructFields<PyFrameObject311, PyFrameObject311.Fields>(process);
+                var _interpreterFields = StructProxy.GetStructFields<PyInterpreterFrame, PyInterpreterFrame.Fields>(process);
+                f_frame = _frameFields.f_frame.Offset;
+                f_back = _frameFields.f_back.Offset;
+                f_code = _interpreterFields.f_code.Offset;
+                f_globals = _interpreterFields.f_globals.Offset;
+                f_locals = _interpreterFields.f_locals.Offset;
+                f_lineno = _frameFields.f_lineno.Offset;
             }
         }
 
@@ -180,6 +200,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         private readonly PythonDllBreakpointHandlers _handlers;
         private readonly DkmNativeInstructionAddress _traceFunc;
         private readonly DkmNativeInstructionAddress _evalFrameFunc;
+        private readonly DkmNativeInstructionAddress _pyEval_FrameDefault;
         private readonly PointerProxy _defaultEvalFrameFunc;
         private readonly ByteProxy _isTracing;
 
@@ -222,6 +243,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             _process = process;
             _pyrtInfo = process.GetPythonRuntimeInfo();
 
+            _pyEval_FrameDefault = _pyrtInfo.DLLs.Python.GetExportedFunctionAddress("_PyEval_EvalFrameDefault");
             _traceFunc = _pyrtInfo.DLLs.DebuggerHelper.GetExportedFunctionAddress("TraceFunc");
             _evalFrameFunc = 
                 _pyrtInfo.DLLs.DebuggerHelper.GetExportedFunctionAddress("EvalFrameFunc");
@@ -243,7 +265,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                     if (_pyrtInfo.LanguageVersion >= PythonLanguageVersion.V36) {
                         RegisterJITTracing(interp);
                     }
-                    foreach (var tstate in interp.GetThreadStates()) {
+                    foreach (var tstate in interp.GetThreadStates(process)) {
                         RegisterTracing(tstate);
                     }
                 }
@@ -305,9 +327,15 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             Debug.Assert(_pyrtInfo.LanguageVersion >= PythonLanguageVersion.V36);
 
             var current = istate.eval_frame.Read();
-            if (current != _evalFrameFunc.GetPointer()) {
+            var evalFrameAddr = _evalFrameFunc.GetPointer();
+
+            if (current == 0) {
+                // This means the eval_frame is set to the default. Write
+                // this as our _defaultEvalFrameFunc
+                _defaultEvalFrameFunc.Write(_pyEval_FrameDefault.GetPointer());
+            } else if (current != evalFrameAddr) {
                 _defaultEvalFrameFunc.Write(current);
-                istate.eval_frame.Write(_evalFrameFunc.GetPointer());
+                istate.eval_frame.Write(evalFrameAddr);
             }
         }
 
@@ -493,7 +521,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 _owner.OnPotentialRuntimeExit(thread, pProc);
             }
 
-            [StepInGate]
+            [StepInGate(MaxVersion = PythonLanguageVersion.V310)] // TODO: What's the side effect of this no longer working in 3.11? Seems step into won't work in some obscure cases.
             public void call_function(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters) {
                 var process = thread.Process;
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
@@ -508,6 +536,19 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                     "*((*(PyObject***){0}) - {1} - 1)",
                     useRegisters ? "@rcx" : "pp_stack",
                     n);
+                var obj = PyObject.FromAddress(process, func);
+                ulong ml_meth = cppEval.EvaluateUInt64(
+                    "((PyObject*){0})->ob_type == &PyCFunction_Type ? ((PyCFunctionObject*){0})->m_ml->ml_meth : 0",
+                    func);
+
+                _owner.OnPotentialRuntimeExit(thread, ml_meth);
+            }
+
+            [StepInGate]
+            public void trace_call_function(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters) {
+                var process = thread.Process;
+                var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
+                ulong func = cppEval.EvaluateUInt64(useRegisters ? "@rcx" : "func");
                 var obj = PyObject.FromAddress(process, func);
                 ulong ml_meth = cppEval.EvaluateUInt64(
                     "((PyObject*){0})->ob_type == &PyCFunction_Type ? ((PyCFunctionObject*){0})->m_ml->ml_meth : 0",
