@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private const string TestFrameworkProperty = "TestFramework";
         private const string UnitTestRootDirectoryProperty = "UnitTestRootDirectory";
         private const string UnitTestPatternProperty = "UnitTestPattern";
-        private const int DebounceDelayMS = 10000;
+        private const int DebounceDelayMS = 500;
 
         private readonly IWorkspace _workspace;
         private readonly IPropertyEvaluatorService _propertyEvaluatorService;
