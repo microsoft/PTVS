@@ -16,6 +16,8 @@
 
 using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.VisualStudio.Debugger;
+using Microsoft.VisualStudio.Debugger.CallStack;
+using Microsoft.VisualStudio.Debugger.Evaluation;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
     [StructProxy(StructName = "_frame", MinVersion = PythonLanguageVersion.V311)]
@@ -41,7 +43,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             CheckPyType<PyFrameObject311>();
         }
 
-        private PointerProxy<PyInterpreterFrame> f_frame {
+        public PointerProxy<PyInterpreterFrame> f_frame {
             get { return GetFieldProxy(_fields.f_frame); }
         }
 
@@ -49,7 +51,17 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             return f_frame.TryRead();
         }
 
-        public override PointerProxy<PyFrameObject> f_back => GetFieldProxy(_fields.f_back);
+        public override PointerProxy<PyFrameObject> f_back {
+            get {
+                // See the code here https://github.com/python/cpython/blob/a0866f4c81ecc057d4521e8e7a02f4e1fff175a1/Objects/frameobject.c#L1491,
+                // f_back can be null when there is actually a frame because it's created lazily.
+                var back = GetFieldProxy(_fields.f_back);
+                if (back.IsNull) {
+                    back = GetFrame().FindBackFrame();
+                }
+                return back;
+            }
+        }
 
         public override PointerProxy<PyCodeObject> f_code => GetFrame().f_code;
 
@@ -57,8 +69,20 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
 
         public override PointerProxy<PyDictObject> f_locals => GetFrame().f_locals;
 
-        public override Int32Proxy f_lineno => GetFieldProxy(_fields.f_lineno);
-
         public override ArrayProxy<PointerProxy<PyObject>> f_localsplus => GetFrame().f_localsplus;
+
+        public override int ComputeLineNumber(DkmInspectionSession inspectionSession, DkmStackWalkFrame frame) {
+            var setLineNumber = GetFieldProxy(_fields.f_lineno).Read();
+            if (setLineNumber == 0) {
+                // We need to use the CppExpressionEvaluator to compute the line number from
+                // our frame object. This function here: https://github.com/python/cpython/blob/46710ca5f263936a2e36fa5d0f140cf9f50b2618/Objects/frameobject.c#L40-L41
+                var evaluator = new CppExpressionEvaluator(inspectionSession, 10, frame, DkmEvaluationFlags.TreatAsExpression);
+                var funcAddr = Process.GetPythonRuntimeInfo().DLLs.Python.GetFunctionAddress("PyFrame_GetLineNumber");
+                var frameAddr = Address; 
+                setLineNumber = evaluator.EvaluateInt32(string.Format("((int (*)(void *)){0})({1})", funcAddr, frameAddr), DkmEvaluationFlags.EnableExtendedSideEffects);
+            }
+
+            return setLineNumber;
+        }
     }
 }

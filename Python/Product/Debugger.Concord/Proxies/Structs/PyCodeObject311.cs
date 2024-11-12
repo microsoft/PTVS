@@ -32,6 +32,8 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             public StructField<Int32Proxy> co_firstlineno;
             public StructField<PointerProxy<PyTupleObject>> co_localsplusnames;
             public StructField<PointerProxy<PyBytesObject>> co_localspluskinds;
+            public StructField<ArrayProxy<SByteProxy>> co_code_adaptive;
+            public StructField<Int32Proxy> _co_firsttraceable;
         }
 
         private readonly Fields _fields;
@@ -51,6 +53,10 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         public override PointerProxy<IPyBaseStringObject> co_name => GetFieldProxy(_fields.co_name);
 
         public override Int32Proxy co_firstlineno => GetFieldProxy(_fields.co_firstlineno);
+
+        public ArrayProxy<SByteProxy> co_code_adaptive => GetFieldProxy(_fields.co_code_adaptive);
+
+        public Int32Proxy _co_firsttraceable => GetFieldProxy(_fields._co_firsttraceable);
 
         public PyCodeObject311(DkmProcess process, ulong address)
             : base(process, address) {

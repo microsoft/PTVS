@@ -14,6 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
+using System.Diagnostics;
 using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.VisualStudio.Debugger;
 
@@ -29,7 +31,14 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             public StructField<PointerProxy<PyFrameObject>> frame_obj;
             public StructField<PointerProxy<PyInterpreterFrame>> previous;
             public StructField<ArrayProxy<PointerProxy<PyObject>>> localsplus;
+            public StructField<CharProxy> owner;
+            public StructField<PointerProxy<UInt16Proxy>> prev_instr;
         }
+
+        private const int FRAME_OWNED_BY_THREAD = 0;
+        private const int FRAME_OWNED_BY_GENERATOR = 1;
+        private const int FRAME_OWNED_BY_FRAME_OBJECT = 2;
+        private const int FRAME_OWNED_BY_CSTACK = 3;
 
         private readonly Fields _fields;
 
@@ -58,5 +67,33 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             get { return GetFieldProxy(_fields.frame_obj); }
         }
 
+        public PointerProxy<PyInterpreterFrame> previous => GetFieldProxy(_fields.previous);
+
+        public PointerProxy<UInt16Proxy> prev_instr => GetFieldProxy(_fields.prev_instr);
+
+        private bool OwnedByThread() {
+            if (Process.GetPythonRuntimeInfo().LanguageVersion <= PythonLanguageVersion.V310) {
+                return true;
+            }
+            var owner = (GetFieldProxy(_fields.owner) as IValueStore).Read();
+            var charOwner = owner.ToString()[0];
+            return (int)charOwner  == FRAME_OWNED_BY_THREAD;
+        }
+
+        public PointerProxy<PyFrameObject> FindBackFrame() {
+            // Trace.WriteLine("Searching for back frame ...");
+            var frame = previous.TryRead();
+            while (frame != null && !frame.OwnedByThread()) {
+                frame = frame.previous.TryRead();
+            }
+
+            // Make sure this frame_obj is pointing to this frame 
+            if (frame != null && !frame.frame_obj.IsNull) {
+                var obj = frame.frame_obj.Read() as PyFrameObject311;
+                obj.f_frame.Write(frame);
+                return frame.frame_obj;
+            }
+            return default(PointerProxy<PyFrameObject>);
+        }
     }
 }

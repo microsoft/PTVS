@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             [FieldProxy(MaxVersion = PythonLanguageVersion.V311)]
             public StructField<PointerProxy<PyDictObject>> modules;
             [FieldProxy(MinVersion = PythonLanguageVersion.V312)]
-            public StructField<PointerProxy<ImportState>> imports;
+            public StructField<ImportState> imports;
             public StructField<PointerProxy> eval_frame;
             public StructField<ceval_state> ceval;
         }
@@ -71,7 +71,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
                     return GetFieldProxy(_fields.modules);
                 }
                 var imports = GetFieldProxy(_fields.imports);
-                return imports.Read().modules;
+                return imports.modules;
             }
         }
 
@@ -102,7 +102,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             } else {
                 var threads = GetFieldProxy(_fields.threads);
                 var head = threads.head.TryRead();
-                while (head.Address != 0) {
+                while (head != null && head.Address != 0) {
                     yield return head;
                     head = head.next.TryRead();
                 }

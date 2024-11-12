@@ -18,6 +18,7 @@ using System.Linq;
 using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.CallStack;
+using Microsoft.VisualStudio.Debugger.Evaluation;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
     internal abstract class PyFrameObject : PyVarObject {
@@ -72,7 +73,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
 
         public abstract PointerProxy<PyDictObject> f_locals { get; }
 
-        public abstract Int32Proxy f_lineno { get; }
+        public abstract int ComputeLineNumber(DkmInspectionSession inspectionSession, DkmStackWalkFrame frame);
 
         public abstract ArrayProxy<PointerProxy<PyObject>> f_localsplus { get; }
 
@@ -90,7 +91,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
                     // This pyFrame should be the topmost frame. We need to go down the callstack
                     // based on the number of previous frames that were already found.
                     var numberBack = previousFrameCount != null ? previousFrameCount.Value : 0;
-                    while (numberBack > 0 && !pyFrame.f_back.IsNull) {
+                    while (numberBack > 0 && pyFrame.f_back.Process != null) {
                         pyFrame = pyFrame.f_back.Read();
                         numberBack--;
                     }

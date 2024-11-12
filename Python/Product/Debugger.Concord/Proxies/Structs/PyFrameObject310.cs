@@ -16,6 +16,8 @@
 
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.PythonTools.Common.Parsing;
+using Microsoft.VisualStudio.Debugger.CallStack;
+using Microsoft.VisualStudio.Debugger.Evaluation;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
     [StructProxy(StructName = "_frame", MaxVersion = PythonLanguageVersion.V310)]
@@ -41,9 +43,9 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
 
         public override PointerProxy<PyDictObject> f_locals => GetFieldProxy(_fields.f_locals);
 
-        public override Int32Proxy f_lineno => GetFieldProxy(_fields.f_lineno);
-
         public override ArrayProxy<PointerProxy<PyObject>> f_localsplus => GetFieldProxy(_fields.f_localsplus);
+
+        public override int ComputeLineNumber(DkmInspectionSession inspectionSession, DkmStackWalkFrame frame) => GetFieldProxy(_fields.f_lineno).Read();
 
         public PyFrameObject310(DkmProcess process, ulong address)
             : base(process, address) {
