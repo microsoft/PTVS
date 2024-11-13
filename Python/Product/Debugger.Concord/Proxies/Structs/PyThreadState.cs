@@ -33,12 +33,16 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             [FieldProxy(MinVersion = PythonLanguageVersion.V310)]
             public StructField<PointerProxy<CFrameProxy>> cframe;
             public StructField<PointerProxy> c_tracefunc;
+            [FieldProxy(MaxVersion = PythonLanguageVersion.V311)]
             public StructField<PointerProxy<PyObject>> curexc_type;
+            [FieldProxy(MaxVersion = PythonLanguageVersion.V311)]
             public StructField<PointerProxy<PyObject>> curexc_value;
-            public StructField<PointerProxy<PyObject>> curexc_traceback;
-            public StructField<PyErr_StackItem> exc_state;
+            [FieldProxy(MinVersion = PythonLanguageVersion.V312)]   
+            public StructField<PointerProxy<PyBaseExceptionObject>> current_exception;
             public StructField<PointerProxy<PyErr_StackItem>> exc_info;
             public StructField<Int32Proxy> thread_id;
+            [FieldProxy(MinVersion = PythonLanguageVersion.V312)]
+            public StructField<Int32Proxy> tracing; // Indicates if sys.monitoring is set, not something we set here.
         }
 
         private readonly Fields _fields;
@@ -72,10 +76,6 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             }
         }
 
-        public Int32Proxy use_tracing {
-            get { return GetFieldProxy(_fields.use_tracing); }
-        }
-
         public PointerProxy<CFrameProxy> cframe {
             get { return GetFieldProxy(_fields.cframe); }
         }
@@ -85,26 +85,29 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         }
 
         public PointerProxy<PyObject> curexc_type {
-            get { return GetFieldProxy(_fields.curexc_type); }
+            get {
+                if (_fields.curexc_type.Process != null) {
+                    return GetFieldProxy(_fields.curexc_type);
+                }
+
+                // In 3.12, the current exception was stored by itself instead of separately with the
+                // type and value.
+                var exc = GetFieldProxy(_fields.current_exception).Read();
+                return exc.ob_type.ReinterpretCast<PyObject>();
+            }
         }
 
         public PointerProxy<PyObject> curexc_value {
-            get { return GetFieldProxy(_fields.curexc_value); }
+            get {
+                if (_fields.curexc_value.Process != null) {
+                    return GetFieldProxy(_fields.curexc_value);
+                }
+
+                // In 3.12, the current exception was stored by itself instead of separately with the
+                // type and value.
+                return GetFieldProxy(_fields.current_exception).ReinterpretCast<PyObject>();
+            }
         }
-
-        public PointerProxy<PyObject> curexc_traceback {
-            get { return GetFieldProxy(_fields.curexc_traceback); }
-        }
-
-        public PointerProxy<PyObject> exc_type(PythonLanguageVersion version) => 
-            GetFieldProxy(_fields.exc_state).exc_type;
-
-        public PointerProxy<PyObject> exc_value(PythonLanguageVersion version) => 
-            GetFieldProxy(_fields.exc_state).exc_value;
-
-        public PointerProxy<PyObject> exc_traceback(PythonLanguageVersion version) => 
-            GetFieldProxy(_fields.exc_state).exc_traceback;
-
 
         public Int32Proxy thread_id {
             get { return GetFieldProxy(_fields.thread_id); }
@@ -115,14 +118,19 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         }
 
         public void RegisterTracing(ulong traceFunc) {
+            // In 3.10, the use_tracing flag sets tracing for the thread.
             if (_fields.use_tracing.Process != null) {
-                use_tracing.Write(1);
+                GetFieldProxy(_fields.use_tracing).Write(1);
             }
-            if (_fields.cframe.Process != null) {
+            // In 3.11 the cframe has the use_tracing flag, but must be set to 255.
+            if (_fields.cframe.Process != null && Process.GetPythonRuntimeInfo().LanguageVersion == PythonLanguageVersion.V311) {
                 var frame = cframe.Read();
-                frame.use_tracing.Write(255); // In 3.11 this flag has to be zero or 255
+                frame.use_tracing.Write(255);
             }
-            c_tracefunc.Write(traceFunc);
+            // In 3.12, there's no longer a use_tracing flag. We have to register tracing through an API instead.
+            if (Process.GetPythonRuntimeInfo().LanguageVersion <= PythonLanguageVersion.V311) {
+                c_tracefunc.Write(traceFunc);
+            }
         }
 
         

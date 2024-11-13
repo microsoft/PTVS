@@ -60,8 +60,8 @@ struct {
         int64_t ob_sval;
     } PyBytesObject;
     struct {
-        int64_t PyAsciiObjectData, PyCompactUnicodeObjectData;
-        int64_t length, state, wstr, wstr_length, data;
+        int64_t sizeof_PyAsciiObjectData, sizeof_PyCompactUnicodeObjectData;
+        int64_t length, state, wstr, wstr_length, utf8, utf8_length, data;
     } PyUnicodeObject;
 } fieldOffsets;
 
@@ -82,6 +82,11 @@ struct {
     uint64_t PyErr_Restore;
     uint64_t PyErr_Occurred;
     uint64_t PyObject_Str;
+    uint64_t PyEval_SetTraceAllThreads;
+    uint64_t PyGILState_Ensure;
+    uint64_t PyGILState_Release;
+    uint64_t Py_Initialize;
+	uint64_t Py_Finalize;
 } functionPointers;
 
 void Py_DecRef(PyObject* a1) {
@@ -110,6 +115,33 @@ PyObject* PyErr_Occurred() {
 
 PyObject* PyObject_Str(PyObject* o) {
     return reinterpret_cast<decltype(&PyObject_Str)>(functionPointers.PyObject_Str)(o);
+}
+
+/* Py_tracefunc return -1 when raising an exception, or 0 for success. */
+typedef int (*Py_tracefunc)(void* obj, void* frame, int what, void* arg);
+
+void
+PyEval_SetTraceAllThreads(Py_tracefunc func, PyObject* arg) {
+    return reinterpret_cast<decltype(&PyEval_SetTraceAllThreads)>(functionPointers.PyEval_SetTraceAllThreads)(func, arg);
+}
+
+typedef
+enum { PyGILState_LOCKED, PyGILState_UNLOCKED } PyGILState_STATE;
+
+PyGILState_STATE PyGILState_Ensure() {
+	return reinterpret_cast<decltype(&PyGILState_Ensure)>(functionPointers.PyGILState_Ensure)();
+}
+
+void PyGILState_Release(PyGILState_STATE state) {
+    return reinterpret_cast<decltype(&PyGILState_Release)>(functionPointers.PyGILState_Release)(state);
+}
+
+void Py_Initialize() {
+	return reinterpret_cast<decltype(&Py_Initialize)>(functionPointers.Py_Initialize)();
+}
+
+void Py_Finalize() {
+	return reinterpret_cast<decltype(&Py_Finalize)>(functionPointers.Py_Finalize)();
 }
 
 // A string provided by the debugger (e.g. for file names). This is actually a variable-length struct,
@@ -256,7 +288,7 @@ bool StringEquals(const DebuggerString* debuggerString, const void* pyString) {
 
     state = ReadField<char>(pyString, fieldOffsets.PyUnicodeObject.state);
 
-    if (!ready) {
+    if (!ready && fieldOffsets.PyUnicodeObject.wstr != 0) {
         auto wstr = ReadField<wchar_t*>(pyString, fieldOffsets.PyUnicodeObject.wstr);
         if (!wstr) {
             return false;
@@ -279,9 +311,9 @@ bool StringEquals(const DebuggerString* debuggerString, const void* pyString) {
     if (!compact) {
         data = ReadField<void*>(pyString, fieldOffsets.PyUnicodeObject.data);
     } else if (ascii) {
-        data = reinterpret_cast<const char*>(pyString) + fieldOffsets.PyUnicodeObject.PyAsciiObjectData;
+        data = reinterpret_cast<const char*>(pyString) + fieldOffsets.PyUnicodeObject.sizeof_PyAsciiObjectData;
     } else {
-        data = reinterpret_cast<const char*>(pyString) + fieldOffsets.PyUnicodeObject.PyCompactUnicodeObjectData;
+        data = reinterpret_cast<const char*>(pyString) + fieldOffsets.PyUnicodeObject.sizeof_PyCompactUnicodeObjectData;
     }
 
     if (kind == 2) {
@@ -551,19 +583,46 @@ int TraceFunc(void* obj, void* frame, int what, void* arg) {
     return 0;
 }
 
-// In Python 3.9 the eval function added the thread state. So
-// we need a new function def to accomodate that change.
-typedef void* (*_PyFrameEvalFunction)(void*,void*, int);
+void* InitialEvalFrameFunc(void* ts, void* f, int throwFlag);
+
+typedef void* (*_PyFrameEvalFunction)(void*, void*, int);
+_PyFrameEvalFunction CurrentEvalFrameFunc = InitialEvalFrameFunc;
+
 __declspec(dllexport)
 _PyFrameEvalFunction DefaultEvalFrameFunc = nullptr;
 
-__declspec(dllexport)
-void* EvalFrameFunc(void* ts, void* f, int throwFlag)
+// Initial EvalFrameFunc that is used to set the trace function. 
+volatile unsigned long _isTracing = 0;
+void *InitialEvalFrameFunc(void* ts, void* f, int throwFlag)
 {
+    // If were in 3.12, we need to set the trace function ourselves. 
+    // This is because just writing to the use_tracing flag is no longer enough. Internally CPython
+    // doesn't just trace everything if the flag is set. Instead tracing now uses the sys.monitoring
+    // api under the covers. That's a lot more than just flipping a flag.
+    if (functionPointers.PyEval_SetTraceAllThreads != 0 && ::InterlockedCompareExchange(&_isTracing, 1, 0) == 0) {
+        auto gilState = PyGILState_Ensure();
+        PyEval_SetTraceAllThreads(TraceFunc, nullptr);
+        PyGILState_Release(gilState);
+    }
+
+	// Rewrite the current EvalFrameFunc so we don't bother attempting to register the trace function again.
+	CurrentEvalFrameFunc = DefaultEvalFrameFunc;
+
     if (DefaultEvalFrameFunc)
         return (*DefaultEvalFrameFunc)(ts, f, throwFlag);
 
     return nullptr;
 }
+
+
+
+// Function that is inserted into the current thread state by the debugger as the function to call
+// in order to evaluate a frame. This is done so that the debugger can intercept the call
+__declspec(dllexport)
+void* EvalFrameFunc(void* ts, void* f, int throwFlag)
+{
+	return (*CurrentEvalFrameFunc)(ts, f, throwFlag);
+}
+
 
 }
