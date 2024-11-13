@@ -1038,6 +1038,12 @@ namespace Microsoft.PythonTools.Project {
         }
 
         protected override void Dispose(bool disposing) {
+            if (_isDisposed) {
+                throw new ObjectDisposedException(nameof(PythonProjectNode));
+            }
+
+            _isDisposed = true;
+
             if (disposing) {
                 var actions = _actionsOnClose;
                 _actionsOnClose = null;
@@ -1085,7 +1091,6 @@ namespace Microsoft.PythonTools.Project {
 
                 _recreatingAnalyzer.Dispose();
             }
-            _isDisposed = true;
             base.Dispose(disposing);
         }
 
