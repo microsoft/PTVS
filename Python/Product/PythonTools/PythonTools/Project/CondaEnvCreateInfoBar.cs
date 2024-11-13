@@ -129,6 +129,10 @@ namespace Microsoft.PythonTools.Project {
             Context = InfoBarContexts.Project;
             MissingEnvName = null;
 
+            if (Project == null || Project.IsDisposed) {
+                return;
+            }
+
             if (Project.GetProjectProperty(PythonConstants.SuppressEnvironmentCreationPrompt).IsTrue()) {
                 return;
             }

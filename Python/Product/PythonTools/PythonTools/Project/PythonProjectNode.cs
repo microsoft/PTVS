@@ -86,6 +86,7 @@ namespace Microsoft.PythonTools.Project {
 
         private bool _infoBarCheckTriggered = false;
         private bool _asyncInfoBarCheckTriggered = false;
+        private bool _isDisposed = false;
         private readonly CondaEnvCreateInfoBar _condaEnvCreateInfoBar;
         private readonly VirtualEnvCreateInfoBar _virtualEnvCreateInfoBar;
         private readonly PackageInstallInfoBar _packageInstallInfoBar;
@@ -94,6 +95,8 @@ namespace Microsoft.PythonTools.Project {
 
         private readonly SemaphoreSlim _recreatingAnalyzer = new SemaphoreSlim(1);
         private bool _isRefreshingInterpreters = false;
+
+        public bool IsDisposed => _isDisposed;
 
         public event EventHandler LanguageServerInterpreterChanged;
 
@@ -1082,7 +1085,7 @@ namespace Microsoft.PythonTools.Project {
 
                 _recreatingAnalyzer.Dispose();
             }
-
+            _isDisposed = true;
             base.Dispose(disposing);
         }
 
