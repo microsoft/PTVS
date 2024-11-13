@@ -566,11 +566,12 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                                 capabilities["workspace"]["configuration"] = true;
 
                                 var folders = GetFolders();
-                                Debug.Assert(folders.Any(), "no workspace or projects found");
-                                messageParams["workspaceFolders"] = JToken.FromObject(folders.ToArray());
-                                _sentInitialWorkspaceFolders = true;
-                                _workspaceFoldersSupported = true;
-
+                                if (folders.Any()) {
+                                    messageParams["workspaceFolders"] = JToken.FromObject(folders.ToArray());
+                                    _sentInitialWorkspaceFolders = true;
+                                    _workspaceFoldersSupported = true;
+                                }
+                                
                                 // Root path and root URI should not be sent. They're deprecated and will
                                 // just confuse pylance with respect to what is the root folder. 
                                 // https://microsoft.github.io/language-server-protocol/specifications/specification-current/#initialize
