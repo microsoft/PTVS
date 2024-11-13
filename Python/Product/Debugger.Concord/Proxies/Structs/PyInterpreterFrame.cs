@@ -87,7 +87,11 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
                 frame = frame.previous.TryRead();
             }
 
-            // Make sure this frame_obj is pointing to this frame 
+            // Make sure this frame_obj is pointing to this frame. Since the f_back 
+            // of a PyFrameObject can be null even if it exists, the PyFrameObject we find
+            // through the list of PyInterpreterFrames may not have been created. We need
+            // to make sure it points to the PyInterpreterFrame we found so that subsequent calls
+            // to get things like its f_locals will work.
             if (frame != null && !frame.frame_obj.IsNull) {
                 var obj = frame.frame_obj.Read() as PyFrameObject311;
                 obj.f_frame.Write(frame);
