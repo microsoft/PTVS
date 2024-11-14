@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
 
         public override ArrayProxy<PointerProxy<PyObject>> f_localsplus => GetFieldProxy(_fields.f_localsplus);
 
-        public override int ComputeLineNumber(DkmInspectionSession inspectionSession, DkmStackWalkFrame frame) => GetFieldProxy(_fields.f_lineno).Read();
+        public override int ComputeLineNumber(DkmInspectionSession inspectionSession, DkmStackWalkFrame frame, DkmEvaluationFlags flags) => GetFieldProxy(_fields.f_lineno).Read();
 
         public PyFrameObject310(DkmProcess process, ulong address)
             : base(process, address) {

@@ -19,7 +19,7 @@ DWORD WINAPI runner(LPVOID lpParam)
     PyObject* startObj = Py_BuildValue("s", startFileStr);
     FILE* file = _Py_fopen_obj(startObj, "rb+");
     if (file != NULL) {
-        PyRun_SimpleFile(file, startFileStr);
+        PyRun_SimpleFileEx(file, startFileStr, 1);
     }
 
     Py_Finalize();

@@ -28,10 +28,6 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             public StructField<PointerProxy<PyInterpreterFrame>> f_frame;
             public StructField<PointerProxy<PyObject>> f_trace;
             public StructField<Int32Proxy> f_lineno;
-            public StructField<CharProxy> f_trace_lines;
-            public StructField<CharProxy> f_trace_opcodes;
-            public StructField<CharProxy> f_fast_as_locals;
-            public StructField<ArrayProxy<PointerProxy<PyObject>>> _f_frame_data;
         }
 
         private readonly Fields _fields;
@@ -71,15 +67,23 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
 
         public override ArrayProxy<PointerProxy<PyObject>> f_localsplus => GetFrame().f_localsplus;
 
-        public override int ComputeLineNumber(DkmInspectionSession inspectionSession, DkmStackWalkFrame frame) {
+        public override int ComputeLineNumber(DkmInspectionSession inspectionSession, DkmStackWalkFrame frame, DkmEvaluationFlags flags) {
             var setLineNumber = GetFieldProxy(_fields.f_lineno).Read();
-            if (setLineNumber == 0) {
+            if (setLineNumber == 0 && flags != DkmEvaluationFlags.None) {
                 // We need to use the CppExpressionEvaluator to compute the line number from
                 // our frame object. This function here: https://github.com/python/cpython/blob/46710ca5f263936a2e36fa5d0f140cf9f50b2618/Objects/frameobject.c#L40-L41
+                //
+                // However only do this when stopped at a breakpoint and evaluating the frame. Otherwise we it will fail and cause stepping
+                // to think the frame we eval is where we should stop.
                 var evaluator = new CppExpressionEvaluator(inspectionSession, 10, frame, DkmEvaluationFlags.TreatAsExpression);
                 var funcAddr = Process.GetPythonRuntimeInfo().DLLs.Python.GetFunctionAddress("PyFrame_GetLineNumber");
                 var frameAddr = Address; 
-                setLineNumber = evaluator.EvaluateInt32(string.Format("((int (*)(void *)){0})({1})", funcAddr, frameAddr), DkmEvaluationFlags.EnableExtendedSideEffects);
+                try {
+                    setLineNumber = evaluator.EvaluateInt32(string.Format("((int (*)(void *)){0})({1})", funcAddr, frameAddr), DkmEvaluationFlags.EnableExtendedSideEffects);
+                } catch (CppEvaluationException) {
+                    // This means we can't evaluate right now, just leave as zero
+                    setLineNumber = 0;
+                }
             }
 
             return setLineNumber;

@@ -93,7 +93,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             PyCodeObject code = pythonFrame.f_code.Read();
             var loc = new SourceLocation(
                 code.co_filename.Read().ToStringOrNull(),
-                pythonFrame.ComputeLineNumber(stackContext.InspectionSession, nativeFrame),
+                pythonFrame.ComputeLineNumber(stackContext.InspectionSession, nativeFrame, stackContext.FormatOptions.EvaluationFlags),
                 code.co_name.Read().ToStringOrNull(),
                 nativeFrame.InstructionAddress as DkmNativeInstructionAddress);
 

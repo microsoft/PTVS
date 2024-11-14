@@ -104,14 +104,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(LOCALAPPDATA)\Programs\Python\Python311\include;$(LOCALAPPDATA)\Programs\Python\Python310\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(LOCALAPPDATA)\Programs\Python\Python313\include;$(LOCALAPPDATA)\Programs\Python\Python312\include;$(LOCALAPPDATA)\Programs\Python\Python311\include;$(LOCALAPPDATA)\Programs\Python\Python310\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(LOCALAPPDATA)\Programs\Python\Python311\libs;$(LOCALAPPDATA)\Programs\Python\Python310\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(LOCALAPPDATA)\Programs\Python\Python313\libs;$(LOCALAPPDATA)\Programs\Python\Python312\libs;$(LOCALAPPDATA)\Programs\Python\Python311\libs;$(LOCALAPPDATA)\Programs\Python\Python310\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
