@@ -73,7 +73,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
 
         public abstract PointerProxy<PyDictObject> f_locals { get; }
 
-        public abstract int ComputeLineNumber(DkmInspectionSession inspectionSession, DkmStackWalkFrame frame);
+        public abstract int ComputeLineNumber(DkmInspectionSession inspectionSession, DkmStackWalkFrame frame, DkmEvaluationFlags flags);
 
         public abstract ArrayProxy<PointerProxy<PyObject>> f_localsplus { get; }
 
