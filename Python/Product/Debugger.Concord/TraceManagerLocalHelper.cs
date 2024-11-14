@@ -100,7 +100,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 var _interpreterFields = StructProxy.GetStructFields<PyInterpreterFrame, PyInterpreterFrame.Fields>(process);
                 f_frame = _frameFields.f_frame.Offset;
                 f_back = _frameFields.f_back.Offset;
-                f_code = _interpreterFields.f_code.Offset;
+                f_code = _interpreterFields.f_code.Process != null ? _interpreterFields.f_code.Offset : _interpreterFields.f_executable.Offset;
                 f_globals = _interpreterFields.f_globals.Offset;
                 f_locals = _interpreterFields.f_locals.Offset;
                 f_lineno = _frameFields.f_lineno.Offset;
@@ -308,6 +308,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 _handlers = new PythonDllBreakpointHandlers(this);
                 LocalComponent.CreateRuntimeDllFunctionExitBreakpoints(_pyrtInfo.DLLs.Python, "new_threadstate", _handlers.new_threadstate, enable: true);
                 LocalComponent.CreateRuntimeDllFunctionExitBreakpoints(_pyrtInfo.DLLs.Python, "PyInterpreterState_New", _handlers.PyInterpreterState_New, enable: true);
+                LocalComponent.CreateRuntimeDllFunctionExitBreakpoints(_pyrtInfo.DLLs.Python, "_PyInterpreterState_New", _handlers._PyInterpreterState_New, enable: true);
 
                 foreach (var methodInfo in _handlers.GetType().GetMethods()) {
                     var stepInAttr = (StepInGateAttribute)Attribute.GetCustomAttribute(methodInfo, typeof(StepInGateAttribute));
@@ -547,6 +548,15 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
                 if (process.GetPythonRuntimeInfo().LanguageVersion >= PythonLanguageVersion.V36) {
                     _owner.RegisterJITTracing(istate);
+                }
+            }
+
+            public void _PyInterpreterState_New(DkmThread thread, ulong frameBase, ulong vframe, ulong returnAddress) {
+                // The new interpreter should be the 'head' of the list of interpreters
+                // (this function actually returns a status code, not the interpreter state).
+                var head = PyInterpreterState.GetInterpreterStates(thread.Process).First();
+                if (head != null && head.Process != null) {
+                    _owner.RegisterJITTracing(head);
                 }
             }
 

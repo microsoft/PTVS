@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             public StructField<PointerProxy<PyInterpreterState>> interp;
             [FieldProxy(MaxVersion = PythonLanguageVersion.V39)]
             public StructField<Int32Proxy> use_tracing;
-            [FieldProxy(MinVersion = PythonLanguageVersion.V310)]
+            [FieldProxy(MinVersion = PythonLanguageVersion.V310, MaxVersion = PythonLanguageVersion.V312)]
             public StructField<PointerProxy<CFrameProxy>> cframe;
             public StructField<PointerProxy> c_tracefunc;
             [FieldProxy(MaxVersion = PythonLanguageVersion.V311)]
@@ -43,6 +43,8 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             public StructField<Int32Proxy> thread_id;
             [FieldProxy(MinVersion = PythonLanguageVersion.V312)]
             public StructField<Int32Proxy> tracing; // Indicates if sys.monitoring is set, not something we set here.
+            [FieldProxy(MinVersion = PythonLanguageVersion.V313)]
+            public StructField<PointerProxy<PyInterpreterFrame>> current_frame;
         }
 
         private readonly Fields _fields;
@@ -70,8 +72,15 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
                 }
 
                 // In 3.11, the current frame was moved into the cframe
-                var cframe = GetFieldProxy(_fields.cframe).Read();
-                var interpFrame = cframe.current_frame.TryRead();
+                if (_fields.cframe.Process != null) {
+                    var cframe = GetFieldProxy(_fields.cframe).Read();
+                    var interpFrame311 = cframe.current_frame.TryRead();
+                    return interpFrame311.frame_obj;
+                }
+
+                // In 3.13, cframe was removed and the current_frame was just placed
+                // in the thread.
+                var interpFrame = GetFieldProxy(_fields.current_frame).TryRead();
                 return interpFrame.frame_obj;
             }
         }

@@ -27,12 +27,14 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             public StructField<PointerProxy<PyDictObject>> f_globals;
             public StructField<PointerProxy<PyDictObject>> f_builtins;
             public StructField<PointerProxy<PyDictObject>> f_locals;
+            [FieldProxy(MaxVersion = PythonLanguageVersion.V312)]
             public StructField<PointerProxy<PyCodeObject>> f_code;
+            [FieldProxy(MinVersion = PythonLanguageVersion.V313)]
+            public StructField<PointerProxy<PyCodeObject>> f_executable;
             public StructField<PointerProxy<PyFrameObject>> frame_obj;
             public StructField<PointerProxy<PyInterpreterFrame>> previous;
             public StructField<ArrayProxy<PointerProxy<PyObject>>> localsplus;
             public StructField<CharProxy> owner;
-            public StructField<PointerProxy<UInt16Proxy>> prev_instr;
         }
 
         private const int FRAME_OWNED_BY_THREAD = 0;
@@ -48,7 +50,13 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         }
 
         public PointerProxy<PyCodeObject> f_code {
-            get { return GetFieldProxy(_fields.f_code); }
+            get {
+                // In 3.13, the f_code was renamed to f_executable
+                if (_fields.f_code.Process != null) {
+                    return GetFieldProxy(_fields.f_code);
+                }
+                return GetFieldProxy(_fields.f_executable);
+            }
         }
 
         public PointerProxy<PyDictObject> f_globals {
@@ -68,8 +76,6 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         }
 
         public PointerProxy<PyInterpreterFrame> previous => GetFieldProxy(_fields.previous);
-
-        public PointerProxy<UInt16Proxy> prev_instr => GetFieldProxy(_fields.prev_instr);
 
         private bool OwnedByThread() {
             if (Process.GetPythonRuntimeInfo().LanguageVersion <= PythonLanguageVersion.V310) {

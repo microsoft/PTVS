@@ -28,10 +28,6 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             public StructField<PointerProxy<PyInterpreterFrame>> f_frame;
             public StructField<PointerProxy<PyObject>> f_trace;
             public StructField<Int32Proxy> f_lineno;
-            public StructField<CharProxy> f_trace_lines;
-            public StructField<CharProxy> f_trace_opcodes;
-            public StructField<CharProxy> f_fast_as_locals;
-            public StructField<ArrayProxy<PointerProxy<PyObject>>> _f_frame_data;
         }
 
         private readonly Fields _fields;

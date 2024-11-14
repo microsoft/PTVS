@@ -385,8 +385,20 @@ void EvalLoop(void (*bp)()) {
                 auto frame = reinterpret_cast<PyObject*>(evalLoopFrame);
                 PyFrame_FastToLocals(frame);
 
-                auto f_globals = ReadField<PyObject*>(frame, fieldOffsets.PyFrameObject.f_globals);
-                auto f_locals = ReadField<PyObject*>(frame, fieldOffsets.PyFrameObject.f_locals);
+                PyObject* f_globals = NULL;
+                PyObject* f_locals = NULL;
+                if (fieldOffsets.PyFrameObject.f_frame == 0) {
+                    // We're on 3.10 or earlier. f_globals and f_locals is directly off of the frame.
+                    f_globals = ReadField<PyObject*>(frame, fieldOffsets.PyFrameObject.f_globals);
+                    f_locals = ReadField<PyObject*>(frame, fieldOffsets.PyFrameObject.f_locals);
+                }
+                else {
+                    // We're on 3.11 or later. f_frame (PyInterpreterFrame) is off of the frame. It has
+                    // the f_globals and f_locals object.
+                    void* f_frame = ReadField<void*>(frame, fieldOffsets.PyFrameObject.f_frame);
+                    f_globals = ReadField<PyObject*>(f_frame, fieldOffsets.PyFrameObject.f_globals);
+                    f_locals = ReadField<PyObject*>(f_frame, fieldOffsets.PyFrameObject.f_locals);
+                }
 
                 PyObject *orig_exc_type, *orig_exc_value, *orig_exc_tb;
                 PyErr_Fetch(&orig_exc_type, &orig_exc_value, &orig_exc_tb);
@@ -457,7 +469,7 @@ static void TraceLine(void* frame) {
     const auto& bpData = breakpointData[iData];
 
     int f_lineno = ReadField<int>(frame, fieldOffsets.PyFrameObject.f_lineno);
-    if (f_lineno > bpData.maxLineNumber) {
+    if (f_lineno > bpData.maxLineNumber || f_lineno <= 0) {
         return;
     }
 
