@@ -36,3 +36,6 @@ __pycache__/
 *.log
 *.pch
 *.tlog
+GlassStandalone
+DropTools
+

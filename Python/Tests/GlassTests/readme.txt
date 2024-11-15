@@ -3,7 +3,11 @@ For developers working on Python Tools at Microsoft: Please refer to internal do
 Note: Some the instructions are path specific. If you use a different path than what is specified below, you will need to modify the configurations to point to the new path.
     For example, Python 38 64 bit must be installed in the default location. If it is not, "Python38.64GlassTestProps" needs to be updated
     
-Setup Glass Testing Environment
+
+Setup Glass Testing Environment Automatically
+    Run `python build\setup_glass.py`
+
+Setup Glass Testing Environment Manually
     Install Python in default location (install symbols as well)
     Install VS 
         Select "Development with C++" workload			
@@ -22,6 +26,8 @@ Setup Glass Testing Environment
     Transfer all files that start with "Microsoft.Python" to "C:\GlassTesting\GlassStandAlone\Glass" and "C:\GlassTesting\GlassStandAlone\Glass\Remote Debugger\x64"
     Transfer "PythonEngine.regdef" to "C:\GlassTesting\GlassStandAlone\Glass"
     
-Running Glass Tests
+Running Glass Tests through Visual Studio
     Run VS as admin and load "C:\GlassTesting\PythonTests" in open folder environment
     Run the tests through test explorer
+
+Runnin Glass Tests through Command Line
