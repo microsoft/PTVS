@@ -44,6 +44,12 @@ def setup_glass():
         print(f"Error getting glass: {glass_installer.stderr}")
         exit(1)
 
+    # Copy the Glass.TestAdapter.dll into the extensions directory so vstest.console.exe can find it
+    glass_test_adapter = os.path.join(glass_dir, "Glass.TestAdapter.dll")
+    glass_extensions_dir = os.path.join(glass_dir, "extensions")
+    os.makedirs(glass_extensions_dir, exist_ok=True)
+    shutil.copy(glass_test_adapter, glass_extensions_dir)
+
     # Next install the test console app that will run the tests.
     test_bits = subprocess.run(
         [drop_exe_path,
@@ -74,6 +80,21 @@ def setup_glass():
     test_console_app = os.path.join(glass_dir, "vstest.console.exe")
     if not os.path.exists(test_console_app):
         print(f"Error: Test console app not found at {test_console_app}")
+        exit(1)
+
+    # Copy the PythonTests folder into the glass directory
+    python_tests_source_dir = os.path.join(os.path.dirname(__file__), "..", "Python", "Tests", "GlassTests", "PythonTests")
+    python_tests_target_dir = os.path.join(glass_dir, "PythonTests")
+    shutil.copytree(python_tests_source_dir, python_tests_target_dir)
+
+    # Output the tests found to verify this all worked
+    print("Listing tests found in GlassTests/PythonTests:")
+    tests = subprocess.run(
+        [test_console_app,
+        "/lt",
+        f"{python_tests_target_dir}/PythonConcord.GlassTestRoot"], stdout=sys.stdout, stderr=sys.stderr)
+    if test_bits.returncode != 0:
+        print(f"Error listing tests: {tests.stderr}")
         exit(1)
 
 
