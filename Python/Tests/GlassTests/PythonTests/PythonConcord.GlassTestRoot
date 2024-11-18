@@ -1,22 +1,23 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<GlassTestRoot xmlns="http://schemas.microsoft.com/vstudio/diagnostics/glasstestmanagement/2014">
+<GlassTestRoot xmlns="http://schemas.microsoft.com/vstudio/diagnostics/glasstestmanagement/2014"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://schemas.microsoft.com/vstudio/diagnostics/glasstestmanagement/2014 ../GlassTestManagement.xsd">
   <!--This file defines the rules for running glass tests. Add this file to any solution and install 
   the GlassTestAdapter to get test integration-->
   
   <!--Special setup items for running glass tests from a debugger enlistment-->
   <Setup>
-    <ImportPropertyGroup>tools\RunSettings.GlassTestProps</ImportPropertyGroup>
-    <RunScript Condition="Exists('tools\internal\PrepGlass.cmd')" RunAs="VSUser">tools\internal\PrepGlass.cmd &quot;$(GlassDir)&quot;</RunScript>
+    <ImportPropertyGroup>..\tools\RunSettings.GlassTestProps</ImportPropertyGroup>
+    <RunScript Condition="Exists('..\tools\internal\PrepGlass.cmd')" RunAs="VSUser">..\tools\internal\PrepGlass.cmd &quot;$(GlassDir)&quot;</RunScript>
     <!-- Process the regdef file to create the .reg file for Glass registration. -->
     <RunScript RunAs="VSUser">"$(GlassDir)GlassRegGen.exe" "$(GlassDir)ConGlass.regdef" "$(GlassDir)glass2.exe.regroot" "$(GlassDir)ConGlass.reg"</RunScript>
-    <RunScript RunAs="VSUser">"$(GlassDir)GlassRegGen.exe" "$(GlassDir)PythonEngine.regdef" "$(GlassDir)glass2.exe.regroot" "$(GlassDir)PythonConGlass.reg"</RunScript>
+    <RunScript RunAs="VSUser">"$(GlassDir)GlassRegGen.exe" "PythonEngine.regdef" "$(GlassDir)glass2.exe.regroot" "$(GlassDir)PythonConGlass.reg"</RunScript>
   </Setup>
   <TestSetup>
-    <RunScript RunAs="Admin">..\GlassStandAlone\tools\RegImport.cmd "$(GlassDir)ConGlass.reg" $(RunAs64)</RunScript>
-    <RunScript RunAs="Admin">..\GlassStandAlone\tools\RegImport.cmd "$(GlassDir)PythonConGlass.reg" $(RunAs64)</RunScript>
+    <RunScript RunAs="Admin">..\tools\RegImport.cmd "$(GlassDir)ConGlass.reg" $(RunAs64)</RunScript>
+    <RunScript RunAs="Admin">..\tools\RegImport.cmd "$(GlassDir)PythonConGlass.reg" $(RunAs64)</RunScript>
   </TestSetup>
   <TestCleanup>
-    <RunScript RunAs="Admin">..\GlassStandAlone\tools\RegDelete.cmd "$(GlassDir)glass2.exe.regroot" $(RunAs64)</RunScript>
+    <RunScript RunAs="Admin">..\tools\RegDelete.cmd "$(GlassDir)glass2.exe.regroot" $(RunAs64)</RunScript>
   </TestCleanup>
   
   <PropertyGroup>
