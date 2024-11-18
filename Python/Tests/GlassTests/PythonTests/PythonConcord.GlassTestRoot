@@ -9,7 +9,7 @@
     <ImportPropertyGroup>..\tools\RunSettings.GlassTestProps</ImportPropertyGroup>
     <RunScript Condition="Exists('..\tools\internal\PrepGlass.cmd')" RunAs="VSUser">..\tools\internal\PrepGlass.cmd &quot;$(GlassDir)&quot;</RunScript>
     <!-- Process the regdef file to create the .reg file for Glass registration. -->
-    <RunScript RunAs="VSUser">"$(GlassDir)GlassRegGen.exe" "$(GlassDir)ConGlass.regdef" "$(GlassDir)glass2.exe.regroot" "$(GlassDir)ConGlass.reg"</RunScript>
+    <RunScript RunAs="VSUser">"$(GlassDir)GlassRegGen.exe" "$(GlassDir)\" -r "$(GlassDir)glass2.exe.regroot" "$(GlassDir)ConGlass.reg"</RunScript>
     <RunScript RunAs="VSUser">"$(GlassDir)GlassRegGen.exe" "PythonEngine.regdef" "$(GlassDir)glass2.exe.regroot" "$(GlassDir)PythonConGlass.reg"</RunScript>
   </Setup>
   <TestSetup>
