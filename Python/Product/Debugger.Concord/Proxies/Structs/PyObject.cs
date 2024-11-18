@@ -30,6 +30,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         public string VariableName { get; set; }
         public PythonLanguageVersion MinVersion { get; set; }
         public PythonLanguageVersion MaxVersion { get; set; }
+        public bool Hidden { get; set; }
     }
 
     internal interface IPyObject : IValueStore<PyObject>, IDataProxy<StructProxy> {
@@ -79,6 +80,9 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
                                 continue;
                             }
                             if (pyTypeAttr.MaxVersion != PythonLanguageVersion.None && langVer > pyTypeAttr.MaxVersion) {
+                                continue;
+                            }
+                            if (pyTypeAttr.Hidden) {
                                 continue;
                             }
 
@@ -169,7 +173,12 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
                 } else if (dictoffset < 0) {
                     var varObj = this as PyVarObject;
                     if (varObj == null) {
-                        throw new InvalidDataException();
+                        // Prior to 3.11 this should have been an error. In 3.11 many objects have negative tp_dictoffset
+                        if (Process.GetPythonRuntimeInfo().LanguageVersion <= PythonLanguageVersion.V310) {
+                            Debug.Fail("Non-var object with negative tp_dictoffset.");
+                            throw new InvalidOperationException();
+                        }
+                        return null;
                     }
 
                     long size = ob_type.tp_basicsize.Read();

@@ -20,6 +20,7 @@ using System.Linq;
 using Microsoft.Dia;
 using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.VisualStudio.Debugger;
+using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
@@ -137,11 +138,6 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies {
 
         public override int GetHashCode() {
             return new { _process, _address }.GetHashCode();
-        }
-
-        protected TProxy GetFieldProxy<TProxy>(StructField<TProxy>? field, bool polymorphic = true)
-            where TProxy : IDataProxy {
-            return field.HasValue ? GetFieldProxy(field.Value) : default(TProxy);
         }
 
         protected TProxy GetFieldProxy<TProxy>(StructField<TProxy> field, bool polymorphic = true)

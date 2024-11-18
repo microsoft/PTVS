@@ -76,9 +76,14 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             _pyrtInfo = process.GetPythonRuntimeInfo();
 
             LoadInitialPythonModules();
-            string pyCodeFunctionName = (_pyrtInfo.LanguageVersion < PythonLanguageVersion.V38) ? "PyCode_New" : "PyCode_NewWithPosOnlyArgs";
-            LocalComponent.CreateRuntimeDllFunctionBreakpoint(_pyrtInfo.DLLs.Python, pyCodeFunctionName, PythonDllBreakpointHandlers.PyCode_New, enable: true, debugStart: true);
-            LocalComponent.CreateRuntimeDllFunctionBreakpoint(_pyrtInfo.DLLs.Python, "PyCode_NewEmpty", PythonDllBreakpointHandlers.PyCode_NewEmpty, enable: true, debugStart: true);
+
+            if (_pyrtInfo.LanguageVersion <= PythonLanguageVersion.V310) {
+                LocalComponent.CreateRuntimeDllFunctionBreakpoint(_pyrtInfo.DLLs.Python, "PyCode_NewWithPosOnlyArgs", PythonDllBreakpointHandlers.PyCode_New, enable: true, debugStart: true);
+                LocalComponent.CreateRuntimeDllFunctionBreakpoint(_pyrtInfo.DLLs.Python, "PyCode_NewEmpty", PythonDllBreakpointHandlers.PyCode_NewEmpty, enable: true, debugStart: true);
+            } else {
+                // In 3.11, the PyCode_New functions were no longer used. Instead, an internal _PyCode_New function is used to create a code object.
+                LocalComponent.CreateRuntimeDllFunctionBreakpoint(_pyrtInfo.DLLs.Python, "_PyCode_New", PythonDllBreakpointHandlers._PyCode_New, enable: true, debugStart: true);
+            }
         }
 
         private void LoadInitialPythonModules() {
@@ -144,6 +149,27 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
                 var filenamePtr = cppEval.EvaluateUInt64("filename");
+                var filenameObj = PyObject.FromAddress(process, filenamePtr) as IPyBaseStringObject;
+                if (filenameObj == null) {
+                    return;
+                }
+
+                string filename = filenameObj.ToString();
+                if (process.GetPythonRuntimeInstance().GetModuleInstances().Any(mi => mi.FullName == filename)) {
+                    return;
+                }
+
+                new RemoteComponent.CreateModuleRequest {
+                    ModuleId = Guid.NewGuid(),
+                    FileName = filename
+                }.SendLower(process);
+            }
+
+            public static void _PyCode_New(DkmThread thread, ulong frameBase, ulong vframe, ulong returnAddress) {
+                var process = thread.Process;
+                var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
+
+                var filenamePtr = cppEval.EvaluateUInt64("con->filename");
                 var filenameObj = PyObject.FromAddress(process, filenamePtr) as IPyBaseStringObject;
                 if (filenameObj == null) {
                     return;
