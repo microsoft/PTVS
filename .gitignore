@@ -38,4 +38,5 @@ __pycache__/
 *.tlog
 GlassTests
 DropTools
+obj/
 
