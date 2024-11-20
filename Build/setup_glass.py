@@ -146,6 +146,10 @@ def copy_ptvs_bits():
         shutil.copy(file, glass_debugger_dir)
         shutil.copy(file, glass_remote_debugger_dir)
 
+    for file in glob.glob(os.path.join(build_output, "DkmDebu*")):
+        shutil.copy(file, glass_debugger_dir)
+        shutil.copy(file, glass_remote_debugger_dir)
+
     # Whenever we copy new bits, we have to regenerate the Python.GlassTestGroup file
     generate_python_version_props()
 
