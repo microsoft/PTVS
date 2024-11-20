@@ -236,6 +236,17 @@ def generate_python_version_props():
         if any(prop["minor"] == minor and prop["arch"] == arch for prop in props_to_add):
             continue
 
+        # See if the path exists
+        if not os.path.exists(python_root):
+            print(f"Error: Python path not found at {python_root}")
+            exit(1)
+
+        # Try the debug version if possible as it works better with the debugger
+        debug_path = os.path.join(os.path.dirname(python_root), "python_d.exe")
+        if os.path.exists(debug_path):
+            python_root = debug_path
+
+
         # We need to write this to a file in the props folder
         props_file = os.path.join(props_folder, f"Python3{minor}.{bitness}.GlassTestProps")
         with open(props_file, "w") as f:
