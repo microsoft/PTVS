@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System.Collections.Generic;
+using System.Diagnostics;
 using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.VisualStudio.Debugger;
 
@@ -23,8 +24,14 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
     internal class PyInterpreterState : StructProxy {
         private class Fields {
             public StructField<PointerProxy<PyInterpreterState>> next;
+            [FieldProxy(MaxVersion = PythonLanguageVersion.V310)]
             public StructField<PointerProxy<PyThreadState>> tstate_head;
+            [FieldProxy(MinVersion = PythonLanguageVersion.V311)]
+            public StructField<PyThreads> threads;
+            [FieldProxy(MaxVersion = PythonLanguageVersion.V311)]
             public StructField<PointerProxy<PyDictObject>> modules;
+            [FieldProxy(MinVersion = PythonLanguageVersion.V312)]
+            public StructField<ImportState> imports;
             public StructField<PointerProxy> eval_frame;
             public StructField<ceval_state> ceval;
         }
@@ -49,11 +56,23 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         }
 
         public PointerProxy<PyThreadState> tstate_head {
-            get { return GetFieldProxy(_fields.tstate_head); }
+            get { 
+                if (_fields.tstate_head.Process != null) {
+                    return GetFieldProxy(_fields.tstate_head);
+                }
+                var threads = GetFieldProxy(_fields.threads);
+                return threads.head;
+            }
         }
 
         public PointerProxy<PyDictObject> modules {
-            get { return GetFieldProxy(_fields.modules); }
+            get {
+                if (_fields.modules.Process != null) {
+                    return GetFieldProxy(_fields.modules);
+                }
+                var imports = GetFieldProxy(_fields.imports);
+                return imports.modules;
+            }
         }
 
         public PointerProxy eval_frame {
@@ -62,29 +81,31 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
 
         public ceval_state ceval => GetFieldProxy(_fields.ceval);
 
-        private class InterpHeadHolder : DkmDataItem {
-            public readonly PointerProxy<PyInterpreterState> Proxy;
-
-            public InterpHeadHolder(DkmProcess process) {
-                var pyrtInfo = process.GetPythonRuntimeInfo();
-                Proxy = pyrtInfo.GetRuntimeState()?.interpreters.head
-                    ?? pyrtInfo.DLLs.Python.GetStaticVariable<PointerProxy<PyInterpreterState>>("interp_head");
-            }
-        }
-
-        public static PointerProxy<PyInterpreterState> interp_head(DkmProcess process) {
-            return process.GetOrCreateDataItem(() => new InterpHeadHolder(process)).Proxy;
-        }
 
         public static IEnumerable<PyInterpreterState> GetInterpreterStates(DkmProcess process) {
-            for (var interp = interp_head(process).TryRead(); interp != null; interp = interp.next.TryRead()) {
-                yield return interp;
+            var pyrtInfo = process.GetPythonRuntimeInfo();
+            var runtimeState = pyrtInfo.GetRuntimeState();
+            var interpreters = runtimeState.interpreters;
+            var head = interpreters.head.TryRead();
+            while (head != null) {
+                yield return head;
+                head = head.next.TryRead();
             }
         }
 
-        public IEnumerable<PyThreadState> GetThreadStates() {
-            for (var tstate = tstate_head.TryRead(); tstate != null; tstate = tstate.next.TryRead()) {
-                yield return tstate;
+        public IEnumerable<PyThreadState> GetThreadStates(DkmProcess process) {
+            var pyrtInfo = process.GetPythonRuntimeInfo();
+            if (pyrtInfo.LanguageVersion <= PythonLanguageVersion.V310) {
+                for (var tstate = tstate_head.TryRead(); tstate != null; tstate = tstate.next.TryRead()) {
+                    yield return tstate;
+                }
+            } else {
+                var threads = GetFieldProxy(_fields.threads);
+                var head = threads.head.TryRead();
+                while (head != null && head.Address != 0) {
+                    yield return head;
+                    head = head.next.TryRead();
+                }
             }
         }
 
@@ -92,6 +113,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         public class ceval_state : StructProxy {
             private class Fields {
                 public StructField<Int32Proxy> recursion_limit;
+                [FieldProxy(MaxVersion = PythonLanguageVersion.V39)]
                 public StructField<Int32Proxy> tracing_possible;
             }
 

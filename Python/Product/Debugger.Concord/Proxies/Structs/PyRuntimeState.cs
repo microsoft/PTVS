@@ -32,6 +32,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             public StructField<BoolProxy> core_initialized;
             public StructField<BoolProxy> initialized;
             public StructField<pyinterpreters> interpreters;
+            public StructField<gilstate_runtime_state> gilstate;
         }
 
         private readonly Fields _fields;
@@ -44,6 +45,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         public BoolProxy core_initialized => GetFieldProxy(_fields.core_initialized);
         public BoolProxy initialized => GetFieldProxy(_fields.initialized);
         public pyinterpreters interpreters => GetFieldProxy(_fields.interpreters);
+        public gilstate_runtime_state gilstate => GetFieldProxy(_fields.gilstate);
 
 
         [StructProxy(MinVersion = PythonLanguageVersion.V39, StructName = "pyinterpreters")]
@@ -62,6 +64,22 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
 
             public PointerProxy<PyInterpreterState> head => GetFieldProxy(_fields.head);
             public PointerProxy<PyInterpreterState> main => GetFieldProxy(_fields.main);
+        }
+
+        [StructProxy(MinVersion = PythonLanguageVersion.V312, StructName = "_gilstate_runtime_state")]
+        public class gilstate_runtime_state : StructProxy {
+            public class Fields  {
+                public StructField<Int32Proxy> check_enabled;
+            }
+
+            private readonly Fields _fields;
+
+            public gilstate_runtime_state(DkmProcess process, ulong address)
+                : base(process, address) {
+                InitializeStruct(this, out _fields);
+            }
+
+            public Int32Proxy check_enabled => GetFieldProxy(_fields.check_enabled);
         }
 
 

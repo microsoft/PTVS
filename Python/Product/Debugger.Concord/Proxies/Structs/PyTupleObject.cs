@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             get { return GetFieldProxy(_fields.ob_item); }
         }
 
-        public IEnumerable<PointerProxy<PyObject>> ReadElements() {
+        public virtual IEnumerable<PointerProxy<PyObject>> ReadElements() {
             return ob_item.Take(ob_size.Read());
         }
 
