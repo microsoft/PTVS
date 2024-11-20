@@ -136,7 +136,7 @@ def get_test_console_app():
         print(f"Error: Test console app not found at {test_console_app}")
         exit(1)
 
-def copy_ptvs_bits():
+def copy_ptvs_output():
     # Copy the PythonTests folder into the glass directory
     print(f"Copying PythonTests from {python_tests_source_dir} to {python_tests_target_dir}")
     shutil.copytree(python_tests_source_dir, python_tests_target_dir, dirs_exist_ok=True)
@@ -203,6 +203,7 @@ def write_python_tests_group(file: str, props_to_add: list[PythonVersionProps]):
 
 
 def generate_python_version_props():
+    print("Generaring Python version props files...")
     # This will generate the Python<Major><Bitness>.GlassTestProps files based
     # on where python is installed on this machine.
     props_folder = os.path.join(python_tests_target_dir, "Python")
@@ -272,6 +273,8 @@ def generate_python_version_props():
     python_tests_3x_group = os.path.join(python_tests_target_dir, "Python3x", "Python3x.GlassTestGroup")
     write_python_tests_group(python_tests_3x_group, props_to_add)
 
+    print("Done generating Python version props files.")
+
 if __name__ == "__main__":
     # Process the command line arguments and run the appropriate steps
     if len(sys.argv) < 2:
@@ -279,7 +282,7 @@ if __name__ == "__main__":
         get_drop_exe()
         get_glass()
         get_test_console_app()
-        copy_ptvs_bits()
+        copy_ptvs_output()
         generate_python_version_props()
         verify_listing()
     else:
@@ -290,8 +293,8 @@ if __name__ == "__main__":
             get_glass()
         elif step == "get-test-console-app":
             get_test_console_app()
-        elif step == "copy-ptvs-bits":
-            copy_ptvs_bits()
+        elif step == "copy-ptvs-output":
+            copy_ptvs_output()
         elif step == "generate-python-version-props":
             generate_python_version_props()
         elif step == "verify-listing":
@@ -303,7 +306,7 @@ if __name__ == "__main__":
             print("    get-drop-exe: Get the drop.exe tool")
             print("    get-glass: Get the Glass test runner")
             print("    get-test-console-app: Get the test console app")
-            print("    copy-ptvs-bits: Copy the PythonTests folder into the glass directory")
+            print("    copy-ptvs-output: Copy the PythonTests folder and the PTVS debugger into the glass directory")
             print("    generate-python-version-props: Generate the Python version props files")
             print("    verify-listing: Verify that the tests are listed")
         else:

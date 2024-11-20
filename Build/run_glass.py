@@ -1,9 +1,14 @@
 import os
 import subprocess
 import sys
+from setup_glass import copy_ptvs_output
 
 
 def run_glass():
+    # Ensure the PTVS output is copied to the GlassTests directory
+    copy_ptvs_output()
+
+    # Get the test console app and test source directories
     glass_dir = os.path.join(os.path.dirname(__file__), "..", "GlassTests")
     test_console = os.path.join(glass_dir, "vstest.console.exe")
     tests_dir = os.path.join(glass_dir, "PythonTests")
