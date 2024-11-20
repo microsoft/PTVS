@@ -138,9 +138,11 @@ def get_test_console_app():
 
 def copy_ptvs_bits():
     # Copy the PythonTests folder into the glass directory
+    print(f"Copying PythonTests from {python_tests_source_dir} to {python_tests_target_dir}")
     shutil.copytree(python_tests_source_dir, python_tests_target_dir, dirs_exist_ok=True)
 
     # Copy the output of the build into the glass debugger directory (where the debuggers are installed)
+    print(f"Copying PTVS Debugger bits to {glass_debugger_dir}")
     build_output = get_build_output()
     for file in glob.glob(os.path.join(build_output, "Microsoft.Python*")):
         shutil.copy(file, glass_debugger_dir)
@@ -294,7 +296,16 @@ if __name__ == "__main__":
             generate_python_version_props()
         elif step == "verify-listing":
             verify_listing()
+        elif step == "help" or step == "-h" or step == "--help" or step == "/?" or step == "-?":
+            print("Usage: setup_glass.py [step]")
+            print("  Steps:")
+            print("    <none>: Run all steps")
+            print("    get-drop-exe: Get the drop.exe tool")
+            print("    get-glass: Get the Glass test runner")
+            print("    get-test-console-app: Get the test console app")
+            print("    copy-ptvs-bits: Copy the PythonTests folder into the glass directory")
+            print("    generate-python-version-props: Generate the Python version props files")
+            print("    verify-listing: Verify that the tests are listed")
         else:
             print(f"Error: Unrecognized argument: {step}")
-        print(f"Glass setup step: {step}")
     
