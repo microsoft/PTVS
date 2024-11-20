@@ -24,6 +24,13 @@
     <!--NOTE: GlassDir has a trailing slash-->
     <PythonTestRootDir Condition="'?(PythonTestRootDir)'==''">$(GetFullPath('.\Python\'))</PythonTestRootDir>
     <GlassPath Condition="'?(GlassPath)'==''">$(GlassDir)glass2.exe</GlassPath>
+  <!-- Uncomment the following to force glass to show a message box on startup in order to attach a debugger -->
+  <!--<GLASS_DEBUG CopyToEnvironment="true">startup</GLASS_DEBUG>-->
+
+  <!-- Uncomment the following line to save dumps of the debuggee, when glass2 or msvsmon crashes, and multiple tests are run (no assert mode). -->
+  <!--
+  <VSASSERT_SAVE_CHILD_DEBUGGED_PROCESSES_DUMPS CopyToEnvironment="true">true</VSASSERT_SAVE_CHILD_DEBUGGED_PROCESSES_DUMPS>
+  -->
   </PropertyGroup>
 
   <!-- The source files in a directory will be compiled in the order of the compilation rule definition. -->
@@ -36,7 +43,7 @@
     <Rule Extension=".cpp" Output="$(OutDir)\$(SourceFileName).cpp" Command="tools\CopyPythonDebuggee.cmd $(TargetArchitecture) &quot;$(SourceFilePath)&quot; &quot;$(OutDir)&quot; &quot;$(GlassDir)&quot; &quot;$(PythonTestRootDir)&quot;"/>
     <Rule Extension=".py" Output="$(OutDir)\$(SourceFileName).py" Command="tools\CopyPythonDebuggee.cmd $(TargetArchitecture) &quot;$(SourceFilePath)&quot; &quot;$(OutDir)&quot; &quot;$(GlassDir)&quot; &quot;$(PythonTestRootDir)&quot;"/>
   </DebuggeeCompileRules>
-  
+
   <TestGroups>
     <TestGroup Include="Python\Python.GlassTestGroup"/>
     <TestGroup Include="Python3x\Python3x.GlassTestGroup"/>

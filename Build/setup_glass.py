@@ -1,15 +1,18 @@
 import os
 import re
 import shutil
+import glob
 import subprocess
 import sys
-from typing import TypedDict
+from typing import Callable, TypedDict
 import zipfile
 
 ptvs_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 drop_tools_output_path = os.path.abspath(os.path.join(ptvs_root, "DropTools"))
 drop_exe_path = os.path.join(drop_tools_output_path, "lib", "net45", "drop.exe")
 glass_dir = os.path.abspath(os.path.join(ptvs_root, "GlassTests"))
+glass_debugger_dir = os.path.join(glass_dir, "Glass")
+glass_remote_debugger_dir = os.path.join(glass_debugger_dir, "Remote Debugger", "x64")
 test_console_app = os.path.join(glass_dir, "vstest.console.exe")
 python_tests_source_dir = os.path.abspath(os.path.join(ptvs_root, "Python", "Tests", "GlassTests", "PythonTests"))
 python_tests_target_dir = os.path.join(glass_dir, "PythonTests")
@@ -34,9 +37,42 @@ def get_drop_exe():
         print(f"Error: drop.exe not found at {drop_exe_path}")
         exit(1)
 
-def get_glass():        
-    shutil.rmtree(glass_dir)
-    glass_installer = subprocess.run(
+def compute_drop_path(drop_prefix: str, matcher: Callable[[str], bool]) -> str:
+    # Compute drop path by querying the drop location for all the drops
+    print(f"Computing drop path for {drop_prefix}...")
+    drop_list = subprocess.run(
+        [drop_exe_path, 
+         "list", 
+         "-s", 
+         "https://devdiv.artifacts.visualstudio.com/DefaultCollection", 
+         "-p", 
+         drop_prefix], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if drop_list.returncode != 0:
+        print(f"Error listing glass drops: {drop_list.stderr}")
+        exit(1)
+    
+    # Parse the output to get the latest drop
+    drops = drop_list.stdout.decode("utf-8").split("\n")
+
+    # Remove CR/LF
+    drops = [drop.strip() for drop in drops]
+
+    # Remove the timestamps on the front if they exist
+    drops = [drop.split(" - ")[1] if " - " in drop else drop for drop in drops]
+
+    # Find the last drop that matches the matcher
+    matches = [drop for drop in drops if matcher(drop)]
+    line = matches[-1]
+
+    print(f"Picked drop: {line}")
+    return line
+
+def get_drop(drop_prefix: str, dest: str, matcher: Callable[[str], bool]) -> None:
+    # Get the latest drop that matches the glass prefix
+    latest_drop = compute_drop_path(drop_prefix, matcher)
+
+    # Then get the drop
+    drop_run = subprocess.run(
         [drop_exe_path, 
          "get", 
          "-s", 
@@ -45,54 +81,73 @@ def get_glass():
          "-writable", 
          "true", 
          "-n", 
-         "Temp/DevDiv/Concord/GlassStandalone1559032", # TODO: Figure out how to get a permanent drop location
+         latest_drop, 
          "-d", 
-         glass_dir], stdout=sys.stdout, stderr=sys.stderr)
-    if glass_installer.returncode != 0:
-        print(f"Error getting glass: {glass_installer.stderr}")
+         dest], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if drop_run.returncode != 0:
+        print(f"Error getting drop: {drop_run.stderr}")
         exit(1)
+
+    print(f"Got drop {latest_drop}")
+
+def unzip_vsix(dest: str, vsix_file_name: str) -> None:
+    vsix_file = os.path.join(dest, vsix_file_name)
+    if not os.path.exists(vsix_file):
+        print(f"Error: VSIX file not found at {vsix_file}")
+        exit(1)
+   
+    zipfile.ZipFile(vsix_file, 'r').extractall(dest)
+
+
+def get_glass():      
+    # First remove the glass_dir
+    # os.system('taskkill /f /im GlassTestAdminRunner.exe')  This doesn't work because the process is running as admin
+    if os.path.exists(glass_dir):
+        shutil.rmtree(glass_dir)
+
+    # Get the latest drop that matches the glass prefix
+    get_drop("Temp/DevDiv/Concord", glass_dir, lambda d: "GlassStandalone" in d)
 
     # Copy the Glass.TestAdapter.dll into the extensions directory so vstest.console.exe can find it
     glass_test_adapter = os.path.join(glass_dir, "Glass.TestAdapter.dll")
+    if not os.path.exists(glass_test_adapter):
+        print(f"Error: Glass.TestAdapter.dll not found at {glass_test_adapter}")
     glass_extensions_dir = os.path.join(glass_dir, "extensions")
     os.makedirs(glass_extensions_dir, exist_ok=True)
     shutil.copy(glass_test_adapter, glass_extensions_dir)
 
+
 def get_test_console_app():
-    # Next install the test console app that will run the tests.
-    test_bits = subprocess.run(
-        [drop_exe_path,
-        "get",
-        "-s",
-        "https://devdiv.artifacts.visualstudio.com/DefaultCollection",
-        "-a",
-        "-writable",
-        "true",
-        "-n",
-        "Products/internal/microsoft-vstest/17.12/20241008.1", # TODO: Figure out how to get a permanent drop location
-        "-d",
-        glass_dir], stdout=sys.stdout, stderr=sys.stderr)
-    if test_bits.returncode != 0:
-        print(f"Error getting glass: {test_bits.stderr}")
-        exit(1)
+    # Get the latest drop that matches the nuget prefix. We need some of the assemblies
+    # from this location. We're looking for the release-5.11 drop.
+    get_drop("Products/DevDiv/NuGet-NuGet.Client-Trusted/release-5.11.x", glass_dir, lambda d: "5.11" in d)
 
     # It downloads a VSIX file, which we need to extract
-    vsix_file = os.path.join(glass_dir, "Microsoft.VisualStudio.TestTools.TestPlatform.V2.CLI.vsix")
-    if not os.path.exists(vsix_file):
-        print(f"Error: VSIX file not found at {vsix_file}")
-        exit(1)
-    
-    # Unzip the VSIX file into the glass directory
-    zipfile.ZipFile(vsix_file, 'r').extractall(glass_dir)
+    unzip_vsix(glass_dir, "Nuget.tools.vsix")
+
+    # Get the latest drop that matches the vstest prefix
+    get_drop("Products/internal/microsoft-vstest/main", glass_dir, lambda d: "main" in d)
+
+    # It downloads a VSIX file, which we need to extract
+    unzip_vsix(glass_dir, "Microsoft.VisualStudio.TestTools.TestPlatform.V2.CLI.vsix")
 
     # Verify that the test console app is in the glass directory
     if not os.path.exists(test_console_app):
         print(f"Error: Test console app not found at {test_console_app}")
         exit(1)
 
-def copy_python_tests():
+def copy_ptvs_bits():
     # Copy the PythonTests folder into the glass directory
     shutil.copytree(python_tests_source_dir, python_tests_target_dir, dirs_exist_ok=True)
+
+    # Copy the output of the build into the glass debugger directory (where the debuggers are installed)
+    build_output = get_build_output()
+    for file in glob.glob(os.path.join(build_output, "Microsoft.Python*")):
+        shutil.copy(file, glass_debugger_dir)
+        shutil.copy(file, glass_remote_debugger_dir)
+
+    # Whenever we copy new bits, we have to regenerate the Python.GlassTestGroup file
+    generate_python_version_props()
 
 def verify_listing():
     # Output the tests found to verify this all worked
@@ -117,6 +172,7 @@ def get_build_output():
 class PythonVersionProps(TypedDict):
     minor: int
     bitness: int
+    arch: str
     path: str
 
 def write_python_tests_group(file: str, props_to_add: list[PythonVersionProps]):
@@ -125,7 +181,7 @@ def write_python_tests_group(file: str, props_to_add: list[PythonVersionProps]):
         f.write(f'<GlassTestGroup xmlns="http://schemas.microsoft.com/vstudio/diagnostics/glasstestmanagement/2014">\n')
         f.write(f'  <Configurations>\n')
         for prop in props_to_add:
-            f.write(f'    <StandardConfiguration Name="3{prop["minor"]}" TargetArchitecture="x{prop["bitness"]}">\n')
+            f.write(f'    <StandardConfiguration Name="3{prop["minor"]}-{prop["bitness"]}" TargetArchitecture="x{prop["arch"]}">\n')
             f.write(f'      <Setup>\n')
             f.write(f'        <ImportPropertyGroup>{prop["path"]}</ImportPropertyGroup>\n')
             f.write(f'        <ImportPropertyGroup>..\\..\\Native\\InProcPdb.GlassTestProps</ImportPropertyGroup>\n')
@@ -170,13 +226,14 @@ def generate_python_version_props():
         minor = int(match.group(1))
         bitness = int(match.group(2))
         python_root = match.group(3)
+        arch = "64" if bitness == 64 else "86"
 
         # Skip anything older than 3.9
         if minor < 9:
             continue
 
         # Skip if we already found an item for this version/bitness
-        if any(prop["minor"] == minor and prop["bitness"] == bitness for prop in props_to_add):
+        if any(prop["minor"] == minor and prop["arch"] == arch for prop in props_to_add):
             continue
 
         # We need to write this to a file in the props folder
@@ -188,7 +245,7 @@ def generate_python_version_props():
             f.write(f"</PropertyGroup>\n")
 
         # Then we need to add this to the list of python versions in the PythonTests.props file
-        props_to_add.append({ "minor": minor, "bitness": bitness, "path": "..\\Python\\" + os.path.basename(props_file) })
+        props_to_add.append({ "minor": minor, "bitness": bitness, "arch": arch, "path": "..\\Python\\" + os.path.basename(props_file) })
         
     # Now we need to update the PythonTests.GlassTestGroup file with the new versions
     python_tests_group = os.path.join(props_folder, "Python.GlassTestGroup")
@@ -205,7 +262,7 @@ if __name__ == "__main__":
         get_drop_exe()
         get_glass()
         get_test_console_app()
-        copy_python_tests()
+        copy_ptvs_bits()
         generate_python_version_props()
         verify_listing()
     else:
@@ -216,8 +273,8 @@ if __name__ == "__main__":
             get_glass()
         elif step == "get-test-console-app":
             get_test_console_app()
-        elif step == "copy-python-tests":
-            copy_python_tests()
+        elif step == "copy-ptvs-bits":
+            copy_ptvs_bits()
         elif step == "generate-python-version-props":
             generate_python_version_props()
         elif step == "verify-listing":
