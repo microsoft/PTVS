@@ -17,9 +17,9 @@ module = Extension(
     extra_compile_args = ['/Zi', '/Fdbuild'],
     extra_link_args = ['/DEBUG'],
     libraries=[lib_name],
-    library_dirs=['path_to_python_libs'],
-    include_dirs=['path_to_python_include']
 )
+
+print(f"Setting up cpp_mod extension module with the following parameters: {module}")
 
 setup(name='cpp_mod_pkg',
       version='1.0',
