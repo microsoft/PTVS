@@ -20,9 +20,13 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.InteropServices.WindowsRuntime;
 using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Debugger;
+using Microsoft.VisualStudio.Debugger.CallStack;
+using Microsoft.VisualStudio.Debugger.Evaluation;
+using static Microsoft.VisualStudio.Threading.SingleThreadedSynchronizationContext;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
@@ -163,38 +167,65 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             }
         }
 
-        public PointerProxy<PyObject>? __dict__ {
-            get {
-                var ob_type = this.ob_type.Read();
-                long dictoffset = ob_type.tp_dictoffset.Read();
+        private PointerProxy<PyObject>? GetDict310() {
+            var ob_type = this.ob_type.Read();
+            long dictoffset = ob_type.tp_dictoffset.Read();
 
-                if (dictoffset == 0) {
-                    return null;
-                } else if (dictoffset < 0) {
-                    var varObj = this as PyVarObject;
-                    if (varObj == null) {
-                        // Prior to 3.11 this should have been an error. In 3.11 many objects have negative tp_dictoffset
-                        if (Process.GetPythonRuntimeInfo().LanguageVersion <= PythonLanguageVersion.V310) {
-                            Debug.Fail("Non-var object with negative tp_dictoffset.");
-                            throw new InvalidOperationException();
-                        }
-                        return null;
-                    }
-
-                    long size = ob_type.tp_basicsize.Read();
-                    size += checked(Math.Abs(varObj.ob_size.Read()) * ob_type.tp_itemsize.Read());
-
-                    // Align to pointer boundary
-                    var sizeofPtr = Process.GetPointerSize();
-                    size += (sizeofPtr - 1);
-                    size &= ~(sizeofPtr - 1);
-
-                    dictoffset += size;
-                    Debug.Assert(dictoffset > 0);
+            if (dictoffset == 0) {
+                return null;
+            } else if (dictoffset < 0) {
+                var varObj = this as PyVarObject;
+                if (varObj == null) {
+                    Debug.Fail("Non-var object with negative tp_dictoffset.");
+                    throw new InvalidOperationException();
                 }
 
-                return new PointerProxy<PyObject>(Process, Address.OffsetBy(dictoffset));
+                long size = ob_type.tp_basicsize.Read();
+                size += checked(Math.Abs(varObj.ob_size.Read()) * ob_type.tp_itemsize.Read());
+
+                // Align to pointer boundary
+                var sizeofPtr = Process.GetPointerSize();
+                size += (sizeofPtr - 1);
+                size &= ~(sizeofPtr - 1);
+
+                dictoffset += size;
+                Debug.Assert(dictoffset > 0);
             }
+
+            return new PointerProxy<PyObject>(Process, Address.OffsetBy(dictoffset));
+        }
+
+        private PointerProxy<PyObject>? GetDict311(DkmInspectionContext inspectionContext, DkmStackWalkFrame stackFrame) {
+            var ob_type = this.ob_type.Read();
+            long dictoffset = ob_type.tp_dictoffset.Read();
+            if (dictoffset == 0) {
+                return null;
+            }
+
+            // We need to call the _PyObject_GetDictPtr function to get the dict.
+            // The dict is generated lazily so it's difficult for us to read process memory it.
+            var evaluator = new CppExpressionEvaluator(inspectionContext, stackFrame, DkmEvaluationFlags.TreatAsExpression);
+            var funcAddr = Process.GetPythonRuntimeInfo().DLLs.Python.GetFunctionAddress("_PyObject_GetDictPtr");
+            if (funcAddr != 0) {
+                try {
+                    var dictAddr = evaluator.EvaluateUInt64(string.Format("((void ** (*)(void *)){0})({1})", funcAddr, Address), DkmEvaluationFlags.EnableExtendedSideEffects);
+                    if (dictAddr != 0) {
+                        return new PointerProxy<PyObject>(Process, dictAddr);
+                    }
+                } catch (CppEvaluationException) {
+                    // This means we can't evaluate right now, just return null
+                }
+            }
+            return null;
+        }
+
+
+        public PointerProxy<PyObject>? GetDict(DkmInspectionContext inspectionContext, DkmStackWalkFrame stackFrame) {
+            if (Process.GetPythonRuntimeInfo().LanguageVersion <= PythonLanguageVersion.V310) {
+                return GetDict310();
+            }
+
+            return GetDict311(inspectionContext, stackFrame);
         }
 
         public bool IsInstanceOf(PyTypeObject type) {
@@ -239,10 +270,10 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         /// The default implementation enumerates object fields specified via either __dict__ or __slots__. Most derived classes
         /// will want to keep that as is, except for collections.
         /// </remarks>
-        public virtual IEnumerable<PythonEvaluationResult> GetDebugChildren(ReprOptions reprOptions) {
+        public virtual IEnumerable<PythonEvaluationResult> GetDebugChildren(ReprOptions reprOptions, DkmInspectionContext inspectionContext, DkmStackWalkFrame stackFrame) {
             var children = GetDebugChildrenFromSlots();
 
-            var maybeDictProxy = this.__dict__;
+            var maybeDictProxy = this.GetDict(inspectionContext, stackFrame);
             if (maybeDictProxy != null) {
                 var dictProxy = maybeDictProxy.Value;
                 if (!dictProxy.IsNull) {

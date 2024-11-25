@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.Text;
 using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.VisualStudio.Debugger;
+using Microsoft.VisualStudio.Debugger.CallStack;
 using Microsoft.VisualStudio.Debugger.Evaluation;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
@@ -34,7 +35,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             builder.AppendLiteral(ToString());
         }
 
-        public override IEnumerable<PythonEvaluationResult> GetDebugChildren(ReprOptions reprOptions) {
+        public override IEnumerable<PythonEvaluationResult> GetDebugChildren(ReprOptions reprOptions, DkmInspectionContext inspectionContext, DkmStackWalkFrame stackFrame) {
             string s = ToString();
 
             yield return new PythonEvaluationResult(new ValueStore<long>(s.Length), "len()") {

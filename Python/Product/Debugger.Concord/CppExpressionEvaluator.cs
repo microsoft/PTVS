@@ -32,8 +32,8 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         private readonly DkmStackWalkFrame _nativeFrame;
         private readonly DkmInspectionContext _cppInspectionContext;
 
-        public CppExpressionEvaluator(DkmInspectionContext inspectionContext, DkmStackWalkFrame stackFrame) 
-            : this(inspectionContext.InspectionSession, inspectionContext.Radix, stackFrame) { 
+        public CppExpressionEvaluator(DkmInspectionContext inspectionContext, DkmStackWalkFrame stackFrame, DkmEvaluationFlags flags = DkmEvaluationFlags.TreatAsExpression | DkmEvaluationFlags.NoSideEffects) 
+            : this(inspectionContext.InspectionSession, inspectionContext.Radix, stackFrame, flags) { 
         }
         public CppExpressionEvaluator(DkmInspectionSession inspectionSession, uint radix, DkmStackWalkFrame stackFrame, DkmEvaluationFlags flags = DkmEvaluationFlags.TreatAsExpression | DkmEvaluationFlags.NoSideEffects) {
             _process = stackFrame.Process;
@@ -114,9 +114,9 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             }
         }
 
-        public ulong EvaluateUInt64(string expr) {
+        public ulong EvaluateUInt64(string expr, DkmEvaluationFlags flags = DkmEvaluationFlags.NoSideEffects) {
             try {
-                return ulong.Parse(Evaluate("(unsigned __int64)(" + expr + ")"));
+                return ulong.Parse(Evaluate("(unsigned __int64)(" + expr + ")", flags));
             } catch (FormatException) {
                 throw new CppEvaluationException();
             }

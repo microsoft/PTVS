@@ -21,3 +21,32 @@ Running Glass Tests through Command Line
     or
     Run `python build\run_glass.py <test name>` 
         where <test name> is one of the tests listed when you run setup_glass "verify-listing"
+
+
+Debugging test failures
+   Running with actual product
+   - Run PTVS under the debugger
+   - In the EXP version that runs, open folder on where the test runs
+   - create launch.vs.json with settings like so:
+{
+
+  "version": "0.2.1",
+  "defaults": {},
+  "configurations": [
+    {
+      "type": "python",
+      "name": "py_mod.py",
+      "project": "py_mod.py",
+      "nativeDebug": true,
+      "interpreter": "C:\\Users\\rchiodo\\AppData\\Local\\Programs\\Python\\Python313\\python_d.exe"
+    }
+  ]
+}
+    - set breakpoints like the test does (look at the testscript.xml)
+    - do the same things the testscript does
+
+    Debugging Glass itself
+    - Set GLASS_DEBUG=1
+    - Run test with `python build\run_glass.py <test name>`
+    - Attach VS to the glass2.exe
+    - Check for asserts or set breakpoints on events
