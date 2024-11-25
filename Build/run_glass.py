@@ -26,6 +26,7 @@ def run_glass():
         [test_console,
          "/Parallel",
         tests_source,
+        "/logger:trx;LogFileName=PythonTests.trx",
         test_filter], stdout=sys.stdout, stderr=sys.stderr)
     
     if tests.returncode != 0:
