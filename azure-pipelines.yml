@@ -183,7 +183,7 @@ extends:
           - template: /Build/templates/run_tests.yml@self
 
         # Non-PR steps
-        - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
+        # - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
 
           # Create VS bootstrapper for testing
           # TODO: Put Back - template: Build/templates/create_vs_bootstrapper.yml@self
