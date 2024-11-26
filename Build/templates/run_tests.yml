@@ -20,26 +20,26 @@ steps:
       addToPath: false # boolean. Add to PATH. Default: true.
     # Advanced
       architecture: 'x64' # 'x86' | 'x64'. Required. Architecture. Default: x64.
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '3.10'
-      addToPath: false
-      architecture: 'x64'
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '3.11'
-      addToPath: false
-      architecture: 'x64'
+  # - task: UsePythonVersion@0
+  #   inputs:
+  #     versionSpec: '3.10'
+  #     addToPath: false
+  #     architecture: 'x64'
+  # - task: UsePythonVersion@0
+  #   inputs:
+  #     versionSpec: '3.11'
+  #     addToPath: false
+  #     architecture: 'x64'
   - task: UsePythonVersion@0
     inputs:
       versionSpec: '3.12'
       addToPath: true # This is the version we'll use to run the scripts below
       architecture: 'x64'
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '3.13'
-      addToPath: false
-      architecture: 'x64'  
+  # - task: UsePythonVersion@0
+  #   inputs:
+  #     versionSpec: '3.13'
+  #     addToPath: false
+  #     architecture: 'x64'  
 
   # Setup the glass test folder
   - task: PythonScript@0

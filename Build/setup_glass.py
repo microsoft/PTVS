@@ -29,7 +29,7 @@ def get_drop_exe():
          drop_tools_output_path], 
          stdout=sys.stdout, stderr=sys.stderr)
     if drop_getter.returncode != 0:
-        print(f"Error getting drop.exe: {drop_getter.stderr}")
+        print(f"Error getting drop.exe: {drop_getter.stderr.decode('utf-8')}")
         exit(1)
 
     # Next, install glass in the GlassTests directory
@@ -43,12 +43,13 @@ def compute_drop_path(drop_prefix: str, matcher: Callable[[str], bool]) -> str:
     drop_list = subprocess.run(
         [drop_exe_path, 
          "list", 
+         "-a",
          "-s", 
          "https://devdiv.artifacts.visualstudio.com/DefaultCollection", 
          "-p", 
          drop_prefix], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if drop_list.returncode != 0:
-        print(f"Error listing glass drops: {drop_list.stderr}")
+        print(f"Error listing glass drops: {drop_list.stderr.decode('utf-8') + drop_list.stdout.decode('utf-8')}")
         exit(1)
     
     # Parse the output to get the latest drop
@@ -85,7 +86,7 @@ def get_drop(drop_prefix: str, dest: str, matcher: Callable[[str], bool]) -> Non
          "-d", 
          dest], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if drop_run.returncode != 0:
-        print(f"Error getting drop: {drop_run.stderr}")
+        print(f"Error getting drop: {drop_run.stderr.decode('utf-8') + drop_run.stdout.decode('utf-8')}")
         exit(1)
 
     print(f"Got drop {latest_drop}")
@@ -163,7 +164,7 @@ def verify_listing():
         "/lt",
         f"{python_tests_target_dir}/PythonConcord.GlassTestRoot"], stdout=sys.stdout, stderr=sys.stderr)
     if tests.returncode != 0:
-        print(f"Error listing tests: {tests.stderr}")
+        print(f"Error listing tests: {tests.stderr.decode('utf-8')}")
         exit(1)
 
 def get_build_output():
@@ -217,7 +218,7 @@ def generate_python_version_props():
     discover_output = subprocess.run(
         [discover_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if discover_output.returncode != 0:
-        print(f"Error finding python versions: {discover_output.stderr}")
+        print(f"Error finding python versions: {discover_output.stderr.decode('utf-8')}")
         exit(1)
 
     props_to_add: list[PythonVersionProps] = []
