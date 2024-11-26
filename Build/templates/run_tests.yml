@@ -1,0 +1,70 @@
+steps:
+
+  # Build the product
+  - task: MSBuild@1
+    displayName: 'Build product'
+    inputs:
+      solution: $(Build.SourcesDirectory)/Python/Product/dirs.proj
+      msbuildVersion: $(MsBuildVersion)
+      platform: $(Platform)
+      configuration: $(BuildConfiguration)
+      msbuildArguments: '/p:VSTarget=$(VSTarget) /bl:$(Build.SourcesDirectory)\logs\BuildProduct.binlog'
+
+  # Install different python versions
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.9' # string. Required. Version spec. Default: 3.x.
+      #disableDownloadFromRegistry: false # boolean. Disable downloading releases from the GitHub registry. Default: false.
+      #allowUnstable: false # boolean. Optional. Use when disableDownloadFromRegistry = false. Allow downloading unstable releases. Default: false.
+      #githubToken: # string. Optional. Use when disableDownloadFromRegistry = false. GitHub token for GitHub Actions python registry. 
+      addToPath: false # boolean. Add to PATH. Default: true.
+    # Advanced
+      architecture: 'x64' # 'x86' | 'x64'. Required. Architecture. Default: x64.
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.10'
+      addToPath: false
+      architecture: 'x64'
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.11'
+      addToPath: false
+      architecture: 'x64'
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.12'
+      addToPath: false
+      architecture: 'x64'
+      addToPath: true # This is the version we'll use to run the scripts below
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.13'
+      addToPath: false
+      architecture: 'x64'  
+
+  # Setup the glass test folder
+  - task: PythonScript@0
+    inputs:
+      scriptSource: 'filePath' # 'filePath' | 'inline'. Required. Script source. Default: filePath.
+      scriptPath: $(Build.SourcesDirectory)/Build/setup_glass.py
+      workingDirectory: $(Build.SourcesDirectory)
+      failOnStderr: true
+
+  # Run the glass tests
+  - task: PythonScript@0
+    inputs:
+      scriptSource: 'filePath' # 'filePath' | 'inline'. Required. Script source. Default: filePath.
+      scriptPath: $(Build.SourcesDirectory)/Build/run_glass.py
+      workingDirectory: $(Build.SourcesDirectory)
+      failOnStderr: true
+
+  # Upload the trx file as a test result
+  - task: PublishTestResults@2
+    inputs:
+      testResultsFiles: '$(Build.SourcesDirectory)/TestResults/*.trx'
+      testRunTitle: 'Glass Tests'
+      testRunSystem: 'VSTest'
+      failTaskOnFailedTests: true
+      mergeTestResults: true
+      testRunAttachmentsEnabled: true
+      testRunAttachmentsDirectory: '$(Build.SourcesDirectory)/TestResults'      
