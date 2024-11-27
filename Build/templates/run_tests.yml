@@ -19,7 +19,6 @@ steps:
         inlineScript: |
           # if this fails, check out this bash script that includes diagnostics:
           # https://gist.github.com/johnterickson/19f80a3e969e39f1000d118739176e62
-
           # Note that the resoruce is specified to limit the token to Azure DevOps
           $token = az account get-access-token --query accessToken --resource 499b84ac-1321-427f-aa17-267ca6975798 -o tsv
           Write-Host "##vso[task.setvariable variable=DropToken;issecret=true]$token"      
