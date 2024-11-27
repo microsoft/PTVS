@@ -60,7 +60,9 @@ steps:
     inputs:
       scriptSource: 'filePath' # 'filePath' | 'inline'. Required. Script source. Default: filePath.
       scriptPath: $(Build.SourcesDirectory)/Build/setup_glass.py
-      arguments: '--authTokenVariable DropToken'
+      env:
+        SYSTEM_ACCESSTOKEN: $(DropToken)
+      arguments: '--authTokenVariable SYSTEM_ACCESSTOKEN'
       workingDirectory: $(Build.SourcesDirectory)
       failOnStderr: true
 
