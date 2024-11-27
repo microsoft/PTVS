@@ -1,3 +1,4 @@
+import argparse
 import os
 import re
 import shutil
@@ -16,6 +17,13 @@ glass_remote_debugger_dir = os.path.join(glass_debugger_dir, "Remote Debugger", 
 test_console_app = os.path.join(glass_dir, "vstest.console.exe")
 python_tests_source_dir = os.path.abspath(os.path.join(ptvs_root, "Python", "Tests", "GlassTests", "PythonTests"))
 python_tests_target_dir = os.path.join(glass_dir, "PythonTests")
+auth_token = None
+
+def get_auth_token_args():
+    if auth_token is not None:
+        return ["--patAuthEnvVar", auth_token]
+    return ['-a']
+        
 
 def get_drop_exe():
     # First step, get the drop exe installed if not already there. This may query the user for credentials.
@@ -43,7 +51,7 @@ def compute_drop_path(drop_prefix: str, matcher: Callable[[str], bool]) -> str:
     drop_list = subprocess.run(
         [drop_exe_path, 
          "list", 
-         "-a",
+         *get_auth_token_args(),
          "-s", 
          "https://devdiv.artifacts.visualstudio.com/DefaultCollection", 
          "-p", 
@@ -78,7 +86,7 @@ def get_drop(drop_prefix: str, dest: str, matcher: Callable[[str], bool]) -> Non
          "get", 
          "-s", 
          "https://devdiv.artifacts.visualstudio.com/DefaultCollection",  
-         "-a", 
+         *get_auth_token_args(),
          "-writable", 
          "true", 
          "-n", 
@@ -276,40 +284,50 @@ def generate_python_version_props():
 
     print("Done generating Python version props files.")
 
+def main():
+    get_drop_exe()
+    get_glass()
+    get_test_console_app()
+    copy_ptvs_output()
+    generate_python_version_props()
+    verify_listing()
+
+
 if __name__ == "__main__":
     # Process the command line arguments and run the appropriate steps
-    if len(sys.argv) < 2:
+    arg_parser = argparse.ArgumentParser(description="Setup Glass for running Python tests")
+    arg_parser.add_argument("--getDropExe", action='store_true', help="Get the drop.exe for downloading the glass drop")
+    arg_parser.add_argument("--getGlass", action='store_true', help="Get the Glass test runner")
+    arg_parser.add_argument("--getVsTestConsole", action='store_true', help="Get the test console app")
+    arg_parser.add_argument("--copyPtvsOutput", action='store_true', help="Copy the PTVS output to the glass directory")
+    arg_parser.add_argument("--verifyListing", action='store_true', help="Verify that the tests are listed")
+    arg_parser.add_argument("--authTokenVariable", type=str, help="The environment variable holding the auth token to use for downloading the drop")
+    arg_parser.add_argument("--?", action='store_true', help="Show help")
+    args = arg_parser.parse_args()
+
+    # Set the auth token if it was passed in
+    auth_token = args.authTokenVariable
+
+    # See if any of the flags are set
+    args_dict = vars(args)
+    flags_set = any(value for key, value in args_dict.items() if not key.startswith('auth'))
+
+    if not flags_set:
         # All the steps
-        get_drop_exe()
-        get_glass()
-        get_test_console_app()
-        copy_ptvs_output()
-        generate_python_version_props()
-        verify_listing()
+        main()
     else:
-        step = sys.argv[1]
-        if step == "get-drop-exe":
+        if args.getDropExe:
             get_drop_exe()
-        elif step == "get-glass":
+        if args.getGlass:
             get_glass()
-        elif step == "get-test-console-app":
+        if args.getVsTestConsole:
             get_test_console_app()
-        elif step == "copy-ptvs-output":
+        if args.copyPtvsOutput:
             copy_ptvs_output()
-        elif step == "generate-python-version-props":
-            generate_python_version_props()
-        elif step == "verify-listing":
+        if args.verifyListing:
             verify_listing()
-        elif step == "help" or step == "-h" or step == "--help" or step == "/?" or step == "-?":
-            print("Usage: setup_glass.py [step]")
-            print("  Steps:")
-            print("    <none>: Run all steps")
-            print("    get-drop-exe: Get the drop.exe tool")
-            print("    get-glass: Get the Glass test runner")
-            print("    get-test-console-app: Get the test console app")
-            print("    copy-ptvs-output: Copy the PythonTests folder and the PTVS debugger into the glass directory")
-            print("    generate-python-version-props: Generate the Python version props files")
-            print("    verify-listing: Verify that the tests are listed")
-        else:
-            print(f"Error: Unrecognized argument: {step}")
+        if args_dict.get("?"):
+            arg_parser.print_help()
+    
+    print("Done.")
     
