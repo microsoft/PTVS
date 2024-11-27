@@ -57,17 +57,19 @@ steps:
 
   # Setup the glass test folder
   - task: PythonScript@0
+    displayName: 'Setup glass test folder'
+    env:
+      SYSTEM_ACCESSTOKEN: $(DropToken)
     inputs:
       scriptSource: 'filePath' # 'filePath' | 'inline'. Required. Script source. Default: filePath.
       scriptPath: $(Build.SourcesDirectory)/Build/setup_glass.py
-      env:
-        SYSTEM_ACCESSTOKEN: $(DropToken)
       arguments: '--authTokenVariable SYSTEM_ACCESSTOKEN'
       workingDirectory: $(Build.SourcesDirectory)
       failOnStderr: true
 
   # Run the glass tests
   - task: PythonScript@0
+    displayName: 'Run Glass tests'
     inputs:
       scriptSource: 'filePath' # 'filePath' | 'inline'. Required. Script source. Default: filePath.
       scriptPath: $(Build.SourcesDirectory)/Build/run_glass.py
