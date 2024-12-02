@@ -27,7 +27,8 @@
   <Command name="down">
     <functionName />
     <file>py_mod.py</file>
-    <line>6</line>
+    <!-- Line number only works if we are in the debugger UI. We need to be able to eval -->
+    <line Volatile="True"/>
     <col>0</col>
   </Command>
 

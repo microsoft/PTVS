@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Debugger;
+using Microsoft.VisualStudio.Debugger.CallStack;
 using Microsoft.VisualStudio.Debugger.Evaluation;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
@@ -56,7 +57,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             }
         }
 
-        public override IEnumerable<PythonEvaluationResult> GetDebugChildren(ReprOptions reprOptions) {
+        public override IEnumerable<PythonEvaluationResult> GetDebugChildren(ReprOptions reprOptions, DkmInspectionContext inspectionContext, DkmStackWalkFrame stackFrame) {
             yield return new PythonEvaluationResult(new ValueStore<long>(ob_size.Read()), "len()") {
                 Category = DkmEvaluationResultCategory.Method
             };

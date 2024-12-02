@@ -188,7 +188,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 }
 
                 int i = 0;
-                foreach (var child in obj.GetDebugChildren(reprOptions).Take(MaxDebugChildren)) {
+                foreach (var child in obj.GetDebugChildren(reprOptions, inspectionContext, stackFrame).Take(MaxDebugChildren)) {
                     if (child.Name == null) {
                         reprBuilder.Clear();
                         reprBuilder.AppendFormat("[{0:PY}]", i++);
@@ -331,7 +331,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             string repr = valueObj.Repr(reprOptions);
 
             var flags = pyEvalResult.Flags;
-            if (DebuggerOptions.ShowCppViewNodes || valueObj.GetDebugChildren(reprOptions).Any()) {
+            if (DebuggerOptions.ShowCppViewNodes || valueObj.GetDebugChildren(reprOptions, inspectionContext, stackFrame).Any()) {
                 flags |= DkmEvaluationResultFlags.Expandable;
             }
             if (!(valueStore is IWritableDataProxy)) {

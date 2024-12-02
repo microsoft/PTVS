@@ -21,6 +21,7 @@ using System.Text;
 using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Debugger;
+using Microsoft.VisualStudio.Debugger.CallStack;
 using Microsoft.VisualStudio.Debugger.Evaluation;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
@@ -84,7 +85,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             builder.AppendLiteral(new AsciiString(ToBytes(), ToString()));
         }
 
-        public override IEnumerable<PythonEvaluationResult> GetDebugChildren(ReprOptions reprOptions) {
+        public override IEnumerable<PythonEvaluationResult> GetDebugChildren(ReprOptions reprOptions, DkmInspectionContext inspectionContext, DkmStackWalkFrame stackFrame) {
             long count = ob_size.Read();
             yield return new PythonEvaluationResult(new ValueStore<long>(count), "len()") {
                 Category = DkmEvaluationResultCategory.Method

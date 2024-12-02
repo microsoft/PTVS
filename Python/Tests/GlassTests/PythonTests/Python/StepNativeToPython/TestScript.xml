@@ -28,7 +28,8 @@
       <functionName/>
       <function>callback</function>
       <file>py_mod.py</file>
-      <line>3</line>
+      <!-- Line number in 3.12 and above cannot be computed during the step complete. It will happen during the stack trace though -->
+      <line Volatile="True"/>
       <col>0</col>
     </Event>
   </Command>

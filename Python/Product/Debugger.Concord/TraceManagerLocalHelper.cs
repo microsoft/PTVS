@@ -308,7 +308,11 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 _handlers = new PythonDllBreakpointHandlers(this);
                 LocalComponent.CreateRuntimeDllFunctionExitBreakpoints(_pyrtInfo.DLLs.Python, "new_threadstate", _handlers.new_threadstate, enable: true);
                 LocalComponent.CreateRuntimeDllFunctionExitBreakpoints(_pyrtInfo.DLLs.Python, "PyInterpreterState_New", _handlers.PyInterpreterState_New, enable: true);
-                LocalComponent.CreateRuntimeDllFunctionExitBreakpoints(_pyrtInfo.DLLs.Python, "_PyInterpreterState_New", _handlers._PyInterpreterState_New, enable: true);
+
+                // For 3.13 we need a different function. PyInterpreterState_New is still present, but it's not the one that's callled internally,
+                if (_pyrtInfo.LanguageVersion >= PythonLanguageVersion.V313) {
+                    LocalComponent.CreateRuntimeDllFunctionExitBreakpoints(_pyrtInfo.DLLs.Python, "_PyInterpreterState_New", _handlers._PyInterpreterState_New, enable: true);
+                }
 
                 foreach (var methodInfo in _handlers.GetType().GetMethods()) {
                     var stepInAttr = (StepInGateAttribute)Attribute.GetCustomAttribute(methodInfo, typeof(StepInGateAttribute));

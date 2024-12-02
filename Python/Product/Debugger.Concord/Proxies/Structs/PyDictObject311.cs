@@ -26,7 +26,8 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
     internal class PyDictObject311 : PyDictObject {
         private class Fields {
             public StructField<PointerProxy<PyDictKeysObject311>> ma_keys;
-            public StructField<PointerProxy<ArrayProxy<PointerProxy<PyObject>>>> ma_values;
+            public StructField<SSizeTProxy> ma_used;
+            public StructField<PointerProxy<PyDictValuesObject311>> ma_values;
         }
 
         private readonly Fields _fields;
@@ -41,8 +42,12 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             get { return GetFieldProxy(_fields.ma_keys); }
         }
 
-        public PointerProxy<ArrayProxy<PointerProxy<PyObject>>> ma_values {
+        public PointerProxy<PyDictValuesObject311> ma_values {
             get { return GetFieldProxy(_fields.ma_values); }
+        }
+
+        public SSizeTProxy ma_used {
+            get { return GetFieldProxy(_fields.ma_used); }
         }
 
         public override IEnumerable<KeyValuePair<PyObject, PointerProxy<PyObject>>> ReadElements() {
@@ -51,17 +56,17 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             }
 
             var keys = ma_keys.Read();
-            var size = 1 << (int)keys.dk_log2_size.Read();
-            if (size <= 0) {
+            var used = ma_used.Read();
+
+            if (used <= 0) {
                 yield break;
             }
 
-            var n = keys.dk_nentries.Read();
             if (!ma_values.IsNull) {
-                var values = ma_values.Read();
+                var values = ma_values.Read().values;
                 var value = values[0];
 
-                for (int i = 0; i < n; ++i) {
+                for (int i = 0; i < used; ++i) {
                     var entry = GetDkEntry(i);
                     var key = entry.me_key;
                     if (!value.IsNull && !key.IsNull) {
@@ -70,7 +75,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
                     value = value.GetAdjacentProxy(1);
                 }
             } else {
-                for (int i = 0; i < n; ++i) {
+                for (int i = 0; i < used; ++i) {
                     var entry = GetDkEntry(i);
                     var key = entry.me_key;
                     var value = entry.me_value;
@@ -149,6 +154,25 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             : base(process, address) {
             InitializeStruct(this, out _fields);
         }
+    }
+
+    [StructProxy(MinVersion = PythonLanguageVersion.V311, StructName = "_dictvalues")]
+    internal class PyDictValuesObject311 : StructProxy {
+        public class Fields {
+            public StructField<ArrayProxy<PointerProxy<PyObject>>> values;
+        }
+
+        public readonly Fields _fields;
+
+        public PyDictValuesObject311(DkmProcess process, ulong address)
+            : base(process, address) {
+            InitializeStruct(this, out _fields);
+        }
+
+        public ArrayProxy<PointerProxy<PyObject>> values {
+            get { return GetFieldProxy(_fields.values); }
+        }
+
     }
 
     internal interface IDictKeyEntry : IDataProxy<IDictKeyEntry> {
