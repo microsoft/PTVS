@@ -16,7 +16,7 @@ def run_glass():
     test_filter = f"/Tests:{sys.argv[1]}" if len(sys.argv) > 1 else "*"
 
     # Verify the tests are there.
-    if not os.path.exists(tests_source):
+    if not os.path.exists(tests_source) or not os.path.exists(os.path.join(tests_dir, "PythonEngine.regdef")):
         print(f"Error: Test source not found at {tests_source}. Make sure you run setup_glass.py first.")
         # List the directory contents to help diagnose the issue
         print(f"Contents of {tests_dir}:")
