@@ -14,6 +14,15 @@ def run_glass():
     tests_dir = os.path.join(glass_dir, "PythonTests")
     tests_source = os.path.join(tests_dir, "PythonConcord.GlassTestRoot")
     test_filter = f"/Tests:{sys.argv[1]}" if len(sys.argv) > 1 else "*"
+
+    # Verify the tests are there.
+    if not os.path.exists(tests_source):
+        print(f"Error: Test source not found at {tests_source}. Make sure you run setup_glass.py first.")
+        # List the directory contents to help diagnose the issue
+        print(f"Contents of {tests_dir}:")
+        for f in os.listdir(tests_dir):
+            print(f)
+        exit(1)    
     
     # Verify test_console exists
     if not os.path.exists(test_console):
