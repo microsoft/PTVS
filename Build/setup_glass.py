@@ -145,7 +145,7 @@ def get_test_console_app():
         print(f"Error: Test console app not found at {test_console_app}")
         exit(1)
 
-def copy_ptvs_output():
+def copy_ptvs_output(debug_output: bool = False):
     # Copy the PythonTests folder into the glass directory
     print(f"Copying PythonTests from {python_tests_source_dir} to {python_tests_target_dir}")
     shutil.copytree(python_tests_source_dir, python_tests_target_dir, dirs_exist_ok=True)
