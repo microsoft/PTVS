@@ -1,0 +1,5 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<PropertyGroup xmlns="http://schemas.microsoft.com/vstudio/diagnostics/glasstestmanagement/2014">
+  <PythonExe CopyToEnvironment="true">C:\Program Files (x86)\Python39-32\python.exe</PythonExe>
+</PropertyGroup>
