@@ -151,8 +151,8 @@ def copy_ptvs_output(debug_output: bool = False):
     shutil.copytree(python_tests_source_dir, python_tests_target_dir, dirs_exist_ok=True)
 
     # Copy the output of the build into the glass debugger directory (where the debuggers are installed)
-    print(f"Copying PTVS Debugger bits to {glass_debugger_dir}")
     build_output = get_build_output()
+    print(f"Copying PTVS Debugger bits from {build_output} to {glass_debugger_dir}")
     for file in glob.glob(os.path.join(build_output, "Microsoft.Python*")):
         shutil.copy(file, glass_debugger_dir)
         shutil.copy(file, glass_remote_debugger_dir)
