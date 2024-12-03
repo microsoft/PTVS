@@ -46,7 +46,7 @@ steps:
   #     architecture: 'x64'
   - task: UsePythonVersion@0
     inputs:
-      versionSpec: '3.12'
+      versionSpec: '3.12-debug'
       addToPath: true # This is the version we'll use to run the scripts below
       architecture: 'x64'
   # - task: UsePythonVersion@0
