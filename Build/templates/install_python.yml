@@ -4,28 +4,23 @@ parameters:
     default: '3.9.7'
     displayName: 'Python Version'
 
-resources:
-  containers:
-    - container: windows-latest
-      image: mcr.microsoft.com/windows/servercore:ltsc2019
-
 steps:
-- task: Cache@2
-  inputs:
-    key: 'python-installer-$(parameters.pythonVersion)'
-    path: '$(Pipeline.Workspace)/python-installer'
-    restoreKeys: |
-      python-installer-
-  displayName: 'Cache Python Installer'
+  - task: Cache@2
+    inputs:
+      key: 'python-installer-$(parameters.pythonVersion)'
+      path: '$(Pipeline.Workspace)/python-installer'
+      restoreKeys: |
+        python-installer-
+    displayName: 'Cache Python Installer'
 
-- script: |
-    $pythonInstallerUrl = "https://www.python.org/ftp/python/$(parameters.pythonVersion)/python-$(parameters.pythonVersion)-amd64.exe"
-    $pythonInstaller = "$(Pipeline.Workspace)/python-installer/python-installer.exe"
-    if (!(Test-Path -Path $pythonInstaller)) {
-      Invoke-WebRequest -Uri $pythonInstallerUrl -OutFile $pythonInstaller
-    }
-  displayName: 'Download Python Installer if not cached'
+  - script: |
+      $pythonInstallerUrl = "https://www.python.org/ftp/python/$(parameters.pythonVersion)/python-$(parameters.pythonVersion)-amd64.exe"
+      $pythonInstaller = "$(Pipeline.Workspace)/python-installer/python-installer.exe"
+      if (!(Test-Path -Path $pythonInstaller)) {
+        Invoke-WebRequest -Uri $pythonInstallerUrl -OutFile $pythonInstaller
+      }
+    displayName: 'Download Python Installer if not cached'
 
-- script: |
-    Start-Process $pythonInstaller -ArgumentList '/quiet InstallAllUsers=1 PrependPath=1 Include_debug=1 Include_doc=0 Include_symbols=1' -NoNewWindow -Wait
-  displayName: 'Install Python'
+  - script: |
+      Start-Process $pythonInstaller -ArgumentList '/quiet InstallAllUsers=1 PrependPath=1 Include_debug=1 Include_doc=0 Include_symbols=1' -NoNewWindow -Wait
+    displayName: 'Install Python'
