@@ -12,7 +12,7 @@ import certifi
 # if this import fails, run PreBuild.ps1, which will pip install packaging
 from packaging.version import parse as version_parser
 
-DEBUGGER_PYTHON_VERSIONS = ("cp35", "cp36", "cp37", "cp38", "cp39")
+DEBUGGER_PYTHON_VERSIONS = ("cp38", "cp39", "cp310", "cp311", "cp312", "cp313")
 DEBUGGER_EXCLUDED_PLATFORMS = ("manylinux", "macosx")
 
 

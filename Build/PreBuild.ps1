@@ -216,11 +216,10 @@ try {
     $pipArgList = "-m", "pip", "--disable-pip-version-check", "install", "packaging" 
     Start-Process -Wait -NoNewWindow "$outdir\python\tools\python.exe" -ErrorAction SilentlyContinue -ArgumentList $pipArgList
 
-    # install debugpy
-    $debugpyArglist = "install_debugpy.py", $debugpyVersion, "`"$outdir`""
+    # install debugpy and print out the installed version
+    $debugpyArglist = "install_pypi_package.py", "debugpy", $debugpyVersion, "`"$outdir`""
     Start-Process -Wait -NoNewWindow "$outdir\python\tools\python.exe" -ErrorAction Stop -ArgumentList $debugpyArglist
 
-    # print out the installed version
     $installedDebugpyVersion = ""
     $versionPyFile = Join-Path $outdir "debugpy\_version.py"
     foreach ($line in Get-Content $versionPyFile) {
@@ -231,9 +230,6 @@ try {
     }
     "Installed Debugpy $installedDebugpyVersion"
 
-    # TODO: download and install etwtrace (using $etwtraceVersion) and print out the installed version
-    # Once etwtrace is up on PyPi, refactor install_debugpy.py to work for any package
-
     # write debugpy version out to $buildroot\build\debugpy-version.txt, since that file is used by Debugger.csproj and various other classes
     Set-Content -NoNewline -Force -Path "$buildroot\build\debugpy-version.txt" -Value $installedDebugpyVersion
 
@@ -243,6 +239,9 @@ try {
             Write-Host "##vso[build.addbuildtag]Debugpy $installedDebugpyVersion"
         }
     }
+
+    # install etwtrace (using $etwtraceVersion) and print out the installed version
+    # Once etwtrace is up on PyPi, refactor install_debugpy.py to work for any package
 
 } finally {
     Pop-Location
