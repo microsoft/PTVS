@@ -164,8 +164,8 @@ def copy_ptvs_output(debug_output: bool = False):
     # Verify some of the files were copied.
     if not os.path.exists(os.path.join(glass_debugger_dir, "Microsoft.PythonTools.Core.pkgdef")) or not os.path.exists(os.path.join(glass_remote_debugger_dir, "Microsoft.PythonTools.Core.pkgdef")):
         print(f"Error: Microsoft.PythonTools.Core.pkgdef not found in {glass_debugger_dir} or {glass_remote_debugger_dir}.")
-        print(f"Contents of {glass_debugger_dir}:")
-        for f in os.listdir(glass_debugger_dir):
+        print(f"Contents of {build_output}:")
+        for f in os.listdir(build_output):
             print(f)
         exit(1)
 
