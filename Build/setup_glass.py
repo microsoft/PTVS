@@ -20,6 +20,7 @@ python_tests_target_dir = os.path.join(glass_dir, "PythonTests")
 auth_token = None
 
 def get_auth_token_args():
+    global auth_token
     if auth_token is not None:
         return ["--patAuthEnvVar", auth_token]
     return ['-a']
@@ -145,13 +146,17 @@ def get_test_console_app():
         print(f"Error: Test console app not found at {test_console_app}")
         exit(1)
 
-def copy_ptvs_output(debug_output: bool = False):
+def copy_ptvs_output(build_output_dir: str | None = None):
     # Copy the PythonTests folder into the glass directory
     print(f"Copying PythonTests from {python_tests_source_dir} to {python_tests_target_dir}")
     shutil.copytree(python_tests_source_dir, python_tests_target_dir, dirs_exist_ok=True)
 
+    # Make sure both desired directories exist
+    os.makedirs(glass_debugger_dir, exist_ok=True)
+    os.makedirs(glass_remote_debugger_dir, exist_ok=True)
+
     # Copy the output of the build into the glass debugger directory (where the debuggers are installed)
-    build_output = get_build_output()
+    build_output = get_build_output(build_output_dir)
     print(f"Copying PTVS Debugger bits from {build_output} to {glass_debugger_dir}")
     for file in glob.glob(os.path.join(build_output, "Microsoft.Python*")):
         shutil.copy(file, glass_debugger_dir)
@@ -183,7 +188,12 @@ def verify_listing():
         print(f"Error listing tests: {tests.stderr.decode('utf-8')}")
         exit(1)
 
-def get_build_output():
+def get_build_output(build_output_dir: str | None = None) -> str:
+    # Check if the build output path was passed in
+    if build_output_dir is not None:
+        return build_output_dir
+
+    # Try to find the DkmDebugger.vsdconfig file to determine the build output path
     debug_path = os.path.join(ptvs_root, "BuildOutput", "Debug17.0", "raw", "binaries")
     release_path = os.path.join(ptvs_root, "BuildOutput", "Release17.0", "raw", "binaries")
     dkm_debugger_config = os.path.join(debug_path, "DkmDebugger.vsdconfig")
@@ -293,11 +303,11 @@ def generate_python_version_props():
 
     print("Done generating Python version props files.")
 
-def main():
+def main(build_output_dir: str | None = None):
     get_drop_exe()
     get_glass()
     get_test_console_app()
-    copy_ptvs_output()
+    copy_ptvs_output(build_output_dir)
     generate_python_version_props()
     verify_listing()
 
@@ -311,19 +321,23 @@ if __name__ == "__main__":
     arg_parser.add_argument("--copyPtvsOutput", action='store_true', help="Copy the PTVS output to the glass directory")
     arg_parser.add_argument("--verifyListing", action='store_true', help="Verify that the tests are listed")
     arg_parser.add_argument("--authTokenVariable", type=str, help="The environment variable holding the auth token to use for downloading the drop")
+    arg_parser.add_argument("--buildOutput", type=str, help="The path to the build output directory")
     arg_parser.add_argument("--?", action='store_true', help="Show help")
     args = arg_parser.parse_args()
 
     # Set the auth token if it was passed in
     auth_token = args.authTokenVariable
 
+    # Set the build_output_dir if it was passed in
+    build_output_dir = args.buildOutput
+
     # See if any of the flags are set
     args_dict = vars(args)
-    flags_set = any(value for key, value in args_dict.items() if not key.startswith('auth'))
+    flags_set = any(value for key, value in args_dict.items() if not key.startswith('auth') and not key.startswith('build') and value)
 
     if not flags_set:
         # All the steps
-        main()
+        main(build_output_dir)
     else:
         if args.getDropExe:
             get_drop_exe()
@@ -332,7 +346,7 @@ if __name__ == "__main__":
         if args.getVsTestConsole:
             get_test_console_app()
         if args.copyPtvsOutput:
-            copy_ptvs_output()
+            copy_ptvs_output(build_output_dir)
         if args.verifyListing:
             verify_listing()
         if args_dict.get("?"):

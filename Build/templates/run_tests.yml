@@ -63,7 +63,7 @@ steps:
     inputs:
       scriptSource: 'filePath' # 'filePath' | 'inline'. Required. Script source. Default: filePath.
       scriptPath: $(Build.SourcesDirectory)/Build/setup_glass.py
-      arguments: '--authTokenVariable SYSTEM_ACCESSTOKEN'
+      arguments: '--authTokenVariable SYSTEM_ACCESSTOKEN --buildOutput $(Build.BinariesDirectory)\raw\binaries'
       workingDirectory: $(Build.SourcesDirectory)
       failOnStderr: true
 
