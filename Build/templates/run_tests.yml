@@ -1,4 +1,9 @@
 steps:
+  # Install different python versions
+  - template: ./install_python.yml
+    parameters:
+      pythonVersion: '3.12.7'
+    displayName: 'Install Python 3.12'
 
   # Build the product
   - task: MSBuild@1
@@ -23,36 +28,6 @@ steps:
         # Note that the resoruce is specified to limit the token to Azure DevOps
         $token = az account get-access-token --query accessToken --resource 499b84ac-1321-427f-aa17-267ca6975798 -o tsv
         Write-Host "##vso[task.setvariable variable=DropToken;issecret=true]$token"      
-
-  # Install different python versions
-  #- task: UsePythonVersion@0
-  #  inputs:
-  #    versionSpec: '3.9' # string. Required. Version spec. Default: 3.x.
-      #disableDownloadFromRegistry: false # boolean. Disable downloading releases from the GitHub registry. Default: false.
-      #allowUnstable: false # boolean. Optional. Use when disableDownloadFromRegistry = false. Allow downloading unstable releases. Default: false.
-      #githubToken: # string. Optional. Use when disableDownloadFromRegistry = false. GitHub token for GitHub Actions python registry. 
-  #    addToPath: false # boolean. Add to PATH. Default: true.
-    # Advanced
-  #    architecture: 'x64' # 'x86' | 'x64'. Required. Architecture. Default: x64.
-  # - task: UsePythonVersion@0
-  #   inputs:
-  #     versionSpec: '3.10'
-  #     addToPath: false
-  #     architecture: 'x64'
-  # - task: UsePythonVersion@0
-  #   inputs:
-  #     versionSpec: '3.11'
-  #     addToPath: false
-  #     architecture: 'x64'
-  - template: install_python.yml
-    parameters:
-      pythonVersion: '3.12.7'
-    displayName: 'Install Python 3.12'
-  # - task: UsePythonVersion@0
-  #   inputs:
-  #     versionSpec: '3.13'
-  #     addToPath: false
-  #     architecture: 'x64'  
 
   # Setup the glass test folder
   - task: PythonScript@0
