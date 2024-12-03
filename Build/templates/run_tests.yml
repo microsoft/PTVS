@@ -44,11 +44,10 @@ steps:
   #     versionSpec: '3.11'
   #     addToPath: false
   #     architecture: 'x64'
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '3.12-debug'
-      addToPath: true # This is the version we'll use to run the scripts below
-      architecture: 'x64'
+  - template: install_python.yml
+    parameters:
+      pythonVersion: '3.12.7'
+    displayName: 'Install Python 3.12'
   # - task: UsePythonVersion@0
   #   inputs:
   #     versionSpec: '3.13'
