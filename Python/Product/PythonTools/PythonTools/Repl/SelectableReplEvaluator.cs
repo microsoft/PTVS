@@ -145,8 +145,6 @@ namespace Microsoft.PythonTools.Repl {
         public bool IsExecuting => (_evaluator as IPythonInteractiveEvaluator)?.IsExecuting ?? false;
         public string DisplayName => (_evaluator as IPythonInteractiveEvaluator)?.DisplayName;
 
-        public bool LiveCompletionsOnly => (_evaluator as IPythonInteractiveIntellisense)?.LiveCompletionsOnly ?? false;
-
         // Test methods
         internal string PrimaryPrompt => ((dynamic)_evaluator)?.PrimaryPrompt ?? ">>> ";
         internal string SecondaryPrompt => ((dynamic)_evaluator)?.SecondaryPrompt ?? "... ";

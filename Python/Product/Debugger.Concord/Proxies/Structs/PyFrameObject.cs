@@ -14,117 +14,90 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using Microsoft.PythonTools.Common.Core.OS;
 using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.CallStack;
 using Microsoft.VisualStudio.Debugger.Evaluation;
-using static Microsoft.VisualStudio.Threading.SingleThreadedSynchronizationContext;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
-    [StructProxy(MaxVersion = PythonLanguageVersion.V38, StructName = "PyFrameObject")]
-    [StructProxy(MinVersion = PythonLanguageVersion.V39, StructName = "_frame")]
-    internal class PyFrameObject : PyVarObject {
-        public class Fields_27_35 {
-            public StructField<PointerProxy<PyCodeObject>> f_code;
-            public StructField<PointerProxy<PyDictObject>> f_globals;
-            public StructField<PointerProxy<PyDictObject>> f_locals;
-            public StructField<Int32Proxy> f_lineno;
-            public StructField<ArrayProxy<PointerProxy<PyObject>>> f_localsplus;
-        }
-
-        public class Fields_36 {
-            public StructField<PointerProxy<PyFrameObject>> f_back;
-            public StructField<PointerProxy<PyCodeObject>> f_code;
-            public StructField<PointerProxy<PyDictObject>> f_globals;
-            public StructField<PointerProxy<PyDictObject>> f_locals;
-            public StructField<Int32Proxy> f_lineno;
-            public StructField<ArrayProxy<PointerProxy<PyObject>>> f_localsplus;
-        }
-
-        private readonly object _fields;
-
+    internal abstract class PyFrameObject : PyVarObject {
         public PyFrameObject(DkmProcess process, ulong address)
             : base(process, address) {
-            var pythonInfo = process.GetPythonRuntimeInfo();
-            if (pythonInfo.LanguageVersion <= PythonLanguageVersion.V35) {
-                Fields_27_35 fields;
-                InitializeStruct(this, out fields);
-                _fields = fields;
-            } else {
-                Fields_36 fields;
-                InitializeStruct(this, out fields);
-                _fields = fields;
-            }
-            CheckPyType<PyFrameObject>();
         }
 
 
         private static bool IsInEvalFrame(DkmStackWalkFrame frame) {
             var process = frame.Process;
             var pythonInfo = process.GetPythonRuntimeInfo();
+            var name = "PyEval_EvalFrameEx";
             ulong addr = 0;
-            if (pythonInfo.LanguageVersion <= PythonLanguageVersion.V35) {
-                if (frame.ModuleInstance == pythonInfo.DLLs.Python) {
-                    addr = pythonInfo.DLLs.Python.GetFunctionAddress("PyEval_EvalFrameEx");
-                }
-            } else {
-                if (frame.ModuleInstance == pythonInfo.DLLs.Python) {
-                    addr = pythonInfo.DLLs.Python.GetFunctionAddress("_PyEval_EvalFrameDefault");
-                }
+            if (pythonInfo.LanguageVersion > PythonLanguageVersion.V35) {
+                name = "_PyEval_EvalFrameDefault";
             }
-
+            addr = pythonInfo.DLLs.Python.GetFunctionAddress(name);
             if (addr == 0) {
                 return false;
             }
 
-            return frame.InstructionAddress.IsInSameFunction(process.CreateNativeInstructionAddress(addr));
+            var addressMatch = frame.InstructionAddress.IsInSameFunction(process.CreateNativeInstructionAddress(addr));
+            var nameMatch = frame.BasicSymbolInfo.MethodName == name;
+            return addressMatch || nameMatch;
         }
 
         public static unsafe PyFrameObject TryCreate(DkmStackWalkFrame frame, int? previousFrameCount) {
             var process = frame.Process;
             if (frame.InstructionAddress == null) {
                 return null;
-            } 
+            }
             if (frame.RuntimeInstance.Id.RuntimeType != Guids.PythonRuntimeTypeGuid && !IsInEvalFrame(frame)) {
                 return null;
             }
 
             var framePtrAddress = PyFrameObject.GetFramePtrAddress(frame, previousFrameCount);
             if (framePtrAddress != 0) {
-                return new PyFrameObject(frame.Process, framePtrAddress);
+                var pythonInfo = process.GetPythonRuntimeInfo();
+                if (pythonInfo.LanguageVersion < PythonLanguageVersion.V311) {
+                    return new PyFrameObject310(frame.Process, framePtrAddress);
+                }
+                return new PyFrameObject311(frame.Process, framePtrAddress);
             }
             return null;
         }
 
-        public PointerProxy<PyFrameObject> f_back {
-            get { return GetFieldProxy((_fields as Fields_36)?.f_back); }
+        public abstract PointerProxy<PyFrameObject> f_back { get; }
+
+        public abstract PointerProxy<PyCodeObject> f_code { get; }
+
+        public abstract PointerProxy<PyDictObject> f_globals { get; }
+
+        public abstract PointerProxy<PyDictObject> f_locals { get; }
+
+        public abstract Int32Proxy f_lineno { get; }
+
+        public int ComputeLineNumber(DkmInspectionSession inspectionSession, DkmStackWalkFrame frame, DkmEvaluationFlags flags) {
+            var setLineNumber = f_lineno.Read();
+            if (setLineNumber == 0 && flags != DkmEvaluationFlags.None) {
+                // We need to use the CppExpressionEvaluator to compute the line number from
+                // our frame object. This function here: https://github.com/python/cpython/blob/46710ca5f263936a2e36fa5d0f140cf9f50b2618/Objects/frameobject.c#L40-L41
+                //
+                // However only do this when stopped at a breakpoint and evaluating the frame. Otherwise we it will fail and cause stepping
+                // to think the frame we eval is where we should stop.
+                var evaluator = new CppExpressionEvaluator(inspectionSession, 10, frame, DkmEvaluationFlags.TreatAsExpression);
+                var funcAddr = Process.GetPythonRuntimeInfo().DLLs.Python.GetFunctionAddress("PyFrame_GetLineNumber");
+                var frameAddr = Address;
+                try {
+                    setLineNumber = evaluator.EvaluateInt32(string.Format("((int (*)(void *)){0})({1})", funcAddr, frameAddr), DkmEvaluationFlags.EnableExtendedSideEffects);
+                } catch (CppEvaluationException) {
+                    // This means we can't evaluate right now, just leave as zero
+                    setLineNumber = 0;
+                }
+            }
+
+            return setLineNumber;
         }
 
-        public PointerProxy<PyCodeObject> f_code {
-            get { return GetFieldProxy((_fields as Fields_36)?.f_code ?? (_fields as Fields_27_35)?.f_code); }
-        }
-
-        public PointerProxy<PyDictObject> f_globals {
-            get { return GetFieldProxy((_fields as Fields_36)?.f_globals ?? (_fields as Fields_27_35)?.f_globals); }
-        }
-
-        public PointerProxy<PyDictObject> f_locals {
-            get { return GetFieldProxy((_fields as Fields_36)?.f_locals ?? (_fields as Fields_27_35)?.f_locals); }
-        }
-
-        public Int32Proxy f_lineno {
-            get { return GetFieldProxy((_fields as Fields_36)?.f_lineno ?? (_fields as Fields_27_35)?.f_lineno); }
-        }
-
-        public ArrayProxy<PointerProxy<PyObject>> f_localsplus {
-            get { return GetFieldProxy((_fields as Fields_36)?.f_localsplus ?? (_fields as Fields_27_35)?.f_localsplus); }
-        }
+        public abstract ArrayProxy<PointerProxy<PyObject>> f_localsplus { get; }
 
         private static ulong GetFramePtrAddress(DkmStackWalkFrame frame, int? previousFrameCount) {
             // Frame address may already be stored in the frame, check the data.
@@ -135,12 +108,12 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
                 var process = frame.Process;
                 var tid = frame.Thread.SystemPart.Id;
                 PyThreadState tstate = PyThreadState.GetThreadStates(process).FirstOrDefault(ts => ts.thread_id.Read() == tid);
-                PyFrameObject pyFrame = tstate.frame.Read();
+                PyFrameObject pyFrame = tstate.frame.TryRead();
                 if (pyFrame != null) {
                     // This pyFrame should be the topmost frame. We need to go down the callstack
                     // based on the number of previous frames that were already found.
                     var numberBack = previousFrameCount != null ? previousFrameCount.Value : 0;
-                    while (numberBack > 0) {
+                    while (numberBack > 0 && pyFrame.f_back.Process != null) {
                         pyFrame = pyFrame.f_back.Read();
                         numberBack--;
                     }

@@ -92,6 +92,9 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
             Array.ForEach(patterns, p => AddPattern(p));
         }
 
+        public void AddExclude(FileSystemWatcher pattern) {
+            _matcher.AddExclude(pattern.GlobPattern);
+        }
         private void AddPattern(FileSystemWatcher pattern) {
             // Add to our matcher
             _matcher.AddInclude(pattern.GlobPattern);

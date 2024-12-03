@@ -17,7 +17,8 @@ echo Executable is %PythonExe%
 echo Output dir is %OutputDir%
 
 pushd "%OutputDir%"
-call "%PythonExe%" setup.py install
+call "%PythonExe%" -m pip install setuptools
+call "%PythonExe%" setup.py install --user
 popd
 if NOT "%ERRORLEVEL%"=="0" goto Error
 

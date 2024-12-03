@@ -22,40 +22,26 @@ namespace Microsoft.PythonTools.Options {
     /// Stores options related to the all interactive windows.
     /// </summary>
     class PythonInteractiveOptions {
-        private bool _smartHistory, _liveCompletionsOnly;
-        private ReplIntellisenseMode _completionMode;
+        private bool _smartHistory;
         private string _scripts;
 
         private readonly PythonToolsService _pyService;
         private readonly string _category;
 
-        private const string CompletionModeSetting = "CompletionMode";
         private const string UseSmartHistorySetting = "UseSmartHistory";
-        private const string LiveCompletionsOnlySetting = "LiveCompletionsOnly";
         private const string ScriptsSetting = "Scripts";
 
         internal PythonInteractiveOptions(PythonToolsService pyService, string category) {
             _pyService = pyService;
             _category = category;
-            _completionMode = ReplIntellisenseMode.DontEvaluateCalls;
             _smartHistory = true;
             _scripts = string.Empty;
             Load();
         }
 
-        internal ReplIntellisenseMode CompletionMode {
-            get { return _completionMode; }
-            set { _completionMode = value; }
-        }
-
         public bool UseSmartHistory {
             get { return _smartHistory; }
             set { _smartHistory = value; }
-        }
-
-        public bool LiveCompletionsOnly {
-            get { return _liveCompletionsOnly; }
-            set { _liveCompletionsOnly = value; }
         }
 
         public string Scripts {
@@ -64,25 +50,19 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public void Load() {
-            CompletionMode = _pyService.LoadEnum<ReplIntellisenseMode>(CompletionModeSetting, _category) ?? ReplIntellisenseMode.DontEvaluateCalls;
             UseSmartHistory = _pyService.LoadBool(UseSmartHistorySetting, _category) ?? true;
-            LiveCompletionsOnly = _pyService.LoadBool(LiveCompletionsOnlySetting, _category) ?? false;
             Scripts = _pyService.LoadString(ScriptsSetting, _category) ?? string.Empty;
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
         public void Save() {
-            _pyService.SaveEnum(CompletionModeSetting, _category, CompletionMode);
             _pyService.SaveBool(UseSmartHistorySetting, _category, UseSmartHistory);
-            _pyService.SaveBool(LiveCompletionsOnlySetting, _category, LiveCompletionsOnly);
             _pyService.SaveString(ScriptsSetting, _category, Scripts);
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
         public void Reset() {
-            CompletionMode = ReplIntellisenseMode.DontEvaluateCalls;
             UseSmartHistory = true;
-            LiveCompletionsOnly = false;
             Scripts = string.Empty;
             Changed?.Invoke(this, EventArgs.Empty);
         }

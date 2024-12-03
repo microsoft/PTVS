@@ -18,7 +18,7 @@ parameters:
 steps:
 
   # nuget authenticate so we can restore from azure artifacts
-  - task: NuGetAuthenticate@0
+  - task: NuGetAuthenticate@1
     displayName: 'NuGet Authenticate'
 
   # npm authenticate so we can restore from azure artifacts

@@ -26,14 +26,13 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
     /// <summary>
     /// In Python 3.7, many global variables were combined into the _PyRuntime struct.
     /// </summary>
-    [StructProxy(MinVersion = PythonLanguageVersion.V37, StructName = "_PyRuntimeState")]
+    [StructProxy(MinVersion = PythonLanguageVersion.V39, StructName = "_PyRuntimeState")]
     internal class PyRuntimeState : StructProxy {
         private class Fields {
             public StructField<BoolProxy> core_initialized;
             public StructField<BoolProxy> initialized;
             public StructField<pyinterpreters> interpreters;
-            [FieldProxy(MaxVersion = PythonLanguageVersion.V38)]
-            public StructField<ceval_runtime_state> ceval;
+            public StructField<gilstate_runtime_state> gilstate;
         }
 
         private readonly Fields _fields;
@@ -46,10 +45,10 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         public BoolProxy core_initialized => GetFieldProxy(_fields.core_initialized);
         public BoolProxy initialized => GetFieldProxy(_fields.initialized);
         public pyinterpreters interpreters => GetFieldProxy(_fields.interpreters);
-        public ceval_runtime_state ceval => GetFieldProxy(_fields.ceval);
+        public gilstate_runtime_state gilstate => GetFieldProxy(_fields.gilstate);
 
 
-        [StructProxy(MinVersion = PythonLanguageVersion.V37, StructName = "pyinterpreters")]
+        [StructProxy(MinVersion = PythonLanguageVersion.V39, StructName = "pyinterpreters")]
         public class pyinterpreters : StructProxy {
             private class Fields {
                 public StructField<PointerProxy<PyInterpreterState>> head;
@@ -67,23 +66,23 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             public PointerProxy<PyInterpreterState> main => GetFieldProxy(_fields.main);
         }
 
-        [StructProxy(MinVersion = PythonLanguageVersion.V37, MaxVersion = PythonLanguageVersion.V38, StructName = "_ceval_runtime_state")]
-        public class ceval_runtime_state : StructProxy {
-            private class Fields {
-                public StructField<Int32Proxy> recursion_limit;
-                public StructField<Int32Proxy> tracing_possible;
+        [StructProxy(MinVersion = PythonLanguageVersion.V312, StructName = "_gilstate_runtime_state")]
+        public class gilstate_runtime_state : StructProxy {
+            public class Fields  {
+                public StructField<Int32Proxy> check_enabled;
             }
 
             private readonly Fields _fields;
 
-            public ceval_runtime_state(DkmProcess process, ulong address)
+            public gilstate_runtime_state(DkmProcess process, ulong address)
                 : base(process, address) {
                 InitializeStruct(this, out _fields);
             }
 
-            public Int32Proxy recursion_limit => GetFieldProxy(_fields.recursion_limit);
-            public Int32Proxy tracing_possible => GetFieldProxy(_fields.tracing_possible);
+            public Int32Proxy check_enabled => GetFieldProxy(_fields.check_enabled);
         }
+
+
     }
 
 }

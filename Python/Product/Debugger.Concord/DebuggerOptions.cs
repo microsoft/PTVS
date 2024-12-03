@@ -20,6 +20,9 @@ using Microsoft.VisualStudio.Debugger;
 namespace Microsoft.PythonTools.Debugger.Concord {
     public static class DebuggerOptions {
         // These are intentionally not implemented as auto-properties to enable easily changing them at runtime, including when stopped in native code.
+        //
+        // These show up in commands in the debugger watch window if you set the registry value:
+        // Key: HKCU/Software/Microsoft/PythonTools/Debugger - Value: PythonDeveloper: DWORD = 1
         private static bool _showNativePythonFrames;
         private static bool _usePythonStepping;
         private static bool _showCppViewNodes;
@@ -29,7 +32,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
         public static bool ShowNativePythonFrames {
             get {
-                return _showNativePythonFrames;
+                return _showNativePythonFrames; // Enable this to show native (C++) frames including our trace helper and CPython code
             }
             set {
                 _showNativePythonFrames = value;
@@ -39,7 +42,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
         public static bool UsePythonStepping {
             get {
-                return _usePythonStepping;
+                return _usePythonStepping; // Disable this to step through the TraceHelper dll (or CPython) in the launched VS
             }
             set {
                 _usePythonStepping = value;

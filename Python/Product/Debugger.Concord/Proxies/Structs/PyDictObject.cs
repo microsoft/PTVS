@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.VisualStudio.Debugger;
+using Microsoft.VisualStudio.Debugger.CallStack;
 using Microsoft.VisualStudio.Debugger.Evaluation;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
@@ -44,7 +45,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             builder.Append("}");
         }
 
-        public override IEnumerable<PythonEvaluationResult> GetDebugChildren(ReprOptions reprOptions) {
+        public override IEnumerable<PythonEvaluationResult> GetDebugChildren(ReprOptions reprOptions, DkmInspectionContext inspectionContext, DkmStackWalkFrame stackFrame) {
             yield return new PythonEvaluationResult(new ValueStore<long>(ReadElements().Count()), "len()") {
                 Category = DkmEvaluationResultCategory.Method
             };
@@ -58,27 +59,4 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         }
     }
 
-    [StructProxy(MaxVersion = PythonLanguageVersion.V27, StructName = "PyDictEntry")]
-    [StructProxy(MinVersion = PythonLanguageVersion.V33)]
-    internal class PyDictKeyEntry : StructProxy {
-        private class Fields {
-            public StructField<PointerProxy<PyObject>> me_key;
-            public StructField<PointerProxy<PyObject>> me_value;
-        }
-
-        private readonly Fields _fields;
-
-        public PyDictKeyEntry(DkmProcess process, ulong address)
-            : base(process, address) {
-            InitializeStruct(this, out _fields);
-        }
-
-        public PointerProxy<PyObject> me_key {
-            get { return GetFieldProxy(_fields.me_key); }
-        }
-
-        public PointerProxy<PyObject> me_value {
-            get { return GetFieldProxy(_fields.me_value); }
-        }
-    }
 }

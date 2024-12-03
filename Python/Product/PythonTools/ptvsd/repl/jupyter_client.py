@@ -363,9 +363,8 @@ class JupyterClientBackend(ReplBackend):
                         on_reply = on_replies.pop((parent_id, msg_type), ())
                         for callable in on_reply:
                             callable(m)
-                except Empty:
-                    pass
-
+                except zmq.Again:
+                    pass  # Handle timeout without hanging
         except zmq.error.ZMQError:
             self.exit_process()
         except KeyboardInterrupt:

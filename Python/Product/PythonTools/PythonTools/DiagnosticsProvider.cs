@@ -209,15 +209,11 @@ namespace Microsoft.PythonTools {
             writer.WriteLine();
 
             writer.WriteLine("Interactive Options:");
-            writer.WriteLine("    CompletionMode: {0}", pyService.InteractiveOptions.CompletionMode);
-            writer.WriteLine("    LiveCompletionsOnly: {0}", pyService.InteractiveOptions.LiveCompletionsOnly);
             writer.WriteLine("    Scripts: {0}", pyService.InteractiveOptions.Scripts);
             writer.WriteLine("    UseSmartHistory: {0}", pyService.InteractiveOptions.UseSmartHistory);
             writer.WriteLine();
 
             writer.WriteLine("Debug Interactive Options:");
-            writer.WriteLine("    CompletionMode: {0}", pyService.DebugInteractiveOptions.CompletionMode);
-            writer.WriteLine("    LiveCompletionsOnly: {0}", pyService.DebugInteractiveOptions.LiveCompletionsOnly);
             writer.WriteLine("    Scripts: {0}", pyService.DebugInteractiveOptions.Scripts);
             writer.WriteLine("    UseSmartHistory: {0}", pyService.DebugInteractiveOptions.UseSmartHistory);
             writer.WriteLine();

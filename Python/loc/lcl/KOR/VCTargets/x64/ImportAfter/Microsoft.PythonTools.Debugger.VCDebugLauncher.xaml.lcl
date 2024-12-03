@@ -1,0 +1,150 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<LCX SchemaVersion="6.0" Name="E:\A\_work\20\b\raw\binaries\VCTargets\Win32\ImportAfter\Microsoft.PythonTools.Debugger.VCDebugLauncher.xaml" PsrId="22" FileType="1" SrcCul="en-US" TgtCul="ko-KR" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx">
+  <OwnedComments>
+    <Cmt Name="Dev" />
+    <Cmt Name="LcxAdmin" />
+    <Cmt Name="Rccx" />
+  </OwnedComments>
+  <Settings Name="@SettingsPath@\default.lss" Type="Lss" />
+  <Item ItemId=";&lt;BoolProperty&gt;" ItemType="0" PsrId="210" Leaf="false">
+    <Disp Icon="Str" Disp="true" LocTbl="false" />
+    <Item ItemId="0;localdebuggermergeenvironment@BoolProperty@Description" ItemType="47;XML:Attr:Description" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[Merge specified environment variables with existing environment.]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[지정한 환경 변수를 기존 환경과 병합합니다.]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId="0;localdebuggermergeenvironment@BoolProperty@DisplayName" ItemType="47;XML:Attr:DisplayName" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[Merge Environment]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[환경 병합]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+  </Item>
+  <Item ItemId=";&lt;Rule&gt;" ItemType="0" PsrId="210" Leaf="false">
+    <Disp Icon="Str" Disp="true" LocTbl="false" />
+    <Item ItemId="0;pythondebuglaunchprovider@Rule@Description" ItemType="47;XML:Attr:Description" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[Python/Native debugging options]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[Python/네이티브 디버깅 옵션]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId="0;pythondebuglaunchprovider@Rule@DisplayName" ItemType="47;XML:Attr:DisplayName" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[Python/Native Debugging]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[Python/네이티브 디버깅]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+  </Item>
+  <Item ItemId=";&lt;StringListProperty&gt;" ItemType="0" PsrId="210" Leaf="false">
+    <Disp Icon="Str" Disp="true" LocTbl="false" />
+    <Item ItemId="0;localdebuggerenvironment@StringListProperty@Description" ItemType="47;XML:Attr:Description" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[Specifies the environment for the debugee, or variables to merge with existing environment.]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[디버거의 환경을 지정하거나 기존 환경과 병합할 변수를 지정합니다.]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId="0;localdebuggerenvironment@StringListProperty@DisplayName" ItemType="47;XML:Attr:DisplayName" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[Environment]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[환경]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+  </Item>
+  <Item ItemId=";&lt;StringProperty&gt;" ItemType="0" PsrId="210" Leaf="false">
+    <Disp Icon="Str" Disp="true" LocTbl="false" />
+    <Item ItemId="0;localdebuggercommand@StringProperty@Description" ItemType="47;XML:Attr:Description" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[The debug command to execute.]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[실행할 디버그 명령입니다.]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId="0;localdebuggercommandarguments@StringProperty@Description" ItemType="47;XML:Attr:Description" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[The command line arguments to pass to the application.]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[애플리케이션에 전달할 명령줄 인수입니다.]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId="0;localdebuggerworkingdirectory@StringProperty@Description" ItemType="47;XML:Attr:Description" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[The application's working directory. By default, the directory containing the project file.]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[애플리케이션의 작업 디렉터리입니다. 기본적으로 이 디렉터리에는 프로젝트 파일이 들어 있습니다.]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId="0;localdebuggercommand@StringProperty@DisplayName" ItemType="47;XML:Attr:DisplayName" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[Command]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[명령]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId="0;localdebuggercommandarguments@StringProperty@DisplayName" ItemType="47;XML:Attr:DisplayName" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[Command Arguments]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[명령 인수]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId="0;localdebuggerworkingdirectory@StringProperty@DisplayName" ItemType="47;XML:Attr:DisplayName" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[Working Directory]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[작업 디렉터리]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+  </Item>
+  <Item ItemId=";&lt;ValueEditor&gt;" ItemType="0" PsrId="210" Leaf="false">
+    <Disp Icon="Str" Disp="true" LocTbl="false" />
+    <Item ItemId="0;5a88dad82b4127d481f86820c9fcbf98" ItemType="47;XML:Attr:DisplayName" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[<Edit...>]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[<편집...>]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId="0;b66ab1d4354799e0066c0af0ab39211f" ItemType="47;XML:Attr:DisplayName" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[<Browse...>]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[<찾아보기...>]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+  </Item>
+</LCX>

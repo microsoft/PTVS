@@ -161,10 +161,6 @@ namespace Microsoft.PythonTools.Repl {
         public string CurrentScopePath => "";
         public bool EnableMultipleScopes => false;
 
-        public bool LiveCompletionsOnly {
-            get { return CurrentOptions.LiveCompletionsOnly; }
-        }
-
         public IInteractiveWindow CurrentWindow { get; set; }
 
         public Uri DocumentUri {

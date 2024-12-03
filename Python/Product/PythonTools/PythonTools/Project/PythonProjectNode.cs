@@ -86,6 +86,7 @@ namespace Microsoft.PythonTools.Project {
 
         private bool _infoBarCheckTriggered = false;
         private bool _asyncInfoBarCheckTriggered = false;
+        private bool _isDisposed = false;
         private readonly CondaEnvCreateInfoBar _condaEnvCreateInfoBar;
         private readonly VirtualEnvCreateInfoBar _virtualEnvCreateInfoBar;
         private readonly PackageInstallInfoBar _packageInstallInfoBar;
@@ -94,6 +95,8 @@ namespace Microsoft.PythonTools.Project {
 
         private readonly SemaphoreSlim _recreatingAnalyzer = new SemaphoreSlim(1);
         private bool _isRefreshingInterpreters = false;
+
+        public bool IsDisposed => _isDisposed;
 
         public event EventHandler LanguageServerInterpreterChanged;
 
@@ -245,6 +248,7 @@ namespace Microsoft.PythonTools.Project {
                 _activePackageManagers = null;
                 foreach (var pm in oldPms.MaybeEnumerate()) {
                     pm.InstalledFilesChanged -= PackageManager_InstalledFilesChanged;
+                    pm.DisableNotifications();
                 }
 
                 lock (_validFactories) {
@@ -255,15 +259,6 @@ namespace Microsoft.PythonTools.Project {
                         _active = null;
                     } else {
                         _active = value;
-                    }
-                }
-
-                // start listening for package changes on the active interpreter again if interpreter is outside our workspace.
-                _activePackageManagers = InterpreterOptions.GetPackageManagers(_active).ToArray();
-                if (_active != null && !PathUtils.IsSubpathOf(ProjectHome, _active.Configuration.InterpreterPath)) {
-                    foreach (var pm in _activePackageManagers) {
-                        pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
-                        pm.EnableNotifications();
                     }
                 }
 
@@ -296,6 +291,15 @@ namespace Microsoft.PythonTools.Project {
                     ActiveInterpreterChanged?.Invoke(this, EventArgs.Empty);
                 }
                 BoldActiveEnvironment();
+
+                // start listening for package changes on the active interpreter again if interpreter is outside our workspace.
+                _activePackageManagers = InterpreterOptions.GetPackageManagers(_active).ToArray();
+                if (_active != null) {
+                    foreach (var pm in _activePackageManagers) {
+                        pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
+                        pm.EnableNotifications();
+                    }
+                }
             }
         }
 
@@ -1035,6 +1039,12 @@ namespace Microsoft.PythonTools.Project {
         }
 
         protected override void Dispose(bool disposing) {
+            if (_isDisposed) {
+                throw new ObjectDisposedException(nameof(PythonProjectNode));
+            }
+
+            _isDisposed = true;
+
             if (disposing) {
                 var actions = _actionsOnClose;
                 _actionsOnClose = null;
@@ -1082,7 +1092,6 @@ namespace Microsoft.PythonTools.Project {
 
                 _recreatingAnalyzer.Dispose();
             }
-
             base.Dispose(disposing);
         }
 

@@ -21,11 +21,15 @@ using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.PythonTools.Common.Parsing.Ast;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Debugger;
+using Microsoft.VisualStudio.Debugger.CallStack;
 using Microsoft.VisualStudio.Debugger.Evaluation;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
-    internal abstract class PyByteArrayObject : PyVarObject {
+    [StructProxy(MinVersion = PythonLanguageVersion.V39, StructName = "PyByteArrayObject")]
+    [PyType(MinVersion = PythonLanguageVersion.V39, VariableName = "PyByteArray_Type")]
+    internal class PyByteArrayObject : PyVarObject {
         public class Fields {
+            public StructField<PointerProxy<ArrayProxy<ByteProxy>>> ob_start;
             // Not CStringProxy, because the array can contain embedded null chars.
             public StructField<PointerProxy<ArrayProxy<ByteProxy>>> ob_bytes;
         }
@@ -45,7 +49,13 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             get { return GetFieldProxy(_fields.ob_bytes); }
         }
 
-        protected abstract ArrayProxy<ByteProxy> GetDataProxy();
+        public PointerProxy<ArrayProxy<ByteProxy>> ob_start {
+            get { return GetFieldProxy(_fields.ob_start); }
+        }
+
+        protected ArrayProxy<ByteProxy> GetDataProxy() {
+            return ob_start.Read();
+        }
 
         public byte[] ToBytes() {
             var size = ob_size.Read();
@@ -64,17 +74,14 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
 
         public override void Repr(ReprBuilder builder) {
             // In Python 2.7, string literals in bytearray repr use the 3.x-style prefixed b'...' form.
-            var langVer =
-                builder.Options.LanguageVersion <= PythonLanguageVersion.V27 ?
-                PythonLanguageVersion.V33 :
-                builder.Options.LanguageVersion;
+            var langVer = builder.Options.LanguageVersion;
             var constExpr = new ConstantExpression(new AsciiString(ToBytes(), ToString()));
             builder.Append("bytearray(");
             builder.Append(constExpr.GetConstantRepr(langVer, escape8bitStrings: true));
             builder.Append(")");
         }
 
-        public override IEnumerable<PythonEvaluationResult> GetDebugChildren(ReprOptions reprOptions) {
+        public override IEnumerable<PythonEvaluationResult> GetDebugChildren(ReprOptions reprOptions, DkmInspectionContext inspectionContext, DkmStackWalkFrame stackFrame) {
             long count = ob_size.Read();
             yield return new PythonEvaluationResult(new ValueStore<long>(count), "len()") {
                 Category = DkmEvaluationResultCategory.Method
@@ -85,43 +92,6 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
                     yield return new PythonEvaluationResult(b);
                 }
             }
-        }
-    }
-
-    [StructProxy(MaxVersion = PythonLanguageVersion.V33, StructName = "PyByteArrayObject")]
-    [PyType(MaxVersion = PythonLanguageVersion.V33, VariableName = "PyByteArray_Type")]
-    internal class PyByteArrayObject33 : PyByteArrayObject {
-        public PyByteArrayObject33(DkmProcess process, ulong address)
-            : base(process, address) {
-            CheckPyType<PyByteArrayObject33>();
-        }
-
-        protected override ArrayProxy<ByteProxy> GetDataProxy() {
-            return ob_bytes.Read();
-        }
-    }
-
-    [StructProxy(MinVersion = PythonLanguageVersion.V34, StructName = "PyByteArrayObject")]
-    [PyType(MinVersion = PythonLanguageVersion.V34, VariableName = "PyByteArray_Type")]
-    internal class PyByteArrayObject34 : PyByteArrayObject {
-        private new class Fields {
-            public StructField<PointerProxy<ArrayProxy<ByteProxy>>> ob_start;
-        }
-
-        private readonly Fields _fields;
-
-        public PyByteArrayObject34(DkmProcess process, ulong address)
-            : base(process, address) {
-            InitializeStruct(this, out _fields);
-            CheckPyType<PyByteArrayObject34>();
-        }
-
-        public PointerProxy<ArrayProxy<ByteProxy>> ob_start {
-            get { return GetFieldProxy(_fields.ob_start); }
-        }
-
-        protected override ArrayProxy<ByteProxy> GetDataProxy() {
-            return ob_start.Read();
         }
     }
 }

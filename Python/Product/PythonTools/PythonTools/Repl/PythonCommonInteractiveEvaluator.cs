@@ -125,7 +125,6 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public bool UseSmartHistoryKeys { get; set; }
-        public bool LiveCompletionsOnly { get; set; }
         public string BackendName { get; set; }
 
         internal bool AssociatedProjectHasChanged { get; set; }
@@ -263,7 +262,6 @@ namespace Microsoft.PythonTools.Repl {
                     _options = _serviceProvider.GetPythonToolsService().InteractiveOptions;
                     _options.Changed += InteractiveOptions_Changed;
                     UseSmartHistoryKeys = _options.UseSmartHistory;
-                    LiveCompletionsOnly = _options.LiveCompletionsOnly;
                 } else {
                     if (_options != null) {
                         _options.Changed -= InteractiveOptions_Changed;
@@ -280,7 +278,6 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             UseSmartHistoryKeys = _options.UseSmartHistory;
-            LiveCompletionsOnly = _options.LiveCompletionsOnly;
 
             var window = CurrentWindow;
             if (window == null) {

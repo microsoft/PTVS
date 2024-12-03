@@ -38,6 +38,8 @@ namespace Microsoft.PythonTools.Editor {
             var langPrefs = new LANGPREFERENCES[1];
             langPrefs[0].guidLang = languageGuid;
             ErrorHandler.ThrowOnFailure(_textMgr.GetUserPreferences(null, null, langPrefs, null));
+            langPrefs[0].fLineNumbers = 1;
+            ErrorHandler.ThrowOnFailure(_textMgr.SetUserPreferences(null, null, langPrefs, null));
             _preferences = langPrefs[0];
 
             var guid = typeof(IVsTextManagerEvents2).GUID;
@@ -103,6 +105,7 @@ namespace Microsoft.PythonTools.Editor {
                 _preferences.fAutoListParams = langPrefs[0].fAutoListParams;
                 _preferences.fHideAdvancedAutoListMembers = langPrefs[0].fHideAdvancedAutoListMembers;
                 _preferences.fDropdownBar = langPrefs[0].fDropdownBar;
+                _preferences.fLineNumbers = langPrefs[0].fLineNumbers;
             }
             return VSConstants.S_OK;
         }

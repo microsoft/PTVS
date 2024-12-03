@@ -1,0 +1,3 @@
+{
+    "exclude": ["Tests", "venv", "node_modules"],
+}

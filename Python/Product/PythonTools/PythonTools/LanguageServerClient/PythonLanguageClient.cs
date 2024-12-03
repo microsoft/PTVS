@@ -22,9 +22,6 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Common.Core.Disposables;
-using Microsoft.PythonTools.Common.Infrastructure;
-using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.LanguageServerClient.FileWatcher;
@@ -91,17 +88,18 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private List<IPythonLanguageClientContext> _clientContexts = new List<IPythonLanguageClientContext>();
         private PythonAnalysisOptions _analysisOptions;
         private PythonAdvancedEditorOptions _advancedEditorOptions;
-        private ITaskList _taskListService; 
+        private ITaskList _taskListService;
         private LanguageServer _server;
         private JsonRpc _rpc;
         private bool _workspaceFoldersSupported = false;
         private bool _isDebugging = LanguageServer.IsDebugging();
         private bool _sentInitialWorkspaceFolders = false;
+        private List<WorkspaceFolder> _workspaceFolders = new List<WorkspaceFolder>();
         private FileWatcher.Listener _fileListener;
-        private static TaskCompletionSource<int> _readyTcs = new System.Threading.Tasks.TaskCompletionSource<int>();
+        private static TaskCompletionSource<int> _readyTcs = new TaskCompletionSource<int>();
         private bool _loaded = false;
         private Timer _deferredSettingsChangedTimer;
-        private const int _defaultSettingsDelayMS = 2000;
+        private const int _defaultSettingsDelayMS = 5000;
 
         public PythonLanguageClient() {
             _disposables = new Common.Core.Disposables.DisposableBag(GetType().Name);
@@ -137,7 +135,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             await JoinableTaskContext.Factory.SwitchToMainThreadAsync();
             CreateClientContexts();
 
-            _deferredSettingsChangedTimer = new Timer(OnDeferredSettingsChanged, state: null, Timeout.Infinite, Timeout.Infinite);
+            _deferredSettingsChangedTimer = new Timer(state => TriggerWorkspaceUpdateConfig(), state: null, Timeout.Infinite, Timeout.Infinite);
             _analysisOptions = Site.GetPythonToolsService().AnalysisOptions;
             _advancedEditorOptions = Site.GetPythonToolsService().AdvancedEditorOptions;
             _analysisOptions.Changed += OnSettingsChanged;
@@ -154,10 +152,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
             _disposables.Add(() => {
                 _clientContexts.ForEach(c => {
-                    c.InterpreterChanged -= OnSettingsChanged;
+                    c.InterpreterChanged -= OnInterpreterChanged;
                     c.SearchPathsChanged -= OnSettingsChanged;
                     c.ReanalyzeChanged -= OnReanalyzeChanged;
-                    });
+                });
                 _analysisOptions.Changed -= OnSettingsChanged;
                 _advancedEditorOptions.Changed -= OnSettingsChanged;
 
@@ -166,7 +164,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     taskListService.PropertyChanged -= OnSettingsChanged;
                 } catch (ServiceUnavailableException) {
                 }
-                
+
                 _clientContexts.ForEach(c => c.Dispose());
                 _clientContexts.Clear();
                 solutionEvents.Opened -= OnSolutionOpened;
@@ -200,6 +198,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             customTarget.WorkspaceFolderChangeRegistered += OnWorkspaceFolderWatched;
             customTarget.AnalysisComplete += OnAnalysisComplete;
             customTarget.WorkspaceConfiguration += OnWorkspaceConfiguration;
+            customTarget.WorkspaceFolders += OnWorkspaceFolders;
             await StartAsync.InvokeAsync(this, EventArgs.Empty);
         }
 
@@ -216,7 +215,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
                 var pythonSetting = GetSettings(item.scopeUri);
 
-                if(pythonSetting == null) {
+                if (pythonSetting == null) {
                     continue;
                 }
 
@@ -232,10 +231,23 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             args.requestResult = result.ToArray();
         }
 
+        private async Task OnWorkspaceFolders(object sender, WorkspaceFolders.WorkspaceFoldersArgs args) {
+            // Return our current list of workspace folders
+            args.requestResult = this._workspaceFolders;
+        }
+
         public async Task OnServerInitializedAsync() {
             IsInitialized = true;
-            // Set _workspaceFoldersSupported to true and send to either workspace open or solution open
-            OnWorkspaceFolderWatched(this, EventArgs.Empty);
+            await TriggerWorkspaceUpdateConfig();
+        }
+
+        private Task TriggerWorkspaceUpdateConfig() {
+            Debug.WriteLine("Settings Changed");
+            return InvokeDidChangeConfigurationAsync(new LSP.DidChangeConfigurationParams() {
+                // Pylance will ask us for per workspace configuration settings. We can send
+                // default workspace settings here.
+                Settings = GetSettings()
+            });
         }
 
         public Task OnServerInitializeFailedAsync(Exception e) {
@@ -244,7 +256,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         public Task AttachForCustomMessageAsync(JsonRpc rpc) {
-     
+
             _rpc = rpc;
 
             // This is a workaround until we have proper API from ILanguageClient for now.
@@ -257,7 +269,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             _fileListener = null;
             _fileListener = new FileWatcher.Listener(_rpc, WorkspaceService, Site);
             _disposables.Add(_fileListener);
-
             // We also need to switch the order on handlers for all of the rpc targets. Until
             // the VSSDK gives us a way to do this, use reflection.
             try {
@@ -289,7 +300,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             } catch {
                 // Any exceptions, just skip this part
             }
-            
+
             return Task.CompletedTask;
         }
 
@@ -297,7 +308,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         public void AddClientContext(IPythonLanguageClientContext context) {
             _clientContexts.Add(context);
-            context.InterpreterChanged += OnSettingsChanged;
+            context.InterpreterChanged += OnInterpreterChanged;
             context.SearchPathsChanged += OnSettingsChanged;
             context.ReanalyzeChanged += OnReanalyzeChanged;
         }
@@ -322,9 +333,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                         removed = removed
                     }
                 });
-                   
-            // If we send workspace folder updates, we have to resend document opens
-            // await SendDocumentOpensAsync();
         }
 
         public Task<object> InvokeTextDocumentCompletionAsync(LSP.CompletionParams request, CancellationToken cancellationToken = default)
@@ -358,19 +366,18 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             await _rpc.NotifyWithParameterObjectAsync(request, parameters).ConfigureAwait(false);
         }
 
-        private LanguageServerSettings.PythonSettings GetSettings(Uri scopeUri = null)
-        {
+        private LanguageServerSettings.PythonSettings GetSettings(Uri scopeUri = null) {
             IPythonLanguageClientContext context = null;
             if (scopeUri == null) {
                 // REPL context has null RootPath
                 context = _clientContexts.Find(c => c.RootPath == null);
-                if (context == null) {                  
+                if (context == null) {
                     return null;
                 }
-            }else {
+            } else {
                 var pathFromScopeUri = CommonUtils.NormalizeDirectoryPath(scopeUri.LocalPath).ToLower().TrimStart('\\');
-                // Find the matching context for the item
-                context = _clientContexts.Find(c => scopeUri != null && PathUtils.IsSamePath(c.RootPath.ToLower(), pathFromScopeUri));
+                // Find the matching context for the item, but ignore interactive window where "RootPath" is null.
+                context = _clientContexts.Find(c => scopeUri != null && c.RootPath != null && PathUtils.IsSamePath(c.RootPath.ToLower(), pathFromScopeUri));
             }
 
             if (context == null) {
@@ -399,12 +406,9 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             // get task list tokens from options
             var taskListTokens = new List<LanguageServerSettings.PythonSettings.PythonAnalysisSettings.TaskListToken>();
             var taskListService = Site.GetService<SVsTaskList, ITaskList>();
-            if (taskListService != null)
-            {
-                foreach (var commentToken in taskListService.CommentTokens)
-                {
-                    taskListTokens.Add(new LanguageServerSettings.PythonSettings.PythonAnalysisSettings.TaskListToken()
-                    {
+            if (taskListService != null) {
+                foreach (var commentToken in taskListService.CommentTokens) {
+                    taskListTokens.Add(new LanguageServerSettings.PythonSettings.PythonAnalysisSettings.TaskListToken() {
                         text = commentToken.Text,
                         priority = commentToken.Priority.ToString()
                     });
@@ -440,6 +444,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             return settings;
 
         }
+        private void OnInterpreterChanged(object sender, EventArgs e) {
+            UpdateInterpreterExcludes();
+            OnSettingsChanged(sender, e);
+        }
 
         private void OnSettingsChanged(object sender, EventArgs e) {
             try {
@@ -447,17 +455,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 _deferredSettingsChangedTimer.Change(_defaultSettingsDelayMS, Timeout.Infinite);
             } catch (ObjectDisposedException) {
             }
-        }
-
-        private void OnDeferredSettingsChanged(object state) {
-            Debug.WriteLine("deferred Settings Changed");
-            InvokeDidChangeConfigurationAsync(new LSP.DidChangeConfigurationParams() {
-                // If we pass null settings and workspace.configuration is supported, Pylance will ask
-                // us for per workspace configuration settings. Otherwise we can send
-                // global settings here.
-                Settings = null
-            }).DoNotWait();
-
         }
 
         private void OnAnalysisComplete(object sender, EventArgs e) {
@@ -472,7 +469,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             } catch (ObjectDisposedException) {
             }
         }
-    
+
         private bool TryGetOpenedDocumentData(RunningDocumentInfo info, out ITextBuffer textBuffer, out string filePath) {
             textBuffer = null;
             filePath = string.Empty;
@@ -517,7 +514,23 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         private void WatchedFilesRegistered(object sender, DidChangeWatchedFilesRegistrationOptions e) {
             // Add the file globs to our listener. It will listen to the globs
+            UpdateInterpreterExcludes();
             _fileListener?.AddPatterns(e.Watchers);
+
+        }
+
+        // By default Pylance will tell us to watch everything under the workspace with pattern "**/*"
+        // we can exclude the interpreter directory because we already have package managers listening to them
+        private void UpdateInterpreterExcludes() {
+            this._clientContexts.ForEach(context => {
+
+                if (PathUtils.IsSubpathOf(context.RootPath, context.InterpreterConfiguration.InterpreterPath)) {
+                    var pattern = CommonUtils.GetRelativeFilePath(context.RootPath, context.InterpreterConfiguration.GetPrefixPath()).TrimEnd('\\') + "/**/*";
+                    var watcher = new FileSystemWatcher() { GlobPattern = pattern };
+                    this._fileListener.AddExclude(watcher);
+                }
+
+            });
         }
 
         private void CreateClientContexts() {
@@ -552,6 +565,13 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                                 capabilities["workspace"]["didChangeWatchedFiles"]["dynamicRegistration"] = true;
                                 capabilities["workspace"]["configuration"] = true;
 
+                                var folders = GetFolders();
+                                if (folders.Any()) {
+                                    messageParams["workspaceFolders"] = JToken.FromObject(folders.ToArray());
+                                    _sentInitialWorkspaceFolders = true;
+                                    _workspaceFoldersSupported = true;
+                                }
+                                
                                 // Root path and root URI should not be sent. They're deprecated and will
                                 // just confuse pylance with respect to what is the root folder. 
                                 // https://microsoft.github.io/language-server-protocol/specifications/specification-current/#initialize
@@ -565,15 +585,15 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                         }
                     } else if (message.Value<string>("method") == "textDocument/codeAction") {
                         if (message.TryGetValue("params", out JToken messageParams)) {
-                            if (messageParams != null && messageParams["range"] != null 
-                                && messageParams["context"] != null 
+                            if (messageParams != null && messageParams["range"] != null
+                                && messageParams["context"] != null
                                 && messageParams["context"]["_vs_selectionRange"] != null) {
                                 var selectionRange = messageParams["context"]["_vs_selectionRange"];
                                 messageParams["range"]["start"] = selectionRange["start"];
                                 messageParams["range"]["end"] = selectionRange["end"];
                                 return Tuple.Create(MessageParser.Serialize(message), true);
                             }
-                                
+
                         }
                     }
                 } catch {
@@ -586,27 +606,40 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             return Tuple.Create(data, true);
         }
 
-        private async Task OnWorkspaceOpening(object sende, EventArgs e) {
+        private List<WorkspaceFolder> GetFolders() {
+            if (WorkspaceService.CurrentWorkspace != null) {
+                var folder = new WorkspaceFolder { uri = new System.Uri(WorkspaceService.CurrentWorkspace.Location), name = WorkspaceService.CurrentWorkspace.GetName() };
+                return [folder];
+            } else {
+                var folders = from n in this.ProjectContextProvider.ProjectNodes
+                              select new WorkspaceFolder { uri = new System.Uri(n.BaseURI.Directory), name = n.Name };
+                return folders.ToList();
+            }
+        }
+
+        private async Task OnWorkspaceOpening(object sender, EventArgs e) {
             if (_workspaceFoldersSupported && IsInitialized && !_sentInitialWorkspaceFolders && WorkspaceService.CurrentWorkspace != null) {
                 _sentInitialWorkspaceFolders = true;
                 // Send just this workspace folder. Assumption here is that the language client will be destroyed/recreated on
                 // each workspace open
-                var folder = new WorkspaceFolder { uri = new System.Uri(WorkspaceService.CurrentWorkspace.Location), name = WorkspaceService.CurrentWorkspace.GetName() };
-                await InvokeDidChangeWorkspaceFoldersAsync(new WorkspaceFolder[] { folder }, new WorkspaceFolder[0]);
+                var folders = GetFolders();
+                this._workspaceFolders = folders.ToList();
+                await InvokeDidChangeWorkspaceFoldersAsync(folders.ToArray(), new WorkspaceFolder[0]);
             }
         }
 
+        // Note this is called for both openFolder and openProject modes
         private void OnSolutionClosing() {
             this._clientContexts.Clear();
             if (_workspaceFoldersSupported && IsInitialized && _sentInitialWorkspaceFolders) {
                 JoinableTaskContext.Factory.RunAsync(async () => {
                     // If workspace folders are supported, then send our workspace folders
-                    var folders = from n in this.ProjectContextProvider.ProjectNodes
-                                  select new WorkspaceFolder { uri = new System.Uri(n.BaseURI.Directory), name = n.Name };
+                    var folders = GetFolders();
                     if (folders.Any()) {
                         await InvokeDidChangeWorkspaceFoldersAsync(new WorkspaceFolder[0], folders.ToArray());
                     }
                 });
+                this._workspaceFolders.Clear();
                 _workspaceFoldersSupported = false;
                 IsInitialized = false;
                 _sentInitialWorkspaceFolders = false;
@@ -618,8 +651,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 _sentInitialWorkspaceFolders = true;
                 JoinableTaskContext.Factory.RunAsync(async () => {
                     // If workspace folders are supported, then send our workspace folders
-                    var folders = from n in this.ProjectContextProvider.ProjectNodes
-                                  select new WorkspaceFolder { uri = new System.Uri(n.BaseURI.Directory), name = n.Name };
+                    var folders = GetFolders();
+                    this._workspaceFolders = folders.ToList();
                     if (folders.Any()) {
                         await InvokeDidChangeWorkspaceFoldersAsync(folders.ToArray(), new WorkspaceFolder[0]);
                     }
@@ -630,9 +663,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private void OnProjectAdded(EnvDTE.Project project) {
             if (_workspaceFoldersSupported) {
                 JoinableTaskContext.Factory.RunAsync(async () => {
-                    var pythonProject = project as PythonProjectNode;
+                    var pythonProject = project.GetPythonProject() as PythonProjectNode;
                     if (pythonProject != null) {
                         var folder = new WorkspaceFolder { uri = new System.Uri(pythonProject.BaseURI.Directory), name = project.Name };
+                        this._workspaceFolders.Add(folder);
                         await InvokeDidChangeWorkspaceFoldersAsync(new WorkspaceFolder[] { folder }, new WorkspaceFolder[0]);
                     }
                 });
@@ -642,9 +676,13 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private void OnProjectRemoved(EnvDTE.Project project) {
             if (_workspaceFoldersSupported) {
                 JoinableTaskContext.Factory.RunAsync(async () => {
-                    var pythonProject = project as PythonProjectNode;
+                    var pythonProject = project.GetPythonProject() as PythonProjectNode;
                     if (pythonProject != null) {
                         var folder = new WorkspaceFolder { uri = new System.Uri(pythonProject.BaseURI.Directory), name = project.Name };
+                        var entry = this._workspaceFolders.Find((f) => f.uri.ToString() == folder.uri.ToString());
+                        if (entry != null) {
+                            this._workspaceFolders.Remove(entry);
+                        }
                         await InvokeDidChangeWorkspaceFoldersAsync(new WorkspaceFolder[0], new WorkspaceFolder[] { folder });
                     }
                 });

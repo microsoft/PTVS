@@ -45,10 +45,15 @@ namespace Microsoft.PythonTools.Interpreter {
                 var libraryPath = !string.IsNullOrEmpty(configuration.LibraryPath) ? configuration.LibraryPath : Path.Combine(prefixPath, "Lib");
                 var sitePackagesPath = !string.IsNullOrEmpty(configuration.SitePackagesPath) ? configuration.SitePackagesPath : Path.Combine(libraryPath, "site-packages");
                 var requiresInitPyFiles = ModulePath.PythonVersionRequiresInitPyFiles(configuration.Version);
-                foreach (var mp in GetModulesInLib(libraryPath, sitePackagesPath, requiresInitPyFiles)) {
-                    if (mp.ModuleName == moduleName) {
-                        return true;
+                try {
+                    foreach (var mp in GetModulesInLib(libraryPath, sitePackagesPath, requiresInitPyFiles)) {
+                        if (mp.ModuleName == moduleName) {
+                            return true;
+                        }
                     }
+
+                } catch(DirectoryNotFoundException) {
+
                 }
 
                 return false;

@@ -295,7 +295,6 @@ namespace Microsoft.PythonTools.Repl {
 
             var options = _serviceProvider.GetPythonToolsService().InteractiveOptions;
             UseSmartHistoryKeys = options.UseSmartHistory;
-            LiveCompletionsOnly = options.LiveCompletionsOnly;
 
             EnableMultipleScopes = false;
 

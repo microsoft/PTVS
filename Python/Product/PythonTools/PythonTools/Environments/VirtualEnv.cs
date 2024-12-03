@@ -135,7 +135,7 @@ namespace Microsoft.PythonTools.Environments {
                         var relativeInterpExe = PathUtils.GetRelativeFilePath(workspace.Location, interpExe);
                         if (setAsCurrent) {
                             await workspace.SetInterpreterAsync(relativeInterpExe);
-                        }         
+                        }
                     }
 
                     var factory = workspaceFactoryProvider?
@@ -162,6 +162,7 @@ namespace Microsoft.PythonTools.Environments {
                 }
             }
 
+
             var workspaceFactoryProvider = provider.GetComponentModel().GetService<WorkspaceInterpreterFactoryProvider>();
             using (workspaceFactoryProvider?.SuppressDiscoverFactories(forceDiscoveryOnDispose: true)) {
                 // Ensure the target directory exists.
@@ -182,6 +183,12 @@ namespace Microsoft.PythonTools.Environments {
                             output.WriteLine(Strings.VirtualEnvCreationSucceeded.FormatUI(path));
                         } else {
                             output.WriteLine(Strings.VirtualEnvCreationFailedExitCode.FormatUI(path, exitCode));
+
+                            if (!useVEnv) {
+                                output.WriteLine("");
+                                output.WriteLine(Strings.VirtualEnvUpdateSuggestion);
+                                output.WriteLine(factory.Configuration.InterpreterPath + " -m pip install virtualenv --use-pep517 --upgrade");
+                            }
                         }
                         if (provider.GetPythonToolsService().GeneralOptions.ShowOutputWindowForVirtualEnvCreate) {
                             output.ShowAndActivate();

@@ -19,13 +19,14 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Interpreter {
-    class PythonRegistrySearch {
+    public class PythonRegistrySearch {
         public const string PythonCoreCompanyDisplayName = "Python Software Foundation";
         public const string PythonCoreSupportUrl = "https://www.python.org/";
         public const string PythonCoreCompany = "PythonCore";
@@ -39,7 +40,7 @@ namespace Microsoft.PythonTools.Interpreter {
         // when queried directly (e.g. as HKCU\Software\Python\PythonCore\3.7),
         // but enumerating HKCU\Software\Python\PythonCore key does not
         // find it (because of deliberate limitations in Windows).
-        private static readonly string[] StoreAppTags = { "3.7", "3.8", "3.9" };
+        private static readonly string[] StoreAppTags = { "3.9", "3.10", "3.11", "3.12", "3.13" };
         private static readonly string[] StoreAppCompanies = { PythonCoreCompany };
 
         private readonly HashSet<string> _seenIds;
@@ -171,14 +172,17 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
             }
 
+            // The regex captures the major and minor version as a group.
+            var match = Regex.Match(tag, @"^(\d+\.\d+)");
+
             var version = tagKey.GetValue("Version") as string;
             if (pythonCoreCompatibility && string.IsNullOrEmpty(version) && tag.Length >= 3) {
-                version = tag.Substring(0, 3);
+                version = match.Success ? match.Groups[1].Value : "";
             }
 
             var sysVersionString = tagKey.GetValue("SysVersion") as string;
             if (pythonCoreCompatibility && string.IsNullOrEmpty(sysVersionString) && tag.Length >= 3) {
-                sysVersionString = tag.Substring(0, 3);
+                sysVersionString = match.Success ? match.Groups[1].Value : "";
             }
             if (string.IsNullOrEmpty(sysVersionString) || !Version.TryParse(sysVersionString, out var sysVersion)) {
                 sysVersion = new Version(0, 0);
@@ -188,9 +192,6 @@ namespace Microsoft.PythonTools.Interpreter {
                 return null; // Python 2.x is no longer supported.
             }
 
-            if (sysVersion.ToLanguageVersion() == PythonLanguageVersion.None) {
-                sysVersion = new Version(0, 0);
-            }
 
             if (!InterpreterArchitecture.TryParse(tagKey.GetValue("SysArchitecture", null) as string, out var arch)) {
                 arch = assumedArch;
