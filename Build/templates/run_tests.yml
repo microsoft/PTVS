@@ -86,4 +86,3 @@ steps:
       testRunTitle: 'Glass Tests'
       testResultsFormat: 'VSTest'
       failTaskOnFailedTests: true
-      mergeTestResults: true
