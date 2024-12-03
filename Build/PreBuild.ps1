@@ -42,6 +42,32 @@ param (
 
 $ErrorActionPreference = "Stop"
 
+function Install-Package {
+    param(
+        [string] $packageName,
+        [string] $version,
+        [string] $outdir
+    )
+
+    "Installing $packageName $version"
+
+    $argList = "install_pypi_package.py", $packageName, $version, "`"$outdir`""
+    Start-Process -Wait -NoNewWindow "$outdir\python\tools\python.exe" -ErrorAction Stop -ArgumentList $argList
+
+    $installedVersion = ""
+    $versionPyFile = Join-Path $outdir "$packageName\_version.py"
+    foreach ($line in Get-Content $versionPyFile) {
+        if ($line.Trim().StartsWith("`"version`"")) {
+            $installedVersion = $line.split(":")[1].Trim(" `"") # trim spaces and double quotes
+            break
+        } elseif ($line.Trim().StartsWith("__version__")) {
+            $installedVersion = $line.split("=")[1].Trim(" `"") # trim spaces and double quotes
+            break
+        }
+    }
+    "Installed $packageName $installedVersion"
+}
+
 if ($vstarget.ToString() -match "^\d\d$") {
     $vstarget = "$vstarget.0"
 }
@@ -202,33 +228,23 @@ try {
         New-Item -ItemType Junction "$outdir\$_" -Value "$outdir\$_.$($versions[$_])"
     } | Out-Null
         
+    # The following installs must come AFTER package restore because they use python which is symlinked as part of the previous step
+
+    "-----"
     "Install and update certificate with PIP"
     # pip install -upgrade certifi
     $pipArgList = "-m", "pip", "--disable-pip-version-check", "install", "--upgrade", "certifi" 
     Start-Process -Wait -NoNewWindow "$outdir\python\tools\python.exe" -ErrorAction SilentlyContinue -ArgumentList $pipArgList
 
-    # debugpy install must come after package restore because it uses python which is symlinked as part of the previous step
-
     "-----"
-    "Installing Debugpy"
-    # pip install python packaging utilities
+    "Install python packaging utilities"
     # SilentlyContinue on error since pip warnings will cause the build to fail, and installing debugpy will fail later if this step fails anyway
     $pipArgList = "-m", "pip", "--disable-pip-version-check", "install", "packaging" 
     Start-Process -Wait -NoNewWindow "$outdir\python\tools\python.exe" -ErrorAction SilentlyContinue -ArgumentList $pipArgList
 
-    # install debugpy and print out the installed version
-    $debugpyArglist = "install_pypi_package.py", "debugpy", $debugpyVersion, "`"$outdir`""
-    Start-Process -Wait -NoNewWindow "$outdir\python\tools\python.exe" -ErrorAction Stop -ArgumentList $debugpyArglist
-
-    $installedDebugpyVersion = ""
-    $versionPyFile = Join-Path $outdir "debugpy\_version.py"
-    foreach ($line in Get-Content $versionPyFile) {
-        if ($line.Trim().StartsWith("`"version`"")) {
-            $installedDebugpyVersion = $line.split(":")[1].Trim(" `"") # trim spaces and double quotes
-            break
-        }
-    }
-    "Installed Debugpy $installedDebugpyVersion"
+    "-----"
+    # install debugpy
+    Install-Package "debugpy" $debugpyVersion $outdir
 
     # write debugpy version out to $buildroot\build\debugpy-version.txt, since that file is used by Debugger.csproj and various other classes
     Set-Content -NoNewline -Force -Path "$buildroot\build\debugpy-version.txt" -Value $installedDebugpyVersion
@@ -240,8 +256,9 @@ try {
         }
     }
 
-    # install etwtrace (using $etwtraceVersion) and print out the installed version
-    # Once etwtrace is up on PyPi, refactor install_debugpy.py to work for any package
+    "-----"
+    # install etwtrace
+    Install-Package "etwtrace" $etwtraceVersion $outdir
 
 } finally {
     Pop-Location
