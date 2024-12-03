@@ -175,7 +175,7 @@ def copy_ptvs_output(build_output_dir: str | None = None):
         exit(1)
 
     # Whenever we copy new bits, we have to regenerate the Python.GlassTestGroup file
-    generate_python_version_props()
+    generate_python_version_props(build_output_dir)
 
 def verify_listing():
     # Output the tests found to verify this all worked
@@ -230,14 +230,14 @@ def write_python_tests_group(file: str, props_to_add: list[PythonVersionProps]):
         f.write(f'</GlassTestGroup>\n')
 
 
-def generate_python_version_props():
+def generate_python_version_props(build_output_dir: str | None):
     print("Generaring Python version props files...")
     # This will generate the Python<Major><Bitness>.GlassTestProps files based
     # on where python is installed on this machine.
     props_folder = os.path.join(python_tests_target_dir, "Python")
 
     # Run the EnvironmentDiscoverer exe to find the installed versions of python.
-    discover_path = os.path.join(get_build_output(), "EnvironmentDiscover.exe")
+    discover_path = os.path.join(get_build_output(build_output_dir), "EnvironmentDiscover.exe")
     if not os.path.exists(discover_path):
         print(f"Error: EnvironmentDiscover.exe not found at {discover_path}. Make sure you build the project first.")
         exit(1)
@@ -308,7 +308,7 @@ def main(build_output_dir: str | None = None):
     get_glass()
     get_test_console_app()
     copy_ptvs_output(build_output_dir)
-    generate_python_version_props()
+    generate_python_version_props(build_output_dir)
     verify_listing()
 
 
