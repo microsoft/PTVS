@@ -178,10 +178,10 @@ def verify_listing():
 def get_build_output():
     debug_path = os.path.join(ptvs_root, "BuildOutput", "Debug17.0", "raw", "binaries")
     release_path = os.path.join(ptvs_root, "BuildOutput", "Release17.0", "raw", "binaries")
-    discover_exe = os.path.join(debug_path, "EnvironmentDiscover.exe")
+    dkm_debugger_config = os.path.join(debug_path, "DkmDebugger.vsdconfig")
 
     # Default to debug because that's the most likely scenario for a local dev box
-    if os.path.exists(discover_exe) and not auth_token:
+    if os.path.exists(dkm_debugger_config):
         return debug_path
     return release_path
 
