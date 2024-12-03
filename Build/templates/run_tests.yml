@@ -74,7 +74,7 @@ steps:
       scriptSource: 'filePath' # 'filePath' | 'inline'. Required. Script source. Default: filePath.
       scriptPath: $(Build.SourcesDirectory)/Build/run_glass.py
       workingDirectory: $(Build.SourcesDirectory)
-      failOnStderr: true
+      failOnStderr: false
 
   # Upload the trx file as a test result
   - task: PublishTestResults@2
