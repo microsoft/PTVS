@@ -84,8 +84,6 @@ steps:
     inputs:
       testResultsFiles: '$(Build.SourcesDirectory)/TestResults/*.trx'
       testRunTitle: 'Glass Tests'
-      testRunSystem: 'VSTest'
+      testResultsFormat: 'VSTest'
       failTaskOnFailedTests: true
       mergeTestResults: true
-      testRunAttachmentsEnabled: true
-      testRunAttachmentsDirectory: '$(Build.SourcesDirectory)/TestResults'      
