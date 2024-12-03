@@ -2,9 +2,9 @@ steps:
 
   # Build the product
   - task: MSBuild@1
-    displayName: 'Build product'
+    displayName: 'Build full product'
     inputs:
-      solution: $(Build.SourcesDirectory)/Python/Product/dirs.proj
+      solution: $(Build.SourcesDirectory)/Python/dirs.proj
       msbuildVersion: $(MsBuildVersion)
       platform: $(Platform)
       configuration: $(BuildConfiguration)
