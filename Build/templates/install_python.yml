@@ -26,6 +26,7 @@ steps:
     displayName: 'Download Python Installer if not cached'
 
   - pwsh: |
+      $pythonInstaller = "$(Pipeline.Workspace)/python-installer/python-installer.exe"
       Start-Process $pythonInstaller -ArgumentList '/quiet InstallAllUsers=1 PrependPath=1 Include_debug=1 Include_doc=0 Include_symbols=1' -NoNewWindow -Wait
     displayName: 'Install Python'
     
