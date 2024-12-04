@@ -13,16 +13,15 @@ steps:
         python-installer-
     displayName: 'Cache Python Installer'
 
-  - script: |
+  - pwsh: |
       $pythonInstallerUrl = "https://www.python.org/ftp/python/$(parameters.pythonVersion)/python-$(parameters.pythonVersion)-amd64.exe"
       $pythonInstaller = "$(Pipeline.Workspace)/python-installer/python-installer.exe"
       if (!(Test-Path -Path $pythonInstaller)) {
         Invoke-WebRequest -Uri $pythonInstallerUrl -OutFile $pythonInstaller
       }
     displayName: 'Download Python Installer if not cached'
-    pwsh: true
 
-  - script: |
+  - pwsh: |
       Start-Process $pythonInstaller -ArgumentList '/quiet InstallAllUsers=1 PrependPath=1 Include_debug=1 Include_doc=0 Include_symbols=1' -NoNewWindow -Wait
     displayName: 'Install Python'
-    pwsh: true
+    
