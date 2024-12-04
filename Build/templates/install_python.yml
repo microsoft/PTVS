@@ -20,7 +20,9 @@ steps:
         Invoke-WebRequest -Uri $pythonInstallerUrl -OutFile $pythonInstaller
       }
     displayName: 'Download Python Installer if not cached'
+    pwsh: true
 
   - script: |
       Start-Process $pythonInstaller -ArgumentList '/quiet InstallAllUsers=1 PrependPath=1 Include_debug=1 Include_doc=0 Include_symbols=1' -NoNewWindow -Wait
     displayName: 'Install Python'
+    pwsh: true
