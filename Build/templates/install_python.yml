@@ -34,8 +34,8 @@ steps:
     displayName: 'Install Python ${{ parameters.pythonVersion }}'
 
   - pwsh: |
-      $updatedVersion = "${{ parameters.pythonVersion }}" -replace "\.(\d+)\.\d+$", "$1"
-      $installPath = "$(ProgramFiles)\Python$updatedVersion"
+      $installVersion = "${{ parameters.pythonVersion }}" -replace '(\d+)\.(\d+)\.\d+', '$1$2'
+      $installPath = "$(ProgramFiles)\Python$installVersion"
       Write-Host "##vso[task.setvariable variable=${{ parameters.outputVar }};isOutput=true]$installPath"
     displayName: 'Set INSTALLPATH for ${{ parameters.pythonVersion }}'
     
