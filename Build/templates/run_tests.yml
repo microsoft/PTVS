@@ -10,6 +10,10 @@ steps:
       Get-ChildItem Env:
     displayName: 'Dump all variables'
 
+- powershell: |
+    echo "##vso[task.setvariable variable=PYTHON_PATH]$env:POWERSHELL6_INSTALLPYTHON312"
+  displayName: 'Set PYTHON_PATH variable'
+
   # Build the product
   - task: MSBuild@1
     displayName: 'Build product'
@@ -45,7 +49,7 @@ steps:
       arguments: '--authTokenVariable SYSTEM_ACCESSTOKEN --buildOutput $(Build.BinariesDirectory)\raw\binaries'
       workingDirectory: $(Build.SourcesDirectory)
       failOnStderr: true
-      pythonInterpreter: $(POWERSHELL6_INSTALLPYTHON312)/python.exe
+      pythonInterpreter: $(PYTHON_PATH)
 
   # Run the glass tests
   - task: PythonScript@0
@@ -56,7 +60,7 @@ steps:
       arguments: '--buildOutput $(Build.BinariesDirectory)\raw\binaries'
       workingDirectory: $(Build.SourcesDirectory)
       failOnStderr: true
-      pythonInterpreter: $(POWERSHELL6_INSTALLPYTHON312)/python.exe
+      pythonInterpreter: $(PYTHON_PATH)
 
   # Upload the trx file as a test result
   - task: PublishTestResults@2
