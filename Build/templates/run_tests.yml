@@ -3,7 +3,6 @@ steps:
   - template: ./install_python.yml
     parameters:
       pythonVersion: '3.12.7'
-    name: InstallPython312
 
   # Build the product
   - task: MSBuild@1
