@@ -9,7 +9,7 @@ steps:
   - powershell: |
       Get-ChildItem Env:
     displayName: 'Dump all variables'
-    
+
   # Build the product
   - task: MSBuild@1
     displayName: 'Build product'
@@ -45,7 +45,7 @@ steps:
       arguments: '--authTokenVariable SYSTEM_ACCESSTOKEN --buildOutput $(Build.BinariesDirectory)\raw\binaries'
       workingDirectory: $(Build.SourcesDirectory)
       failOnStderr: true
-      pythonInterpreter: $(InstallPython312)/python.exe
+      pythonInterpreter: $(POWERSHELL6_INSTALLPYTHON312)/python.exe
 
   # Run the glass tests
   - task: PythonScript@0
@@ -56,7 +56,7 @@ steps:
       arguments: '--buildOutput $(Build.BinariesDirectory)\raw\binaries'
       workingDirectory: $(Build.SourcesDirectory)
       failOnStderr: true
-      pythonInterpreter: $(InstallPython312.INSTALLPATH)/python.exe
+      pythonInterpreter: $(POWERSHELL6_INSTALLPYTHON312)/python.exe
 
   # Upload the trx file as a test result
   - task: PublishTestResults@2
