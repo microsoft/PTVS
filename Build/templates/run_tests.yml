@@ -2,7 +2,7 @@ steps:
   # Install different python versions
   - template: ./install_python.yml
     parameters:
-      pythonVersion: '3.9.21'
+      pythonVersion: '3.9.13' # Last version with an installer
   - template: ./install_python.yml
     parameters:
       pythonVersion: '3.10.15'
