@@ -27,6 +27,11 @@ steps:
 
   - pwsh: |
       $pythonInstaller = "$(Pipeline.Workspace)/python-installer/python-installer.exe"
-      Start-Process $pythonInstaller -ArgumentList '/quiet InstallAllUsers=1 PrependPath=1 Include_debug=1 Include_doc=0 Include_symbols=1' -NoNewWindow -Wait
+      Start-Process $pythonInstaller -ArgumentList '/quiet InstallAllUsers=1  Include_debug=1 Include_doc=0 Include_symbols=1' -NoNewWindow -Wait
     displayName: 'Install Python'
+
+  - pwsh: |
+      $installPath = "$(ProgramFiles)\Python ${{ parameters.pythonVersion }}"
+      Write-Host "##vso[task.setvariable variable=INSTALLPATH;isOutput=true]$installPath"
+    displayName: 'Set INSTALLPATH'
     

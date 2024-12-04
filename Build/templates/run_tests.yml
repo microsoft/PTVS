@@ -3,6 +3,7 @@ steps:
   - template: ./install_python.yml
     parameters:
       pythonVersion: '3.12.7'
+    name: InstallPython312
 
   # Build the product
   - task: MSBuild@1
@@ -39,6 +40,7 @@ steps:
       arguments: '--authTokenVariable SYSTEM_ACCESSTOKEN --buildOutput $(Build.BinariesDirectory)\raw\binaries'
       workingDirectory: $(Build.SourcesDirectory)
       failOnStderr: true
+      pythonInterpreter: $(InstallPython312.INSTALLPATH)/python.exe
 
   # Run the glass tests
   - task: PythonScript@0
@@ -49,6 +51,7 @@ steps:
       arguments: '--buildOutput $(Build.BinariesDirectory)\raw\binaries'
       workingDirectory: $(Build.SourcesDirectory)
       failOnStderr: true
+      pythonInterpreter: $(InstallPython312.INSTALLPATH)/python.exe
 
   # Upload the trx file as a test result
   - task: PublishTestResults@2
