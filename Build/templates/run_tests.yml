@@ -5,6 +5,10 @@ steps:
       pythonVersion: '3.12.7'
       outputVar: InstallPython312
 
+  # Debug helper, print all variables
+  - task: printAllVariables@1
+    displayName: 'Print all variables'
+
   # Build the product
   - task: MSBuild@1
     displayName: 'Build product'
