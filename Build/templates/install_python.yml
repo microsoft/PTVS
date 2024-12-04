@@ -14,7 +14,11 @@ steps:
     displayName: 'Cache Python Installer'
 
   - pwsh: |
+      $pythonInstallerDir = "$(Pipeline.Workspace)/python-installer"
       $pythonInstallerUrl = "https://www.python.org/ftp/python/${{ parameters.pythonVersion }}/python-${{ parameters.pythonVersion }}-amd64.exe"
+      if (-not (Test-Path -Path $pythonInstallerDir)) {
+        New-Item -ItemType Directory -Path $pythonInstallerDir | Out-Null
+      }
       $pythonInstaller = "$(Pipeline.Workspace)/python-installer/python-installer.exe"
       if (!(Test-Path -Path $pythonInstaller)) {
         Invoke-WebRequest -Uri $pythonInstallerUrl -OutFile $pythonInstaller
