@@ -3,6 +3,9 @@ parameters:
     type: string
     default: '3.9.7'
     displayName: 'Python Version'
+  - name: outputVar
+    type: string
+    default: 'InstallPython'
 
 steps:
   - task: Cache@2
@@ -33,6 +36,6 @@ steps:
   - pwsh: |
       $updatedVersion = "${{ parameters.pythonVersion }}" -replace "\.\d+$", ""
       $installPath = "$(ProgramFiles)\Python $updatedVersion"
-      Write-Host "##vso[task.setvariable variable=INSTALLPATH;isOutput=true]$installPath"
+      Write-Host "##vso[task.setvariable variable=${{ parameters.outputVar }};isOutput=true]$installPath"
     displayName: 'Set INSTALLPATH for ${{ parameters.pythonVersion }}'
     

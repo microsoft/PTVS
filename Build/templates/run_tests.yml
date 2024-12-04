@@ -1,9 +1,9 @@
 steps:
   # Install different python versions
   - template: ./install_python.yml
-    name: InstallPython312
     parameters:
       pythonVersion: '3.12.7'
+      outputVar: InstallPython312
 
   # Build the product
   - task: MSBuild@1
@@ -40,7 +40,7 @@ steps:
       arguments: '--authTokenVariable SYSTEM_ACCESSTOKEN --buildOutput $(Build.BinariesDirectory)\raw\binaries'
       workingDirectory: $(Build.SourcesDirectory)
       failOnStderr: true
-      pythonInterpreter: $(InstallPython312.INSTALLPATH)/python.exe
+      pythonInterpreter: $(InstallPython312)/python.exe
 
   # Run the glass tests
   - task: PythonScript@0
