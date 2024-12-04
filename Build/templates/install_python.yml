@@ -11,7 +11,7 @@ steps:
       path: '$(Pipeline.Workspace)/python-installer'
       restoreKeys: |
         python-installer-
-    displayName: 'Cache Python Installer for $(pythonVersion)'
+    displayName: 'Cache Python Installer for ${{ parameters.pythonVersion }}'
 
   - pwsh: |
       $pythonInstallerDir = "$(Pipeline.Workspace)/python-installer"
@@ -23,16 +23,16 @@ steps:
       if (!(Test-Path -Path $pythonInstaller)) {
         Invoke-WebRequest -Uri $pythonInstallerUrl -OutFile $pythonInstaller
       }
-    displayName: 'Download Python Installer for $(pythonVersion) if not cached'
+    displayName: 'Download Python Installer for ${{ parameters.pythonVersion }} if not cached'
 
   - pwsh: |
       $pythonInstaller = "$(Pipeline.Workspace)/python-installer/python-installer.exe"
       Start-Process $pythonInstaller -ArgumentList '/quiet InstallAllUsers=1  Include_debug=1 Include_doc=0 Include_symbols=1' -NoNewWindow -Wait
-    displayName: 'Install Python $(pythonVersion)'
+    displayName: 'Install Python ${{ parameters.pythonVersion }}'
 
   - pwsh: |
       $updatedVersion = "${{ parameters.pythonVersion }}" -replace "\.\d+$", ""
       $installPath = "$(ProgramFiles)\Python $updatedVersion"
       Write-Host "##vso[task.setvariable variable=INSTALLPATH;isOutput=true]$installPath"
-    displayName: 'Set INSTALLPATH for $(pythonVersion)'
+    displayName: 'Set INSTALLPATH for ${{ parameters.pythonVersion }}'
     

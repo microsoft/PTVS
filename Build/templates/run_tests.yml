@@ -1,6 +1,7 @@
 steps:
   # Install different python versions
   - template: ./install_python.yml
+    name: InstallPython312
     parameters:
       pythonVersion: '3.12.7'
 
