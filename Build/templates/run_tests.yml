@@ -2,8 +2,20 @@ steps:
   # Install different python versions
   - template: ./install_python.yml
     parameters:
+      pythonVersion: '3.9.21'
+  - template: ./install_python.yml
+    parameters:
+      pythonVersion: '3.10.15'
+  - template: ./install_python.yml
+    parameters:
+      pythonVersion: '3.11.10'
+  - template: ./install_python.yml
+    parameters:
       pythonVersion: '3.12.7'
       outputVar: InstallPython312
+  - template: ./install_python.yml
+    parameters:
+      pythonVersion: '3.13.0'
 
   - powershell: |
       echo "##vso[task.setvariable variable=PYTHON_INTERPRETER]$env:POWERSHELL6_INSTALLPYTHON312\python.exe"
