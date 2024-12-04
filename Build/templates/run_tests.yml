@@ -10,9 +10,24 @@ steps:
       Get-ChildItem Env:
     displayName: 'Dump all variables'
 
-- powershell: |
-    echo "##vso[task.setvariable variable=PYTHON_PATH]$env:POWERSHELL6_INSTALLPYTHON312"
-  displayName: 'Set PYTHON_PATH variable'
+  - powershell: |
+      echo "##vso[task.setvariable variable=PYTHON_PATH]$env:POWERSHELL6_INSTALLPYTHON312"
+    displayName: 'Set PYTHON_PATH variable'
+
+  - task: PythonScript@0
+    displayName: 'Test python path'
+    env:
+      SYSTEM_ACCESSTOKEN: $(DropToken)
+    inputs:
+      scriptSource: 'inline' # 'filePath' | 'inline'. Required. Script source. Default: filePath.
+      script: |
+        import sys
+        print(sys.executable)
+        print(sys.version)
+        print(sys.path)
+      workingDirectory: $(Build.SourcesDirectory)
+      failOnStderr: true
+      pythonInterpreter: $(PYTHON_PATH)
 
   # Build the product
   - task: MSBuild@1
