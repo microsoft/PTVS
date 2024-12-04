@@ -35,9 +35,7 @@ steps:
 
   - pwsh: |
       $updatedVersion = "${{ parameters.pythonVersion }}" -replace "\.\d+$", ""
-      $installPath = "$(ProgramFiles)\Python $updatedVersion"
+      $installPath = "$(ProgramFiles)\Python$updatedVersion"
       Write-Host "##vso[task.setvariable variable=${{ parameters.outputVar }};isOutput=true]$installPath"
-      Get-ChildItem "$(ProgramFiles)"
-      Get-ChildItem "$(ProgramFilesX86)"
     displayName: 'Set INSTALLPATH for ${{ parameters.pythonVersion }}'
     
