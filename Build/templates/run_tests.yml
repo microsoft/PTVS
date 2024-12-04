@@ -6,9 +6,10 @@ steps:
       outputVar: InstallPython312
 
   # Debug helper, print all variables
-  - task: printAllVariables@1
-    displayName: 'Print all variables'
-
+  - powershell: |
+      Get-ChildItem Env:
+    displayName: 'Dump all variables'
+    
   # Build the product
   - task: MSBuild@1
     displayName: 'Build product'
