@@ -16,7 +16,9 @@ steps:
   - template: ./install_python.yml
     parameters:
       pythonVersion: '3.13.0'
-
+  - powershell: |
+      Get-ChildItem Env:
+    displayName: 'Dump all variables'
   - powershell: |
       echo "##vso[task.setvariable variable=PYTHON_INTERPRETER]$env:POWERSHELL6_INSTALLPYTHON312\python.exe"
       Get-ChildItem "$env:POWERSHELL6_INSTALLPYTHON312"
