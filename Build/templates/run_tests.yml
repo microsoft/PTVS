@@ -5,10 +5,10 @@ steps:
       pythonVersion: '3.9.13' # Last version with an installer
   - template: ./install_python.yml
     parameters:
-      pythonVersion: '3.10.15'
+      pythonVersion: '3.10.11' # Last version with an installer
   - template: ./install_python.yml
     parameters:
-      pythonVersion: '3.11.10'
+      pythonVersion: '3.11.9' # Last version with an installer
   - template: ./install_python.yml
     parameters:
       pythonVersion: '3.12.7'
