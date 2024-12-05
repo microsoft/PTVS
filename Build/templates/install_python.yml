@@ -1,7 +1,7 @@
 parameters:
   - name: pythonVersion
     type: string
-    default: '3.9.7'
+    default: '3.12.7'
     displayName: 'Python Version'
   - name: outputVar
     type: string
@@ -10,7 +10,7 @@ parameters:
 steps:
   - task: Cache@2
     inputs:
-      key: 'python-installer-$(pythonVersion)'
+      key: 'python-installer-${{ parameters.pythonVersion }}'
       path: '$(Pipeline.Workspace)/python-installer'
       restoreKeys: |
         python-installer-
@@ -22,14 +22,14 @@ steps:
       if (-not (Test-Path -Path $pythonInstallerDir)) {
         New-Item -ItemType Directory -Path $pythonInstallerDir | Out-Null
       }
-      $pythonInstaller = "$(Pipeline.Workspace)/python-installer/python-installer.exe"
+      $pythonInstaller = "$(Pipeline.Workspace)/python-installer/python-installer-${{ parameters.pythonVersion }}.exe"
       if (!(Test-Path -Path $pythonInstaller)) {
         Invoke-WebRequest -Uri $pythonInstallerUrl -OutFile $pythonInstaller
       }
     displayName: 'Download Python Installer for ${{ parameters.pythonVersion }} if not cached'
 
   - pwsh: |
-      $pythonInstaller = "$(Pipeline.Workspace)/python-installer/python-installer.exe"
+      $pythonInstaller = "$(Pipeline.Workspace)/python-installer/python-installer-${{ parameters.pythonVersion }}.exe"
       Start-Process $pythonInstaller -ArgumentList '/quiet InstallAllUsers=1  Include_debug=1 Include_doc=0 Include_symbols=1' -NoNewWindow -Wait
     displayName: 'Install Python ${{ parameters.pythonVersion }}'
 
