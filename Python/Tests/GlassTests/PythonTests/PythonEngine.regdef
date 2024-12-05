@@ -1,0 +1,36 @@
+Windows Registry Editor Version 5.00
+
+[$RootKey$\AD7Metrics\Engine\{EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9}]
+"Name"="Python"
+"CLSID"="{0DA53AFE-069E-47A3-AE34-32610A8253A3}"
+"ProgramProvider"="{FA452F5D-539E-4B55-BCC6-5DE7E342BC44}"
+"PortSupplier"="{708C1ECA-FF48-11D2-904F-00C04FA302A1}"
+"Attach"=dword:00000001
+"AddressBP"=dword:00000000
+"AutoSelectPriority"=dword:00000006
+"CallstackBP"=dword:00000001
+"ConditionalBP"=dword:00000001
+"Exceptions"=dword:00000001
+"SetNextStatement"=dword:00000001
+"RemoteDebugging"=dword:00000001
+"HitCountBP"=dword:00000000
+"JustMyCodeStepping"=dword:00000001
+"EngineClass"="Microsoft.PythonTools.Debugger.DebugEngine.AD7Engine"
+"EngineAssembly"="Microsoft.PythonTools.Debugger, Version=17.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"
+"LoadProgramProviderUnderWOW64"=dword:00000001
+"AlwaysLoadProgramProviderLocal"=dword:00000001
+"LoadUnderWOW64"=dword:00000001
+
+[$RootKey$\CLSID\{0DA53AFE-069E-47A3-AE34-32610A8253A3}]
+"Assembly"="Microsoft.PythonTools.Debugger, Version=17.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"
+"Class"="Microsoft.PythonTools.Debugger.DebugEngine.AD7Engine"
+"InprocServer32"="C:\\windows\\SYSTEM32\\MSCOREE.DLL"
+"CodeBase"="$GlassInstallDir$\\Microsoft.PythonTools.Debugger.dll"
+"ThreadingModel"="Free"
+
+[$RootKey$\CLSID\{FA452F5D-539E-4B55-BCC6-5DE7E342BC44}]
+"Assembly"="Microsoft.PythonTools.Debugger, Version=17.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"
+"Class"="Microsoft.PythonTools.Debugger.DebugEngine.AD7ProgramProvider"
+"InprocServer32"="C:\\windows\\SYSTEM32\\MSCOREE.DLL"
+"CodeBase"="$GlassInstallDir$\\Microsoft.PythonTools.Debugger.dll"
+"ThreadingModel"="Free"

@@ -1,0 +1,41 @@
+parameters:
+  - name: pythonVersion
+    type: string
+    default: '3.12.7'
+    displayName: 'Python Version'
+  - name: outputVar
+    type: string
+    default: 'InstallPython'
+
+steps:
+  - task: Cache@2
+    inputs:
+      key: 'python-installer-$(pythonVersion)'
+      path: '$(Pipeline.Workspace)/python-installer'
+      restoreKeys: |
+        python-installer-
+    displayName: 'Cache Python Installer for ${{ parameters.pythonVersion }}'
+
+  - pwsh: |
+      $pythonInstallerDir = "$(Pipeline.Workspace)/python-installer"
+      $pythonInstallerUrl = "https://www.python.org/ftp/python/${{ parameters.pythonVersion }}/python-${{ parameters.pythonVersion }}-amd64.exe"
+      if (-not (Test-Path -Path $pythonInstallerDir)) {
+        New-Item -ItemType Directory -Path $pythonInstallerDir | Out-Null
+      }
+      $pythonInstaller = "$(Pipeline.Workspace)/python-installer/python-installer-${{ parameters.pythonVersion }}.exe"
+      if (!(Test-Path -Path $pythonInstaller)) {
+        Invoke-WebRequest -Uri $pythonInstallerUrl -OutFile $pythonInstaller
+      }
+    displayName: 'Download Python Installer for ${{ parameters.pythonVersion }} if not cached'
+
+  - pwsh: |
+      $pythonInstaller = "$(Pipeline.Workspace)/python-installer/python-installer-${{ parameters.pythonVersion }}.exe"
+      Start-Process $pythonInstaller -ArgumentList '/quiet InstallAllUsers=1  Include_debug=1 Include_doc=0 Include_symbols=1' -NoNewWindow -Wait
+    displayName: 'Install Python ${{ parameters.pythonVersion }}'
+
+  - pwsh: |
+      $installVersion = "${{ parameters.pythonVersion }}" -replace '(\d+)\.(\d+)\.\d+', '$1$2'
+      $installPath = "$(ProgramFiles)\Python$installVersion"
+      Write-Host "##vso[task.setvariable variable=${{ parameters.outputVar }};isOutput=true]$installPath"
+    displayName: 'Set INSTALLPATH for ${{ parameters.pythonVersion }}'
+    

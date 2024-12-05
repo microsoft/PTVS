@@ -1,3 +1,4 @@
+import argparse
 import os
 import re
 import shutil
@@ -16,6 +17,14 @@ glass_remote_debugger_dir = os.path.join(glass_debugger_dir, "Remote Debugger", 
 test_console_app = os.path.join(glass_dir, "vstest.console.exe")
 python_tests_source_dir = os.path.abspath(os.path.join(ptvs_root, "Python", "Tests", "GlassTests", "PythonTests"))
 python_tests_target_dir = os.path.join(glass_dir, "PythonTests")
+auth_token = None
+
+def get_auth_token_args():
+    global auth_token
+    if auth_token is not None:
+        return ["--patAuthEnvVar", auth_token]
+    return ['-a']
+        
 
 def get_drop_exe():
     # First step, get the drop exe installed if not already there. This may query the user for credentials.
@@ -29,7 +38,7 @@ def get_drop_exe():
          drop_tools_output_path], 
          stdout=sys.stdout, stderr=sys.stderr)
     if drop_getter.returncode != 0:
-        print(f"Error getting drop.exe: {drop_getter.stderr}")
+        print(f"Error getting drop.exe: {drop_getter.stderr.decode('utf-8')}")
         exit(1)
 
     # Next, install glass in the GlassTests directory
@@ -43,12 +52,13 @@ def compute_drop_path(drop_prefix: str, matcher: Callable[[str], bool]) -> str:
     drop_list = subprocess.run(
         [drop_exe_path, 
          "list", 
+         *get_auth_token_args(),
          "-s", 
          "https://devdiv.artifacts.visualstudio.com/DefaultCollection", 
          "-p", 
          drop_prefix], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if drop_list.returncode != 0:
-        print(f"Error listing glass drops: {drop_list.stderr}")
+        print(f"Error listing glass drops: {drop_list.stderr.decode('utf-8') + drop_list.stdout.decode('utf-8')}")
         exit(1)
     
     # Parse the output to get the latest drop
@@ -77,7 +87,7 @@ def get_drop(drop_prefix: str, dest: str, matcher: Callable[[str], bool]) -> Non
          "get", 
          "-s", 
          "https://devdiv.artifacts.visualstudio.com/DefaultCollection",  
-         "-a", 
+         *get_auth_token_args(),
          "-writable", 
          "true", 
          "-n", 
@@ -85,7 +95,7 @@ def get_drop(drop_prefix: str, dest: str, matcher: Callable[[str], bool]) -> Non
          "-d", 
          dest], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if drop_run.returncode != 0:
-        print(f"Error getting drop: {drop_run.stderr}")
+        print(f"Error getting drop: {drop_run.stderr.decode('utf-8') + drop_run.stdout.decode('utf-8')}")
         exit(1)
 
     print(f"Got drop {latest_drop}")
@@ -136,14 +146,18 @@ def get_test_console_app():
         print(f"Error: Test console app not found at {test_console_app}")
         exit(1)
 
-def copy_ptvs_output():
+def copy_ptvs_output(build_output_dir: str | None = None):
     # Copy the PythonTests folder into the glass directory
     print(f"Copying PythonTests from {python_tests_source_dir} to {python_tests_target_dir}")
     shutil.copytree(python_tests_source_dir, python_tests_target_dir, dirs_exist_ok=True)
 
+    # Make sure both desired directories exist
+    os.makedirs(glass_debugger_dir, exist_ok=True)
+    os.makedirs(glass_remote_debugger_dir, exist_ok=True)
+
     # Copy the output of the build into the glass debugger directory (where the debuggers are installed)
-    print(f"Copying PTVS Debugger bits to {glass_debugger_dir}")
-    build_output = get_build_output()
+    build_output = get_build_output(build_output_dir)
+    print(f"Copying PTVS Debugger bits from {build_output} to {glass_debugger_dir}")
     for file in glob.glob(os.path.join(build_output, "Microsoft.Python*")):
         shutil.copy(file, glass_debugger_dir)
         shutil.copy(file, glass_remote_debugger_dir)
@@ -152,8 +166,16 @@ def copy_ptvs_output():
         shutil.copy(file, glass_debugger_dir)
         shutil.copy(file, glass_remote_debugger_dir)
 
+    # Verify some of the files were copied.
+    if not os.path.exists(os.path.join(glass_debugger_dir, "Microsoft.PythonTools.Core.pkgdef")) or not os.path.exists(os.path.join(glass_remote_debugger_dir, "Microsoft.PythonTools.Core.pkgdef")):
+        print(f"Error: Microsoft.PythonTools.Core.pkgdef not found in {glass_debugger_dir} or {glass_remote_debugger_dir}.")
+        print(f"Contents of {build_output}:")
+        for f in os.listdir(build_output):
+            print(f)
+        exit(1)
+
     # Whenever we copy new bits, we have to regenerate the Python.GlassTestGroup file
-    generate_python_version_props()
+    generate_python_version_props(build_output_dir)
 
 def verify_listing():
     # Output the tests found to verify this all worked
@@ -163,15 +185,21 @@ def verify_listing():
         "/lt",
         f"{python_tests_target_dir}/PythonConcord.GlassTestRoot"], stdout=sys.stdout, stderr=sys.stderr)
     if tests.returncode != 0:
-        print(f"Error listing tests: {tests.stderr}")
+        print(f"Error listing tests: {tests.stderr.decode('utf-8')}")
         exit(1)
 
-def get_build_output():
+def get_build_output(build_output_dir: str | None = None) -> str:
+    # Check if the build output path was passed in
+    if build_output_dir is not None:
+        return build_output_dir
+
+    # Try to find the DkmDebugger.vsdconfig file to determine the build output path
     debug_path = os.path.join(ptvs_root, "BuildOutput", "Debug17.0", "raw", "binaries")
     release_path = os.path.join(ptvs_root, "BuildOutput", "Release17.0", "raw", "binaries")
+    dkm_debugger_config = os.path.join(debug_path, "DkmDebugger.vsdconfig")
 
     # Default to debug because that's the most likely scenario for a local dev box
-    if os.path.exists(debug_path):
+    if os.path.exists(dkm_debugger_config):
         return debug_path
     return release_path
 
@@ -202,14 +230,14 @@ def write_python_tests_group(file: str, props_to_add: list[PythonVersionProps]):
         f.write(f'</GlassTestGroup>\n')
 
 
-def generate_python_version_props():
+def generate_python_version_props(build_output_dir: str | None):
     print("Generaring Python version props files...")
     # This will generate the Python<Major><Bitness>.GlassTestProps files based
     # on where python is installed on this machine.
     props_folder = os.path.join(python_tests_target_dir, "Python")
 
     # Run the EnvironmentDiscoverer exe to find the installed versions of python.
-    discover_path = os.path.join(get_build_output(), "EnvironmentDiscover.exe")
+    discover_path = os.path.join(get_build_output(build_output_dir), "EnvironmentDiscover.exe")
     if not os.path.exists(discover_path):
         print(f"Error: EnvironmentDiscover.exe not found at {discover_path}. Make sure you build the project first.")
         exit(1)
@@ -217,7 +245,7 @@ def generate_python_version_props():
     discover_output = subprocess.run(
         [discover_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if discover_output.returncode != 0:
-        print(f"Error finding python versions: {discover_output.stderr}")
+        print(f"Error finding python versions: {discover_output.stderr.decode('utf-8')}")
         exit(1)
 
     props_to_add: list[PythonVersionProps] = []
@@ -275,40 +303,54 @@ def generate_python_version_props():
 
     print("Done generating Python version props files.")
 
+def main(build_output_dir: str | None = None):
+    get_drop_exe()
+    get_glass()
+    get_test_console_app()
+    copy_ptvs_output(build_output_dir)
+    generate_python_version_props(build_output_dir)
+    verify_listing()
+
+
 if __name__ == "__main__":
     # Process the command line arguments and run the appropriate steps
-    if len(sys.argv) < 2:
+    arg_parser = argparse.ArgumentParser(description="Setup Glass for running Python tests")
+    arg_parser.add_argument("--getDropExe", action='store_true', help="Get the drop.exe for downloading the glass drop")
+    arg_parser.add_argument("--getGlass", action='store_true', help="Get the Glass test runner")
+    arg_parser.add_argument("--getVsTestConsole", action='store_true', help="Get the test console app")
+    arg_parser.add_argument("--copyPtvsOutput", action='store_true', help="Copy the PTVS output to the glass directory")
+    arg_parser.add_argument("--verifyListing", action='store_true', help="Verify that the tests are listed")
+    arg_parser.add_argument("--authTokenVariable", type=str, help="The environment variable holding the auth token to use for downloading the drop")
+    arg_parser.add_argument("--buildOutput", type=str, help="The path to the build output directory")
+    arg_parser.add_argument("--?", action='store_true', help="Show help")
+    args = arg_parser.parse_args()
+
+    # Set the auth token if it was passed in
+    auth_token = args.authTokenVariable
+
+    # Set the build_output_dir if it was passed in
+    build_output_dir = args.buildOutput
+
+    # See if any of the flags are set
+    args_dict = vars(args)
+    flags_set = any(value for key, value in args_dict.items() if not key.startswith('auth') and not key.startswith('build') and value)
+
+    if not flags_set:
         # All the steps
-        get_drop_exe()
-        get_glass()
-        get_test_console_app()
-        copy_ptvs_output()
-        generate_python_version_props()
-        verify_listing()
+        main(build_output_dir)
     else:
-        step = sys.argv[1]
-        if step == "get-drop-exe":
+        if args.getDropExe:
             get_drop_exe()
-        elif step == "get-glass":
+        if args.getGlass:
             get_glass()
-        elif step == "get-test-console-app":
+        if args.getVsTestConsole:
             get_test_console_app()
-        elif step == "copy-ptvs-output":
-            copy_ptvs_output()
-        elif step == "generate-python-version-props":
-            generate_python_version_props()
-        elif step == "verify-listing":
+        if args.copyPtvsOutput:
+            copy_ptvs_output(build_output_dir)
+        if args.verifyListing:
             verify_listing()
-        elif step == "help" or step == "-h" or step == "--help" or step == "/?" or step == "-?":
-            print("Usage: setup_glass.py [step]")
-            print("  Steps:")
-            print("    <none>: Run all steps")
-            print("    get-drop-exe: Get the drop.exe tool")
-            print("    get-glass: Get the Glass test runner")
-            print("    get-test-console-app: Get the test console app")
-            print("    copy-ptvs-output: Copy the PythonTests folder and the PTVS debugger into the glass directory")
-            print("    generate-python-version-props: Generate the Python version props files")
-            print("    verify-listing: Verify that the tests are listed")
-        else:
-            print(f"Error: Unrecognized argument: {step}")
+        if args_dict.get("?"):
+            arg_parser.print_help()
+    
+    print("Done.")
     
