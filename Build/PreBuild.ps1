@@ -49,10 +49,10 @@ function Install-Package {
         [string] $outdir
     )
 
-    "Installing $packageName $version"
+    Write-Host "Installing $packageName $version"
 
     $argList = "install_pypi_package.py", $packageName, $version, "`"$outdir`""
-    Start-Process -Wait -NoNewWindow "$outdir\python\tools\python.exe" -ErrorAction Stop -ArgumentList $argList
+    Start-Process -Wait -NoNewWindow "$outdir\python\tools\python.exe" -ErrorAction Stop -ArgumentList $argList | Write-Host
 
     $installedVersion = ""
     $versionPyFile = Join-Path $outdir "$packageName\_version.py"
@@ -65,7 +65,10 @@ function Install-Package {
             break
         }
     }
-    "Installed $packageName $installedVersion"
+
+    Write-Host "Installed $packageName $installedVersion"
+
+    return $installedVersion
 }
 
 if ($vstarget.ToString() -match "^\d\d$") {
@@ -244,7 +247,7 @@ try {
 
     "-----"
     # install debugpy
-    Install-Package "debugpy" $debugpyVersion $outdir
+    $installedDebugpyVersion = Install-Package "debugpy" $debugpyVersion $outdir
 
     # write debugpy version out to $buildroot\build\debugpy-version.txt, since that file is used by Debugger.csproj and various other classes
     Set-Content -NoNewline -Force -Path "$buildroot\build\debugpy-version.txt" -Value $installedDebugpyVersion
@@ -258,7 +261,7 @@ try {
 
     "-----"
     # install etwtrace
-    Install-Package "etwtrace" $etwtraceVersion $outdir
+    Install-Package "etwtrace" $etwtraceVersion $outdir | Out-Null
 
 } finally {
     Pop-Location
