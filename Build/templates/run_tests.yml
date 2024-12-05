@@ -16,12 +16,18 @@ steps:
   - template: ./install_python.yml
     parameters:
       pythonVersion: '3.13.0'
+  
+  # Find the environment variable for the install of 3.12
   - powershell: |
-      Get-ChildItem Env:
-    displayName: 'Dump all variables'
-  - powershell: |
-      echo "##vso[task.setvariable variable=PYTHON_INTERPRETER]$env:POWERSHELL6_INSTALLPYTHON312\python.exe"
-      Get-ChildItem "$env:POWERSHELL6_INSTALLPYTHON312"
+      $suffix = '_INSTALLPYTHON312'
+      $envVars = Get-ChildItem Env:
+
+      foreach ($envVar in $envVars) {
+        if ($envVar.Name.EndsWith($suffix)) {
+          echo "##vso[task.setvariable variable=PYTHON_INTERPRETER]$($envVar.Value)\python.exe"
+          break
+        }
+      }  
     displayName: 'Set PYTHON_INTERPRETER variable'
 
   - task: PythonScript@0
