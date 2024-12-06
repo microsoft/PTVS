@@ -524,7 +524,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private void UpdateInterpreterExcludes() {
             this._clientContexts.ForEach(context => {
 
-                if (PathUtils.IsSubpathOf(context.RootPath, context.InterpreterConfiguration.InterpreterPath)) {
+                if (context.RootPath != null && PathUtils.IsSubpathOf(context.RootPath, context.InterpreterConfiguration.InterpreterPath)) {
                     var pattern = CommonUtils.GetRelativeFilePath(context.RootPath, context.InterpreterConfiguration.GetPrefixPath()).TrimEnd('\\') + "/**/*";
                     var watcher = new FileSystemWatcher() { GlobPattern = pattern };
                     this._fileListener.AddExclude(watcher);
