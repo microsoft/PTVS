@@ -1,0 +1,57 @@
+
+Greet the user and provide instructions
+def main():
+    def start_adventure():
+        input("Press Enter to start your adventure with Elena Martinez...")
+        print("Welcome to Elena's Adventure in Blackwood Manor!")
+        print("In this application, you'll answer a series of questions to create a unique story featuring Elena Martinez.")
+        print("You will be asked about the weather, the time period, a supernatural element, Elena's companion, and her motivation for exploring the mansion.")
+        print("After typing your answer, press the enter key")
+        input("Press the enter key to continue...")
+
+        print("Welcome to the adventure of Elena Martinez, a 16-year-old aspiring photographer with a curious nature.")
+        print("You find yourself at the abandoned Blackwood Manor, a sprawling Victorian mansion shrouded in mystery.")
+        print("As the sun sets, Elena carefully climbs through a broken window, her vintage Polaroid ready to capture anything unusual.")
+
+        footsteps = input("You hear footsteps upstairs. Will you follow the sound upstairs? (yes/no) ")
+
+        if footsteps.lower() == 'yes':
+            print("You bravely ascend the stairs, heart racing.")
+            followed_footsteps = True
+        else:
+            print("You decide to exit the mansion immediately, feeling a chill down your spine.")
+            followed_footsteps = False
+
+        diary = input("You find an old diary. Will you read it and take it with you? (yes/no) ")
+
+        if diary.lower() == 'yes':
+            print("You carefully open the diary, intrigued by its contents.")
+            read_diary = True
+        else:
+            print("You leave the diary untouched, respecting its secrets.")
+            read_diary = False
+
+        weather = input("Is it raining, foggy, or clear outside? ")
+        while weather not in ['raining', 'foggy', 'clear']:
+            weather = input("Please provide valid weather conditions (raining, foggy, clear): ")
+
+        decade = input("What decade would you like the mansion's mystery to be from: 1920s, 1950s, or 1980s? ")
+        supernatural = input("What type of supernatural occurrence would you prefer: ghosts, time travel, or ancient curses? ")
+        companion = input("Should Elena have a friend with her: best friend, stray cat, or local history buff? ")
+        motivation = input("Why is Elena really investigating the mansion: school project, family connection, or local legend? ")
+
+        # Determine the ending based on choices
+        if followed_footsteps and read_diary:
+            print("As the Guardian, you help lost souls find peace.")
+        elif followed_footsteps and not read_diary:
+            print("You solve the town's oldest mystery.")
+        else:
+            print("You navigate the complexities of being trapped in time.")
+
+    while True:
+        start_adventure()
+        replay = input("Do you want to start over? (yes/no) ")
+        if replay.lower() != 'yes':
+            break
+
+main()
