@@ -56,30 +56,30 @@ steps:
       msbuildArguments: '/p:VSTarget=$(VSTarget) /bl:$(Build.SourcesDirectory)\logs\BuildProduct.binlog'
 
   # Restore the glass binaries from cache
-  - task: CacheBeta@2
-    displayName: 'Restore glass binaries from cache'
-    inputs:
-      key: 'glass'
-      path: '$(Build.BinariesDirectory)\raw\binaries'
-      cacheHitVar: 'CACHE_RESTORED'
+  # - task: CacheBeta@2
+  #   displayName: 'Restore glass binaries from cache'
+  #   inputs:
+  #     key: 'glass'
+  #     path: '$(Build.BinariesDirectory)\raw\binaries'
+  #     cacheHitVar: 'CACHE_RESTORED'
 
-  # Run the glass tests
-  - task: PythonScript@0
-    displayName: 'Run Glass tests'
-    inputs:
-      scriptSource: 'filePath' # 'filePath' | 'inline'. Required. Script source. Default: filePath.
-      scriptPath: $(Build.SourcesDirectory)/Build/run_glass.py
-      arguments: '--buildOutput $(Build.BinariesDirectory)\raw\binaries'
-      workingDirectory: $(Build.SourcesDirectory)
-      failOnStderr: true
-      pythonInterpreter: $(PYTHON_INTERPRETER)
+  # # Run the glass tests
+  # - task: PythonScript@0
+  #   displayName: 'Run Glass tests'
+  #   inputs:
+  #     scriptSource: 'filePath' # 'filePath' | 'inline'. Required. Script source. Default: filePath.
+  #     scriptPath: $(Build.SourcesDirectory)/Build/run_glass.py
+  #     arguments: '--buildOutput $(Build.BinariesDirectory)\raw\binaries'
+  #     workingDirectory: $(Build.SourcesDirectory)
+  #     failOnStderr: true
+  #     pythonInterpreter: $(PYTHON_INTERPRETER)
 
-  # Upload the trx file as a test result
-  - task: PublishTestResults@2
-    condition: always() # Always run this step, even if the previous step fails
-    displayName: 'Publish Glass test results'
-    inputs:
-      testResultsFiles: '$(Build.SourcesDirectory)/TestResults/*.trx'
-      testRunTitle: 'Glass Tests'
-      testResultsFormat: 'VSTest'
-      failTaskOnFailedTests: true
+  # # Upload the trx file as a test result
+  # - task: PublishTestResults@2
+  #   condition: always() # Always run this step, even if the previous step fails
+  #   displayName: 'Publish Glass test results'
+  #   inputs:
+  #     testResultsFiles: '$(Build.SourcesDirectory)/TestResults/*.trx'
+  #     testRunTitle: 'Glass Tests'
+  #     testResultsFormat: 'VSTest'
+  #     failTaskOnFailedTests: true

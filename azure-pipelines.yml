@@ -156,6 +156,8 @@ extends:
 
         # check out code clean from source control
         - checkout: self
+          fetchDepth: 1
+          fetchTags: false
           clean: true
 
         # Non-PR steps  
