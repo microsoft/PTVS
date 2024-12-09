@@ -263,6 +263,13 @@ try {
     # install etwtrace
     Install-Package "etwtrace" $etwtraceVersion $outdir | Out-Null
 
+    # Delete an unsigned file from etwtrace that shouldn't be there.
+    # Remove this step once https://github.com/microsoft/python-etwtrace/issues/7 is closed.
+    $fileToDelete = "$outdir\etwtrace\test\DiagnosticsHub.InstrumentationCollector.dll"
+    if (Test-Path -Path $fileToDelete) {
+        Remove-Item -Path $fileToDelete | Out-Null
+    }
+
 } finally {
     Pop-Location
 }
