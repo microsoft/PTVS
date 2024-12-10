@@ -207,11 +207,12 @@ extends:
 
         # Publish test data
         - template: /Build/templates/publish_test_data.yml@self
-      - job: TestJob
-        steps:
-          # Run tests on mixed mode debugger but only for PR builds
-          - ${{ if in(variables['Build.Reason'], 'PullRequest') }}:
-            - template: /Build/templates/run_tests.yml@self
+      
+      # Run tests on mixed mode debugger but only for PR builds
+      - ${{ if in(variables['Build.Reason'], 'PullRequest') }}:
+        - job: Test
+          steps:
+          - template: /Build/templates/run_tests.yml@self
 
 
 
