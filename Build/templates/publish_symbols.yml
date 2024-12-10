@@ -31,6 +31,7 @@ steps:
       Contents: |
         **/*.pyd
       TargetFolder: '$(Build.ArtifactStagingDirectory)/symbols'
+      flattenFolders: true
 
   # Archive Symbols
   # When you insert your binaries into VS or ship them to any other client you need to archive your binaries & symbols to MSDL. 
