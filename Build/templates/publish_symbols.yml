@@ -2,7 +2,7 @@ steps:
 
   # Copy symbols that will be published
   - task: CopyFiles@2
-    displayName: 'Prepare for symbol publishing'
+    displayName: 'Copy symbols (PTVS)'
     inputs:
       SourceFolder: '$(Build.BinariesDirectory)/raw/binaries'
       Contents: |
@@ -21,6 +21,15 @@ steps:
         PyDebugAttach*.dll
         VsPyProf*.pdb
         VsPyProf*.dll
+      TargetFolder: '$(Build.ArtifactStagingDirectory)/symbols'
+  
+  # Copy etwtrace symbols that will be published
+  - task: CopyFiles@2
+    displayName: 'Copy symbols (etwtrace)'
+    inputs:
+      SourceFolder: '$(Build.BinariesDirectory)/etwtrace'
+      Contents: |
+        **/*.pyd
       TargetFolder: '$(Build.ArtifactStagingDirectory)/symbols'
 
   # Archive Symbols
