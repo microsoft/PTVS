@@ -26,8 +26,6 @@ variables:
 
 steps:
 
-- checkout: self
-
-- powershell: |
-    ./build/Run_Azdo_Pipeline.ps1 -organization $(ORGANIZATION) -project $(PROJECT) -pipelineId $(PIPELINE_ID) -runtimeParams $(RUNTIME_PARAMS) -token $(System.AccessToken)
-  displayName: 'Run Azure DevOps Pipeline'
+- script: |
+    echo "Printing foo"
+    echo ${{ parameters.foo }}
