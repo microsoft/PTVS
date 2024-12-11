@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Interpreter {
         // when queried directly (e.g. as HKCU\Software\Python\PythonCore\3.7),
         // but enumerating HKCU\Software\Python\PythonCore key does not
         // find it (because of deliberate limitations in Windows).
-        private static readonly string[] StoreAppTags = { "3.7", "3.8", "3.9" };
+        private static readonly string[] StoreAppTags = { "3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13" };
         private static readonly string[] StoreAppCompanies = { PythonCoreCompany };
 
         private readonly HashSet<string> _seenIds;
