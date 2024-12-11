@@ -210,7 +210,8 @@ extends:
 
       # Run tests on mixed mode debugger but only for PR builds
       - ${{ if in(variables['Build.Reason'], 'PullRequest') }}:
-        - job: TestJob
+        - job: test
+          displayName: Test
           steps:
           - template: /Build/templates/run_tests.yml@self
 
