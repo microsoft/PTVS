@@ -110,9 +110,11 @@ extends:
     settings:
       skipBuildTagsForGitHubPullRequests: true
     stages:
-    - stage: stage
+    - stage: build
+      displayName: Build
       jobs:
-      - job: BuildJob
+      - job: build
+        displayName: Build
         # If the pipeline publishes artifacts, use `templateContext` to define the artifacts.
         # This will enable 1ES PT to run SDL analysis tools on the artifacts and then upload them.
         templateContext:
@@ -205,11 +207,12 @@ extends:
 
         # Publish test data
         - template: /Build/templates/publish_test_data.yml@self
-      - job: TestJob
-        steps:
-          # Run tests on mixed mode debugger but only for PR builds
-          - ${{ if in(variables['Build.Reason'], 'PullRequest') }}:
-            - template: /Build/templates/run_tests.yml@self
+
+      # Run tests on mixed mode debugger but only for PR builds
+      - ${{ if in(variables['Build.Reason'], 'PullRequest') }}:
+        - job: TestJob
+          steps:
+          - template: /Build/templates/run_tests.yml@self
 
 
 
