@@ -59,7 +59,7 @@ steps:
     displayName: 'Restore glass binaries from cache'
     inputs:
       key: 'glass'
-      path: '$(Build.BinariesDirectory)\raw\binaries'
+      path: '$(Build.SourcesDirectory)\GlassTests'
       cacheHitVar: 'CACHE_RESTORED'
 
   - task: AzureCLI@2
@@ -117,4 +117,4 @@ steps:
     condition: and(succeeded(), eq(variables['CACHE_RESTORED'], 'false'))
     inputs:
       key: 'glass'
-      path: '$(Build.BinariesDirectory)\raw\binaries'
+      path: '$(Build.SourcesDirectory)\GlassTests'
