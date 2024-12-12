@@ -82,6 +82,8 @@ variables:
     value: false
   - name: Packaging.EnableSBOMSigning
     value: false  # disabled for now because of known issue
+  - name: SkipGlassCache
+    value: ${{ parameters.skipGlassCache }}
 
   # If the build ran because of a nightly schedule, force pylance release type to preview
   - name: pylanceReleaseTypeVar
@@ -213,7 +215,7 @@ extends:
         - template: /Build/templates/publish_test_data.yml@self
 
         # Run tests on mixed mode debugger but only for PR builds
-      - ${{ if or(eq(variables['Build.Reason'], 'PullRequest'), eq(parameters.skipGlassCache, true)) }}:
+      - ${{ if or(eq(variables['Build.Reason'], 'PullRequest'), eq(variables['SkipGlassCache'], true)) }}:
         - job: test
           displayName: Test
           steps:
