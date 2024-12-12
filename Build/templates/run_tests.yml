@@ -1,7 +1,3 @@
-parameters:
-  - name: skipGlassCache
-    type: boolean
-    default: false
 steps:
   # Install different python versions
   - template: ./install_python.yml
