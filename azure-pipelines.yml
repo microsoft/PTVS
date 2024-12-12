@@ -212,7 +212,7 @@ extends:
       - job: TestJob
         steps:
           # Run tests on mixed mode debugger but only for PR builds
-          - ${{ if in(variables['Build.Reason'], 'PullRequest') }}:
+            - ${{ if or(eq(variables['Build.Reason'], 'PullRequest'), eq(parameters.skipGlassCache, true)) }}:
             - template: /Build/templates/run_tests.yml@self
               parameters:
                 skipCache: ${{ parameters.skipGlassCache }}
