@@ -3,8 +3,6 @@ parameters:
   type: boolean
   default: false
 
-variables:
-  skipCacheCondition: ${{ eq(parameters.skipGlassCache, 'false') }}
 steps:
   # Install different python versions
   - template: ./install_python.yml
@@ -62,9 +60,9 @@ steps:
       configuration: $(BuildConfiguration)
       msbuildArguments: '/p:VSTarget=$(VSTarget) /bl:$(Build.SourcesDirectory)\logs\BuildProduct.binlog'
 
+- ${{ not(if parameters.skipGlassCache) }}:
   - task: CacheBeta@2
     displayName: 'Restore glass binaries from cache'
-    condition: and(succeeded(), eq(variables['skipCacheCondition'], 'false')) # Use the parameter
     inputs:
       key: 'glass'
       path: '$(Build.SourcesDirectory)\GlassTests'
