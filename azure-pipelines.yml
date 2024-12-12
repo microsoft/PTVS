@@ -19,6 +19,10 @@ parameters:
   displayName: Debugpy Version
   type: string
   default: latest
+- name: skipGlassCache
+  displayName: Skip Glass Cache
+  type: boolean
+  default: false
 
 # build number format 
 name: $(date:yy)$(DayOfYear)$(rev:.r)
@@ -78,8 +82,6 @@ variables:
     value: false
   - name: Packaging.EnableSBOMSigning
     value: false  # disabled for now because of known issue
-  - name: SkipGlassCache
-    value: false # Set to true to skip cache
 
   # If the build ran because of a nightly schedule, force pylance release type to preview
   - name: pylanceReleaseTypeVar
@@ -213,7 +215,7 @@ extends:
           - ${{ if in(variables['Build.Reason'], 'PullRequest') }}:
             - template: /Build/templates/run_tests.yml@self
               parameters:
-                skipCache: ${{ variables['SkipGlassCache'] }}
+                skipCache: ${{ parameters.skipGlassCache }}
 
 
 
