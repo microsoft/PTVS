@@ -212,7 +212,7 @@ extends:
         # Publish test data
         - template: /Build/templates/publish_test_data.yml@self
 
-      # Run tests on mixed mode debugger but only for PR builds
+        # Run tests on mixed mode debugger but only for PR builds
         - ${{ if or(eq(variables['Build.Reason'], 'PullRequest'), eq(parameters.skipGlassCache, true)) }}:
           - job: test
             displayName: Test
