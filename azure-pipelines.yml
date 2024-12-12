@@ -214,10 +214,10 @@ extends:
 
       # Run tests on mixed mode debugger but only for PR builds
         - ${{ if or(eq(variables['Build.Reason'], 'PullRequest'), eq(parameters.skipGlassCache, true)) }}:
-        - job: test
-          displayName: Test
-          steps:
-          - template: /Build/templates/run_tests.yml@self
+          - job: test
+            displayName: Test
+            steps:
+            - template: /Build/templates/run_tests.yml@self
               parameters:
                 skipCache: ${{ parameters.skipGlassCache }}
 
