@@ -221,7 +221,7 @@ extends:
           steps:
           - template: /Build/templates/run_tests.yml@self
             parameters:
-              skipCache: ${{ parameters.skipGlassCache }}
+              skipGlassCache: ${{ parameters.skipGlassCache }}
 
 
 
