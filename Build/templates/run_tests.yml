@@ -60,9 +60,9 @@ steps:
       configuration: $(BuildConfiguration)
       msbuildArguments: '/p:VSTarget=$(VSTarget) /bl:$(Build.SourcesDirectory)\logs\BuildProduct.binlog'
 
-- ${{ if not(eq(variables['SkipGlassCache'], true)) }}:
   - task: CacheBeta@2
     displayName: 'Restore glass binaries from cache'
+    condition: not(eq('${{ parameters.skipGlassCache }}', 'true'))
     inputs:
       key: 'glass'
       path: '$(Build.SourcesDirectory)\GlassTests'
