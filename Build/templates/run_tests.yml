@@ -1,3 +1,8 @@
+parameters:
+- name: skipGlassCache
+  type: boolean
+  default: false
+
 steps:
   # Install different python versions
   - template: ./install_python.yml
@@ -55,8 +60,17 @@ steps:
       configuration: $(BuildConfiguration)
       msbuildArguments: '/p:VSTarget=$(VSTarget) /bl:$(Build.SourcesDirectory)\logs\BuildProduct.binlog'
 
+  - task: CacheBeta@2
+    displayName: 'Restore glass binaries from cache'
+    condition: eq('${{ parameters.skipGlassCache }}', 'false')
+    inputs:
+      key: 'glass'
+      path: '$(Build.SourcesDirectory)\GlassTests'
+      cacheHitVar: 'CACHE_RESTORED'
+
   - task: AzureCLI@2
     displayName: 'Acquire an AAD token from a User-Assigned Managed Identity and save it as secret variable DropToken'
+    condition: and(succeeded(), or(eq(variables['CACHE_RESTORED'], 'false'), eq('${{ parameters.skipGlassCache }}', 'true')))
     inputs:
       azureSubscription: 'PylanceSecureVsIdePublishWithManagedIdentity'
       scriptType: 'pscore'
@@ -72,6 +86,7 @@ steps:
   # Setup the glass test folder
   - task: PythonScript@0
     displayName: 'Setup glass test folder'
+    condition: and(succeeded(), or(eq(variables['CACHE_RESTORED'], 'false'), eq('${{ parameters.skipGlassCache }}', 'true')))
     env:
       SYSTEM_ACCESSTOKEN: $(DropToken)
     inputs:
@@ -102,3 +117,10 @@ steps:
       testRunTitle: 'Glass Tests'
       testResultsFormat: 'VSTest'
       failTaskOnFailedTests: true
+
+  - task: CacheBeta@2
+    displayName: 'Cache glass binaries'
+    condition: and(succeeded(), or(eq(variables['CACHE_RESTORED'], 'false'), eq('${{ parameters.skipGlassCache }}', 'true')))
+    inputs:
+      key: 'glass'
+      path: '$(Build.SourcesDirectory)\GlassTests'
