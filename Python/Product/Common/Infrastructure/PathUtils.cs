@@ -183,6 +183,10 @@ namespace Microsoft.PythonTools.Infrastructure {
         /// root or a subdirectory of root.
         /// </summary>
         public static bool IsSubpathOf(string root, string path) {
+            if (string.IsNullOrEmpty(root)) {
+                return false;
+            }
+            
             if (HasEndSeparator(root) && !path.Contains("..") && path.StartsWithOrdinal(root)) {
                 // Quick return, but only where the paths are already normalized and
                 // have matching case.
