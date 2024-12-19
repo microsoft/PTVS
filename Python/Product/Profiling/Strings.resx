@@ -302,4 +302,13 @@ Error:
   <data name="CannotFindGeneratedFile" xml:space="preserve">
     <value>Can't find expected output file</value>
   </data>
+  <data name="InterpreterPathCannotBeNull" xml:space="preserve">
+    <value>Interpreter path cannot be null or empty.</value>
+  </data>
+  <data name="InterpreterNotFoundAtPath" xml:space="preserve">
+    <value>Python interpreter not found at path:</value>
+  </data>
+  <data name="FailedToStartProfilerProcess" xml:space="preserve">
+    <value>Failed to start the profiler process.</value>
+  </data>
 </root>

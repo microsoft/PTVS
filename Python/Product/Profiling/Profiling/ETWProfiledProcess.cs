@@ -31,8 +31,7 @@ namespace Microsoft.PythonTools.Profiling {
         public ETWProfiledProcess(string exe, string args, string dir, Dictionary<string, string> envVars) {
 
             if (string.IsNullOrEmpty(exe)) {
-                // TODO: Localize the error message.
-                throw new ArgumentNullException("Interpreter path cannot be null or empty", nameof(exe));
+                throw new ArgumentNullException(Strings.InterpreterPathCannotBeNull, nameof(exe));
             }
 
             var etwTracePackageDirectory = Path.GetDirectoryName(PythonToolsInstallPath.GetFile("etwtrace\\__init__.py", typeof(ETWProfiledProcess).Assembly));
@@ -54,8 +53,7 @@ namespace Microsoft.PythonTools.Profiling {
 
             // Validate interpreter path
             if (!File.Exists(_interpreterPath)) {
-                // TODO: Localize the error message.
-                throw new FileNotFoundException($"Python interpreter not found at path: {_interpreterPath}");
+                throw new FileNotFoundException(string.Format(Strings.InterpreterNotFoundAtPath, _interpreterPath));
             }
 
             var startInfo = new ProcessStartInfo {
@@ -117,8 +115,7 @@ namespace Microsoft.PythonTools.Profiling {
                 //_process.BeginOutputReadLine();
                 //_process.BeginErrorReadLine();
             } catch (Exception ex) {
-                // TODO: Localize the error message.
-                throw new InvalidOperationException("Failed to start the profiler process.", ex);
+                throw new InvalidOperationException(Strings.FailedToStartProfilerProcess, ex);
             }
         }
 

@@ -19,7 +19,7 @@ namespace Microsoft.PythonTools.Profiling {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Strings {
@@ -187,6 +187,33 @@ namespace Microsoft.PythonTools.Profiling {
         public static string FailedToReadPerformanceSession {
             get {
                 return ResourceManager.GetString("FailedToReadPerformanceSession", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Interpreter path cannot be null or empty.
+        /// </summary>
+        public static string InterpreterPathCannotBeNull {
+            get {
+                return ResourceManager.GetString("InterpreterPathCannotBeNull", resourceCulture);
+            }
+        }
+                
+        /// <summary>
+        ///   Looks up a localized string similar to Python interpreter not found at path:
+        /// </summary>
+        public static string InterpreterNotFoundAtPath {
+            get {
+                return ResourceManager.GetString("InterpreterNotFoundAtPath", resourceCulture);
+            }
+        }
+                        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to start the profiler process.
+        /// </summary>
+        public static string FailedToStartProfilerProcess {
+            get {
+                return ResourceManager.GetString("FailedToStartProfilerProcess", resourceCulture);
             }
         }
         
