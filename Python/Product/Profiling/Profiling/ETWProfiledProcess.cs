@@ -35,10 +35,9 @@ namespace Microsoft.PythonTools.Profiling {
                 throw new ArgumentNullException("Interpreter path cannot be null or empty", nameof(exe));
             }
 
-            // var etwTracePackageDirectory = Path.GetDirectoryName(PythonToolsInstallPath.GetFile("etwtrace\\__init__.py", typeof(ETWProfiledProcess).Assembly));
-            // _etwTracePackageDirectory = etwTracePackageDirectory;
-            _etwTracePackageDirectory = "C:\\users\\stellahuang\\appdata\\local\\microsoft\\visualstudio\\17.0_b3c0adfcexp\\extensions\\microsoft corporation\\python - profiling\\17.0.0";
-
+            var etwTracePackageDirectory = Path.GetDirectoryName(PythonToolsInstallPath.GetFile("etwtrace\\__init__.py", typeof(ETWProfiledProcess).Assembly));
+            var parentDirectory = Path.GetDirectoryName(etwTracePackageDirectory);
+            _etwTracePackageDirectory = parentDirectory;
 
             _interpreterPath = exe;
             _scriptArguments = args ?? string.Empty;
@@ -61,60 +60,62 @@ namespace Microsoft.PythonTools.Profiling {
 
             var startInfo = new ProcessStartInfo {
                 FileName = _interpreterPath,
-                // Arguments = $"-m etwtrace --diaghub -- {_scriptArguments}",
-                Arguments = $"-m etwtrace --capture C:\\Users\\stellahuang\\source\\repos\\PythonApplication6\\output.etl -- {_scriptArguments}",
-                // Arguments = _scriptArguments,
+                Arguments = $"-m etwtrace --diaghub -- {_scriptArguments}",
+                // Arguments = $"-m etwtrace --capture output.etl -- {_scriptArguments}", // Used for testing
+                // Arguments = _scriptArguments, // Used for testing
                 WorkingDirectory = _projectDirectory,
-                // UseShellExecute = false,
-                UseShellExecute = true,
+                UseShellExecute = false,
+                // UseShellExecute = true, // Used for testing
                 CreateNoWindow = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                Verb = "runas" // Request admin privileges, used for testing, to be removed.
+                // Verb = "runas" // Request admin privileges, used for testing.
             };
 
-            //// Add environment variables
-            //if (_envVars != null) {
-            //    foreach (var keyValue in _envVars) {
-            //        startInfo.EnvironmentVariables[keyValue.Key] = keyValue.Value;
-            //    }
-            //}
+            // Add environment variables
+            if (_envVars != null) {
+                foreach (var keyValue in _envVars) {
+                    startInfo.EnvironmentVariables[keyValue.Key] = keyValue.Value;
+                }
+            }
 
 
-            //// Add PYTHONPATH to locate the etwtrace module
-            //if (!string.IsNullOrEmpty(_etwTracePackageDirectory)) {
-            //    string existingPythonPath = string.Empty;
-            //    if (startInfo.EnvironmentVariables.ContainsKey("PYTHONPATH")) {
-            //        existingPythonPath = startInfo.EnvironmentVariables["PYTHONPATH"];
-            //    }
+            // Add PYTHONPATH to locate the etwtrace module
+            if (!string.IsNullOrEmpty(_etwTracePackageDirectory)) {
+                string existingPythonPath = string.Empty;
+                if (startInfo.EnvironmentVariables.ContainsKey("PYTHONPATH")) {
+                    existingPythonPath = startInfo.EnvironmentVariables["PYTHONPATH"];
+                }
 
-            //    // Append the etwtrace directory to the existing PYTHONPATH
-            //    startInfo.EnvironmentVariables["PYTHONPATH"] = string.IsNullOrEmpty(existingPythonPath)
-            //        ? _etwTracePackageDirectory
-            //        : $"{existingPythonPath};{_etwTracePackageDirectory}";
-            //}
+                // Append the etwtrace directory to the existing PYTHONPATH
+                startInfo.EnvironmentVariables["PYTHONPATH"] = string.IsNullOrEmpty(existingPythonPath)
+                    ? _etwTracePackageDirectory
+                    : $"{existingPythonPath};{_etwTracePackageDirectory}";
+            }
 
 
             _process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
             _process.Exited += (sender, args) => ProcessExited?.Invoke(this, EventArgs.Empty);
-            _process.OutputDataReceived += (sender, e) => {
-                if (!string.IsNullOrEmpty(e.Data)) {
-                    Debug.WriteLine($"[StdOut]: {e.Data}");
-                }
-            };
 
-            _process.ErrorDataReceived += (sender, e) => {
-                if (!string.IsNullOrEmpty(e.Data)) {
-                    Debug.WriteLine($"PYTHONPATH: {startInfo.EnvironmentVariables["PYTHONPATH"]}");
-                    Debug.WriteLine($"[StdErr]: {e.Data}");
-                }
-            };
+            // Used for testing.
+            //_process.OutputDataReceived += (sender, e) => {
+            //    if (!string.IsNullOrEmpty(e.Data)) {
+            //        Debug.WriteLine($"[StdOut]: {e.Data}");
+            //    }
+            //};
+
+            //_process.ErrorDataReceived += (sender, e) => {
+            //    if (!string.IsNullOrEmpty(e.Data)) {
+            //        Debug.WriteLine($"PYTHONPATH: {startInfo.EnvironmentVariables["PYTHONPATH"]}");
+            //        Debug.WriteLine($"[StdErr]: {e.Data}");
+            //    }
+            //};
 
 
             try {
                 _process.Start();
-                _process.BeginOutputReadLine();
-                _process.BeginErrorReadLine();
+                //_process.BeginOutputReadLine();
+                //_process.BeginErrorReadLine();
             } catch (Exception ex) {
                 // TODO: Localize the error message.
                 throw new InvalidOperationException("Failed to start the profiler process.", ex);
