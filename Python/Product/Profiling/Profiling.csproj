@@ -63,6 +63,7 @@
     <Compile Include="Profiling\IPythonPerformanceReport.cs" />
     <Compile Include="Profiling\IPythonProfileSession.cs" />
     <Compile Include="Profiling\IPythonProfiling.cs" />
+    <Compile Include="Profiling\ETWProfiledProcess.cs" />
     <Compile Include="Profiling\ProfilingSessionEditorFactory.cs" />
     <Compile Include="Profiling\CustomPythonInterpreterView.cs" />
     <Compile Include="Profiling\PythonInterpreterView.cs" />

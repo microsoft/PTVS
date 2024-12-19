@@ -64,7 +64,8 @@ namespace Microsoft.PythonTools.Profiling {
     [ProvideAutomationObject("PythonProfiling")]
     internal sealed class PythonProfilingPackage : AsyncPackage {
         internal static PythonProfilingPackage Instance;
-        private static ProfiledProcess _profilingProcess;   // process currently being profiled
+        private static ProfiledProcess _profilingProcess;   // etwProcess currently being profiled
+        private static ETWProfiledProcess _etwProfilingProcess;
         internal static readonly string PythonProjectGuid = "{888888a0-9f3d-457c-b088-3a5042f75d52}";
         internal static readonly string PerformanceFileFilter = Strings.PerformanceReportFilesFilter;
         private AutomationProfiling _profilingAutomation;
@@ -87,6 +88,11 @@ namespace Microsoft.PythonTools.Profiling {
                 _profilingProcess = null;
                 if (process != null) {
                     process.Dispose();
+                }
+                var etwProcess = _etwProfilingProcess;
+                _etwProfilingProcess = null;
+                if (etwProcess != null) {
+                    etwProcess.Dispose();
                 }
             }
             base.Dispose(disposing);
@@ -306,6 +312,27 @@ namespace Microsoft.PythonTools.Profiling {
         }
 
         private static void RunProfiler(SessionNode session, LaunchConfiguration config, bool openReport) {
+            var etwProcess = new ETWProfiledProcess(
+                config.GetInterpreterPath(),
+                string.Join(" ", ProcessOutput.QuoteSingleArgument(config.ScriptName), config.ScriptArguments),
+                config.WorkingDirectory,
+                session._serviceProvider.GetPythonToolsService().GetFullEnvironment(config)
+            );
+
+            etwProcess.ProcessExited += (sender, args) => {
+                _etwProfilingProcess = null;
+                _stopCommand.Enabled = false;
+                _startCommand.Enabled = true;
+            };
+
+            etwProcess.StartProfiling();
+            _etwProfilingProcess = etwProcess;
+            _stopCommand.Enabled = true;
+            _startCommand.Enabled = false;
+        }
+
+        // The old profiler only support Python versions <= 3.9, to be removed after the new profiler is implemented.
+        private static void RunOldProfiler(SessionNode session, LaunchConfiguration config, bool openReport) {
             var process = new ProfiledProcess(
                 (PythonToolsService)session._serviceProvider.GetService(typeof(PythonToolsService)),
                 config.GetInterpreterPath(),
