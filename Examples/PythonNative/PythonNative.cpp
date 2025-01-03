@@ -13,12 +13,13 @@ DWORD WINAPI runner(LPVOID lpParam)
     std::filesystem::path cwd = std::filesystem::current_path();
     std::filesystem::path startFile = cwd / "runner.py";
 
-    const char * startFileStr = startFile.string().c_str();
+    std::string str = startFile.string();
+    const char * startFileStr = str.c_str();
 
     PyObject* startObj = Py_BuildValue("s", startFileStr);
     FILE* file = _Py_fopen_obj(startObj, "rb+");
     if (file != NULL) {
-        PyRun_SimpleFile(file, startFileStr);
+        PyRun_SimpleFileEx(file, startFileStr, 1);
     }
 
     Py_Finalize();

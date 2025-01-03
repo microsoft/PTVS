@@ -19,6 +19,10 @@ parameters:
   displayName: Debugpy Version
   type: string
   default: latest
+- name: skipGlassCache
+  displayName: Skip Glass Cache
+  type: boolean
+  default: false
 
 # build number format 
 name: $(date:yy)$(DayOfYear)$(rev:.r)
@@ -78,6 +82,8 @@ variables:
     value: false
   - name: Packaging.EnableSBOMSigning
     value: false  # disabled for now because of known issue
+  - name: SkipGlassCache
+    value: ${{ parameters.skipGlassCache }}
 
   # If the build ran because of a nightly schedule, force pylance release type to preview
   - name: pylanceReleaseTypeVar
@@ -110,9 +116,11 @@ extends:
     settings:
       skipBuildTagsForGitHubPullRequests: true
     stages:
-    - stage: stage
+    - stage: build
+      displayName: Build
       jobs:
-      - job: job
+      - job: build
+        displayName: Build
         # If the pipeline publishes artifacts, use `templateContext` to define the artifacts.
         # This will enable 1ES PT to run SDL analysis tools on the artifacts and then upload them.
         templateContext:
@@ -205,4 +213,16 @@ extends:
 
         # Publish test data
         - template: /Build/templates/publish_test_data.yml@self
+
+        # Run tests on mixed mode debugger but only for PR builds
+      - ${{ if or(eq(variables['Build.Reason'], 'PullRequest'), eq(variables['SkipGlassCache'], true)) }}:
+        - job: test
+          displayName: Test
+          steps:
+          - template: /Build/templates/run_tests.yml@self
+            parameters:
+              skipGlassCache: ${{ parameters.skipGlassCache }}
+
+
+
 

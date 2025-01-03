@@ -58,21 +58,24 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies {
             public static readonly FactoryFunc Factory;
 
             static FactoryBuilder() {
-                FactoryFunc nonPolymorphicFactory;
-                var ctor = typeof(TProxy).GetConstructor(new[] { typeof(DkmProcess), typeof(ulong) });
-                if (ctor != null) {
-                    var processParam = Expression.Parameter(typeof(DkmProcess));
-                    var addressParam = Expression.Parameter(typeof(ulong));
-                    var polymorphicParam = Expression.Parameter(typeof(bool));
-                    nonPolymorphicFactory = Expression.Lambda<FactoryFunc>(
-                        Expression.New(ctor, processParam, addressParam),
-                        new[] { processParam, addressParam, polymorphicParam })
-                        .Compile();
-                } else {
-                    nonPolymorphicFactory = (process, address, polymorphic) => {
-                        Debug.Fail("IDebuggeeReference-derived type " + typeof(TProxy).Name + " does not have a (DkmProcess, ulong) constructor.");
-                        throw new NotSupportedException();
-                    };
+                FactoryFunc nonPolymorphicFactory = (process, address, polymorphic) => {
+                    Debug.Fail("IDebuggeeReference-derived type " + typeof(TProxy).Name + " does not have a (DkmProcess, ulong) constructor or cannot be instantiated.");
+                    throw new NotSupportedException();
+                };
+                var type = typeof(TProxy);
+
+                // Make sure we have a constructor that takes a DkmProcess and a ulong.  If we don't, we can't instantiate the type.
+                if (!type.IsAbstract) { 
+                    var ctor = type.GetConstructor(new[] { typeof(DkmProcess), typeof(ulong) });
+                    if (ctor != null) {
+                        var processParam = Expression.Parameter(typeof(DkmProcess));
+                        var addressParam = Expression.Parameter(typeof(ulong));
+                        var polymorphicParam = Expression.Parameter(typeof(bool));
+                        nonPolymorphicFactory = Expression.Lambda<FactoryFunc>(
+                            Expression.New(ctor, processParam, addressParam),
+                            new[] { processParam, addressParam, polymorphicParam })
+                            .Compile();
+                    }
                 }
 
                 if (typeof(IPyObject).IsAssignableFrom(typeof(TProxy))) {

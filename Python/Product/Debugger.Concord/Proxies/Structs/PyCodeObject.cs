@@ -14,60 +14,30 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.VisualStudio.Debugger;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
-    internal class PyCodeObject : PyObject {
-        public class Fields {
-            public StructField<Int32Proxy> co_nlocals;
-            public StructField<PointerProxy<PyTupleObject>> co_names;
-            public StructField<PointerProxy<PyTupleObject>> co_varnames;
-            public StructField<PointerProxy<PyTupleObject>> co_freevars;
-            public StructField<PointerProxy<PyTupleObject>> co_cellvars;
-            public StructField<PointerProxy<IPyBaseStringObject>> co_filename;
-            public StructField<PointerProxy<IPyBaseStringObject>> co_name;
-            public StructField<Int32Proxy> co_firstlineno;
-        }
-
-        private readonly Fields _fields;
-
+    internal abstract class PyCodeObject : PyObject {
         public PyCodeObject(DkmProcess process, ulong address)
             : base(process, address) {
-            InitializeStruct(this, out _fields);
-            CheckPyType<PyCodeObject>();
         }
 
-        public Int32Proxy co_nlocals {
-            get { return GetFieldProxy(_fields.co_nlocals); }
-        }
+        public abstract Int32Proxy co_nlocals { get; }
 
-        public PointerProxy<PyTupleObject> co_names {
-            get { return GetFieldProxy(_fields.co_names); }
-        }
+        public abstract PointerProxy<PyTupleObject> co_names { get; }
 
-        public PointerProxy<PyTupleObject> co_varnames {
-            get { return GetFieldProxy(_fields.co_varnames); }
-        }
+        public abstract IWritableDataProxy<PyTupleObject> co_varnames { get; }
 
-        public PointerProxy<PyTupleObject> co_freevars {
-            get { return GetFieldProxy(_fields.co_freevars); }
-        }
+        public abstract IWritableDataProxy<PyTupleObject> co_freevars { get; }
 
-        public PointerProxy<PyTupleObject> co_cellvars {
-            get { return GetFieldProxy(_fields.co_cellvars); }
-        }
+        public abstract IWritableDataProxy<PyTupleObject> co_cellvars { get; }
 
-        public PointerProxy<IPyBaseStringObject> co_filename {
-            get { return GetFieldProxy(_fields.co_filename); }
-        }
+        public abstract PointerProxy<IPyBaseStringObject> co_filename { get; }
 
-        public PointerProxy<IPyBaseStringObject> co_name {
-            get { return GetFieldProxy(_fields.co_name); }
-        }
+        public abstract PointerProxy<IPyBaseStringObject> co_name { get; }
 
-        public Int32Proxy co_firstlineno {
-            get { return GetFieldProxy(_fields.co_firstlineno); }
-        }
+        public abstract Int32Proxy co_firstlineno { get; }
 
         public override void Repr(ReprBuilder builder) {
             string name = co_name.TryRead().ToStringOrNull() ?? "???";

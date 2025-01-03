@@ -1,87 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <GlassTestGroup xmlns="http://schemas.microsoft.com/vstudio/diagnostics/glasstestmanagement/2014">
   <Configurations> 
-    <StandardConfiguration Name="36-32" TargetArchitecture="x86">
+    <StandardConfiguration Name="39-32" TargetArchitecture="x86">
       <Setup>
-        <ImportPropertyGroup>..\Python\Python36.32.GlassTestProps</ImportPropertyGroup>
-        <ImportPropertyGroup>..\..\GlassStandAlone\Native\InProcPdb.GlassTestProps</ImportPropertyGroup>
-        <ImportPropertyGroup>..\..\GlassStandAlone\Sync.GlassTestProps</ImportPropertyGroup>
+        <ImportPropertyGroup>..\Python\Python39.32.GlassTestProps</ImportPropertyGroup>
+        <ImportPropertyGroup>..\..\Native\InProcPdb.GlassTestProps</ImportPropertyGroup>
+        <ImportPropertyGroup>..\..\Sync.GlassTestProps</ImportPropertyGroup>
       </Setup>
       <TestSetup>
-        <ImportPropertyGroup>..\Python\Python36.32.GlassTestProps</ImportPropertyGroup>
+        <ImportPropertyGroup>..\Python\Python39.32.GlassTestProps</ImportPropertyGroup>
         <RunScript Condition="Exists('$(TestDir)\setup.py')" RunAs="VSUser">..\tools\RunPythonSetupPy.cmd "$(PythonExe)" "$(TestDir)\$(OutDir)"</RunScript>
       </TestSetup>
     </StandardConfiguration>
-    <StandardConfiguration Name="36-64" TargetArchitecture="x64">
+    <StandardConfiguration Name="39-64" TargetArchitecture="x64">
       <Setup>
-        <ImportPropertyGroup>..\Python\Python36.64.GlassTestProps</ImportPropertyGroup>
-        <ImportPropertyGroup>..\..\GlassStandAlone\Native\InProcPdb.GlassTestProps</ImportPropertyGroup>
-        <ImportPropertyGroup>..\..\GlassStandAlone\Sync.GlassTestProps</ImportPropertyGroup>
+        <ImportPropertyGroup>..\Python\Python39.64.GlassTestProps</ImportPropertyGroup>
+        <ImportPropertyGroup>..\..\Native\InProcPdb.GlassTestProps</ImportPropertyGroup>
+        <ImportPropertyGroup>..\..\Sync.GlassTestProps</ImportPropertyGroup>
       </Setup>
       <TestSetup>
-        <ImportPropertyGroup>..\Python\Python36.64.GlassTestProps</ImportPropertyGroup>
-        <RunScript Condition="Exists('$(TestDir)\setup.py')" RunAs="VSUser">..\tools\RunPythonSetupPy.cmd "$(PythonExe)" "$(TestDir)\$(OutDir)"</RunScript>
-      </TestSetup>
-    </StandardConfiguration>
-    <StandardConfiguration Name="37-32" TargetArchitecture="x86">
-      <Setup>
-        <ImportPropertyGroup>..\Python\Python37.32.GlassTestProps</ImportPropertyGroup>
-        <ImportPropertyGroup>..\..\GlassStandAlone\Native\InProcPdb.GlassTestProps</ImportPropertyGroup>
-        <ImportPropertyGroup>..\..\GlassStandAlone\Sync.GlassTestProps</ImportPropertyGroup>
-      </Setup>
-      <TestSetup>
-        <ImportPropertyGroup>..\Python\Python37.32.GlassTestProps</ImportPropertyGroup>
-        <RunScript Condition="Exists('$(TestDir)\setup.py')" RunAs="VSUser">..\tools\RunPythonSetupPy.cmd "$(PythonExe)" "$(TestDir)\$(OutDir)"</RunScript>
-      </TestSetup>
-    </StandardConfiguration>
-    <StandardConfiguration Name="37-64" TargetArchitecture="x64">
-      <Setup>
-        <ImportPropertyGroup>..\Python\Python37.64.GlassTestProps</ImportPropertyGroup>
-        <ImportPropertyGroup>..\..\GlassStandAlone\Native\InProcPdb.GlassTestProps</ImportPropertyGroup>
-        <ImportPropertyGroup>..\..\GlassStandAlone\Sync.GlassTestProps</ImportPropertyGroup>
-      </Setup>
-      <TestSetup>
-        <ImportPropertyGroup>..\Python\Python37.64.GlassTestProps</ImportPropertyGroup>
-        <RunScript Condition="Exists('$(TestDir)\setup.py')" RunAs="VSUser">..\tools\RunPythonSetupPy.cmd "$(PythonExe)" "$(TestDir)\$(OutDir)"</RunScript>
-      </TestSetup>
-    </StandardConfiguration>
-    <StandardConfiguration Name="38-32" TargetArchitecture="x86">
-      <Setup>
-        <ImportPropertyGroup>..\Python\Python38.32.GlassTestProps</ImportPropertyGroup>
-        <ImportPropertyGroup>..\..\GlassStandAlone\Native\InProcPdb.GlassTestProps</ImportPropertyGroup>
-        <ImportPropertyGroup>..\..\GlassStandAlone\Sync.GlassTestProps</ImportPropertyGroup>
-      </Setup>
-      <TestSetup>
-        <ImportPropertyGroup>..\Python\Python38.32.GlassTestProps</ImportPropertyGroup>
-        <RunScript Condition="Exists('$(TestDir)\setup.py')" RunAs="VSUser">..\tools\RunPythonSetupPy.cmd "$(PythonExe)" "$(TestDir)\$(OutDir)"</RunScript>
-      </TestSetup>
-    </StandardConfiguration>
-    <StandardConfiguration Name="38-64" TargetArchitecture="x64">
-      <Setup>
-        <ImportPropertyGroup>..\Python\Python38.64.GlassTestProps</ImportPropertyGroup>
-        <ImportPropertyGroup>..\..\GlassStandAlone\Native\InProcPdb.GlassTestProps</ImportPropertyGroup>
-        <ImportPropertyGroup>..\..\GlassStandAlone\Sync.GlassTestProps</ImportPropertyGroup>
-      </Setup>
-      <TestSetup>
-        <ImportPropertyGroup>..\Python\Python38.64.GlassTestProps</ImportPropertyGroup>
-        <RunScript Condition="Exists('$(TestDir)\setup.py')" RunAs="VSUser">..\tools\RunPythonSetupPy.cmd "$(PythonExe)" "$(TestDir)\$(OutDir)"</RunScript>
-      </TestSetup>
-    </StandardConfiguration>
-    <StandardConfiguration Name="27-32" TargetArchitecture="x86">
-      <Setup>
-        <ImportPropertyGroup>..\Python\Python27.32.GlassTestProps</ImportPropertyGroup>
-      </Setup>
-      <TestSetup>
-        <ImportPropertyGroup>..\Python\Python27.32.GlassTestProps</ImportPropertyGroup>
-        <RunScript Condition="Exists('$(TestDir)\setup.py')" RunAs="VSUser">..\tools\RunPythonSetupPy.cmd "$(PythonExe)" "$(TestDir)\$(OutDir)"</RunScript>
-      </TestSetup>
-    </StandardConfiguration>
-    <StandardConfiguration Name="27-64" TargetArchitecture="x64">
-      <Setup>
-        <ImportPropertyGroup>..\Python\Python27.64.GlassTestProps</ImportPropertyGroup>
-      </Setup>
-      <TestSetup>
-        <ImportPropertyGroup>..\Python\Python27.64.GlassTestProps</ImportPropertyGroup>
+        <ImportPropertyGroup>..\Python\Python39.64.GlassTestProps</ImportPropertyGroup>
         <RunScript Condition="Exists('$(TestDir)\setup.py')" RunAs="VSUser">..\tools\RunPythonSetupPy.cmd "$(PythonExe)" "$(TestDir)\$(OutDir)"</RunScript>
       </TestSetup>
     </StandardConfiguration>

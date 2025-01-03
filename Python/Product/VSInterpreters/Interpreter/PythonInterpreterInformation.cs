@@ -17,7 +17,7 @@
 using System;
 
 namespace Microsoft.PythonTools.Interpreter {
-    class PythonInterpreterInformation {
+    public class PythonInterpreterInformation {
 #if !NO_FACTORIES
         private IPythonInterpreterFactory _factory;
 #endif

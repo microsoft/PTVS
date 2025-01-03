@@ -444,6 +444,15 @@ namespace Microsoft.PythonTools.Interpreter {
                                             .Where(p => p.IsValid)
                                             .OrderBy(p => p.Name)
                                             .ToList();
+
+
+                                        if(packages.Count() == 0 && proc.StandardErrorLines.Any()) {
+                                            Debug.WriteLine("Failed to run pip to collect packages");
+                                            foreach (var line in proc.StandardErrorLines) {
+                                                Debug.WriteLine(line);
+                                            }
+                                            packages = null;
+                                        }
                                     } catch (JsonException ex) {
                                         Debug.WriteLine("Failed to parse: {0}".FormatInvariant(ex.Message));
                                         foreach (var l in proc.StandardOutputLines) {

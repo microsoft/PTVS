@@ -26,7 +26,7 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Interpreter {
-    class PythonRegistrySearch {
+    public class PythonRegistrySearch {
         public const string PythonCoreCompanyDisplayName = "Python Software Foundation";
         public const string PythonCoreSupportUrl = "https://www.python.org/";
         public const string PythonCoreCompany = "PythonCore";

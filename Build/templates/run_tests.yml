@@ -1,0 +1,126 @@
+parameters:
+- name: skipGlassCache
+  type: boolean
+  default: false
+
+steps:
+  # Install different python versions
+  - template: ./install_python.yml
+    parameters:
+      pythonVersion: '3.9.13' # Last version with an installer
+  - template: ./install_python.yml
+    parameters:
+      pythonVersion: '3.10.11' # Last version with an installer
+  - template: ./install_python.yml
+    parameters:
+      pythonVersion: '3.11.9' # Last version with an installer
+  - template: ./install_python.yml
+    parameters:
+      pythonVersion: '3.12.7'
+      outputVar: InstallPython312
+  - template: ./install_python.yml
+    parameters:
+      pythonVersion: '3.13.0'
+  
+  # Find the environment variable for the install of 3.12
+  - powershell: |
+      $suffix = '_INSTALLPYTHON312'
+      $envVars = Get-ChildItem Env:
+
+      foreach ($envVar in $envVars) {
+        if ($envVar.Name.EndsWith($suffix)) {
+          echo "##vso[task.setvariable variable=PYTHON_INTERPRETER]$($envVar.Value)\python.exe"
+          break
+        }
+      }  
+    displayName: 'Set PYTHON_INTERPRETER variable'
+
+  - task: PythonScript@0
+    displayName: 'Test python path'
+    env:
+      SYSTEM_ACCESSTOKEN: $(DropToken)
+    inputs:
+      scriptSource: 'inline' # 'filePath' | 'inline'. Required. Script source. Default: filePath.
+      script: |
+        import sys
+        print(sys.executable)
+        print(sys.version)
+        print(sys.path)
+      workingDirectory: $(Build.SourcesDirectory)
+      failOnStderr: true
+      pythonInterpreter: $(PYTHON_INTERPRETER)
+
+  # Build the product
+  - task: MSBuild@1
+    displayName: 'Build product'
+    inputs:
+      solution: $(Build.SourcesDirectory)/Python/Product/dirs.proj
+      msbuildVersion: $(MsBuildVersion)
+      platform: $(Platform)
+      configuration: $(BuildConfiguration)
+      msbuildArguments: '/p:VSTarget=$(VSTarget) /bl:$(Build.SourcesDirectory)\logs\BuildProduct.binlog'
+
+  - task: CacheBeta@2
+    displayName: 'Restore glass binaries from cache'
+    condition: eq('${{ parameters.skipGlassCache }}', 'false')
+    inputs:
+      key: 'glass'
+      path: '$(Build.SourcesDirectory)\GlassTests'
+      cacheHitVar: 'CACHE_RESTORED'
+
+  - task: AzureCLI@2
+    displayName: 'Acquire an AAD token from a User-Assigned Managed Identity and save it as secret variable DropToken'
+    condition: and(succeeded(), or(eq(variables['CACHE_RESTORED'], 'false'), eq('${{ parameters.skipGlassCache }}', 'true')))
+    inputs:
+      azureSubscription: 'PylanceSecureVsIdePublishWithManagedIdentity'
+      scriptType: 'pscore'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        # if this fails, check out this bash script that includes diagnostics:
+        # https://gist.github.com/johnterickson/19f80a3e969e39f1000d118739176e62
+        
+        # Note that the resoruce is specified to limit the token to Azure DevOps
+        $token = az account get-access-token --query accessToken --resource 499b84ac-1321-427f-aa17-267ca6975798 -o tsv
+        Write-Host "##vso[task.setvariable variable=DropToken;issecret=true]$token"      
+
+  # Setup the glass test folder
+  - task: PythonScript@0
+    displayName: 'Setup glass test folder'
+    condition: and(succeeded(), or(eq(variables['CACHE_RESTORED'], 'false'), eq('${{ parameters.skipGlassCache }}', 'true')))
+    env:
+      SYSTEM_ACCESSTOKEN: $(DropToken)
+    inputs:
+      scriptSource: 'filePath' # 'filePath' | 'inline'. Required. Script source. Default: filePath.
+      scriptPath: $(Build.SourcesDirectory)/Build/setup_glass.py
+      arguments: '--authTokenVariable SYSTEM_ACCESSTOKEN --buildOutput $(Build.BinariesDirectory)\raw\binaries'
+      workingDirectory: $(Build.SourcesDirectory)
+      failOnStderr: true
+      pythonInterpreter: $(PYTHON_INTERPRETER)
+
+  # Run the glass tests
+  - task: PythonScript@0
+    displayName: 'Run Glass tests'
+    inputs:
+      scriptSource: 'filePath' # 'filePath' | 'inline'. Required. Script source. Default: filePath.
+      scriptPath: $(Build.SourcesDirectory)/Build/run_glass.py
+      arguments: '--buildOutput $(Build.BinariesDirectory)\raw\binaries'
+      workingDirectory: $(Build.SourcesDirectory)
+      failOnStderr: true
+      pythonInterpreter: $(PYTHON_INTERPRETER)
+
+  # Upload the trx file as a test result
+  - task: PublishTestResults@2
+    condition: always() # Always run this step, even if the previous step fails
+    displayName: 'Publish Glass test results'
+    inputs:
+      testResultsFiles: '$(Build.SourcesDirectory)/TestResults/*.trx'
+      testRunTitle: 'Glass Tests'
+      testResultsFormat: 'VSTest'
+      failTaskOnFailedTests: true
+
+  - task: CacheBeta@2
+    displayName: 'Cache glass binaries'
+    condition: and(succeeded(), or(eq(variables['CACHE_RESTORED'], 'false'), eq('${{ parameters.skipGlassCache }}', 'true')))
+    inputs:
+      key: 'glass'
+      path: '$(Build.SourcesDirectory)\GlassTests'
