@@ -46,7 +46,8 @@
         }
 
         public Guid GetId() {
-            return Guids.RunningWindowsStoreAppTargetProviderGuid;
+            return new Guid("bb47b6ec-a8f6-48e9-a7f6-e38795a609d5");
+            // return Guids.RunningWindowsStoreAppTargetProviderGuid;
         }
 
         /// <inheritdoc />
