@@ -50,6 +50,9 @@
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Utilities" />
     <Reference Include="Microsoft.VisualStudio.Threading" />
+    <Reference Include="Microsoft.DiagnosticsHub.SDK">
+        <HintPath>..\..\..\Microsoft.DiagnosticsHub.SDK.17.13.35702.1\lib\net472\Microsoft.DiagnosticsHub.SDK.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DialogWindowVersioningWorkaround.cs" />
@@ -64,6 +67,7 @@
     <Compile Include="Profiling\IPythonProfileSession.cs" />
     <Compile Include="Profiling\IPythonProfiling.cs" />
     <Compile Include="Profiling\ETWProfiledProcess.cs" />
+    <Compile Include="Profiling\PythonTargetProvider.cs" />
     <Compile Include="Profiling\ProfilingSessionEditorFactory.cs" />
     <Compile Include="Profiling\CustomPythonInterpreterView.cs" />
     <Compile Include="Profiling\PythonInterpreterView.cs" />
