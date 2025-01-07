@@ -18,14 +18,14 @@
     /// The processes target provider.
     /// </summary>
     [Export(typeof(ITargetProvider))]
-    class PythonTargetProvider : ITargetProvider, ITargetProviderAsync {
+    public class PythonTargetProvider : ITargetProvider, ITargetProviderAsync {
 
 
         /// <summary>
         /// Gets or sets the hub service provider.
         /// </summary>
         [Import(typeof(IHubServiceProvider))]
-        public IHubServiceProvider HubServiceProvider { get; set; } = null!; // This is populated during imports. Failure to do so will cause a MEF exception
+        public IHubServiceProvider HubServiceProvider { get; set; } // This is populated during imports. Failure to do so will cause a MEF exception
 
         public PythonTargetProvider() {
             Debug.WriteLine("PythonTargetProvider: MEF component initialized.");
@@ -69,25 +69,10 @@
         /// <inheritdoc />
         public async Task<IEnumerable<ITarget>> GetTargetsAsync(IDictionary<string, object> properties, bool chooseTarget, CancellationToken cancellationToken) {
 
-            // Copied from ExeTargetProvider, to be replaced with Python-specific logic
-            IRecentOptionsService settings = this.HubServiceProvider.GetService<IRecentOptionsService>();
-            var loaded = await settings.LoadSettingsAsync<ExeDialogSettingsConfig>(ExeDialogSettingsConfig.StreamName);
-            var viewModel = new ExeTargetPropertiesViewModel(this.HubServiceProvider);
-            viewModel.FromConfig(loaded); // ignore return value
-            var dialog = new ExeTargetPropertiesDialog(viewModel);
-
-            if (chooseTarget) {
-                int result = WindowHelper.ShowModal(dialog);
-                if (result == DialogResult.OK) {
-                    // persist config when user presses Ok
-                    settings.PersistSettings(ExeDialogSettingsConfig.StreamName, viewModel.ToConfig());
-                    return new List<ITarget>() { viewModel.GetTarget() };
-                }
-
-                return Enumerable.Empty<ITarget>();
-            } else {
-                return new List<ITarget>() { viewModel.GetTarget() };
-            }
+            return Process.GetProcesses()
+            .Where(p => p.ProcessName.Equals("python", StringComparison.OrdinalIgnoreCase) ||
+                p.ProcessName.Equals("pythonw", StringComparison.OrdinalIgnoreCase))
+            .Cast<ITarget>();
 
         }
     }
