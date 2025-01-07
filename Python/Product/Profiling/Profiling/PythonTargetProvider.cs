@@ -90,10 +90,5 @@
             }
 
         }
-
-        private IEnumerable<ITarget> GetTargets() {
-            throw new NotImplementedException();
-        }
-
     }
 }
