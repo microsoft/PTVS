@@ -24,9 +24,6 @@
   <Assets>
     <Asset Type="Microsoft.VisualStudio.Package" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|%CurrentProject%;_GetTargetPath|" AssemblyName="|%CurrentProject%;_GetAssemblyName|" />
-    <Asset 
-    Type="Microsoft.VisualStudio.MefComponent" 
-    Path="Microsoft.DiagnosticsHub.SDK.17.13.35702.1\lib\net472\Microsoft.DiagnosticsHub.SDK.dll" />
     <Asset Type="Microsoft.VisualStudio.MefComponent" Path="Microsoft.PythonTools.Profiling.dll" />
   </Assets>
 </PackageManifest>
