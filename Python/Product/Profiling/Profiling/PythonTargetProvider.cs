@@ -25,7 +25,7 @@
         /// Gets or sets the hub service provider.
         /// </summary>
         [Import(typeof(IHubServiceProvider))]
-        public IHubServiceProvider HubServiceProvider { get; set; } // This is populated during imports. Failure to do so will cause a MEF exception
+        public IHubServiceProvider HubServiceProvider { get; set; } = null!; // This is populated during imports. Failure to do so will cause a MEF exception
 
         public PythonTargetProvider() {
             Debug.WriteLine("PythonTargetProvider: MEF component initialized.");
@@ -52,7 +52,7 @@
 
         /// <inheritdoc />
         public int GetOrder() {
-            return (int)DefaultTargetProviderConstants.Order.ProcessTarget;
+            return (int)0x9000;
         }
 
         /// <inheritdoc />
@@ -69,10 +69,25 @@
         /// <inheritdoc />
         public async Task<IEnumerable<ITarget>> GetTargetsAsync(IDictionary<string, object> properties, bool chooseTarget, CancellationToken cancellationToken) {
 
-            return Process.GetProcesses()
-            .Where(p => p.ProcessName.Equals("python", StringComparison.OrdinalIgnoreCase) ||
-                p.ProcessName.Equals("pythonw", StringComparison.OrdinalIgnoreCase))
-            .Cast<ITarget>();
+            // Copied from ExeTargetProvider, to be replaced with Python-specific logic
+            IRecentOptionsService settings = this.HubServiceProvider.GetService<IRecentOptionsService>();
+            var loaded = await settings.LoadSettingsAsync<ExeDialogSettingsConfig>(ExeDialogSettingsConfig.StreamName);
+            var viewModel = new ExeTargetPropertiesViewModel(this.HubServiceProvider);
+            viewModel.FromConfig(loaded); // ignore return value
+            var dialog = new ExeTargetPropertiesDialog(viewModel);
+
+            if (chooseTarget) {
+                int result = WindowHelper.ShowModal(dialog);
+                if (result == DialogResult.OK) {
+                    // persist config when user presses Ok
+                    settings.PersistSettings(ExeDialogSettingsConfig.StreamName, viewModel.ToConfig());
+                    return new List<ITarget>() { viewModel.GetTarget() };
+                }
+
+                return Enumerable.Empty<ITarget>();
+            } else {
+                return new List<ITarget>() { viewModel.GetTarget() };
+            }
 
         }
 
@@ -80,10 +95,5 @@
             throw new NotImplementedException();
         }
 
-        internal static IEnumerable<Process> GetProcesses(int currentProcessId) {
-            // Get the processes on this machine
-            return Process.GetProcesses()
-                .Where((p) => p.Id != currentProcessId);
-        }
     }
 }
