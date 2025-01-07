@@ -344,6 +344,7 @@ class JupyterClientBackend(ReplBackend):
                     break
 
                 try:
+                    # Replace 'block=True' with 'timeout=1.0' and handle Empty exception
                     m = Message(client.get_shell_msg(timeout=0.1))
                     msg_id = m.msg_id
                     msg_type = m.msg_type
@@ -363,13 +364,24 @@ class JupyterClientBackend(ReplBackend):
                         on_reply = on_replies.pop((parent_id, msg_type), ())
                         for callable in on_reply:
                             callable(m)
+                except Empty:
+                    # No message received within the timeout
+                    continue
                 except zmq.Again:
                     pass  # Handle timeout without hanging
-        except zmq.error.ZMQError:
+                except Exception as e:
+                    # Log unexpected errors during message retrieval
+                    print(f"Unexpected error in get_iopub_msg: {e}")
+                    traceback.print_exc()
+                    continue
+        except zmq.error.ZMQError as e:
+            print(f"ZMQError encountered: {e}")
             self.exit_process()
         except KeyboardInterrupt:
+            print("KeyboardInterrupt detected, exiting process.")
             self.exit_process()
-        except:
+        except Exception as e:
+            print(f"Unexpected error: {e}")
             # TODO: Better fatal error handling
             traceback.print_exc()
             try:
@@ -382,28 +394,38 @@ class JupyterClientBackend(ReplBackend):
         try:
             last_exec_count = None
             while not self.exit_requested:
-                m = Message(client.get_iopub_msg(block=True))
+                try:
+                    # Replace 'block=True' with 'timeout=1.0'
+                    m = Message(client.get_iopub_msg(timeout=1.0))  # Timeout in seconds
 
-                if m.parent_header.msg_id in self.__suppress_io:
-                    if m.msg_type != 'status':
-                        self.__suppress_io.discard(m.parent_header.msg_id)
+                    if m.parent_header.msg_id in self.__suppress_io:
+                        if m.msg_type != 'status':
+                            self.__suppress_io.discard(m.parent_header.msg_id)
+                        continue
+
+                    if m.msg_type == 'execute_input':
+                        pass
+                    elif m.msg_type == 'execute_result':
+                        self.__write_result(m.content)
+                    elif m.msg_type == 'display_data':
+                        self.__write_content(m.content)
+                    elif m.msg_type == 'stream':
+                        self.__write_stream(m.content)
+                    elif m.msg_type == 'error':
+                        self.__write_result(m.content, treat_as_error=True)
+                    elif m.msg_type == 'status':
+                        self.__status = m.content['execution_state', 'idle']
+                    else:
+                        print("Received: " + m.msg_type + ":" + str(m) + "\n")
+                        self.write_stdout(str(m) + '\n')
+                except Empty:
+                    # No message received within the timeout, continue loop
                     continue
-
-                if m.msg_type == 'execute_input':
-                    pass
-                elif m.msg_type == 'execute_result':
-                    self.__write_result(m.content)
-                elif m.msg_type == 'display_data':
-                    self.__write_content(m.content)
-                elif m.msg_type == 'stream':
-                    self.__write_stream(m.content)
-                elif m.msg_type == 'error':
-                    self.__write_result(m.content, treat_as_error=True)
-                elif m.msg_type == 'status':
-                    self.__status = m.content['execution_state', 'idle']
-                else:
-                    print("Received: " + m.msg_type + ":" + str(m) + "\n")
-                    self.write_stdout(str(m) + '\n')
+                except Exception as e:
+                    # Log unexpected errors during message retrieval
+                    print(f"Unexpected error in get_iopub_msg: {e}")
+                    traceback.print_exc()
+                    continue
 
         except zmq.error.ZMQError:
             self.exit_process()
