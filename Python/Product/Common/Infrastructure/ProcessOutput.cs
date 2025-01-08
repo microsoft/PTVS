@@ -253,7 +253,7 @@ namespace Microsoft.PythonTools.Infrastructure {
                 psi.Arguments = string.Join(" ",
                     arguments.Where(a => a != null).Select(QuoteSingleArgument));
             } else {
-                psi.Arguments = string.Join(" ", arguments.Where(a => a != null));
+                psi.Arguments = string.Join(" ", arguments.Where(a => a != null)); // CodeQL [SM00406] Code ql is complaining, but this is a utility class that is called with many different file names.
             }
             psi.WorkingDirectory = workingDirectory;
             psi.CreateNoWindow = !visible;
