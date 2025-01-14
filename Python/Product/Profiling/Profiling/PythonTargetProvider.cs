@@ -7,11 +7,13 @@
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using EnvDTE;
     using Microsoft.DiagnosticsHub;
     using Microsoft.DiagnosticsHub.Diagnostics;
     using Microsoft.DiagnosticsHub.Targets;
     using Microsoft.Internal.VisualStudio.PlatformUI;
     using Microsoft.VisualStudio.Threading;
+    using static Microsoft.VisualStudio.VSConstants;
 
 
     /// <summary>
@@ -68,12 +70,44 @@
 
         /// <inheritdoc />
         public async Task<IEnumerable<ITarget>> GetTargetsAsync(IDictionary<string, object> properties, bool chooseTarget, CancellationToken cancellationToken) {
+            var targetView = new ProfilingTargetView(PythonProfilingPackage.Instance);
+            var pythonProfilingPackage = PythonProfilingPackage.Instance;
+            var dialog = new LaunchProfiling(pythonProfilingPackage, targetView);
 
-            return Process.GetProcesses()
-            .Where(p => p.ProcessName.Equals("python", StringComparison.OrdinalIgnoreCase) ||
-                p.ProcessName.Equals("pythonw", StringComparison.OrdinalIgnoreCase))
-            .Cast<ITarget>();
+            var res = dialog.ShowModal() ?? false;
+
+            if (res && targetView.IsValid) {
+                var target = targetView.GetTarget();
+                if (target != null) {
+                    var targetInfo = getTargetInfo(target, pythonProfilingPackage);
+                    return new PythonTarget[] { };
+                }
+            }
+
+            return new PythonTarget[] { };
 
         }
+
+        private object getTargetInfo(ProfilingTarget target, PythonProfilingPackage pythonProfilingPackage) {
+            try {
+                var joinableTaskFactory = pythonProfilingPackage.JoinableTaskFactory;
+                joinableTaskFactory.Run(async () => {
+                    await joinableTaskFactory.SwitchToMainThreadAsync();
+
+                    var name = target.GetProfilingName(pythonProfilingPackage, out var save);
+                    var explorer = await pythonProfilingPackage.ShowPerformanceExplorerAsync();
+                    var session = explorer.Sessions.AddTarget(target, name, save);
+
+                    pythonProfilingPackage.StartProfiling(target, session);
+
+                });
+            } catch (Exception ex) {
+                // Log or handle the exception
+                Debug.Fail($"Error in ProfileTarget: {ex.Message}");
+                throw;
+            }
+            return null;
+        }
+
     }
 }
