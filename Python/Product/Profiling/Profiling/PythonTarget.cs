@@ -1,13 +1,6 @@
-﻿namespace Microsoft.PythonTools.Profiling
-{
+﻿namespace Microsoft.PythonTools.Profiling {
     using System;
-    using System.ComponentModel;
-    using System.Diagnostics;
-    using System.Globalization;
-    using System.Text;
     using System.Threading.Tasks;
-
-    using Microsoft.DiagnosticsHub.Collectors;
     using Microsoft.DiagnosticsHub.Targets;
 
     class PythonTarget : ITarget, IDisposable
@@ -44,7 +37,6 @@
         }
         public Task OnCollectionStartedAsync(CollectionStartedArgs collectionStartedArgs)
         {
-            // Add implementation or return a completed task
             return Task.CompletedTask;
         }
         public Task<bool> SetupAsync(TargetSetupArgs targetSetupArgs)
