@@ -1,0 +1,93 @@
+# This pipeline is used to release PTVS to Visual Studio via an insertion PR.
+# The pipeline extends v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates from 1esPipelines repository defined in resources section.
+
+parameters:
+# The Visual Studio branch we are inserting into.
+# This will almost always be main, but can be changed to a release branch if needed.
+- name: VisualStudioBranch
+  displayName: Visual Studio Branch
+  type: string
+  default: main
+
+# build number format 
+name: $(date:yy)$(DayOfYear)$(rev:.r)
+
+# disable CI and PR triggers
+trigger: none
+pr: none
+
+variables: 
+  - name: VisualStudioBranch
+    value: ${{ parameters.VisualStudioBranch }}
+
+  # https://devdiv.visualstudio.com/DevDiv/_library?itemType=VariableGroups&view=VariableGroupView&variableGroupId=381&path=PTVS-Dev17
+  - group: PTVS-Dev17
+
+resources:
+  repositories:
+  - repository: 1ESPipelineTemplates
+    type: git
+    name: 1ESPipelineTemplates/1ESPipelineTemplates
+    ref: refs/tags/release
+  
+  # Add the PTVS-Build pipeline as a resource
+  pipelines:
+  - pipeline: PTVS-Build
+    source: PTVS-Build
+
+    # When run manually, only consume builds with all of the following tags
+    tags:
+      - Real signed
+      - Pylance Stable
+
+    # Trigger this pipeline when the PTVS-Build pipeline completes.
+    trigger:
+      # Only trigger on builds from main. Builds from release are manually triggered.
+      branches:
+        - main
+      # Only trigger on builds with all of the following tags
+      tags:
+        - Real signed
+        - Pylance Stable
+
+extends:
+  template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
+  parameters:
+    pool:
+      name: VSEngSS-MicroBuild2022-1ES
+      os: windows
+    stages:
+    - stage: Release
+      jobs:
+      - job: Release
+        steps:
+
+        # we don't need to checkout any source code
+        - checkout: none
+
+        # tag the release pipeline with the PTVS-Build build number that produced the artifacts that will be released
+        - script: |
+            echo ##vso[build.addbuildtag]PTVS-Build $(resources.pipeline.PTVS-Build.runName)
+          displayName: 'Add PTVS-Build tag'
+
+        # Insert the payload uploaded by the PTVS-Build pipeline into Visual Studio.
+        # We don't need to download pipeline artifacts here, because the payload is uploaded to a drop location.
+        # For more info, see https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_wiki/wikis/DevDiv.wiki/629/Automated-VS-Insertion.
+        - task: ms-vseng.MicroBuildShipTasks.55100717-a81d-45ea-a363-b8fe3ec375ad.MicroBuildInsertVsPayload@4
+          displayName: 'Create Insertion PR'
+          inputs:
+            TargetBranch: $(VisualStudioBranch)
+            InsertionTopicBranch: 'dev/ptvs/insertions/$(VisualStudioBranch)-$(Build.SourceBranchName)-$(resources.pipeline.PTVS-Build.runName)'
+            TeamName: PTVS
+            TeamEmail: 'pyvs@microsoft.com'
+            ComponentJsonValues: 'Microsoft.PythonTools.vsman=https://vsdrop.corp.microsoft.com/file/v1/Products/DevDiv/microsoft/PTVS/$(Build.SourceBranchName)/$(resources.pipeline.PTVS-Build.runName);Microsoft.PythonTools.vsman'
+            InsertionPayloadName: 'ptvs $(Build.SourceBranchName) $(resources.pipeline.PTVS-Build.runName)'
+            InsertionReviewers: 'pyvs@microsoft.com,plseng@microsoft.com,bschnurr@microsoft.com,advolker@microsoft.com,stellahuang@microsoft.com'
+            InsertionBuildPolicy: 'Request Perf DDRITs'
+            AutoCompletePR: true
+            AutoCompleteMergeStrategy: Squash
+            AddCommitsToPR: false
+            LinkWorkItemsToPR: false
+
+        
+
