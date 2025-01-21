@@ -84,6 +84,9 @@ variables:
     value: false  # disabled for now because of known issue
   - name: SkipGlassCache
     value: ${{ parameters.skipGlassCache }}
+  - ${{ if contains(variables['Build.ChangedFiles'], 'Python/Tests/GlassTests') }}:
+    - name: SkipGlassCache
+      value: true
 
   # If the build ran because of a nightly schedule, force pylance release type to preview
   - name: pylanceReleaseTypeVar
