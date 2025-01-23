@@ -44,11 +44,7 @@ name: $(date:yy)$(DayOfYear)$(rev:.r)
 trigger:
   branches:
     include:
-      - main
       - release/*
-  paths:
-    exclude:
-      - 'azure-pipelines-*.yml'
 
 # Trigger pr builds for commits into master and any release branches
 # Ignore changes to other yml files, since they are for different pipelines
@@ -56,11 +52,7 @@ trigger:
 pr:
   branches:
     include:
-      - main
       - release/*
-  paths:
-    exclude:
-      - 'azure-pipelines-*.yml'
   drafts: false
 
 # Trigger builds on a nightly schedule
