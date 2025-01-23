@@ -29,21 +29,9 @@ schedules:
     - main
   always: true
 
-# Trigger ci builds for commits into master and any release branches
-# Ignore changes to other yml files, since they are for different pipelines
-trigger:
-  branches:
-    include:
-      - release/*
-
-# Trigger pr builds for commits into master and any release branches
-# Ignore changes to other yml files, since they are for different pipelines
-# Also ignore draft PR's
-pr:
-  branches:
-    include:
-      - release/*
-  drafts: false
+# disable CI and PR triggers
+trigger: none
+pr: none
 
 # Build variables
 # None of these are settable at build queue time. To do that, remove the variable from this list,
