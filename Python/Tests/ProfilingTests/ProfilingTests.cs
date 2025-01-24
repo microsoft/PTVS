@@ -65,13 +65,13 @@ namespace ProfilingTests {
                     continue;
                 }
 
-                Trace.TraceInformation(python.InterpreterPath);
+                Trace.TraceInformation(python.PythonExePath);
 
                 foreach (var testFile in testFiles) {
                     Trace.TraceInformation("  {0}", Path.GetFileName(testFile));
 
                     using (var p = ProcessOutput.Run(
-                        python.InterpreterPath,
+                        python.PythonExePath,
                         new[] { proflaun, vspyprof, Path.GetDirectoryName(testFile), testFile },
                         Environment.CurrentDirectory,
                         new[] { new KeyValuePair<string, string>("PYTHONIOENCODING", "utf-8") },

@@ -173,7 +173,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
 
         /// <summary>
-        /// True if InterpreterPath is valid; false if it will be ignored.
+        /// True if PythonExePath is valid; false if it will be ignored.
         /// </summary>
         public bool CanSpecifyInterpreterPath {
             get {
