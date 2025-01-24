@@ -56,6 +56,7 @@
     <Compile Include="Profiling\AutomationProfiling.cs" />
     <Compile Include="Profiling\AutomationReport.cs" />
     <Compile Include="Profiling\AutomationSession.cs" />
+    <Compile Include="Profiling\CommandBuilder.cs" />
     <Compile Include="Profiling\CompareReportsView.cs" />
     <Compile Include="Profiling\CompareReportsWindow.xaml.cs">
       <DependentUpon>CompareReportsWindow.xaml</DependentUpon>
@@ -82,6 +83,7 @@
     <Compile Include="Profiling\SessionNode.cs" />
     <Compile Include="Profiling\StandaloneTargetView.cs" />
     <Compile Include="Profiling\TreeViewIconIndex.cs" />
+    <Compile Include="Profiling\UserDialog.cs" />
     <Compile Include="Profiling\UserInputService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ProvideFileFilterAttribute.cs" />
