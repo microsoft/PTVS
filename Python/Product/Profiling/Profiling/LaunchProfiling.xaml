@@ -68,7 +68,7 @@
                          AutomationProperties.AutomationId="ProfileScript"
                          GroupName="ProjectOrStandalone"
                          IsChecked="{Binding IsStandaloneSelected}" />
-            <ScrollViewer Grid.Row="4" Height="100">
+            <ScrollViewer Grid.Row="4" Height="200">
                 <GroupBox Header="{x:Static ui:Strings.LaunchProfiling_ScriptOptions}"
                       IsEnabled="{Binding IsStandaloneSelected}">
                     <Grid>

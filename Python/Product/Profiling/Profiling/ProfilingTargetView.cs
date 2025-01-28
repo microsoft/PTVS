@@ -67,7 +67,7 @@ namespace Microsoft.PythonTools.Profiling {
                 IsProjectSelected = false;
                 IsStandaloneSelected = true;
             }
-            _startText = Strings.LaunchProfiling_Start;
+            _startText = Strings.LaunchProfiling_OK;
         }
 
         /// <summary>

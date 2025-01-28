@@ -56,6 +56,7 @@
     <Compile Include="Profiling\AutomationProfiling.cs" />
     <Compile Include="Profiling\AutomationReport.cs" />
     <Compile Include="Profiling\AutomationSession.cs" />
+    <Compile Include="Profiling\CommandArgumentBuilder.cs" />
     <Compile Include="Profiling\CompareReportsView.cs" />
     <Compile Include="Profiling\CompareReportsWindow.xaml.cs">
       <DependentUpon>CompareReportsWindow.xaml</DependentUpon>
@@ -63,6 +64,8 @@
     <Compile Include="Profiling\IPythonPerformanceReport.cs" />
     <Compile Include="Profiling\IPythonProfileSession.cs" />
     <Compile Include="Profiling\IPythonProfiling.cs" />
+    <Compile Include="Profiling\IPythonProfilingCommandArgs.cs" />
+    <Compile Include="Profiling\IPythonProfilerCommandService.cs" />
     <Compile Include="Profiling\ProfilingSessionEditorFactory.cs" />
     <Compile Include="Profiling\CustomPythonInterpreterView.cs" />
     <Compile Include="Profiling\PythonInterpreterView.cs" />
@@ -80,7 +83,10 @@
     <Compile Include="Profiling\ProfilingTargetView.cs" />
     <Compile Include="Profiling\SessionNode.cs" />
     <Compile Include="Profiling\StandaloneTargetView.cs" />
+    <Compile Include="Profiling\PythonProfilingCommandArgs.cs" />
     <Compile Include="Profiling\TreeViewIconIndex.cs" />
+    <Compile Include="Profiling\UserInputDialog.cs" />
+    <Compile Include="Profiling\PythonProfilerCommandService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ProvideFileFilterAttribute.cs" />
     <Compile Include="GlobalSuppressions.cs" />

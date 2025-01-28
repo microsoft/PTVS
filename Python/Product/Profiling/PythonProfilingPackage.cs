@@ -191,6 +191,12 @@ namespace Microsoft.PythonTools.Profiling {
                 return;
             }
 
+            // Used for manually testing the user input service.
+            //MessageBox.Show("Test starts");
+            //var tempUserInputService = new PythonProfilerCommandService();
+            //var tempResult = tempUserInputService.GetCommandArgsFromUserInput();
+            //MessageBox.Show("Test ends");
+
             var targetView = new ProfilingTargetView(this);
             var dialog = new LaunchProfiling(this, targetView);
             var res = dialog.ShowModal() ?? false;
