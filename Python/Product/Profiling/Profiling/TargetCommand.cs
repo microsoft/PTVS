@@ -15,16 +15,19 @@
 // permissions and limitations under the License.
 
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 
 namespace Microsoft.PythonTools.Profiling {
-
     /// <summary>
-    /// Defines a service interface for collecting user input to construct a profiling target command.
+    /// Represents a concrete profiling target command.
     /// </summary>
-    public interface IUserInputService {
-        /// <summary>
-        /// Collects user input via a dialog and converts it into a <see cref="ITargetCommand"/>.
-        /// </summary>
-        ITargetCommand GetCommandFromUserInput();
+    [Export(typeof(ITargetCommand))]
+    public class TargetCommand : ITargetCommand {
+        public string PythonExePath { get; set; }
+        public string WorkingDir { get; set; }
+        public string ScriptPath { get; set; }
+        public string[] Args { get; set; }
+        public Dictionary<string, string> EnvVars { get; set; }
     }
 }
+

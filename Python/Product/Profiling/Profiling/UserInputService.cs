@@ -18,11 +18,7 @@ namespace Microsoft.PythonTools.Profiling {
     using System;
     using System.ComponentModel.Composition;
     using System.Diagnostics;
-    using System.IO;
-    using System.Linq;
     using System.Windows;
-    using Microsoft.PythonTools.Infrastructure;
-    using Microsoft.PythonTools.Interpreter;
 
     /// <summary>
     /// Implements a service to collect user input for profiling and generate a <see cref="TargetCommand"/>.
@@ -32,7 +28,6 @@ namespace Microsoft.PythonTools.Profiling {
         private readonly CommandBuilder _commandBuilder;
         private readonly UserDialog _userDialog;
 
-        [ImportingConstructor]
         public UserInputService() {
             _commandBuilder = new CommandBuilder();
             _userDialog = new UserDialog();
@@ -44,7 +39,7 @@ namespace Microsoft.PythonTools.Profiling {
         /// <returns>
         /// A <see cref="TargetCommand"/> object based on user input, or <c>null</c> if canceled.
         /// </returns>
-        public TargetCommand GetCommandFromUserInput() {
+        public ITargetCommand GetCommandFromUserInput() {
             try {
                 var pythonProfilingPackage = PythonProfilingPackage.Instance;
                 var targetView = new ProfilingTargetView(pythonProfilingPackage);
@@ -53,12 +48,12 @@ namespace Microsoft.PythonTools.Profiling {
                     var target = targetView.GetTarget();
                     return _commandBuilder.BuildCommandFromTarget(target);
                 }
-                return null;
             } catch (Exception ex) {
                 Debug.Fail($"Error displaying user input dialog: {ex.Message}");
                 MessageBox.Show($"An unexpected error occurred: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return null;
             }
+
+            return null;
         }
     }
 }

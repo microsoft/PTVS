@@ -265,7 +265,7 @@ Error:
     <value>_Working Directory:</value>
   </data>
   <data name="LaunchProfiling_CommandLineArguments" xml:space="preserve">
-    <value>Command Line _Arguments:</value>
+    <value>Command Line _Arguments (Separated by Spaces):</value>
   </data>
   <data name="LaunchProfiling_Cancel" xml:space="preserve">
     <value>_Cancel</value>

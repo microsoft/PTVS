@@ -16,15 +16,13 @@
 
 using System.Collections.Generic;
 
-namespace Microsoft.PythonTools.Profiling {
-
-    /// <summary>
-    /// Defines a service interface for collecting user input to construct a profiling target command.
-    /// </summary>
-    public interface IUserInputService {
-        /// <summary>
-        /// Collects user input via a dialog and converts it into a <see cref="ITargetCommand"/>.
-        /// </summary>
-        ITargetCommand GetCommandFromUserInput();
+namespace Microsoft.PythonTools.Profiling
+{
+    public interface ITargetCommand {
+        string PythonExePath { get; set; }
+        string WorkingDir { get; set; }
+        string ScriptPath { get; set; }
+        string[] Args { get; set; }
+        Dictionary<string, string> EnvVars { get; set; }
     }
 }

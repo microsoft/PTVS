@@ -64,6 +64,7 @@
     <Compile Include="Profiling\IPythonPerformanceReport.cs" />
     <Compile Include="Profiling\IPythonProfileSession.cs" />
     <Compile Include="Profiling\IPythonProfiling.cs" />
+    <Compile Include="Profiling\ITargetCommand.cs" />
     <Compile Include="Profiling\IUserInputService.cs" />
     <Compile Include="Profiling\ProfilingSessionEditorFactory.cs" />
     <Compile Include="Profiling\CustomPythonInterpreterView.cs" />
@@ -82,6 +83,7 @@
     <Compile Include="Profiling\ProfilingTargetView.cs" />
     <Compile Include="Profiling\SessionNode.cs" />
     <Compile Include="Profiling\StandaloneTargetView.cs" />
+    <Compile Include="Profiling\TargetCommand.cs" />
     <Compile Include="Profiling\TreeViewIconIndex.cs" />
     <Compile Include="Profiling\UserDialog.cs" />
     <Compile Include="Profiling\UserInputService.cs" />

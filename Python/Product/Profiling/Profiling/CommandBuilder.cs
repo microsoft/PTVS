@@ -31,11 +31,11 @@ namespace Microsoft.PythonTools.Profiling {
         /// Constructs a <see cref="TargetCommand"/> based on the provided profiling target.
         /// </summary>
         public TargetCommand BuildCommandFromTarget(ProfilingTarget target) {
-            try {
-                if (target == null) {
-                    return null;
-                }
+            if (target == null) {
+                return null;
+            }
 
+            try {
                 var pythonProfilingPackage = PythonProfilingPackage.Instance;
                 var joinableTaskFactory = pythonProfilingPackage.JoinableTaskFactory;
 
@@ -122,7 +122,7 @@ namespace Microsoft.PythonTools.Profiling {
                 PythonExePath = pythonExePath,
                 ScriptPath = scriptPath,
                 WorkingDir = workingDir,
-                Args = null,
+                Args = Array.Empty<string>(),
                 EnvVars = envVars
             };
             return command;
@@ -154,13 +154,18 @@ namespace Microsoft.PythonTools.Profiling {
             config.ScriptArguments = standaloneTarget.Arguments;
             config.WorkingDirectory = standaloneTarget.WorkingDirectory;
 
+            var argsInput = standaloneTarget.Arguments;
+            var parsedArgs = string.IsNullOrWhiteSpace(argsInput)
+                        ? Array.Empty<string>()
+                        : argsInput.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
             var envVars = session._serviceProvider.GetPythonToolsService().GetFullEnvironment(config);
 
             return new TargetCommand {
                 PythonExePath = config.GetInterpreterPath(),
                 WorkingDir = standaloneTarget.WorkingDirectory,
                 ScriptPath = standaloneTarget.Script,
-                Args = standaloneTarget.Arguments,
+                Args = parsedArgs,
                 EnvVars = envVars
             };
         }
