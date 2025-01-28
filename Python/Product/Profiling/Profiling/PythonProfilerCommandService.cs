@@ -21,7 +21,7 @@ namespace Microsoft.PythonTools.Profiling {
     using System.Windows;
 
     /// <summary>
-    /// Implements a service to collect user input for profiling and generate a <see cref="PythonProfilingCommandArgs"/>.
+    /// Implements a service to collect user input for profiling and convert to a <see cref="PythonProfilingCommandArgs"/>.
     /// </summary>
     [Export(typeof(IPythonProfilerCommandService))]
     class PythonProfilerCommandService : IPythonProfilerCommandService {

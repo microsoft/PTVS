@@ -48,7 +48,7 @@ namespace Microsoft.PythonTools.Profiling {
                     var explorer = await pythonProfilingPackage.ShowPerformanceExplorerAsync();
                     var session = explorer.Sessions.AddTarget(target, name, save);
 
-                    command = SelectCommandBuilder(target, session);
+                    command = SelectBuilder(target, session);
 
                 });
 
@@ -60,9 +60,9 @@ namespace Microsoft.PythonTools.Profiling {
         }
 
         /// <summary>
-        /// Generates a <see cref="PythonProfilingCommandArgs"/> based on the profiling target and session details.
+        /// Select the appropriate builder based on the provided profiling target.
         /// </summary>
-        private PythonProfilingCommandArgs SelectCommandBuilder(ProfilingTarget target, SessionNode session) {
+        private PythonProfilingCommandArgs SelectBuilder(ProfilingTarget target, SessionNode session) {
             var projectTarget = target.ProjectTarget;
             var standaloneTarget = target.StandaloneTarget;
 

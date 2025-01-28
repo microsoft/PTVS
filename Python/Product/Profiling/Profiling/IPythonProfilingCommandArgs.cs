@@ -18,6 +18,9 @@ using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Profiling
 {
+    /// <summary>
+    /// Contains the arguments for a Python profiling command.
+    /// </summary>
     public interface IPythonProfilingCommandArgs {
         string PythonExePath { get; set; }
         string WorkingDir { get; set; }

@@ -14,12 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
-
 namespace Microsoft.PythonTools.Profiling {
 
     /// <summary>
-    /// Defines a service interface for collecting user input to construct a profiling target command.
+    /// Defines a service interface for collecting user input and converting to Python profiling command arguments.
     /// </summary>
     public interface IPythonProfilerCommandService {
         /// <summary>

@@ -19,7 +19,7 @@ using System.ComponentModel.Composition;
 
 namespace Microsoft.PythonTools.Profiling {
     /// <summary>
-    /// Represents a concrete profiling target command.
+    /// Represents the arguments for a Python profiling command.
     /// </summary>
     [Export(typeof(IPythonProfilingCommandArgs))]
     public class PythonProfilingCommandArgs : IPythonProfilingCommandArgs {
