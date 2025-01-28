@@ -21,32 +21,32 @@ namespace Microsoft.PythonTools.Profiling {
     using System.Windows;
 
     /// <summary>
-    /// Implements a service to collect user input for profiling and generate a <see cref="TargetCommand"/>.
+    /// Implements a service to collect user input for profiling and generate a <see cref="PythonProfilingCommandArgs"/>.
     /// </summary>
-    [Export(typeof(IUserInputService))]
-    class UserInputService : IUserInputService {
-        private readonly CommandBuilder _commandBuilder;
-        private readonly UserDialog _userDialog;
+    [Export(typeof(IPythonProfilerCommandService))]
+    class PythonProfilerCommandService : IPythonProfilerCommandService {
+        private readonly CommandArgumentBuilder _commandArgumentBuilder;
+        private readonly UserInputDialog _userInputDialog;
 
-        public UserInputService() {
-            _commandBuilder = new CommandBuilder();
-            _userDialog = new UserDialog();
+        public PythonProfilerCommandService() {
+            _commandArgumentBuilder = new CommandArgumentBuilder();
+            _userInputDialog = new UserInputDialog();
         }
 
         /// <summary>
-        /// Collects user input and constructs a <see cref="TargetCommand"/> object.
+        /// Collects user input and constructs a <see cref="PythonProfilingCommandArgs"/> object.
         /// </summary>
         /// <returns>
-        /// A <see cref="TargetCommand"/> object based on user input, or <c>null</c> if canceled.
+        /// A <see cref="PythonProfilingCommandArgs"/> object based on user input, or <c>null</c> if canceled.
         /// </returns>
-        public ITargetCommand GetCommandFromUserInput() {
+        public IPythonProfilingCommandArgs GetCommandArgsFromUserInput() {
             try {
                 var pythonProfilingPackage = PythonProfilingPackage.Instance;
                 var targetView = new ProfilingTargetView(pythonProfilingPackage);
 
-                if (_userDialog.ShowDialog(targetView)) {
+                if (_userInputDialog.ShowDialog(targetView)) {
                     var target = targetView.GetTarget();
-                    return _commandBuilder.BuildCommandFromTarget(target);
+                    return _commandArgumentBuilder.BuildCommandArgsFromTarget(target);
                 }
             } catch (Exception ex) {
                 Debug.Fail($"Error displaying user input dialog: {ex.Message}");

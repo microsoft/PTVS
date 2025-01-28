@@ -21,10 +21,10 @@ namespace Microsoft.PythonTools.Profiling {
     /// <summary>
     /// Defines a service interface for collecting user input to construct a profiling target command.
     /// </summary>
-    public interface IUserInputService {
+    public interface IPythonProfilerCommandService {
         /// <summary>
-        /// Collects user input via a dialog and converts it into a <see cref="ITargetCommand"/>.
+        /// Collects user input via a dialog and converts it into a <see cref="IPythonProfilingCommandArgs"/>.
         /// </summary>
-        ITargetCommand GetCommandFromUserInput();
+        IPythonProfilingCommandArgs GetCommandArgsFromUserInput();
     }
 }

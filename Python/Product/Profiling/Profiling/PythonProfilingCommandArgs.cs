@@ -15,14 +15,19 @@
 // permissions and limitations under the License.
 
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 
-namespace Microsoft.PythonTools.Profiling
-{
-    public interface ITargetCommand {
-        string PythonExePath { get; set; }
-        string WorkingDir { get; set; }
-        string ScriptPath { get; set; }
-        string[] Args { get; set; }
-        Dictionary<string, string> EnvVars { get; set; }
+namespace Microsoft.PythonTools.Profiling {
+    /// <summary>
+    /// Represents a concrete profiling target command.
+    /// </summary>
+    [Export(typeof(IPythonProfilingCommandArgs))]
+    public class PythonProfilingCommandArgs : IPythonProfilingCommandArgs {
+        public string PythonExePath { get; set; }
+        public string WorkingDir { get; set; }
+        public string ScriptPath { get; set; }
+        public string[] Args { get; set; }
+        public Dictionary<string, string> EnvVars { get; set; }
     }
 }
+

@@ -25,12 +25,12 @@ namespace Microsoft.PythonTools.Profiling {
     using Microsoft.PythonTools.Infrastructure;
     using Microsoft.PythonTools.Interpreter;
 
-    internal class CommandBuilder {
+    internal class CommandArgumentBuilder {
 
         /// <summary>
-        /// Constructs a <see cref="TargetCommand"/> based on the provided profiling target.
+        /// Constructs a <see cref="PythonProfilingCommandArgs"/> based on the provided profiling target.
         /// </summary>
-        public TargetCommand BuildCommandFromTarget(ProfilingTarget target) {
+        public PythonProfilingCommandArgs BuildCommandArgsFromTarget(ProfilingTarget target) {
             if (target == null) {
                 return null;
             }
@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Profiling {
                 var pythonProfilingPackage = PythonProfilingPackage.Instance;
                 var joinableTaskFactory = pythonProfilingPackage.JoinableTaskFactory;
 
-                TargetCommand command = null;
+                PythonProfilingCommandArgs command = null;
 
                 joinableTaskFactory.Run(async () => {
                     await joinableTaskFactory.SwitchToMainThreadAsync();
@@ -60,21 +60,21 @@ namespace Microsoft.PythonTools.Profiling {
         }
 
         /// <summary>
-        /// Generates a <see cref="TargetCommand"/> based on the profiling target and session details.
+        /// Generates a <see cref="PythonProfilingCommandArgs"/> based on the profiling target and session details.
         /// </summary>
-        private TargetCommand SelectCommandBuilder(ProfilingTarget target, SessionNode session) {
+        private PythonProfilingCommandArgs SelectCommandBuilder(ProfilingTarget target, SessionNode session) {
             var projectTarget = target.ProjectTarget;
             var standaloneTarget = target.StandaloneTarget;
 
             if (projectTarget != null) {
-                return BuildProjectCommand(projectTarget, session);
+                return BuildProjectCommandArgs(projectTarget, session);
             } else if (standaloneTarget != null) {
-                return BuildStandaloneCommand(standaloneTarget, session);
+                return BuildStandaloneCommandArgs(standaloneTarget, session);
             }
             return null;
         }
 
-        private TargetCommand BuildProjectCommand(ProjectTarget projectTarget, SessionNode session) {
+        private PythonProfilingCommandArgs BuildProjectCommandArgs(ProjectTarget projectTarget, SessionNode session) {
             var solution = PythonProfilingPackage.Instance.Solution;
             var project = solution.EnumerateLoadedPythonProjects()
                 .SingleOrDefault(p => p.GetProjectIDGuidProperty() == projectTarget.TargetProject);
@@ -118,7 +118,7 @@ namespace Microsoft.PythonTools.Profiling {
             var workingDir = config.WorkingDirectory;
             var envVars = session._serviceProvider.GetPythonToolsService().GetFullEnvironment(config);
 
-            var command = new TargetCommand {
+            var command = new PythonProfilingCommandArgs {
                 PythonExePath = pythonExePath,
                 ScriptPath = scriptPath,
                 WorkingDir = workingDir,
@@ -128,7 +128,7 @@ namespace Microsoft.PythonTools.Profiling {
             return command;
         }
 
-        private TargetCommand BuildStandaloneCommand(StandaloneTarget standaloneTarget, SessionNode session) {
+        private PythonProfilingCommandArgs BuildStandaloneCommandArgs(StandaloneTarget standaloneTarget, SessionNode session) {
             if (standaloneTarget == null) {
                 return null;
             }
@@ -161,7 +161,7 @@ namespace Microsoft.PythonTools.Profiling {
 
             var envVars = session._serviceProvider.GetPythonToolsService().GetFullEnvironment(config);
 
-            return new TargetCommand {
+            return new PythonProfilingCommandArgs {
                 PythonExePath = config.GetInterpreterPath(),
                 WorkingDir = standaloneTarget.WorkingDirectory,
                 ScriptPath = standaloneTarget.Script,

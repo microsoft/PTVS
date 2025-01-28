@@ -14,20 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
-using System.ComponentModel.Composition;
-
 namespace Microsoft.PythonTools.Profiling {
-    /// <summary>
-    /// Represents a concrete profiling target command.
-    /// </summary>
-    [Export(typeof(ITargetCommand))]
-    public class TargetCommand : ITargetCommand {
-        public string PythonExePath { get; set; }
-        public string WorkingDir { get; set; }
-        public string ScriptPath { get; set; }
-        public string[] Args { get; set; }
-        public Dictionary<string, string> EnvVars { get; set; }
+    internal class UserInputDialog {
+        public bool ShowDialog(ProfilingTargetView targetView) {
+            var pythonProfilingPackage = PythonProfilingPackage.Instance;
+            var dialog = new LaunchProfiling(pythonProfilingPackage, targetView);
+            return dialog.ShowModal() ?? false;
+        }
     }
 }
-

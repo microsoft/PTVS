@@ -14,12 +14,15 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Profiling {
-    internal class UserDialog {
-        public bool ShowDialog(ProfilingTargetView targetView) {
-            var pythonProfilingPackage = PythonProfilingPackage.Instance;
-            var dialog = new LaunchProfiling(pythonProfilingPackage, targetView);
-            return dialog.ShowModal() ?? false;
-        }
+using System.Collections.Generic;
+
+namespace Microsoft.PythonTools.Profiling
+{
+    public interface IPythonProfilingCommandArgs {
+        string PythonExePath { get; set; }
+        string WorkingDir { get; set; }
+        string ScriptPath { get; set; }
+        string[] Args { get; set; }
+        Dictionary<string, string> EnvVars { get; set; }
     }
 }
