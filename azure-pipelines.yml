@@ -204,6 +204,8 @@ extends:
         
         # Build and publish logs    
         - template: /Build/templates/build.yml@self
+          parameters:
+            ptvsPackageVersion: ${{ variables.ptvsPackageVersionVar }}
 
         # Non-PR steps
         - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
