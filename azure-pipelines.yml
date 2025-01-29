@@ -106,7 +106,7 @@ variables:
   
   # If the vs package version is not specified, use the build number
   - name: ptvsPackageVersionVar
-    ${{ if eq(variables['ptvsPackageVersion'], 'currentBuildNumber') }}:
+    ${{ if eq(parameters.ptvsPackageVersion, 'currentBuildNumber') }}:
       value: $(Build.BuildNumber)
     ${{ else }}:
       value: ${{ parameters.ptvsPackageVersion }}
