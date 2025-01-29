@@ -29,7 +29,7 @@ parameters:
 - name: ptvsPackageVersion
   displayName: PTVS Package Version
   type: string
-  default: ''
+  default: currentBuildNumber
 
 - name: skipGlassCache
   displayName: Skip Glass Cache
@@ -106,7 +106,7 @@ variables:
   
   # If the vs package version is not specified, use the build number
   - name: ptvsPackageVersionVar
-    ${{ if eq(variables['ptvsPackageVersion'], '') }}:
+    ${{ if eq(variables['ptvsPackageVersion'], 'currentBuildNumber') }}:
       value: $(Build.BuildNumber)
     ${{ else }}:
       value: ${{ parameters.ptvsPackageVersion }}
