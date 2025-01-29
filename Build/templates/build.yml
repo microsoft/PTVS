@@ -33,7 +33,7 @@ steps:
       msbuildVersion: $(MsBuildVersion)
       platform: $(Platform)
       configuration: $(BuildConfiguration)
-      msbuildArguments: '/p:VSTarget=$(VSTarget) /bl:$(Build.SourcesDirectory)\logs\BuildTests.binlog'
+      msbuildArguments: '/p:VSTarget=$(VSTarget) /p:BuildNumber=$(ptvsPackageVersionVar) /bl:$(Build.SourcesDirectory)\logs\BuildTests.binlog'
 
   # Build the installer
   - task: MSBuild@1
@@ -45,6 +45,7 @@ steps:
       configuration: $(BuildConfiguration)
       msbuildArguments: ' /p:SkipProduct=true 
                           /p:VSTarget=$(VSTarget) 
+                          /p:BuildNumber=$(ptvsPackageVersionVar) 
                           /p:BUILD_BINARIESDIRECTORY=$(Build.BinariesDirectory)
                           /p:BUILD_STAGINGDIRECTORY=$(Build.StagingDirectory) 
                           /bl:$(Build.SourcesDirectory)\logs\BuildInstaller.binlog'
