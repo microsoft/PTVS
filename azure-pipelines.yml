@@ -24,7 +24,7 @@ parameters:
   default: latest
 
 # This is the version that the PTVS package currently being built will have.
-# Normally this value should be empty, and it will default to the current build number.
+# If this value is set to 'currentBuildNumber' will default to $(Build.BuildNumber).
 # But this parameter can be used to overwrite the version number if needed.
 - name: ptvsPackageVersion
   displayName: PTVS Package Version

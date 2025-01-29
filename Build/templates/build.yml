@@ -1,7 +1,7 @@
 parameters:
 - name: ptvsPackageVersion
   type: string
-  value: $(Build.BuildNumber)
+  default: $(Build.BuildNumber)
 
 steps:
 
