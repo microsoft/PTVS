@@ -4,6 +4,7 @@
 # The pipeline extends v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates from 1esPipelines repository defined in resources section.
 
 parameters:
+
 - name: pylanceVersion
   displayName: Pylance Version
   type: string
@@ -12,6 +13,14 @@ parameters:
   displayName: Debugpy Version
   type: string
   default: latest
+
+# This is the version that the PTVS package currently being built will have.
+# If this value is set to 'currentBuildNumber' will default to $(Build.BuildNumber).
+# But this parameter can be used to overwrite the version number if needed.
+- name: ptvsPackageVersion
+  displayName: PTVS Package Version
+  type: string
+  default: currentBuildNumber
 
 # build number format 
 name: $(date:yy)$(DayOfYear)$(rev:.r)
@@ -66,6 +75,13 @@ variables:
   - name: Packaging.EnableSBOMSigning
     value: false  # disabled for now because of known issue
   
+  # If the vs package version is not specified, use the build number
+  - name: ptvsPackageVersionVar
+    ${{ if eq(parameters.ptvsPackageVersion, 'currentBuildNumber') }}:
+      value: $(Build.BuildNumber)
+    ${{ else }}:
+      value: ${{ parameters.ptvsPackageVersion }}
+
   # Import variables from PTVS-Dev17 variable group
   - group: PTVS-Dev17
 
@@ -149,6 +165,8 @@ extends:
         
         # Build and publish logs    
         - template: /Build/templates/build.yml@self
+          parameters:
+            ptvsPackageVersion: ${{ variables.ptvsPackageVersionVar }}
 
         # Non-PR steps
         - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
