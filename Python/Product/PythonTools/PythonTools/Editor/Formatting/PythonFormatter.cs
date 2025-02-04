@@ -59,10 +59,16 @@ namespace Microsoft.PythonTools.Editor.Formatting {
         protected abstract string[] GetToolCommandArgs(string documentFilePath, Range range, string[] extraArgs);
 
         protected virtual async Task<string> RunToolAsync(string interpreterExePath, string documentFilePath, Range range, string[] extraArgs) {
+            var args = GetToolCommandArgs(documentFilePath, range, extraArgs);
+
+            if (args == null) { 
+                return "";
+            }
+
             var output = ProcessOutput.RunHiddenAndCapture(
                 interpreterExePath,
                 System.Text.Encoding.UTF8,
-                GetToolCommandArgs(documentFilePath, range, extraArgs)
+                args
             );
 
             await output;
