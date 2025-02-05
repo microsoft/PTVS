@@ -34,7 +34,7 @@ parameters:
 - name: skipGlassCache
   displayName: Skip Glass Cache
   type: boolean
-  default: false
+  default: true
 
 # build number format 
 name: $(date:yy)$(DayOfYear)$(rev:.r)
