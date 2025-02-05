@@ -24,7 +24,8 @@ namespace Microsoft.PythonTools.Editor.Formatting {
 
         protected override string[] GetToolCommandArgs(string documentFilePath, Range range, string[] extraArgs) {
             if (range != null) {
-                throw new PythonFormatterRangeNotSupportedException("Black does not support the Format Selection command.");
+                return null;
+                // throw new PythonFormatterRangeNotSupportedException("Black does not support the Format Selection command.");
             }
 
             return new[] { "-m", Package, "--diff", documentFilePath };
