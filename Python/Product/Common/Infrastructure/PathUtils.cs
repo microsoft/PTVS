@@ -183,7 +183,7 @@ namespace Microsoft.PythonTools.Infrastructure {
         /// root or a subdirectory of root.
         /// </summary>
         public static bool IsSubpathOf(string root, string path) {
-            if (string.IsNullOrEmpty(root)) {
+            if (string.IsNullOrEmpty(root) || string.IsNullOrEmpty(path)) {
                 return false;
             }
             
