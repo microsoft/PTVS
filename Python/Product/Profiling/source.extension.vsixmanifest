@@ -23,5 +23,6 @@
   <Assets>
     <Asset Type="Microsoft.VisualStudio.Package" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|%CurrentProject%;_GetTargetPath|" AssemblyName="|%CurrentProject%;_GetAssemblyName|" />
+    <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|%CurrentProject%;_GetTargetPath|" />
   </Assets>
 </PackageManifest>
