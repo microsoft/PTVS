@@ -448,7 +448,7 @@ namespace Microsoft.PythonTools.Profiling {
 
         internal bool IsProfilingInstalled() {
             IVsShell shell = (IVsShell)GetService(typeof(IVsShell));
-            Guid perfGuid = GuidList.GuidPerfPkg;
+            Guid perfGuid = GuidList.GuidDiagnosticsHubPkg;
             int installed;
             ErrorHandler.ThrowOnFailure(
                 shell.IsPackageInstalled(ref perfGuid, out installed)
