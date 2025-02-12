@@ -16,8 +16,7 @@
 
 namespace Microsoft.PythonTools.Profiling {
     internal class UserInputDialog {
-        public bool ShowDialog(ProfilingTargetView targetView) {
-            var pythonProfilingPackage = PythonProfilingPackage.Instance;
+        public bool ShowDialog(ProfilingTargetView targetView, PythonProfilingPackage pythonProfilingPackage) {
             var dialog = new LaunchProfiling(pythonProfilingPackage, targetView);
             return dialog.ShowModal() ?? false;
         }

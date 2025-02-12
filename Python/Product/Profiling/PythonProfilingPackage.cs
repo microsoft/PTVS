@@ -62,6 +62,7 @@ namespace Microsoft.PythonTools.Profiling {
           NameResourceID = 105,
           DefaultName = "PythonPerfSession")]
     [ProvideAutomationObject("PythonProfiling")]
+    [ProvideService(typeof(PythonProfilingPackage), IsAsyncQueryable = true)]
     internal sealed class PythonProfilingPackage : AsyncPackage {
         internal static PythonProfilingPackage Instance;
         private static ProfiledProcess _profilingProcess;   // process currently being profiled
