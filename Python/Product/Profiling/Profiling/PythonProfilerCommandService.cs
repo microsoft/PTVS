@@ -18,7 +18,11 @@ namespace Microsoft.PythonTools.Profiling {
     using System;
     using System.ComponentModel.Composition;
     using System.Diagnostics;
+    using System.Threading.Tasks;
     using System.Windows;
+    using Microsoft.VisualStudio.Shell;
+    using Microsoft.VisualStudio.Shell.Interop;
+    using Microsoft.VisualStudio.Threading;
 
     /// <summary>
     /// Implements a service to collect user input for profiling and convert to a <see cref="PythonProfilingCommandArgs"/>.
@@ -39,20 +43,41 @@ namespace Microsoft.PythonTools.Profiling {
         /// <returns>
         /// A <see cref="PythonProfilingCommandArgs"/> object based on user input, or <c>null</c> if canceled.
         /// </returns>
-        public IPythonProfilingCommandArgs GetCommandArgsFromUserInput() {
+        public async Task<IPythonProfilingCommandArgs> GetCommandArgsFromUserInput() {
             try {
-                var pythonProfilingPackage = PythonProfilingPackage.Instance;
+                var pythonProfilingPackage = await GetPythonProfilingPackageAsync();
+                if (pythonProfilingPackage == null) {
+                    return null;
+                    
+                }
                 var targetView = new ProfilingTargetView(pythonProfilingPackage);
 
-                if (_userInputDialog.ShowDialog(targetView)) {
+                if (_userInputDialog.ShowDialog(targetView, pythonProfilingPackage)) {
                     var target = targetView.GetTarget();
-                    return _commandArgumentBuilder.BuildCommandArgsFromTarget(target);
+                    return _commandArgumentBuilder.BuildCommandArgsFromTarget(target, pythonProfilingPackage);
                 }
             } catch (Exception ex) {
                 Debug.Fail($"Error displaying user input dialog: {ex.Message}");
                 MessageBox.Show($"An unexpected error occurred: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
+            return null;
+        }
+
+        private async Task<PythonProfilingPackage> GetPythonProfilingPackageAsync() {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            var shell = await ServiceProvider.GetGlobalServiceAsync(typeof(SVsShell)) as IVsShell;
+            if (shell != null) {
+                var packageGuid = typeof(PythonProfilingPackage).GUID;
+                int hr = shell.LoadPackage(ref packageGuid, out var packageObj);
+
+                Debug.WriteLine($"LoadPackage result: {hr}"); // Log HRESULT result
+
+                if (packageObj != null) {
+                    return packageObj as PythonProfilingPackage;
+                }
+            }
             return null;
         }
     }

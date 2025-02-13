@@ -30,13 +30,12 @@ namespace Microsoft.PythonTools.Profiling {
         /// <summary>
         /// Constructs a <see cref="PythonProfilingCommandArgs"/> based on the provided profiling target.
         /// </summary>
-        public PythonProfilingCommandArgs BuildCommandArgsFromTarget(ProfilingTarget target) {
+        public PythonProfilingCommandArgs BuildCommandArgsFromTarget(ProfilingTarget target, PythonProfilingPackage pythonProfilingPackage) {
             if (target == null) {
                 return null;
             }
 
             try {
-                var pythonProfilingPackage = PythonProfilingPackage.Instance;
                 var joinableTaskFactory = pythonProfilingPackage.JoinableTaskFactory;
 
                 PythonProfilingCommandArgs command = null;
@@ -48,7 +47,7 @@ namespace Microsoft.PythonTools.Profiling {
                     var explorer = await pythonProfilingPackage.ShowPerformanceExplorerAsync();
                     var session = explorer.Sessions.AddTarget(target, name, save);
 
-                    command = SelectBuilder(target, session);
+                    command = SelectBuilder(target, session, pythonProfilingPackage);
 
                 });
 
@@ -62,20 +61,28 @@ namespace Microsoft.PythonTools.Profiling {
         /// <summary>
         /// Select the appropriate builder based on the provided profiling target.
         /// </summary>
-        private PythonProfilingCommandArgs SelectBuilder(ProfilingTarget target, SessionNode session) {
+        private PythonProfilingCommandArgs SelectBuilder(ProfilingTarget target, SessionNode session, PythonProfilingPackage pythonProfilingPackage) {
             var projectTarget = target.ProjectTarget;
             var standaloneTarget = target.StandaloneTarget;
 
             if (projectTarget != null) {
-                return BuildProjectCommandArgs(projectTarget, session);
+                return BuildProjectCommandArgs(projectTarget, session, pythonProfilingPackage);
             } else if (standaloneTarget != null) {
                 return BuildStandaloneCommandArgs(standaloneTarget, session);
             }
             return null;
         }
 
-        private PythonProfilingCommandArgs BuildProjectCommandArgs(ProjectTarget projectTarget, SessionNode session) {
-            var solution = PythonProfilingPackage.Instance.Solution;
+        private PythonProfilingCommandArgs BuildProjectCommandArgs(ProjectTarget projectTarget, SessionNode session, PythonProfilingPackage pythonProfilingPackage) {
+            if (pythonProfilingPackage == null) {
+                return null;
+            }
+
+            var solution = pythonProfilingPackage.Solution;
+            if (solution == null) { 
+                return null;
+            }
+
             var project = solution.EnumerateLoadedPythonProjects()
                 .SingleOrDefault(p => p.GetProjectIDGuidProperty() == projectTarget.TargetProject);
 

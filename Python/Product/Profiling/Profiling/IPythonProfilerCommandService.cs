@@ -14,6 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System.Threading.Tasks;
+
 namespace Microsoft.PythonTools.Profiling {
 
     /// <summary>
@@ -23,6 +25,6 @@ namespace Microsoft.PythonTools.Profiling {
         /// <summary>
         /// Collects user input via a dialog and converts it into a <see cref="IPythonProfilingCommandArgs"/>.
         /// </summary>
-        IPythonProfilingCommandArgs GetCommandArgsFromUserInput();
+        Task<IPythonProfilingCommandArgs> GetCommandArgsFromUserInput();
     }
 }
