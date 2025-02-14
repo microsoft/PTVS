@@ -377,8 +377,12 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 context = _clientContexts.Find(c => c.RootPath == null);
                 if (context == null) {
                     // use first clientcontext as default
-                    context = _clientContexts.First();
-                }
+                    try {
+                        context = _clientContexts.First();
+                    } catch (InvalidOperationException) {
+                        // no client context
+                        return null;
+                    }
             } else {
                 var pathFromScopeUri = CommonUtils.NormalizeDirectoryPath(scopeUri.LocalPath).ToLower().TrimStart('\\');
                 // Find the matching context for the item, but ignore interactive window where "RootPath" is null.
