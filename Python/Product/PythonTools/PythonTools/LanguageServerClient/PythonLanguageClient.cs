@@ -367,12 +367,17 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private LanguageServerSettings.PythonSettings GetSettings(Uri scopeUri = null) {
+            // on shutdown return null
+            if (_clientContexts.Count() == 0) {
+                return null;
+            }
             IPythonLanguageClientContext context = null;
             if (scopeUri == null) {
-                // REPL context has null RootPath
+                // REPL context has null RootPath 
                 context = _clientContexts.Find(c => c.RootPath == null);
                 if (context == null) {
-                    return null;
+                    // use first clientcontext as default
+                    context = _clientContexts.First();
                 }
             } else {
                 var pathFromScopeUri = CommonUtils.NormalizeDirectoryPath(scopeUri.LocalPath).ToLower().TrimStart('\\');
