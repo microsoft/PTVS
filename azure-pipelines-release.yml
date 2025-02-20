@@ -34,28 +34,11 @@ resources:
   pipelines:
   - pipeline: PTVS-Build
     source: PTVS-Build
-<<<<<<< HEAD
-    branch: release/17.10
-=======
->>>>>>> 3c4c04fcd (merged file from main)
+    branch: release/17.14
 
     # When run manually, only consume builds with all of the following tags
     tags:
       - Real signed
-<<<<<<< HEAD
-=======
-      - Pylance Stable
-
-    # Trigger this pipeline when the PTVS-Build pipeline completes.
-    trigger:
-      # Only trigger on builds from main. Builds from release are manually triggered.
-      branches:
-        - main
-      # Only trigger on builds with all of the following tags
-      tags:
-        - Real signed
-        - Pylance Stable
->>>>>>> 3c4c04fcd (merged file from main)
 
 extends:
   template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
