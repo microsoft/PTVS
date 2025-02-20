@@ -4,10 +4,12 @@
 # The pipeline extends v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates from 1esPipelines repository defined in resources section.
 
 parameters:
+
 - name: pylanceVersion
   displayName: Pylance Version
   type: string
   default: latest
+
 - name: pylanceReleaseType
   displayName: Pylance Release Type
   type: string
@@ -15,10 +17,20 @@ parameters:
   values:
     - stable
     - preview
+
 - name: debugpyVersion
   displayName: Debugpy Version
   type: string
   default: latest
+
+# This is the version that the PTVS package currently being built will have.
+# If this value is set to 'currentBuildNumber' will default to $(Build.BuildNumber).
+# But this parameter can be used to overwrite the version number if needed.
+- name: ptvsPackageVersion
+  displayName: PTVS Package Version
+  type: string
+  default: currentBuildNumber
+
 - name: skipGlassCache
   displayName: Skip Glass Cache
   type: boolean
@@ -32,11 +44,7 @@ name: $(date:yy)$(DayOfYear)$(rev:.r)
 trigger:
   branches:
     include:
-      - main
       - release/*
-  paths:
-    exclude:
-      - 'azure-pipelines-*.yml'
 
 # Trigger pr builds for commits into master and any release branches
 # Ignore changes to other yml files, since they are for different pipelines
@@ -44,11 +52,7 @@ trigger:
 pr:
   branches:
     include:
-      - main
       - release/*
-  paths:
-    exclude:
-      - 'azure-pipelines-*.yml'
   drafts: false
 
 # Trigger builds on a nightly schedule
@@ -92,6 +96,13 @@ variables:
     ${{ else }}:
       value: ${{ parameters.pylanceReleaseType }}
   
+  # If the vs package version is not specified, use the build number
+  - name: ptvsPackageVersionVar
+    ${{ if eq(parameters.ptvsPackageVersion, 'currentBuildNumber') }}:
+      value: $(Build.BuildNumber)
+    ${{ else }}:
+      value: ${{ parameters.ptvsPackageVersion }}
+
   # Import variables from PTVS-Dev17 variable group
   - group: PTVS-Dev17
 
@@ -185,6 +196,8 @@ extends:
         
         # Build and publish logs    
         - template: /Build/templates/build.yml@self
+          parameters:
+            ptvsPackageVersion: ${{ variables.ptvsPackageVersionVar }}
 
         # Non-PR steps
         - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
