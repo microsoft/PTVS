@@ -1,6 +1,10 @@
 <!--
   This package is meant to be consumed by Visual Studio only. It is not meant to be published to NuGet.org.
-  Some steps need to be done before this nuspec can be used to create a package. See azure-pipelines.yml for details.
+  The CI build will perform the following steps before trying to create the package:
+
+  1. Replace $version$ with ${{ variables.ptvsPackageVersionVar }}
+  2. Replace Build.SourcesDirectory with $(Build.SourcesDirectory)
+  3. Replace Build.BinariesDirectory with $(Build.BinariesDirectory)
 -->
 <?xml version="1.0" encoding="utf-8"?>
 <package>
@@ -17,7 +21,7 @@
     <tags></tags>
   </metadata>
   <files>
-    <file src="LICENSE.txt" target=""/>
-    <file src="Microsoft.PythonTools.Profiling.dll" target="lib"/>
+    <file src="Build.SourcesDirectory\LICENSE.txt" target=""/>
+    <file src="Build.BinariesDirectory\Microsoft.PythonTools.Profiling.dll" target="lib"/>
   </files>
 </package>
