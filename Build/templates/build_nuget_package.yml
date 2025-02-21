@@ -6,9 +6,6 @@ parameters:
   type: string
   default: $(Build.SourcesDirectory)\pkg\Microsoft.Internal.PythonTools.Profiling.ref.nuspec
 
-variables:
-  nuspecPath: $(Build.SourcesDirectory)\pkg\Microsoft.Internal.PythonTools.Profiling.ref.nuspec
-
 steps:
 
   # do some string replaces in the nuspec
