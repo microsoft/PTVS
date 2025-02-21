@@ -178,6 +178,10 @@ extends:
               displayName: 'Publish build artifact: BoM'
               targetPath: '$(Build.BinariesDirectory)\layout'
               artifactName: SBOM
+          - output: pipelineArtifact
+            displayName: 'Publish build artifact: NuGet Package'
+            targetPath: '$(Build.ArtifactStagingDirectory)\pkg'
+            artifactName: pkg
 
         steps:
 
@@ -204,6 +208,11 @@ extends:
         
         # Build and publish logs    
         - template: /Build/templates/build.yml@self
+          parameters:
+            ptvsPackageVersion: ${{ variables.ptvsPackageVersionVar }}
+        
+        # Build and publish nuget package used by VS
+        - template: /Build/templates/build_nuget_package.yml@self
           parameters:
             ptvsPackageVersion: ${{ variables.ptvsPackageVersionVar }}
 
