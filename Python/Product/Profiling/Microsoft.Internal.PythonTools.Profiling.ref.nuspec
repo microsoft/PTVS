@@ -1,0 +1,23 @@
+<!--
+  This package is meant to be consumed by Visual Studio only. It is not meant to be published to NuGet.org.
+  Some steps need to be done before this nuspec can be used to create a package. See azure-pipelines.yml for details.
+-->
+<?xml version="1.0" encoding="utf-8"?>
+<package>
+  <metadata>
+    <id>Microsoft.Internal.PythonTools.Profiling.ref.nuspec</id>
+    <authors>Microsoft</authors>
+    <license type="file">LICENSE.txt</license>
+    <version>$version$</version>
+    <projectUrl>https://github.com/microsoft/PTVS</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Internal PTVS profiling package, meant to be consumed by Visual Studio.</description>
+    <releaseNotes></releaseNotes>
+    <copyright>© Microsoft Corporation. All rights reserved.</copyright>
+    <tags></tags>
+  </metadata>
+  <files>
+    <file src="LICENSE.txt" target=""/>
+    <file src="Microsoft.PythonTools.Profiling.dll" target="lib"/>
+  </files>
+</package>
