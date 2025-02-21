@@ -2,6 +2,9 @@ parameters:
 - name: ptvsPackageVersion
   type: string
   default: $(Build.BuildNumber)
+- name: nuspecPath
+  type: string
+  default: $(Build.SourcesDirectory)\pkg\Microsoft.Internal.PythonTools.Profiling.ref.nuspec
 
 variables:
   nuspecPath: $(Build.SourcesDirectory)\pkg\Microsoft.Internal.PythonTools.Profiling.ref.nuspec
@@ -10,11 +13,11 @@ steps:
 
   # do some string replaces in the nuspec
   - powershell: |
-      $content = Get-Content $(nuspecPath)
+      $content = Get-Content ${{ parameters.nuspecPath }}
       $content = $content.Replace('$version$', '${{ parameters.ptvsPackageVersion }}')
       $content = $content.Replace('Build.SourcesDirectory', '$(Build.SourcesDirectory)')
       $content = $content.Replace('Build.BinariesDirectory', '$(Build.BinariesDirectory)')
-      $content | Set-Content $(nuspecPath)
+      $content | Set-Content ${{ parameters.nuspecPath }}
     displayName: 'Update nuspec'
 
   # Rebuild the profiling dll, but only produce a reference assembly
@@ -38,7 +41,7 @@ steps:
     displayName: NuGet Pack
     inputs:
       command: pack
-      packagesToPack: $(nuspecPath)
+      packagesToPack: ${{ parameters.nuspecPath }}
       packDestination: $(Build.ArtifactStagingDirectory)\pkg
 
   # The 1ES pipeline template will publish the package as a pipeline artifact using the templateContext
