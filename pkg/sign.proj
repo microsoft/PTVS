@@ -19,8 +19,8 @@
   <Import Project="$(PackagesDir)\Microsoft.VisualStudioEng.MicroBuild.Core\build\Microsoft.VisualStudioEng.MicroBuild.Core.props" />
 
   <ItemGroup>
-    <FilesToSign Include="*.nupkg">
-      <Authenticode>Microsoft400</Authenticode>
+    <FilesToSign Include="$(OutDir)\*.nupkg">
+      <Authenticode>NuGet</Authenticode>
     </FilesToSign>
   </ItemGroup>
 
