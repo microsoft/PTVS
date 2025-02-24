@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!--
   This package is meant to be consumed by Visual Studio only. It is not meant to be published to NuGet.org.
   The CI build will perform the following steps before trying to create the package:
@@ -5,8 +6,8 @@
   1. Replace $version$ with ${{ variables.ptvsPackageVersionVar }}
   2. Replace Build.SourcesDirectory with $(Build.SourcesDirectory)
   3. Replace Build.BinariesDirectory with $(Build.BinariesDirectory)
+  4. Build the profiling dll as a reference assembly instead of a full assembly
 -->
-<?xml version="1.0" encoding="utf-8"?>
 <package>
   <metadata>
     <id>Microsoft.Internal.PythonTools.Profiling.ref.nuspec</id>
