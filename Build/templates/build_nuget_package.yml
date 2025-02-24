@@ -40,12 +40,16 @@ steps:
 
   # Pack the nuget package  
   - task: NuGetCommand@2
-    displayName: NuGet Pack
+    displayName: Build NuGet Package
     inputs:
       command: pack
       packagesToPack: ${{ parameters.nuspecPath }}
       packDestination: $(Build.ArtifactStagingDirectory)\pkg
+  
+  # Sign the nuget package
+  - task: MSBuild@1
+    displayName: Sign NuGet Package
+    inputs:
+      solution: $(Build.SourcesDirectory)\pkg\sign.proj
 
   # The 1ES pipeline template will publish the package as a pipeline artifact using the templateContext
-
-  # TODO: SIGN THE PACKAGE WITH MICROBUILD
