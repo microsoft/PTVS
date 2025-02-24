@@ -32,7 +32,12 @@ steps:
                           /p:ProduceOnlyReferenceAssembly=true 
                           /p:CreateVsixContainer=false 
                           /p:GeneratePkgDefFile=false'
-    
+  
+  # Copy LICENCE to LICENSE.txt because nuget doesn't like files without extensions
+  - powershell: |
+      Copy-Item $(Build.SourcesDirectory)/LICENSE $(Build.SourcesDirectory)/LICENSE.txt
+    displayName: 'Copy LICENSE to LICENSE.txt'
+
   # Pack the nuget package  
   - task: NuGetCommand@2
     displayName: NuGet Pack
