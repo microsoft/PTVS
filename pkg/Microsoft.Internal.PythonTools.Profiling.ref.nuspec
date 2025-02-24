@@ -23,6 +23,6 @@
   </metadata>
   <files>
     <file src="Build.SourcesDirectory\LICENSE.txt" target=""/>
-    <file src="Build.BinariesDirectory\Microsoft.PythonTools.Profiling.dll" target="lib"/>
+    <file src="Build.BinariesDirectory\raw\binaries\Microsoft.PythonTools.Profiling.dll" target="lib"/>
   </files>
 </package>
