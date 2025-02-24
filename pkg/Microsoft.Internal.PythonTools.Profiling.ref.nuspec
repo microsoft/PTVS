@@ -10,7 +10,7 @@
 -->
 <package>
   <metadata>
-    <id>Microsoft.Internal.PythonTools.Profiling.ref.nuspec</id>
+    <id>Microsoft.Internal.PythonTools.Profiling.ref</id>
     <authors>Microsoft</authors>
     <license type="file">LICENSE.txt</license>
     <version>$version$</version>
