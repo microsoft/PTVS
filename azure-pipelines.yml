@@ -211,11 +211,6 @@ extends:
           parameters:
             ptvsPackageVersion: ${{ variables.ptvsPackageVersionVar }}
         
-        # Build and publish nuget package used by VS
-        - template: /Build/templates/build_nuget_package.yml@self
-          parameters:
-            ptvsPackageVersion: ${{ variables.ptvsPackageVersionVar }}
-
         # Non-PR steps
         - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
 
@@ -235,6 +230,11 @@ extends:
 
           # publish symbols
           - template: /Build/templates/publish_symbols.yml@self
+
+          # Build and publish nuget package used by VS
+          - template: /Build/templates/build_nuget_package.yml@self
+            parameters:
+              ptvsPackageVersion: ${{ variables.ptvsPackageVersionVar }}
 
         # MicroBuild cleanup
         - task: MicroBuildCleanup@1
