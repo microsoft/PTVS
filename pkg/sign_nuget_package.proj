@@ -1,0 +1,32 @@
+<!-- This project is meant to be used as part of the PTVS AzDO pipeline. -->
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+
+    <!-- This is where the packages live, set in Common.Build.Core.settings -->
+    <PackagesDir Condition="$(Build_BinariesDirectory) != ''">$(Build_BinariesDirectory)</PackagesDir>
+
+    <!-- This is where the generated nuget package is -->
+    <TempDir Condition="$(TempDir) == ''">$(Build_ArtifactStagingDirectory)\pkg</TempDir>
+
+    <MicroBuildPluginDirectory>$(PackagesDir)</MicroBuildPluginDirectory>
+
+    <!-- SignFiles task requires these, and will refuse to sign anything that's outside of $(OutDir). -->
+    <OutDir>$(TempDir)</OutDir>
+    <IntDir>$(TempDir)</IntDir>
+    <IntermediateOutputPath>$(TempDir)</IntermediateOutputPath>
+  </PropertyGroup>
+
+  <Import Project="$(PackagesDir)\Microsoft.VisualStudioEng.MicroBuild.Core\build\Microsoft.VisualStudioEng.MicroBuild.Core.props" />
+
+  <ItemGroup>
+    <FilesToSign Include="$(OutDir)\*.nupkg">
+      <Authenticode>NuGet</Authenticode>
+    </FilesToSign>
+  </ItemGroup>
+
+  <!-- Dummy targets for SignFiles to hook. -->
+  <Target Name="Build" />
+  <Target Name="AfterBuild" AfterTargets="Build" />
+
+  <Import Project="$(PackagesDir)\Microsoft.VisualStudioEng.MicroBuild.Core\build\Microsoft.VisualStudioEng.MicroBuild.Core.targets" />
+</Project>

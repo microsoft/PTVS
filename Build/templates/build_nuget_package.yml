@@ -1,0 +1,61 @@
+parameters:
+- name: ptvsPackageVersion
+  type: string
+  default: $(Build.BuildNumber)
+- name: nuspecPath
+  type: string
+  default: $(Build.SourcesDirectory)\pkg\Microsoft.Internal.PythonTools.Profiling.ref.nuspec
+
+steps:
+
+  # do some string replaces in the nuspec
+  - powershell: |
+      $content = Get-Content ${{ parameters.nuspecPath }}
+      $content = $content.Replace('$version$', '${{ parameters.ptvsPackageVersion }}')
+      $content = $content.Replace('Build.SourcesDirectory', '$(Build.SourcesDirectory)')
+      $content = $content.Replace('Build.BinariesDirectory', '$(Build.BinariesDirectory)')
+      $content | Set-Content ${{ parameters.nuspecPath }}
+    displayName: 'Update nuspec'
+
+  # Rebuild the profiling dll, but only produce a reference assembly
+  - task: MSBuild@1
+    displayName: 'Build Profiling Ref Assembly'
+    inputs:
+      solution: $(Build.SourcesDirectory)/Python/Product/Profiling/Profiling.csproj
+      msbuildVersion: $(MsBuildVersion)
+      platform: $(Platform)
+      configuration: $(BuildConfiguration)
+      msbuildArguments: ' /p:VSTarget=$(VSTarget) 
+                          /p:BuildNumber=${{ parameters.ptvsPackageVersion }} 
+                          /bl:$(Build.SourcesDirectory)\logs\BuildProfilingRefAssembly.binlog 
+                          /t:Rebuild 
+                          /p:ProduceOnlyReferenceAssembly=true 
+                          /p:CreateVsixContainer=false 
+                          /p:GeneratePkgDefFile=false'
+    
+  # Sign the profiling ref dll
+  - task: MSBuild@1
+    displayName: Sign Profiling Ref Assembly
+    inputs:
+      solution: $(Build.SourcesDirectory)\pkg\sign_profiling_ref_assembly.proj
+
+  # Copy LICENCE to LICENSE.txt because nuget doesn't like files without extensions
+  - powershell: |
+      Copy-Item $(Build.SourcesDirectory)/LICENSE $(Build.SourcesDirectory)/LICENSE.txt
+    displayName: 'Copy LICENSE to LICENSE.txt'
+
+  # Pack the nuget package  
+  - task: NuGetCommand@2
+    displayName: Build NuGet Package
+    inputs:
+      command: pack
+      packagesToPack: ${{ parameters.nuspecPath }}
+      packDestination: $(Build.ArtifactStagingDirectory)\pkg
+  
+  # Sign the nuget package
+  - task: MSBuild@1
+    displayName: Sign NuGet Package
+    inputs:
+      solution: $(Build.SourcesDirectory)\pkg\sign_nuget_package.proj
+
+  # The 1ES pipeline template will publish the package as a pipeline artifact using the templateContext

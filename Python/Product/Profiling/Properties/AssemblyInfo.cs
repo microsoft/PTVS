@@ -16,8 +16,12 @@
 
 using System.Reflection;
 using System.Runtime.InteropServices;
+using Microsoft.VisualStudio.Shell;
 
 [assembly: AssemblyTitle("Visual Studio - Python profiling support")]
 [assembly: AssemblyDescription("Provides support for profiling Python projects.")]
 
 [assembly: ComVisible(false)]
+
+// ProvideCodeBase so VS can find the profiling dll
+[assembly: ProvideCodeBase(CodeBase = @"$PackageFolder$\Microsoft.PythonTools.Profiling.dll")]

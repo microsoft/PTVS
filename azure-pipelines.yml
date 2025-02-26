@@ -178,6 +178,10 @@ extends:
               displayName: 'Publish build artifact: BoM'
               targetPath: '$(Build.BinariesDirectory)\layout'
               artifactName: SBOM
+          - output: pipelineArtifact
+            displayName: 'Publish build artifact: NuGet Package'
+            targetPath: '$(Build.ArtifactStagingDirectory)\pkg'
+            artifactName: pkg
 
         steps:
 
@@ -206,7 +210,7 @@ extends:
         - template: /Build/templates/build.yml@self
           parameters:
             ptvsPackageVersion: ${{ variables.ptvsPackageVersionVar }}
-
+        
         # Non-PR steps
         - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
 
@@ -226,6 +230,11 @@ extends:
 
           # publish symbols
           - template: /Build/templates/publish_symbols.yml@self
+
+          # Build and publish nuget package used by VS
+          - template: /Build/templates/build_nuget_package.yml@self
+            parameters:
+              ptvsPackageVersion: ${{ variables.ptvsPackageVersionVar }}
 
         # MicroBuild cleanup
         - task: MicroBuildCleanup@1
