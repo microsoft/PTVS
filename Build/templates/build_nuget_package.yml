@@ -4,7 +4,7 @@ parameters:
   default: $(Build.BuildNumber)
 - name: nuspecPath
   type: string
-  default: $(Build.SourcesDirectory)\pkg\Microsoft.Internal.PythonTools.Profiling.ref.nuspec
+  default: $(Build.SourcesDirectory)\pkg\Microsoft.Internal.PythonTools.Profiling.nuspec
 
 steps:
 
@@ -16,29 +16,7 @@ steps:
       $content = $content.Replace('Build.BinariesDirectory', '$(Build.BinariesDirectory)')
       $content | Set-Content ${{ parameters.nuspecPath }}
     displayName: 'Update nuspec'
-
-  # Rebuild the profiling dll, but only produce a reference assembly
-  - task: MSBuild@1
-    displayName: 'Build Profiling Ref Assembly'
-    inputs:
-      solution: $(Build.SourcesDirectory)/Python/Product/Profiling/Profiling.csproj
-      msbuildVersion: $(MsBuildVersion)
-      platform: $(Platform)
-      configuration: $(BuildConfiguration)
-      msbuildArguments: ' /p:VSTarget=$(VSTarget) 
-                          /p:BuildNumber=${{ parameters.ptvsPackageVersion }} 
-                          /bl:$(Build.SourcesDirectory)\logs\BuildProfilingRefAssembly.binlog 
-                          /t:Rebuild 
-                          /p:ProduceOnlyReferenceAssembly=true 
-                          /p:CreateVsixContainer=false 
-                          /p:GeneratePkgDefFile=false'
-    
-  # Sign the profiling ref dll
-  - task: MSBuild@1
-    displayName: Sign Profiling Ref Assembly
-    inputs:
-      solution: $(Build.SourcesDirectory)\pkg\sign_profiling_ref_assembly.proj
-
+   
   # Copy LICENCE to LICENSE.txt because nuget doesn't like files without extensions
   - powershell: |
       Copy-Item $(Build.SourcesDirectory)/LICENSE $(Build.SourcesDirectory)/LICENSE.txt
