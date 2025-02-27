@@ -111,7 +111,7 @@ extends:
               useDotNetTask: false # The default is false to use the NuGetCommand task. Set to true to use the DotNetCoreCLI task to publish packages.
               packagesToPush: '!$(System.ArtifactsDirectory)\pkg\*.nupkg'
               packageParentPath: '$(System.ArtifactsDirectory)'
-              nuGetFeedType: internal 
+              nuGetFeedType: external
               allowPackageConflicts: true # Optional. NuGetCommand task only.
               publishPackageMetadata: true # Optional. NuGetCommand task only.
               publishFeedCredentials: VSIDE vs-impl
