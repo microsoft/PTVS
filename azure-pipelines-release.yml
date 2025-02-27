@@ -66,8 +66,8 @@ extends:
     stages:
     - stage: Release
       jobs:
-      - ${{eq(variables['PublishNugetPackage'], false)}}:
-        - job: Release
+      - job: Release
+        condition: eq(variables['PublishNugetPackage'], 'false')
         steps:
 
         # we don't need to checkout any source code
@@ -79,8 +79,6 @@ extends:
           displayName: 'Add PTVS-Build tag'
 
         # Insert the payload uploaded by the PTVS-Build pipeline into Visual Studio.
-        # We don't need to download pipeline artifacts here, because the payload is uploaded to a drop location.
-        # For more info, see https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_wiki/wikis/DevDiv.wiki/629/Automated-VS-Insertion.
         - task: ms-vseng.MicroBuildShipTasks.55100717-a81d-45ea-a363-b8fe3ec375ad.MicroBuildInsertVsPayload@4
           displayName: 'Create Insertion PR'
           inputs:
@@ -97,34 +95,31 @@ extends:
             AddCommitsToPR: false
             LinkWorkItemsToPR: false
 
-      - ${{eq(variables['PublishNugetPackage'], true)}}:
-        - job: Publish
-          displayName: Publish Profiler Nuget Package
+      - job: Publish
+        displayName: Publish Profiler Nuget Package
+        condition: eq(variables['PublishNugetPackage'], 'true')
 
-          templateContext:
-              type: releaseJob
-              isProduction: true
-              inputs:
-              - input: pipelineArtifact
-                pipeline: PTVS-Build
-                artifactName: pkg
-                targetPath: $(System.ArtifactsDirectory)/pkg
+        templateContext:
+            type: releaseJob
+            isProduction: true
+            inputs:
+            - input: pipelineArtifact
+              pipeline: PTVS-Build
+              artifactName: pkg
+              targetPath: $(System.ArtifactsDirectory)/pkg
 
-          steps:
+        steps:
 
-            # Remove the _manifest folder (sbom) from the pkg artifact, since we don't want to publish it.
-            - script: rd /s /q $(System.ArtifactsDirectory)\pkg\_manifest
-              displayName: Remove _manifest folder
+          # Remove the _manifest folder (sbom) from the pkg artifact, since we don't want to publish it.
+          - script: rd /s /q $(System.ArtifactsDirectory)\pkg\_manifest
+            displayName: Remove _manifest folder
 
-            # Publish the signed Nuget package to the devdiv/vs-impl feed.
-            # See https://devdiv.visualstudio.com/DevDiv/_wiki/wikis/DevDiv.wiki/6700/Building-NuGet-packages-in-the-VS-build-and-publishing-to-feeds-(taking-dependencies-on-VS)-for-VS-SDK-or-impl
-            - task: NuGetCommand@2
-              displayName: Nuget push
-              inputs:
-                command: push
-                packagesToPush: '$(System.ArtifactsDirectory)\pkg\*.nupkg;'
-                nuGetFeedType: external
-                publishFeedCredentials: VSIDE vs-impl
-
-        
-
+          # Publish the signed Nuget package to the devdiv/vs-impl feed.
+          # See https://devdiv.visualstudio.com/DevDiv/_wiki/wikis/DevDiv.wiki/6700/Building-NuGet-packages-in-the-VS-build-and-publishing-to-feeds-(taking-dependencies-on-VS)-for-VS-SDK-or-impl
+          - task: NuGetCommand@2
+            displayName: Nuget push
+            inputs:
+              command: push
+              packagesToPush: '$(System.ArtifactsDirectory)\pkg\*.nupkg;'
+              nuGetFeedType: external
+              publishFeedCredentials: VSIDE vs-impl
