@@ -122,12 +122,3 @@ extends:
           - script: rd /s /q $(System.ArtifactsDirectory)\pkg\_manifest
             displayName: Remove _manifest folder
 
-          # Publish the signed Nuget package to the devdiv/vs-impl feed.
-          # See https://devdiv.visualstudio.com/DevDiv/_wiki/wikis/DevDiv.wiki/6700/Building-NuGet-packages-in-the-VS-build-and-publishing-to-feeds-(taking-dependencies-on-VS)-for-VS-SDK-or-impl
-          - task: NuGetCommand@2
-            displayName: Nuget push
-            inputs:
-              command: push
-              packagesToPush: '$(System.ArtifactsDirectory)\pkg\*.nupkg;'
-              nuGetFeedType: external
-              publishFeedCredentials: VSIDE vs-impl
