@@ -114,7 +114,7 @@ extends:
               nuGetFeedType: external
               allowPackageConflicts: true # Optional. NuGetCommand task only.
               publishPackageMetadata: true # Optional. NuGetCommand task only.
-              publishFeedCredentials: VSIDE vs-impl
+              publishFeedCredentials: azure-public/vs-impl
 
         steps:
 
