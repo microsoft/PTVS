@@ -9,6 +9,11 @@ parameters:
   type: string
   default: main
 
+- name: PublishNugetPackage
+  displayName: Publish Nuget Package
+  type: boolean
+  default: false
+
 # build number format 
 name: $(date:yy)$(DayOfYear)$(rev:.r)
 
@@ -19,6 +24,8 @@ pr: none
 variables: 
   - name: VisualStudioBranch
     value: ${{ parameters.VisualStudioBranch }}
+  - name: PublishNugetPackage
+    value: ${{ parameters.PublishNugetPackage }}
 
   # https://devdiv.visualstudio.com/DevDiv/_library?itemType=VariableGroups&view=VariableGroupView&variableGroupId=381&path=PTVS-Dev17
   - group: PTVS-Dev17
@@ -59,7 +66,8 @@ extends:
     stages:
     - stage: Release
       jobs:
-      - job: Release
+      - ${{eq(variables['PublishNugetPackage'], false)}}:
+        - job: Release
         steps:
 
         # we don't need to checkout any source code
@@ -88,6 +96,35 @@ extends:
             AutoCompleteMergeStrategy: Squash
             AddCommitsToPR: false
             LinkWorkItemsToPR: false
+
+      - ${{eq(variables['PublishNugetPackage'], true)}}:
+        - job: Publish
+          displayName: Publish Profiler Nuget Package
+
+          templateContext:
+              type: releaseJob
+              isProduction: true
+              inputs:
+              - input: pipelineArtifact
+                pipeline: PTVS-Build
+                artifactName: pkg
+                targetPath: $(System.ArtifactsDirectory)/pkg
+
+          steps:
+
+            # Remove the _manifest folder (sbom) from the pkg artifact, since we don't want to publish it.
+            - script: rd /s /q $(System.ArtifactsDirectory)\pkg\_manifest
+              displayName: Remove _manifest folder
+
+            # Publish the signed Nuget package to the devdiv/vs-impl feed.
+            # See https://devdiv.visualstudio.com/DevDiv/_wiki/wikis/DevDiv.wiki/6700/Building-NuGet-packages-in-the-VS-build-and-publishing-to-feeds-(taking-dependencies-on-VS)-for-VS-SDK-or-impl
+            - task: NuGetCommand@2
+              displayName: Nuget push
+              inputs:
+                command: push
+                packagesToPush: '$(System.ArtifactsDirectory)\pkg\*.nupkg;'
+                nuGetFeedType: external
+                publishFeedCredentials: VSIDE vs-impl
 
         
 
