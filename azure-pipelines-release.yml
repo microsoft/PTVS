@@ -119,7 +119,7 @@ extends:
               publishVstsFeed: vs-impl
 
         steps:
-
+        
           # Remove the _manifest folder (sbom) from the pkg artifact, since we don't want to publish it.
           - script: rd /s /q $(System.ArtifactsDirectory)\pkg\_manifest
             displayName: Remove _manifest folder
