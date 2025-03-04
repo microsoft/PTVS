@@ -9,6 +9,11 @@ parameters:
   type: string
   default: main
 
+- name: PublishNugetPackage
+  displayName: Publish Nuget Package
+  type: boolean
+  default: false
+
 # build number format 
 name: $(date:yy)$(DayOfYear)$(rev:.r)
 
@@ -19,6 +24,8 @@ pr: none
 variables: 
   - name: VisualStudioBranch
     value: ${{ parameters.VisualStudioBranch }}
+  - name: PublishNugetPackage
+    value: ${{ parameters.PublishNugetPackage }}
 
   # https://devdiv.visualstudio.com/DevDiv/_library?itemType=VariableGroups&view=VariableGroupView&variableGroupId=381&path=PTVS-Dev17
   - group: PTVS-Dev17
@@ -60,6 +67,7 @@ extends:
     - stage: Release
       jobs:
       - job: Release
+        condition: eq(variables['PublishNugetPackage'], 'false')
         steps:
 
         # we don't need to checkout any source code
@@ -89,5 +97,31 @@ extends:
             AddCommitsToPR: false
             LinkWorkItemsToPR: false
 
+      # See https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/1es-pipeline-templates/features/outputs/nuget-packages?tabs=outputsyntax
+      - job: Publish
+        displayName: Publish Profiler Nuget Package
+        condition: eq(variables['PublishNugetPackage'], 'true')
+
+        templateContext:
+            inputs:
+            - input: pipelineArtifact
+              pipeline: PTVS-Build
+              artifactName: pkg
+              targetPath: $(System.ArtifactsDirectory)/pkg
+            outputs:
+            - output: nuget
+              useDotNetTask: false # The default is false to use the NuGetCommand task. Set to true to use the DotNetCoreCLI task to publish packages.
+              packagesToPush: '$(System.ArtifactsDirectory)\pkg\*.nupkg'
+              packageParentPath: '$(System.ArtifactsDirectory)'
+              nuGetFeedType: internal
+              allowPackageConflicts: true # Optional. NuGetCommand task only.
+              publishPackageMetadata: true # Optional. NuGetCommand task only.
+              publishVstsFeed: vs-impl
+
+        steps:
         
+          # Remove the _manifest folder (sbom) from the pkg artifact, since we don't want to publish it.
+          - script: rd /s /q $(System.ArtifactsDirectory)\pkg\_manifest
+            displayName: Remove _manifest folder
+
 
