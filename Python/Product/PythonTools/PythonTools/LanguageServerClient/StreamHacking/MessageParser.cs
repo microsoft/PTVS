@@ -23,7 +23,7 @@ namespace Microsoft.PythonTools.LanguageServerClient.StreamHacking {
     static class MessageParser {
         private static string ContentLengthHeader = "Content-Length: ";
 
-        public static JObject Deserialize(StreamData data) {
+        public static (JObject jObject, bool hasHeader) Deserialize(StreamData data) {
             // Go through the byte stream until we get past the http header
             var contentLength = data.count;
             var httpHeaderOffset = -1;
@@ -54,21 +54,30 @@ namespace Microsoft.PythonTools.LanguageServerClient.StreamHacking {
                     contentLength = Math.Min(contentLength, data.bytes.Length - httpHeaderOffset);
                     var messageJson = System.Text.Encoding.UTF8.GetString(data.bytes, httpHeaderOffset, contentLength);
                     var messageJsonLength = System.Text.Encoding.UTF8.GetBytes(messageJson).Length;
-                    return JObject.Parse(messageJson);
+                    return (JObject.Parse(messageJson), true);
                 } catch {
 
                 }
 
+            } else {
+                try {
+                    contentLength = Math.Min(contentLength, data.bytes.Length);
+                    var messageJson = System.Text.Encoding.UTF8.GetString(data.bytes, 0, contentLength);
+                    var messageJsonLength = System.Text.Encoding.UTF8.GetBytes(messageJson).Length;
+                    return (JObject.Parse(messageJson), false);
+                } catch {
+
+                }
             }
-            return null;
+            return (null, false);
         }
 
-        public static StreamData Serialize(JObject message) {
+        public static StreamData Serialize(JObject message, bool hasHeader) {
             var newJson = message.ToString(Newtonsoft.Json.Formatting.None);
             var newJsonLength = System.Text.Encoding.UTF8.GetBytes(newJson).Length;
 
             // Http header is just 'Content-Length: number'
-            var fullText = $"{ContentLengthHeader}{newJsonLength}\r\n\r\n{newJson}";
+            var fullText = hasHeader? $"{ContentLengthHeader}{newJsonLength}\r\n\r\n{newJson}" : newJson;
             var newBuffer = System.Text.Encoding.UTF8.GetBytes(fullText);
             return new StreamData { bytes = newBuffer, offset = 0, count = newBuffer.Length };
         }

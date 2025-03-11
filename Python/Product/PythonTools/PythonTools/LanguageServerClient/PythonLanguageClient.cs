@@ -547,7 +547,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         // This is all a hack until VSSDK LanguageServer can handle workspace folders and dynamic registration
         private Tuple<StreamData, bool> OnSendToServer(StreamData data) {
-            var message = MessageParser.Deserialize(data);
+            var message = MessageParser.Deserialize(data).jObject;
+            var hasHeader = MessageParser.Deserialize(data).hasHeader;
             if (message != null) {
                 if (_isDebugging) {
                     System.Diagnostics.Debug.WriteLine($"*** Sending pylance: {message.ToString()}");
@@ -580,7 +581,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                                 messageParams["rootUri"] = "";
 
                                 // Need to rewrite the message now. 
-                                return Tuple.Create(MessageParser.Serialize(message), true);
+                                return Tuple.Create(MessageParser.Serialize(message, hasHeader), true);
                             }
                         }
                     } else if (message.Value<string>("method") == "textDocument/codeAction") {
@@ -591,7 +592,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                                 var selectionRange = messageParams["context"]["_vs_selectionRange"];
                                 messageParams["range"]["start"] = selectionRange["start"];
                                 messageParams["range"]["end"] = selectionRange["end"];
-                                return Tuple.Create(MessageParser.Serialize(message), true);
+                                return Tuple.Create(MessageParser.Serialize(message, hasHeader), true);
                             }
 
                         }
