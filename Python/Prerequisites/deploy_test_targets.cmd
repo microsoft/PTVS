@@ -16,6 +16,7 @@ set D=%~dp0
 if NOT EXIST "%VSINSTALLDIR%" call :failure
 
 call :docopy "%VSINSTALLDIR%\MSBuild\Microsoft\VisualStudio\v17.0"
+call :docopy "%VSINSTALLDIR%\MSBuild\Microsoft\VisualStudio\v18.0"
 
 pause
 exit /B 0
