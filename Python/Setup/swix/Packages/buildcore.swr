@@ -1,5 +1,15 @@
 
-folder "InstallDir:\MSBuild\Microsoft\VisualStudio\v$(VSTarget)\Python Tools"
+folder "InstallDir:\MSBuild\Microsoft\VisualStudio\v17.0\Python Tools"
+  file source=Microsoft.PythonTools.BuildTasks.Core.dll
+  file source=Microsoft.PythonTools.Common.dll
+  file source=Microsoft.PythonTools.targets
+  file source=Microsoft.PythonTools.Web.targets
+  file source=Microsoft.PythonTools.Worker.targets
+  file source=Microsoft.PythonTools.Django.targets
+  file source=Microsoft.PythonTools.WebRole.dll
+  file source=wfastcgi.py
+
+folder "InstallDir:\MSBuild\Microsoft\VisualStudio\v18.0\Python Tools"
   file source=Microsoft.PythonTools.BuildTasks.Core.dll
   file source=Microsoft.PythonTools.Common.dll
   file source=Microsoft.PythonTools.targets
