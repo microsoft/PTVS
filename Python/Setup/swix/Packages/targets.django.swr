@@ -1,3 +1,6 @@
 ﻿
-folder "InstallDir:\MSBuild\Microsoft\VisualStudio\v$(VSTarget)\Python Tools"
+folder "InstallDir:\MSBuild\Microsoft\VisualStudio\v17.0\Python Tools"
+  file source=Microsoft.PythonTools.Django.targets
+
+folder "InstallDir:\MSBuild\Microsoft\VisualStudio\v18.0\Python Tools"
   file source=Microsoft.PythonTools.Django.targets
