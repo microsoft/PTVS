@@ -23,6 +23,11 @@ parameters:
   type: string
   default: latest
 
+- name: PublishNugetPackageAsBuildArtifact
+  displayName: Publish Nuget Package As Build Artifact
+  type: boolean
+  default: false
+
 # This is the version that the PTVS package currently being built will have.
 # If this value is set to 'currentBuildNumber' will default to $(Build.BuildNumber).
 # But this parameter can be used to overwrite the version number if needed.
@@ -96,6 +101,8 @@ variables:
     value: false  # disabled for now because of known issue
   - name: SkipGlassCache
     value: ${{ parameters.skipGlassCache }}
+  - name: PublishNugetPackageAsBuildArtifact
+    value: ${{ parameters.PublishNugetPackageAsBuildArtifact }}
 
   # If the build ran because of a nightly schedule, force pylance release type to preview
   - name: pylanceReleaseTypeVar
@@ -178,10 +185,11 @@ extends:
               displayName: 'Publish build artifact: BoM'
               targetPath: '$(Build.BinariesDirectory)\layout'
               artifactName: SBOM
-          - output: pipelineArtifact
-            displayName: 'Publish build artifact: NuGet Package'
-            targetPath: '$(Build.ArtifactStagingDirectory)\pkg'
-            artifactName: pkg
+          - ${{ if or(eq(variables['Build.Reason'], 'PullRequest'), eq(variables['PublishNugetPackageAsBuildArtifact'], true)) }}:
+            - output: pipelineArtifact
+              displayName: 'Publish build artifact: NuGet Package'
+              targetPath: '$(Build.ArtifactStagingDirectory)\pkg'
+              artifactName: pkg
 
         steps:
 
