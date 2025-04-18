@@ -334,7 +334,6 @@
                         AutomationProperties.AutomationId="PreviewResult"
                         VerticalScrollBarVisibility="Auto"
                         HorizontalScrollBarVisibility="Auto"
-                        IsTabStop="True"
                         Height ="300"
                         >
 
