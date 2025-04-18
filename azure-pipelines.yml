@@ -185,7 +185,7 @@ extends:
               displayName: 'Publish build artifact: BoM'
               targetPath: '$(Build.BinariesDirectory)\layout'
               artifactName: SBOM
-          - ${{ if or(eq(variables['Build.Reason'], 'PullRequest'), eq(variables['PublishNugetPackageAsBuildArtifact'], true)) }}:
+          - ${{ if or(notin(variables['Build.Reason'], 'PullRequest'), eq(variables['PublishNugetPackageAsBuildArtifact'], true)) }}:
             - output: pipelineArtifact
               displayName: 'Publish build artifact: NuGet Package'
               targetPath: '$(Build.ArtifactStagingDirectory)\pkg'

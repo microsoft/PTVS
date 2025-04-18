@@ -86,8 +86,8 @@
                 Text="{x:Static common:Strings.AddVirtualEnvironmentWindow_NoInterpreterHelp}"
                 TextWrapping="Wrap"/>
         </Grid>
-        <ScrollViewer VerticalScrollBarVisibility="Auto" IsTabStop="True">
-            <ItemsControl 
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False" IsTabStop="False">
+            <ItemsControl
                 Style="{Binding 
                 RelativeSource={RelativeSource AncestorType=UserControl},
                 Converter={StaticResource LandscapePortraitConverter}, 
@@ -95,7 +95,7 @@
 
                 <!--Main options-->
 
-                <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Vertical" Focusable="False">
                     <!--Project-->
                     <Label
                         x:Name="ProjectLabel"
