@@ -234,6 +234,24 @@ namespace Microsoft.PythonTools.Profiling {
                 return ResourceManager.GetString("LaunchProfiling_InterpreterPathBrowseButtonDescription", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Radio button 1 of 2, Open project.
+        /// </summary>
+        public static string LaunchProfiling_OpenProjectRadioButtonDescription {
+            get {
+                return ResourceManager.GetString("LaunchProfiling_OpenProjectRadioButtonDescription", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Radio button 2 of 2, Standalone script.
+        /// </summary>
+        public static string LaunchProfiling_StandaloneScriptRadioButtonDescription {
+            get {
+                return ResourceManager.GetString("LaunchProfiling_StandaloneScriptRadioButtonDescription", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Mi_xed Mode Profiling.
