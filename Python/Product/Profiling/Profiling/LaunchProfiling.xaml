@@ -45,11 +45,14 @@
 
             <Label Grid.Row="0"
                    Content="{x:Static ui:Strings.LaunchProfiling_WhatToProfile}"
+                   Focusable="True"
+                   IsTabStop="True"
                    Margin="6 12 6 0"
                    FontWeight="Bold"/>
 
             <RadioButton Grid.Row="1" Margin="12 12 12 4"
                          Content="{x:Static ui:Strings.LaunchProfiling_OpenProject}"
+                         AutomationProperties.Name="{x:Static ui:Strings.LaunchProfiling_OpenProjectRadioButtonDescription}"
                          AutomationProperties.AutomationId="ProfileProject"
                          GroupName="ProjectOrStandalone"
                          IsEnabled="{Binding IsAnyAvailableProjects}"
@@ -66,6 +69,7 @@
             <RadioButton Grid.Row="3" Margin="12 12 12 4"
                          Content="{x:Static ui:Strings.LaunchProfiling_StandaloneScript}" 
                          AutomationProperties.AutomationId="ProfileScript"
+                         AutomationProperties.Name="{x:Static ui:Strings.LaunchProfiling_StandaloneScriptRadioButtonDescription}"
                          GroupName="ProjectOrStandalone"
                          IsChecked="{Binding IsStandaloneSelected}" />
             <ScrollViewer Grid.Row="4" Height="200">
