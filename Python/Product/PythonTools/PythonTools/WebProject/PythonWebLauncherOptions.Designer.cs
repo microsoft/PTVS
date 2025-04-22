@@ -32,7 +32,6 @@ namespace Microsoft.PythonTools.Project.Web {
             this._arguments = new System.Windows.Forms.TextBox();
             this._interpArgs = new System.Windows.Forms.TextBox();
             this._interpreterPath = new System.Windows.Forms.TextBox();
-            this._interpreterPathLabel = new System.Windows.Forms.Label();
             this._interpArgsLabel = new System.Windows.Forms.Label();
             this._argumentsLabel = new System.Windows.Forms.Label();
             this._searchPathLabel = new System.Windows.Forms.Label();
@@ -41,6 +40,7 @@ namespace Microsoft.PythonTools.Project.Web {
             this._launchUrl = new System.Windows.Forms.TextBox();
             this._launchUrlLabel = new System.Windows.Forms.Label();
             this._environmentLabel = new System.Windows.Forms.Label();
+            this._interpreterPathLabel = new System.Windows.Forms.Label();
             this._toolTip = new System.Windows.Forms.ToolTip(this.components);
             this._debugServerTarget = new System.Windows.Forms.TextBox();
             this._debugServerArguments = new System.Windows.Forms.TextBox();
@@ -102,7 +102,6 @@ namespace Microsoft.PythonTools.Project.Web {
             this._environment.Name = "_environment";
             this._toolTip.SetToolTip(this._environment, resources.GetString("_environment.ToolTip"));
             this._environment.TextChanged += new System.EventHandler(this.Setting_TextChanged);
-            this._environment.AccessibleName = resources.GetString("_environment.ToolTip");
             // 
             // _searchPaths
             // 
@@ -110,7 +109,6 @@ namespace Microsoft.PythonTools.Project.Web {
             this._searchPaths.Name = "_searchPaths";
             this._toolTip.SetToolTip(this._searchPaths, resources.GetString("_searchPaths.ToolTip"));
             this._searchPaths.TextChanged += new System.EventHandler(this.Setting_TextChanged);
-            this._searchPaths.AccessibleName = resources.GetString("_searchPaths.ToolTip");
             // 
             // _arguments
             // 
@@ -118,7 +116,6 @@ namespace Microsoft.PythonTools.Project.Web {
             this._arguments.Name = "_arguments";
             this._toolTip.SetToolTip(this._arguments, resources.GetString("_arguments.ToolTip"));
             this._arguments.TextChanged += new System.EventHandler(this.Setting_TextChanged);
-            this._arguments.AccessibleName = resources.GetString("_arguments.ToolTip");
             // 
             // _interpArgs
             // 
@@ -126,7 +123,6 @@ namespace Microsoft.PythonTools.Project.Web {
             this._interpArgs.Name = "_interpArgs";
             this._toolTip.SetToolTip(this._interpArgs, resources.GetString("_interpArgs.ToolTip"));
             this._interpArgs.TextChanged += new System.EventHandler(this.Setting_TextChanged);
-            this._interpArgs.AccessibleName = resources.GetString("_interpArgs.ToolTip");
             // 
             // _interpreterPath
             // 
@@ -134,42 +130,30 @@ namespace Microsoft.PythonTools.Project.Web {
             this._interpreterPath.Name = "_interpreterPath";
             this._toolTip.SetToolTip(this._interpreterPath, resources.GetString("_interpreterPath.ToolTip"));
             this._interpreterPath.TextChanged += new System.EventHandler(this.Setting_TextChanged);
-            this._interpreterPath.AccessibleName = resources.GetString("_interpreterPath.ToolTip");
-            // 
-            // _interpreterPathLabel
-            // 
-            resources.ApplyResources(this._interpreterPathLabel, "_interpreterPathLabel");
-            this._interpreterPathLabel.Name = "_interpreterPathLabel";
-            this._toolTip.SetToolTip(this._interpreterPathLabel, resources.GetString("_interpreterPathLabel.ToolTip"));
-            this._interpreterPathLabel.AccessibleName = resources.GetString("_interpreterPathLabel.ToolTip");
             // 
             // _interpArgsLabel
             // 
             resources.ApplyResources(this._interpArgsLabel, "_interpArgsLabel");
             this._interpArgsLabel.Name = "_interpArgsLabel";
             this._toolTip.SetToolTip(this._interpArgsLabel, resources.GetString("_interpArgsLabel.ToolTip"));
-            this._interpArgsLabel.AccessibleName = resources.GetString("_interpArgsLabel.ToolTip");
             // 
             // _argumentsLabel
             // 
             resources.ApplyResources(this._argumentsLabel, "_argumentsLabel");
             this._argumentsLabel.Name = "_argumentsLabel";
             this._toolTip.SetToolTip(this._argumentsLabel, resources.GetString("_argumentsLabel.ToolTip"));
-            this._argumentsLabel.AccessibleName = resources.GetString("_argumentsLabel.ToolTip");
             // 
             // _searchPathLabel
             // 
             resources.ApplyResources(this._searchPathLabel, "_searchPathLabel");
             this._searchPathLabel.Name = "_searchPathLabel";
             this._toolTip.SetToolTip(this._searchPathLabel, resources.GetString("_searchPathLabel.ToolTip"));
-            this._searchPathLabel.AccessibleName = resources.GetString("_searchPathLabel.ToolTip");
             // 
             // _portNumberLabel
             // 
             resources.ApplyResources(this._portNumberLabel, "_portNumberLabel");
             this._portNumberLabel.Name = "_portNumberLabel";
             this._toolTip.SetToolTip(this._portNumberLabel, resources.GetString("_portNumberLabel.ToolTip"));
-            this._portNumberLabel.AccessibleName = resources.GetString("_portNumberLabel.ToolTip");
             // 
             // _portNumber
             // 
@@ -177,7 +161,6 @@ namespace Microsoft.PythonTools.Project.Web {
             this._portNumber.Name = "_portNumber";
             this._toolTip.SetToolTip(this._portNumber, resources.GetString("_portNumber.ToolTip"));
             this._portNumber.TextChanged += new System.EventHandler(this.Setting_TextChanged);
-            this._portNumber.AccessibleName = resources.GetString("_portNumber.ToolTip");
             // 
             // _launchUrl
             // 
@@ -185,21 +168,24 @@ namespace Microsoft.PythonTools.Project.Web {
             this._launchUrl.Name = "_launchUrl";
             this._toolTip.SetToolTip(this._launchUrl, resources.GetString("_launchUrl.ToolTip"));
             this._launchUrl.TextChanged += new System.EventHandler(this.Setting_TextChanged);
-            this._launchUrl.AccessibleName = resources.GetString("_launchUrl.ToolTip");
             // 
             // _launchUrlLabel
             // 
             resources.ApplyResources(this._launchUrlLabel, "_launchUrlLabel");
             this._launchUrlLabel.Name = "_launchUrlLabel";
             this._toolTip.SetToolTip(this._launchUrlLabel, resources.GetString("_launchUrlLabel.ToolTip"));
-            this._launchUrlLabel.AccessibleName = resources.GetString("_launchUrlLabel.ToolTip");
             // 
             // _environmentLabel
             // 
             resources.ApplyResources(this._environmentLabel, "_environmentLabel");
             this._environmentLabel.Name = "_environmentLabel";
             this._toolTip.SetToolTip(this._environmentLabel, resources.GetString("_environmentLabel.ToolTip"));
-            this._environmentLabel.AccessibleName = resources.GetString("_environmentLabel.ToolTip");
+            // 
+            // _interpreterPathLabel
+            // 
+            resources.ApplyResources(this._interpreterPathLabel, "_interpreterPathLabel");
+            this._interpreterPathLabel.Name = "_interpreterPathLabel";
+            this._toolTip.SetToolTip(this._interpreterPathLabel, resources.GetString("_interpreterPathLabel.ToolTip"));
             // 
             // _debugServerTarget
             // 
@@ -207,7 +193,6 @@ namespace Microsoft.PythonTools.Project.Web {
             this._debugServerTarget.Name = "_debugServerTarget";
             this._toolTip.SetToolTip(this._debugServerTarget, resources.GetString("_debugServerTarget.ToolTip"));
             this._debugServerTarget.TextChanged += new System.EventHandler(this.Setting_TextChanged);
-            this._debugServerTarget.AccessibleName = resources.GetString("_debugServerTarget.ToolTip");
             // 
             // _debugServerArguments
             // 
@@ -216,7 +201,6 @@ namespace Microsoft.PythonTools.Project.Web {
             this._debugServerArguments.Name = "_debugServerArguments";
             this._toolTip.SetToolTip(this._debugServerArguments, resources.GetString("_debugServerArguments.ToolTip"));
             this._debugServerArguments.TextChanged += new System.EventHandler(this.Setting_TextChanged);
-            this._debugServerArguments.AccessibleName = resources.GetString("_debugServerArguments.ToolTip");
             // 
             // _debugServerEnvironment
             // 
@@ -225,28 +209,24 @@ namespace Microsoft.PythonTools.Project.Web {
             this._debugServerEnvironment.Name = "_debugServerEnvironment";
             this._toolTip.SetToolTip(this._debugServerEnvironment, resources.GetString("_debugServerEnvironment.ToolTip"));
             this._debugServerEnvironment.TextChanged += new System.EventHandler(this.Setting_TextChanged);
-            this._debugServerEnvironment.AccessibleName = resources.GetString("_debugServerEnvironment.ToolTip");
             // 
             // _debugServerEnvironmentLabel
             // 
             resources.ApplyResources(this._debugServerEnvironmentLabel, "_debugServerEnvironmentLabel");
             this._debugServerEnvironmentLabel.Name = "_debugServerEnvironmentLabel";
             this._toolTip.SetToolTip(this._debugServerEnvironmentLabel, resources.GetString("_debugServerEnvironmentLabel.ToolTip"));
-            this._debugServerEnvironmentLabel.AccessibleName = resources.GetString("_debugServerEnvironmentLabel.ToolTip");
             // 
             // _debugServerArgumentsLabel
             // 
             resources.ApplyResources(this._debugServerArgumentsLabel, "_debugServerArgumentsLabel");
             this._debugServerArgumentsLabel.Name = "_debugServerArgumentsLabel";
             this._toolTip.SetToolTip(this._debugServerArgumentsLabel, resources.GetString("_debugServerArgumentsLabel.ToolTip"));
-            this._debugServerArgumentsLabel.AccessibleName = resources.GetString("_debugServerArgumentsLabel.ToolTip");
             // 
             // _debugServerTargetLabel
             // 
             resources.ApplyResources(this._debugServerTargetLabel, "_debugServerTargetLabel");
             this._debugServerTargetLabel.Name = "_debugServerTargetLabel";
             this._toolTip.SetToolTip(this._debugServerTargetLabel, resources.GetString("_debugServerTargetLabel.ToolTip"));
-            this._debugServerTargetLabel.AccessibleName = resources.GetString("_debugServerTargetLabel.ToolTip");
             // 
             // _debugServerTargetType
             // 
@@ -260,7 +240,6 @@ namespace Microsoft.PythonTools.Project.Web {
             resources.GetString("_debugServerTargetType.Items3")});
             this._debugServerTargetType.Name = "_debugServerTargetType";
             this._toolTip.SetToolTip(this._debugServerTargetType, resources.GetString("_debugServerTargetType.ToolTip"));
-            this._debugServerTargetType.AccessibleName = resources.GetString("_debugServerTargetType.ToolTip");
             this._debugServerTargetType.SelectedValueChanged += new System.EventHandler(this.Setting_SelectedValueChanged);
             // 
             // _runServerTarget
@@ -269,7 +248,6 @@ namespace Microsoft.PythonTools.Project.Web {
             this._runServerTarget.Name = "_runServerTarget";
             this._toolTip.SetToolTip(this._runServerTarget, resources.GetString("_runServerTarget.ToolTip"));
             this._runServerTarget.TextChanged += new System.EventHandler(this.Setting_TextChanged);
-            this._runServerTarget.AccessibleName = resources.GetString("_runServerTarget.ToolTip");
             // 
             // _runServerArguments
             // 
@@ -277,7 +255,6 @@ namespace Microsoft.PythonTools.Project.Web {
             this.tableLayoutPanel3.SetColumnSpan(this._runServerArguments, 2);
             this._runServerArguments.Name = "_runServerArguments";
             this._toolTip.SetToolTip(this._runServerArguments, resources.GetString("_runServerArguments.ToolTip"));
-            this._runServerArguments.AccessibleName = resources.GetString("_runServerArguments.ToolTip");
             this._runServerArguments.TextChanged += new System.EventHandler(this.Setting_TextChanged);
             // 
             // _runServerEnvironment
@@ -286,7 +263,6 @@ namespace Microsoft.PythonTools.Project.Web {
             this.tableLayoutPanel3.SetColumnSpan(this._runServerEnvironment, 2);
             this._runServerEnvironment.Name = "_runServerEnvironment";
             this._toolTip.SetToolTip(this._runServerEnvironment, resources.GetString("_runServerEnvironment.ToolTip"));
-            this._runServerEnvironment.AccessibleName = resources.GetString("_runServerEnvironment.ToolTip");
             this._runServerEnvironment.TextChanged += new System.EventHandler(this.Setting_TextChanged);
             // 
             // _runServerEnvironmentLabel
@@ -294,21 +270,18 @@ namespace Microsoft.PythonTools.Project.Web {
             resources.ApplyResources(this._runServerEnvironmentLabel, "_runServerEnvironmentLabel");
             this._runServerEnvironmentLabel.Name = "_runServerEnvironmentLabel";
             this._toolTip.SetToolTip(this._runServerEnvironmentLabel, resources.GetString("_runServerEnvironmentLabel.ToolTip"));
-            this._runServerEnvironmentLabel.AccessibleName = resources.GetString("_runServerEnvironmentLabel.ToolTip");
             // 
             // _runServerArgumentsLabel
             // 
             resources.ApplyResources(this._runServerArgumentsLabel, "_runServerArgumentsLabel");
             this._runServerArgumentsLabel.Name = "_runServerArgumentsLabel";
             this._toolTip.SetToolTip(this._runServerArgumentsLabel, resources.GetString("_runServerArgumentsLabel.ToolTip"));
-            this._runServerArgumentsLabel.AccessibleName = resources.GetString("_runServerArgumentsLabel.ToolTip");
             // 
             // _runServerTargetLabel
             // 
             resources.ApplyResources(this._runServerTargetLabel, "_runServerTargetLabel");
             this._runServerTargetLabel.Name = "_runServerTargetLabel";
             this._toolTip.SetToolTip(this._runServerTargetLabel, resources.GetString("_runServerTargetLabel.ToolTip"));
-            this._runServerTargetLabel.AccessibleName = resources.GetString("_runServerTargetLabel.ToolTip");
             // 
             // _runServerTargetType
             // 
@@ -322,7 +295,6 @@ namespace Microsoft.PythonTools.Project.Web {
             resources.GetString("_runServerTargetType.Items3")});
             this._runServerTargetType.Name = "_runServerTargetType";
             this._toolTip.SetToolTip(this._runServerTargetType, resources.GetString("_runServerTargetType.ToolTip"));
-            this._runServerTargetType.AccessibleName = resources.GetString("_runServerTargetType.ToolTip");
             this._runServerTargetType.SelectedValueChanged += new System.EventHandler(this.Setting_SelectedValueChanged);
             // 
             // tableLayoutPanel1
