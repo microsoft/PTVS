@@ -134,6 +134,9 @@
   <data name="tableLayoutPanel2.ColumnCount" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
+  <data name="_envVars.AccessibleName" xml:space="preserve">
+    <value>Environment Variables</value>
+  </data>
   <data name="_envVars.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
@@ -184,6 +187,13 @@ NAME2=value2
   <data name="&gt;&gt;_envVars.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="_envVarsLabel.AccessibleName" xml:space="preserve">
+    <value>Specifies environment variables to be set in the spawned process in the form:
+
+NAME1=value1
+NAME2=value2
+...</value>
+  </data>
   <data name="_envVarsLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -224,6 +234,9 @@ NAME2=value2
   <data name="&gt;&gt;_envVarsLabel.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="_searchPathLabel.AccessibleName" xml:space="preserve">
+    <value>Semicolon separated list of import directories to be added to sys.path.</value>
+  </data>
   <data name="_searchPathLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left</value>
   </data>
@@ -263,6 +276,9 @@ NAME2=value2
   <data name="&gt;&gt;_searchPathLabel.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
+  <data name="_searchPaths.AccessibleName" xml:space="preserve">
+    <value>Search Paths</value>
+  </data>
   <data name="_searchPaths.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
@@ -295,6 +311,9 @@ NAME2=value2
   </data>
   <data name="&gt;&gt;_searchPaths.ZOrder" xml:space="preserve">
     <value>3</value>
+  </data>
+  <data name="_argumentsLabel.AccessibleName" xml:space="preserve">
+    <value>Specifies arguments which are passed to the script and available via sys.argv.</value>
   </data>
   <data name="_argumentsLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left</value>
@@ -335,6 +354,9 @@ NAME2=value2
   <data name="&gt;&gt;_argumentsLabel.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
+  <data name="_arguments.AccessibleName" xml:space="preserve">
+    <value>Script Arguments</value>
+  </data>
   <data name="_arguments.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
@@ -367,6 +389,9 @@ NAME2=value2
   </data>
   <data name="&gt;&gt;_arguments.ZOrder" xml:space="preserve">
     <value>5</value>
+  </data>
+  <data name="_interpArgs.AccessibleName" xml:space="preserve">
+    <value>Interpreter Arguments</value>
   </data>
   <data name="_interpArgs.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
@@ -401,6 +426,9 @@ NAME2=value2
   <data name="&gt;&gt;_interpArgs.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
+  <data name="_interpreterPath.AccessibleName" xml:space="preserve">
+    <value>Interpreter Path</value>
+  </data>
   <data name="_interpreterPath.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
@@ -433,6 +461,9 @@ NAME2=value2
   </data>
   <data name="&gt;&gt;_interpreterPath.ZOrder" xml:space="preserve">
     <value>7</value>
+  </data>
+  <data name="_interpreterPathLabel.AccessibleName" xml:space="preserve">
+    <value>Overrides the path of the interpreter to use when launching the project.</value>
   </data>
   <data name="_interpreterPathLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left</value>
@@ -472,6 +503,9 @@ NAME2=value2
   </data>
   <data name="&gt;&gt;_interpreterPathLabel.ZOrder" xml:space="preserve">
     <value>8</value>
+  </data>
+  <data name="_interpArgsLabel.AccessibleName" xml:space="preserve">
+    <value>Specifies arguments for the interpreter before the script (for example, -Wall, -O or -B)</value>
   </data>
   <data name="_interpArgsLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left</value>
