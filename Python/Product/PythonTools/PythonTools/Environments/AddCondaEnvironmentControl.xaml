@@ -176,11 +176,17 @@
                 ConverterParameter=MainGridLandscape|MainGridPortrait}">
 
                 <StackPanel>
-                    <Label
-                        x:Name="ProjectLabel"
-                        Content="{x:Static common:Strings.AddEnvironmentProjectLabel}"
-                        Target="{Binding ElementName=ProjectComboBox}"
-                        Style="{StaticResource ModernLabel}"/>
+                    <StackPanel Orientation="Horizontal">
+                        <Label
+                            x:Name="ProjectLabel"
+                            Content="{x:Static common:Strings.AddEnvironmentProjectLabel}"
+                            Target="{Binding ElementName=ProjectComboBox}"
+                            Style="{StaticResource ModernLabel}"/>
+                        <Label                                
+                            Content=" *"                  
+                            Style="{StaticResource ModernLabel}" />
+                    </StackPanel>
+
 
                     <ComboBox
                         x:Name="ProjectComboBox"
@@ -197,12 +203,17 @@
                         AutomationProperties.LabeledBy="{Binding ElementName=ProjectLabel}"
                         AutomationProperties.IsRequiredForForm="{Binding Path=Projects, Converter={x:Static wpf:Converters.NullOrEmptyIsFalse}}"
                         AutomationProperties.AutomationId="Project"/>
-
-                    <Label
-                        x:Name="EnvNameLabel"
-                        Content="{x:Static common:Strings.AddCondaEnvironmentNameLabel}"
-                        Target="{Binding ElementName=EnvNameTextBox}"
-                        Style="{StaticResource ModernLabel}"/>
+              
+                    <StackPanel Orientation="Horizontal">
+                        <Label
+                            x:Name="EnvNameLabel"
+                            Content="{x:Static common:Strings.AddCondaEnvironmentNameLabel}"
+                            Target="{Binding ElementName=EnvNameTextBox}"
+                            Style="{StaticResource ModernLabel}"/>
+                        <Label                                
+                            Content=" *"                  
+                            Style="{StaticResource ModernLabel}" />
+                    </StackPanel>
 
                     <TextBox
                         x:Name="EnvNameTextBox"
