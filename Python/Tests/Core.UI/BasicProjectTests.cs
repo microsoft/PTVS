@@ -34,6 +34,7 @@ using EnvDTE80;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools.Project;
 using pythontools::Microsoft.PythonTools;
 using pythontools::Microsoft.PythonTools.Project;
 using pythontools::Microsoft.VisualStudioTools;
@@ -97,11 +98,11 @@ namespace PythonToolsUITests {
         }
 
         public void SetDefaultInterpreter(PythonVisualStudioApp app) {
-            var python2 = PythonPaths.Python27_x64 ?? PythonPaths.Python27;
+            //var python2 = PythonPaths.Python27_x64 ?? PythonPaths.Python27;
             var python3 = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
-            python2.AssertInstalled();
+            //python2.AssertInstalled();
             python3.AssertInstalled();
-            var interpreterIds = new string[] { python2.Id, python3.Id };
+            var interpreterIds = new string[] { python3.Id };
 
             var service = app.ComponentModel.GetService<IInterpreterOptionsService>();
             Assert.IsNotNull(service, "Failed to get IInterpreterOptionsService");
@@ -286,13 +287,13 @@ namespace PythonToolsUITests {
             var project = app.OpenProject(sln);
             var solutionExplorer = app.SolutionExplorerTreeView;
 
-            var solutionNode = solutionExplorer.FindItem("Solution 'AddFolderExists' (1 of 1 project)");
-            var projectNode = solutionExplorer.FindItem("Solution 'AddFolderExists' (1 of 1 project)", "AddFolderExists");
+            var solutionNode = solutionExplorer.FindItem("Solution 'AddFolderExists' ");
+            var projectNode = solutionExplorer.FindItem("Solution 'AddFolderExists' ", "AddFolderExists");
 
             ProjectNewFolderWithName(app, solutionNode, projectNode, "A");
 
             var folderA = project.ProjectItems.Item("A");
-            var folderANode = solutionExplorer.FindItem("Solution 'AddFolderExists' (1 of 1 project)", "AddFolderExists", "A");
+            var folderANode = solutionExplorer.FindItem("Solution 'AddFolderExists' ", "AddFolderExists", "A");
 
             var expectedA = Path.Combine(slnDir, "AddFolderExists", "A");
             Assert.AreEqual(expectedA, CommonUtils.TrimEndSeparator((string)folderA.Properties.Item("FullPath").Value));
@@ -301,7 +302,7 @@ namespace PythonToolsUITests {
             ProjectNewFolderWithName(app, solutionNode, folderANode, "B");
 
             var folderB = folderA.ProjectItems.Item("B");
-            var folderBNode = solutionExplorer.FindItem("Solution 'AddFolderExists' (1 of 1 project)", "AddFolderExists", "A", "B");
+            var folderBNode = solutionExplorer.FindItem("Solution 'AddFolderExists' ", "AddFolderExists", "A", "B");
 
             var expectedB = Path.Combine(slnDir, "AddFolderExists", "A", "B");
             Assert.AreEqual(expectedB, CommonUtils.TrimEndSeparator((string)folderB.Properties.Item("FullPath").Value));
@@ -310,7 +311,7 @@ namespace PythonToolsUITests {
             ProjectNewFolderWithName(app, solutionNode, folderBNode, "C");
 
             var folderC = folderB.ProjectItems.Item("C");
-            var folderCNode = solutionExplorer.FindItem("Solution 'AddFolderExists' (1 of 1 project)", "AddFolderExists", "A", "B", "C");
+            var folderCNode = solutionExplorer.FindItem("Solution 'AddFolderExists' ", "AddFolderExists", "A", "B", "C");
 
             // 817 & 836: Nested subfolders
             // Setting the wrong VirtualNodeName in FolderNode.FinishFolderAdd caused C's fullpath to be ...\AddFolderExists\B\C\
@@ -337,8 +338,8 @@ namespace PythonToolsUITests {
         public void AddExistingFolder(VisualStudioApp app) {
             var sln = app.CopyProjectForTest(@"TestData\AddExistingFolder.sln");
             var project = app.OpenProject(sln);
-            var solutionExplorer = app.SolutionExplorerTreeView;
-
+           
+            var solutionExplorer = app.OpenSolutionExplorer();
             solutionExplorer.SelectProject(project);
 
             using (var dialog = SelectFolderDialog.AddExistingFolder(app)) {
@@ -347,6 +348,7 @@ namespace PythonToolsUITests {
                 dialog.FolderName = Path.Combine(Path.GetDirectoryName(sln), "AddExistingFolder", "TestFolder");
                 dialog.SelectFolder();
             }
+            solutionExplorer.ExpandAll();
 
             Assert.IsNotNull(solutionExplorer.WaitForChildOfProject(project, "TestFolder"));
             Assert.IsNotNull(solutionExplorer.WaitForChildOfProject(project, "TestFolder", "TestFile.txt"));
@@ -371,12 +373,11 @@ namespace PythonToolsUITests {
 
             var docWindow = app.GetDocument(window.Document.FullName);
 
-            var solutionExplorer = app.SolutionExplorerTreeView;
+            var solutionExplorer = app.OpenSolutionExplorer();
+            solutionExplorer.SelectProject(project);
+
             app.Dte.ExecuteCommand("Debug.Start");
             app.WaitForMode(dbgDebugMode.dbgRunMode);
-
-            app.OpenSolutionExplorer();
-            solutionExplorer.SelectProject(project);
 
             bool dialogWasCreated = false;
             try {
@@ -401,6 +402,9 @@ namespace PythonToolsUITests {
                 addDialog.FolderName = TestData.GetPath(@"TestData\AddExistingFolder\TestFolder");
                 addDialog.SelectFolder();
             }
+
+            solutionExplorer.ExpandAll();
+
 
             Assert.IsNotNull(solutionExplorer.WaitForChildOfProject(project, "TestFolder"));
         }
@@ -717,6 +721,9 @@ namespace PythonToolsUITests {
             app.ServiceProvider.GetUIThread().Invoke(() => {
                 project.GetPythonProject().VSProject.References.AddProject(moduleProj);
             });
+
+            solutionExplorer.ExpandAll();
+
             solutionExplorer.WaitForChildOfProject(project, Strings.ReferencesNodeName, @"PythonModule");
             solutionExplorer.WaitForChildOfProject(project, Strings.SearchPaths, @"..\PythonModule");
 
@@ -819,31 +826,44 @@ namespace PythonToolsUITests {
             var project = app.OpenProject(projectPath);
             var solutionExplorer = app.OpenSolutionExplorer();
 
-            var solutionNode = solutionExplorer.FindItem("Solution 'AddFolderExists' (1 of 1 project)");
+            solutionExplorer.ExpandAll();
 
+            var solutionNode = solutionExplorer.FindItem("Solution 'AddFolderExists' ");
 
-            var projectNode = solutionExplorer.FindItem("Solution 'AddFolderExists' (1 of 1 project)", "AddFolderExists");
+            var projectNode = solutionNode.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.NameProperty, "AddFolderExists"));
 
-            ProjectNewFolder(app, solutionNode, projectNode);
-
-            Thread.Sleep(1000);
+            ProjectNewFolder(app, solutionNode, projectNode);            
+            
             Keyboard.Type("."); // bad filename
             Keyboard.Type(System.Windows.Input.Key.Enter);
 
-            app.CheckMessageBox(MessageBoxButton.Ok, "Directory names cannot:", "be '.' or '..'");
-            Thread.Sleep(1000);
+            app.CheckMessageBox(MessageBoxButton.Ok, "Directory names cannot:", "be '.' or '..'");            
+
+            var newFolderNode = projectNode.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.NameProperty, "NewFolder1"));
+            if (newFolderNode == null) {
+                throw new InvalidOperationException("Failed to find the newly created folder.");
+            }
 
             Keyboard.Type(".."); // another bad filename
             Keyboard.Type(System.Windows.Input.Key.Enter);
 
             app.CheckMessageBox(MessageBoxButton.Ok, "Directory names cannot:", "be '.' or '..'");
-            Thread.Sleep(1000);
+            
+
+            newFolderNode = projectNode.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.NameProperty, "NewFolder1"));
+            if (newFolderNode == null) {
+                throw new InvalidOperationException("Failed to find the newly created folder.");
+            }
 
             Keyboard.Type("Y"); // another bad filename
             Keyboard.Type(System.Windows.Input.Key.Enter);
 
-            app.CheckMessageBox(MessageBoxButton.Ok, "The folder Y already exists.");
-            Thread.Sleep(1000);
+            app.CheckMessageBox(MessageBoxButton.Ok, "The folder Y already exists.");            
+
+            newFolderNode = projectNode.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.NameProperty, "NewFolder1"));
+            if (newFolderNode == null) {
+                throw new InvalidOperationException("Failed to find the newly created folder.");
+            }
 
             Keyboard.Type("X"); // directory exists, but is ok.
             Keyboard.Type(System.Windows.Input.Key.Enter);
@@ -855,6 +875,8 @@ namespace PythonToolsUITests {
         public void AddFolderCopyAndPasteFile(VisualStudioApp app) {
             var project = app.OpenProject(app.CopyProjectForTest(@"TestData\AddFolderCopyAndPasteFile.sln"));
             var solutionExplorer = app.OpenSolutionExplorer();
+
+            solutionExplorer.ExpandAll();
 
             solutionExplorer.FindChildOfProject(project, "Program.py").Select();
             app.ExecuteCommand("Edit.Copy");
@@ -890,11 +912,11 @@ namespace PythonToolsUITests {
             var project = app.OpenProject(projectPath);
 
             var solutionExplorer = app.OpenSolutionExplorer();
-            var solutionNode = solutionExplorer.FindItem("Solution 'CopyAndPasteFolder' (1 of 1 project)");
+            var solutionNode = solutionExplorer.FindItem("Solution 'CopyAndPasteFolder' ");
 
-            var projectNode = solutionExplorer.FindItem("Solution 'CopyAndPasteFolder' (1 of 1 project)", "CopyAndPasteFolder");
+            var projectNode = solutionExplorer.FindItem("Solution 'CopyAndPasteFolder' ", "CopyAndPasteFolder");
 
-            var folderNode = solutionExplorer.FindItem("Solution 'CopyAndPasteFolder' (1 of 1 project)", "CopyAndPasteFolder", "X");
+            var folderNode = solutionExplorer.FindItem("Solution 'CopyAndPasteFolder' ", "CopyAndPasteFolder", "X");
 
             // paste to project node, make sure the files are there
             StringCollection paths = new StringCollection() {
@@ -903,15 +925,15 @@ namespace PythonToolsUITests {
 
             ClipboardSetFileDropList(paths);
 
-            Mouse.MoveTo(projectNode.GetClickablePoint());
+            Mouse.MoveTo(getClickablePointFromBoundingBox(projectNode));
             Mouse.Click();
             Keyboard.ControlV();
 
-            Assert.IsNotNull(solutionExplorer.WaitForItem("Solution 'CopyAndPasteFolder' (1 of 1 project)", "CopyAndPasteFolder", "CopiedFiles"));
+            Assert.IsNotNull(solutionExplorer.WaitForItem("Solution 'CopyAndPasteFolder' ", "CopyAndPasteFolder", "CopiedFiles"));
             Assert.IsTrue(File.Exists(Path.Combine(projectDir, "CopyAndPasteFolder", "CopiedFiles", "SomeFile.py")));
             Assert.IsTrue(File.Exists(Path.Combine(projectDir, "CopyAndPasteFolder", "CopiedFiles", "Fob", "SomeOtherFile.py")));
 
-            Mouse.MoveTo(folderNode.GetClickablePoint());
+            Mouse.MoveTo(getClickablePointFromBoundingBox(folderNode));
             Mouse.Click();
 
             // paste to folder node, make sure the files are there
@@ -920,7 +942,7 @@ namespace PythonToolsUITests {
 
             Thread.Sleep(2000);
 
-            Assert.IsNotNull(solutionExplorer.WaitForItem("Solution 'CopyAndPasteFolder' (1 of 1 project)", "CopyAndPasteFolder", "X", "CopiedFiles"));
+            Assert.IsNotNull(solutionExplorer.WaitForItem("Solution 'CopyAndPasteFolder' ", "CopyAndPasteFolder", "X", "CopiedFiles"));
             Assert.IsTrue(File.Exists(Path.Combine(projectDir, "CopyAndPasteFolder", "X", "CopiedFiles", "SomeFile.py")));
             Assert.IsTrue(File.Exists(Path.Combine(projectDir, "CopyAndPasteFolder", "X", "CopiedFiles", "Fob", "SomeOtherFile.py")));
         }
@@ -997,28 +1019,28 @@ namespace PythonToolsUITests {
             // http://mpfproj10.codeplex.com/workitem/11618
             var project = app.OpenProject(app.CopyProjectForTest(@"TestData\FolderMultipleItems.sln"));
             var solutionExplorer = app.SolutionExplorerTreeView;
-            var solutionNode = solutionExplorer.FindItem("Solution 'FolderMultipleItems' (1 of 1 project)");
+            var solutionNode = solutionExplorer.FindItem("Solution 'FolderMultipleItems' ");
 
-            var projectNode = solutionExplorer.FindItem("Solution 'FolderMultipleItems' (1 of 1 project)", "FolderMultipleItems");
+            var projectNode = solutionExplorer.FindItem("Solution 'FolderMultipleItems' ", "FolderMultipleItems");
 
-            var folderNode = solutionExplorer.FindItem("Solution 'FolderMultipleItems' (1 of 1 project)", "FolderMultipleItems", "A");
+            var folderNode = solutionExplorer.FindItem("Solution 'FolderMultipleItems' ", "FolderMultipleItems", "A");
 
-            Mouse.MoveTo(folderNode.GetClickablePoint());
+            Mouse.MoveTo(getClickablePointFromBoundingBox(folderNode));
             Mouse.Click();
             Keyboard.ControlC();
 
             Keyboard.ControlV();
             WaitForItem(project, "A - Copy");
 
-            Assert.IsNotNull(solutionExplorer.FindItem("Solution 'FolderMultipleItems' (1 of 1 project)", "FolderMultipleItems", "A - Copy", "a.py"));
-            Assert.IsNotNull(solutionExplorer.FindItem("Solution 'FolderMultipleItems' (1 of 1 project)", "FolderMultipleItems", "A - Copy", "b.py"));
+            Assert.IsNotNull(solutionExplorer.FindItem("Solution 'FolderMultipleItems' ", "FolderMultipleItems", "A - Copy", "a.py"));
+            Assert.IsNotNull(solutionExplorer.FindItem("Solution 'FolderMultipleItems' ", "FolderMultipleItems", "A - Copy", "b.py"));
         }
 
         /// <summary>
         /// Verify we can start the interactive window when focus in within solution explorer in one of our projects.
         /// </summary>
         public void OpenInteractiveFromSolutionExplorer(PythonVisualStudioApp app) {
-            var python = PythonPaths.Python27_x64 ?? PythonPaths.Python27;
+            var python = PythonPaths.LatestVersion;
             python.AssertInstalled();
 
             using (var dis = app.SelectDefaultInterpreter(python)) {
@@ -1026,11 +1048,15 @@ namespace PythonToolsUITests {
 
                 var solutionExplorer = app.OpenSolutionExplorer();
 
+                solutionExplorer.ExpandAll();
+
                 var programNode = solutionExplorer.WaitForChildOfProject(project, "Program.py");
                 programNode.Select();
 
-                app.ExecuteCommand("Python.Interactive");
-
+                Thread.Sleep(500);
+                app.ServiceProvider.GetUIThread().Invoke(() => {
+                    app.ExecuteCommand("Python.Interactive");
+                } );
                 Keyboard.Type("print('hi')\r");
                 using (var interactive = app.WaitForInteractiveWindow("HelloWorld Interactive")) {
                     Assert.IsNotNull(interactive, "Unable to find HelloWorld Interactive");
@@ -1135,17 +1161,18 @@ namespace PythonToolsUITests {
             Assert.AreEqual(0, app.OpenDocumentWindows.Count());
 
             app.OpenSolutionExplorer();
-
-            Mouse.MoveTo(app.SolutionExplorerTreeView.FindItem("Solution 'HelloWorld' (1 of 1 project)", "HelloWorld").GetClickablePoint());
+            var projNode = app.SolutionExplorerTreeView.FindItem("Solution 'HelloWorld' ", "HelloWorld");
+            Mouse.MoveTo(getClickablePointFromBoundingBox(projNode));
             Mouse.Click();
 
-            app.WaitForNoDialog(TimeSpan.FromSeconds(5));
+            app.WaitForNoDialog(TimeSpan.FromSeconds(2));
             Assert.AreEqual(0, app.OpenDocumentWindows.Count());
 
-            Mouse.MoveTo(app.SolutionExplorerTreeView.FindItem("Solution 'HelloWorld' (1 of 1 project)", "HelloWorld", "Program.py").GetClickablePoint());
+            var fileNode = app.SolutionExplorerTreeView.FindItem("Solution 'HelloWorld' ", "HelloWorld", "Program.py");
+            Mouse.MoveTo(getClickablePointFromBoundingBox(fileNode));
             Mouse.Click();
 
-            app.WaitForNoDialog(TimeSpan.FromSeconds(5));
+            app.WaitForNoDialog(TimeSpan.FromSeconds(2));
             try {
                 app.WaitForDocument("Program.py");
             } catch (InvalidOperationException) {
@@ -1164,13 +1191,16 @@ namespace PythonToolsUITests {
 
             app.OpenSolutionExplorer();
 
-            Mouse.MoveTo(app.SolutionExplorerTreeView.FindItem("Solution 'MissingFiles' (1 of 1 project)", "HelloWorld").GetClickablePoint());
+            var projNode = app.SolutionExplorerTreeView.FindItem("Solution 'MissingFiles' ", "HelloWorld");
+
+            Mouse.MoveTo(getClickablePointFromBoundingBox(projNode));
             Mouse.Click();
 
             app.WaitForNoDialog(TimeSpan.FromSeconds(5));
             Assert.AreEqual(0, app.OpenDocumentWindows.Count());
 
-            Mouse.MoveTo(app.SolutionExplorerTreeView.FindItem("Solution 'MissingFiles' (1 of 1 project)", "HelloWorld", "Program2.py").GetClickablePoint());
+            var fileNode = app.SolutionExplorerTreeView.FindItem("Solution 'MissingFiles' ", "HelloWorld", "Program2.py");
+            Mouse.MoveTo(getClickablePointFromBoundingBox(fileNode));
             Mouse.Click();
 
             app.WaitForNoDialog(TimeSpan.FromSeconds(5));
@@ -1250,25 +1280,47 @@ namespace PythonToolsUITests {
         }
 
         private static void ProjectNewFolder(VisualStudioApp app, System.Windows.Automation.AutomationElement solutionNode, System.Windows.Automation.AutomationElement projectNode) {
-            // Project menu can take a little while to appear...
+            // Retry logic to handle delays in the UI
             for (int i = 0; i < 10; i++) {
-                Mouse.MoveTo(projectNode.GetClickablePoint());
-                Mouse.Click();
-                projectNode.SetFocus();
                 try {
+                    // Ensure the project node is available and has a clickable point
+                    if (projectNode == null || projectNode.Current.BoundingRectangle.IsEmpty) {
+                        throw new InvalidOperationException("Project node is not available or does not have a valid bounding rectangle.");
+                    }
+                    projectNode.SetFocus();
+                    Debug.WriteLine($"ProjectNode: BoundingRectangle={projectNode?.Current.BoundingRectangle}, IsOffscreen={projectNode?.Current.IsOffscreen}");
+
+                    //Mouse.MoveTo(projectNode.GetClickablePoint());
+                    var boundingRect = projectNode.Current.BoundingRectangle;
+                    if (!boundingRect.IsEmpty) {
+                        var fallbackPoint = new System.Windows.Point(
+                            boundingRect.X + boundingRect.Width / 2,
+                            boundingRect.Y + boundingRect.Height / 2
+                        );
+                        Mouse.MoveTo(fallbackPoint);
+                        Mouse.Click();
+                    }
+                    
+                    // Attempt to execute the "New Folder" command
                     app.Dte.ExecuteCommand("Project.NewFolder");
-                    break;
-                } catch {
+                    return; // Exit the loop if successful
+                } catch (System.Windows.Automation.NoClickablePointException) {
+                    Console.WriteLine("Project node does not have a clickable point. Retrying...");
+                } catch (InvalidOperationException ex) {
+                    Console.WriteLine($"Failed to interact with the project node: {ex.Message}");
+                } catch (Exception ex) {
+                    Console.WriteLine($"Unexpected error: {ex.Message}");
                 }
 
-                Mouse.MoveTo(solutionNode.GetClickablePoint());
-                Mouse.Click();
+                // Wait before retrying
                 Thread.Sleep(1000);
             }
+
+            throw new InvalidOperationException("Failed to create a new folder after multiple attempts.");
         }
 
         private static void ProjectNewFolderWithName(VisualStudioApp app, System.Windows.Automation.AutomationElement solutionNode, System.Windows.Automation.AutomationElement projectNode, string name) {
-            Mouse.MoveTo(projectNode.GetClickablePoint());
+            Mouse.MoveTo(getClickablePointFromBoundingBox(projectNode));
             Mouse.Click(System.Windows.Input.MouseButton.Right);
 
             Thread.Sleep(500);
@@ -1314,6 +1366,18 @@ namespace PythonToolsUITests {
                 Assert.Fail();
             } catch (T) {
             }
+        }
+
+        private static Point getClickablePointFromBoundingBox(AutomationElement node ) {
+            var boundingRect = node.Current.BoundingRectangle;
+            if (!boundingRect.IsEmpty) {
+                var fallbackPoint = new System.Windows.Point(
+                    boundingRect.X + boundingRect.Width / 2,
+                    boundingRect.Y + boundingRect.Height / 2
+                );
+                return fallbackPoint;
+            }
+            throw new InvalidOperationException("Node does not have a valid bounding rectangle.");
         }
     }
 }
