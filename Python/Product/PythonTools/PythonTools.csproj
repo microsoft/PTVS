@@ -668,6 +668,7 @@
     <Compile Include="PythonTools\Wpf\ModernStyles.cs" />
     <Compile Include="PythonTools\Wpf\Utilities.cs" />
     <Compile Include="PythonTools\Wpf\VisualTreeExtensions.cs" />
+    <Compile Include="SharedProject\ActionableSolutionListener.cs" />
     <Compile Include="VsCredentials.cs" />
     <Compile Include="PythonTools\Commands\UsePythonStepping.cs" />
     <Compile Include="PythonTools\Commands\ShowNativePythonFrames.cs" />
