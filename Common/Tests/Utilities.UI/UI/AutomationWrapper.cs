@@ -373,11 +373,11 @@ namespace TestUtilities.UI {
 
         private static void DumpElement(AutomationElement element, int depth) {
             Console.WriteLine(String.Format(
-                "{0} {1}\t{2}\t{3}\t{4}", 
+                "{0} {1}\t{2}\t{3}", 
                 new string(' ', depth * 4), 
                 element.Current.Name, 
                 element.Current.ClassName,
-                element.Current.ControlType.ProgrammaticName, 
+                //element.Current.ControlType.ProgrammaticName, 
                 element.Current.AutomationId
             ));
 
