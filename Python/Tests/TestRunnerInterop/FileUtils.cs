@@ -185,8 +185,30 @@ namespace TestRunnerInterop {
         }
 
         public static void DeleteDirectory(string path) {
-            Trace.TraceInformation("Removing directory: {0}", path);
-            NativeMethods.RecursivelyDeleteDirectory(path, silent: true);
+            Trace.TraceInformation("Removing directory: {0}", path);            
+
+            try {
+                if (Directory.Exists(path)) {
+                    Directory.Delete(path, true);
+                }
+            } catch (UnauthorizedAccessException) {
+                // Try to delete the directory again after setting the attributes to normal
+                try {
+
+
+                    // With the following line:
+                    foreach (var file in Directory.GetFiles(path, "*", SearchOption.AllDirectories)) {
+                        File.SetAttributes(file, FileAttributes.Normal);
+                    }
+
+                } catch (UnauthorizedAccessException) {
+                    // Ignore this exception, we will try to delete the directory again
+                }
+
+                if (Directory.Exists(path)) {
+                    Directory.Delete(path, true);
+                }
+            }
         }
 
         public static void Delete(string path) {
@@ -207,6 +229,43 @@ namespace TestRunnerInterop {
             File.Delete(backup);
             File.Copy(path, backup);
             return new FileRestorer(path, backup);
+        }
+        public static void DeleteFolder(string folderPath)
+        {
+            if (Directory.Exists(folderPath))
+            {
+                try
+                {
+                    Directory.Delete(folderPath, true);
+                }
+                catch (IOException)
+                {
+                    foreach (var file in Directory.GetFiles(folderPath, "*", SearchOption.AllDirectories))
+                    {
+                        try
+                        {
+                            File.SetAttributes(file, FileAttributes.Normal);
+                            File.Delete(file);
+                        }
+                        catch
+                        {
+                            Debug.WriteLine($"Failed to delete file: {file}");
+                        }
+                    }
+                    try
+                    {
+                        Directory.Delete(folderPath, true);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"Failed to delete folder: {folderPath}. Exception: {ex.Message}");
+                    }
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    Debug.WriteLine($"Access denied while deleting folder: {folderPath}. Exception: {ex.Message}");
+                }
+            }
         }
 
         private sealed class FileDeleter : IDisposable {
