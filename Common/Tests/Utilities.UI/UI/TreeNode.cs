@@ -97,13 +97,36 @@ namespace TestUtilities.UI
             }
             set
             {
-                if (value)
+                const int maxRetries = 5;
+                const int retryDelay = 500; // Delay in milliseconds
+
+                for (int attempt = 0; attempt < maxRetries; attempt++)
                 {
-                    Element.GetExpandCollapsePattern().Expand();
-                }
-                else
-                {
-                    Element.GetExpandCollapsePattern().Collapse();
+                    try
+                    {
+                        if (value)
+                        {
+                            Element.GetExpandCollapsePattern().Expand();
+                        }
+                        else
+                        {
+                            Element.GetExpandCollapsePattern().Collapse();
+                        }
+
+                        // Exit the loop if successful
+                        return;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Attempt {attempt + 1} failed: {ex.Message}");
+                        if (attempt == maxRetries - 1)
+                        {
+                            throw; // Rethrow the exception if all retries fail
+                        }
+                    }
+
+                    // Wait before retrying
+                    System.Threading.Thread.Sleep(retryDelay);
                 }
             }
         }
