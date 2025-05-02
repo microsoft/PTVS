@@ -1,4 +1,4 @@
-﻿    // Visual Studio Shared Project
+﻿// Visual Studio Shared Project
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -14,6 +14,17 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using EnvDTE;
+using EnvDTE80;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Editor;
+using Microsoft.VisualStudio.OLE.Interop;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -25,15 +36,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Automation;
-using EnvDTE;
-using EnvDTE80;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.ComponentModelHost;
-using Microsoft.VisualStudio.Editor;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
+using IServiceProvider = System.IServiceProvider;
 using Task = System.Threading.Tasks.Task;
 
 namespace TestUtilities.UI {
@@ -252,10 +255,10 @@ namespace TestUtilities.UI {
         }
 
         public void WaitForCommandAvailable(string commandName, TimeSpan timeout) {
-            WaitForCommandAvailable(Dte.Commands.Item(commandName), timeout);
+            WaitForCommandAvailable(Dte.Commands.Item(commandName).ToString(), timeout);
         }
 
-        public void WaitForCommandAvailable(Command cmd, TimeSpan timeout) {
+        public void WaitForCommandAvailable(EnvDTE.Command cmd, TimeSpan timeout) {
             var stopWatch = new Stopwatch();
             stopWatch.Start();
             while (stopWatch.Elapsed < timeout) {
@@ -639,7 +642,15 @@ namespace TestUtilities.UI {
 
             bool closed = false;
             try {
-                string title = dlg.Text;
+                // Look for the Edit control inside the dialog
+                var editControl = dlg.Element.FindFirst(
+                    TreeScope.Descendants,
+                    new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Edit)
+                );
+                
+                Assert.IsNotNull(editControl, "Failed to find Edit control in dialog");
+
+                string title = editControl.Current.Name;
                 if (assertIfNoDialog) {
                     AssertUtil.Contains(title, text);
                 } else if (!text.All(title.Contains)) {
@@ -894,10 +905,15 @@ namespace TestUtilities.UI {
             Assert.IsNotNull(solution4, "Failed to obtain IVsSolution4 interface");
 
             // Close any open solution
-            if (ErrorHandler.Succeeded(solution.GetSolutionInfo(out _, out string slnFile, out _))) {
-                Console.WriteLine("Closing {0}", slnFile);
-                solution.CloseSolutionElement(0, null, 0);
-            }
+            InvokeOnUIThread(() =>
+            {
+                if (ErrorHandler.Succeeded(solution.GetSolutionInfo(out _, out string slnFile, out _)))
+                {
+                    Console.WriteLine("Closing {0}", slnFile);
+                    solution.CloseSolutionElement(0, null, 0);
+                }
+
+            });
 
             string fullPath = TestData.GetPath(projName);
             if (!File.Exists(fullPath)) {
@@ -920,49 +936,31 @@ namespace TestUtilities.UI {
                 }
             }
 
-            Task t;
             if (fullPath.EndsWith(".sln", StringComparison.OrdinalIgnoreCase)) {
-                t = Task.Run(() => {
-                    ErrorHandler.ThrowOnFailure(solution.OpenSolutionFile((uint)0, fullPath));
-                });
-            } else {
-                t = Task.Run(() => {
-                    Guid guidNull = Guid.Empty;
-                    Guid iidUnknown = Guid.Empty;
-                    IntPtr projPtr;
-                    ErrorHandler.ThrowOnFailure(solution.CreateProject(
-                        ref guidNull,
-                        fullPath,
-                        "",
-                        "",
-                        (uint)__VSCREATEPROJFLAGS.CPF_OPENFILE |
-                            (uint)__VSCREATEPROJFLAGS2.CPF_OPEN_STANDALONE |
-                            (uint)__VSCREATEPROJFLAGS.CPF_SILENT,
-                        ref iidUnknown,
-                        out projPtr
-                    ));
-                });
+                OpenSolutionInternal(solution, fullPath);
+            } else {                
+                OpenProjectInternal(solution, fullPath);
             }
             using (var cts = System.Diagnostics.Debugger.IsAttached ? new CancellationTokenSource() : new CancellationTokenSource(30000)) {
                 try {
-                    if (!t.Wait(1000, cts.Token)) {
-                        // Load has taken a while, start checking whether a dialog has
-                        // appeared
-                        IVsUIShell uiShell = GetService<IVsUIShell>(typeof(IVsUIShell));
-                        IntPtr hwnd;
-                        while (!t.Wait(1000, cts.Token)) {
-                            ErrorHandler.ThrowOnFailure(uiShell.GetDialogOwnerHwnd(out hwnd));
-                            if (hwnd != _mainWindowHandle) {
-                                using (var dlg = new AutomationDialog(this, AutomationElement.FromHandle(hwnd))) {
-                                    if (onDialog == null || onDialog(dlg) == false) {
-                                        Console.WriteLine("Unexpected dialog");
-                                        DumpElement(dlg.Element);
-                                        Assert.Fail("Unexpected dialog while loading project");
-                                    }
-                                }
+                    
+
+                    // Load has taken a while, start checking whether a dialog has
+                    // appeared
+                    IVsUIShell uiShell = GetService<IVsUIShell>(typeof(IVsUIShell));
+                    IntPtr hwnd;
+                    
+                    ErrorHandler.ThrowOnFailure(uiShell.GetDialogOwnerHwnd(out hwnd));
+                    if (hwnd != _mainWindowHandle) {
+                        using (var dlg = new AutomationDialog(this, AutomationElement.FromHandle(hwnd))) {
+                            if (onDialog == null || onDialog(dlg) == false) {
+                                Console.WriteLine("Unexpected dialog");
+                                DumpElement(dlg.Element);
+                                Assert.Fail("Unexpected dialog while loading project");
                             }
                         }
-                    }
+                    }      
+                    
                 } catch (OperationCanceledException) {
                     Assert.Fail("Failed to open project quickly enough");
                 }
@@ -1038,6 +1036,93 @@ namespace TestUtilities.UI {
 
             return project;
         }
+
+        internal void OpenProjectInternal(IVsSolution solution, string fullPath)
+        {
+            var solutionListener = new ActionableSolutionListener(this.ServiceProvider);
+            ManualResetEvent manualResetEvent = new ManualResetEvent(false);
+            solutionListener.AfterLoadProjectEvent += delegate
+                                                        {
+                                                            manualResetEvent.Set();
+                                                            return VSConstants.S_OK;
+                                                        };
+            solutionListener.AfterOpenProjectEvent += delegate
+            {
+                manualResetEvent.Set();
+                return VSConstants.S_OK;
+            };
+
+            try
+            {
+                solutionListener.Init();
+               
+
+                ThreadHelper.JoinableTaskFactory.Run(async () => {
+                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                    IntPtr projPtr;
+                    Guid guidNull = Guid.Empty;
+                    Guid iidVsHierarchy = typeof(IVsHierarchy).GUID;
+                    uint flags = (uint)__VSCREATEPROJFLAGS.CPF_OPENFILE |
+                            (uint)__VSCREATEPROJFLAGS2.CPF_OPEN_STANDALONE |
+                            (uint)__VSCREATEPROJFLAGS.CPF_SILENT;
+
+                    //get filename and location path
+                    string fileName = Path.GetFileName(fullPath);
+                    string locationPath = Path.GetDirectoryName(fullPath);
+                    int hResult = solution.CreateProject(
+                        ref guidNull,
+                        fullPath,
+                        locationPath,                        
+                        "",
+                        flags,
+                        ref iidVsHierarchy,
+                        out projPtr
+                    );
+
+                    ErrorHandler.ThrowOnFailure(hResult);
+                   
+                });
+
+                
+                // Wait for the solution to open
+                manualResetEvent.WaitOne();
+            }
+            finally
+            {
+                manualResetEvent.Close();
+                solutionListener.Dispose();
+            }
+        }
+
+        internal void OpenSolutionInternal(IVsSolution solution, string fullPath)
+        {
+            var solutionListener = new ActionableSolutionListener(this.ServiceProvider);
+            ManualResetEvent manualResetEvent = new ManualResetEvent(false);
+            solutionListener.AfterOpenSolutionEvent += delegate (object _o, int added)
+            {
+                manualResetEvent.Set();
+                return VSConstants.S_OK;
+            };
+
+            try
+            {
+                solutionListener.Init();
+
+                ThreadHelper.JoinableTaskFactory.Run(async () => {
+                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                    ErrorHandler.ThrowOnFailure(solution.OpenSolutionFile((uint)0, fullPath));
+                });
+
+                // Wait for the solution to open
+                manualResetEvent.WaitOne();
+            }
+            finally
+            {
+                manualResetEvent.Close();
+                solutionListener.Dispose();
+            }
+        }
+
 
         public Project GetProject(string projectName) {
             var iter = Dte.Solution.Projects.GetEnumerator();
@@ -1119,6 +1204,15 @@ namespace TestUtilities.UI {
         internal ProjectItem AddItem(Project project, string language, string template, string filename) {
             var fullTemplate = ((Solution2)project.DTE.Solution).GetProjectItemTemplate(template, language);
             return project.ProjectItems.AddFromTemplate(fullTemplate, filename);
+        }
+
+
+        public static void InvokeOnUIThread(Action method)
+        {
+            ThreadHelper.JoinableTaskFactory.Run(async () => {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                method.Invoke();
+            });
         }
     }
 }
