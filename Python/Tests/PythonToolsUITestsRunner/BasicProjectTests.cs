@@ -34,10 +34,13 @@ namespace PythonToolsUITestsRunner {
 
         [TestInitialize]
         public void TestInitialize() => VsTestContext.Instance.TestInitialize(TestContext.DeploymentDirectory);
-        [TestCleanup]
-        public void TestCleanup() => VsTestContext.Instance.TestCleanup();
+        //[TestCleanup]
+        //public void TestCleanup() => VsTestContext.Instance.TestCleanup();
         [ClassCleanup]
-        public static void ClassCleanup() => VsTestContext.Instance.Dispose();
+        public static void ClassCleanup() {
+            VsTestContext.Instance.TestCleanup();
+            VsTestContext.Instance.Dispose();
+        }
         #endregion
 
         [TestMethod, Priority(UITestPriority.P0)]
