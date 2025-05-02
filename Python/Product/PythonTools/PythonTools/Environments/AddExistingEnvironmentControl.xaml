@@ -51,11 +51,16 @@
     </UserControl.Resources>
     <ScrollViewer Grid.Column="0" Margin="0 7 0 0" VerticalScrollBarVisibility="Auto">
         <StackPanel Orientation="Vertical">
-            <Label
-                x:Name="ProjectLabel"
-                Content="{x:Static common:Strings.AddEnvironmentProjectLabel}"
-                Target="{Binding ElementName=ProjectComboBox}"
-                Style="{StaticResource ModernLabel}"/>
+            <StackPanel Orientation="Horizontal">
+                <Label
+                    x:Name="ProjectLabel"
+                    Content="{x:Static common:Strings.AddEnvironmentProjectLabel}"
+                    Target="{Binding ElementName=ProjectComboBox}"
+                    Style="{StaticResource ModernLabel}"/>
+                <Label                                
+                    Content=" *"                  
+                    Style="{StaticResource ModernLabel}" />    
+            </StackPanel>
 
             <ComboBox
                 x:Name="ProjectComboBox"
@@ -70,11 +75,16 @@
                 AutomationProperties.IsRequiredForForm="{Binding Path=Projects, Converter={x:Static wpf:Converters.NullOrEmptyIsFalse}}"
                 AutomationProperties.LabeledBy="{Binding ElementName=ProjectLabel}"/>
 
-            <Label
-                x:Name="ExistingEnvLabel"
-                Target="{Binding ElementName=InterpretersComboBox}"
-                Content="{x:Static common:Strings.AddExistingEnvironmentExistingLabel}"
-                Style="{StaticResource ModernLabel}"/>
+            <StackPanel Orientation="Horizontal">
+                <Label
+                    x:Name="ExistingEnvLabel"
+                    Target="{Binding ElementName=InterpretersComboBox}"
+                    Content="{x:Static common:Strings.AddExistingEnvironmentExistingLabel}"
+                    Style="{StaticResource ModernLabel}"/>
+                <Label                                
+                    Content=" *"                  
+                    Style="{StaticResource ModernLabel}" />     
+            </StackPanel>
 
             <ComboBox
                 x:Name="InterpretersComboBox"

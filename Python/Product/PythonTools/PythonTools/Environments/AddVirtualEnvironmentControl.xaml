@@ -73,7 +73,6 @@
                     </Style>
                     <l:LandscapePortraitConverter x:Key="LandscapePortraitConverter" />
                     <l:ScreenAdjustingConverter x:Key="ScreenAdjustingConverter" />
-
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
@@ -97,11 +96,18 @@
 
                 <StackPanel Orientation="Vertical" Focusable="False">
                     <!--Project-->
-                    <Label
-                        x:Name="ProjectLabel"
-                        Content="{x:Static common:Strings.AddEnvironmentProjectLabel}"
-                        Target="{Binding ElementName=ProjectComboBox}"
-                        Style="{StaticResource ModernLabel}"/>
+                 
+                    <StackPanel Orientation="Horizontal">
+                        <Label
+                             x:Name="ProjectLabel"
+                             Content="{x:Static common:Strings.AddEnvironmentProjectLabel}"
+                             Target="{Binding ElementName=ProjectComboBox}"
+                             Style="{StaticResource ModernLabel}"/>
+                                        <Label                                
+                         Content=" *"
+                  
+                         Style="{StaticResource ModernLabel}" />
+                    </StackPanel>
 
                     <ComboBox
                         x:Name="ProjectComboBox"
@@ -127,11 +133,16 @@
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
                             <!--Virtual environment name-->
-                            <Label
-                                x:Name="EnvNameLabel"
-                                Content="{x:Static common:Strings.AddVirtualEnvironmentNameLabel}"
-                                Target="{Binding ElementName=EnvNameTextBox}"
-                                Style="{StaticResource ModernLabel}"/>
+                            <StackPanel Orientation="Horizontal">
+                                <Label
+                                    x:Name="EnvNameLabel"
+                                    Content="{x:Static common:Strings.AddVirtualEnvironmentNameLabel}"
+                                    Target="{Binding ElementName=EnvNameTextBox}"
+                                    Style="{StaticResource ModernLabel}"/>
+                                <Label                                
+                                    Content=" *"
+                                    Style="{StaticResource ModernLabel}" />
+                            </StackPanel>
 
                             <TextBox
                                 x:Name="EnvNameTextBox"
@@ -148,11 +159,17 @@
                                 AutomationProperties.LabeledBy="{Binding ElementName=EnvNameLabel}">
                             </TextBox>
                             <!--Base interpreter-->
-                            <Label
-                                x:Name="BaseInterpreterLabel"
-                                Content="{x:Static common:Strings.AddVirtualEnvironmentBaseInterpreterLabel}"
-                                Target="{Binding ElementName=BaseInterpreterComboBox}"
-                                Style="{StaticResource ModernLabel}"/>
+                            
+                            <StackPanel Orientation="Horizontal">
+                                <Label
+                                     x:Name="BaseInterpreterLabel"
+                                     Content="{x:Static common:Strings.AddVirtualEnvironmentBaseInterpreterLabel}"
+                                     Target="{Binding ElementName=BaseInterpreterComboBox}"
+                                     Style="{StaticResource ModernLabel}"/>
+                                <Label                                
+                                    Content=" *"
+                                    Style="{StaticResource ModernLabel}" />
+                            </StackPanel>
 
                             <ComboBox
                                 x:Name="BaseInterpreterComboBox"
