@@ -21,4 +21,4 @@ Prior to Visual Studio 2017, Python support was released as a standalone extensi
 
 [PTVS 2.2.2](https://github.com/Microsoft/PTVS/releases/v2.2.2) is the last release for Visual Studio 2013 users.
 
-Thank you for using and supporting Python Tools for Visual Studio.
+Thank you for using and supporting Python Tools for Visual Studio. 
