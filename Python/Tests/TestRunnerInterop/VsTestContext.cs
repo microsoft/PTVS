@@ -124,6 +124,23 @@ namespace TestRunnerInterop {
                 }
             }
 
+            // Recursive delete out any ".vs" folders that were created
+            //foreach (var dir in FileUtils.EnumerateDirectories(_testDataRoot)) {
+            //    foreach (var vsDir in FileUtils.EnumerateDirectories(dir)) {
+            //        if (Path.GetFileName(vsDir) == ".vs") {
+            //            Console.WriteLine($"Deleting: {vsDir}");
+            //            for(int retries = 10; retries > 0; --retries) {
+            //                try {
+            //                    FileUtils.DeleteDirectory(vsDir);
+            //                    break;
+            //                } catch (Exception) {
+            //                    Thread.Sleep(100);
+            //                }
+            //            }                       
+            //        }
+            //    }
+            //}
+
             // Validate that no files in TestData were modified
             var after = GetAllFileInfo(_testDataRoot);
             var deleted = new List<string>();
@@ -136,6 +153,10 @@ namespace TestRunnerInterop {
                     }
                 } else {
                     deleted.Add(kv.Key);
+                    //if (!kv.Key.Contains(".vs")) {
+                    //    deleted.Add(kv.Key);
+                    //}
+
                 }
             }
             foreach (var k in after.Keys) {
@@ -173,6 +194,7 @@ namespace TestRunnerInterop {
             queue.Enqueue(path);
 
             foreach(var d in FileUtils.EnumerateDirectories(path)) {
+                //if (!Path.GetFileName(d).Contains(".vs")) {
                 if (Path.GetFileName(d) != ".vs") {
                     queue.Enqueue(d);
                     result[d] = DateTime.MinValue;
