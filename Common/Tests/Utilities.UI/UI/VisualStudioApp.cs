@@ -642,15 +642,20 @@ namespace TestUtilities.UI {
 
             bool closed = false;
             try {
+
+                string title = dlg.Text;
+                
                 // Look for the Edit control inside the dialog
                 var editControl = dlg.Element.FindFirst(
                     TreeScope.Descendants,
                     new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Edit)
                 );
-                
-                Assert.IsNotNull(editControl, "Failed to find Edit control in dialog");
 
-                string title = editControl.Current.Name;
+                if (editControl != null)
+                {
+                    title = editControl.Current.Name;
+                }
+                    
                 if (assertIfNoDialog) {
                     AssertUtil.Contains(title, text);
                 } else if (!text.All(title.Contains)) {
