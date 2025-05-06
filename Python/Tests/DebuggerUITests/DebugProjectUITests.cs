@@ -761,8 +761,7 @@ namespace DebuggerUITests {
                 OpenDebuggerProject(app);
 
                 app.Dte.ItemOperations.OpenFile(scriptFilePath);
-                app.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 1);
-                Thread.Sleep(1000);
+                app.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 1);                
                 app.Dte.ExecuteCommand("Python.StartWithDebugging");
                 WaitForMode(app, dbgDebugMode.dbgBreakMode);
                 Assert.AreEqual(dbgDebugMode.dbgBreakMode, app.Dte.Debugger.CurrentMode);
