@@ -1513,8 +1513,7 @@ namespace ProjectUITests {
 
                         Keyboard.Type(System.Windows.Input.Key.F2);
                         Keyboard.Type("server2\r");
-
-                       // solution.WaitForItem("HelloWorld", projectType.Code("server2"));
+                       
                         using (var dlg = AutomationDialog.WaitForDialog(app)) {
                             dlg.ClickButtonAndClose("Cancel");
                         }
