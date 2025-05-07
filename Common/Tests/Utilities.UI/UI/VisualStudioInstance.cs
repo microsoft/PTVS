@@ -156,16 +156,9 @@ namespace TestUtilities.UI {
         }
 
         private string SolutionNodeText {
-            get {
-                if (_solution.Projects.Count(sln => !sln.Flags.HasFlag(SolutionElementFlags.ExcludeFromConfiguration) && !sln.Flags.HasFlag(SolutionElementFlags.ExcludeFromSolution)) > 1) {
-                    return String.Format(
-                        "Solution '{0}' ({1} of {1} projects)",
-                        Path.GetFileNameWithoutExtension(_solution.Filename),
-                        _solution.Projects.Length
-                    );
-                }
+            get {          
                 return String.Format(
-                    "Solution '{0}' (1 of 1 project)",
+                    "Solution '{0}' ",
                     Path.GetFileNameWithoutExtension(_solution.Filename)
                 );
 
@@ -189,8 +182,19 @@ namespace TestUtilities.UI {
             var item = SolutionExplorer.WaitForItem(SolutionNodeText);
             Assert.IsNotNull(item, "Failed to find {0}", SolutionNodeText);
             SolutionExplorer.CenterInView(item);
-            Mouse.MoveTo(item.GetClickablePoint());
-            Mouse.Click(MouseButton.Left);
+            var boundingRect = item.Current.BoundingRectangle;
+            if (!boundingRect.IsEmpty)
+            {
+                var fallbackPoint = new System.Windows.Point(
+                    boundingRect.X + boundingRect.Width / 2,
+                    boundingRect.Y + boundingRect.Height / 2
+                );
+                Mouse.MoveTo(fallbackPoint);
+                Mouse.Click(MouseButton.Left);
+                return;
+            }
+
+            Assert.Fail("Bounding rectangle is empty, unable to select the solution node.");
         }
 
         #region IDisposable Members

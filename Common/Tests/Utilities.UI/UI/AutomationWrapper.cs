@@ -427,20 +427,41 @@ namespace TestUtilities.UI {
                 AutomationEventHandler handler = (s, e) => {
                     closed.Set();
                 };
-                try {
+                try
+                {
                     Automation.AddAutomationEventHandler(
                         WindowPattern.WindowClosedEvent,
                         Element,
                         TreeScope.Element,
                         handler
                     );
-                } catch (ElementNotAvailableException) {
+                }
+                catch (ElementNotAvailableException)
+                {
                     // Already closed
                     return true;
                 }
 
-                if (closeCommand != null) {
-                    closeCommand();
+
+                if (closeCommand != null)
+                {
+                    for (int retry = 0; retry < 3; retry++)
+                    {
+                        try
+                        {
+                            closeCommand();
+                            break;
+                        }
+                        catch (InvalidOperationException ex)
+                        {
+                            Console.WriteLine("Retry {0} failed: {1}", retry + 1, ex.Message);
+                            Thread.Sleep(100);
+                            if (retry == 2)
+                            {
+                                throw; // Re-throw after max retries
+                            }
+                        }
+                    }
                 }
 
                 bool r = closed.WaitOne(timeout);
