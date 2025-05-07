@@ -11,13 +11,8 @@
         <Setter Property="theming:ImageThemingUtilities.ImageBackgroundColor"
                 Value="{Binding Background,RelativeSource={RelativeSource Self},Converter={StaticResource BrushToColorConverter}}" />
     </Style>
-
-    <Style x:Key="BaseImage" TargetType="Control">
-        <Setter Property="theming:ImageThemingUtilities.ImageBackgroundColor"
-                Value="{Binding Background,RelativeSource={RelativeSource Self},Converter={StaticResource BrushToColorConverter}}" />
-    </Style>
     
-    <Style x:Key="SettingsImage" TargetType="Control" BasedOn="{StaticResource BaseImage}">
+    <Style x:Key="SettingsImage" TargetType="Control">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
@@ -28,7 +23,7 @@
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
-    <Style x:Key="FolderClosedImage" TargetType="Control" BasedOn="{StaticResource BaseImage}">
+    <Style x:Key="FolderClosedImage" TargetType="Control">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
@@ -39,7 +34,7 @@
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
-    <Style x:Key="FolderOpenedImage" TargetType="Control" BasedOn="{StaticResource BaseImage}">
+    <Style x:Key="FolderOpenedImage" TargetType="Control">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
@@ -50,7 +45,7 @@
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
-    <Style x:Key="CheckMarkImage" TargetType="Control" BasedOn="{StaticResource BaseImage}">
+    <Style x:Key="CheckMarkImage" TargetType="Control">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
@@ -61,7 +56,7 @@
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
-    <Style x:Key="ExclamationPointImage" TargetType="Control" BasedOn="{StaticResource BaseImage}">
+    <Style x:Key="ExclamationPointImage" TargetType="Control">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
@@ -72,7 +67,7 @@
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
-    <Style x:Key="RefreshImage" TargetType="Control" BasedOn="{StaticResource BaseImage}">
+    <Style x:Key="RefreshImage" TargetType="Control">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
@@ -83,7 +78,7 @@
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
-    <Style x:Key="InteractiveWindowImage" TargetType="Control" BasedOn="{StaticResource BaseImage}">
+    <Style x:Key="InteractiveWindowImage" TargetType="Control">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
@@ -99,7 +94,7 @@
         </Style.Triggers>
     </Style>
 
-    <Style x:Key="PythonApplicationImage" TargetType="Control" BasedOn="{StaticResource BaseImage}">
+    <Style x:Key="PythonApplicationImage" TargetType="Control">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
@@ -110,7 +105,7 @@
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
-    <Style x:Key="PythonConsoleApplicationImage" TargetType="Control" BasedOn="{StaticResource BaseImage}">
+    <Style x:Key="PythonConsoleApplicationImage" TargetType="Control">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
@@ -121,7 +116,7 @@
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
-    <Style x:Key="PythonEnvironmentImage" TargetType="Control" BasedOn="{StaticResource BaseImage}">
+    <Style x:Key="PythonEnvironmentImage" TargetType="Control">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
@@ -133,7 +128,7 @@
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
-    <Style x:Key="ActiveEnvironmentImage" TargetType="Control" BasedOn="{StaticResource BaseImage}">
+    <Style x:Key="ActiveEnvironmentImage" TargetType="Control">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
@@ -144,7 +139,7 @@
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
-    <Style x:Key="PythonPackageImage" TargetType="Control" BasedOn="{StaticResource BaseImage}">
+    <Style x:Key="PythonPackageImage" TargetType="Control">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
@@ -155,7 +150,7 @@
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
-    <Style x:Key="ConsoleImage" TargetType="Control" BasedOn="{StaticResource BaseImage}">
+    <Style x:Key="ConsoleImage" TargetType="Control">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
@@ -166,7 +161,7 @@
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
-    <Style x:Key="CheckBoxCheckedImage" TargetType="Control" BasedOn="{StaticResource BaseImage}">
+    <Style x:Key="CheckBoxCheckedImage" TargetType="Control">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
@@ -176,7 +171,7 @@
         </Setter>
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
-    <Style x:Key="CheckBoxUncheckedImage" TargetType="Control" BasedOn="{StaticResource BaseImage}">
+    <Style x:Key="CheckBoxUncheckedImage" TargetType="Control">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
@@ -187,7 +182,7 @@
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
-    <Style x:Key="HelpImage" TargetType="Control" BasedOn="{StaticResource BaseImage}">
+    <Style x:Key="HelpImage" TargetType="Control">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
@@ -198,7 +193,7 @@
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
-    <Style x:Key="BrokenEnvironmentImage" TargetType="Control" BasedOn="{StaticResource BaseImage}">
+    <Style x:Key="BrokenEnvironmentImage" TargetType="Control">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
@@ -209,7 +204,7 @@
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
-    <Style x:Key="DeleteFolderImage" TargetType="Control" BasedOn="{StaticResource BaseImage}">
+    <Style x:Key="DeleteFolderImage" TargetType="Control">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
