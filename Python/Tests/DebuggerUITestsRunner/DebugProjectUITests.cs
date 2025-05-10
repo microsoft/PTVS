@@ -271,6 +271,6 @@ namespace DebuggerUITestsRunner {
 
     [TestClass]
     public class DebugProjectUITestsDebugPy37 : DebugProjectUITestsDebugPy {
-        protected override string Interpreter => "Python37|Python37_x64";
+        protected override string Interpreter => "Python39|Python39_x64";
     }
 }
