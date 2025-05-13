@@ -18,6 +18,7 @@ using System.Windows.Automation;
 
 namespace TestUtilities.UI {
     public class AddExistingEnvironmentDialogWrapper : AddEnvironmentDialogWrapperBase {
+
         public AddExistingEnvironmentDialogWrapper(VisualStudioApp app, AutomationElement element)
             : base(app, element) {
         }
