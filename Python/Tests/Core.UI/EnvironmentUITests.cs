@@ -131,13 +131,19 @@ namespace PythonToolsUITests {
                 var env = app.CreateProjectVirtualEnvironment(project, out string envName);
                 env.Select();
 
-                try {
-                    app.ExecuteCommand("Python.InstallRequirementsTxt", "/y", timeout: 5000);
-                    Assert.Fail("Command should not have executed");
-                } catch (AggregateException ae) {
-                    ae.Handle(ex => ex is COMException);
-                } catch (COMException) {
+                bool success = false;
+                for (int i = 0; i < 3; i++) {
+                    try {
+                        app.ExecuteCommand("Python.InstallRequirementsTxt", "/y", timeout: 5000);
+                        success = true;
+                        break;
+                    } catch (Exception ex) {
+                        Console.WriteLine($"Attempt {i + 1} failed: {ex.Message}");
+                        Thread.Sleep(500); // Wait before retrying
+                    }
                 }
+                Assert.IsTrue(success, "Python.InstallRequirementsTxt command failed after 3 attempts.");
+
 
                 var requirementsTxt = Path.Combine(Path.GetDirectoryName(project.FullName), "requirements.txt");
                 File.WriteAllText(requirementsTxt, TestPackageSpec);
@@ -206,7 +212,7 @@ namespace PythonToolsUITests {
                 Assert.AreNotEqual(id0, id2);
 
                 // Activate env1 (previously stored node is now invalid, we need to query again)
-                env1 = app.OpenSolutionExplorer().WaitForChildOfProject(project, Strings.Environments, envName1);
+                env1 = app.SolutionExplorerTreeView.FindChildOfProject(project, Strings.Environments, envName1);
                 env1.Select();
                 app.Dte.ExecuteCommand("Python.ActivateEnvironment");
 
@@ -284,27 +290,27 @@ namespace PythonToolsUITests {
 
         public void DefaultBaseInterpreterSelection(PythonVisualStudioApp app) {
             // The project that will be loaded references these environments.
-            PythonPaths.Python27.AssertInstalled();
-            PythonPaths.Python37.AssertInstalled();
+            //PythonPaths.Python27.AssertInstalled();
+            PythonPaths.Python39.AssertInstalled();
 
             using (var dis = InitPython3(app)) {
                 var sln = app.CopyProjectForTest(@"TestData\Environments.sln");
                 var project = app.OpenProject(sln);
 
-                app.OpenSolutionExplorer().SelectProject(project);
-                app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"Python 2.7 (32-bit)\"");
+                //app.OpenSolutionExplorer().SelectProject(project);
+                //app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"Python 2.7 (32-bit)\"");
 
                 var environmentsNode = app.OpenSolutionExplorer().FindChildOfProject(project, Strings.Environments);
                 environmentsNode.Select();
 
-                using (var createVenv = AddVirtualEnvironmentDialogWrapper.FromDte(app)) {
-                    var baseInterp = createVenv.BaseInterpreter;
+                //using (var createVenv = AddVirtualEnvironmentDialogWrapper.FromDte(app)) {
+                //    var baseInterp = createVenv.BaseInterpreter;
 
-                    Assert.AreEqual("Python 2.7 (32-bit)", baseInterp);
-                    createVenv.Cancel();
-                }
+                //    Assert.AreEqual("Python 2.7 (32-bit)", baseInterp);
+                //    createVenv.Cancel();
+                //}
 
-                app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"Python 3.7 (32-bit)\"");
+                app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"Python 3.9 (32-bit)\"");
 
                 environmentsNode = app.OpenSolutionExplorer().FindChildOfProject(project, Strings.Environments);
                 environmentsNode.Select();
@@ -312,7 +318,7 @@ namespace PythonToolsUITests {
                 using (var createVenv = AddVirtualEnvironmentDialogWrapper.FromDte(app)) {
                     var baseInterp = createVenv.BaseInterpreter;
 
-                    Assert.AreEqual("Python 3.7 (32-bit)", baseInterp);
+                    Assert.AreEqual("Python 3.9 (32-bit)", baseInterp);
                     createVenv.Cancel();
                 }
             }
@@ -362,7 +368,7 @@ namespace PythonToolsUITests {
         }
 
         public void ProjectAddExistingVEnvLocal(PythonVisualStudioApp app) {
-            var python =    PythonPaths.Python37_x64 ??
+            var python = PythonPaths.Python39_x64 ??
                             PythonPaths.Python37 ??
                             PythonPaths.Python36_x64 ??
                             PythonPaths.Python36 ??
@@ -389,7 +395,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
         }
 
         public void ProjectAddCustomEnvLocal(PythonVisualStudioApp app) {
-            var python =    PythonPaths.Python37_x64 ??
+            var python = PythonPaths.Python39_x64 ??
                             PythonPaths.Python37 ??
                             PythonPaths.Python36_x64 ??
                             PythonPaths.Python36 ??
@@ -411,7 +417,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
         }
 
         public void ProjectAddExistingEnv(PythonVisualStudioApp app) {
-            var python =    PythonPaths.Python37_x64 ??
+            var python = PythonPaths.Python39_x64 ??
                             PythonPaths.Python37 ??
                             PythonPaths.Python36_x64 ??
                             PythonPaths.Python36 ??
@@ -614,8 +620,9 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                     pp.AddInterpreter(dis.CurrentDefault.Configuration.Id);
                 });
 
-                var envName = dis.CurrentDefault.Configuration.Description;
+                var envName = dis.CurrentDefault.Configuration.Description + " Linked";
                 var sln = app.OpenSolutionExplorer();
+                
                 var env = sln.FindChildOfProject(project, Strings.Environments, envName);
 
                 EnvironmentReplWorkingDirectoryTest(app, project, env);

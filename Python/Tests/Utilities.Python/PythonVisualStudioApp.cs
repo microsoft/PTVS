@@ -516,11 +516,16 @@ namespace TestUtilities.UI.Python {
             environmentsNode.Select();
 
             ApplyVirtualEnvironmentDialog(out string baseInterp, out string location, out string envName);
-            envLabel = "{0} ({1})".FormatUI(envName, baseInterp);
+            envLabel = "{0} ({1})".FormatUI(envName, baseInterp.Split('\n')[0]);
             envPath = Path.Combine(location, envName);
 
             try {
-                return OpenSolutionExplorer().WaitForChildOfProject(project, TimeSpan.FromMinutes(5), Strings.Environments, envLabel);
+                this.SolutionExplorerTreeView.ExpandAll();
+                environmentsNode.Select();
+              
+
+
+                return this.SolutionExplorerTreeView.WaitForChildOfProject(project, TimeSpan.FromMinutes(5), Strings.Environments, envLabel);
             } finally {
                 var text = GetOutputWindowText("General");
                 if (!string.IsNullOrEmpty(text)) {
