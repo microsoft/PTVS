@@ -32,7 +32,7 @@ jobs:
       - uses: lee-dohm/team-rotation@v1
         with:
           last: ${{ steps.assigned.outputs.result }}
-          include: AdamYoblick bschnurr debonte heejaechang StellaHuang95 rchiodo KacieKK
+          include: bschnurr debonte heejaechang StellaHuang95 rchiodo
         id: rotation
       - name: Dump next in rotation
         env:
