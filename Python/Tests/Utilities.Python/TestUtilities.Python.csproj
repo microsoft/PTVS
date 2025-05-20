@@ -58,7 +58,6 @@
     <Reference Include="UIAutomationTypes" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="$(BuildRoot)\Common\Tests\MockVsTests\MockVsTests.csproj">
       <Project>{a390e1c0-0d90-4a9e-8413-3e959bb07292}</Project>
@@ -100,7 +99,7 @@
       <Project>{a52ac77f-6df9-4387-bb08-8ded3fd95a0f}</Project>
       <Name>VSCommon</Name>
     </ProjectReference>
-  </ItemGroup>  
+  </ItemGroup>
   <ItemGroup>
     <Compile Include="AddEnvironmentDialogWrapperBase.cs" />
     <Compile Include="AddExistingEnvironmentDialogWrapper.cs" />
@@ -120,6 +119,7 @@
     <Compile Include="MockReplWindow.cs" />
     <Compile Include="MockUIThread.cs" />
     <Compile Include="AddCondaEnvironmentDialogWrapper.cs" />
+    <Compile Include="PythonUntrustedWorkspaceInfoBar.cs" />
     <Compile Include="PythonInstallPackagesInfoBar.cs" />
     <Compile Include="PythonCreateCondaEnvInfoBar.cs" />
     <Compile Include="PythonCreateVirtualEnvInfoBar.cs" />

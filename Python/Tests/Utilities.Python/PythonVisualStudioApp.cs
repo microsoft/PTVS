@@ -240,14 +240,14 @@ namespace TestUtilities.UI.Python {
         public AutomationElementCollection GetInfoBars() {
             return Element.FindAll(
                 TreeScope.Descendants,
-                new PropertyCondition(AutomationElement.AutomationIdProperty, "infobarcontrol")
+                new PropertyCondition(AutomationElement.ClassNameProperty, "InfoBarControl", PropertyConditionFlags.IgnoreCase)
             );
         }
 
         public AutomationElement FindFirstInfoBar(Condition condition, TimeSpan timeout) {
             for (int i = 0; i < timeout.TotalMilliseconds; i += 500) {
-                var infoBars = GetInfoBars();
-                foreach (AutomationElement infoBar in infoBars) {
+                
+                foreach (AutomationElement infoBar in GetInfoBars()) {
                     var createLink = infoBar.FindFirst(TreeScope.Descendants, condition);
                     if (createLink != null) {
                         return createLink;
@@ -267,6 +267,11 @@ namespace TestUtilities.UI.Python {
         public PythonCreateCondaEnvInfoBar FindCreateCondaEnvInfoBar(TimeSpan timeout) {
             var element = FindFirstInfoBar(PythonCreateCondaEnvInfoBar.FindCondition, timeout);
             return element != null ? new PythonCreateCondaEnvInfoBar(element) : null;
+        }
+
+        public PythonUntrustedWorkspaceInfoBar FindUntrustedWorkspaceInfoBar(TimeSpan timeout) {
+            var element = FindFirstInfoBar(PythonUntrustedWorkspaceInfoBar.FindCondition, timeout);
+            return element != null ? new PythonUntrustedWorkspaceInfoBar(element) : null;
         }
 
         public PythonInstallPackagesInfoBar FindInstallPackagesInfoBar(TimeSpan timeout) {
@@ -516,7 +521,7 @@ namespace TestUtilities.UI.Python {
             environmentsNode.Select();
 
             ApplyVirtualEnvironmentDialog(out string baseInterp, out string location, out string envName);
-            envLabel = "{0} ({1})".FormatUI(envName, baseInterp);
+            envLabel = "{0} ({1})".FormatUI(envName, baseInterp.Split('\n')[0]);
             envPath = Path.Combine(location, envName);
 
             try {
@@ -535,6 +540,9 @@ namespace TestUtilities.UI.Python {
         public void CreateWorkspaceVirtualEnvironment(out string baseEnvDescription, out string envPath) {
             ApplyVirtualEnvironmentDialog(out baseEnvDescription, out string location, out string envName);
             envPath = Path.Combine(location, envName);
+
+            var infoBarAlwaysTrust = FindUntrustedWorkspaceInfoBar(TimeSpan.FromSeconds(5));
+            infoBarAlwaysTrust?.Invoke();
 
             try {
                 var id = WorkspaceInterpreterFactoryConstants.GetInterpreterId(WorkspaceInterpreterFactoryConstants.EnvironmentCompanyName, envName);
@@ -580,7 +588,7 @@ namespace TestUtilities.UI.Python {
 
             ApplyAddExistingEnvironmentDialog(envPath, out envName);
 
-            return OpenSolutionExplorer().WaitForChildOfProject(project, Strings.Environments, envName);
+            return OpenSolutionExplorer().WaitForChildOfProject(project, Strings.Environments, envName + " Linked");
         }
 
         public void AddWorkspaceExistingEnvironment(string envPath, out string envName) {
@@ -619,6 +627,10 @@ namespace TestUtilities.UI.Python {
             ApplyAddLocalCustomEnvironmentDialog(envPath, descriptionOverride, expectedLangVer, expectedArch, out _, out _, out _, out _);
         }
 
+        bool IsWindowsAppsAlias(string path) {
+            return path.IndexOf("WindowsApps", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
         private void ApplyAddLocalCustomEnvironmentDialog(string envPath, string descriptionOverride, string expectedLangVer, string expectedArch, out string envDescription, out string envPrefixPath, out string languageVer, out string architecture) {
             envDescription = string.Empty;
             envPrefixPath = string.Empty;
@@ -629,16 +641,27 @@ namespace TestUtilities.UI.Python {
                 dlg.SelectCustomInterpreter();
                 dlg.PrefixPath = envPath;
 
+                
                 // Need to wait for async auto detect to be finished
                 dlg.WaitForReady();
 
-                if (expectedLangVer != null) {
-                    Assert.AreEqual(expectedLangVer, dlg.LanguageVersion);
-                }
+                if (IsWindowsAppsAlias(envPath)) {
 
-                if (expectedArch != null) {
-                    Assert.AreEqual(expectedArch, dlg.Architecture);
+                    Assert.AreEqual("", dlg.LanguageVersion);
+                } else {
+                    if (expectedLangVer != null) {
+                        Assert.AreEqual(expectedLangVer, dlg.LanguageVersion);
+                    }
                 }
+                if(IsWindowsAppsAlias(envPath)) {
+                    Assert.AreEqual("", dlg.Architecture);
+
+                } else {
+                    if (expectedArch != null) {
+                        Assert.AreEqual(expectedArch, dlg.Architecture);
+                    }
+                }
+                
 
                 dlg.RegisterGlobally = false;
 
