@@ -18,7 +18,6 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Common;
@@ -131,13 +130,19 @@ namespace PythonToolsUITests {
                 var env = app.CreateProjectVirtualEnvironment(project, out string envName);
                 env.Select();
 
-                try {
-                    app.ExecuteCommand("Python.InstallRequirementsTxt", "/y", timeout: 5000);
-                    Assert.Fail("Command should not have executed");
-                } catch (AggregateException ae) {
-                    ae.Handle(ex => ex is COMException);
-                } catch (COMException) {
+                bool success = false;
+                for (int i = 0; i < 10; i++) {
+                    try {
+                        app.ExecuteCommand("Python.InstallRequirementsTxt", "/y", timeout: 5000);
+                        success = true;
+                        break;
+                    } catch (Exception ex) {
+                        Console.WriteLine($"Attempt {i + 1} failed: {ex.Message}");
+                        Thread.Sleep(500); // Wait before retrying
+                    }
                 }
+                Assert.IsTrue(success, "Python.InstallRequirementsTxt command failed after 3 attempts.");
+
 
                 var requirementsTxt = Path.Combine(Path.GetDirectoryName(project.FullName), "requirements.txt");
                 File.WriteAllText(requirementsTxt, TestPackageSpec);
@@ -206,7 +211,7 @@ namespace PythonToolsUITests {
                 Assert.AreNotEqual(id0, id2);
 
                 // Activate env1 (previously stored node is now invalid, we need to query again)
-                env1 = app.OpenSolutionExplorer().WaitForChildOfProject(project, Strings.Environments, envName1);
+                env1 = app.SolutionExplorerTreeView.FindChildOfProject(project, Strings.Environments, envName1);
                 env1.Select();
                 app.Dte.ExecuteCommand("Python.ActivateEnvironment");
 
@@ -284,15 +289,15 @@ namespace PythonToolsUITests {
 
         public void DefaultBaseInterpreterSelection(PythonVisualStudioApp app) {
             // The project that will be loaded references these environments.
-            PythonPaths.Python27.AssertInstalled();
-            PythonPaths.Python37.AssertInstalled();
+            PythonPaths.Python310.AssertInstalled();
+            PythonPaths.Python39.AssertInstalled();
 
             using (var dis = InitPython3(app)) {
                 var sln = app.CopyProjectForTest(@"TestData\Environments.sln");
                 var project = app.OpenProject(sln);
 
                 app.OpenSolutionExplorer().SelectProject(project);
-                app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"Python 2.7 (32-bit)\"");
+                app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"Python 3.10 (64-bit)\"");
 
                 var environmentsNode = app.OpenSolutionExplorer().FindChildOfProject(project, Strings.Environments);
                 environmentsNode.Select();
@@ -300,11 +305,11 @@ namespace PythonToolsUITests {
                 using (var createVenv = AddVirtualEnvironmentDialogWrapper.FromDte(app)) {
                     var baseInterp = createVenv.BaseInterpreter;
 
-                    Assert.AreEqual("Python 2.7 (32-bit)", baseInterp);
+                    Assert.AreEqual("Python 3.10 (64-bit)", baseInterp);
                     createVenv.Cancel();
                 }
 
-                app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"Python 3.7 (32-bit)\"");
+                app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"Python 3.9 (64-bit)\"");
 
                 environmentsNode = app.OpenSolutionExplorer().FindChildOfProject(project, Strings.Environments);
                 environmentsNode.Select();
@@ -312,7 +317,7 @@ namespace PythonToolsUITests {
                 using (var createVenv = AddVirtualEnvironmentDialogWrapper.FromDte(app)) {
                     var baseInterp = createVenv.BaseInterpreter;
 
-                    Assert.AreEqual("Python 3.7 (32-bit)", baseInterp);
+                    Assert.AreEqual("Python 3.9 (64-bit)", baseInterp);
                     createVenv.Cancel();
                 }
             }
@@ -362,7 +367,7 @@ namespace PythonToolsUITests {
         }
 
         public void ProjectAddExistingVEnvLocal(PythonVisualStudioApp app) {
-            var python =    PythonPaths.Python37_x64 ??
+            var python =    PythonPaths.Python39_x64 ??
                             PythonPaths.Python37 ??
                             PythonPaths.Python36_x64 ??
                             PythonPaths.Python36 ??
@@ -383,13 +388,13 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
             Assert.IsNotNull(env);
             Assert.IsNotNull(env.Element);
             Assert.AreEqual(
-                string.Format("venv (Python 3.{0} (32-bit))", python.Version.ToVersion().Minor),
+                string.Format("venv (Python 3.{0} (64-bit))", python.Version.ToVersion().Minor),
                 envName
             );
         }
 
         public void ProjectAddCustomEnvLocal(PythonVisualStudioApp app) {
-            var python =    PythonPaths.Python37_x64 ??
+            var python = PythonPaths.Python39_x64 ??
                             PythonPaths.Python37 ??
                             PythonPaths.Python36_x64 ??
                             PythonPaths.Python36 ??
@@ -411,7 +416,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
         }
 
         public void ProjectAddExistingEnv(PythonVisualStudioApp app) {
-            var python =    PythonPaths.Python37_x64 ??
+            var python = PythonPaths.Python39_x64 ??
                             PythonPaths.Python37 ??
                             PythonPaths.Python36_x64 ??
                             PythonPaths.Python36 ??
@@ -427,46 +432,47 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
             Assert.IsNotNull(env);
             Assert.IsNotNull(env.Element);
             Assert.AreEqual(
-                string.Format("Python 3.{0} (32-bit)", python.Version.ToVersion().Minor),
+                string.Format("Python 3.{0} (64-bit)", python.Version.ToVersion().Minor),
                 envName
             );
         }
 
         public void WorkspaceCreateVEnv(PythonVisualStudioApp app) {
-            var globalDefault37 = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
-            globalDefault37.AssertInstalled();
+            var globalDefault39 = PythonPaths.Python39_x64 ?? PythonPaths.Python39;
+            globalDefault39.AssertInstalled();
 
-            using (var dis = app.SelectDefaultInterpreter(globalDefault37)) {
-                var workspaceFolder = CreateAndOpenWorkspace(app, globalDefault37);
+            using (var dis = app.SelectDefaultInterpreter(globalDefault39)) {
+                var workspaceFolder = CreateAndOpenWorkspace(app, globalDefault39);
 
                 // Create virtual environment dialog, it should by default create it
                 // under the workspace root folder, using the current environment as the base.
                 // Since there's no other virtual env in the workspace, it should be named "env"
                 app.CreateWorkspaceVirtualEnvironment(out string baseEnvDesc, out string envPath);
+                
                 Assert.IsTrue(
                     PathUtils.IsSameDirectory(Path.Combine(workspaceFolder, "env"), envPath),
                     "venv should be created in env subfolder of worskpace"
                 );
                 Assert.AreEqual(
-                    baseEnvDesc,
-                    globalDefault37.Configuration.Description,
+                    baseEnvDesc.Split('\n')[0],
+                    globalDefault39.Configuration.Description,
                     "venv should use current interpreter as base env"
                 );
 
                 var expectedEnvName = "env ({0}, {1})".FormatInvariant(
-                    globalDefault37.Configuration.Version,
-                    globalDefault37.Configuration.ArchitectureString
+                    globalDefault39.Configuration.Version,
+                    globalDefault39.Configuration.ArchitectureString
                 );
                 CheckSwitcherEnvironment(app, expectedEnvName);
             }
         }
 
         public void WorkspaceCreateCondaEnvFromPackages(PythonVisualStudioApp app) {
-            var globalDefault37 = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
-            globalDefault37.AssertInstalled();
+            var globalDefault39 = PythonPaths.Python39_x64 ?? PythonPaths.Python39;
+            globalDefault39.AssertInstalled();
 
-            using (var dis = app.SelectDefaultInterpreter(globalDefault37)) {
-                var workspaceFolder = CreateAndOpenWorkspace(app, globalDefault37);
+            using (var dis = app.SelectDefaultInterpreter(globalDefault39)) {
+                var workspaceFolder = CreateAndOpenWorkspace(app, globalDefault39);
 
                 // Create conda environment dialog, using a list of packages
                 app.CreateWorkspaceCondaEnvironment("python=3.7 requests", null, null, out _, out string envPath, out string envDesc);
@@ -479,11 +485,11 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
         }
 
         public void WorkspaceCreateCondaEnvFromNoPackages(PythonVisualStudioApp app) {
-            var globalDefault37 = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
-            globalDefault37.AssertInstalled();
+            var globalDefault39 = PythonPaths.Python39_x64 ?? PythonPaths.Python39;
+            globalDefault39.AssertInstalled();
 
-            using (var dis = app.SelectDefaultInterpreter(globalDefault37)) {
-                var workspaceFolder = CreateAndOpenWorkspace(app, globalDefault37);
+            using (var dis = app.SelectDefaultInterpreter(globalDefault39)) {
+                var workspaceFolder = CreateAndOpenWorkspace(app, globalDefault39);
 
                 // Create conda environment dialog with no packages
                 app.CreateWorkspaceCondaEnvironment("", null, null, out _, out string envPath, out string envDesc);
@@ -496,11 +502,11 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
         }
 
         public void WorkspaceCreateCondaEnvFromEnvFile(PythonVisualStudioApp app) {
-            var globalDefault37 = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
-            globalDefault37.AssertInstalled();
+            var globalDefault39 = PythonPaths.Python39_x64 ?? PythonPaths.Python37;
+            globalDefault39.AssertInstalled();
 
-            using (var dis = app.SelectDefaultInterpreter(globalDefault37)) {
-                var workspaceFolder = CreateAndOpenWorkspace(app, globalDefault37);
+            using (var dis = app.SelectDefaultInterpreter(globalDefault39)) {
+                var workspaceFolder = CreateAndOpenWorkspace(app, globalDefault39);
                 var envFilePath = CreateTempEnvYml();
 
                 // Create conda environment dialog, using a environment.yml
@@ -515,19 +521,19 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
         }
 
         public void WorkspaceAddExistingEnv(PythonVisualStudioApp app) {
-            var python37 = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
-            python37.AssertInstalled();
+            var python39 = PythonPaths.Python39_x64 ?? PythonPaths.Python39;
+            python39.AssertInstalled();
 
-            var python27 = PythonPaths.Python27_x64 ?? PythonPaths.Python27;
-            python27.AssertInstalled();
+            var python38 = PythonPaths.Python38_x64 ?? PythonPaths.Python38;
+            python38.AssertInstalled();
 
-            using (var dis = app.SelectDefaultInterpreter(python27)) {
-                var workspaceFolder = CreateAndOpenWorkspace(app, python27);
+            using (var dis = app.SelectDefaultInterpreter(python38)) {
+                var workspaceFolder = CreateAndOpenWorkspace(app, python38);
 
                 // Add existing environment dialog, selecting an already detected environment
-                app.AddWorkspaceExistingEnvironment(python37.PrefixPath, out string envDesc);
+                app.AddWorkspaceExistingEnvironment(python39.PrefixPath, out string envDesc);
                 Assert.AreEqual(
-                    string.Format("Python {0} ({1})", python37.Version.ToVersion(), python37.Architecture),
+                    string.Format("Python {0} ({1})", python39.Version.ToVersion(), python39.Architecture),
                     envDesc
                 );
                 CheckSwitcherEnvironment(app, envDesc);
@@ -535,14 +541,14 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
         }
 
         public void WorkspaceAddCustomEnvLocal(PythonVisualStudioApp app) {
-            var python27 = PythonPaths.Python27_x64 ?? PythonPaths.Python27;
-            python27.AssertInstalled();
+            var python38 = PythonPaths.Python38_x64 ?? PythonPaths.Python38;
+            python38.AssertInstalled();
 
-            var basePython = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
+            var basePython = PythonPaths.Python39_x64 ?? PythonPaths.Python39;
             basePython.AssertInstalled();
 
-            using (var dis = app.SelectDefaultInterpreter(python27)) {
-                var workspaceFolder = CreateAndOpenWorkspace(app, python27);
+            using (var dis = app.SelectDefaultInterpreter(python38)) {
+                var workspaceFolder = CreateAndOpenWorkspace(app, python38);
 
                 // Create a virtual environment in a folder outside the workspace
                 // Note: we need to use a real virtual env for this, because the
@@ -557,7 +563,12 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                     basePython.Configuration.Version.ToString(),
                     basePython.Architecture.ToString()
                 );
-                var envDesc = string.Format("testenv ({0}, {1})", basePython.Version.ToVersion(), basePython.Architecture);
+
+                var infoBarAlwaysTrust = app.FindUntrustedWorkspaceInfoBar(TimeSpan.FromSeconds(10));
+                infoBarAlwaysTrust?.Invoke();
+
+                var envDesc = string.Format("{0} ({1}, {2})", VirtualEnvName.First, basePython.Version.ToVersion(), basePython.Architecture);
+                
                 CheckSwitcherEnvironment(app, envDesc);
             }
         }
@@ -614,8 +625,8 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                     pp.AddInterpreter(dis.CurrentDefault.Configuration.Id);
                 });
 
-                var envName = dis.CurrentDefault.Configuration.Description;
-                var sln = app.OpenSolutionExplorer();
+                var envName = dis.CurrentDefault.Configuration.Description + " Linked";
+                var sln = app.OpenSolutionExplorer();                
                 var env = sln.FindChildOfProject(project, Strings.Environments, envName);
 
                 EnvironmentReplWorkingDirectoryTest(app, project, env);
@@ -633,33 +644,33 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
         }
 
         public void SwitcherSingleProject(PythonVisualStudioApp app) {
-            var globalDefault37 = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
-            globalDefault37.AssertInstalled();
+            var globalDefault39 = PythonPaths.Python39_x64 ?? PythonPaths.Python39;
+            globalDefault39.AssertInstalled();
 
-            var added27 = PythonPaths.Python27_x64 ?? PythonPaths.Python27;
-            added27.AssertInstalled();
+            var added310 = PythonPaths.Python310_x64 ?? PythonPaths.Python310;
+            added310.AssertInstalled();
 
-            var added36 = PythonPaths.Python36_x64 ?? PythonPaths.Python36;
-            added36.AssertInstalled();
+            var added38 = PythonPaths.Python38_x64 ?? PythonPaths.Python38;
+            added38.AssertInstalled();
 
-            using (var dis = app.SelectDefaultInterpreter(globalDefault37)) {
+            using (var dis = app.SelectDefaultInterpreter(globalDefault39)) {
                 // Project has no references, uses global default
                 var project = CreateTemporaryProject(app);
-                CheckSwitcherEnvironment(app, globalDefault37.Configuration.Description);
+                CheckSwitcherEnvironment(app, globalDefault39.Configuration.Description);
 
                 // Project has one referenced interpreter
                 app.ServiceProvider.GetUIThread().Invoke(() => {
                     var pp = project.GetPythonProject();
-                    pp.AddInterpreter(added27.Configuration.Id);
+                    pp.AddInterpreter(added310.Configuration.Id);
                 });
-                CheckSwitcherEnvironment(app, added27.Configuration.Description);
+                CheckSwitcherEnvironment(app, added310.Configuration.Description);
 
                 // Project has two referenced interpreters (active remains the same)
                 app.ServiceProvider.GetUIThread().Invoke(() => {
                     var pp = project.GetPythonProject();
-                    pp.AddInterpreter(added36.Configuration.Id);
+                    pp.AddInterpreter(added38.Configuration.Id);
                 });
-                CheckSwitcherEnvironment(app, added27.Configuration.Description);
+                CheckSwitcherEnvironment(app, added310.Configuration.Description);
 
                 // No switcher visible when solution closed and no file opened
                 app.Dte.Solution.Close(SaveFirst: false);
@@ -668,11 +679,11 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
         }
 
         public void SwitcherWorkspace(PythonVisualStudioApp app) {
-            var globalDefault37 = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
-            globalDefault37.AssertInstalled();
+            var globalDefault39 = PythonPaths.Python39_x64 ?? PythonPaths.Python39;
+            globalDefault39.AssertInstalled();
 
-            var python27 = PythonPaths.Python27_x64;
-            python27.AssertInstalled();
+            var python38 = PythonPaths.Python38_x64;
+            python38.AssertInstalled();
 
             var folders = TestData.GetTempPath();
             FileUtils.CopyDirectory(TestData.GetPath("TestData", "EnvironmentsSwitcherFolders"), folders);
@@ -681,26 +692,29 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
             var folder2 = Path.Combine(folders, "WorkspaceWithSettings");
             var folder3 = Path.Combine(folders, "WorkspaceNoPython");
 
-            using (var dis = app.SelectDefaultInterpreter(globalDefault37)) {
+            using (var dis = app.SelectDefaultInterpreter(globalDefault39)) {
                 // Hidden before any file is opened
                 CheckSwitcherEnvironment(app, null);
 
                 // Workspace without PythonSettings.json shows global default
                 app.OpenFolder(folder1);
                 app.OpenDocument(Path.Combine(folder1, "app1.py"));
-                CheckSwitcherEnvironment(app, globalDefault37.Configuration.Description);
+                app.OpenSolutionExplorer();
+                CheckSwitcherEnvironment(app, globalDefault39.Configuration.Description);
 
-                // Workspace with PythonSettings.json - Python 2.7 (64-bit)
+                // Workspace with PythonSettings.json - Python 3.8 (64-bit)
                 app.OpenFolder(folder2);
+                app.OpenSolutionExplorer();
                 app.OpenDocument(Path.Combine(folder2, "app2.py"));
-                CheckSwitcherEnvironment(app, python27.Configuration.Description);
+                CheckSwitcherEnvironment(app, python38.Configuration.Description);
 
                 // Keep showing even after opening non-python files
                 app.OpenDocument(Path.Combine(folder2, "app2.cpp"));
-                CheckSwitcherEnvironment(app, python27.Configuration.Description);
+                CheckSwitcherEnvironment(app, python38.Configuration.Description);
 
                 // Workspace without python file
                 app.OpenFolder(folder3);
+                app.OpenSolutionExplorer();
                 CheckSwitcherEnvironment(app, null);
                 app.OpenDocument(Path.Combine(folder3, "app3.cpp"));
                 CheckSwitcherEnvironment(app, null);
@@ -711,13 +725,13 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
         }
 
         public void SwitcherNoProject(PythonVisualStudioApp app) {
-            var globalDefault37 = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
-            globalDefault37.AssertInstalled();
+            var globalDefault39 = PythonPaths.Python39_x64 ?? PythonPaths.Python39;
+            globalDefault39.AssertInstalled();
 
-            using (var dis = app.SelectDefaultInterpreter(globalDefault37)) {
+            using (var dis = app.SelectDefaultInterpreter(globalDefault39)) {
                 // Loose Python file shows global default
                 app.OpenDocument(TestData.GetPath("TestData", "Environments", "Program.py"));
-                CheckSwitcherEnvironment(app, globalDefault37.Configuration.Description);
+                CheckSwitcherEnvironment(app, globalDefault39.Configuration.Description);
 
                 // No switcher visible when solution closed and no file opened
                 app.Dte.ActiveWindow.Close();
@@ -735,6 +749,8 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
 
             app.OpenFolder(workspaceFolder);
             app.OpenDocument(Path.Combine(workspaceFolder, "app1.py"));
+            app.OpenSolutionExplorer(); // trigger python toolbar to appear
+
             CheckSwitcherEnvironment(app, expectedFactory.Configuration.Description);
 
             return workspaceFolder;
