@@ -194,11 +194,23 @@ namespace TestUtilities.UI {
             }
             var projElement = projElements.Cast<AutomationElement>().Single();
 
-            var itemElement = path.Any() ? FindNode(
-                projElement.FindAll(TreeScope.Children, Condition.TrueCondition),
-                path,
-                0
-            ) : projElement;
+            AutomationElement itemElement = null;
+            int maxAttempts = 10;
+            int delayMs = 500;
+            for (int attempt = 0; attempt < maxAttempts; attempt++)
+            {
+                itemElement = path.Any() ? FindNode(
+                    projElement.FindAll(TreeScope.Children, Condition.TrueCondition),
+                    path,
+                    0
+                ) : projElement;
+
+                if (itemElement != null)
+                {
+                    break;
+                }
+                System.Threading.Thread.Sleep(delayMs);
+            }
 
             if (assertOnFailure) {
                 AutomationWrapper.DumpElement(Element);
