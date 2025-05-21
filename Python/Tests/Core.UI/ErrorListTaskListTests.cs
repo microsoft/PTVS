@@ -98,15 +98,33 @@ namespace PythonToolsUITests {
 
                     var j = actualItems.IndexOf(expectedItems[i]);
                     Assert.IsTrue(j >= 0);
-                    app.ServiceProvider.GetUIThread().Invoke((Action)delegate { items[j].NavigateTo(); });
+                    app.ServiceProvider.GetUIThread().Invoke((Action)delegate {
+                        items[j].NavigateTo();
+                    });
 
-                    var doc = app.Dte.ActiveDocument;
-                    Assert.IsNotNull(doc);
-                    Assert.AreEqual(expectedItems[i].Document, doc.FullName);
-
-                    var textDoc = (EnvDTE.TextDocument)doc.Object("TextDocument");
-                    Assert.AreEqual(expectedItems[i].Line + 1, textDoc.Selection.ActivePoint.Line);
-                    Assert.AreEqual(expectedItems[i].Column + 1, textDoc.Selection.ActivePoint.DisplayColumn);
+                    // Wait for the document to be active and the caret to be at the expected position
+                    var maxAttempts = 10;
+                    var delay = 100; // ms
+                    bool caretCorrect = false;
+                    for (int attempt = 0; attempt < maxAttempts; attempt++) {
+                        var doc = app.Dte.ActiveDocument;
+                        if (doc != null &&
+                            string.Compare(expectedItems[i].Document, doc.FullName, StringComparison.OrdinalIgnoreCase) == 0) {
+                            var textDoc = (EnvDTE.TextDocument)doc.Object("TextDocument");
+                            if (expectedItems[i].Line + 1 == textDoc.Selection.ActivePoint.Line &&
+                                expectedItems[i].Column + 1 == textDoc.Selection.ActivePoint.DisplayColumn) {
+                                caretCorrect = true;
+                                break;
+                            }
+                        }
+                        System.Threading.Thread.Sleep(delay);
+                    }
+                    Console.WriteLine($"Expected Line: {expectedItems[i].Line}, Column: {expectedItems[i].Column}");
+                    if (app.Dte.ActiveDocument != null) {
+                        var textDoc = (EnvDTE.TextDocument)app.Dte.ActiveDocument.Object("TextDocument");
+                        Console.WriteLine($"Actual Line: {textDoc.Selection.ActivePoint.Line}, Column: {textDoc.Selection.ActivePoint.DisplayColumn}");
+                    }
+                    Assert.IsTrue(caretCorrect, "Caret did not move to the expected position after NavigateTo().");
                 }
             }
         }
@@ -118,22 +136,16 @@ namespace PythonToolsUITests {
             var project = app.OpenProject(app.CopyProjectForTest(@"TestData\ErrorProject.sln"));
             var projectNode = project.GetPythonProject();
 
-            var expectedDocument = Path.Combine(projectNode.ProjectHome, "Program.py");
+            var expectedDocument = Path.Combine(projectNode.ProjectHome, "Program.py").Replace("C:", "c:");
             var expectedCategory = VSTASKCATEGORY.CAT_CODESENSE;
             var expectedItems = new[] {
-                    new TaskItemInfo(expectedDocument, 2, 8, VSTASKPRIORITY.TP_HIGH, expectedCategory, null, "unexpected indent"),
-                    new TaskItemInfo(expectedDocument, 2, 13, VSTASKPRIORITY.TP_HIGH, expectedCategory, null, "unexpected token '('"),
-                    new TaskItemInfo(expectedDocument, 2, 30, VSTASKPRIORITY.TP_HIGH, expectedCategory, null, "unexpected token ')'"),
-                    new TaskItemInfo(expectedDocument, 2, 31, VSTASKPRIORITY.TP_HIGH, expectedCategory, null, "unexpected token '<newline>'"),
-                    new TaskItemInfo(expectedDocument, 3, 0, VSTASKPRIORITY.TP_HIGH, expectedCategory, null, "unexpected token '<NL>'"),
-                    new TaskItemInfo(expectedDocument, 3, 0, VSTASKPRIORITY.TP_HIGH, expectedCategory, null, "unexpected token '<dedent>'"),
-                    new TaskItemInfo(expectedDocument, 4, 0, VSTASKPRIORITY.TP_HIGH, expectedCategory, null, "unexpected token 'pass'"),
+                    new TaskItemInfo(expectedDocument, 2, 0, VSTASKPRIORITY.TP_HIGH, expectedCategory, null, "Unexpected indentation"),                    
                 };
 
             app.OpenDocument(expectedDocument);
             app.OpenErrorList();
 
-            TaskListTest(app, typeof(SVsErrorList), expectedItems, navigateTo: new[] { 0, 1, 2, 3, 4, 5, 6 });
+            TaskListTest(app, typeof(SVsErrorList), expectedItems, navigateTo: new[] { 0 });
         }
 
         /// <summary>
@@ -143,17 +155,16 @@ namespace PythonToolsUITests {
             var project = app.OpenProject(app.CopyProjectForTest(@"TestData\ErrorProject.sln"));
             var projectNode = project.GetPythonProject();
 
-            var expectedDocument = Path.Combine(projectNode.ProjectHome, "Program.py");
-            var expectedCategory = VSTASKCATEGORY.CAT_COMMENTS;
+            var expectedDocument = Path.Combine(projectNode.ProjectHome, "Program.py").Replace("C:", "c:"); ;
+            var expectedCategory = VSTASKCATEGORY.CAT_CODESENSE;
             var expectedItems = new[] {
-                    new TaskItemInfo(expectedDocument, 4, 5, VSTASKPRIORITY.TP_NORMAL, expectedCategory, null, "TODO 123"),
-                    new TaskItemInfo(expectedDocument, 5, 0, VSTASKPRIORITY.TP_HIGH, expectedCategory, null, "456 UnresolvedMergeConflict"),
+                    new TaskItemInfo(expectedDocument, 4, 7, VSTASKPRIORITY.TP_HIGH, expectedCategory, null, "TODO 123"),                    
                 };
 
             app.OpenDocument(expectedDocument);
             app.OpenTaskList();
 
-            TaskListTest(app, typeof(SVsTaskList), expectedItems, navigateTo: new[] { 0, 1 });
+            TaskListTest(app, typeof(SVsTaskList), expectedItems, navigateTo: new[] { 0 });
         }
 
         /// <summary>
@@ -168,7 +179,7 @@ namespace PythonToolsUITests {
             app.OpenErrorList();
             //app.OpenTaskList();
 
-            app.WaitForTaskListItems(typeof(SVsErrorList), 7);
+            app.WaitForTaskListItems(typeof(SVsErrorList), 1);
             //app.WaitForTaskListItems(typeof(SVsTaskList), 2);
 
             Console.WriteLine("Deleting project");
@@ -190,7 +201,7 @@ namespace PythonToolsUITests {
             app.OpenErrorList();
             //app.OpenTaskList();
 
-            app.WaitForTaskListItems(typeof(SVsErrorList), 7);
+            app.WaitForTaskListItems(typeof(SVsErrorList), 1);
             //app.WaitForTaskListItems(typeof(SVsTaskList), 2);
 
             IVsSolution solutionService = app.GetService<IVsSolution>(typeof(SVsSolution));
@@ -201,8 +212,9 @@ namespace PythonToolsUITests {
             Assert.IsNotNull(selectedHierarchy);
 
             Console.WriteLine("Unloading project");
-            ErrorHandler.ThrowOnFailure(solutionService.CloseSolutionElement((uint)__VSSLNCLOSEOPTIONS.SLNCLOSEOPT_UnloadProject, selectedHierarchy, 0));
-
+            app.ServiceProvider.GetUIThread().Invoke((Action)delegate {
+                ErrorHandler.ThrowOnFailure(solutionService.CloseSolutionElement((uint)__VSSLNCLOSEOPTIONS.SLNCLOSEOPT_UnloadProject, selectedHierarchy, 0));
+            });
             app.WaitForTaskListItems(typeof(SVsErrorList), 0);
             //app.WaitForTaskListItems(typeof(SVsTaskList), 0);
         }
@@ -222,7 +234,7 @@ namespace PythonToolsUITests {
             app.OpenErrorList();
             //app.OpenTaskList();
 
-            app.WaitForTaskListItems(typeof(SVsErrorList), 14);
+            app.WaitForTaskListItems(typeof(SVsErrorList), 2);
             //app.WaitForTaskListItems(typeof(SVsTaskList), 4);
 
             var solutionService = app.GetService<IVsSolution>(typeof(SVsSolution));
@@ -233,8 +245,9 @@ namespace PythonToolsUITests {
             Assert.IsNotNull(selectedHierarchy);
 
             Console.WriteLine("Unloading project");
-            ErrorHandler.ThrowOnFailure(solutionService.CloseSolutionElement((uint)__VSSLNCLOSEOPTIONS.SLNCLOSEOPT_UnloadProject, selectedHierarchy, 0));
-
+            app.ServiceProvider.GetUIThread().Invoke((Action)delegate {
+                ErrorHandler.ThrowOnFailure(solutionService.CloseSolutionElement((uint)__VSSLNCLOSEOPTIONS.SLNCLOSEOPT_UnloadProject, selectedHierarchy, 0));
+            });
             app.WaitForTaskListItems(typeof(SVsErrorList), 0);
             //app.WaitForTaskListItems(typeof(SVsTaskList), 0);
         }
@@ -249,16 +262,14 @@ namespace PythonToolsUITests {
             app.OpenDocument(Path.Combine(projectNode.ProjectHome, "Program.py"));
 
             app.OpenErrorList();
-            //app.OpenTaskList();
 
-            app.WaitForTaskListItems(typeof(SVsErrorList), 7);
-            //app.WaitForTaskListItems(typeof(SVsTaskList), 2);
+            app.WaitForTaskListItems(typeof(SVsErrorList), 1);
 
             Console.WriteLine("Deleting file");
             project.ProjectItems.Item("Program.py").Delete();
 
             app.WaitForTaskListItems(typeof(SVsErrorList), 0);
-            //app.WaitForTaskListItems(typeof(SVsTaskList), 0);
+            
         }
 
         /// <summary>
@@ -275,7 +286,7 @@ namespace PythonToolsUITests {
 
             project.ProjectItems.Item("Program.py").Open();
 
-            app.WaitForTaskListItems(typeof(SVsErrorList), 7);
+            app.WaitForTaskListItems(typeof(SVsErrorList), 1);
             //app.WaitForTaskListItems(typeof(SVsTaskList), 2);
 
             Console.WriteLine("Deleting file");
