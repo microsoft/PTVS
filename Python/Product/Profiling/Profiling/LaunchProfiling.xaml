@@ -45,8 +45,6 @@
 
             <Label Grid.Row="0"
                    Content="{x:Static ui:Strings.LaunchProfiling_WhatToProfile}"
-                   Focusable="True"
-                   IsTabStop="True"
                    Margin="6 12 6 0"
                    FontWeight="Bold"/>
 
