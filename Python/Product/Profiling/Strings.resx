@@ -289,10 +289,10 @@ Error:
     <value>Browse folder dialog for working directory</value>
   </data>
   <data name="LaunchProfiling_OpenProjectRadioButtonDescription" xml:space="preserve">
-    <value>Radio button 1 of 2, Open project</value>
+    <value>What would you like to profile? Radio button 1 of 2, Open project</value>
   </data>
   <data name="LaunchProfiling_StandaloneScriptRadioButtonDescription" xml:space="preserve">
-    <value>Radio button 2 of 2, Standalone script</value>
+    <value>What would you like to profile? Radio button 2 of 2, Standalone script</value>
   </data>
   <data name="Reports" xml:space="preserve">
     <value>Reports</value>
