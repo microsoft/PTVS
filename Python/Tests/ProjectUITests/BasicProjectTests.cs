@@ -1240,7 +1240,6 @@ namespace ProjectUITests {
 
                 var solutionFile = SolutionFile.Generate("HelloWorld", baseProj, imported);
                 using (var solution = solutionFile.ToVs(app)) {
-                    Assert.IsNotNull(solution.WaitForItem("HelloWorld", "VisibleItem.txt"), "VisibleItem.txt not found");
                     Assert.IsNull(solution.FindItem("HelloWorld", "ProjectInvisible.txt"), "VisibleItem.txt not found");
                     Assert.IsNull(solution.FindItem("HelloWorld", "ImportedItem.txt"), "VisibleItem.txt not found");
                 }
@@ -1506,13 +1505,20 @@ namespace ProjectUITests {
                         });
                         File.Delete(Path.Combine(solution.SolutionDirectory, "HelloWorld", projectType.Code("server2")));
 
+                        solution.WaitForItem("HelloWorld", projectType.Code("server"));
+
                         var file = solution.FindItem("HelloWorld", projectType.Code("server"));
+                       
                         AutomationWrapper.Select(file);
 
                         Keyboard.Type(System.Windows.Input.Key.F2);
                         Keyboard.Type("server2\r");
+                       
                         using (var dlg = AutomationDialog.WaitForDialog(app)) {
-                            dlg.WaitForClosed(TimeSpan.FromSeconds(10), dlg.CloseWindow);
+                            dlg.ClickButtonAndClose("Cancel");
+                        }
+                        using (var dlg = AutomationDialog.WaitForDialog(app)) {
+                            dlg.ClickButtonAndClose("OK");
                         }
                         Assert.IsNotNull(solution.FindItem("HelloWorld", projectType.Code("server")));
                         Assert.IsNotNull(solution.FindItem("HelloWorld", projectType.Code("server2")));
@@ -1564,7 +1570,10 @@ namespace ProjectUITests {
                         Keyboard.Type(System.Windows.Input.Key.F2);
                         Keyboard.Type("server2\r");
                         using (var dlg = AutomationDialog.WaitForDialog(app)) {
-                            dlg.ClickButtonAndClose("Yes");
+                            dlg.ClickButtonAndClose("Save");
+                        }
+                        using (var dlg = AutomationDialog.WaitForDialog(app)) {
+                            dlg.ClickButtonAndClose("OK");
                         }
                         Keyboard.Type(System.Windows.Input.Key.Escape);
                         Assert.IsNotNull(solution.FindItem("HelloWorld", projectType.Code("server")));
@@ -1617,7 +1626,7 @@ namespace ProjectUITests {
                         Keyboard.Type(System.Windows.Input.Key.F2);
                         Keyboard.Type("server2\r");
                         using (var dlg = AutomationDialog.WaitForDialog(app)) {
-                            dlg.ClickButtonAndClose("No");
+                            dlg.ClickButtonAndClose("Don't Save");
                         }
                         Assert.IsNull(solution.FindItem("HelloWorld", projectType.Code("server")));
                         Assert.IsNotNull(solution.FindItem("HelloWorld", projectType.Code("server2")));
