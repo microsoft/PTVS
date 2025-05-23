@@ -4,26 +4,52 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:common="clr-namespace:Microsoft.PythonTools;assembly=Microsoft.PythonTools.Common"
+             xmlns:vsui="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.15.0"
+             xmlns:wpf="clr-namespace:Microsoft.PythonTools.Wpf"
              mc:Ignorable="d" 
-             FontFamily="{DynamicResource VsFont.EnvironmentFontFamily}"
-             FontSize="{DynamicResource VsFont.EnvironmentFontSize}"
+             FontFamily="{DynamicResource {x:Static wpf:ModernStyles.EnvironmentFontFamilyKey}}"
+             FontSize="{DynamicResource {x:Static wpf:ModernStyles.EnvironmentFontSizeKey}}"
+             Background="{DynamicResource {x:Static wpf:ModernStyles.BackgroundKey}}"
+             Foreground="{DynamicResource {x:Static wpf:ModernStyles.ForegroundKey}}"
              d:DesignHeight="400" d:DesignWidth="400">
     <UserControl.Resources>
         <ResourceDictionary>
+            <!-- Define styles using ModernStyles resources -->
             <Style TargetType="{x:Type Label}">
-                <Setter Property="Margin" Value="4" />
+                <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:ModernStyles.ForegroundKey}}" />
             </Style>
 
             <Style TargetType="{x:Type TextBox}">
-                <Setter Property="Margin" Value="4" />
-                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="Background" Value="{DynamicResource {x:Static wpf:ModernStyles.ControlBackgroundKey}}" />
+                <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:ModernStyles.ControlForegroundKey}}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:ModernStyles.ControlBorderKey}}" />
             </Style>
 
             <Style TargetType="{x:Type ComboBox}">
-                <Setter Property="Margin" Value="4" />
-                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="Background" Value="{DynamicResource {x:Static wpf:ModernStyles.ControlBackgroundKey}}" />
+                <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:ModernStyles.ControlForegroundKey}}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:ModernStyles.ControlBorderKey}}" />
+                <Setter Property="ItemContainerStyle">
+                    <Setter.Value>
+                        <Style TargetType="ComboBoxItem">
+                            <Setter Property="Background" Value="{DynamicResource {x:Static wpf:ModernStyles.ControlBackgroundKey}}" />
+                            <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:ModernStyles.ControlForegroundKey}}" />
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="{DynamicResource {x:Static wpf:ModernStyles.ControlBackgroundHoverKey}}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:ModernStyles.ControlForegroundHoverKey}}" />
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="{DynamicResource {x:Static wpf:ModernStyles.ControlBackgroundSelectedKey}}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:ModernStyles.ControlForegroundSelectedKey}}" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Setter.Value>
+                </Setter>
             </Style>
 
+            <!-- Keep existing data templates -->
             <DataTemplate x:Key="FrameworkNone">
             </DataTemplate>
             
@@ -97,7 +123,8 @@
             Margin="0"
             Content="{Binding}"
             IsTabStop="False"
-            Focusable="False">
+            Focusable="False"
+            Background="{DynamicResource {x:Static vsui:EnvironmentColors.ToolWindowBackgroundBrushKey}}">
             <ContentControl.Style>
                 <Style TargetType="ContentControl">
                     <Style.Triggers>
@@ -115,5 +142,4 @@
             </ContentControl.Style>
         </ContentControl>
     </StackPanel>
-
 </UserControl>

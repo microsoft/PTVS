@@ -29,13 +29,14 @@ namespace Microsoft.PythonTools.Project {
         private int _dirtyCount;
         private Control _curLauncher;
 
-        public PythonDebugPropertyPageControl() {
-            InitializeComponent();
-        }
-
         internal PythonDebugPropertyPageControl(PythonDebugPropertyPage newPythonGeneralPropertyPage)
-            : this() {
+        {
+            InitializeComponent();
+
             _propPage = newPythonGeneralPropertyPage;
+            
+            // Apply the VS theme to this control
+            ApplyThemeColors();
         }
 
         internal void LoadSettings() {

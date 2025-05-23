@@ -58,6 +58,9 @@ namespace Microsoft.PythonTools.Project.Web {
         internal PythonWebPropertyPageControl(PythonWebPropertyPage properties)
             : this() {
             _properties = properties;
+            
+            // Apply the VS theme to this control
+            ApplyThemeColors();
         }
 
         public string StaticUriPattern {

@@ -25,10 +25,14 @@ using Microsoft.VisualStudioTools.Project;
 namespace Microsoft.PythonTools.Project {
     public partial class PublishPropertyControl : ThemeAwareUserControl {
         private readonly PublishPropertyPage _page;
-        public PublishPropertyControl(PublishPropertyPage page) {
+        public PublishPropertyControl(PublishPropertyPage page)
+        {
             InitializeComponent();
 
             _page = page;
+            
+            // Apply the VS theme to this control
+            ApplyThemeColors();
         }
 
         internal void LoadSettings() {
