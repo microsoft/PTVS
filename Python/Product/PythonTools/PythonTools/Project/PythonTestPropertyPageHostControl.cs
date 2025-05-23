@@ -17,7 +17,7 @@
 using System.Windows.Forms;
 
 namespace Microsoft.PythonTools.Project {
-    internal partial class PythonTestPropertyPageHostControl : UserControl {
+    internal partial class PythonTestPropertyPageHostControl : ThemeAwareUserControl {
         public PythonTestPropertyPageHostControl() {
             InitializeComponent();
         }

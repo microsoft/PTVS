@@ -21,7 +21,7 @@ using System.Windows.Forms;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
-    partial class PythonDebugPropertyPageControl : UserControl {
+    partial class PythonDebugPropertyPageControl : ThemeAwareUserControl {
         private readonly PythonDebugPropertyPage _propPage;
         private readonly Dictionary<object, bool> _dirtyPages = new Dictionary<object, bool>();
         private readonly ToolTip _debuggerToolTip = new ToolTip();

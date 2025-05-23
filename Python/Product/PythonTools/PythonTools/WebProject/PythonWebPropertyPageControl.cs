@@ -23,7 +23,7 @@ using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project.Web {
-    public partial class PythonWebPropertyPageControl : UserControl {
+    public partial class PythonWebPropertyPageControl : ThemeAwareUserControl {
         private readonly PythonWebPropertyPage _properties;
         private readonly Timer _validateStaticPatternTimer;
 

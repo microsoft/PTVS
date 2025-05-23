@@ -70,24 +70,105 @@ namespace Microsoft.PythonTools.Project {
 
         private void ApplyThemeToControls(Control.ControlCollection controls, Color backColor, Color foreColor) {
             foreach (Control control in controls) {
-                // Different control types need special handling
-                if (control is TextBox || control is ComboBox) {
-                    // Input controls
+                // Special handling for different control types
+                if (control is TextBox) {
+                    // For text inputs
                     control.BackColor = VSColorTheme.GetThemedColor(EnvironmentColors.ToolWindowBackgroundColorKey);
                     control.ForeColor = VSColorTheme.GetThemedColor(EnvironmentColors.ToolWindowTextColorKey);
-                } else if (control is Button) {
-                    // Use VS styling for buttons
-                    ((Button)control).UseVisualStyleBackColor = true;
+                } else if (control is ComboBox comboBox) {
+                    // Special handling for ComboBox to ensure proper theming
+                    var comboBackColor = VSColorTheme.GetThemedColor(EnvironmentColors.ComboBoxBackgroundColorKey);
+                    var comboForeColor = VSColorTheme.GetThemedColor(EnvironmentColors.ComboBoxTextColorKey);
+                    
+                    // Apply colors
+                    comboBox.BackColor = comboBackColor;
+                    comboBox.ForeColor = comboForeColor;
+                    
+                    // This additional style is needed for proper themed appearance
+                    if (comboBox.DropDownStyle == ComboBoxStyle.DropDownList) {
+                        // For dropdown lists, set flat style for better theming
+                        comboBox.FlatStyle = FlatStyle.Flat;
+                    }
+                    
+                    // Handle rendered correctly in dark theme
+                    comboBox.DrawMode = DrawMode.OwnerDrawFixed;
+                    comboBox.DrawItem -= ComboBox_DrawItem;  // Remove previous handler if any
+                    comboBox.DrawItem += ComboBox_DrawItem;  // Add our custom drawing
+                } else if (control is Button button) {
+                    button.UseVisualStyleBackColor = true;
+                } else if (control is CheckBox || control is RadioButton) {
+                    control.ForeColor = foreColor;
+                } else if (control is ListView || control is TreeView || control is DataGridView) {
+                    control.BackColor = VSColorTheme.GetThemedColor(EnvironmentColors.ToolWindowBackgroundColorKey);
+                    control.ForeColor = VSColorTheme.GetThemedColor(EnvironmentColors.ToolWindowTextColorKey);
                 } else if (!(control is Label)) {
-                    // Most controls get the standard background/foreground
+                    // Default for other controls
                     control.BackColor = backColor;
                     control.ForeColor = foreColor;
                 }
 
-                // Recursively apply to any child controls
+                // Recurse into child controls if any
                 if (control.Controls.Count > 0) {
                     ApplyThemeToControls(control.Controls, backColor, foreColor);
                 }
+            }
+        }
+        
+        // Custom drawing for ComboBox items to ensure they render correctly in dark theme
+        private void ComboBox_DrawItem(object sender, DrawItemEventArgs e) {
+            if (e.Index < 0) return;
+            
+            ComboBox combo = sender as ComboBox;
+            
+            // Get colors for drawing
+            Color textColor;
+            Color backColor;
+            
+            if ((e.State & DrawItemState.Selected) == DrawItemState.Selected) {
+                // Selected item
+                backColor = VSColorTheme.GetThemedColor(EnvironmentColors.ComboBoxItemMouseOverBackgroundColorKey);
+                textColor = VSColorTheme.GetThemedColor(EnvironmentColors.ComboBoxItemMouseOverTextColorKey);
+            } else {
+                // Normal item
+                backColor = VSColorTheme.GetThemedColor(EnvironmentColors.ComboBoxBackgroundColorKey);
+                textColor = VSColorTheme.GetThemedColor(EnvironmentColors.ComboBoxTextColorKey);
+            }
+            
+            // Draw the background
+            using (var brush = new SolidBrush(backColor)) {
+                e.Graphics.FillRectangle(brush, e.Bounds);
+            }
+            
+            // Draw separator item (for the General page's interpreter dropdown)
+            if (combo.Items[e.Index].ToString() == "-") {
+                // Draw a separator line
+                using (var pen = new Pen(textColor)) {
+                    int y = e.Bounds.Top + e.Bounds.Height / 2;
+                    e.Graphics.DrawLine(pen, e.Bounds.Left + 2, y, e.Bounds.Right - 2, y);
+                }
+            } else {
+                // Draw the item text
+                string text = combo.GetItemText(combo.Items[e.Index]);
+                using (var brush = new SolidBrush(textColor)) {
+                    // Use TextRenderer for better text quality
+                    TextRenderer.DrawText(
+                        e.Graphics, 
+                        text, 
+                        e.Font, 
+                        new Rectangle(
+                            e.Bounds.X + 2, 
+                            e.Bounds.Y, 
+                            e.Bounds.Width - 4, 
+                            e.Bounds.Height
+                        ), 
+                        textColor, 
+                        TextFormatFlags.VerticalCenter | TextFormatFlags.Left);
+                }
+            }
+            
+            // Draw the focus rectangle if the item has focus
+            if ((e.State & DrawItemState.Focus) == DrawItemState.Focus) {
+                e.DrawFocusRectangle();
             }
         }
     }
