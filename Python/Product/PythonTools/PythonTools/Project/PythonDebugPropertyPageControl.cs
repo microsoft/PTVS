@@ -29,6 +29,10 @@ namespace Microsoft.PythonTools.Project {
         private int _dirtyCount;
         private Control _curLauncher;
 
+        // Add a field to track dropdown state
+        private bool _isDropDownOpen;
+        private LauncherInfo _pendingSelection;
+
         public PythonDebugPropertyPageControl() {
             InitializeComponent();
         }
@@ -36,6 +40,10 @@ namespace Microsoft.PythonTools.Project {
         internal PythonDebugPropertyPageControl(PythonDebugPropertyPage newPythonGeneralPropertyPage)
             : this() {
             _propPage = newPythonGeneralPropertyPage;
+
+            // Add these new event handlers
+            _launchModeCombo.DropDown += LaunchModeCombo_DropDown;
+            _launchModeCombo.DropDownClosed += LaunchModeCombo_DropDownClosed;
         }
 
         internal void LoadSettings() {
@@ -148,7 +156,14 @@ namespace Microsoft.PythonTools.Project {
         private void LaunchModeComboSelectedIndexChanged(object sender, EventArgs e) {
             _launcherSelectionDirty = true;
             _propPage.IsDirty = true;
-            SwitchLauncher((LauncherInfo)_launchModeCombo.SelectedItem);
+
+            // If dropdown is open, store selection but don't switch yet
+            if (_isDropDownOpen) {
+                _pendingSelection = (LauncherInfo)_launchModeCombo.SelectedItem;
+            } else {
+                // For mouse clicks or direct selection, switch immediately
+                SwitchLauncher((LauncherInfo)_launchModeCombo.SelectedItem);
+            }
         }
 
         private void _launchModeCombo_Format(object sender, ListControlConvertEventArgs e) {
@@ -156,5 +171,20 @@ namespace Microsoft.PythonTools.Project {
             e.Value = launcher.DisplayName;
         }
 
+        // Add these new methods
+        private void LaunchModeCombo_DropDown(object sender, EventArgs e) {
+            _isDropDownOpen = true;
+            _pendingSelection = null;
+        }
+
+        private void LaunchModeCombo_DropDownClosed(object sender, EventArgs e) {
+            _isDropDownOpen = false;
+
+            // Apply the pending selection if there is one
+            if (_pendingSelection != null) {
+                SwitchLauncher(_pendingSelection);
+                _pendingSelection = null;
+            }
+        }
     }
 }
