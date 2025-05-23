@@ -38,12 +38,17 @@ namespace Microsoft.PythonTools.Project {
         }
 
         internal PythonDebugPropertyPageControl(PythonDebugPropertyPage newPythonGeneralPropertyPage)
-            : this() {
+        {
+            InitializeComponent();
+
             _propPage = newPythonGeneralPropertyPage;
 
             // Add these new event handlers
             _launchModeCombo.DropDown += LaunchModeCombo_DropDown;
             _launchModeCombo.DropDownClosed += LaunchModeCombo_DropDownClosed;
+            
+            // Apply the VS theme to this control
+            ApplyThemeColors();
         }
 
         internal void LoadSettings() {
