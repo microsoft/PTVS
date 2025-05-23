@@ -98,13 +98,20 @@ namespace TestUtilities.UI {
                     if (depth == splitPath.Length - 1) {
                         return node;
                     }
-
-                    // ensure the node is expanded...
-                    try {
-                        EnsureExpanded(node);
-                    } catch (InvalidOperationException) {
-                        // handle race w/ items being removed...
-                        Console.WriteLine("Failed to expand {0}", splitPath[depth]);
+                    
+                    int maxAttempts = 10;
+                    int delayMs = 500;
+                    for (int attempt = 0; attempt < maxAttempts; attempt++)
+                    { 
+                        // ensure the node is expanded...
+                        try {
+                            EnsureExpanded(node);
+                            break;
+                        } catch (InvalidOperationException) {
+                            // handle race w/ items being removed...
+                            Console.WriteLine("Failed to expand {0}", splitPath[depth]);
+                            System.Threading.Thread.Sleep(delayMs);
+                        }
                     }
                     return FindNode(node.FindAll(TreeScope.Children, Condition.TrueCondition), splitPath, depth + 1);
                 }

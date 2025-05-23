@@ -195,10 +195,10 @@ namespace TestUtilities.UI {
             var projElement = projElements.Cast<AutomationElement>().Single();
 
             var itemElement = path.Any() ? FindNode(
-                projElement.FindAll(TreeScope.Children, Condition.TrueCondition),
-                path,
-                0
-            ) : projElement;
+               projElement.FindAll(TreeScope.Children, Condition.TrueCondition),
+               path,
+               0
+           ) : projElement;
 
             if (assertOnFailure) {
                 AutomationWrapper.DumpElement(Element);

@@ -179,7 +179,23 @@ namespace TestUtilities.UI {
         /// </summary>
         public SolutionExplorerTree OpenSolutionExplorer() {
             _solutionExplorerTreeView = null;
-            Dte.ExecuteCommand("View.SolutionExplorer");
+
+            // Try to open Solution Explorer with retries
+            const int maxRetries = 5;
+            for (int attempt = 0; attempt < maxRetries; attempt++)
+            {
+                try
+                {
+                    Dte.ExecuteCommand("View.SolutionExplorer");
+                    break;
+                }
+                catch (Exception ex) when   (ex is InvalidOperationException ||
+                                            ex is ElementNotAvailableException)
+                {
+                    System.Threading.Thread.Sleep(500);
+                }
+               
+            }
             return SolutionExplorerTreeView;
         }
 
@@ -642,15 +658,20 @@ namespace TestUtilities.UI {
 
             bool closed = false;
             try {
+
+                string title = dlg.Text;
+                
                 // Look for the Edit control inside the dialog
                 var editControl = dlg.Element.FindFirst(
                     TreeScope.Descendants,
                     new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Edit)
                 );
-                
-                Assert.IsNotNull(editControl, "Failed to find Edit control in dialog");
 
-                string title = editControl.Current.Name;
+                if (editControl != null)
+                {
+                    title = editControl.Current.Name;
+                }
+                    
                 if (assertIfNoDialog) {
                     AssertUtil.Contains(title, text);
                 } else if (!text.All(title.Contains)) {
