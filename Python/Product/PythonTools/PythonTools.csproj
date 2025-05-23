@@ -644,6 +644,9 @@
     <Compile Include="PythonTools\Options\PythonDebuggingOptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="PythonTools\Project\ThemeAwareUserControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="PythonTools\Project\PythonGeneralPropertyPageControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
