@@ -33,10 +33,6 @@ namespace Microsoft.PythonTools.Project {
         private bool _isDropDownOpen;
         private LauncherInfo _pendingSelection;
 
-        public PythonDebugPropertyPageControl() {
-            InitializeComponent();
-        }
-
         internal PythonDebugPropertyPageControl(PythonDebugPropertyPage newPythonGeneralPropertyPage)
         {
             InitializeComponent();
