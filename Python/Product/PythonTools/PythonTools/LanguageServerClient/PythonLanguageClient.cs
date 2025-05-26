@@ -367,7 +367,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private LanguageServerSettings.PythonSettings GetSettings(Uri scopeUri = null) {
-            // on shutdown return null
+            // guard on shutdown
             if (_clientContexts.Count() == 0) {
                 return null;
             }
@@ -378,11 +378,12 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 if (context == null) {
                     // use first clientcontext as default
                     try {
-                        context = _clientContexts.First();
+                        context = _clientContexts.FirstOrDefault();
                     } catch (InvalidOperationException) {
                         // no client context
                         return null;
                     }
+                }
             } else {
                 var pathFromScopeUri = CommonUtils.NormalizeDirectoryPath(scopeUri.LocalPath).ToLower().TrimStart('\\');
                 // Find the matching context for the item, but ignore interactive window where "RootPath" is null.
