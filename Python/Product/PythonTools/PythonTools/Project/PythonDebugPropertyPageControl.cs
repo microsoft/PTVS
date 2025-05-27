@@ -78,6 +78,9 @@ namespace Microsoft.PythonTools.Project {
             }
 
             _launchModeCombo.SelectedIndexChanged += LaunchModeComboSelectedIndexChanged;
+            
+            // Apply theme after all controls are loaded
+            ApplyThemeColors();
         }
 
         public string CurrentLauncher {
@@ -152,6 +155,9 @@ namespace Microsoft.PythonTools.Project {
             newLauncher.Dock = DockStyle.Fill;
             _curLauncher = newLauncher;
             _debuggerToolTip.SetToolTip(_launchModeCombo, info.Launcher.Description);
+            
+            // Apply theme to the newly added launcher control
+            ApplyThemeColors();
         }
 
         private void LaunchModeComboSelectedIndexChanged(object sender, EventArgs e) {

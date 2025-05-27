@@ -101,7 +101,17 @@ namespace Microsoft.PythonTools.Project {
                 } else if (control is ListView || control is TreeView || control is DataGridView) {
                     control.BackColor = VSColorTheme.GetThemedColor(EnvironmentColors.ToolWindowBackgroundColorKey);
                     control.ForeColor = VSColorTheme.GetThemedColor(EnvironmentColors.ToolWindowTextColorKey);
-                } else if (!(control is Label)) {
+                } else if (control is Label) {
+                    // Explicitly handle labels to ensure they get the correct foreground color
+                    control.ForeColor = foreColor;
+                    control.BackColor = Color.Transparent; // Labels typically have transparent background
+                } else if (control is GroupBox) {
+                    // Handle GroupBox - set foreground color for the title
+                    control.ForeColor = foreColor;
+                } else if (control is TableLayoutPanel) {
+                    // TableLayoutPanel should inherit parent's background
+                    control.BackColor = backColor;
+                } else {
                     // Default for other controls
                     control.BackColor = backColor;
                     control.ForeColor = foreColor;
