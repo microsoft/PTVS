@@ -84,16 +84,22 @@ namespace Microsoft.PythonTools.Project {
                     comboBox.BackColor = comboBackColor;
                     comboBox.ForeColor = comboForeColor;
                     
-                    // This additional style is needed for proper themed appearance
+                    // For DropDownList style (non-editable), enable custom drawing for proper theming
                     if (comboBox.DropDownStyle == ComboBoxStyle.DropDownList) {
-                        // For dropdown lists, set flat style for better theming
+                        // Use Flat style to avoid double arrow issue
                         comboBox.FlatStyle = FlatStyle.Flat;
+                        comboBox.DrawMode = DrawMode.OwnerDrawFixed;
+                        
+                        // Remove existing handler to avoid duplicates
+                        comboBox.DrawItem -= ComboBox_DrawItem;
+                        // Add our custom drawing handler
+                        comboBox.DrawItem += ComboBox_DrawItem;
+                    } else {
+                        // For editable combo boxes, use standard rendering
+                        comboBox.DrawMode = DrawMode.Normal;
+                        comboBox.FlatStyle = FlatStyle.Standard;
+                        comboBox.DrawItem -= ComboBox_DrawItem;
                     }
-                    
-                    // Handle rendered correctly in dark theme
-                    comboBox.DrawMode = DrawMode.OwnerDrawFixed;
-                    comboBox.DrawItem -= ComboBox_DrawItem;  // Remove previous handler if any
-                    comboBox.DrawItem += ComboBox_DrawItem;  // Add our custom drawing
                 } else if (control is Button button) {
                     button.UseVisualStyleBackColor = true;
                 } else if (control is CheckBox || control is RadioButton) {
