@@ -87,8 +87,9 @@ namespace Microsoft.PythonTools.Project {
                     
                     // For DropDownList style (non-editable), enable custom drawing for proper theming
                     if (comboBox.DropDownStyle == ComboBoxStyle.DropDownList) {
-                        // Use Flat style to avoid double arrow issue
-                        comboBox.FlatStyle = FlatStyle.Flat;
+                        // Use Standard style with owner draw to avoid double arrow issue
+                        // Standard style doesn't draw its own arrow when DrawMode is OwnerDrawFixed
+                        comboBox.FlatStyle = FlatStyle.Standard;
                         comboBox.DrawMode = DrawMode.OwnerDrawFixed;
                         
                         // Remove existing handler to avoid duplicates
