@@ -51,9 +51,10 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         public void ApplyThemeColors() {
             try {
-                // Get theme colors from VS
-                Color backColor = VSColorTheme.GetThemedColor(EnvironmentColors.ToolWindowBackgroundColorKey);
-                Color foreColor = VSColorTheme.GetThemedColor(EnvironmentColors.ToolWindowTextColorKey);
+                // Get theme colors from VS - use Window colors for property pages
+                // This provides the correct background for dialogs in all themes including Blue
+                Color backColor = VSColorTheme.GetThemedColor(EnvironmentColors.SystemWindowColorKey);
+                Color foreColor = VSColorTheme.GetThemedColor(EnvironmentColors.SystemWindowTextColorKey);
 
                 // Apply to this control
                 BackColor = backColor;
@@ -72,11 +73,11 @@ namespace Microsoft.PythonTools.Project {
             foreach (Control control in controls) {
                 // Special handling for different control types
                 if (control is TextBox) {
-                    // For text inputs
-                    control.BackColor = VSColorTheme.GetThemedColor(EnvironmentColors.ToolWindowBackgroundColorKey);
-                    control.ForeColor = VSColorTheme.GetThemedColor(EnvironmentColors.ToolWindowTextColorKey);
+                    // Use themed dialog colors for consistency with environment dialogs
+                    control.BackColor = VSColorTheme.GetThemedColor(EnvironmentColors.ComboBoxBackgroundColorKey);
+                    control.ForeColor = VSColorTheme.GetThemedColor(EnvironmentColors.ComboBoxTextColorKey);
                 } else if (control is ComboBox comboBox) {
-                    // Special handling for ComboBox to ensure proper theming
+                    // Use the same colors as TextBox for consistency
                     var comboBackColor = VSColorTheme.GetThemedColor(EnvironmentColors.ComboBoxBackgroundColorKey);
                     var comboForeColor = VSColorTheme.GetThemedColor(EnvironmentColors.ComboBoxTextColorKey);
                     
@@ -102,8 +103,12 @@ namespace Microsoft.PythonTools.Project {
                     }
                 } else if (control is Button button) {
                     button.UseVisualStyleBackColor = true;
+                    // Apply themed dialog button colors
+                    button.FlatStyle = FlatStyle.System;
                 } else if (control is CheckBox || control is RadioButton) {
                     control.ForeColor = foreColor;
+                    // Make background transparent for checkboxes and radio buttons
+                    control.BackColor = Color.Transparent;
                 } else if (control is ListView || control is TreeView || control is DataGridView) {
                     control.BackColor = VSColorTheme.GetThemedColor(EnvironmentColors.ToolWindowBackgroundColorKey);
                     control.ForeColor = VSColorTheme.GetThemedColor(EnvironmentColors.ToolWindowTextColorKey);
@@ -114,8 +119,10 @@ namespace Microsoft.PythonTools.Project {
                 } else if (control is GroupBox) {
                     // Handle GroupBox - set foreground color for the title
                     control.ForeColor = foreColor;
-                } else if (control is TableLayoutPanel) {
-                    // TableLayoutPanel should inherit parent's background
+                    // GroupBox background should be transparent
+                    control.BackColor = Color.Transparent;
+                } else if (control is TableLayoutPanel || control is Panel) {
+                    // Panels should use the parent's background
                     control.BackColor = backColor;
                 } else {
                     // Default for other controls
