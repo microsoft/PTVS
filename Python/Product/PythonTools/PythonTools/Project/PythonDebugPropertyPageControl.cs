@@ -43,7 +43,6 @@ namespace Microsoft.PythonTools.Project {
             _launchModeCombo.DropDown += LaunchModeCombo_DropDown;
             _launchModeCombo.DropDownClosed += LaunchModeCombo_DropDownClosed;
             
-            // Apply the VS theme to this control
             ApplyThemeColors();
         }
 

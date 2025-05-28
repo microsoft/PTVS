@@ -35,7 +35,6 @@ namespace Microsoft.PythonTools.Project {
 
             _propPage = newPythonGeneralPropertyPage;
             
-            // Apply the VS theme to this control
             ApplyThemeColors();
         }
 

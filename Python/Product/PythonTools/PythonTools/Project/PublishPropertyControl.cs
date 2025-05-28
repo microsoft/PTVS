@@ -31,7 +31,6 @@ namespace Microsoft.PythonTools.Project {
 
             _page = page;
             
-            // Apply the VS theme to this control
             ApplyThemeColors();
         }
 
