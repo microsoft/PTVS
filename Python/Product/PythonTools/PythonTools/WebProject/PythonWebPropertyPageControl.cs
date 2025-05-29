@@ -23,7 +23,7 @@ using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project.Web {
-    public partial class PythonWebPropertyPageControl : UserControl {
+    public partial class PythonWebPropertyPageControl : ThemeAwareUserControl {
         private readonly PythonWebPropertyPage _properties;
         private readonly Timer _validateStaticPatternTimer;
 
@@ -58,6 +58,9 @@ namespace Microsoft.PythonTools.Project.Web {
         internal PythonWebPropertyPageControl(PythonWebPropertyPage properties)
             : this() {
             _properties = properties;
+            
+            // Apply the VS theme to this control
+            ApplyThemeColors();
         }
 
         public string StaticUriPattern {

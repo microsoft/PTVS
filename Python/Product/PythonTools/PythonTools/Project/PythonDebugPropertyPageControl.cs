@@ -21,7 +21,7 @@ using System.Windows.Forms;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
-    partial class PythonDebugPropertyPageControl : UserControl {
+    partial class PythonDebugPropertyPageControl : ThemeAwareUserControl {
         private readonly PythonDebugPropertyPage _propPage;
         private readonly Dictionary<object, bool> _dirtyPages = new Dictionary<object, bool>();
         private readonly ToolTip _debuggerToolTip = new ToolTip();
@@ -33,17 +33,17 @@ namespace Microsoft.PythonTools.Project {
         private bool _isDropDownOpen;
         private LauncherInfo _pendingSelection;
 
-        public PythonDebugPropertyPageControl() {
-            InitializeComponent();
-        }
-
         internal PythonDebugPropertyPageControl(PythonDebugPropertyPage newPythonGeneralPropertyPage)
-            : this() {
+        {
+            InitializeComponent();
+
             _propPage = newPythonGeneralPropertyPage;
 
             // Add these new event handlers
             _launchModeCombo.DropDown += LaunchModeCombo_DropDown;
             _launchModeCombo.DropDownClosed += LaunchModeCombo_DropDownClosed;
+            
+            ApplyThemeColors();
         }
 
         internal void LoadSettings() {
@@ -77,6 +77,9 @@ namespace Microsoft.PythonTools.Project {
             }
 
             _launchModeCombo.SelectedIndexChanged += LaunchModeComboSelectedIndexChanged;
+            
+            // Apply theme after all controls are loaded
+            ApplyThemeColors();
         }
 
         public string CurrentLauncher {
@@ -151,6 +154,9 @@ namespace Microsoft.PythonTools.Project {
             newLauncher.Dock = DockStyle.Fill;
             _curLauncher = newLauncher;
             _debuggerToolTip.SetToolTip(_launchModeCombo, info.Launcher.Description);
+            
+            // Apply theme to the newly added launcher control
+            ApplyThemeColors();
         }
 
         private void LaunchModeComboSelectedIndexChanged(object sender, EventArgs e) {

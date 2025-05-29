@@ -23,12 +23,15 @@ using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
-    public partial class PublishPropertyControl : UserControl {
+    public partial class PublishPropertyControl : ThemeAwareUserControl {
         private readonly PublishPropertyPage _page;
-        public PublishPropertyControl(PublishPropertyPage page) {
+        public PublishPropertyControl(PublishPropertyPage page)
+        {
             InitializeComponent();
 
             _page = page;
+            
+            ApplyThemeColors();
         }
 
         internal void LoadSettings() {

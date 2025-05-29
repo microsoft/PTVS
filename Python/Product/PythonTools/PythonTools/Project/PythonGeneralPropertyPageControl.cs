@@ -21,7 +21,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Project {
-    public partial class PythonGeneralPropertyPageControl : UserControl {
+    public partial class PythonGeneralPropertyPageControl : ThemeAwareUserControl {
         static readonly IPythonInterpreterFactory Separator =
             new InterpreterPlaceholder("", Strings.PythonGeneralPropertyPageControl_OtherInterpretersSeparator);
         static readonly IPythonInterpreterFactory GlobalDefault =
@@ -34,6 +34,8 @@ namespace Microsoft.PythonTools.Project {
             InitializeComponent();
 
             _propPage = newPythonGeneralPropertyPage;
+            
+            ApplyThemeColors();
         }
 
         internal void LoadSettings() {

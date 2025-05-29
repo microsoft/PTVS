@@ -4,26 +4,141 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:common="clr-namespace:Microsoft.PythonTools;assembly=Microsoft.PythonTools.Common"
+             xmlns:vsui="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.15.0"
+             xmlns:wpf="clr-namespace:Microsoft.PythonTools.Wpf"
              mc:Ignorable="d" 
-             FontFamily="{DynamicResource VsFont.EnvironmentFontFamily}"
-             FontSize="{DynamicResource VsFont.EnvironmentFontSize}"
+             FontFamily="{DynamicResource {x:Static wpf:ModernStyles.EnvironmentFontFamilyKey}}"
+             FontSize="{DynamicResource {x:Static wpf:ModernStyles.EnvironmentFontSizeKey}}"
+             Background="{DynamicResource {x:Static wpf:ModernStyles.BackgroundKey}}"
+             Foreground="{DynamicResource {x:Static wpf:ModernStyles.ForegroundKey}}"
              d:DesignHeight="400" d:DesignWidth="400">
     <UserControl.Resources>
         <ResourceDictionary>
+            <!-- Define styles using ModernStyles resources -->
             <Style TargetType="{x:Type Label}">
-                <Setter Property="Margin" Value="4" />
+                <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:ModernStyles.ForegroundKey}}" />
             </Style>
 
             <Style TargetType="{x:Type TextBox}">
-                <Setter Property="Margin" Value="4" />
-                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="Background" Value="{DynamicResource {x:Static wpf:ModernStyles.ControlBackgroundKey}}" />
+                <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:ModernStyles.ControlForegroundKey}}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:ModernStyles.ControlBorderKey}}" />
             </Style>
 
             <Style TargetType="{x:Type ComboBox}">
-                <Setter Property="Margin" Value="4" />
-                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="Background" Value="{DynamicResource {x:Static wpf:ModernStyles.ControlBackgroundKey}}" />
+                <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:ModernStyles.ControlForegroundKey}}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:ModernStyles.ControlBorderKey}}" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type ComboBox}">
+                            <Grid>
+                                <Border 
+                                    Name="Border"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="1">
+                                </Border>
+                                
+                                <ToggleButton 
+                                    Name="ToggleButton" 
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Focusable="false"
+                                    IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                    ClickMode="Press">
+                                    <ToggleButton.Template>
+                                        <ControlTemplate TargetType="ToggleButton">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition />
+                                                    <ColumnDefinition Width="20" />
+                                                </Grid.ColumnDefinitions>
+                                                <Border 
+                                                    Grid.ColumnSpan="2"
+                                                    Background="Transparent"/>
+                                                <Path 
+                                                    Grid.Column="1"
+                                                    Fill="{DynamicResource {x:Static wpf:ModernStyles.ControlForegroundKey}}"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Data="M 0 0 L 4 4 L 8 0 Z"/>
+                                            </Grid>
+                                        </ControlTemplate>
+                                    </ToggleButton.Template>
+                                </ToggleButton>
+                                
+                                <ContentPresenter 
+                                    Name="ContentSite"
+                                    Margin="5,3,23,3"
+                                    IsHitTestVisible="False"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    Content="{TemplateBinding SelectionBoxItem}"
+                                    ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                    ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}" />
+                                
+                                <Popup 
+                                    Name="Popup"
+                                    Placement="Bottom"
+                                    IsOpen="{TemplateBinding IsDropDownOpen}"
+                                    AllowsTransparency="True" 
+                                    Focusable="False"
+                                    PopupAnimation="Slide">
+                                    <Grid 
+                                        Name="DropDown"
+                                        SnapsToDevicePixels="True"                
+                                        MinWidth="{TemplateBinding ActualWidth}"
+                                        MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                                        <Border 
+                                            x:Name="DropDownBorder"
+                                            Background="{DynamicResource {x:Static wpf:ModernStyles.ControlBackgroundKey}}"
+                                            BorderThickness="1"
+                                            BorderBrush="{DynamicResource {x:Static wpf:ModernStyles.ControlBorderKey}}"/>
+                                        <ScrollViewer Margin="4,6,4,6" SnapsToDevicePixels="True">
+                                            <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained" />
+                                        </ScrollViewer>
+                                    </Grid>
+                                </Popup>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="HasItems" Value="false">
+                                    <Setter TargetName="DropDownBorder" Property="MinHeight" Value="95" />
+                                </Trigger>
+                                <Trigger Property="IsMouseOver" Value="true">
+                                    <Setter TargetName="Border" Property="Background" Value="{DynamicResource {x:Static wpf:ModernStyles.ControlBackgroundHoverKey}}" />
+                                </Trigger>
+                                <Trigger Property="IsDropDownOpen" Value="true">
+                                    <Setter TargetName="Border" Property="Background" Value="{DynamicResource {x:Static wpf:ModernStyles.ControlBackgroundSelectedKey}}" />
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="false">
+                                    <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:ModernStyles.ControlForegroundDisabledKey}}" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+                <Setter Property="ItemContainerStyle">
+                    <Setter.Value>
+                        <Style TargetType="ComboBoxItem">
+                            <Setter Property="Background" Value="{DynamicResource {x:Static wpf:ModernStyles.ControlBackgroundKey}}" />
+                            <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:ModernStyles.ControlForegroundKey}}" />
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="{DynamicResource {x:Static wpf:ModernStyles.ControlBackgroundHoverKey}}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:ModernStyles.ControlForegroundHoverKey}}" />
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="{DynamicResource {x:Static wpf:ModernStyles.ControlBackgroundSelectedKey}}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:ModernStyles.ControlForegroundSelectedKey}}" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Setter.Value>
+                </Setter>
             </Style>
 
+            <!-- Keep existing data templates -->
             <DataTemplate x:Key="FrameworkNone">
             </DataTemplate>
             
@@ -97,7 +212,8 @@
             Margin="0"
             Content="{Binding}"
             IsTabStop="False"
-            Focusable="False">
+            Focusable="False"
+            Background="{DynamicResource {x:Static vsui:EnvironmentColors.ToolWindowBackgroundBrushKey}}">
             <ContentControl.Style>
                 <Style TargetType="ContentControl">
                     <Style.Triggers>
@@ -115,5 +231,4 @@
             </ContentControl.Style>
         </ContentControl>
     </StackPanel>
-
 </UserControl>
