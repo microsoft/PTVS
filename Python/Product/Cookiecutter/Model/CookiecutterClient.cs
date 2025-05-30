@@ -202,7 +202,7 @@ namespace Microsoft.CookiecutterTools.Model {
             _redirector.WriteLine(Strings.InstallingCookiecutterInstallPackages.FormatUI(_envFolderPath));
             var output = ProcessOutput.Run(
                 _envInterpreterPath,
-                new[] { "-m", "pip", "install", "cookiecutter<1.5" },
+                new[] { "-m", "pip", "install", "cookiecutter>=2.5.0", "future" },
                 null,
                 null,
                 false,
