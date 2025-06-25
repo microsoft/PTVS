@@ -400,7 +400,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         public virtual void CreateDirectory() {
             if (Directory.Exists(this.Url) == false) {
-                Directory.CreateDirectory(directoryPath);
+                Directory.CreateDirectory(this.Url);
             }
         }
         /// <summary>

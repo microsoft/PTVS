@@ -62,7 +62,7 @@ namespace Microsoft.PythonTools.Interpreter {
     public static class PythonInterpreterExtensions {
         public static bool IsAvailable(this InterpreterConfiguration configuration) {
             return File.Exists(configuration.InterpreterPath) &&
-            File.Exists(configuration.GetWindowsInterpreterPath());
+                File.Exists(configuration.GetWindowsInterpreterPath());
         }
 
         public static bool CanBeDeleted(this IPythonInterpreterFactory factory) {

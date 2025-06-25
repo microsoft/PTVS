@@ -375,7 +375,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     return null;
                 }
             } else {
-                var pathFromScopeUri = CommonUtils.NormalizeDirectoryPath(Uri.UnescapeDataString(scopeUri.LocalPath)).ToLower().TrimStart('\\');
+                var pathFromScopeUri = CommonUtils.NormalizeDirectoryPath(scopeUri.LocalPath).ToLower().TrimStart('\\');
                 // Find the matching context for the item, but ignore interactive window where "RootPath" is null.
                 context = _clientContexts.Find(c => scopeUri != null && c.RootPath != null && PathUtils.IsSamePath(c.RootPath.ToLower(), pathFromScopeUri));
             }
