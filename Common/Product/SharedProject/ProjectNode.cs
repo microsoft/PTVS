@@ -640,21 +640,6 @@ namespace Microsoft.VisualStudioTools.Project {
                     home = CommonUtils.GetAbsoluteDirectoryPath(
                         folder,
                         this.GetProjectProperty(CommonConstants.ProjectHome, resetCache: false));
-                    if (!string.IsNullOrEmpty(home) && home.Contains("%"))
-                    {
-                        try
-                        {
-                            string decodedFileName = Uri.UnescapeDataString(home);
-                            if (!string.IsNullOrEmpty(decodedFileName))
-                            {
-                                home = decodedFileName;
-                            }
-                        }
-                        catch
-                        {
-                            // Continue with original filename if decoding fails
-                        }
-                    }
                     projectHome = home = CommonUtils.TrimEndSeparator(home);
                 }
 
@@ -1117,27 +1102,7 @@ namespace Microsoft.VisualStudioTools.Project {
         public override string GetMkDocument() {
             Debug.Assert(!String.IsNullOrEmpty(this.filename));
             Debug.Assert(this.BaseURI != null && !String.IsNullOrEmpty(this.BaseURI.AbsoluteUrl));
-            string mkDocument = CommonUtils.GetAbsoluteFilePath(this.BaseURI.AbsoluteUrl, this.filename);
-
-            // If the path contains URL-encoded characters, decode them
-            if (!string.IsNullOrEmpty(mkDocument) && mkDocument.Contains("%"))
-            {
-                try
-                {
-                    string decodedPath = Uri.UnescapeDataString(mkDocument);
-                    // Only use the decoded path if the file actually exists
-                    if (File.Exists(decodedPath))
-                    {
-                        mkDocument = decodedPath;
-                    }
-                }
-                catch
-                {
-                    // If decoding fails, use the original path
-                }
-            }
-
-            return mkDocument;
+            return CommonUtils.GetAbsoluteFilePath(this.BaseURI.AbsoluteUrl, this.filename);
         }
 
         /// <summary>
@@ -1800,23 +1765,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
                         Debug.Assert(!String.IsNullOrEmpty(tempName), "Could not compute project name");
                         string tempProjectFileName = tempName + extension;
-                        string newFileName1 = CommonUtils.GetAbsoluteFilePath(location, tempProjectFileName);
-                        if (!string.IsNullOrEmpty(newFileName1) && newFileName1.Contains("%"))
-                        {
-                            try
-                            {
-                                string decodedFileName = Uri.UnescapeDataString(newFileName1);
-                                if (!string.IsNullOrEmpty(decodedFileName))
-                                {
-                                    newFileName1 = decodedFileName;
-                                }
-                            }
-                            catch
-                            {
-                                // Continue with original filename if decoding fails
-                            }
-                        }
-                        this.filename = newFileName1;
+                        this.filename = CommonUtils.GetAbsoluteFilePath(location, tempProjectFileName);
 
                         // Initialize the common project properties.
                         this.InitializeProjectProperties();
@@ -1917,25 +1866,15 @@ namespace Microsoft.VisualStudioTools.Project {
             Utilities.ArgumentNotNullOrEmpty("target", target);
 
             try {
-                // Decode the target path to handle Unicode characters properly
-                string decodedTarget = target;
-                if (!string.IsNullOrEmpty(target) && target.Contains("%")) {
-                    try {
-                        decodedTarget = Uri.UnescapeDataString(target);
-                    } catch {
-                        // Continue with original target if decoding fails
-                    }
-                }
-                
-                string directory = Path.GetDirectoryName(decodedTarget);
+                string directory = Path.GetDirectoryName(target);
                 if (!String.IsNullOrEmpty(directory) && !Directory.Exists(directory)) {
                     Directory.CreateDirectory(directory);
                 }
 
-                File.Copy(source, decodedTarget, true);
+                File.Copy(source, target, true);
 
                 // best effort to reset the ReadOnly attribute
-                File.SetAttributes(decodedTarget, File.GetAttributes(decodedTarget) & ~FileAttributes.ReadOnly);
+                File.SetAttributes(target, File.GetAttributes(target) & ~FileAttributes.ReadOnly);
             } catch (IOException e) {
                 Trace.WriteLine("Exception : " + e.Message);
             } catch (UnauthorizedAccessException e) {
@@ -2962,23 +2901,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="newFileName">The new full path of the project file</param>
         protected virtual void SaveMSBuildProjectFileAs(string newFileName) {
             Debug.Assert(!String.IsNullOrEmpty(newFileName), "Cannot save project file for an empty or null file name");
-
-            // Decode any URL-encoded characters in the filename
-            if (!string.IsNullOrEmpty(newFileName) && newFileName.Contains("%"))
-            {
-                try
-                {
-                    string decodedFileName = Uri.UnescapeDataString(newFileName);
-                    if (!string.IsNullOrEmpty(decodedFileName))
-                    {
-                        newFileName = decodedFileName;
-                    }
-                }
-                catch
-                {
-                    // Continue with original filename if decoding fails
-                }
-            }
 
             string newProjectHome = CommonUtils.GetRelativeDirectoryPath(Path.GetDirectoryName(newFileName), ProjectHome);
             buildProject.SetProperty(CommonConstants.ProjectHome, newProjectHome);
@@ -4113,23 +4035,6 @@ namespace Microsoft.VisualStudioTools.Project {
 
             if (String.IsNullOrEmpty(tempFileToBeSaved)) {
                 throw new ArgumentException(SR.GetString(SR.InvalidParameter), "fileToBeSaved");
-            }
-
-            // Decode URL-encoded characters in the file path before file system operations
-            if (!string.IsNullOrEmpty(tempFileToBeSaved) && tempFileToBeSaved.Contains("%"))
-            {
-                try
-                {
-                    string decodedPath = Uri.UnescapeDataString(tempFileToBeSaved);
-                    if (!string.IsNullOrEmpty(decodedPath))
-                    {
-                        tempFileToBeSaved = decodedPath;
-                    }
-                }
-                catch
-                {
-                    // If decoding fails, continue with original path
-                }
             }
 
             int setProjectFileDirtyAfterSave = 0;

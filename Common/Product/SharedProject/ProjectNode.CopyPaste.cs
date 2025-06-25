@@ -631,19 +631,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     return null;
                 }
 
-                var folderPath = Path.Combine(targetFolderNode.FullPathToChildren, targetFileName);
-                
-                // Decode the folder path for length checking to get the actual Unicode length
-                string decodedFolderPath = folderPath;
-                if (!string.IsNullOrEmpty(folderPath) && folderPath.Contains("%")) {
-                    try {
-                        decodedFolderPath = Uri.UnescapeDataString(folderPath);
-                    } catch {
-                        // Continue with original path if decoding fails
-                    }
-                }
-
-                if (decodedFolderPath.Length >= NativeMethods.MAX_FOLDER_PATH) {
+                if (Path.Combine(targetFolderNode.FullPathToChildren, targetFileName).Length >= NativeMethods.MAX_FOLDER_PATH) {
                     Utilities.ShowMessageBox(
                         Project.Site,
                         SR.GetString(SR.FolderPathTooLongShortMessage),
@@ -1100,17 +1088,7 @@ namespace Microsoft.VisualStudioTools.Project {
                         return null;
                     }
 
-                    // Decode the file path for length checking to get the actual Unicode length
-                    string decodedNewPath = newPath;
-                    if (!string.IsNullOrEmpty(newPath) && newPath.Contains("%")) {
-                        try {
-                            decodedNewPath = Uri.UnescapeDataString(newPath);
-                        } catch {
-                            // Continue with original path if decoding fails
-                        }
-                    }
-
-                    if (decodedNewPath.Length >= NativeMethods.MAX_PATH) {
+                    if (newPath.Length >= NativeMethods.MAX_PATH) {
                         Utilities.ShowMessageBox(
                             Project.Site,
                             SR.GetString(SR.PathTooLongShortMessage),

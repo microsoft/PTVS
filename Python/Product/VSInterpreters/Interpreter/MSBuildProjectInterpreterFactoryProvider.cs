@@ -310,15 +310,6 @@ namespace Microsoft.PythonTools.Interpreter {
                     continue;
                 }
                 dir = PathUtils.GetAbsoluteDirectoryPath(projectHome, dir);
-                
-                // Decode directory path if it contains URL-encoded characters
-                if (!string.IsNullOrEmpty(dir) && dir.Contains("%")) {
-                    try {
-                        dir = Uri.UnescapeDataString(dir);
-                    } catch {
-                        // Continue with original path if decoding fails
-                    }
-                }
 
                 var id = GetValue(item, MSBuildConstants.IdKey);
                 if (string.IsNullOrEmpty(id)) {
@@ -354,14 +345,6 @@ namespace Microsoft.PythonTools.Interpreter {
                     hasError = true;
                 } else if (!hasError) {
                     path = PathUtils.GetAbsoluteFilePath(dir, path);
-                    // Decode path if it contains URL-encoded characters
-                    if (!string.IsNullOrEmpty(path) && path.Contains("%")) {
-                        try {
-                            path = Uri.UnescapeDataString(path);
-                        } catch {
-                            // Continue with original path if decoding fails
-                        }
-                    }
                 }
 
                 var winPath = GetValue(item, MSBuildConstants.WindowsPathKey);
@@ -370,14 +353,6 @@ namespace Microsoft.PythonTools.Interpreter {
                     hasError = true;
                 } else if (!hasError) {
                     winPath = PathUtils.GetAbsoluteFilePath(dir, winPath);
-                    // Decode winPath if it contains URL-encoded characters
-                    if (!string.IsNullOrEmpty(winPath) && winPath.Contains("%")) {
-                        try {
-                            winPath = Uri.UnescapeDataString(winPath);
-                        } catch {
-                            // Continue with original path if decoding fails
-                        }
-                    }
                 }
 
                 var pathVar = GetValue(item, MSBuildConstants.PathEnvVarKey);

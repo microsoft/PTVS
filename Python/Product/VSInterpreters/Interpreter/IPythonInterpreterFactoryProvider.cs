@@ -61,27 +61,8 @@ namespace Microsoft.PythonTools.Interpreter {
 
     public static class PythonInterpreterExtensions {
         public static bool IsAvailable(this InterpreterConfiguration configuration) {
-            // Decode paths if they contain URL-encoded characters
-            string interpreterPath = configuration.InterpreterPath;
-            if (!string.IsNullOrEmpty(interpreterPath) && interpreterPath.Contains("%")) {
-                try {
-                    interpreterPath = Uri.UnescapeDataString(interpreterPath);
-                } catch {
-                    // Continue with original path if decoding fails
-                }
-            }
-
-            string windowsInterpreterPath = configuration.GetWindowsInterpreterPath();
-            if (!string.IsNullOrEmpty(windowsInterpreterPath) && windowsInterpreterPath.Contains("%")) {
-                try {
-                    windowsInterpreterPath = Uri.UnescapeDataString(windowsInterpreterPath);
-                } catch {
-                    // Continue with original path if decoding fails
-                }
-            }
-
-            return File.Exists(interpreterPath) &&
-                File.Exists(windowsInterpreterPath);
+            return File.Exists(configuration.InterpreterPath) &&
+            File.Exists(configuration.GetWindowsInterpreterPath());
         }
 
         public static bool CanBeDeleted(this IPythonInterpreterFactory factory) {
