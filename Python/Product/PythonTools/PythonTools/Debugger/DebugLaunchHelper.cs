@@ -93,9 +93,19 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         private static string GetArgs(LaunchConfiguration config) {
+            // Decode script name if it contains URL-encoded characters
+            string scriptName = config.ScriptName;
+            if (!string.IsNullOrEmpty(scriptName) && scriptName.Contains("%")) {
+                try {
+                    scriptName = Uri.UnescapeDataString(scriptName);
+                } catch {
+                    // Continue with original path if decoding fails
+                }
+            }
+
             var args = string.Join(" ", new[] {
                     config.InterpreterArguments,
-                    config.ScriptName == null ? "" : ProcessOutput.QuoteSingleArgument(config.ScriptName),
+                    scriptName == null ? "" : ProcessOutput.QuoteSingleArgument(scriptName),
                     config.ScriptArguments
                 }.Where(s => !string.IsNullOrEmpty(s)));
 
@@ -133,9 +143,19 @@ namespace Microsoft.PythonTools.Debugger {
                 ["special"] = pyService.DebuggerOptions.VariablePresentationForSpecial.ToString().ToLower(),
             };
 
+            // Decode working directory if it contains URL-encoded characters
+            string workingDirectory = string.IsNullOrEmpty(config.WorkingDirectory) ? PathUtils.GetParent(config.ScriptName) : config.WorkingDirectory;
+            if (!string.IsNullOrEmpty(workingDirectory) && workingDirectory.Contains("%")) {
+                try {
+                    workingDirectory = Uri.UnescapeDataString(workingDirectory);
+                } catch {
+                    // Continue with original path if decoding fails
+                }
+            }
+
             JObject jsonObj = new JObject {
                 ["exe"] = config.GetInterpreterPath(),
-                ["cwd"] = string.IsNullOrEmpty(config.WorkingDirectory) ? PathUtils.GetParent(config.ScriptName) : config.WorkingDirectory,
+                ["cwd"] = workingDirectory,
                 ["remoteMachine"] = "",
                 ["args"] = GetArgs(config),
                 ["options"] = GetOptions(provider, config),
@@ -145,10 +165,28 @@ namespace Microsoft.PythonTools.Debugger {
             };
 
             if (config.Environment == null) {
-                jsonObj["scriptName"] = config.ScriptName?.Trim();
+                // Decode script name if it contains URL-encoded characters
+                string scriptName = config.ScriptName?.Trim();
+                if (!string.IsNullOrEmpty(scriptName) && scriptName.Contains("%")) {
+                    try {
+                        scriptName = Uri.UnescapeDataString(scriptName);
+                    } catch {
+                        // Continue with original path if decoding fails
+                    }
+                }
+                jsonObj["scriptName"] = scriptName;
                 jsonObj["scriptArgs"] = config.ScriptArguments?.Trim();
             } else {
-                jsonObj["scriptName"] = DoSubstitutions(config.Environment, config.ScriptName?.Trim());
+                // Decode script name if it contains URL-encoded characters
+                string scriptName = config.ScriptName?.Trim();
+                if (!string.IsNullOrEmpty(scriptName) && scriptName.Contains("%")) {
+                    try {
+                        scriptName = Uri.UnescapeDataString(scriptName);
+                    } catch {
+                        // Continue with original path if decoding fails
+                    }
+                }
+                jsonObj["scriptName"] = DoSubstitutions(config.Environment, scriptName);
                 jsonObj["scriptArgs"] = DoSubstitutions(config.Environment, config.ScriptArguments?.Trim());
             }
 
@@ -166,8 +204,18 @@ namespace Microsoft.PythonTools.Debugger {
                 throw new NoStartupFileException(Strings.DebugLaunchScriptNameMissing);
             }
 
-            if (!File.Exists(config.ScriptName)) {
-                throw new NoStartupFileException(Strings.DebugLaunchScriptNameDoesntExist.FormatUI(config.ScriptName));
+            // Decode the script name if it contains URL-encoded characters
+            string decodedScriptName = config.ScriptName;
+            if (!string.IsNullOrEmpty(config.ScriptName) && config.ScriptName.Contains("%")) {
+                try {
+                    decodedScriptName = Uri.UnescapeDataString(config.ScriptName);
+                } catch {
+                    // Continue with original path if decoding fails
+                }
+            }
+
+            if (!File.Exists(decodedScriptName)) {
+                throw new NoStartupFileException(Strings.DebugLaunchScriptNameDoesntExist.FormatUI(decodedScriptName));
             }
         }
 
@@ -182,7 +230,17 @@ namespace Microsoft.PythonTools.Debugger {
             try {
                 dti.Info.dlo = DEBUG_LAUNCH_OPERATION.DLO_CreateProcess;
                 dti.Info.bstrExe = GetLaunchingPython(config);
-                dti.Info.bstrCurDir = string.IsNullOrEmpty(config.WorkingDirectory) ? PathUtils.GetParent(config.ScriptName) : config.WorkingDirectory;
+                
+                // Decode working directory if it contains URL-encoded characters
+                string workingDirectory = string.IsNullOrEmpty(config.WorkingDirectory) ? PathUtils.GetParent(config.ScriptName) : config.WorkingDirectory;
+                if (!string.IsNullOrEmpty(workingDirectory) && workingDirectory.Contains("%")) {
+                    try {
+                        workingDirectory = Uri.UnescapeDataString(workingDirectory);
+                    } catch {
+                        // Continue with original path if decoding fails
+                    }
+                }
+                dti.Info.bstrCurDir = workingDirectory;
 
                 dti.Info.bstrRemoteMachine = null;
                 dti.Info.fSendStdoutToOutputWindow = 0;
@@ -233,11 +291,21 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         public static ProcessStartInfo CreateProcessStartInfo(IServiceProvider provider, LaunchConfiguration config) {
+            // Decode script name if it contains URL-encoded characters
+            string scriptName = config.ScriptName;
+            if (!string.IsNullOrEmpty(scriptName) && scriptName.Contains("%")) {
+                try {
+                    scriptName = Uri.UnescapeDataString(scriptName);
+                } catch {
+                    // Continue with original path if decoding fails
+                }
+            }
+
             var psi = new ProcessStartInfo {
                 FileName = config.GetInterpreterPath(),
                 Arguments = string.Join(" ", new[] {
                     config.InterpreterArguments,
-                    config.ScriptName == null ? "" : ProcessOutput.QuoteSingleArgument(config.ScriptName),
+                    scriptName == null ? "" : ProcessOutput.QuoteSingleArgument(scriptName),
                     config.ScriptArguments
                 }.Where(s => !string.IsNullOrEmpty(s))),
                 WorkingDirectory = config.WorkingDirectory,
@@ -251,14 +319,28 @@ namespace Microsoft.PythonTools.Debugger {
                 throw new FileNotFoundException(Strings.DebugLaunchInterpreterMissing_Path.FormatUI(psi.FileName));
             }
             if (string.IsNullOrEmpty(psi.WorkingDirectory)) {
-                psi.WorkingDirectory = PathUtils.GetParent(config.ScriptName);
+                psi.WorkingDirectory = PathUtils.GetParent(scriptName); // Use decoded script name
             }
             if (string.IsNullOrEmpty(psi.WorkingDirectory)) {
                 throw new DirectoryNotFoundException(Strings.DebugLaunchWorkingDirectoryMissing);
             }
-            if (!Directory.Exists(psi.WorkingDirectory)) {
-                throw new DirectoryNotFoundException(Strings.DebugLaunchWorkingDirectoryMissing_Path.FormatUI(psi.WorkingDirectory));
+
+            // Decode working directory if it contains URL-encoded characters
+            string decodedWorkingDirectory = psi.WorkingDirectory;
+            if (!string.IsNullOrEmpty(psi.WorkingDirectory) && psi.WorkingDirectory.Contains("%")) {
+                try {
+                    decodedWorkingDirectory = Uri.UnescapeDataString(psi.WorkingDirectory);
+                } catch {
+                    // Continue with original path if decoding fails
+                }
             }
+
+            if (!Directory.Exists(decodedWorkingDirectory)) {
+                throw new DirectoryNotFoundException(Strings.DebugLaunchWorkingDirectoryMissing_Path.FormatUI(decodedWorkingDirectory));
+            }
+
+            // Update the working directory to the decoded version
+            psi.WorkingDirectory = decodedWorkingDirectory;
 
             foreach (var kv in provider.GetPythonToolsService().GetFullEnvironment(config)) {
                 psi.Environment[kv.Key] = kv.Value;
@@ -337,16 +419,38 @@ namespace Microsoft.PythonTools.Debugger {
             if (string.IsNullOrEmpty(cwd)) {
                 throw new DirectoryNotFoundException(Strings.DebugLaunchWorkingDirectoryMissing);
             }
-            if (!Directory.Exists(cwd)) {
-                throw new DirectoryNotFoundException(Strings.DebugLaunchWorkingDirectoryMissing_Path.FormatUI(Info.bstrCurDir));
+
+            // Decode working directory if it contains URL-encoded characters
+            string decodedCwd = cwd;
+            if (!string.IsNullOrEmpty(cwd) && cwd.Contains("%")) {
+                try {
+                    decodedCwd = Uri.UnescapeDataString(cwd);
+                } catch {
+                    // Continue with original path if decoding fails
+                }
+            }
+
+            if (!Directory.Exists(decodedCwd)) {
+                throw new DirectoryNotFoundException(Strings.DebugLaunchWorkingDirectoryMissing_Path.FormatUI(decodedCwd));
             }
 
             var exe = UnquotePath(Info.bstrExe);
             if (string.IsNullOrEmpty(exe)) {
                 throw new FileNotFoundException(Strings.DebugLaunchInterpreterMissing);
             }
-            if (!File.Exists(exe)) {
-                throw new FileNotFoundException(Strings.DebugLaunchInterpreterMissing_Path.FormatUI(exe));
+
+            // Decode executable path if it contains URL-encoded characters  
+            string decodedExe = exe;
+            if (!string.IsNullOrEmpty(exe) && exe.Contains("%")) {
+                try {
+                    decodedExe = Uri.UnescapeDataString(exe);
+                } catch {
+                    // Continue with original path if decoding fails
+                }
+            }
+
+            if (!File.Exists(decodedExe)) {
+                throw new FileNotFoundException(Strings.DebugLaunchInterpreterMissing_Path.FormatUI(decodedExe));
             }
         }
 

@@ -1,6 +1,6 @@
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="81da0100-e6db-4783-91ea-c38c3fa1b81e" Version="17.0.0" Language="en-US" Publisher="Microsoft Corporation" />
+    <Identity Id="81da0100-e6db-4783-91ea-c38c3fa1b81e" Version="17.0.1" Language="en-US" Publisher="Microsoft Corporation" />
     <DisplayName>Python - Profiling</DisplayName>
     <Description xml:space="preserve">Provides support for profiling Python projects.</Description>
     <MoreInfo>http://aka.ms/ptvs</MoreInfo>

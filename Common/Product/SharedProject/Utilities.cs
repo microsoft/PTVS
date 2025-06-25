@@ -465,6 +465,24 @@ namespace Microsoft.VisualStudioTools.Project {
             // Call GetFullPath to expand any relative path passed into this method.
             fullProjectPath = CommonUtils.NormalizePath(fullProjectPath);
 
+            if (fullProjectPath.Contains("%"))
+            {
+                try
+                {
+                    string decodedPath = Uri.UnescapeDataString(fullProjectPath);
+                    // Check if the decoded path exists on disk
+                    if (File.Exists(decodedPath))
+                    {
+                        fullProjectPath = decodedPath;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // If decoding fails, continue with the normalized path
+                    System.Diagnostics.Debug.WriteLine($"Failed to decode normalized path: {ex.Message}");
+                }
+            }
+
             // Check if the project already has been loaded with the fullProjectPath. If yes return the build project associated to it.
             var loadedProject = new List<MSBuild.Project>(buildEngine.GetLoadedProjects(fullProjectPath));
             var buildProject = loadedProject != null && loadedProject.Count > 0 && loadedProject[0] != null ? loadedProject[0] : null;

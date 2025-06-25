@@ -52,7 +52,7 @@ namespace Microsoft.PythonTools.Project {
                 } catch (UnauthorizedAccessException) {
                     var resource = new VisualStudioTools.Project.NativeMethods._NETRESOURCE();
                     resource.dwType = VisualStudioTools.Project.NativeMethods.RESOURCETYPE_DISK;
-                    resource.lpRemoteName = Path.GetPathRoot(destination.LocalPath);
+                    resource.lpRemoteName = Path.GetPathRoot(Uri.UnescapeDataString(destination.LocalPath));
 
                     NetworkCredential creds = null;
                     var res = VsCredentials.PromptForCredentials(
@@ -86,7 +86,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private static void CopyOneFile(Uri destination, IPublishFile item) {
-            var destFile = PathUtils.GetAbsoluteFilePath(destination.LocalPath, item.DestinationFile);
+            var destFile = PathUtils.GetAbsoluteFilePath(Uri.UnescapeDataString(destination.LocalPath), item.DestinationFile);
             Debug.WriteLine("CopyingOneFile: " + destFile);
             string destDir = Path.GetDirectoryName(destFile);
             if (!Directory.Exists(destDir)) {

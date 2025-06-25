@@ -60,7 +60,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 var resultUris = e.Operation.GetRunSettingsDataCollectorResultUri(PythonConstants.PythonCodeCoverageUri);
                 if (resultUris != null) {
                     foreach (var eachAttachment in resultUris) {
-                        string filePath = eachAttachment.LocalPath;
+                        string filePath = Uri.UnescapeDataString(eachAttachment.LocalPath);
 
                         if (File.Exists(filePath)) {
                             object inObj = filePath;

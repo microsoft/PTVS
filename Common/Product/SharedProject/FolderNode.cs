@@ -198,7 +198,18 @@ namespace Microsoft.VisualStudioTools.Project {
             }
 
             var path = Path.Combine(Parent.FullPathToChildren, label);
-            if (path.Length >= NativeMethods.MAX_FOLDER_PATH) {
+            
+            // Decode the path for length checking to get the actual Unicode length
+            string decodedPath = path;
+            if (!string.IsNullOrEmpty(path) && path.Contains("%")) {
+                try {
+                    decodedPath = Uri.UnescapeDataString(path);
+                } catch {
+                    // Continue with original path if decoding fails
+                }
+            }
+            
+            if (decodedPath.Length >= NativeMethods.MAX_FOLDER_PATH) {
                 if (wasCancelled) {
                     // cancelling an edit label doesn't result in the error
                     // being displayed, so we'll display one for the user.
@@ -217,8 +228,8 @@ namespace Microsoft.VisualStudioTools.Project {
             }
 
             if (filename == Caption || Parent.FindImmediateChildByName(filename) == null) {
-                if (ProjectMgr.QueryFolderAdd(Parent, path)) {
-                    Directory.CreateDirectory(path);
+                if (ProjectMgr.QueryFolderAdd(Parent, decodedPath)) {
+                    Directory.CreateDirectory(decodedPath);
                     IsBeingCreated = false;
                     var relativePath = CommonUtils.GetRelativeDirectoryPath(
                         ProjectMgr.ProjectHome,
@@ -235,7 +246,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     ExpandItem(EXPANDFLAGS.EXPF_SelectItem);
 
                     ProjectMgr.Tracker.OnFolderAdded(
-                        path,
+                        decodedPath,
                         VSADDDIRECTORYFLAGS.VSADDDIRECTORYFLAGS_NoFlags
                     );
                 }
@@ -399,8 +410,19 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Override if your node does not use file system folder
         /// </summary>
         public virtual void CreateDirectory() {
-            if (Directory.Exists(this.Url) == false) {
-                Directory.CreateDirectory(this.Url);
+            string directoryPath = this.Url;
+            
+            // Decode the directory path if it contains URL-encoded characters
+            if (!string.IsNullOrEmpty(directoryPath) && directoryPath.Contains("%")) {
+                try {
+                    directoryPath = Uri.UnescapeDataString(directoryPath);
+                } catch {
+                    // Continue with original path if decoding fails
+                }
+            }
+
+            if (Directory.Exists(directoryPath) == false) {
+                Directory.CreateDirectory(directoryPath);
             }
         }
         /// <summary>

@@ -1214,20 +1214,44 @@ namespace Microsoft.PythonTools.Project {
             }
 
             if (!File.Exists(config.GetInterpreterPath())) {
-                throw new MissingInterpreterException(
-                    Strings.DebugLaunchInterpreterMissing_Path.FormatUI(config.GetInterpreterPath())
-                );
+                // Decode interpreter path if it contains URL-encoded characters
+                string decodedInterpreterPath = config.GetInterpreterPath();
+                if (!string.IsNullOrEmpty(decodedInterpreterPath) && decodedInterpreterPath.Contains("%")) {
+                    try {
+                        decodedInterpreterPath = Uri.UnescapeDataString(decodedInterpreterPath);
+                    } catch {
+                        // Continue with original path if decoding fails
+                    }
+                }
+                
+                if (!File.Exists(decodedInterpreterPath)) {
+                    throw new MissingInterpreterException(
+                        Strings.DebugLaunchInterpreterMissing_Path.FormatUI(decodedInterpreterPath)
+                    );
+                }
             }
 
-            if (!Directory.Exists(config.WorkingDirectory)) {
+            // Decode working directory if it contains URL-encoded characters
+            string decodedWorkingDirectory = config.WorkingDirectory;
+            if (!string.IsNullOrEmpty(config.WorkingDirectory) && config.WorkingDirectory.Contains("%")) {
+                try {
+                    decodedWorkingDirectory = Uri.UnescapeDataString(config.WorkingDirectory);
+                } catch {
+                    // Continue with original path if decoding fails
+                }
+            }
+
+            if (!Directory.Exists(decodedWorkingDirectory)) {
                 throw new DirectoryNotFoundException(
-                    Strings.DebugLaunchWorkingDirectoryMissing.FormatUI(config.WorkingDirectory)
+                    Strings.DebugLaunchWorkingDirectoryMissing.FormatUI(decodedWorkingDirectory)
                 );
             }
 
             // Ensure working directory is a search path.
             config.SearchPaths.Insert(0, config.WorkingDirectory);
             config.SearchPaths.AddRange(Site.GetPythonToolsService().GetGlobalPythonSearchPaths(config.Interpreter));
+            // Update the config to use the decoded working directory for subsequent operations
+            config.WorkingDirectory = decodedWorkingDirectory;
 
             return config;
         }
@@ -2680,7 +2704,7 @@ namespace Microsoft.PythonTools.Project {
                 var ep = runtime.SelectSingleNode("sd:EntryPoint", ns);
                 ep.AppendChildElement(null, "ProgramEntryPoint", null, null);
                 var pep = ep.SelectSingleNode("sd:ProgramEntryPoint", ns);
-                pep.CreateAttribute(null, "commandLine", null, "bin\\ps.cmd LaunchWorker.ps1 worker.py");
+                pep.CreateAttribute(null, "commandLine", null, "bin\\ps.cmd LaunchWorker.ps1");
                 pep.CreateAttribute(null, "setReadyOnProcessStart", null, "true");
             }
         }
