@@ -255,7 +255,7 @@ namespace Microsoft.PythonTools.Infrastructure {
             } else {
                 psi.Arguments = string.Join(" ", arguments.Where(a => a != null)); // CodeQL [SM00406] Code ql is complaining, but this is a utility class that is called with many different file names.
             }
-            psi.WorkingDirectory = workingDirectory;
+            psi.WorkingDirectory = workingDirectory; // CodeQL [SM00406] Audited the uses of this helper and this is not a vulnerability.
             psi.CreateNoWindow = !visible;
             psi.UseShellExecute = false;
             psi.RedirectStandardError = !visible || (redirector != null);

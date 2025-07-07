@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Debugger {
                 string html = reader.ReadToEnd();
                 var wsUri = new UriBuilder(context.Request.Url) { Scheme = "wss", Port = -1, UserName = "secret" }.ToString();
                 wsUri = wsUri.Replace("secret@", "<span class='secret'>secret</span>@");
-                context.Response.Write(html.Replace("{{WS_URI}}", wsUri));
+                context.Response.Write(html.Replace("{{WS_URI}}", wsUri)); // CodeQL [SM00430] its the same URL they hit just with a corrected extension so safe.
                 context.Response.End();
             }
         }
