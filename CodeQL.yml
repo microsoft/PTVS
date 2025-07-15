@@ -1,0 +1,6 @@
+path_classifiers:
+  library:
+    - "Python/Templates/Django/ProjectTemplates/Python/Web/StarterDjangoProject/jquery-1.10.2.js"
+    - "Python/Templates/Django/ProjectTemplates/Python/Web/StarterFlaskJadeProject/jquery-1.10.2.js"
+    - "Python/Templates/Django/ProjectTemplates/Python/Web/StarterBottleProject/jquery-1.10.2.js"
+    - "Python/Templates/Django/ProjectTemplates/Python/Web/StarterFlaskProject/jquery-1.10.2.js"
