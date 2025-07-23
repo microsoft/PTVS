@@ -239,7 +239,7 @@ namespace Microsoft.PythonTools.Infrastructure {
                 }
             }
 
-            absPath = absUri.IsFile ? absUri.LocalPath : absUri.AbsoluteUri;
+            absPath = absUri.IsFile ? Uri.UnescapeDataString(absUri.LocalPath) : absUri.AbsoluteUri;
 
             if (!string.IsNullOrEmpty(absPath) && !HasEndSeparator(absPath)) {
                 absPath += absUri.IsFile ? Path.DirectorySeparatorChar : Path.AltDirectorySeparatorChar;
@@ -270,7 +270,7 @@ namespace Microsoft.PythonTools.Infrastructure {
                 }
             }
 
-            return absUri.IsFile ? absUri.LocalPath : absUri.AbsoluteUri;
+            return absUri.IsFile ? Uri.UnescapeDataString(absUri.LocalPath) : absUri.AbsoluteUri;
         }
 
         /// <summary>
@@ -290,14 +290,14 @@ namespace Microsoft.PythonTools.Infrastructure {
             try {
                 var relUri = fromUri.MakeRelativeUri(toUri);
                 if (relUri.IsAbsoluteUri) {
-                    relPath = relUri.IsFile ? relUri.LocalPath : relUri.AbsoluteUri;
+                    relPath = relUri.IsFile ? Uri.UnescapeDataString(relUri.LocalPath) : relUri.AbsoluteUri;
                 } else {
                     relPath = Uri.UnescapeDataString(relUri.ToString());
                 }
             } catch (InvalidOperationException ex) {
                 Trace.WriteLine(string.Format("Error finding path from {0} to {1}", fromUri, toUri));
                 Trace.WriteLine(ex);
-                relPath = toUri.IsFile ? toUri.LocalPath : toUri.AbsoluteUri;
+                relPath = toUri.IsFile ? Uri.UnescapeDataString(toUri.LocalPath) : toUri.AbsoluteUri;
             }
 
             if (!string.IsNullOrEmpty(relPath) && !HasEndSeparator(relPath)) {
@@ -326,14 +326,14 @@ namespace Microsoft.PythonTools.Infrastructure {
             try {
                 var relUri = fromUri.MakeRelativeUri(toUri);
                 if (relUri.IsAbsoluteUri) {
-                    relPath = relUri.IsFile ? relUri.LocalPath : relUri.AbsoluteUri;
+                    relPath = relUri.IsFile ? Uri.UnescapeDataString(relUri.LocalPath) : relUri.AbsoluteUri;
                 } else {
                     relPath = Uri.UnescapeDataString(relUri.ToString());
                 }
             } catch (InvalidOperationException ex) {
                 Trace.WriteLine(string.Format("Error finding path from {0} to {1}", fromUri, toUri));
                 Trace.WriteLine(ex);
-                relPath = toUri.IsFile ? toUri.LocalPath : toUri.AbsoluteUri;
+                relPath = toUri.IsFile ? Uri.UnescapeDataString(toUri.LocalPath) : toUri.AbsoluteUri;
             }
 
             if (toUri.IsFile) {

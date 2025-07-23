@@ -143,7 +143,7 @@ namespace Microsoft.VisualStudioTools {
             var uri = MakeUri(path, false, UriKind.RelativeOrAbsolute);
             if (uri.IsAbsoluteUri) {
                 if (uri.IsFile) {
-                    return uri.LocalPath;
+                    return Uri.UnescapeDataString(uri.LocalPath);
                 } else {
                     return uri.AbsoluteUri.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
                 }
@@ -160,7 +160,7 @@ namespace Microsoft.VisualStudioTools {
         public static string GetLocalFilePath(Uri documentUri)
         {
             // Note: this would remove the '/' from some Uri returned on some LSP providers
-            string absolutePath = documentUri.LocalPath.TrimStart('/');
+            string absolutePath = Uri.UnescapeDataString(documentUri.LocalPath.TrimStart('/'));
             string fullPath = Path.GetFullPath(absolutePath);
 
             return fullPath;
@@ -178,7 +178,7 @@ namespace Microsoft.VisualStudioTools {
             var uri = MakeUri(path, true, UriKind.RelativeOrAbsolute);
             if (uri.IsAbsoluteUri) {
                 if (uri.IsFile) {
-                    return uri.LocalPath;
+                    return Uri.UnescapeDataString(uri.LocalPath);
                 } else {
                     return uri.AbsoluteUri.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
                 }
@@ -290,7 +290,7 @@ namespace Microsoft.VisualStudioTools {
                 }
             }
 
-            absPath = absUri.IsFile ? absUri.LocalPath : absUri.AbsoluteUri;
+            absPath = absUri.IsFile ? Uri.UnescapeDataString(absUri.LocalPath) : absUri.AbsoluteUri;
 
             if (!string.IsNullOrEmpty(absPath) && !HasEndSeparator(absPath)) {
                 absPath += absUri.IsFile ? Path.DirectorySeparatorChar : Path.AltDirectorySeparatorChar;
@@ -321,7 +321,7 @@ namespace Microsoft.VisualStudioTools {
                 }
             }
 
-            return absUri.IsFile ? absUri.LocalPath : absUri.AbsoluteUri;
+            return absUri.IsFile ? Uri.UnescapeDataString(absUri.LocalPath) : absUri.AbsoluteUri;
         }
 
         /// <summary>
@@ -341,14 +341,14 @@ namespace Microsoft.VisualStudioTools {
             try {
                 var relUri = fromUri.MakeRelativeUri(toUri);
                 if (relUri.IsAbsoluteUri) {
-                    relPath = relUri.IsFile ? relUri.LocalPath : relUri.AbsoluteUri;
+                    relPath = relUri.IsFile ? Uri.UnescapeDataString(relUri.LocalPath) : relUri.AbsoluteUri;
                 } else {
                     relPath = Uri.UnescapeDataString(relUri.ToString());
                 }
             } catch (InvalidOperationException ex) {
                 Trace.WriteLine(string.Format("Error finding path from {0} to {1}", fromUri, toUri));
                 Trace.WriteLine(ex);
-                relPath = toUri.IsFile ? toUri.LocalPath : toUri.AbsoluteUri;
+                relPath = toUri.IsFile ? Uri.UnescapeDataString(toUri.LocalPath) : toUri.AbsoluteUri;
             }
 
             if (!string.IsNullOrEmpty(relPath) && !HasEndSeparator(relPath)) {
@@ -377,14 +377,14 @@ namespace Microsoft.VisualStudioTools {
             try {
                 var relUri = fromUri.MakeRelativeUri(toUri);
                 if (relUri.IsAbsoluteUri) {
-                    relPath = relUri.IsFile ? relUri.LocalPath : relUri.AbsoluteUri;
+                    relPath = relUri.IsFile ? Uri.UnescapeDataString(relUri.LocalPath) : relUri.AbsoluteUri;
                 } else {
                     relPath = Uri.UnescapeDataString(relUri.ToString());
                 }
             } catch (InvalidOperationException ex) {
                 Trace.WriteLine(string.Format("Error finding path from {0} to {1}", fromUri, toUri));
                 Trace.WriteLine(ex);
-                relPath = toUri.IsFile ? toUri.LocalPath : toUri.AbsoluteUri;
+                relPath = toUri.IsFile ? Uri.UnescapeDataString(toUri.LocalPath) : toUri.AbsoluteUri;
             }
 
             if (toUri.IsFile) {
