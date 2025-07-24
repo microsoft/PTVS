@@ -392,7 +392,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 ?? _analysisOptions.ExtraPaths;
 
             // Add search paths to extraPaths for pylance to look through
-            var searchPaths = context.SearchPaths.ToArray();
+            var searchPaths = context.SearchPaths?.ToArray() ?? Array.Empty<string>();
             extraPaths = extraPaths == null ? searchPaths : extraPaths.Concat(searchPaths).ToArray();
 
             var stubPath = UserSettings.GetStringSetting(
