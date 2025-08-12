@@ -38,6 +38,7 @@ namespace Microsoft.PythonTools {
         internal const string FileExtension = ".py";
         internal const string WindowsFileExtension = ".pyw";
         internal const string StubFileExtension = ".pyi";
+        internal const string ArcGISToolboxExtension = ".pyt";
         internal const string SourceFileExtensions = ".py;.pyw;.pyi";
         internal static readonly string[] SourceFileExtensionsArray = SourceFileExtensions.Split(';');
 
