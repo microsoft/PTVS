@@ -74,7 +74,7 @@ except NameError:
     # BaseException not defined until Python 2.5
     BaseException = Exception
 
-DEBUG = os.environ.get('DEBUG_REPL') or os.environ.get('_PTVS_DEBUG_REPL')
+DEBUG = True # os.environ.get('DEBUG_REPL') or os.environ.get('_PTVS_DEBUG_REPL')
 
 __all__ = ['ReplBackend', 'BasicReplBackend', 'BACKEND']
 
