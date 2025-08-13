@@ -390,7 +390,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 context = _clientContexts.Find(c => scopeUri != null && c.RootPath != null && PathUtils.IsSamePath(c.RootPath.ToLower(), pathFromScopeUri));
             }
 
-            if (context == null) {
+            if (context == null || context.InterpreterConfiguration == null) {
                 Debug.WriteLine(String.Format("GetSettings() scopeUri not found: {0}", scopeUri));
                 return null;
             }
