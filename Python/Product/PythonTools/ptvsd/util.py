@@ -21,8 +21,14 @@ __version__ = "3.2.1.0"
 # attach scenario, it is loaded on the injected debugger attach thread, and if threading module
 # hasn't been loaded already, it will assume that the thread on which it is being loaded is the
 # main thread. This will cause issues when the thread goes away after attach completes.
-
-import imp
+import types
+try:
+    # Python < 3.12
+    import imp
+    new_module = imp.new_module
+except ImportError:
+    # Python >= 3.12 - imp module was removed
+    new_module = types.ModuleType
 import os
 import sys
 import struct
@@ -72,7 +78,7 @@ def exec_code(code, file, global_variables):
 
     global_variables = dict(global_variables)
     mod_name = global_variables.setdefault('__name__', '<run_path>')
-    mod = sys.modules[mod_name] = imp.new_module(mod_name)
+    mod = sys.modules[mod_name] = new_module(mod_name)
     mod.__dict__.update(global_variables)
     global_variables = mod.__dict__
     global_variables.setdefault('__file__', file)
