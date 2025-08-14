@@ -367,12 +367,22 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private LanguageServerSettings.PythonSettings GetSettings(Uri scopeUri = null) {
+            // guard on shutdown
+            if (_clientContexts.Count() == 0) {
+                return null;
+            }
             IPythonLanguageClientContext context = null;
             if (scopeUri == null) {
-                // REPL context has null RootPath
+                // REPL context has null RootPath 
                 context = _clientContexts.Find(c => c.RootPath == null);
                 if (context == null) {
-                    return null;
+                    // use first clientcontext as default
+                    try {
+                        context = _clientContexts.FirstOrDefault();
+                    } catch (InvalidOperationException) {
+                        // no client context
+                        return null;
+                    }
                 }
             } else {
                 var pathFromScopeUri = CommonUtils.NormalizeDirectoryPath(scopeUri.LocalPath).ToLower().TrimStart('\\');
@@ -380,7 +390,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 context = _clientContexts.Find(c => scopeUri != null && c.RootPath != null && PathUtils.IsSamePath(c.RootPath.ToLower(), pathFromScopeUri));
             }
 
-            if (context == null) {
+            if (context == null || context.InterpreterConfiguration == null) {
                 Debug.WriteLine(String.Format("GetSettings() scopeUri not found: {0}", scopeUri));
                 return null;
             }
