@@ -39,12 +39,19 @@ import socket
 import select
 import time
 import struct
-import imp
+import types
+# Add compatibility code:
+try:
+    # Python < 3.12
+    import imp
+    new_module = imp.new_module
+except ImportError:
+    # Python >= 3.12 - imp module was removed
+    new_module = types.ModuleType
 import traceback
 import random
 import os
 import inspect
-import types
 from collections import deque
 import ptvsd.util as _vspu
 
@@ -557,7 +564,7 @@ class BasicReplBackend(ReplBackend):
                 self.exec_mod = Scope()
                 self.exec_mod.__name__ = '__main__'
             else:
-                self.exec_mod = imp.new_module(mod_name)
+                self.exec_mod = new_module(mod_name)
                 # On 2.6, the below messes up the globals of the calling script
                 # if it is in sys.modules of the same name.
                 if sys.version_info >= (2, 7):
