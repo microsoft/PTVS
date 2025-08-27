@@ -44,9 +44,6 @@ parameters:
 # build number format 
 name: $(date:yy)$(DayOfYear)$(rev:.r)
 
-# Set pipeline timeout to 2 hours (120 minutes)
-timeoutInMinutes: 120
-
 # Trigger ci builds for commits into master and any release branches
 # Ignore changes to other yml files, since they are for different pipelines
 trigger:
@@ -149,6 +146,8 @@ extends:
       displayName: Build
       jobs:
       - job: build
+        # Set pipeline timeout to 2 hours (120 minutes)
+        timeoutInMinutes: 120
         displayName: Build
         # If the pipeline publishes artifacts, use `templateContext` to define the artifacts.
         # This will enable 1ES PT to run SDL analysis tools on the artifacts and then upload them.
