@@ -516,14 +516,14 @@ class SafeRepr(object):
         d1 = {}
         d1_key = 'a' * self.maxstring_inner * 2
         d1[d1_key] = d1_key
-        re_test(d1, "{'a+\.\.\.a+': 'a+\.\.\.a+'}")
+        re_test(d1, r"{'a+\.\.\.a+': 'a+\.\.\.a+'}")
         d2 = {d1_key : d1}
-        re_test(d2, "{'a+\.\.\.a+': {'a+\.\.\.a+': 'a+\.\.\.a+'}}")
+        re_test(d2, r"{'a+\.\.\.a+': {'a+\.\.\.a+': 'a+\.\.\.a+'}}")
         d3 = {d1_key : d2}
         if len(self.maxcollection) == 2:
-            re_test(d3, "{'a+\.\.\.a+': {'a+\.\.\.a+': {\.\.\.}}}")
+            re_test(d3, r"{'a+\.\.\.a+': {'a+\.\.\.a+': {\.\.\.}}}")
         else:
-            re_test(d3, "{'a+\.\.\.a+': {'a+\.\.\.a+': {'a+\.\.\.a+': 'a+\.\.\.a+'}}}")
+            re_test(d3, r"{'a+\.\.\.a+': {'a+\.\.\.a+': {'a+\.\.\.a+': 'a+\.\.\.a+'}}}")
 
         # Ensure empty dicts work
         test({}, '{}')
