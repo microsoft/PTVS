@@ -10,17 +10,17 @@
         <PreviewImage>PythonProjectBig.ico</PreviewImage>
     </Metadata>
     <Installation SystemComponent="true" AllUsers="true" InstalledByMsi="true">
-        <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.0,18.0)">
+        <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.0,19.0)">
             <ProductArchitecture>amd64</ProductArchitecture>
         </InstallationTarget>
     </Installation>
     <Dependencies>
         <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" Version="4.6" />
-        <Dependency IsRequired="false" Version="[17.0,18.0)" d:Source="Installed" Id="TestWindow.Microsoft.0771d463-d74d-4e95-aac2-39d3c7ec1f97" DisplayName="Test Explorer" />
+        <Dependency IsRequired="false" Version="[17.0,19.0)" d:Source="Installed" Id="TestWindow.Microsoft.0771d463-d74d-4e95-aac2-39d3c7ec1f97" DisplayName="Test Explorer" />
         <Dependency d:Source="Installed" Id="1F42C6D0-F876-4AF0-8185-1BEB0A325BB2" DisplayName="VisualStudio Interactive Components" />
     </Dependencies>
     <Prerequisites>
-        <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[17.0,18.0)" DisplayName="Visual Studio core editor" />
+        <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[17.0,19.0)" DisplayName="Visual Studio core editor" />
     </Prerequisites>
     <Assets>
         <Asset Type="Microsoft.VisualStudio.Package" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />

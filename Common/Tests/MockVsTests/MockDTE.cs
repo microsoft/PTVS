@@ -44,6 +44,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             }
         }
 
+        [Obsolete("AddIn related extension points are no longer supported in Visual Studio.")]
         public AddIns AddIns {
             get {
                 throw new NotImplementedException();
