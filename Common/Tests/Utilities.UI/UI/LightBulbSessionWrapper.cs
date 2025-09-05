@@ -49,6 +49,7 @@ namespace TestUtilities.UI {
             }
         }
 
+        [Obsolete]
         public IEnumerable<LightBulbActionWrapper> Actions {
             get {
                 IEnumerable<SuggestedActionSet> sets;
