@@ -37,7 +37,7 @@
     <Reference Include="Microsoft.VisualStudio.Text.UI" />
     <Reference Include="Microsoft.VisualStudio.Text.UI.Wpf" />
     <Reference Include="Microsoft.VisualStudio.Threading">
-      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(PackagesPath)\Microsoft.VisualStudio.Threading.Only\lib\net472\Microsoft.VisualStudio.Threading.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />

@@ -37,7 +37,7 @@
     <Reference Include="Microsoft.VisualStudio.Language.Intellisense" />
     <Reference Include="Microsoft.VisualStudio.Language.StandardClassification" />
     <Reference Include="Microsoft.VisualStudio.Shell.15.0" />
-    <Reference Include="Microsoft.VisualStudio.Shell.Framework, Version=17.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Reference Include="Microsoft.VisualStudio.Shell.Framework" />
     <Reference Include="Microsoft.VisualStudio.Interop">
       <IncludeInVSIX>False</IncludeInVSIX>
     </Reference>
@@ -51,7 +51,9 @@
     <Reference Include="Microsoft.VisualStudio.Imaging.Interop.14.0.DesignTime, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
-    <Reference Include="Microsoft.VisualStudio.Threading" />
+    <Reference Include="Microsoft.VisualStudio.Threading">
+      <HintPath>$(PackagesPath)\Microsoft.VisualStudio.Threading.Only\lib\net472\Microsoft.VisualStudio.Threading.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.Utilities" />
     <Reference Include="Microsoft.Build, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="PresentationCore" />

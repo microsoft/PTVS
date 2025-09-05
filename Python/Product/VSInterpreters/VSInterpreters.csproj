@@ -86,7 +86,9 @@
       <IncludeInVSIX>False</IncludeInVSIX>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.10.0" />
-    <Reference Include="Microsoft.VisualStudio.Threading" />
+    <Reference Include="Microsoft.VisualStudio.Threading">
+      <HintPath>$(PackagesPath)\Microsoft.VisualStudio.Threading.Only\lib\net472\Microsoft.VisualStudio.Threading.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.Workspace" />
     <Reference Include="Microsoft.VisualStudio.Workspace.VSIntegration.Contracts" />
     <Reference Include="Newtonsoft.Json">
