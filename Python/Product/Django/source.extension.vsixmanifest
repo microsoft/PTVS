@@ -1,6 +1,6 @@
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="a8637c34-aa55-46e2-973c-9c3e09afc17b" Version="17.0.0" Language="en-US" Publisher="Microsoft Corporation" />
+    <Identity Id="a8637c34-aa55-46e2-973c-9c3e09afc17b" Version="18.0.0" Language="en-US" Publisher="Microsoft Corporation" />
     <DisplayName>Python - Django</DisplayName>
     <Description xml:space="preserve">Provides templates and integration for the Django web framework.</Description>
     <MoreInfo>http://aka.ms/ptvs</MoreInfo>
