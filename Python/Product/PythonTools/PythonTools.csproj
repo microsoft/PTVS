@@ -227,8 +227,8 @@
     <Reference Include="Microsoft.VisualStudio.LanguageServer.Client" />
     <Reference Include="Microsoft.Internal.VisualStudio.Shell.Framework">
       <HintPath>$(PackagesPath)\Microsoft.Internal.VisualStudio.Shell.Framework\lib\net472\Microsoft.Internal.VisualStudio.Shell.Framework.dll</HintPath>
-      <Private>false</Private> -->
-    <!-- </Reference>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.LanguageServer.Protocol">
       <Private>True</Private>
       <IncludeInVSIX>True</IncludeInVSIX>
