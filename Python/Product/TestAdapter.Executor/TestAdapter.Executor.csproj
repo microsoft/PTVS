@@ -31,6 +31,16 @@
         <OldToolsVersion>17.0</OldToolsVersion>
       </PropertyGroup>
     </When>
+    <When Condition=" '$(VisualStudioVersion)'=='18.0'  Or '$(TargetVisualStudioVersion)'=='VS180' ">
+      <PropertyGroup>
+        <MinimumVisualStudioVersion>18.0</MinimumVisualStudioVersion>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
+        <OldToolsVersion>17.0</OldToolsVersion>
+      </PropertyGroup>
+    </When>
   </Choose>
   <Import Project="..\ProjectBefore.settings" />
   <PropertyGroup>
@@ -63,7 +73,7 @@
       <Private>False</Private>
     </Reference> -->
     <Reference Include="Microsoft.TestPlatform.ObjectModel">
-      <HintPath>$(PackagesPath)\Microsoft.TestPlatform.ObjectModel.17.4.0-preview-20221003-03\lib\net462\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll</HintPath>
+      <HintPath>$(PackagesPath)\Microsoft.TestPlatform.ObjectModel.17.14.1\lib\net462\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.TestWindow.Interfaces">

@@ -50,7 +50,7 @@ namespace Microsoft.VisualStudioTools.Project {
         StartupFile
     }
 
-    internal abstract class CommonProjectNode : ProjectNode, IVsProjectSpecificEditorMap2, IVsDeferredSaveProject {
+    internal abstract class CommonProjectNode : ProjectNode, IVsProjectSpecificEditorMap2 {
         private VSLangProj.VSProject _vsProject = null;
         private static ImageList _imageList;
         private ProjectDocumentsListenerForStartupFileUpdates _projectDocListenerForStartupFileUpdates;
