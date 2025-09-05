@@ -156,7 +156,7 @@
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.15.0" />
-    <Reference Include="Microsoft.VisualStudio.Shell.Framework" />
+    <Reference Include="Microsoft.VisualStudio.Shell.Framework, Version=17.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.Shell.Design" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop" />
     <Reference Include="Microsoft.VisualStudio.TextManager.Interop" />
@@ -221,7 +221,7 @@
       <Private>false</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Threading" />
-    <Reference Include="Microsoft.VisualStudio.Shell.Framework" />
+    <Reference Include="Microsoft.VisualStudio.Shell.Framework, Version=17.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.LanguageServer.Client" />
     <Reference Include="Microsoft.Internal.VisualStudio.Shell.Framework">
       <Private>false</Private>
@@ -235,7 +235,10 @@
     <Reference Include="Microsoft.ServiceHub.Framework" />
     <Reference Include="Microsoft.Extensions.Logging" />
     <Reference Include="Microsoft.Extensions.Logging.Abstractions" />
-    <Reference Include="System.Threading.Tasks.Extensions" />
+    <Reference Include="System.Threading.Tasks.Extensions">
+      <SpecificVersion>false</SpecificVersion>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Memory" />
     <Reference Include="Microsoft.VisualStudio.RpcContracts" />
   </ItemGroup>
