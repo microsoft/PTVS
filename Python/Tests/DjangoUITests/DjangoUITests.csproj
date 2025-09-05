@@ -90,7 +90,7 @@
     <Reference Include="UIAutomationTypes" />
     <Reference Include="WindowsBase" />
     <Reference Include="Microsoft.VisualStudio.Threading">
-      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(PackagesPath)\Microsoft.VisualStudio.Threading.Only\lib\net472\Microsoft.VisualStudio.Threading.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
