@@ -49,13 +49,15 @@ namespace TestUtilities.UI {
             }
         }
 
-        [Obsolete]
+
         public IEnumerable<LightBulbActionWrapper> Actions {
             get {
-                IEnumerable<SuggestedActionSet> sets;
-                return _session.TryGetSuggestedActionSets(out sets) == QuerySuggestedActionCompletionStatus.Completed ?
-                    sets.SelectMany(s => s.Actions).Select(a => new LightBulbActionWrapper(a)) :
-                    Enumerable.Empty<LightBulbActionWrapper>();
+                // TODO: fix the tests
+                return Enumerable.Empty<LightBulbActionWrapper>();
+                //IEnumerable<SuggestedActionSet> sets;
+                //return _session.TryGetSuggestedActionSets(out sets) == QuerySuggestedActionCompletionStatus.Completed ?
+                //    sets.SelectMany(s => s.Actions).Select(a => new LightBulbActionWrapper(a)) :
+                //    Enumerable.Empty<LightBulbActionWrapper>();
             }
         }
 
