@@ -27,8 +27,8 @@ variables:
   - name: PublishNugetPackage
     value: ${{ parameters.PublishNugetPackage }}
 
-  # https://devdiv.visualstudio.com/DevDiv/_library?itemType=VariableGroups&view=VariableGroupView&variableGroupId=381&path=PTVS-Dev17
-  - group: PTVS-Dev17
+  # https://devdiv.visualstudio.com/DevDiv/_library?itemType=VariableGroups&view=VariableGroupView&variableGroupId=604&path=PTVS-Dev18
+  - group: PTVS-Dev18
 
 resources:
   repositories:
