@@ -90,7 +90,7 @@ extends:
             TeamEmail: 'pyvs@microsoft.com'
             ComponentJsonValues: 'Microsoft.PythonTools.vsman=https://vsdrop.corp.microsoft.com/file/v1/Products/DevDiv/microsoft/PTVS/$(Build.SourceBranchName)/$(resources.pipeline.PTVS-Build.runName);Microsoft.PythonTools.vsman'
             InsertionPayloadName: 'ptvs $(Build.SourceBranchName) $(resources.pipeline.PTVS-Build.runName)'
-            InsertionReviewers: 'pyvs@microsoft.com,plseng@microsoft.com,bschnurr@microsoft.com,advolker@microsoft.com,stellahuang@microsoft.com'
+            InsertionReviewers: 'plseng@microsoft.com,bschnurr@microsoft.com,stellahuang@microsoft.com'
             InsertionBuildPolicy: 'Request Perf DDRITs'
             AutoCompletePR: true
             AutoCompleteMergeStrategy: Squash
