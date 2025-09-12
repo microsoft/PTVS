@@ -62,15 +62,33 @@
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
+  <Choose>
+    <When Condition=" '$(VisualStudioVersion)'=='17.0' Or '$(TargetVisualStudioVersion)'=='VS170' ">
+      <ItemGroup>
+        <Reference Include="Microsoft.TestPlatform.ObjectModel">
+          <HintPath>$(PackagesPath)\Microsoft.TestPlatform.ObjectModel.17.4.0-preview-20221003-03\lib\net462\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+      </ItemGroup>
+    </When>
+    <When Condition=" '$(VisualStudioVersion)'=='18.0' Or '$(TargetVisualStudioVersion)'=='VS180' ">
+      <ItemGroup>
+        <Reference Include="Microsoft.TestPlatform.ObjectModel">
+          <HintPath>$(PackagesPath)\Microsoft.TestPlatform.ObjectModel.17.14.1\lib\net462\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
   <ItemGroup>
     <!-- <Reference Include="Microsoft.VisualStudio.TestPlatform.ObjectModel">
       <HintPath>$(DevEnvDir)\Extensions\TestPlatform\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll</HintPath>
     </Reference> -->
-    <Reference Include="Microsoft.TestPlatform.ObjectModel">
+    <!-- <Reference Include="Microsoft.TestPlatform.ObjectModel">
       <HintPath>$(PackagesPath)\Microsoft.TestPlatform.ObjectModel.17.14.1\lib\net462\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll</HintPath>
       <HintPath>$(PackagesPath)\Microsoft.TestPlatform.ObjectModel.17.4.0-preview-20221003-03\lib\net462\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll</HintPath>
       <Private>False</Private>
-    </Reference>
+    </Reference> -->
     <Reference Include="Microsoft.VisualStudio.TestWindow.Interfaces">
       <HintPath>$(DevEnvDir)\CommonExtensions\Microsoft\TestWindow\Microsoft.VisualStudio.TestWindow.Interfaces.dll</HintPath>
     </Reference>
