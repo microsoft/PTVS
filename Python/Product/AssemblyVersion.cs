@@ -31,15 +31,27 @@ class AssemblyVersionInfo {
 #if DEV15
     public const string VSMajorVersion = "15";
     public const string VSName = "2017";
+    public const string StableVersionPrefix = "15.0.0";
+    public const string StableVersion = "15.0.0.0";
+    public const string Version = "15.0.0.0";
 #elif DEV16
     public const string VSMajorVersion = "16";
     public const string VSName = "2019";
+    public const string StableVersionPrefix = "16.0.0";
+    public const string StableVersion = "16.0.0.0";
+    public const string Version = "16.0.0.0";
 #elif DEV17
     public const string VSMajorVersion = "17";
     public const string VSName = "2022";
+    public const string StableVersionPrefix = "17.0.0";
+    public const string StableVersion = "17.0.0.0";
+    public const string Version = "17.0.0.0";
 #elif DEV18
     public const string VSMajorVersion = "18";
-    public const string VSName = "2025";
+    public const string VSName = "18";
+    public const string StableVersionPrefix = "18.0.0";
+    public const string StableVersion = "18.0.0.0";
+    public const string Version = "18.0.0.0";
 #else
 #error Unrecognized VS Version.
 #endif
@@ -47,7 +59,5 @@ class AssemblyVersionInfo {
     public const string VSVersion = VSMajorVersion + ".0";
 
     // These version strings are automatically updated at build.
-    public const string StableVersionPrefix = "1.0.0";
-    public const string StableVersion = "1.0.0.0";
-    public const string Version = "1.0.0.0";
+    // Note: StableVersionPrefix, StableVersion, and Version are now defined above per VS version
 }
