@@ -125,7 +125,9 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             }
         }
 
+#if DEV18_OR_LATER
         IClassificationType IStandardClassificationService.BidirectionalTextControlCharacter => throw new System.NotImplementedException();
+#endif
 
         [Export]
         [Name(PredefinedClassificationTypeNames.NaturalLanguage)]
