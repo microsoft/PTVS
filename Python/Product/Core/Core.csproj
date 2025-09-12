@@ -28,7 +28,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Extensions.FileSystemGlobbing, Version=3.1.8.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.Extensions.FileSystemGlobbing">
       <Private>True</Private>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Reference>

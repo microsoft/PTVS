@@ -1,6 +1,6 @@
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="6970B230-8BA1-4BB5-8EB9-4BDB894D55B0" Version="17.0.0" Language="en-US" Publisher="Microsoft Corporation" />
+    <Identity Id="6970B230-8BA1-4BB5-8EB9-4BDB894D55B0" Version="18.0.0" Language="en-US" Publisher="Microsoft Corporation" />
     <DisplayName>PTVSTemplates</DisplayName>
     <Description xml:space="preserve">Provides local debugging of templates when developing PTVS. *NOT FOR DISTRIBUTION*</Description>
     <License>License_en-US.rtf</License>
@@ -11,13 +11,13 @@
        Id specifications are minimums; any SKU equal or 'higher' will accept
        them. -->
   <Installation InstalledByMsi="true">
-    <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="17.0">
+    <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.0, 19.0)">
       <ProductArchitecture>amd64</ProductArchitecture>
     </InstallationTarget>
   </Installation>
   <Dependencies />
   <Prerequisites>
-    <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[17.0,18.0)" DisplayName="Visual Studio core editor" />
+    <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[17.0,19.0)" DisplayName="Visual Studio core editor" />
   </Prerequisites>
   <Assets>
     <Asset Type="Microsoft.VisualStudio.ProjectTemplate" Path="ProjectTemplates" />

@@ -34,6 +34,14 @@
     <Optimize>true</Optimize>
     <DefineConstants>TRACE;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
+  
+  <PropertyGroup Condition=" '$(VSTarget)' == '18.0' ">
+    <DefineConstants>$(DefineConstants);DEV18;DEV18_OR_LATER;DEV17_OR_LATER;DEV16_OR_LATER;DEV15_OR_LATER;DEV14_OR_LATER;DEV12_OR_LATER;DEV11_OR_LATER</DefineConstants>
+    <VSCTDefinitions>DEV18;DEV18_OR_LATER;DEV17_OR_LATER;DEV16_OR_LATER;DEV15_OR_LATER;DEV14_OR_LATER;DEV12_OR_LATER;DEV11_OR_LATER</VSCTDefinitions>
+    <MicrosoftBuildAssemblyVersion>15.1.0.0</MicrosoftBuildAssemblyVersion>
+    <MicrosoftBuildEngineAssemblyVersion>15.1.0.0</MicrosoftBuildEngineAssemblyVersion>
+    <MicrosoftBuildAssemblyVersionSuffix>Core</MicrosoftBuildAssemblyVersionSuffix>
+  </PropertyGroup>
 
   <PropertyGroup Condition=" '$(VSTarget)' == '17.0' ">
     <DefineConstants>$(DefineConstants);DEV17;DEV17_OR_LATER;DEV16_OR_LATER;DEV15_OR_LATER;DEV14_OR_LATER;DEV12_OR_LATER;DEV11_OR_LATER</DefineConstants>

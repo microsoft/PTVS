@@ -58,6 +58,13 @@ namespace TestUtilities.Mocks {
             return _types[type] = new MockClassificationType(type, baseTypes.ToArray());
         }
 
+#if DEV18_OR_LATER
+        public ILayeredClassificationType CreateClassificationType(ClassificationLayer layer, string type, IEnumerable<IClassificationType> baseTypes)
+        {
+            return null;
+        }
+#endif
+
         public IClassificationType CreateTransientClassificationType(params IClassificationType[] baseTypes) {
             return new MockClassificationType(String.Empty, baseTypes);
         }
@@ -70,5 +77,12 @@ namespace TestUtilities.Mocks {
             MockClassificationType result;
             return _types.TryGetValue(type, out result) ? result : null;
         }
+
+#if DEV18_OR_LATER
+        public ILayeredClassificationType GetClassificationType(ClassificationLayer layer, string type)
+        {
+            return null;
+        }
+#endif
     }
 }

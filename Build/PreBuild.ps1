@@ -9,7 +9,7 @@
 param (
     # The visual studio major version we are targeting, defaults to 17.0
     [Parameter()]
-    [string] $vstarget = "17.0",
+    [string] $vstarget = "18.0",
 
     # The directory where packages should be restored to, defaults to the root of the repo
     [Parameter()]

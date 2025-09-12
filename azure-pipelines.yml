@@ -118,7 +118,7 @@ variables:
     ${{ else }}:
       value: ${{ parameters.ptvsPackageVersion }}
 
-  # Import variables from PTVS-Dev17 variable group
+  # Import variables from PTVS-Dev18 variable group
   - group: PTVS-Dev17
 
 # The `resources` specify the location and version of the 1ES PT.

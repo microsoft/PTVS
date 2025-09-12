@@ -27,10 +27,26 @@
 
     <PropertyGroup>
       <OriginalAVText>$([System.IO.File]::ReadAllText('$(BuildRoot)\Python\Product\AssemblyVersion.cs'))</OriginalAVText>
+      <!-- Replace build number -->
       <AVText>$(OriginalAVText.Replace(` BuildNumber = "1000.00"`, ` BuildNumber = "$(BuildNumber)"`))</AVText>
+      <!-- Replace version - handle both generic and specific versions -->
       <AVText>$(AVText.Replace(` Version = "1.0.0.0"`, ` Version = "$(FileVersion)"`))</AVText>
+      <AVText>$(AVText.Replace(` Version = "15.0.0.0"`, ` Version = "$(FileVersion)"`))</AVText>
+      <AVText>$(AVText.Replace(` Version = "16.0.0.0"`, ` Version = "$(FileVersion)"`))</AVText>
+      <AVText>$(AVText.Replace(` Version = "17.0.0.0"`, ` Version = "$(FileVersion)"`))</AVText>
+      <AVText>$(AVText.Replace(` Version = "18.0.0.0"`, ` Version = "$(FileVersion)"`))</AVText>
+      <!-- Replace stable version - handle both generic and specific versions -->
       <AVText>$(AVText.Replace(` StableVersion = "1.0.0.0"`, ` StableVersion = "$(StableVersion)"`))</AVText>
+      <AVText>$(AVText.Replace(` StableVersion = "15.0.0.0"`, ` StableVersion = "$(StableVersion)"`))</AVText>
+      <AVText>$(AVText.Replace(` StableVersion = "16.0.0.0"`, ` StableVersion = "$(StableVersion)"`))</AVText>
+      <AVText>$(AVText.Replace(` StableVersion = "17.0.0.0"`, ` StableVersion = "$(StableVersion)"`))</AVText>
+      <AVText>$(AVText.Replace(` StableVersion = "18.0.0.0"`, ` StableVersion = "$(StableVersion)"`))</AVText>
+      <!-- Replace stable version prefix - handle both generic and specific versions -->
       <AVText>$(AVText.Replace(` StableVersionPrefix = "1.0.0"`, ` StableVersionPrefix = "$(StableVersionPrefix)"`))</AVText>
+      <AVText>$(AVText.Replace(` StableVersionPrefix = "15.0.0"`, ` StableVersionPrefix = "$(StableVersionPrefix)"`))</AVText>
+      <AVText>$(AVText.Replace(` StableVersionPrefix = "16.0.0"`, ` StableVersionPrefix = "$(StableVersionPrefix)"`))</AVText>
+      <AVText>$(AVText.Replace(` StableVersionPrefix = "17.0.0"`, ` StableVersionPrefix = "$(StableVersionPrefix)"`))</AVText>
+      <AVText>$(AVText.Replace(` StableVersionPrefix = "18.0.0"`, ` StableVersionPrefix = "$(StableVersionPrefix)"`))</AVText>
     </PropertyGroup>
 
     <WriteLinesToFile File="@(_NewItem)" Lines="$(AVText)" Overwrite="true" />

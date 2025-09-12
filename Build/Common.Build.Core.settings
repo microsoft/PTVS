@@ -14,6 +14,7 @@
   <PropertyGroup>
     <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSTarget Condition="$(VSTarget)=='' and '$(VisualStudioVersion)'=='18.0'">18.0</VSTarget>
     <VSTarget Condition="$(VSTarget)=='' and '$(VisualStudioVersion)'=='17.0'">17.0</VSTarget>
     <VSTarget Condition="$(VSTarget)=='' and '$(VisualStudioVersion)'=='16.0'">16.0</VSTarget>
     <VSTarget Condition="$(VSTarget)=='' and '$(VisualStudioVersion)'=='15.0'">15.0</VSTarget>
@@ -22,6 +23,7 @@
     <VSTarget Condition="$(VSTarget)=='' and '$(VisualStudioVersion)'=='11.0'">11.0</VSTarget>
     <VSTarget Condition="$(VSTarget)==''">10.0</VSTarget>
     
+    <VSTargetName Condition="'$(VSTarget)' == '18.0'">2025</VSTargetName>
     <VSTargetName Condition="'$(VSTarget)' == '17.0'">2022</VSTargetName>
     <VSTargetName Condition="'$(VSTarget)' == '16.0'">2019</VSTargetName>
     <VSTargetName Condition="'$(VSTarget)' == '15.0'">2017</VSTargetName>
@@ -30,6 +32,7 @@
     <VSTargetName Condition="'$(VSTarget)' == '11.0'">2012</VSTargetName>
     <VSTargetName Condition="'$(VSTarget)' == '10.0'">2010</VSTargetName>
 
+    <VCTargetVersion Condition="'$(VSTarget)' == '18.0'">v180</VCTargetVersion>
     <VCTargetVersion Condition="'$(VSTarget)' == '17.0'">v170</VCTargetVersion>
     <VCTargetVersion Condition="'$(VSTarget)' == '16.0'">v160</VCTargetVersion>
     <VCTargetVersion Condition="'$(VSTarget)' == '15.0'">v150</VCTargetVersion>

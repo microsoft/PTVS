@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+    <Metadata>
+        <Identity Id="PythonVCDebugLauncher.5AF7E179-1406-4804-9267-93F3BD7C7422" Version="17.0.1" Language="en-US" Publisher="Microsoft Corporation" />
+        <DisplayName>Python - C++ project debugging support</DisplayName>
+        <Description xml:space="preserve">Adds a debug launcher for C++ projects that launches with Python debugging enabled.</Description>
+        <MoreInfo>http://aka.ms/ptvs</MoreInfo>
+        <License>License_en-US.rtf</License>
+        <GettingStartedGuide>http://aka.ms/ptvstutorial</GettingStartedGuide>
+        <Icon>PythonProject.ico</Icon>
+        <PreviewImage>PythonProjectBig.ico</PreviewImage>
+        <PackageId>Microsoft.PythonTools.Debugger.VCLauncher.Vsix</PackageId>
+    </Metadata>
+    <Installation AllUsers="true">
+        <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[18.0,19.0)" >
+            <ProductArchitecture>amd64</ProductArchitecture>
+        </InstallationTarget>
+    </Installation>
+    <Dependencies>
+        <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual" Version="[4.6,)" />
+    </Dependencies>
+    <Assets>
+        <Asset Type="Microsoft.VisualStudio.MefComponent" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%|" />
+    </Assets>
+    <Prerequisites>
+        <Prerequisite Id="Microsoft.Component.PythonTools" Version="[18.0,19.0)" DisplayName="Python development workload" />
+        <Prerequisite Id="Microsoft.VisualStudio.Component.VC.CoreIde" Version="[18.0,19.0)" DisplayName="Visual Studio C++ core features" />
+    </Prerequisites>
+</PackageManifest>

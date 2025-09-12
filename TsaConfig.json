@@ -1,7 +1,7 @@
 {
     "codebaseName": "Python VS IDE PTVS",
-    "notificationAliases": ["pyvs@microsoft.com"],
-    "codebaseAdmins": ["REDMOND\\advolker", "REDMOND\\judej"],
+    "notificationAliases": ["plseng@microsoft.com"],
+    "codebaseAdmins": ["REDMOND\\bschnurr", "REDMOND\\stellahuang"],
     "instanceUrl": "https://devdiv.visualstudio.com",
     "projectName": "DevDiv",
     "areaPath": "DevDiv\\Python and AI Tools\\Python\\VS IDE",
