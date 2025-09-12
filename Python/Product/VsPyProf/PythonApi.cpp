@@ -22,7 +22,7 @@ VsPyProf* VsPyProf::Create(HMODULE pythonModule) {
     wchar_t buffer[MAX_PATH];
     buffer[0] = '\0';
 #if DEV18
-    const wchar_t *dllName = L"\\System32\\VsPerf180.dll";
+    const wchar_t *dllName = L"\\System32\\VsPerf170.dll";
 #elif DEV17
     const wchar_t *dllName = L"\\System32\\VsPerf170.dll";
 #elif DEV16
