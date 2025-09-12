@@ -47,7 +47,7 @@ jobs:
 
     # PTVS variable group
     # This contains variables shared between various PTVS pipelines
-    - group: PTVS-Dev18
+    - group: PTVS-Dev17
 
   steps:
 
