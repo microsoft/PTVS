@@ -10,7 +10,7 @@ steps:
     displayName: 'Build product'
     inputs:
       solution: $(Build.SourcesDirectory)/Python/Product/dirs.proj
-      msbuildVersion: $(MsBuildVersion)
+      msbuildVersion: latest
       platform: $(Platform)
       configuration: $(BuildConfiguration)
       msbuildArguments: ' /p:VSTarget=$(VSTarget) 
