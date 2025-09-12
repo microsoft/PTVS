@@ -195,7 +195,7 @@ namespace Microsoft.PythonTools.Profiling {
 
                 using (var key = baseKey.OpenSubKey(@"Software\Microsoft\VisualStudio\VSPerf")) {
                     // ie. CollectionToolsDir2022
-                    var path = key?.GetValue("CollectionToolsDir" + AssemblyVersionInfo.VSName) as string;
+                    var path = key?.GetValue("CollectionToolsDir" + AssemblyVersionInfo.VSMajorVersion) as string;
 
                     if (!string.IsNullOrEmpty(path)) {
                         if (_arch == ProcessorArchitecture.Amd64) {
