@@ -42,7 +42,7 @@
     <Reference Include="Microsoft.VisualStudio.Shell.15.0" />
     <Reference Include="Microsoft.VisualStudio.Shell.Framework" />
     <Reference Include="Microsoft.VisualStudio.Threading">
-      <HintPath>$(PackagesPath)\Microsoft.VisualStudio.Threading.Only\lib\net472\Microsoft.VisualStudio.Threading.dll</HintPath>
+      <HintPath Condition="'$(VSTarget)' == '18.0'">$(PackagesPath)\Microsoft.VisualStudio.Threading.Only\lib\net472\Microsoft.VisualStudio.Threading.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Workspace" />
     <Reference Include="Microsoft.VisualStudio.Workspace.VSIntegration.Contracts" />

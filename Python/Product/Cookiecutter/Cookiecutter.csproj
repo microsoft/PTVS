@@ -52,7 +52,7 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Threading">
-      <HintPath>$(PackagesPath)\Microsoft.VisualStudio.Threading.Only\lib\net472\Microsoft.VisualStudio.Threading.dll</HintPath>
+      <HintPath Condition="'$(VSTarget)' == '18.0'">$(PackagesPath)\Microsoft.VisualStudio.Threading.Only\lib\net472\Microsoft.VisualStudio.Threading.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Utilities" />
     <Reference Include="Microsoft.Build, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />

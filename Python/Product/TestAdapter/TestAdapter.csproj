@@ -104,7 +104,7 @@
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost" />
     <Reference Include="Microsoft.VisualStudio.CoreUtility" />
     <Reference Include="Microsoft.VisualStudio.Threading">
-      <HintPath>$(PackagesPath)\Microsoft.VisualStudio.Threading.Only\lib\net472\Microsoft.VisualStudio.Threading.dll</HintPath>
+      <HintPath Condition="'$(VSTarget)' == '18.0'">$(PackagesPath)\Microsoft.VisualStudio.Threading.Only\lib\net472\Microsoft.VisualStudio.Threading.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
@@ -121,7 +121,7 @@
     <Reference Include="WindowsBase" />
     <Reference Include="Microsoft.VisualStudio.Settings.15.0" />
     <Reference Include="Microsoft.VisualStudio.Threading">
-      <HintPath>$(PackagesPath)\Microsoft.VisualStudio.Threading.Only\lib\net472\Microsoft.VisualStudio.Threading.dll</HintPath>
+      <HintPath Condition="'$(VSTarget)' == '18.0'">$(PackagesPath)\Microsoft.VisualStudio.Threading.Only\lib\net472\Microsoft.VisualStudio.Threading.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll</HintPath>
