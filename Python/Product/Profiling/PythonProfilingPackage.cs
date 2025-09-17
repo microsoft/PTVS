@@ -26,6 +26,7 @@ using System.Windows;
 using Microsoft.PythonTools.Common;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
@@ -231,9 +232,13 @@ namespace Microsoft.PythonTools.Profiling {
                     return;
                 }
 
+                var logger = session._serviceProvider.GetService(typeof(IPythonToolsLogger)) as IPythonToolsLogger;
+
                 if (target.ProjectTarget != null) {
+                    logger?.LogEvent(PythonLogEvent.ProfilingStarted, "project");
                     ProfileProjectTarget(session, target.ProjectTarget, openReport);
                 } else if (target.StandaloneTarget != null) {
+                    logger?.LogEvent(PythonLogEvent.ProfilingStarted, "standalongTarget");
                     ProfileStandaloneTarget(session, target.StandaloneTarget, openReport);
                 } else {
                     if (MessageBox.Show(Strings.ProfilingSessionNotConfigured, Strings.NoProfilingTargetTitle, MessageBoxButton.YesNo) == MessageBoxResult.Yes) {
