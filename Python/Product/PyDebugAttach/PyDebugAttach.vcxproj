@@ -36,6 +36,14 @@
         <VCTargetsPath Condition="'$(VCTargetsPath17)' != '' and '$(VSVersion)' == '' and $(VisualStudioVersion) == ''">$(VCTargetsPath17)</VCTargetsPath>
       </PropertyGroup>
     </When>
+    <When Condition=" '$(VisualStudioVersion)'=='18.0'  Or '$(TargetVisualStudioVersion)'=='VS180' ">
+      <PropertyGroup>
+        <!-- When VisualStudioVersion=18.0, explicitly use VS 2022 tools -->
+        <!-- This is because currently VS Dev18 still has its C++ native components in the v170 folder -->
+        <VCTargetsPath Condition="'$(VCTargetsPath17)' != ''">$(VCTargetsPath17)</VCTargetsPath>
+        <PlatformToolset>v145</PlatformToolset>
+      </PropertyGroup>
+    </When>
   </Choose>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
@@ -58,11 +66,13 @@
     <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset Condition="'$(VisualStudioVersion)'=='18.0'">v145</PlatformToolset>
+    <PlatformToolset Condition="'$(VisualStudioVersion)'!='18.0'">v143</PlatformToolset>
     <SpectreMitigation>Spectre</SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset Condition="'$(VisualStudioVersion)'=='18.0'">v145</PlatformToolset>
+    <PlatformToolset Condition="'$(VisualStudioVersion)'!='18.0'">v143</PlatformToolset>
     <SpectreMitigation>Spectre</SpectreMitigation>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />

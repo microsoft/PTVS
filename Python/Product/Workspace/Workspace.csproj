@@ -31,6 +31,16 @@
         <OldToolsVersion>17.0</OldToolsVersion>
       </PropertyGroup>
     </When>
+    <When Condition=" '$(VisualStudioVersion)'=='18.0'  Or '$(TargetVisualStudioVersion)'=='VS180' ">
+      <PropertyGroup>
+        <MinimumVisualStudioVersion>18.0</MinimumVisualStudioVersion>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
+        <OldToolsVersion>17.0</OldToolsVersion>
+      </PropertyGroup>
+    </When>
   </Choose>
   <Import Project="..\ProjectBefore.settings" />
   <PropertyGroup>
@@ -50,7 +60,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.VisualStudio.ImageCatalog" />
-    <Reference Include="Microsoft.VisualStudio.Imaging.Interop.14.0.DesignTime, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.VisualStudio.Imaging.Interop.14.0.DesignTime,  Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Interop">
@@ -87,7 +97,7 @@
     <Reference Include="Microsoft.VisualStudio.Workspace.Extensions" />
     <Reference Include="Microsoft.VisualStudio.Workspace.Extensions.VS" />
     <Reference Include="Microsoft.VisualStudio.Threading">
-      <SpecificVersion>False</SpecificVersion>
+      <HintPath Condition="'$(VSTarget)' == '18.0'">$(PackagesPath)\Microsoft.VisualStudio.Threading.Only\lib\net472\Microsoft.VisualStudio.Threading.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

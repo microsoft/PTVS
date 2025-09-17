@@ -2112,11 +2112,13 @@ namespace Microsoft.PythonTools.Project {
             var statusBar = (IVsStatusbar)GetService(typeof(SVsStatusbar));
 
             var solution = (IVsSolution3)GetService(typeof(SVsSolution));
+#if DEV17
             var saveResult = solution.CheckForAndSaveDeferredSaveSolution(0, Strings.VirtualEnvSaveDeferredSolution, Strings.ProductTitle, 0);
             if (saveResult != VSConstants.S_OK) {
                 // The user cancelled out of the save project dialog
                 return;
             }
+#endif
 
             object index = (short)0;
             statusBar.Animation(1, ref index);
