@@ -20,6 +20,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
+using System.Windows.Forms;
 using EnvDTE;
 using Process = System.Diagnostics.Process;
 
@@ -85,8 +86,11 @@ namespace Microsoft.PythonTools.Infrastructure {
             }
 
             // Temporary fix. we should revert back to AssemblyVersionInfo.VSVersion once pipeline support dev18 toolchain
-            string progIdDev17 = string.Format("!{0}.DTE.{1}:{2}", prefix, 17.0, processId);
-            string progIdDev18 = string.Format("!{0}.DTE.{1}:{2}", prefix, 18.0, processId);
+            MessageBox.Show("Hello: " + Process.GetCurrentProcess().Id);
+            string progIdDev17 = string.Format("!{0}.DTE.{1}:{2}", prefix, "17.0", processId);
+            string progIdDev18 = string.Format("!{0}.DTE.{1}:{2}", prefix, "18.0", processId);
+
+            string test11 = AssemblyVersionInfo.VSVersion;
             object runningObject = null;
 
             IBindCtx bindCtx = null;
@@ -102,7 +106,7 @@ namespace Microsoft.PythonTools.Infrastructure {
                 while (enumMonikers.Next(1, moniker, IntPtr.Zero) == 0) {
                     IMoniker runningObjectMoniker = moniker[0];
 
-                    string name = null;
+                    string name = test11;
 
                     try {
                         if (runningObjectMoniker != null) {
