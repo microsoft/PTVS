@@ -20,7 +20,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
-using System.Windows.Forms;
 using EnvDTE;
 using Process = System.Diagnostics.Process;
 
