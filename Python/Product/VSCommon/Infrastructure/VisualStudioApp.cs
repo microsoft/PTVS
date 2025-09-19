@@ -84,7 +84,10 @@ namespace Microsoft.PythonTools.Infrastructure {
                 prefix = "VisualStudio";
             }
 
-            string progId = string.Format("!{0}.DTE.{1}:{2}", prefix, AssemblyVersionInfo.VSVersion, processId);
+            // Temporary fix. we should revert back to AssemblyVersionInfo.VSVersion once pipeline support dev18 toolchain
+            string progIdDev17 = string.Format("!{0}.DTE.{1}:{2}", prefix, "17.0", processId);
+            string progIdDev18 = string.Format("!{0}.DTE.{1}:{2}", prefix, "18.0", processId);
+
             object runningObject = null;
 
             IBindCtx bindCtx = null;
@@ -110,7 +113,7 @@ namespace Microsoft.PythonTools.Infrastructure {
                         // Do nothing, there is something in the ROT that we do not have access to.
                     }
 
-                    if (!string.IsNullOrEmpty(name) && string.Equals(name, progId, StringComparison.Ordinal)) {
+                    if (!string.IsNullOrEmpty(name) && (string.Equals(name, progIdDev17, StringComparison.Ordinal) || string.Equals(name, progIdDev18, StringComparison.Ordinal))) {
                         rot.GetObject(runningObjectMoniker, out runningObject);
                         break;
                     }
