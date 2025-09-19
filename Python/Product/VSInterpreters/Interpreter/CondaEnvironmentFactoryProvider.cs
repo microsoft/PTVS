@@ -425,6 +425,7 @@ namespace Microsoft.PythonTools.Interpreter {
             var windowsInterpreterPath = Path.Combine(prefixPath, CondaEnvironmentFactoryConstants.WindowsExecutable);
 
             if (!File.Exists(interpreterPath)) {
+                Debug.WriteLine($"[CondaEnv] Python Interpreter not found for environment '{name}' (prefix: '{prefixPath}'). Expected at: {interpreterPath}");
                 return null;
             }
 
