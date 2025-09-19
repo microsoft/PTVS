@@ -31,6 +31,7 @@ using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Utility;
 using Microsoft.VisualStudio.LanguageServer.Client;
+using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
@@ -455,7 +456,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         }
         private void OnInterpreterChanged(object sender, EventArgs e) {
-            UpdateInterpreterExcludes();
             OnSettingsChanged(sender, e);
         }
 
@@ -475,7 +475,18 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private void OnReanalyzeChanged(object sender, EventArgs e) {
             try {
                 Debug.WriteLine("Reanalyze Changed");
-                _deferredSettingsChangedTimer.Change(_defaultSettingsDelayMS, Timeout.Infinite);
+
+                // Packages have changes, so send a workspace/didChangeWatchedFiles for the env directory.
+                this._clientContexts.ForEach(context => {
+                    var createEvent = new FileEvent();
+                    createEvent.FileChangeType = FileChangeType.Changed;
+                    createEvent.Uri = new Uri(CommonUtils.GetParent(context.InterpreterConfiguration.InterpreterPath));
+                    var didChangeParams = new DidChangeWatchedFilesParams();
+                    didChangeParams.Changes = new FileEvent[] { createEvent };
+                    _rpc.NotifyWithParameterObjectAsync(Methods.WorkspaceDidChangeWatchedFiles.Name, didChangeParams);
+                });
+               
+                
             } catch (ObjectDisposedException) {
             }
         }
@@ -524,24 +535,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         private void WatchedFilesRegistered(object sender, DidChangeWatchedFilesRegistrationOptions e) {
             // Add the file globs to our listener. It will listen to the globs
-            UpdateInterpreterExcludes();
             _fileListener?.AddPatterns(e.Watchers);
 
         }
 
-        // By default Pylance will tell us to watch everything under the workspace with pattern "**/*"
-        // we can exclude the interpreter directory because we already have package managers listening to them
-        private void UpdateInterpreterExcludes() {
-            this._clientContexts.ForEach(context => {
 
-                if (PathUtils.IsSubpathOf(context.RootPath, context.InterpreterConfiguration.InterpreterPath)) {
-                    var pattern = CommonUtils.GetRelativeFilePath(context.RootPath, context.InterpreterConfiguration.GetPrefixPath()).TrimEnd('\\') + "/**/*";
-                    var watcher = new FileSystemWatcher() { GlobPattern = pattern };
-                    this._fileListener.AddExclude(watcher);
-                }
-
-            });
-        }
 
         private void CreateClientContexts() {
             if (PythonWorkspaceContextProvider.Workspace != null) {

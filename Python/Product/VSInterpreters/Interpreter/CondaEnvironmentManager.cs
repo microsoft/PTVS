@@ -60,6 +60,7 @@ namespace Microsoft.PythonTools.Interpreter {
             return new CondaEnvironmentManager(condaPath);
         }
 
+        // Creates a new conda environment with the given name or path, installing the specified packages. 'conda create -n name python pkg1 pkg2 ... -y'
         public async Task<bool> CreateAsync(string newEnvNameOrPath, IEnumerable<PackageSpec> packageSpecs, ICondaEnvironmentManagerUI ui, CancellationToken ct) {
             bool success = false;
             using (await _working.LockAsync(ct)) {
@@ -67,8 +68,8 @@ namespace Microsoft.PythonTools.Interpreter {
                     "create",
                     IsAbsolutePath(newEnvNameOrPath) ? "-p" : "-n",
                     ProcessOutput.QuoteSingleArgument(newEnvNameOrPath),
-                    "-y",
-                }.Union(packageSpecs.Select(s => s.FullSpec));
+                    "python",                    
+                }.Union(packageSpecs.Select(s => s.FullSpec)).Append("-y");
 
                 var operation = "conda " + string.Join(" ", args);
 
