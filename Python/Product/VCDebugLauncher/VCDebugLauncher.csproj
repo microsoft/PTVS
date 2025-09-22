@@ -239,18 +239,6 @@
   </ItemGroup>
   <ItemGroup>
     <XamlPropertyRule Include="VCTargets\Win32\ImportAfter\Microsoft.PythonTools.Debugger.VCDebugLauncher.xaml">
-      <VSIXSubPath>Microsoft\VC\v170\Platforms\Win32\ImportAfter</VSIXSubPath>
-      <InstallRoot>MSBuild</InstallRoot>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </XamlPropertyRule>
-    <Content Include="VCTargets\x64\ImportAfter\Microsoft.PythonTools.Debugger.VCDebugLauncher.xaml">
-      <VSIXSubPath>Microsoft\VC\v170\Platforms\x64\ImportAfter</VSIXSubPath>
-      <InstallRoot>MSBuild</InstallRoot>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <XamlPropertyRule Include="VCTargets\Win32\ImportAfter\Microsoft.PythonTools.Debugger.VCDebugLauncher.xaml">
       <VSIXSubPath>Microsoft\VC\v180\Platforms\Win32\ImportAfter</VSIXSubPath>
       <InstallRoot>MSBuild</InstallRoot>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -258,6 +246,18 @@
     </XamlPropertyRule>
     <Content Include="VCTargets\x64\ImportAfter\Microsoft.PythonTools.Debugger.VCDebugLauncher.xaml">
       <VSIXSubPath>Microsoft\VC\v180\Platforms\x64\ImportAfter</VSIXSubPath>
+      <InstallRoot>MSBuild</InstallRoot>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="VCTargets\Win32\ImportAfter\Microsoft.PythonTools.Debugger.VCDebugLauncher.xaml">
+      <VSIXSubPath>Microsoft\VC\v170\Platforms\Win32\ImportAfter</VSIXSubPath>
+      <InstallRoot>MSBuild</InstallRoot>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="VCTargets\x64\ImportAfter\Microsoft.PythonTools.Debugger.VCDebugLauncher.xaml">
+      <VSIXSubPath>Microsoft\VC\v170\Platforms\x64\ImportAfter</VSIXSubPath>
       <InstallRoot>MSBuild</InstallRoot>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
