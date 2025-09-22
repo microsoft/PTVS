@@ -6,6 +6,7 @@ steps:
   - task: MicroBuildBuildVSBootstrapper@3
     displayName: 'Build Bootstrapper'
     inputs:
+      azureSubscription: 'VSEng-VSDrop-MI'      # SERVICE CONNECTION
       channelName: 'IntPreview'
       vsMajorVersion: '18'
       bootstrapperCoreFeedSource: 'https://devdiv.pkgs.visualstudio.com/_packaging/Setup/nuget/v3/index.json'
@@ -14,6 +15,8 @@ steps:
       # this outputFolder must match the "dropFolder" in the 1ES.MicroBuildVstsDrop@1 task in azure-pipelines.yml
       outputFolder: $(Build.StagingDirectory)\release
       manifests: $(Build.StagingDirectory)\release\Microsoft.PythonTools.vsman
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)  # Add the system access token.
 
   # Publish the bootstrapper as a build artifact.
   # We do this manually instead of using the templateContext outputs because we don't need sbom generation.
