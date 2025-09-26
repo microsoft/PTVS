@@ -114,6 +114,11 @@ namespace Microsoft.PythonTools.Logging {
         /// </summary>
         UntrustedWorkspaceInfoBar,
         /// <summary>
+        /// Safe attach attempt (Python 3.14+ _Py_DebugOffsets / PEP 768)
+        /// Data: SafeAttachInfo
+        /// </summary>
+        SafeAttach,
+        /// <summary>
         /// User started a profiling session
         /// </summary>
         ProfilingStarted,

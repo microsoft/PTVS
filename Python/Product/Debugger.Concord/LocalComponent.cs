@@ -23,7 +23,6 @@ using System.Runtime.Serialization;
 using Microsoft.Dia;
 using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.PythonTools.Debugger.Concord.Proxies;
-using Microsoft.PythonTools.Debugger.Concord.Proxies.Structs;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Breakpoints;
 using Microsoft.VisualStudio.Debugger.CallStack;
@@ -33,6 +32,9 @@ using Microsoft.VisualStudio.Debugger.Evaluation;
 using Microsoft.VisualStudio.Debugger.Evaluation.IL;
 using Microsoft.VisualStudio.Debugger.Native;
 using Microsoft.VisualStudio.Debugger.Symbols;
+using Microsoft.PythonTools.Infrastructure; // existing
+using Microsoft.PythonTools; // root namespace
+using Microsoft.VisualStudio.Shell; // for ServiceProvider
 
 namespace Microsoft.PythonTools.Debugger.Concord {
     public class LocalComponent :
@@ -189,6 +191,44 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
                 if (PythonDLLs.GetPythonLanguageVersion(moduleInstance) != PythonLanguageVersion.None) {
                     pyrtInfo.DLLs.Python = moduleInstance;
+
+                    try {
+                        if (pyrtInfo.LanguageVersion >= PythonLanguageVersion.V314 && pyrtInfo.HasValidDebugOffsets) {
+                            var loaderPath = PythonToolsInstallPath.TryGetFile("ptvsd_loader.py");
+                            SafeAttachOutcome outcome = null;
+                            if (!string.IsNullOrEmpty(loaderPath)) {
+                                outcome = RemoteAttach314.TryPerform(process, loaderPath);
+                                Debug.WriteLine($"[PTVS][SafeAttach314] Attempt result={outcome.Result} truncated={outcome.TruncatedPath} loader='{loaderPath}'");
+                            } else {
+                                Debug.WriteLine("[PTVS][SafeAttach314] Loader script not found.");
+                            }
+
+                            // Reflection-based telemetry (no compile-time dependency on VSCommon)
+                            try {
+                                if (outcome != null) {
+                                    var loggerInterface = Type.GetType("Microsoft.PythonTools.Logging.IPythonToolsLogger, Microsoft.PythonTools.VSCommon", throwOnError: false);
+                                    if (loggerInterface != null) {
+                                        var logger = ServiceProvider.GlobalProvider?.GetService(loggerInterface);
+                                        if (logger != null) {
+                                            var props = new System.Collections.Generic.Dictionary<string, object> {
+                                                { "Success", outcome.Result == SafeAttachResult.Success },
+                                                { "Reason", outcome.Result.ToString().ToLowerInvariant() },
+                                                { "Version", pyrtInfo.LanguageVersion.ToVersion().ToString() },
+                                                { "TruncatedPath", outcome.TruncatedPath }
+                                            } as System.Collections.Generic.IReadOnlyDictionary<string, object>;
+                                            var logMethod = loggerInterface.GetMethod("LogEvent", new[] { typeof(string), typeof(System.Collections.Generic.IReadOnlyDictionary<string, object>), typeof(System.Collections.Generic.IReadOnlyDictionary<string, double>) });
+                                            logMethod?.Invoke(logger, new object[] { "SafeAttach", props, null });
+                                        }
+                                    }
+                                }
+                            } catch (Exception tex) {
+                                Debug.WriteLine("[PTVS][SafeAttach314] Telemetry reflection failure: " + tex.Message);
+                            }
+                        }
+                    } catch (Exception ex) {
+                        Debug.WriteLine($"[PTVS][SafeAttach314] Exception during attempt: {ex.Message}");
+                    }
+
                     for (int i = 0; i < 2; ++i) {
                         if (moduleInstance.HasSymbols()) {
                             if (process.LivePart == null) {
@@ -209,20 +249,12 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                             moduleInstance.TryLoadSymbols();
                         }
                     }
-
                     var symWarnMsg = DkmCustomMessage.Create(process.Connection, process, Guid.Empty, (int)VsPackageMessage.WarnAboutPythonSymbols, moduleInstance.Name, null);
                     symWarnMsg.SendToVsService(Guids.CustomDebuggerEventHandlerGuid, IsBlocking: true);
                 } else if (PythonDLLs.DebuggerHelperNames.Contains(moduleInstance.Name)) {
                     if (!moduleInstance.HasSymbols()) {
                         moduleInstance.TryLoadSymbols();
                     }
-
-                    // When the module is reported is loaded, it is not necessarily fully initialized yet - it is possible to get into a state
-                    // where its import table is not processed yet. If we register TraceFunc and it gets called by Python when in that state,
-                    // we'll get a crash as soon as any imported WinAPI function is called. So check whether DllMain has already run - if it
-                    // is, we're good to go, and if not, set a breakpoint on a hook that will be called once it is run, and defer runtime
-                    // creation until that breakpoint is hit.
-
                     bool isInitialized = moduleInstance.GetExportedStaticVariable<ByteProxy>("isInitialized").Read() != 0;
                     if (isInitialized) {
                         OnHelperDllInitialized(moduleInstance);
@@ -273,12 +305,16 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             }
         }
 
+        // When the module is reported is loaded, it is not necessarily fully initialized yet - it is possible to get into a state
+        // where its import table is not processed yet. If we register TraceFunc and it gets called by Python when in that state,
+        // we'll get a crash as soon as any imported WinAPI function is called. So check whether DllMain has already run - if it
+        // is, we're good to go, and if not, set a breakpoint on a hook that will be called once it is run, and defer runtime
+        // creation until that breakpoint is hit.
         unsafe void IDkmRuntimeInstanceLoadNotification.OnRuntimeInstanceLoad(DkmRuntimeInstance runtimeInstance, DkmEventDescriptor eventDescriptor) {
             if (runtimeInstance.Id.RuntimeType != Guids.PythonRuntimeTypeGuid) {
                 Debug.Fail("OnRuntimeInstanceLoad notification for a non-Python runtime.");
                 throw new NotSupportedException();
             }
-
             var process = runtimeInstance.Process;
             process.SetDataItem(DkmDataCreationDisposition.CreateNew, new ModuleManager(process));
             process.SetDataItem(DkmDataCreationDisposition.CreateNew, new CallStackFilter(process));

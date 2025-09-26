@@ -107,6 +107,7 @@
     <Compile Include="Infrastructure\VSTaskExtensions.cs" />
     <Compile Include="Infrastructure\UIThreadBase.cs" />
     <Compile Include="Logging\PythonToolsLoggerData.cs" />
+    <Compile Include="Logging\SafeAttachInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

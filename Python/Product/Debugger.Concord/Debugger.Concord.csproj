@@ -141,7 +141,9 @@
     <Compile Include="Proxies\Structs\PyThreads.cs" />
     <Compile Include="Proxies\Structs\PyUnicodeObject311.cs" />
     <Compile Include="Proxies\Structs\PyUnicodeObject312.cs" />
+    <Compile Include="PyDebugOffsetsReader.cs" />
     <Compile Include="PythonRuntimeInfo.cs" />
+    <Compile Include="RemoteAttach314.cs" />
     <Compile Include="StackFrameDataItem.cs" />
     <Compile Include="ValueStore.cs" />
     <Compile Include="ModuleManager.cs" />
