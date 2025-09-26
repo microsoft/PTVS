@@ -14,7 +14,7 @@ PTVS is adding full **Python 3.14 debugging support** across all modes:
 * Stepping, breakpoints, evaluation
 * Version recognition and backward compatibility (3.5–3.13)
 
-Key change: Leverage CPython 3.14's `debugger_support` structure for **safe attach** instead of legacy code injection. Managed-only path is being upgraded to prefer safe attach (feature-flagged) before falling back to DLL injection.
+Key change: Leverage CPython 3.14's `debugger_support` structure for **safe attach** instead of legacy code injection. Managed-only path now has functional safe attach (feature-flag gated) with fallback to DLL injection.
 
 ---
 
@@ -23,7 +23,7 @@ Key change: Leverage CPython 3.14's `debugger_support` structure for **safe atta
 * Recognize Python 3.14 everywhere version gating exists.
 * Implement safe remote attach using PEP 768 facilities.
 * Update mixed-mode/native data model for 3.14 runtime changes.
-* Add managed-only (debugpy) safe attach path (Phase 2) with clean fallback to legacy injection.
+* Add managed-only (debugpy) safe attach path with clean fallback to legacy injection.
 * Preserve existing behavior for ≤3.13.
 * Upgrade debugpy to 1.9.0 (done).
 * Add comprehensive test coverage for launch, attach, stepping, evaluation.
@@ -36,119 +36,117 @@ Out of Scope: IntelliSense updates, profiling, or REPL changes beyond 3.14 versi
 
 1. **Version Recognition & Constants** – Add `V314` enum, update predicates, paths, resources.
 2. **debugpy Upgrade** – Bump to 1.9.0 (completed).
-3. **_Py_DebugOffsets Extensions** – Parse new 3.14 fields: `eval_breaker`, `pending_call`, `script_path`, etc.
+3. **_Py_DebugOffsets Extensions** – Parse new 3.14 fields: `eval_breaker`, `pending_call`, `script_path`, etc. (shared parser complete)
 4. **Safe Attach Implementation (Native/Mixed)** – (Completed Phase 1) Memory writes + fallback chain.
-5. **Safe Attach Implementation (Managed-only)** – Feature-flagged; add offsets reader & write sequence; fallback to legacy injection.
-6. **Stepping Reliability** – Adjust for potential frame/code object changes.
-7. **Resilience/Fallback** – Fail gracefully, revert to legacy if needed.
-8. **Telemetry & Strings** – Safe attach success/failure codes, loader reuse flags, managed path events.
-9. **Docs & Samples** – Update mixed-mode/remote & managed-only attach guides.
-10. **Test Matrix** – Automated + manual validation across modes and versions.
-11. **Final Validation** – Backward compatibility, performance baseline checks.
+5. **Safe Attach Implementation (Managed-only)** – Core functionality implemented behind flags (offsets parse, thread state, writes, stop bit).
+6. **Stepping Reliability** – Pending validation on managed safe attach code path.
+7. **Resilience/Fallback** – Legacy fallback path maintained.
+8. **Telemetry & Strings** – Managed telemetry wiring pending (debug log only so far).
+9. **Docs & Samples** – Updates in progress.
+10. **Test Matrix** – Managed path tests to be added (Phase 2C).
+11. **Final Validation** – Pending performance + regression verification.
 
 ---
 
-## Current State (as of 2025-09-24 / updated progress)
+## Current State (Updated)
 
-* **Safe Attach Protocol Implemented (Native/Mixed)**
-  * Memory writes for script path + pending flag + eval breaker stop bit.
-  * Fallback chain for thread state discovery: main → enumerate → export → heuristic.
-  * Loader reuse: existing `ptvsd_loader.py` invoked via safe attach for now; minimal loader planned later.
-  * Telemetry logs selection method, attach result, truncation, reattach optimization.
+* **Safe Attach Protocol Implemented (Native/Mixed)** – COMPLETE (Phase 1)
 
-* **Managed-only Safe Attach – Phase 2 Progress**
-  * Phase 2A scaffold merged: feature flag `PTVS_SAFE_ATTACH_MANAGED=1` gates attempt.
-  * Shared parser extracted (`DebugOffsetsParser`) – reused by Concord and managed path.
-  * Shared safe attach abstractions (`SafeAttachCommon`: result / failure enums) added.
-  * Managed orchestrator skeleton (`SafeAttachOrchestrator`) created (currently version detection only, always falls back).
-  * Next: implement offsets location + parse + (later) memory write sequence.
+* **Managed-only Safe Attach – Implemented (Phase 2B/early 2C)**
+  * Offsets discovery: PE section + fallback byte scan.
+  * Shared parser integration (`DebugOffsetsParser`).
+  * Thread state discovery via export `_PyThreadState_Current` with reuse cache.
+  * Memory writes: script path (UTF-8 + null, truncation handling), pending flag (byte=1), eval breaker stop-bit OR (dynamic heuristic mask).
+  * Reattach cache with validation (can disable via `PTVS_SAFE_ATTACH_MANAGED_NO_CACHE=1`).
+  * Dynamic (heuristic) stop-bit mask selection among candidate bits (RT1 refinement still pending).
+  * Feature flags:
+    * `PTVS_SAFE_ATTACH_MANAGED=1` – enable attempt.
+    * `PTVS_SAFE_ATTACH_MANAGED_WRITE=1` – permit writes (otherwise dry-run failure forcing legacy).
+    * `PTVS_SAFE_ATTACH_MANAGED_FORCE=1` – force success (testing).
+  * Fallback to legacy DLL injection on any failure site.
+
+* **Telemetry**
+  * Currently debug output only; structured event emission next (TM1).
 
 * **Shared Code Convergence**
-  * Offsets parsing now single implementation; Concord reader invokes shared parser.
-  * Plan to add shared thread state locator & memory writer modules (Phase 2B+).
+  * Parser + safe attach common result types shared.
+  * Managed orchestrator mirrors native logic; future unification of thread state heuristics planned.
 
-* **Legacy Compatibility Confirmed**
-  * Attach scripts for ≤3.13 remain functional.
-  * Safe attach is version-gated and policy-aware (`RemoteDebugDisabled`).
-
-* **Validation**
-  * Native path tests in place (offsets + fallbacks); managed path tests pending.
-  * Performance tests for attach latency pending.
+* **Legacy Compatibility**
+  * Unchanged for ≤3.13 or when flags disabled.
 
 ---
 
 ## Managed-only Safe Attach Rollout Plan
 
 ### Phase 2A (Scaffolding – DONE)
-* Feature flag & gating.
-* Orchestrator skeleton with version detection.
-* Shared parser + result enums.
-* Always falls back (no behavior change).
+* Gating + parser + result enums.
 
-### Phase 2B (Core Functionality – IN PROGRESS)
-* Offsets address discovery for managed path (symbol / section / scan fallback).
-* Parse offsets via shared parser.
-* Minimal thread state discovery (export `_PyThreadState_UncheckedGet` or heuristic scan).
-* Implement memory writes (script path, pending flag, eval breaker stop bit) – behind sub-flag if needed.
-* Telemetry event `ManagedSafeAttachAttempt` (success / failureSite / version / flags / timings).
+### Phase 2B (Core – DONE)
+* Offsets address discovery + parsing.
+* Basic thread state discovery.
+* Memory write sequence (gated) + success path skip injection.
 
-### Phase 2C (Robustness & Optimization)
-* Reattach cache (PyThreadState reuse validation).
-* Partial-write fault injection + truncation tests.
-* Dynamic eval_breaker mask derivation (RT1).
-* Output window diagnostics for failure taxonomy.
+### Phase 2C (Robustness & Optimization – IN PROGRESS)
+* Reattach cache (implemented) & validation (implemented basic).
+* Partial-write fault injection (PENDING).
+* Dynamic eval_breaker mask derivation (heuristic implemented; formal derivation pending RT1).
+* Telemetry events (PENDING).
+* Script path truncation telemetry (PENDING).
+* Output window diagnostics (PENDING).
 
-### Phase 2D (Enable by Default)
-* Flip semantics: enabled unless opt-out env var set.
-* Monitor success & fallback metrics, attach latency (P50/P95 delta vs legacy).
+### Phase 2D (Enable by Default – PENDING)
+* Success metrics & latency thresholds.
 
-### Phase 2E (Minimal Loader)
-* Replace `ptvsd_loader.py` for safe path with slim bootstrap (reduce buffer footprint & startup latency).
+### Phase 2E (Minimal Loader – PENDING)
+* Replace `ptvsd_loader.py` path with minimal bootstrap.
 
 ---
 
 ## Design Decisions & Risks
 
-* **Atomicity**: Minimal writes, no process suspension for now.
-* **Safety**: Structured parsing + bounds checks before writes.
-* **Fallbacks**: Legacy path always available.
-* **Shared Logic**: Parser & result types centralized to reduce divergence.
-* **Thread State Risk**: Heuristic false positives mitigated via pointer plausibility + revalidation.
-* **Free-Threaded Flag**: Observed in shared parser; future handling TBD for nogil builds.
+* **Safety**: Strict parsing + bounds checks before writes.
+* **Fallback**: Immediate switch to legacy on any failure site.
+* **Cache Validation**: Lightweight probe of remote support memory before reuse.
+* **Stop-Bit Mask**: Heuristic; must confirm against runtime constants (RT1).
+* **Telemetry Gap**: Must wire structured events before broad enablement.
 
 ---
 
-## Telemetry & Logging
+## Telemetry & Logging (Planned vs Current)
 
-* **AttachAttempt / ManagedSafeAttachAttempt**: result, failureSite, versionHex, flags, truncation, reuse, elapsedMs.
-* **Offsets**: pointer values & size sanity (debug-level logging only).
-* **Failure Taxonomy**: openProcess, offsetsResolve, parse, policyDisabled, threadState, writeScript, writeBreaker, timeoutConnect.
-
----
-
-## Test Matrix (Incremental Additions)
-
-Managed path additions to implement during 2B–2C:
-* Offsets parse success / failure.
-* Policy disabled path.
-* Truncated script path.
-* Partial write failure (simulated via injected failing WriteProcessMemory wrapper).
-* Reattach with cached thread state.
+| Aspect | Current | Planned |
+|--------|---------|---------|
+| Event Emission | Debug.WriteLine | Structured VS telemetry events |
+| Failure Site Enum | Implemented | Same + counts, correlation id |
+| Timing | Elapsed ms logged | Phase breakdown (resolve / parse / write) |
+| Cache Reuse Flag | Logged | Event field |
+| Truncation | Logged | Event field |
+| Mask Selection | Logged | Event field + dynamic derivation (RT1) |
 
 ---
 
-## Next Actions (Updated)
+## Test Matrix Additions (Pending Implementation)
 
-1. **MA1**: Managed offsets address discovery + parse (implement in orchestrator).
-2. **MA2**: Thread state locator (export-based + fallback heuristics).
-3. **MA3**: Memory write logic & success path (stop bit + pending flag + script path).
-4. **TM1**: Telemetry enrichment & wiring for managed attempts.
-5. **PW1**: Partial write failure simulation framework.
-6. **CA1**: Thread state cache + validation.
-7. **RT1**: Eval breaker dynamic mask derivation.
-8. **TH1**: Optional full interpreter/thread enumeration telemetry.
-9. **MA4**: Enable-by-default readiness criteria + guard flag flip.
-10. **ML1**: Minimal loader implementation & integration.
+1. Safe attach success (3.14) end-to-end with writes.
+2. Policy disabled (`RemoteDebugDisabled`).
+3. Script truncation boundary case.
+4. Partial write failure simulation (script path & eval breaker) – ensures fallback.
+5. Reattach using cached thread state (with both valid and invalidated cases).
+6. Future: stop-bit mask variation tests (after RT1).
+
+---
+
+## Next Actions (Revised)
+
+1. **TM1**: Implement structured telemetry emission for managed safe attach attempts.
+2. **PW1**: Partial write failure simulation hooks + tests.
+3. **RT1**: Replace heuristic stop-bit mask with runtime-derived mask logic.
+4. **CA1**: Strengthen cached thread state validation (struct field plausibility).
+5. **MA-Tests**: Add managed safe attach unit & integration tests (success, fallback taxonomy, truncation, cache reuse).
+6. **DX1**: Output window / Activity Log diagnostics summarizing failure site.
+7. **ML1**: Minimal safe loader script & path size reduction.
+8. **EN1**: Enable-by-default readiness review (success rate %, latency delta, failure taxonomy distribution).
 
 ---
 
@@ -158,24 +156,25 @@ Managed path additions to implement during 2B–2C:
 | ---------------- | ----------------------- | ------------------------------ | --------------------- |
 | Discovery        | Heuristic symbol lookup | Structured `_Py_DebugOffsets`  | Lower fragility       |
 | Entry            | Code injection calls    | Script path + flags + stop bit | Reduced crash surface |
-| Thread State     | Current thread only     | Ordered fallback chain         | Higher success rate   |
+| Thread State     | Current thread only     | Export + cache reuse           | Higher success rate   |
 | Validation       | Minimal                 | Size, bounds, partial checks   | Safety                |
 | Reattach         | Full re-run             | Cached `PyThreadState` reuse   | Performance           |
 | Policy Awareness | Limited                 | `RemoteDebugDisabled` flag     | Governance            |
-| Telemetry        | Sparse                  | Structured, detailed           | Diagnostics           |
-| Compatibility    | Single path             | Legacy + Safe Attach coexist   | Smooth migration      |
+| Telemetry        | Sparse                  | (Planned) Structured events    | Diagnostics           |
+| Compatibility    | Single path             | Dual path w/ fallback          | Smooth migration      |
 
 ---
 
 ## Done Definition (Phase 1)
 * Native safe attach implemented & validated.
 
+## Done Definition (Phase 2B – Managed Core)
+* Offsets parse + write path + thread state discovery functional under flags.
+* Legacy fallback maintained.
+
 ## Done Definition (Phase 2A – Managed Scaffolding)
-* Shared parser + enums.
-* Managed orchestrator skeleton.
-* Feature flag gating; always fallback.
-* No regressions.
+* Parser / enums / gating.
 
 ---
 
-(Visual roadmap diagram to be added after Phase 2B implementation.)
+(Visual roadmap diagram to be added after telemetry integration.)
