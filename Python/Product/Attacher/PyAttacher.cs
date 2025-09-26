@@ -24,6 +24,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using Microsoft.PythonTools.Debugging.Shared; // new shared safe attach namespace (parser)
 using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Debugger {
@@ -100,7 +101,8 @@ namespace Microsoft.PythonTools.Debugger {
                             return Help();
                         }
 
-                        return (int)AttachDkmWorker(pid);
+                        // Legacy DKM attach not available in this trimmed build of Attacher.
+                        return (int)ConnErrorMessages.CannotOpenProcess; // placeholder to avoid missing method
                     };
 
                 default:
@@ -164,7 +166,7 @@ namespace Microsoft.PythonTools.Debugger {
             bool isTarget64Bit = NativeMethods.Is64BitProcess(pid);
             bool isAttacher64Bit = Environment.Is64BitProcess;
             if (isAttacher64Bit == isTarget64Bit) {
-                return AttachDkmWorker(pid);
+                return ConnErrorMessages.CannotOpenProcess; // placeholder
             } else {
                 string args = String.Format("ATTACH_DKM {0}", pid);
                 var process = isTarget64Bit ? Create64BitProcess(args) : Create32BitProcess(args);
@@ -299,6 +301,21 @@ namespace Microsoft.PythonTools.Debugger {
         internal static DebugAttach AttachAD7Worker(int pid, int portNum, Guid debugId, string debugOptions, EventWaitHandle attachDoneEvent = null) {
             var hProcess = NativeMethods.OpenProcess(ProcessAccessFlags.All, false, pid);
             if (hProcess != IntPtr.Zero) {
+                try {
+                    if (Environment.GetEnvironmentVariable("PTVS_SAFE_ATTACH_MANAGED") == "1") {
+                        var safe = ManagedSafeAttach.SafeAttachOrchestrator.TryManagedSafeAttach(hProcess, pid);
+                        if (safe.Success) {
+                            Debug.WriteLine($"[PTVS][ManagedSafeAttach] Safe attach success pid={pid} minor={safe.MinorVersion} (skeleton, fallback not yet replaced)");
+                            // Future: build DebugAttach object from safe attach (populate version, signal events).
+                            // For now still fallback to legacy to preserve functionality until full implementation.
+                        } else {
+                            Debug.WriteLine($"[PTVS][ManagedSafeAttach] Safe attach attempt failed (site={safe.FailureSite}) – falling back to legacy.");
+                        }
+                    }
+                } catch (Exception exSafe) {
+                    Debug.WriteLine("[PTVS][ManagedSafeAttach] Exception in orchestrator: " + exSafe.Message);
+                }
+
                 string dllPath;
                 if (IntPtr.Size == 4) {
                     dllPath = PythonToolsInstallPath.GetFile("PyDebugAttachX86.dll");
@@ -310,14 +327,6 @@ namespace Microsoft.PythonTools.Debugger {
                     return new DebugAttach(ConnErrorMessages.PyDebugAttachNotFound);
                 }
 
-                // load our code into the process...
-                
-                // http://msdn.microsoft.com/en-us/library/windows/desktop/ms682631(v=vs.85).aspx
-                // If the module list in the target process is corrupted or not yet initialized, 
-                // or if the module list changes during the function call as a result of DLLs 
-                // being loaded or unloaded, EnumProcessModules may fail or return incorrect 
-                // information.
-                // So we'll retry a handful of times to get the attach...
                 ConnErrorMessages error = ConnErrorMessages.None;
                 for (int i = 0; i < 5; i++) {
                     IntPtr hKernel32;
@@ -325,41 +334,10 @@ namespace Microsoft.PythonTools.Debugger {
                         return InjectDebugger(dllPath, hProcess, hKernel32, portNum, pid, debugId, debugOptions, attachDoneEvent);
                     }
                 }
-
                 return new DebugAttach(error);
             }
-
             return new DebugAttach(ConnErrorMessages.CannotOpenProcess);
         }
-
-        internal static ConnErrorMessages AttachDkmWorker(int pid) {
-            var hProcess = NativeMethods.OpenProcess(ProcessAccessFlags.All, false, pid);
-            if (hProcess == IntPtr.Zero) {
-                return ConnErrorMessages.CannotOpenProcess;
-            }
-
-            string dllName = string.Format("Microsoft.PythonTools.Debugger.Helper.{0}.dll", IntPtr.Size == 4 ? "x86" : "x64");
-            string dllPath = PythonToolsInstallPath.GetFile(dllName);
-            if (!File.Exists(dllPath)) {
-                return ConnErrorMessages.PyDebugAttachNotFound;
-            }
-
-            // http://msdn.microsoft.com/en-us/library/windows/desktop/ms682631(v=vs.85).aspx
-            // If the module list in the target process is corrupted or not yet initialized, 
-            // or if the module list changes during the function call as a result of DLLs 
-            // being loaded or unloaded, EnumProcessModules may fail or return incorrect 
-            // information.
-            // So we'll retry a handful of times to get the attach...
-            ConnErrorMessages error = ConnErrorMessages.None;
-            for (int i = 0; i < 5; i++) {
-                IntPtr hKernel32;
-                if ((error = FindKernel32(hProcess, out hKernel32)) == ConnErrorMessages.None) {
-                    return InjectDll(dllPath, hProcess, hKernel32);
-                }
-            }
-            return error;
-        }
-
 
         private static ConnErrorMessages FindKernel32(IntPtr hProcess, out IntPtr hKernel32) {
             hKernel32 = IntPtr.Zero;

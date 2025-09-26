@@ -23,6 +23,7 @@ using Microsoft.VisualStudio.Debugger.Native;
 using Microsoft.Dia;
 using System.Text;
 using System.Collections.Generic;
+using Microsoft.PythonTools.Debugging.Shared;
 
 namespace Microsoft.PythonTools.Debugger.Concord {
     internal sealed class PyDebugOffsetsReader {
@@ -85,66 +86,6 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         }
         #endregion
 
-        #region Spec-driven parser (PEP 768)
-        private struct ParseResult {
-            public bool Success; public string Failure; public uint Version; public byte Flags; public ulong SizeOfStruct; public DebuggerSupportOffsets Offsets;
-        }
-
-        private static ParseResult ParseDebugOffsetsSpec(byte[] data, byte ptrSize, ulong baseAddress) {
-            var pr = new ParseResult { Success = false, Failure = "unknown" };
-            if (data == null || data.Length < 64) { pr.Failure = "buffer too small"; return pr; }
-            // cookie
-            for (int i = 0; i < EXPECTED_COOKIE.Length; i++) {
-                if (data[i] != (byte)EXPECTED_COOKIE[i]) { pr.Failure = "cookie mismatch"; return pr; }
-            }
-            // version (little endian)
-            if (data.Length < 12) { pr.Failure = "incomplete header"; return pr; }
-            uint version = BitConverter.ToUInt32(data, 8);
-            // Accept prerelease variants: only major/minor must match
-            uint vMask = version & 0xFFFF0000;
-            if (vMask < MIN_SUPPORTED_VERSION) { pr.Failure = $"unsupported version 0x{version:X8}"; return pr; }
-            // flags (1 byte) followed by padding up to pointer alignment
-            int flagsOffset = 12;
-            byte flags = data.Length > flagsOffset ? data[flagsOffset] : (byte)0;
-            int cursor = flagsOffset + 1;
-            while ((cursor % ptrSize) != 0 && cursor < data.Length) cursor++; // align
-            if (cursor + ptrSize > data.Length) { pr.Failure = "missing sizeof_struct"; return pr; }
-            ulong sizeofStruct = ptrSize == 8 ? BitConverter.ToUInt64(data, cursor) : BitConverter.ToUInt32(data, cursor);
-            cursor += ptrSize;
-            // Some prerelease builds may still have sizeof=0; tolerate but record
-            ulong minExpected = (ulong)(EXPECTED_COOKIE.Length + 4 + 1 + (ptrSize - ((EXPECTED_COOKIE.Length + 5) % ptrSize)) + ptrSize + (5 * ptrSize));
-            if (sizeofStruct != 0 && sizeofStruct < minExpected) { pr.Failure = $"sizeof_struct too small ({sizeofStruct})"; return pr; }
-            // debugger_support block: 5 * pointer-size (PEP indicates 5 x 64-bit; treat pointer-size for portability)
-            if (cursor + 5 * ptrSize > data.Length) { pr.Failure = "insufficient data for debugger_support"; return pr; }
-            ulong ReadPtr(int off) => ptrSize == 8 ? BitConverter.ToUInt64(data, off) : BitConverter.ToUInt32(data, off);
-            ulong evalBreakerRaw = ReadPtr(cursor); cursor += (int)ptrSize;
-            ulong remoteSupport = ReadPtr(cursor); cursor += (int)ptrSize;
-            ulong pendingCall = ReadPtr(cursor); cursor += (int)ptrSize;
-            ulong scriptPath = ReadPtr(cursor); cursor += (int)ptrSize;
-            ulong scriptPathSize = ReadPtr(cursor); cursor += (int)ptrSize;
-            // Basic validation of offsets / sizes
-            if (remoteSupport == 0 || pendingCall == 0 || scriptPath == 0) { pr.Failure = "zero offset(s)"; return pr; }
-            if (scriptPathSize == 0 || scriptPathSize > 1_000_000UL) { pr.Failure = "invalid script_path_size"; return pr; }
-            // remoteSupport, pendingCall, scriptPath expected to be small offsets (but tolerate larger prototypes)
-            bool looksOffset(ulong v) => v < 64 * 1024 * 1024; // 64MB upper bound for offset heuristics
-            if (!looksOffset(remoteSupport) || !looksOffset(pendingCall) || !looksOffset(scriptPath)) { pr.Failure = "offset(s) out of expected range"; return pr; }
-            // eval_breaker: if value is suspiciously small (likely an offset inside PyRuntime) reinterpret relative to base.
-            ulong evalBreaker = evalBreakerRaw;
-            if (evalBreakerRaw < baseAddress || evalBreakerRaw < 0x0100_0000UL) { // treat as relative offset
-                evalBreaker = baseAddress + evalBreakerRaw;
-            }
-            pr.Success = true; pr.Version = version; pr.Flags = flags; pr.SizeOfStruct = sizeofStruct;
-            pr.Offsets = new DebuggerSupportOffsets {
-                EvalBreaker = evalBreaker,
-                RemoteSupport = remoteSupport,
-                PendingCall = pendingCall,
-                ScriptPath = scriptPath,
-                ScriptPathSize = scriptPathSize
-            };
-            return pr;
-        }
-        #endregion
-
         public static PyDebugOffsetsReader TryCreate(DkmProcess process) {
             Debug.WriteLine("[PTVS][DebugOffsets] TryCreate: starting resolution of _Py_DebugOffsets");
             var reader = new PyDebugOffsetsReader(process);
@@ -163,18 +104,27 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 catch (Exception exRead) { Debug.WriteLine($"[PTVS][DebugOffsets] TryCreate: ReadMemory failed @0x{addr:X}: {exRead.Message}"); return reader; }
                 Debug.WriteLine("[PTVS][DebugOffsets] First64=" + Hex(data, 0, 64));
 
-                var spec = ParseDebugOffsetsSpec(data, process.GetPointerSize(), addr);
-                if (spec.Success) {
-                    reader.Version = spec.Version;
-                    reader.Cookie = EXPECTED_COOKIE;
-                    reader.DebuggerSupport = spec.Offsets;
-                    reader.FreeThreaded = (spec.Flags & FLAG_FREE_THREADED) != 0;
-                    reader.RemoteDebugDisabled = (spec.Flags & FLAG_REMOTE_DEBUG_DISABLED) != 0;
-                    reader.IsAvailable = !reader.RemoteDebugDisabled; // if disabled, we expose detection but not availability
-                    Debug.WriteLine($"[PTVS][DebugOffsets] Spec parse OK: Version=0x{spec.Version:X8} Flags=0x{spec.Flags:X2} FreeThreaded={reader.FreeThreaded} Disabled={reader.RemoteDebugDisabled} SizeOfStruct={spec.SizeOfStruct} EvalBreaker=0x{reader.DebuggerSupport.EvalBreaker:X} RemoteSupportOff=0x{reader.DebuggerSupport.RemoteSupport:X} PendingCallOff=0x{reader.DebuggerSupport.PendingCall:X} ScriptPathOff=0x{reader.DebuggerSupport.ScriptPath:X} ScriptPathSize={reader.DebuggerSupport.ScriptPathSize}");
+                var pyModule = process.GetPythonRuntimeInfo()?.DLLs?.Python;
+                var spec = DebugOffsetsParser.TryParse(data, pyModule.BaseAddress, process.GetPointerSize(), out var parsed, out var fail)
+                    ? new { Ok = true, Parsed = parsed, Fail = (string)null }
+                    : new { Ok = false, Parsed = default(ParsedDebugOffsets), Fail = fail };
+                if (spec.Ok) {
+                    reader.Version = spec.Parsed.Version;
+                    reader.Cookie = DebugOffsetsParser.Cookie;
+                    reader.DebuggerSupport = new DebuggerSupportOffsets {
+                        EvalBreaker = spec.Parsed.EvalBreaker,
+                        RemoteSupport = spec.Parsed.RemoteSupport,
+                        PendingCall = spec.Parsed.PendingCall,
+                        ScriptPath = spec.Parsed.ScriptPath,
+                        ScriptPathSize = spec.Parsed.ScriptPathSize
+                    };
+                    reader.FreeThreaded = spec.Parsed.FreeThreaded;
+                    reader.RemoteDebugDisabled = spec.Parsed.RemoteDebugDisabled;
+                    reader.IsAvailable = !reader.RemoteDebugDisabled;
+                    Debug.WriteLine($"[PTVS][DebugOffsets] Shared parse OK: Version=0x{reader.Version:X8} Flags=0x{spec.Parsed.Flags:X2} FreeThreaded={reader.FreeThreaded} Disabled={reader.RemoteDebugDisabled} EvalBreaker=0x{reader.DebuggerSupport.EvalBreaker:X} RemoteSupportOff=0x{reader.DebuggerSupport.RemoteSupport:X} PendingCallOff=0x{reader.DebuggerSupport.PendingCall:X} ScriptPathOff=0x{reader.DebuggerSupport.ScriptPath:X} ScriptPathSize={reader.DebuggerSupport.ScriptPathSize}");
                     return reader;
                 }
-                Debug.WriteLine($"[PTVS][DebugOffsets] Spec parse failed: {spec.Failure}; attempting legacy fallback");
+                Debug.WriteLine($"[PTVS][DebugOffsets] Shared parse failed: {spec.Fail}; attempting legacy fallback");
 
                 // Legacy fallback (older experimental builds) – attempt to marshal a V1 layout (not cookie-first).
                 if (TryParse(data, out var ver, out var cookie, out var offs)) {

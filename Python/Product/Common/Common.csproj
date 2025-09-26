@@ -130,6 +130,8 @@
     <Compile Include="Core\Threading\SingleThreadSynchronizationContext.cs" />
     <Compile Include="Core\Threading\TaskCompletionSourceEx.cs" />
     <Compile Include="Core\Threading\TaskQueue.cs" />
+    <Compile Include="Debugger\DebugOffsetsParser.cs" />
+    <Compile Include="Debugger\SafeAttach\SafeAttachCommon.cs" />
     <Compile Include="Infrastructure\BindableBase.cs" />
     <Compile Include="Infrastructure\CancellationTokens.cs" />
     <Compile Include="Infrastructure\JsonRpcWrapper.cs" />
