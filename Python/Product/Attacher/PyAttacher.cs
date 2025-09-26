@@ -58,6 +58,11 @@ namespace Microsoft.PythonTools.Debugger {
             _langVersion = langVersion;
         }
 
+        internal static DebugAttach FromSafeAttach(int major, int minor) {
+            int langVersion = ((major & 0xFF) << 8) | (minor & 0xFF);
+            return new DebugAttach(null, ConnErrorMessages.None, langVersion);
+        }
+
         public static int Main(string[] args) {
             if (args.Length < 1) {
                 return Help();
@@ -305,15 +310,14 @@ namespace Microsoft.PythonTools.Debugger {
                     if (Environment.GetEnvironmentVariable("PTVS_SAFE_ATTACH_MANAGED") == "1") {
                         var safe = ManagedSafeAttach.SafeAttachOrchestrator.TryManagedSafeAttach(hProcess, pid);
                         if (safe.Success) {
-                            Debug.WriteLine($"[PTVS][ManagedSafeAttach] Safe attach success pid={pid} minor={safe.MinorVersion} (skeleton, fallback not yet replaced)");
-                            // Future: build DebugAttach object from safe attach (populate version, signal events).
-                            // For now still fallback to legacy to preserve functionality until full implementation.
+                            Debug.WriteLine($"[PTVS][ManagedSafeAttach] Safe attach success pid={pid} version={safe.MajorVersion}.{safe.MinorVersion}; skipping DLL injection.");
+                            return FromSafeAttach(safe.MajorVersion, safe.MinorVersion);
                         } else {
                             Debug.WriteLine($"[PTVS][ManagedSafeAttach] Safe attach attempt failed (site={safe.FailureSite}) – falling back to legacy.");
                         }
                     }
                 } catch (Exception exSafe) {
-                    Debug.WriteLine("[PTVS][ManagedSafeAttach] Exception in orchestrator: " + exSafe.Message);
+                    Debug.WriteLine("[PTVS][ManagedSafeAttach] Exception in scaffold: " + exSafe.Message);
                 }
 
                 string dllPath;
