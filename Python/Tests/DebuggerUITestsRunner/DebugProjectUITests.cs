@@ -186,7 +186,7 @@ namespace DebuggerUITestsRunner {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.BreakpointsDisableReenable), UseVsCodeDebugger, Interpreter);
         }
 
-        [Ignore] // Not reliable enough right now
+        [Ignore] // see PythonProjectNode's ShouldWarnOnLaunch disabled
         [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void LaunchWithErrorsDontRun() {
@@ -271,6 +271,6 @@ namespace DebuggerUITestsRunner {
 
     [TestClass]
     public class DebugProjectUITestsDebugPy37 : DebugProjectUITestsDebugPy {
-        protected override string Interpreter => "Python39|Python39_x64";
+        protected override string Interpreter => "Python314|Python314_x64";
     }
 }

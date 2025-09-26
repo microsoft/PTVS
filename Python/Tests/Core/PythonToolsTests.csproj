@@ -124,10 +124,12 @@
   <ItemGroup>
     <Compile Include="AssemblySetup.cs" />
     <None Include="AutoIndentTests.cs" />
+    <Compile Include="PyDebugOffsetsParserTests.cs" />
     <Compile Include="PythonFormatterTests.cs" />
     <Compile Include="LspDiffTextEditFactoryTests.cs" />
     <Compile Include="BuildTasksTests.cs" />
     <None Include="CodeCellTests.cs" />
+    <Compile Include="PythonVersionRecognition314Tests.cs" />
     <Compile Include="PythonWorkspaceContextProviderTests.cs" />
     <Compile Include="PythonWorkspaceContextTests.cs" />
     <Compile Include="WorkspaceInterpreterFactoryTests.cs" />

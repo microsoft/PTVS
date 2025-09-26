@@ -39,6 +39,13 @@
       <Name>TestRunnerInterop</Name>
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </ProjectReference>
+    <ProjectReference Include="..\Utilities.Python.Analysis\TestUtilities.Python.Analysis.csproj">
+      <Project>{A731C4C3-3741-4080-A946-C47574C1F3BF}</Project>
+      <Name>TestUtilities.Python.Analysis</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Docs\MixedModeDebugging.md" />
   </ItemGroup>
   <Import Project="..\TestProjectAfter.settings" />
 </Project>

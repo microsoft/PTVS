@@ -69,6 +69,7 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="SafeAttach314Tests.cs" />
     <Compile Include="TaskExtensions.cs" />
     <Compile Include="MiniDumpWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -77,6 +78,10 @@
     <ProjectReference Include="..\..\Product\Attacher\Attacher.csproj">
       <Project>{666A22BB-0CB5-4C08-A20F-E17450DA6573}</Project>
       <Name>Attacher</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Product\Debugger.Concord\Debugger.Concord.csproj">
+      <Project>{515f701e-336d-4d58-af4b-e976bc33c957}</Project>
+      <Name>Debugger.Concord</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Product\Debugger\Debugger.csproj">
       <Project>{DECC7971-FA58-4DB0-9561-BFFADD393BBD}</Project>

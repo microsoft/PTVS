@@ -147,9 +147,17 @@
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
+    <None Include="TestData\MixedModeHelloWorld\MixedModeHelloWorld.pyproj" />
+    <None Include="TestData\MixedModeHelloWorld\MixedModeNative\MixedModeNative.vcxproj" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="TestData\MixedModeHelloWorld.sln" />
+    <Content Include="TestData\MixedModeHelloWorld\MixedModeNative\mixedmodenative.cpp" />
+    <Content Include="TestData\MixedModeHelloWorld\MixedModeNative\mixedmodenative.h" />
+    <Content Include="TestData\MixedModeHelloWorld\Program.py" />
   </ItemGroup>
   <Import Project="..\TestProjectAfter.settings" />
 </Project>

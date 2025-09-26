@@ -38,6 +38,20 @@ namespace DebuggerUITests {
             }
         }
 
+        /// <summary>
+        /// Verify mixed-mode (native+Python) debugging launch for supported (Python3+) interpreters.
+        /// </summary>
+        public void DebugMixedModePythonProject(PythonVisualStudioApp app, string interpreter) {
+            using (app.SelectDefaultInterpreter(FindInterpreter(interpreter))) {
+                if (interpreter.StartsWith("Python27")) {
+                    Assert.Inconclusive("Mixed-mode debugging not supported for Python 2.x");
+                }
+                DebugProjectUITests.OpenProjectAndBreak(app, @"TestData\MixedModeHelloWorld.sln", "Program.py", 1);
+                app.Dte.Debugger.Go(WaitForBreakOrEnd: true);
+                Assert.AreEqual(dbgDebugMode.dbgDesignMode, app.Dte.Debugger.CurrentMode);
+            }
+        }
+
         #endregion
 
         #region Helpers

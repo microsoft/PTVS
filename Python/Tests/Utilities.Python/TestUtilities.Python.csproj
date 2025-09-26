@@ -119,6 +119,7 @@
     <Compile Include="MockReplWindow.cs" />
     <Compile Include="MockUIThread.cs" />
     <Compile Include="AddCondaEnvironmentDialogWrapper.cs" />
+    <Compile Include="PythonLaunchWithPreviewDialog.cs" />
     <Compile Include="PythonUntrustedWorkspaceInfoBar.cs" />
     <Compile Include="PythonInstallPackagesInfoBar.cs" />
     <Compile Include="PythonCreateCondaEnvInfoBar.cs" />
