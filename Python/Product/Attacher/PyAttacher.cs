@@ -307,17 +307,20 @@ namespace Microsoft.PythonTools.Debugger {
             var hProcess = NativeMethods.OpenProcess(ProcessAccessFlags.All, false, pid);
             if (hProcess != IntPtr.Zero) {
                 try {
-                    if (Environment.GetEnvironmentVariable("PTVS_SAFE_ATTACH_MANAGED") == "1") {
+                    // Safe attach now enabled by default; opt-out with PTVS_SAFE_ATTACH_MANAGED_DISABLE=1
+                    if (Environment.GetEnvironmentVariable("PTVS_SAFE_ATTACH_MANAGED_DISABLE") != "1") {
                         var safe = ManagedSafeAttach.SafeAttachOrchestrator.TryManagedSafeAttach(hProcess, pid);
                         if (safe.Success) {
                             Debug.WriteLine($"[PTVS][ManagedSafeAttach] Safe attach success pid={pid} version={safe.MajorVersion}.{safe.MinorVersion}; skipping DLL injection.");
                             return FromSafeAttach(safe.MajorVersion, safe.MinorVersion);
                         } else {
-                            Debug.WriteLine($"[PTVS][ManagedSafeAttach] Safe attach attempt failed (site={safe.FailureSite}) – falling back to legacy.");
+                            Debug.WriteLine($"[PTVS][ManagedSafeAttach] Safe attach attempt failed (site={safe.FailureSite}) – falling back to legacy injection.");
                         }
+                    } else {
+                        Debug.WriteLine("[PTVS][ManagedSafeAttach] Disabled via PTVS_SAFE_ATTACH_MANAGED_DISABLE env var – using legacy injection path.");
                     }
                 } catch (Exception exSafe) {
-                    Debug.WriteLine("[PTVS][ManagedSafeAttach] Exception in scaffold: " + exSafe.Message);
+                    Debug.WriteLine("[PTVS][ManagedSafeAttach] Exception in safe attach: " + exSafe.Message);
                 }
 
                 string dllPath;

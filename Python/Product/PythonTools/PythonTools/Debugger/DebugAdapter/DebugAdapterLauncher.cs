@@ -16,11 +16,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Web;
 using System.Windows.Forms;
+using Microsoft.PythonTools.Debugger.ManagedSafeAttach;
 using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -84,10 +86,47 @@ namespace Microsoft.PythonTools.Debugger {
                 _debugInfo = GetTcpAttachDebugInfo(adapterLaunchInfo);
             } else {
                 _debugInfo = GetLocalAttachDebugInfo(adapterLaunchInfo);
+                TryManagedSafeAttachForLocalProcess(_debugInfo as DebugLocalAttachInfo);
             }
 
             AddDebuggerOptions(adapterLaunchInfo, _debugInfo);
             adapterLaunchInfo.LaunchJson = _debugInfo.GetJsonString();
+        }
+
+        // P/Invoke locally (avoid taking hard dependency on Attacher NativeMethods here)
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern IntPtr OpenProcess(uint dwDesiredAccess, bool bInheritHandle, int dwProcessId);
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool CloseHandle(IntPtr hObject);
+        private const uint PROCESS_ALL_ACCESS = 0x001F0FFF; // sufficient for our read/write operations (will gracefully fail if denied)
+
+        private void TryManagedSafeAttachForLocalProcess(DebugLocalAttachInfo localInfo) {
+            try {
+                if (localInfo == null) return;
+                if (Environment.GetEnvironmentVariable("PTVS_SAFE_ATTACH_MANAGED_DISABLE") == "1") {
+                    Debug.WriteLine("[PTVS][ManagedSafeAttach][DA] Disabled via env var – skipping orchestrator.");
+                    return;
+                }
+                int pid = (int)localInfo.ProcessId;
+                IntPtr hProcess = OpenProcess(PROCESS_ALL_ACCESS, false, pid);
+                if (hProcess == IntPtr.Zero) {
+                    Debug.WriteLine($"[PTVS][ManagedSafeAttach][DA] OpenProcess failed pid={pid} (GetLastError={Marshal.GetLastWin32Error()}) – skipping.");
+                    return;
+                }
+                try {
+                    var res = SafeAttachOrchestrator.TryManagedSafeAttach(hProcess, pid);
+                    if (res.Success) {
+                        Debug.WriteLine($"[PTVS][ManagedSafeAttach][DA] Safe attach success pid={pid} v={res.MajorVersion}.{res.MinorVersion}");
+                        if (_debugInfo.Env == null) _debugInfo.Env = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                        _debugInfo.Env["PTVS_SAFE_ATTACH_MANAGED_DONE"] = "1";
+                        _debugInfo.Env["PTVS_SAFE_ATTACH_VERSION"] = $"{res.MajorVersion}.{res.MinorVersion}";
+                    } else {
+                        Debug.WriteLine($"[PTVS][ManagedSafeAttach][DA] Safe attach failed pid={pid} site={res.FailureSite} – continuing with debugpy injector fallback.");
+                    }
+                } finally { CloseHandle(hProcess); }
+            } catch (Exception ex) {
+                Debug.WriteLine("[PTVS][ManagedSafeAttach][DA] Exception attempting safe attach: " + ex.Message);
+            }
         }
 
         #region Launch

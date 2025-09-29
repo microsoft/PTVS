@@ -131,7 +131,13 @@
     <Compile Include="Core\Threading\TaskCompletionSourceEx.cs" />
     <Compile Include="Core\Threading\TaskQueue.cs" />
     <Compile Include="Debugger\DebugOffsetsParser.cs" />
+    <Compile Include="Debugger\SafeAttach\EvalBreakerHelper.cs" />
+    <Compile Include="Debugger\SafeAttach\HeuristicThreadStateLocator.cs" />
+    <Compile Include="Debugger\SafeAttach\PeExportReader.cs" />
     <Compile Include="Debugger\SafeAttach\SafeAttachCommon.cs" />
+    <Compile Include="Debugger\SafeAttach\SafeAttachUtilities.cs" />
+    <Compile Include="Debugger\SafeAttach\ThreadStateCacheValidator.cs" />
+    <Compile Include="Debugger\SafeAttach\ThreadStateExportResolver.cs" />
     <Compile Include="Infrastructure\BindableBase.cs" />
     <Compile Include="Infrastructure\CancellationTokens.cs" />
     <Compile Include="Infrastructure\JsonRpcWrapper.cs" />

@@ -70,6 +70,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="SafeAttach314Tests.cs" />
+    <Compile Include="SafeAttachOrchestratorMockTests.cs" />
     <Compile Include="TaskExtensions.cs" />
     <Compile Include="MiniDumpWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -26,21 +26,31 @@ namespace Microsoft.PythonTools.Debugging.Shared.SafeAttach {
     }
 
     /// <summary>
+    /// Central constants for safe attach telemetry / tests.
+    /// </summary>
+    internal static class SafeAttachConstants {
+        // PEP / proposal typical buffer size (current finalized expectation)
+        public const uint TypicalScriptPathSize = 512; // Used by tests to build truncation scenarios
+    }
+
+    /// <summary>
     /// Result of a safe attach attempt.
     /// </summary>
     public struct SafeAttachResult {
-        public bool Success;              // true only if memory writes completed (Phase 2A: always false)
+        public bool Success;              // true only if memory writes completed
         public SafeAttachFailureSite FailureSite;
         public int MajorVersion;
         public int MinorVersion;
         public uint RawVersion;
-        public bool RemoteDebugDisabledFlag;
+        public bool RemoteDebugDisabledFlag; // runtime policy flag
         public bool FreeThreadedFlag;
         public bool TruncatedScript;
         public bool ReusedThreadState;
+        public bool PolicyDisabledEarly;  // true if failure = PolicyDisabled pre-writes
+        public bool ExportBypassed;       // true if 3.14+ path skipped legacy export lookup
         public string Message;
 
-        public static SafeAttachResult Ok(uint rawVersion, bool freeThreaded, bool disabled, bool reused, bool truncated) {
+        public static SafeAttachResult Ok(uint rawVersion, bool freeThreaded, bool disabled, bool reused, bool truncated, bool exportBypassed=false) {
             Decode(rawVersion, out int maj, out int min);
             return new SafeAttachResult {
                 Success = true,
@@ -51,11 +61,13 @@ namespace Microsoft.PythonTools.Debugging.Shared.SafeAttach {
                 FreeThreadedFlag = freeThreaded,
                 RemoteDebugDisabledFlag = disabled,
                 ReusedThreadState = reused,
-                TruncatedScript = truncated
+                TruncatedScript = truncated,
+                PolicyDisabledEarly = false,
+                ExportBypassed = exportBypassed
             };
         }
 
-        public static SafeAttachResult Fail(SafeAttachFailureSite site, string msg = null, uint rawVersion=0, bool disabled=false, bool freeThreaded=false) {
+        public static SafeAttachResult Fail(SafeAttachFailureSite site, string msg = null, uint rawVersion=0, bool disabled=false, bool freeThreaded=false, bool exportBypassed=false) {
             Decode(rawVersion, out int maj, out int min);
             return new SafeAttachResult {
                 Success = false,
@@ -65,7 +77,9 @@ namespace Microsoft.PythonTools.Debugging.Shared.SafeAttach {
                 MajorVersion = maj,
                 MinorVersion = min,
                 RemoteDebugDisabledFlag = disabled,
-                FreeThreadedFlag = freeThreaded
+                FreeThreadedFlag = freeThreaded,
+                PolicyDisabledEarly = (site == SafeAttachFailureSite.PolicyDisabled),
+                ExportBypassed = exportBypassed
             };
         }
 

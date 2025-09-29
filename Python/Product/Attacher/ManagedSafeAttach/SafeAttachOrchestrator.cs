@@ -11,13 +11,34 @@ using Microsoft.PythonTools.Debugging.Shared.SafeAttach;
 using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
-    internal static class SafeAttachOrchestrator {
-        private static readonly Regex _pyDllRegex = new Regex(@"python3(\d{2})(?:_d)?\.dll", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+    public interface ISafeAttachProcess { // changed to public for test access
+        int Pid { get; }
+        IntPtr Handle { get; }
+        bool EnumerateModules(Func<string, IntPtr, int, bool> onModule);
+        bool Read(ulong address, byte[] buffer, int size);
+        bool Write(ulong address, byte[] buffer, int size);
+    }
+
+    internal sealed class RealSafeAttachProcess : ISafeAttachProcess {
+        private readonly int _pid; private readonly IntPtr _handle;
+        public RealSafeAttachProcess(int pid, IntPtr handle) { _pid = pid; _handle = handle; }
+        public int Pid => _pid; public IntPtr Handle => _handle;
+        public bool EnumerateModules(Func<string, IntPtr, int, bool> onModule) => SafeAttachOrchestrator.EnumerateModulesInternal(_pid, onModule);
+        public bool Read(ulong address, byte[] buffer, int size) => SafeAttachOrchestrator.ReadFullyInternal(_handle, new IntPtr((long)address), buffer, size);
+        public bool Write(ulong address, byte[] buffer, int size) => SafeAttachOrchestrator.WriteFullyInternal(_handle, new IntPtr((long)address), buffer, size);
+    }
+
+    public static class SafeAttachOrchestrator { // changed from internal to public
+        private static readonly Regex _pyDllRegex = new Regex(@"^python3(\d{2,3})(?:_d)?\.dll$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
         private const int HEADER_READ = 0x800; // larger header read for export directory
         private const string PY_RUNTIME_SECTION = "PyRuntim"; // truncated section name
         private const string EXPORT_TSTATE_CURRENT = "_PyThreadState_Current"; // data symbol pointer to current tstate
+        private const string EXPORT_TSTATE_UNCHECKED_GET = "_PyThreadState_UncheckedGet"; // function returning current tstate (fallback)
         private const uint IMAGE_DIRECTORY_ENTRY_EXPORT = 0; // export table index
         private static readonly uint[] STOP_BIT_CANDIDATES = new uint[] { 0x1, 0x2, 0x4, 0x8 }; // heuristic candidate bits (RT1 will refine)
+        private const ulong MAX_SCRIPT_PATH_SIZE = 4096; // spec nominal 512; allow headroom
+        private const ulong MAX_REMOTE_SUPPORT_OFFSET = 0x4000;
+        private const int MAX_RUNTIME_SECTION_READ = 0x20000; // 128KB safety cap
 
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, [Out] byte[] lpBuffer, IntPtr nSize, out IntPtr lpNumberOfBytesRead);
@@ -27,199 +48,254 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
         private class CacheEntry { public ulong ThreadState; public ulong PyBase; public uint Version; public DateTime Stamp; }
         private static readonly ConcurrentDictionary<int, CacheEntry> _tstateCache = new ConcurrentDictionary<int, CacheEntry>();
 
+        // Public entry point (production)
         public static SafeAttachResult TryManagedSafeAttach(IntPtr hProcess, int pid) {
-            var attemptStart = Stopwatch.StartNew();
-            try {
-                if (hProcess == IntPtr.Zero) return FailTelemetry(pid, SafeAttachFailureSite.OpenProcess, "null handle");
+            if (hProcess == IntPtr.Zero) return FailTelemetry(pid, SafeAttachFailureSite.OpenProcess, "null handle", exportBypassed: false);
+            return TryManagedSafeAttach(new RealSafeAttachProcess(pid, hProcess));
+        }
 
+        // Test/abstraction entry point
+        internal static SafeAttachResult TryManagedSafeAttach(ISafeAttachProcess proc) {
+            var attemptStart = Stopwatch.StartNew();
+            int pid = proc.Pid;
+            try {
                 // 1. Locate python3XY.dll module
                 IntPtr pyBase = IntPtr.Zero; int pySize = 0; int minor = -1;
-                if (!EnumerateModules(pid, (name, baseAddr, size) => {
+                if (!proc.EnumerateModules((name, baseAddr, size) => {
                     var m = _pyDllRegex.Match(name);
                     if (m.Success && int.TryParse(m.Groups[1].Value, out minor) && minor >= 14) { pyBase = baseAddr; pySize = size; return true; }
                     return false;
                 })) {
-                    return FailTelemetry(pid, SafeAttachFailureSite.VersionGate, "python < 3.14 or not found");
+                    return FailTelemetry(pid, SafeAttachFailureSite.VersionGate, "python < 3.14 or not found", exportBypassed: false);
                 }
 
-                // 2. Resolve _Py_DebugOffsets
-                ulong offsetsAddr = LocateDebugOffsets(hProcess, pyBase, pySize);
+                // 2. Resolve _Py_DebugOffsets start + section size
+                ulong offsetsAddr; uint runtimeSize;
+                (offsetsAddr, runtimeSize) = LocateDebugOffsetsAndSize(proc, pyBase, pySize);
                 if (offsetsAddr == 0) {
-                    return FailTelemetry(pid, SafeAttachFailureSite.OffsetsAddressResolution, "_Py_DebugOffsets not found");
+                    return FailTelemetry(pid, SafeAttachFailureSite.OffsetsAddressResolution, "_Py_DebugOffsets not found", exportBypassed: false);
                 }
 
-                // 3. Read & parse offsets
-                byte[] buf = new byte[128];
-                if (!ReadFully(hProcess, new IntPtr((long)offsetsAddr), buf, buf.Length)) {
-                    return FailTelemetry(pid, SafeAttachFailureSite.OffsetsRead, "read fail");
+                // 3. Read full slab (bounded)
+                uint readSize = runtimeSize == 0 ? (uint)4096 : runtimeSize;
+                if (readSize > MAX_RUNTIME_SECTION_READ) readSize = MAX_RUNTIME_SECTION_READ;
+                byte[] slab = new byte[readSize];
+                if (!proc.Read(offsetsAddr, slab, slab.Length)) {
+                    return FailTelemetry(pid, SafeAttachFailureSite.OffsetsRead, "read fail", exportBypassed: false);
                 }
-                if (!DebugOffsetsParser.TryParse(buf, (ulong)pyBase.ToInt64(), IntPtr.Size, out var parsed, out var fail)) {
-                    return FailTelemetry(pid, SafeAttachFailureSite.OffsetsParse, fail);
+                if (Verbose) {
+                    string first32 = DebugOffsetsParser.Hex(slab, 32);
+                    bool cookieOk = true; for (int i = 0; i < DebugOffsetsParser.Cookie.Length && i < slab.Length; i++) if (slab[i] != (byte)DebugOffsetsParser.Cookie[i]) { cookieOk = false; break; }
+                    Debug.WriteLine($"[PTVS][ManagedSafeAttach] OffsetsAddr=0x{offsetsAddr:X} size={readSize} first32={first32} cookieOk={cookieOk}");
                 }
+
+                if (!DebugOffsetsParser.TryParse(slab, (ulong)pyBase.ToInt64(), IntPtr.Size, out var parsed, out var fail)) {
+                    return FailTelemetry(pid, SafeAttachFailureSite.OffsetsParse, fail, exportBypassed: false);
+                }
+                if (Verbose) Debug.WriteLine($"[PTVS][ManagedSafeAttach] Parsed offsets ver=0x{parsed.Version:X} evalBreakerOff=0x{parsed.EvalBreaker:X} supportOff=0x{parsed.RemoteSupport:X} pendingOff=0x{parsed.PendingCall:X} scriptPathOff=0x{parsed.ScriptPath:X} size={parsed.ScriptPathSize} hasInterpWalk={parsed.HasInterpreterWalk}");
                 if (parsed.RemoteDebugDisabled) {
-                    return FailTelemetry(pid, SafeAttachFailureSite.PolicyDisabled, "remote debug disabled", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded);
+                    return FailTelemetry(pid, SafeAttachFailureSite.PolicyDisabled, "remote debug disabled", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed: true);
                 }
 
-                // 4. Thread state discovery with cache reuse
+                bool version314Plus = ((parsed.Version >> 24) & 0xFF) == 3 && ((parsed.Version >> 16) & 0xFF) >= 14;
+                // Flip default: bypass export (TLS) unless explicitly allowed
+                bool bypassExport = version314Plus && !EnvVarTrue("PTVS_SAFE_ATTACH_ALLOW_EXPORT");
+                bool exportBypassed = bypassExport;
+                bool allowHeuristic = !EnvVarTrue("PTVS_SAFE_ATTACH_MANAGED_HEURISTIC_DISABLE");
+
+                // Secondary sanity
+                if (parsed.RemoteSupport == 0 || parsed.RemoteSupport > MAX_REMOTE_SUPPORT_OFFSET) {
+                    return FailTelemetry(pid, SafeAttachFailureSite.OffsetsParse, $"remote_support offset implausible (0x{parsed.RemoteSupport:X})", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
+                }
+                if (parsed.ScriptPathSize != 512 || parsed.ScriptPath >= parsed.ScriptPathSize) {
+                    return FailTelemetry(pid, SafeAttachFailureSite.OffsetsParse, $"script_path tuple invalid (path=0x{parsed.ScriptPath:X} size={parsed.ScriptPathSize})", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
+                }
+                if (parsed.PendingCall >= parsed.ScriptPathSize || (parsed.PendingCall % 4) != 0 || parsed.ScriptPath <= parsed.PendingCall) {
+                    return FailTelemetry(pid, SafeAttachFailureSite.OffsetsParse, $"pending/script ordering invalid (pending=0x{parsed.PendingCall:X} path=0x{parsed.ScriptPath:X})", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
+                }
+
+                // Attempt to infer interpreter-walk offsets slab-wide if not already populated
+                if (!parsed.HasInterpreterWalk) {
+                    if (TryInferInterpreterOffsets(proc, offsetsAddr, slab, IntPtr.Size, ref parsed, out var whyNot)) {
+                        if (Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] Inferred interpreter walk offsets from slab");
+                    } else if (Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] Could not infer interpreter walk offsets: " + whyNot);
+                }
+
+                // Thread state discovery
                 ulong tstatePtr = 0;
-                if (!DisableCache()) {
+                var forcedTState = Environment.GetEnvironmentVariable("PTVS_SAFE_ATTACH_MANAGED_TEST_TSTATE");
+                if (!string.IsNullOrEmpty(forcedTState) && ulong.TryParse(forcedTState, System.Globalization.NumberStyles.HexNumber, null, out var forcedVal)) {
+                    tstatePtr = forcedVal;
+                }
+                if (tstatePtr == 0 && !DisableCache()) {
                     if (_tstateCache.TryGetValue(pid, out var ce) && ce.PyBase == (ulong)pyBase.ToInt64() && ce.Version == parsed.Version) {
-                        tstatePtr = ce.ThreadState;
-                        if (!ValidateThreadState(hProcess, tstatePtr, parsed)) {
-                            tstatePtr = 0; // force rediscovery
-                        } else {
-                            Debug.WriteLine($"[PTVS][ManagedSafeAttach] Reusing cached tstate 0x{tstatePtr:X}");
+                        bool cacheValid = ThreadStateCacheValidator.Validate(ce.ThreadState, parsed, IntPtr.Size, (addr, buffer) => proc.Read(addr, buffer, buffer.Length));
+                        if (Verbose) Debug.WriteLine($"[PTVS][ManagedSafeAttach] Cache probe tstate=0x{ce.ThreadState:X} valid={cacheValid}");
+                        if (cacheValid) tstatePtr = ce.ThreadState;
+                    }
+                }
+
+                // Deterministic interpreter walk
+                if (tstatePtr == 0 && parsed.HasInterpreterWalk) {
+                    tstatePtr = FindTStateViaWalk(proc, offsetsAddr, parsed, IntPtr.Size);
+                    if (Verbose) Debug.WriteLine(tstatePtr != 0 ? $"[PTVS][ManagedSafeAttach] Walk located tstate=0x{tstatePtr:X}" : "[PTVS][ManagedSafeAttach] Walk failed");
+                }
+
+                // (Optional) heuristic disabled by default - requires absolute eval breaker (not available here)
+                if (tstatePtr == 0 && allowHeuristic && EnvVarTrue("PTVS_SAFE_ATTACH_FORCE_HEURISTIC")) {
+                    if (Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] Attempting heuristic thread state scan (forced)");
+                    tstatePtr = HeuristicThreadStateLocator.TryLocate(0, parsed.RemoteSupport, parsed.ScriptPath, parsed.ScriptPathSize, IntPtr.Size, (addr, hb) => proc.Read(addr, hb, hb.Length));
+                }
+
+                // Optional export path ONLY if explicitly allowed (legacy / diagnostics)
+                bool allowExportFallback = EnvVarTrue("PTVS_SAFE_ATTACH_ALLOW_EXPORT_FALLBACK");
+                if (tstatePtr == 0 && !bypassExport && allowExportFallback) {
+                    var exportTstate = LocateThreadStateCurrent(proc, pyBase, pySize);
+                    if (exportTstate != 0) {
+                        tstatePtr = exportTstate;
+                        if (Verbose) Debug.WriteLine($"[PTVS][ManagedSafeAttach] Export-based tstate=0x{tstatePtr:X}");
+                      }
+                }
+                // If heuristic failed earlier and export not allowed, try a second heuristic pass (disabled by default)
+                if (tstatePtr == 0 && allowHeuristic && !allowExportFallback && EnvVarTrue("PTVS_SAFE_ATTACH_FORCE_HEURISTIC2")) {
+                }
+                // Validate candidate tstate (alignment, canonical user address, readable fields)
+                if (tstatePtr != 0) {
+                    bool valid = ValidateCandidate(tstatePtr, parsed, proc);
+                    if (!valid) tstatePtr = 0;
+                }
+                if (tstatePtr == 0) {
+                    return FailTelemetry(pid, SafeAttachFailureSite.ThreadStateDiscovery, "thread state unresolved", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
+                }
+                _tstateCache[pid] = new CacheEntry { ThreadState = tstatePtr, PyBase = (ulong)pyBase.ToInt64(), Version = parsed.Version, Stamp = DateTime.UtcNow };
+
+                bool performWrites = EnvVarTrue("PTVS_SAFE_ATTACH_MANAGED_WRITE") || string.IsNullOrEmpty(Environment.GetEnvironmentVariable("PTVS_SAFE_ATTACH_MANAGED_DISABLE"));
+                if (!performWrites) {
+                    return FailTelemetry(pid, SafeAttachFailureSite.ScriptBufferWrite, "write gate disabled", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
+                }
+
+                // 6. Compute embedded remote_debugger_support base
+                ulong supportBase = tstatePtr + parsed.RemoteSupport;
+                ulong scriptPathBufAddr = supportBase + parsed.ScriptPath;
+                ulong pendingFlagAddr = supportBase + parsed.PendingCall;
+                ulong evalBreakerAddr = tstatePtr + parsed.EvalBreaker;
+
+                // Probe script buffer before write
+                byte[] probeBuf = new byte[32];
+                if (!proc.Read(scriptPathBufAddr, probeBuf, probeBuf.Length)) {
+                    return FailTelemetry(pid, SafeAttachFailureSite.ScriptBufferWrite, "script buffer unreadable", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
+                }
+
+                // 7. Acquire loader path (must be a real file)
+                string loaderPath = PythonToolsInstallPath.GetFile("ptvsd_loader.py") ?? PythonToolsInstallPath.GetFile("ptvsd\\ptvsd_loader.py");
+                if (string.IsNullOrEmpty(loaderPath)) {
+                    try {
+                        string temp = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "ptvs_bootstrap.py");
+                        if (!System.IO.File.Exists(temp)) {
+                            System.IO.File.WriteAllText(temp, "import debugpy; debugpy.listen(('127.0.0.1',0));\n");
+                        }
+                        loaderPath = temp;
+                    } catch { loaderPath = null; }
+                }
+                if (string.IsNullOrEmpty(loaderPath)) {
+                    return FailTelemetry(pid, SafeAttachFailureSite.ScriptBufferWrite, "no loader file path", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
+                }
+
+                if (!SafeAttachUtilities.TryPrepareLoaderBuffer(loaderPath, parsed.ScriptPathSize, out var scriptWrite, out var truncated)) {
+                    return FailTelemetry(pid, SafeAttachFailureSite.ScriptBufferWrite, "loader buffer prep failed", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
+                }
+                if (scriptWrite.Length > (long)parsed.ScriptPathSize) {
+                    return FailTelemetry(pid, SafeAttachFailureSite.ScriptBufferWrite, "prepared buffer exceeds script_path_size", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
+                }
+                if (!proc.Write(scriptPathBufAddr, scriptWrite, scriptWrite.Length)) {
+                    return FailTelemetry(pid, SafeAttachFailureSite.ScriptBufferWrite, "script write failed", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
+                }
+
+                // 8. Set pending flag (int32)
+                if (!proc.Write(pendingFlagAddr, new byte[] { 1, 0, 0, 0 }, 4)) {
+                    return FailTelemetry(pid, SafeAttachFailureSite.PendingFlagWrite, "pending flag write failed", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
+                }
+
+                // 9. Set eval breaker stop bit (use fixed _PY_EVAL_PLEASE_STOP_BIT for 3.14+)
+                const uint EVAL_BREAKER_MASK = 0x20; // bit 5 per PEP 768
+                bool breakerOk = false;
+                if (version314Plus) {
+                    var brBuf = new byte[4];
+                    if (!proc.Read(evalBreakerAddr, brBuf, brBuf.Length)) {
+                        return FailTelemetry(pid, SafeAttachFailureSite.EvalBreakerWrite, "eval breaker read failed", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
+                    }
+                    uint brVal = BitConverter.ToUInt32(brBuf, 0);
+                    if ((brVal & EVAL_BREAKER_MASK) == 0) {
+                        brVal |= EVAL_BREAKER_MASK;
+                        var newBr = BitConverter.GetBytes(brVal);
+                        if (!proc.Write(evalBreakerAddr, newBr, newBr.Length)) {
+                            return FailTelemetry(pid, SafeAttachFailureSite.EvalBreakerWrite, "eval breaker write failed", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
+                        }
+                    }
+                    breakerOk = true;
+                }
+                if (!breakerOk && !version314Plus) {
+                    // Fall back to legacy heuristic (pre-3.14) – kept for backward compatibility.
+                    byte[] breakerBuf = new byte[IntPtr.Size];
+                    StopBitSelection sel = EvalBreakerHelper.DetermineMask(
+                        readBreaker: () => proc.Read(evalBreakerAddr, breakerBuf, breakerBuf.Length),
+                        getValue: () => IntPtr.Size == 8 ? (ulong)BitConverter.ToUInt64(breakerBuf, 0) : BitConverter.ToUInt32(breakerBuf, 0),
+                        candidateMasks: STOP_BIT_CANDIDATES,
+                        defaultMask: STOP_BIT_CANDIDATES[0]);
+                    ulong breakerVal = IntPtr.Size == 8 ? BitConverter.ToUInt64(breakerBuf, 0) : BitConverter.ToUInt32(breakerBuf, 0);
+                    if (!sel.AlreadySet) {
+                        breakerVal |= sel.Mask;
+                        byte[] newBreaker = IntPtr.Size == 8 ? BitConverter.GetBytes(breakerVal) : BitConverter.GetBytes((uint)breakerVal);
+                        if (!proc.Write(evalBreakerAddr, newBreaker, newBreaker.Length)) {
+                            return FailTelemetry(pid, SafeAttachFailureSite.EvalBreakerWrite, "eval breaker write failed", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
                         }
                     }
                 }
-                if (tstatePtr == 0) {
-                    tstatePtr = LocateThreadStateCurrent(hProcess, pyBase, pySize);
-                    if (tstatePtr == 0) {
-                        return FailTelemetry(pid, SafeAttachFailureSite.ThreadStateDiscovery, "_PyThreadState_Current unresolved", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded);
-                    }
-                    _tstateCache[pid] = new CacheEntry { ThreadState = tstatePtr, PyBase = (ulong)pyBase.ToInt64(), Version = parsed.Version, Stamp = DateTime.UtcNow };
-                }
-
-                // 5. Optional: if write gate disabled, stop here with failure so legacy fallback happens (unless FORCE success requested)
-                bool performWrites = EnvVarTrue("PTVS_SAFE_ATTACH_MANAGED_WRITE");
-                bool forceSuccess = EnvVarTrue("PTVS_SAFE_ATTACH_MANAGED_FORCE");
-                if (!performWrites && !forceSuccess) {
-                    return FailTelemetry(pid, SafeAttachFailureSite.ScriptBufferWrite, "write gate disabled", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded);
-                }
-
-                // 6. Compute remote support structure addresses
-                ulong remoteSupportAddr = tstatePtr + parsed.RemoteSupport; // offset inside PyThreadState
-                ulong scriptPathBufAddr = remoteSupportAddr + parsed.ScriptPath;
-                ulong pendingFlagAddr = remoteSupportAddr + parsed.PendingCall;
-                ulong evalBreakerAddr = parsed.EvalBreaker; // already normalized in parser
-
-                // 7. Build script path string
-                string loaderPath = PythonToolsInstallPath.GetFile("ptvsd_loader.py") ?? PythonToolsInstallPath.GetFile("ptvsd\\ptvsd_loader.py");
-                if (string.IsNullOrEmpty(loaderPath)) loaderPath = "import debugpy";
-                byte[] scriptBytes = Encoding.UTF8.GetBytes(loaderPath);
-                ulong maxScriptBytes = parsed.ScriptPathSize > 0 ? parsed.ScriptPathSize : (ulong)scriptBytes.Length;
-                bool truncated = false;
-                if ((ulong)scriptBytes.Length >= maxScriptBytes) {
-                    truncated = true;
-                    int newLen = (int)Math.Max(0, (long)maxScriptBytes - 1);
-                    if (newLen < scriptBytes.Length) Array.Resize(ref scriptBytes, newLen);
-                }
-                byte[] scriptWrite = new byte[scriptBytes.Length + 1]; // null terminate
-                Array.Copy(scriptBytes, scriptWrite, scriptBytes.Length);
-                if (!WriteFully(hProcess, new IntPtr((long)scriptPathBufAddr), scriptWrite, scriptWrite.Length)) {
-                    return FailTelemetry(pid, SafeAttachFailureSite.ScriptBufferWrite, "script write failed", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded);
-                }
-
-                // 8. Set pending flag
-                if (!WriteFully(hProcess, new IntPtr((long)pendingFlagAddr), new byte[] { 1 }, 1)) {
-                    return FailTelemetry(pid, SafeAttachFailureSite.PendingFlagWrite, "pending flag write failed", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded);
-                }
-
-                // 9. Set eval breaker stop bit with dynamic mask selection
-                uint mask = SelectStopBitMask(hProcess, evalBreakerAddr);
-                int ptrSize = IntPtr.Size;
-                byte[] breakerBuf = new byte[ptrSize];
-                if (!ReadFully(hProcess, new IntPtr((long)evalBreakerAddr), breakerBuf, breakerBuf.Length)) {
-                    return FailTelemetry(pid, SafeAttachFailureSite.EvalBreakerWrite, "eval breaker read failed", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded);
-                }
-                ulong breakerVal = ptrSize == 8 ? BitConverter.ToUInt64(breakerBuf, 0) : BitConverter.ToUInt32(breakerBuf, 0);
-                if ((breakerVal & mask) == 0) breakerVal |= mask; // only set if not already set
-                byte[] newBreaker = ptrSize == 8 ? BitConverter.GetBytes(breakerVal) : BitConverter.GetBytes((uint)breakerVal);
-                if (!WriteFully(hProcess, new IntPtr((long)evalBreakerAddr), newBreaker, newBreaker.Length)) {
-                    return FailTelemetry(pid, SafeAttachFailureSite.EvalBreakerWrite, "eval breaker write failed", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded);
-                }
 
                 attemptStart.Stop();
-                var ok = SafeAttachResult.Ok(parsed.Version, parsed.FreeThreaded, parsed.RemoteDebugDisabled, tstatePtr != 0 && _tstateCache.ContainsKey(pid), truncated);
-                Debug.WriteLine($"[PTVS][ManagedSafeAttach] SUCCESS pid={pid} ver=0x{parsed.Version:X} tstate=0x{tstatePtr:X} mask=0x{mask:X} truncated={truncated} elapsedMs={attemptStart.ElapsedMilliseconds}");
+                bool reused = tstatePtr != 0 && _tstateCache.ContainsKey(pid);
+                var ok = SafeAttachResult.Ok(parsed.Version, parsed.FreeThreaded, parsed.RemoteDebugDisabled, reused, truncated, exportBypassed);
+                Debug.WriteLine($"[PTVS][ManagedSafeAttach] SUCCESS pid={pid} ver=0x{parsed.Version:X} tstate=0x{tstatePtr:X} exportBypassed={exportBypassed} elapsedMs={attemptStart.ElapsedMilliseconds}");
                 return ok;
             } catch (Exception ex) {
                 Debug.WriteLine("[PTVS][ManagedSafeAttach] Orchestrator exception: " + ex);
-                return FailTelemetry(pid, SafeAttachFailureSite.Unknown, ex.Message);
+                return FailTelemetry(proc.Pid, SafeAttachFailureSite.Unknown, ex.Message, exportBypassed: false);
             }
         }
 
-        private static SafeAttachResult FailTelemetry(int pid, SafeAttachFailureSite site, string msg, uint rawVersion=0, bool disabled=false, bool freeThreaded=false) {
-            Debug.WriteLine($"[PTVS][ManagedSafeAttach] FAIL pid={pid} site={site} msg={msg}");
-            return SafeAttachResult.Fail(site, msg, rawVersion, disabled, freeThreaded);
+        private static ulong ReadPointer(ISafeAttachProcess proc, ulong address, int pointerSize) {
+            if (address == 0) return 0;
+            var tmp = new byte[pointerSize];
+            if (!proc.Read(address, tmp, pointerSize)) return 0;
+            return pointerSize == 8 ? BitConverter.ToUInt64(tmp, 0) : BitConverter.ToUInt32(tmp, 0);
+        }
+
+        private static SafeAttachResult FailTelemetry(int pid, SafeAttachFailureSite site, string msg, uint rawVersion = 0, bool disabled = false, bool freeThreaded = false, bool exportBypassed = false) {
+            Debug.WriteLine($"[PTVS][ManagedSafeAttach] FAIL pid={pid} site={site} msg={msg} exportBypassed={exportBypassed}");
+            return SafeAttachResult.Fail(site, msg, rawVersion, disabled, freeThreaded, exportBypassed);
         }
 
         private static bool DisableCache() => EnvVarTrue("PTVS_SAFE_ATTACH_MANAGED_NO_CACHE");
         private static bool EnvVarTrue(string name) => string.Equals(Environment.GetEnvironmentVariable(name), "1", StringComparison.Ordinal);
-
-        private static uint SelectStopBitMask(IntPtr hProcess, ulong evalBreakerAddr) {
-            // Very naive heuristic: try candidate masks and pick first that is not already set.
-            // Future (RT1): derive from runtime state / symbol.
-            int ps = IntPtr.Size; byte[] buf = new byte[ps];
-            if (!ReadFully(hProcess, new IntPtr((long)evalBreakerAddr), buf, ps)) return STOP_BIT_CANDIDATES[0];
-            ulong val = ps == 8 ? BitConverter.ToUInt64(buf, 0) : BitConverter.ToUInt32(buf, 0);
-            foreach (var m in STOP_BIT_CANDIDATES) { if ((val & m) == 0) return m; }
-            return STOP_BIT_CANDIDATES[0];
-        }
-
+#if DEBUG
+        private static bool Verbose => true;
+#else
+        private static bool Verbose => EnvVarTrue("PTVS_SAFE_ATTACH_VERBOSE");
+#endif
         #region ThreadState / Export helpers
-        private static ulong LocateThreadStateCurrent(IntPtr hProcess, IntPtr baseAddr, int moduleSize) {
+        private static ulong LocateThreadStateCurrent(ISafeAttachProcess proc, IntPtr baseAddr, int moduleSize) {
             try {
-                byte[] hdr = new byte[HEADER_READ];
-                if (!ReadFully(hProcess, baseAddr, hdr, hdr.Length)) return 0;
-                if (!(hdr[0] == 'M' && hdr[1] == 'Z')) return 0;
-                int e_lfanew = BitConverter.ToInt32(hdr, 0x3C);
-                if (e_lfanew <= 0 || e_lfanew + 0x90 > hdr.Length) return 0;
-                if (!(hdr[e_lfanew] == 'P' && hdr[e_lfanew + 1] == 'E')) return 0;
-                int optOffset = e_lfanew + 24;
-                bool isPE32Plus = BitConverter.ToUInt16(hdr, optOffset) == 0x20b;
-                int dataDirCountOffset = isPE32Plus ? optOffset + 108 : optOffset + 92;
-                ushort numberOfRva = BitConverter.ToUInt16(hdr, dataDirCountOffset);
-                int dataDirBase = isPE32Plus ? optOffset + 112 : optOffset + 96;
-                if (numberOfRva <= IMAGE_DIRECTORY_ENTRY_EXPORT) return 0;
-                int exportDirEntry = dataDirBase + (int)IMAGE_DIRECTORY_ENTRY_EXPORT * 8;
-                uint exportRva = BitConverter.ToUInt32(hdr, exportDirEntry);
-                uint exportSize = BitConverter.ToUInt32(hdr, exportDirEntry + 4);
-                if (exportRva == 0 || exportSize == 0) return 0;
-                byte[] exportDir = new byte[40];
-                if (!ReadFully(hProcess, new IntPtr(baseAddr.ToInt64() + exportRva), exportDir, exportDir.Length)) return 0;
-                uint numberOfNames = BitConverter.ToUInt32(exportDir, 24);
-                uint addressOfFunctions = BitConverter.ToUInt32(exportDir, 28);
-                uint addressOfNames = BitConverter.ToUInt32(exportDir, 32);
-                uint addressOfNameOrdinals = BitConverter.ToUInt32(exportDir, 36);
-                if (numberOfNames == 0) return 0;
-                byte[] nameRvas = new byte[numberOfNames * 4];
-                if (!ReadFully(hProcess, new IntPtr(baseAddr.ToInt64() + addressOfNames), nameRvas, nameRvas.Length)) return 0;
-                byte[] ordinals = new byte[numberOfNames * 2];
-                if (!ReadFully(hProcess, new IntPtr(baseAddr.ToInt64() + addressOfNameOrdinals), ordinals, ordinals.Length)) return 0;
-                for (uint i = 0; i < numberOfNames; i++) {
-                    uint nameRva = BitConverter.ToUInt32(nameRvas, (int)(i * 4));
-                    string name = ReadAsciiZ(hProcess, new IntPtr(baseAddr.ToInt64() + nameRva), 128);
-                    if (name == EXPORT_TSTATE_CURRENT) {
-                        ushort ordinalIndex = BitConverter.ToUInt16(ordinals, (int)(i * 2));
-                        byte[] funcRvaBuf = new byte[4];
-                        if (!ReadFully(hProcess, new IntPtr(baseAddr.ToInt64() + addressOfFunctions + ordinalIndex * 4), funcRvaBuf, 4)) return 0;
-                        uint symbolRva = BitConverter.ToUInt32(funcRvaBuf, 0);
-                        ulong symbolAddr = (ulong)baseAddr.ToInt64() + symbolRva;
-                        int ptrSize = IntPtr.Size; byte[] tstateBuf = new byte[ptrSize];
-                        if (ReadFully(hProcess, new IntPtr((long)symbolAddr), tstateBuf, ptrSize)) {
-                            ulong tstatePtr = ptrSize == 8 ? BitConverter.ToUInt64(tstateBuf, 0) : BitConverter.ToUInt32(tstateBuf, 0);
-                            return tstatePtr;
-                        }
-                        return 0;
-                    }
-                }
+                ulong moduleBase = (ulong)baseAddr.ToInt64();
+                bool Read(ulong addr, byte[] buffer, int size) => proc.Read(addr, buffer, size);
+                return ThreadStateExportResolver.TryGetCurrentThreadState(Read, moduleBase, IntPtr.Size);
             } catch (Exception ex) { Debug.WriteLine("[PTVS][ManagedSafeAttach] LocateThreadStateCurrent exception: " + ex.Message); }
             return 0;
         }
         #endregion
 
-        private static bool ValidateThreadState(IntPtr hProcess, ulong tstatePtr, ParsedDebugOffsets parsed) {
-            if (tstatePtr == 0) return false;
-            // Basic sanity: remote support address should be readable (first 8 bytes)
-            ulong remoteSupport = tstatePtr + parsed.RemoteSupport;
-            byte[] probe = new byte[8];
-            return ReadFully(hProcess, new IntPtr((long)remoteSupport), probe, probe.Length);
-        }
-
         public static SafeAttachResult LegacyProbeOnly(IntPtr hProcess, int pid) => SafeAttachResult.Fail(SafeAttachFailureSite.ThreadStateDiscovery, "legacy stub");
 
-        private static bool EnumerateModules(int pid, Func<string, IntPtr, int, bool> onModule) {
+        internal static bool EnumerateModulesInternal(int pid, Func<string, IntPtr, int, bool> onModule) {
             IntPtr snap = NativeMethods.CreateToolhelp32Snapshot(SnapshotFlags.Module, (uint)pid);
             if (snap == NativeMethods.INVALID_HANDLE_VALUE) return false;
             try {
@@ -236,15 +312,15 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
             return false;
         }
 
-        private static ulong LocateDebugOffsets(IntPtr hProcess, IntPtr baseAddr, int moduleSize) {
+        private static (ulong addr, uint size) LocateDebugOffsetsAndSize(ISafeAttachProcess proc, IntPtr baseAddr, int moduleSize) {
             try {
-                if (moduleSize < 0x1000) return 0;
+                if (moduleSize < 0x1000) return (0, 0);
                 byte[] hdr = new byte[HEADER_READ];
-                if (!ReadFully(hProcess, baseAddr, hdr, hdr.Length)) return 0;
-                if (!(hdr[0] == 'M' && hdr[1] == 'Z')) return 0;
+                if (!proc.Read((ulong)baseAddr.ToInt64(), hdr, hdr.Length)) return (0, 0);
+                if (!(hdr[0] == 'M' && hdr[1] == 'Z')) return (0, 0);
                 int e_lfanew = BitConverter.ToInt32(hdr, 0x3C);
-                if (e_lfanew <= 0 || e_lfanew > hdr.Length - 0x200) return 0;
-                if (!(hdr[e_lfanew] == 'P' && hdr[e_lfanew + 1] == 'E')) return 0;
+                if (e_lfanew <= 0 || e_lfanew > hdr.Length - 0x200) return (0, 0);
+                if (!(hdr[e_lfanew] == 'P' && hdr[e_lfanew + 1] == 'E')) return (0, 0);
                 int coff = e_lfanew + 4;
                 ushort numberOfSections = BitConverter.ToUInt16(hdr, coff + 2);
                 ushort optSize = BitConverter.ToUInt16(hdr, coff + 16);
@@ -255,47 +331,117 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
                     if (off + sectionSize > hdr.Length) break;
                     string name = ExtractAscii(hdr, off, 8);
                     if (name == PY_RUNTIME_SECTION) {
+                        uint virtualSize = BitConverter.ToUInt32(hdr, off + 8);
                         uint virtualAddress = BitConverter.ToUInt32(hdr, off + 12);
-                        return (ulong)baseAddr.ToInt64() + virtualAddress;
+                        uint rawSize = BitConverter.ToUInt32(hdr, off + 16);
+                        uint size = Math.Max(virtualSize, rawSize);
+                        if (size == 0) size = 4096;
+                        return ((ulong)baseAddr.ToInt64() + virtualAddress, size);
                     }
                 }
+                // Fallback: scan whole module for cookie and assume default size
                 int scanSize = Math.Min(moduleSize, 2 * 1024 * 1024);
-                const string cookie = DebugOffsetsParser.Cookie;
                 byte[] scan = new byte[scanSize];
-                if (ReadFully(hProcess, baseAddr, scan, scan.Length)) {
-                    for (int i = 0; i <= scan.Length - cookie.Length; i++) {
+                if (proc.Read((ulong)baseAddr.ToInt64(), scan, scan.Length)) {
+                    for (int i = 0; i <= scan.Length - DebugOffsetsParser.Cookie.Length; i++) {
                         bool match = true;
-                        for (int j = 0; j < cookie.Length; j++) { if (scan[i + j] != (byte)cookie[j]) { match = false; break; } }
-                        if (match) return (ulong)baseAddr.ToInt64() + (ulong)i;
+                        for (int j = 0; j < DebugOffsetsParser.Cookie.Length; j++) { if (scan[i + j] != (byte)DebugOffsetsParser.Cookie[j]) { match = false; break; } }
+                        if (match) return ((ulong)baseAddr.ToInt64() + (ulong)i, 16384); // default slab
                     }
                 }
-            } catch (Exception ex) { Debug.WriteLine("[PTVS][ManagedSafeAttach] LocateDebugOffsets exception: " + ex.Message); }
+            } catch (Exception ex) { Debug.WriteLine("[PTVS][ManagedSafeAttach] LocateDebugOffsetsAndSize exception: " + ex.Message); }
+            return (0, 0);
+        }
+
+        private static bool ValidateCandidate(ulong tstatePtr, ParsedDebugOffsets parsed, ISafeAttachProcess proc) {
+            if ((tstatePtr & (ulong)(IntPtr.Size - 1)) != 0) { if (Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] Reject candidate (align)"); return false; }
+#if X64 || AMD64
+            if (tstatePtr >= 0x0000800000000000UL) { if (Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] Reject candidate (canonical)"); return false; }
+#endif
+            byte[] probe = new byte[4];
+            if (!proc.Read(tstatePtr + parsed.EvalBreaker, probe, probe.Length)) { if (Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] Reject candidate (eval_breaker read fail)"); return false; }
+            // Probe pending flag (int32) inside support struct
+            ulong supportBase = tstatePtr + parsed.RemoteSupport;
+            byte[] pendingProbe = new byte[4];
+            if (!proc.Read(supportBase + parsed.PendingCall, pendingProbe, pendingProbe.Length)) { if (Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] Reject candidate (pending read fail)"); return false; }
+            // Probe beginning of script buffer
+            byte[] buf = new byte[16];
+            ulong pathAddr = supportBase + parsed.ScriptPath;
+            if (!proc.Read(pathAddr, buf, buf.Length)) { if (Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] Reject candidate (script buffer read fail)"); return false; }
+            return true;
+        }
+
+        // Slab-wide inference of interpreter walk offsets (runtime/interpreters/threads) using live memory validation.
+        private static bool TryInferInterpreterOffsets(ISafeAttachProcess proc, ulong pyRuntimeAddr, byte[] slab, int ptrSize, ref ParsedDebugOffsets off, out string whyNot) {
+            whyNot = "no candidate validated";
+            int qwords = slab.Length / 8;
+            // Work on a local copy to avoid capturing a ref parameter in lambdas/local funcs (C# restriction)
+            var offLocal = off;
+            bool ReadPtr(ulong addr, out ulong val) { var tmp = new byte[ptrSize]; if (!proc.Read(addr, tmp, tmp.Length)) { val = 0; return false; } val = ptrSize == 8 ? BitConverter.ToUInt64(tmp, 0) : BitConverter.ToUInt32(tmp, 0); return true; }
+            bool IsUserPtr(ulong p) => p >= 0x10000 && p < 0x00008000_00000000UL;
+            bool Small(ulong v) => v < 0x20000;
+
+            bool ValidateTstate(ulong tstate) => ValidateCandidate(tstate, offLocal, proc);
+
+            bool ValidateCandidateSet(ulong rt, ulong ih, ulong im, ulong th, ulong tm, ulong tn) {
+                ulong rtBase = pyRuntimeAddr + rt;
+                ulong interp = 0;
+                if (im != 0 && ReadPtr(rtBase + im, out interp) && IsUserPtr(interp)) { }
+                else if (ih != 0 && ReadPtr(rtBase + ih, out interp) && IsUserPtr(interp)) { }
+                else return false;
+                if (tm != 0 && ReadPtr(interp + tm, out var tmain) && IsUserPtr(tmain) && ValidateTstate(tmain)) return true;
+                if (th != 0 && tn != 0 && ReadPtr(interp + th, out var head) && IsUserPtr(head)) {
+                    int limit = 256; ulong cur = head; while (cur != 0 && IsUserPtr(cur) && limit-- > 0) { if (ValidateTstate(cur)) return true; if (!ReadPtr(cur + tn, out cur)) break; }
+                }
+                return false;
+            }
+
+            for (int i = 0; i + 5 < qwords; i++) {
+                ulong rt = BitConverter.ToUInt64(slab, (i + 0) * 8);
+                ulong ih = BitConverter.ToUInt64(slab, (i + 1) * 8);
+                ulong im = BitConverter.ToUInt64(slab, (i + 2) * 8);
+                ulong th = BitConverter.ToUInt64(slab, (i + 3) * 8);
+                ulong tm = BitConverter.ToUInt64(slab, (i + 4) * 8);
+                ulong tn = BitConverter.ToUInt64(slab, (i + 5) * 8);
+                if (!((rt == 0 || Small(rt)) && Small(ih) && Small(im) && Small(th | tm) && Small(tn))) continue;
+                if (tn == 0 || (tn % (ulong)ptrSize) != 0) continue;
+                if (ValidateCandidateSet(rt, ih, im, th, tm, tn)) {
+                    offLocal.RuntimeState = rt; offLocal.InterpretersHead = ih; offLocal.InterpretersMain = im; offLocal.ThreadsHead = th; offLocal.ThreadsMain = tm; offLocal.ThreadNext = tn; off = offLocal; return true;
+                }
+            }
+            return false;
+        }
+
+        private static ulong FindTStateViaWalk(ISafeAttachProcess proc, ulong pyRuntimeAddr, ParsedDebugOffsets off, int ptrSize) {
+            bool ReadPtr(ulong addr, out ulong val) { var tmp = new byte[ptrSize]; if (!proc.Read(addr, tmp, tmp.Length)) { val = 0; return false; } val = ptrSize == 8 ? BitConverter.ToUInt64(tmp, 0) : BitConverter.ToUInt32(tmp, 0); return true; }
+            bool IsUserPtr(ulong p) => p >= 0x10000 && p < 0x00008000_00000000UL;
+            ulong rtBase = pyRuntimeAddr + off.RuntimeState; // RuntimeState may be 0
+            if (off.InterpretersMain != 0 && ReadPtr(rtBase + off.InterpretersMain, out var interp) && IsUserPtr(interp)) {
+                if (off.ThreadsMain != 0 && ReadPtr(interp + off.ThreadsMain, out var tm) && IsUserPtr(tm)) return tm;
+                if (off.ThreadsHead != 0 && off.ThreadNext != 0 && ReadPtr(interp + off.ThreadsHead, out var head) && IsUserPtr(head)) {
+                    for (ulong ts = head; ts != 0 && IsUserPtr(ts); ) { if (ValidateCandidate(ts, off, proc)) return ts; if (!ReadPtr(ts + off.ThreadNext, out ts)) break; }
+                }
+            }
+            if (off.InterpretersHead != 0 && ReadPtr(rtBase + off.InterpretersHead, out var headInterp) && IsUserPtr(headInterp)) {
+                if (off.ThreadsMain != 0 && ReadPtr(headInterp + off.ThreadsMain, out var tm2) && IsUserPtr(tm2)) return tm2;
+                if (off.ThreadsHead != 0 && off.ThreadNext != 0 && ReadPtr(headInterp + off.ThreadsHead, out var headTs) && IsUserPtr(headTs)) {
+                    for (ulong ts = headTs; ts != 0 && IsUserPtr(ts); ) { if (ValidateCandidate(ts, off, proc)) return ts; if (!ReadPtr(ts + off.ThreadNext, out ts)) break; }
+                }
+            }
             return 0;
         }
 
-        private static bool ReadFully(IntPtr hProcess, IntPtr address, byte[] buffer, int size) {
-            IntPtr read;
-            if (!ReadProcessMemory(hProcess, address, buffer, (IntPtr)size, out read)) return false;
-            return read.ToInt64() == size;
+        internal static bool ReadFullyInternal(IntPtr hProcess, IntPtr address, byte[] buffer, int size) {
+            IntPtr read; if (!ReadProcessMemory(hProcess, address, buffer, (IntPtr)size, out read)) return false; return read.ToInt64() == size;
         }
-
-        private static bool WriteFully(IntPtr hProcess, IntPtr address, byte[] buffer, int size) {
-            IntPtr written;
-            if (!WriteProcessMemory(hProcess, address, buffer, (IntPtr)size, out written)) return false;
-            return written.ToInt64() == size;
+        internal static bool WriteFullyInternal(IntPtr hProcess, IntPtr address, byte[] buffer, int size) {
+            IntPtr written; if (!WriteProcessMemory(hProcess, address, buffer, (IntPtr)size, out written)) return false; return written.ToInt64() == size;
         }
 
         private static string ExtractAscii(byte[] data, int offset, int length) {
             int end = offset + length; if (end > data.Length) end = data.Length;
             int realEnd = offset; while (realEnd < end && data[realEnd] != 0) realEnd++;
             return Encoding.ASCII.GetString(data, offset, realEnd - offset);
-        }
-
-        private static string ReadAsciiZ(IntPtr hProcess, IntPtr address, int maxLen) {
-            byte[] tmp = new byte[maxLen];
-            if (!ReadFully(hProcess, address, tmp, maxLen)) return string.Empty;
-            int len = 0; while (len < maxLen && tmp[len] != 0) len++;
-            return Encoding.ASCII.GetString(tmp, 0, len);
         }
     }
 }
