@@ -60,6 +60,7 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
             long tModuleEnum=0, tSlabRead=0, tInfer=0, tWalk=0, tWrite=0; // phase timings (ms)
             int inferCandidates=0; bool inferSucceeded=false; bool walkAttempted=false;
             int pid = proc.Pid;
+            var cfg = new SafeAttachConfig(Verbose); // snapshot env vars once
             try {
                 var swPhase = Stopwatch.StartNew();
                 // 1. Locate python3XY.dll module
@@ -89,7 +90,7 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
                     return FailTelemetry(pid, SafeAttachFailureSite.OffsetsRead, "read fail", exportBypassed: false);
                 }
                 swPhase.Stop(); tSlabRead = swPhase.ElapsedMilliseconds;
-                if (Verbose) {
+                if (cfg.Verbose) {
                     string first32 = DebugOffsetsParser.Hex(slab, 32);
                     bool cookieOk = true; for (int i = 0; i < DebugOffsetsParser.Cookie.Length && i < slab.Length; i++) if (slab[i] != (byte)DebugOffsetsParser.Cookie[i]) { cookieOk = false; break; }
                     Debug.WriteLine($"[PTVS][ManagedSafeAttach] OffsetsAddr=0x{offsetsAddr:X} size={readSize} first32={first32} cookieOk={cookieOk}");
@@ -98,15 +99,15 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
                 if (!DebugOffsetsParser.TryParse(slab, (ulong)pyBase.ToInt64(), IntPtr.Size, out var parsed, out var fail)) {
                     return FailTelemetry(pid, SafeAttachFailureSite.OffsetsParse, fail, exportBypassed: false);
                 }
-                if (Verbose) Debug.WriteLine($"[PTVS][ManagedSafeAttach] Parsed offsets ver=0x{parsed.Version:X} evalBreakerOff=0x{parsed.EvalBreaker:X} supportOff=0x{parsed.RemoteSupport:X} pendingOff=0x{parsed.PendingCall:X} scriptPathOff=0x{parsed.ScriptPath:X} size={parsed.ScriptPathSize} hasInterpWalk=0x{parsed.HasInterpreterWalk}");
+                if (cfg.Verbose) Debug.WriteLine($"[PTVS][ManagedSafeAttach] Parsed offsets ver=0x{parsed.Version:X} evalBreakerOff=0x{parsed.EvalBreaker:X} supportOff=0x{parsed.RemoteSupport:X} pendingOff=0x{parsed.PendingCall:X} scriptPathOff=0x{parsed.ScriptPath:X} size={parsed.ScriptPathSize} hasInterpWalk=0x{parsed.HasInterpreterWalk}");
                 if (parsed.RemoteDebugDisabled) {
                     return FailTelemetry(pid, SafeAttachFailureSite.PolicyDisabled, "remote debug disabled", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed: true);
                 }
 
                 bool version314Plus = ((parsed.Version >> 24) & 0xFF) == 3 && ((parsed.Version >> 16) & 0xFF) >= 14;
-                bool bypassExport = version314Plus && !EnvVarTrue("PTVS_SAFE_ATTACH_ALLOW_EXPORT");
+                bool bypassExport = version314Plus && !cfg.AllowExport;
                 bool exportBypassed = bypassExport;
-                bool allowHeuristic = !EnvVarTrue("PTVS_SAFE_ATTACH_MANAGED_HEURISTIC_DISABLE");
+                bool allowHeuristic = !cfg.HeuristicDisabled;
 
                 // Secondary sanity checks
                 if (parsed.RemoteSupport == 0 || parsed.RemoteSupport > MAX_REMOTE_SUPPORT_OFFSET) {
@@ -119,67 +120,55 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
                     return FailTelemetry(pid, SafeAttachFailureSite.OffsetsParse, $"pending/script ordering invalid (pending=0x{parsed.PendingCall:X} path=0x{parsed.ScriptPath:X})", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
                 }
 
-                // Attempt to infer interpreter-walk offsets slab-wide if not already populated
+                // Attempt to infer interpreter-walk offsets
                 if (!parsed.HasInterpreterWalk) {
                     swPhase.Restart();
                     if (TryInferInterpreterOffsets(proc, offsetsAddr, slab, IntPtr.Size, ref parsed, out var whyNot, out inferCandidates)) {
-                        inferSucceeded = true;
-                        if (Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] Inferred interpreter walk offsets from slab");
-                    } else if (Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] Could not infer interpreter walk offsets: " + whyNot);
+                        inferSucceeded = true; if (cfg.Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] Inferred interpreter walk offsets from slab");
+                    } else if (cfg.Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] Could not infer interpreter walk offsets: " + whyNot);
                     swPhase.Stop(); tInfer = swPhase.ElapsedMilliseconds;
                 }
 
                 // Thread state discovery
                 ulong tstatePtr = 0;
-                var forcedTState = Environment.GetEnvironmentVariable("PTVS_SAFE_ATTACH_MANAGED_TEST_TSTATE");
-                if (!string.IsNullOrEmpty(forcedTState) && ulong.TryParse(forcedTState, System.Globalization.NumberStyles.HexNumber, null, out var forcedVal)) {
-                    tstatePtr = forcedVal;
-                }
-                if (tstatePtr == 0 && !DisableCache()) {
+                if (!string.IsNullOrEmpty(cfg.ForcedTStateHex) && ulong.TryParse(cfg.ForcedTStateHex, System.Globalization.NumberStyles.HexNumber, null, out var forcedVal)) tstatePtr = forcedVal;
+                if (tstatePtr == 0 && !cfg.DisableCache) {
                     if (_tstateCache.TryGetValue(pid, out var ce) && ce.PyBase == (ulong)pyBase.ToInt64() && ce.Version == parsed.Version) {
                         bool cacheValid = ThreadStateCacheValidator.Validate(ce.ThreadState, parsed, IntPtr.Size, (addr, buffer) => proc.Read(addr, buffer, buffer.Length));
-                        if (Verbose) Debug.WriteLine($"[PTVS][ManagedSafeAttach] Cache probe tstate=0x{ce.ThreadState:X} valid={cacheValid}");
+                        if (cfg.Verbose) Debug.WriteLine($"[PTVS][ManagedSafeAttach] Cache probe tstate=0x{ce.ThreadState:X} valid={cacheValid}");
                         if (cacheValid) tstatePtr = ce.ThreadState;
                     }
                 }
 
-                // Deterministic interpreter walk
                 if (tstatePtr == 0 && parsed.HasInterpreterWalk) {
                     swPhase.Restart(); walkAttempted = true;
                     tstatePtr = FindTStateViaWalk(proc, offsetsAddr, parsed, IntPtr.Size);
                     swPhase.Stop(); tWalk = swPhase.ElapsedMilliseconds;
-                    if (Verbose) Debug.WriteLine(tstatePtr != 0 ? $"[PTVS][ManagedSafeAttach] Walk located tstate=0x{tstatePtr:X}" : "[PTVS][ManagedSafeAttach] Walk failed");
+                    if (cfg.Verbose) Debug.WriteLine(tstatePtr != 0 ? $"[PTVS][ManagedSafeAttach] Walk located tstate=0x{tstatePtr:X}" : "[PTVS][ManagedSafeAttach] Walk failed");
                 }
 
-                // Optional heuristic (forced only)
-                if (tstatePtr == 0 && allowHeuristic && EnvVarTrue("PTVS_SAFE_ATTACH_FORCE_HEURISTIC")) {
+                if (tstatePtr == 0 && allowHeuristic && cfg.ForceHeuristic) {
                     swPhase.Restart();
-                    if (Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] Attempting heuristic thread state scan (forced)");
+                    if (cfg.Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] Attempting heuristic thread state scan (forced)");
                     tstatePtr = HeuristicThreadStateLocator.TryLocate(0, parsed.RemoteSupport, parsed.ScriptPath, parsed.ScriptPathSize, IntPtr.Size, (addr, hb) => proc.Read(addr, hb, hb.Length));
-                    swPhase.Stop(); if (Verbose) Debug.WriteLine(tstatePtr != 0 ? $"[PTVS][ManagedSafeAttach] Heuristic located tstate=0x{tstatePtr:X}" : "[PTVS][ManagedSafeAttach] Heuristic scan failed");
+                    swPhase.Stop(); if (cfg.Verbose) Debug.WriteLine(tstatePtr != 0 ? $"[PTVS][ManagedSafeAttach] Heuristic located tstate=0x{tstatePtr:X}" : "[PTVS][ManagedSafeAttach] Heuristic scan failed");
                 }
 
-                // Optional export path
-                bool allowExportFallback = EnvVarTrue("PTVS_SAFE_ATTACH_ALLOW_EXPORT_FALLBACK");
-                if (tstatePtr == 0 && !bypassExport && allowExportFallback) {
+                if (tstatePtr == 0 && !bypassExport && cfg.AllowExportFallback) {
                     swPhase.Restart();
                     var exportTstate = LocateThreadStateCurrent(proc, pyBase, pySize);
-                    swPhase.Stop(); tWalk += swPhase.ElapsedMilliseconds; // treat export timing as walk bucket
-                    if (exportTstate != 0) {
-                        tstatePtr = exportTstate;
-                        if (Verbose) Debug.WriteLine($"[PTVS][ManagedSafeAttach] Export-based tstate=0x{tstatePtr:X}");
-                    }
+                    swPhase.Stop(); tWalk += swPhase.ElapsedMilliseconds;
+                    if (exportTstate != 0) { tstatePtr = exportTstate; if (cfg.Verbose) Debug.WriteLine($"[PTVS][ManagedSafeAttach] Export-based tstate=0x{tstatePtr:X}"); }
                 }
 
                 if (tstatePtr != 0 && !ValidateCandidate(tstatePtr, parsed, proc)) tstatePtr = 0;
                 if (tstatePtr == 0) {
-                    if (Verbose) Debug.WriteLine($"[PTVS][ManagedSafeAttach][Timing] module={tModuleEnum}ms slab={tSlabRead}ms infer={tInfer}ms walk={tWalk}ms write=0ms total={attemptStart.ElapsedMilliseconds}ms candidates={inferCandidates} inferOk={inferSucceeded} walkTried={walkAttempted}");
+                    if (cfg.Verbose) Debug.WriteLine($"[PTVS][ManagedSafeAttach][Timing] module={tModuleEnum}ms slab={tSlabRead}ms infer={tInfer}ms walk={tWalk}ms write=0ms total={attemptStart.ElapsedMilliseconds}ms candidates={inferCandidates} inferOk={inferSucceeded} walkTried={walkAttempted}");
                     return FailTelemetry(pid, SafeAttachFailureSite.ThreadStateDiscovery, "thread state unresolved", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
                 }
                 _tstateCache[pid] = new CacheEntry { ThreadState = tstatePtr, PyBase = (ulong)pyBase.ToInt64(), Version = parsed.Version, Stamp = DateTime.UtcNow };
 
-                bool performWrites = EnvVarTrue("PTVS_SAFE_ATTACH_MANAGED_WRITE") || string.IsNullOrEmpty(Environment.GetEnvironmentVariable("PTVS_SAFE_ATTACH_MANAGED_DISABLE"));
-                if (!performWrites) {
+                if (!cfg.WriteEnabled) {
                     return FailTelemetry(pid, SafeAttachFailureSite.ScriptBufferWrite, "write gate disabled", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
                 }
 
@@ -190,20 +179,16 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
                 ulong pendingFlagAddr = supportBase + parsed.PendingCall;
                 ulong evalBreakerAddr = tstatePtr + parsed.EvalBreaker;
 
-                // Probe script buffer before write
                 byte[] probeBuf = new byte[32];
                 if (!proc.Read(scriptPathBufAddr, probeBuf, probeBuf.Length)) {
                     return FailTelemetry(pid, SafeAttachFailureSite.ScriptBufferWrite, "script buffer unreadable", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
                 }
 
-                // 7. Acquire loader path (must be a real file)
                 string loaderPath = PythonToolsInstallPath.GetFile("ptvsd_loader.py") ?? PythonToolsInstallPath.GetFile("ptvsd\\ptvsd_loader.py");
                 if (string.IsNullOrEmpty(loaderPath)) {
                     try {
                         string temp = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "ptvs_bootstrap.py");
-                        if (!System.IO.File.Exists(temp)) {
-                            System.IO.File.WriteAllText(temp, "import debugpy; debugpy.listen(('127.0.0.1',0));\n");
-                        }
+                        if (!System.IO.File.Exists(temp)) System.IO.File.WriteAllText(temp, "import debugpy; debugpy.listen(('127.0.0.1',0));\n");
                         loaderPath = temp;
                     } catch { loaderPath = null; }
                 }
@@ -220,14 +205,11 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
                 if (!proc.Write(scriptPathBufAddr, scriptWrite, scriptWrite.Length)) {
                     return FailTelemetry(pid, SafeAttachFailureSite.ScriptBufferWrite, "script write failed", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
                 }
-
-                // 8. Set pending flag (int32)
                 if (!proc.Write(pendingFlagAddr, new byte[] { 1, 0, 0, 0 }, 4)) {
                     return FailTelemetry(pid, SafeAttachFailureSite.PendingFlagWrite, "pending flag write failed", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
                 }
 
-                // 9. Set eval breaker stop bit
-                const uint EVAL_BREAKER_MASK = 0x20; // bit 5 per PEP 768
+                const uint EVAL_BREAKER_MASK = 0x20;
                 bool breakerOk = false;
                 if (version314Plus) {
                     var brBuf = new byte[4];
@@ -265,7 +247,7 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
                 attemptStart.Stop();
                 bool reused = tstatePtr != 0 && _tstateCache.ContainsKey(pid);
                 var ok = SafeAttachResult.Ok(parsed.Version, parsed.FreeThreaded, parsed.RemoteDebugDisabled, reused, truncated, exportBypassed);
-                if (Verbose) Debug.WriteLine($"[PTVS][ManagedSafeAttach][Timing] module={tModuleEnum}ms slab={tSlabRead}ms infer={tInfer}ms walk={tWalk}ms write={tWrite}ms total={attemptStart.ElapsedMilliseconds}ms candidates={inferCandidates} inferOk={inferSucceeded} walkTried={walkAttempted}");
+                if (cfg.Verbose) Debug.WriteLine($"[PTVS][ManagedSafeAttach][Timing] module={tModuleEnum}ms slab={tSlabRead}ms infer={tInfer}ms walk={tWalk}ms write={tWrite}ms total={attemptStart.ElapsedMilliseconds}ms candidates={inferCandidates} inferOk={inferSucceeded} walkTried={walkAttempted}");
                 Debug.WriteLine($"[PTVS][ManagedSafeAttach] SUCCESS pid={pid} ver=0x{parsed.Version:X} tstate=0x{tstatePtr:X} exportBypassed={exportBypassed} elapsedMs={attemptStart.ElapsedMilliseconds}");
                 return ok;
             } catch (Exception ex) {

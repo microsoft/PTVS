@@ -37,6 +37,48 @@ Key change: Leverage CPython 3.14 `_Py_DebugOffsets` (`debugger_support`) for **
 
 ---
 
+## Code Simplification Plan (Upcoming Refactors)
+Goal: reduce complexity / duplication in `SafeAttachOrchestrator` while preserving diagnostics.
+
+| Area | Current Issue | Planned Simplification | Benefit |
+|------|---------------|------------------------|---------|
+| Env Var Lookups | Scattered repeated `EnvVarTrue` calls | Centralize into immutable `Config` snapshot object constructed once per attempt | Fewer branches, clearer intent |
+| Phase Timing | Manual local variables | Introduce small `PhaseTimer` struct (Start/Stop -> metrics dictionary) | Cleaner instrumentation, easier telemetry emission |
+| Validation Logic | Mixed inside orchestrator | Extract `ThreadStateValidator.Validate(tstate, parsed, proc)` returning enum (Ok / ReadFail / OutOfRange) | Improves readability & testability |
+| Walk Inference & Walk | Both inline local functions | Move to `InterpreterWalkLocator` with methods: `InferOffsets`, `FindThreadState` | Separation of concerns |
+| Pointer Reads | Repeated in lambdas | Introduce `ProcessMemory` helper: `ReadU32`, `ReadU64`, `TryRead(addr, span)` | Less repetitive boilerplate |
+| Logging Prefixes | Repeated string literals | Static `Log` helper with methods: `Info(tag,msg)` / `Fail(site,msg)` | Reduces string duplication, unifies format |
+| Write Sequence | Inline procedural steps | Encapsulate in `RemoteWritePlan.Execute(parsed, tstate, loaderPath, proc)` returning result object (fields: PendingSet, BreakerUpdated) | Easier to add post‑write verification |
+| Error Construction | Many `FailTelemetry` early returns | Fluent builder or result discriminated union (AttemptResult) | Simplifies early-exit branches |
+| Heuristic Gate | Multi-condition inline | Strategy list (each strategy declares `ShouldRun(config, state)`) | Extensible resolution order |
+| Test Helpers | Custom blob builders scattered | Consolidate into `OffsetsBlobBuilder` with presets (Canonical, SkipN, CorruptSize) | More concise tests |
+| Duplicate Parse Logs | Two lines for parse results | Single structured summary line; optional detail on demand | Cleaner logs |
+| Magic Constants | Offsets & limits inline | Static `Constants` container with descriptive names | Self-documenting code |
+
+### Refactor Steps (Incremental)
+1. Introduce `SafeAttachConfig` (captures env flags + pointer size + verbosity).  
+2. Extract `ThreadStateValidator`.  
+3. Move walk inference + traversal into `InterpreterWalkLocator`.  
+4. Implement `ProcessMemory` helper (thin wrapper around `ISafeAttachProcess`).  
+5. Create `RemoteWritePlan` and replace inline write logic.  
+6. Replace timing locals with `PhaseTimer`.  
+7. Adopt unified logging facade (optionally no‑op in Release unless verbose).  
+8. Migrate orchestrator to a small state machine (phases enum).  
+9. Update unit tests to target new helpers directly (less need for end‑to‑end harness).  
+10. Add telemetry scaffolding on top of simplified objects (Attempt -> Result).  
+
+### Acceptance Criteria
+* LOC in `SafeAttachOrchestrator` reduced by ≥35%.
+* Cyclomatic complexity per method < 12.
+* Unit tests cover: inference success, inference failure -> fallback disabled, cache reuse path, write failures, validation failure reasons.
+* Logs: single parse summary, single success line, single fail line.
+
+### Deferred (Optional)
+* Convert to async (not immediately needed).  
+* Cross-process abstraction reuse for Concord (after consolidation proves stable).  
+
+---
+
 ## NEW (Since Previous Revision)
 
 | Area | Change | Impact |
