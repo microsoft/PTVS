@@ -57,8 +57,11 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
         // Test/abstraction entry point
         internal static SafeAttachResult TryManagedSafeAttach(ISafeAttachProcess proc) {
             var attemptStart = Stopwatch.StartNew();
+            long tModuleEnum=0, tSlabRead=0, tInfer=0, tWalk=0, tWrite=0; // phase timings (ms)
+            int inferCandidates=0; bool inferSucceeded=false; bool walkAttempted=false;
             int pid = proc.Pid;
             try {
+                var swPhase = Stopwatch.StartNew();
                 // 1. Locate python3XY.dll module
                 IntPtr pyBase = IntPtr.Zero; int pySize = 0; int minor = -1;
                 if (!proc.EnumerateModules((name, baseAddr, size) => {
@@ -68,8 +71,10 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
                 })) {
                     return FailTelemetry(pid, SafeAttachFailureSite.VersionGate, "python < 3.14 or not found", exportBypassed: false);
                 }
+                swPhase.Stop(); tModuleEnum = swPhase.ElapsedMilliseconds;
 
                 // 2. Resolve _Py_DebugOffsets start + section size
+                swPhase.Restart();
                 ulong offsetsAddr; uint runtimeSize;
                 (offsetsAddr, runtimeSize) = LocateDebugOffsetsAndSize(proc, pyBase, pySize);
                 if (offsetsAddr == 0) {
@@ -83,6 +88,7 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
                 if (!proc.Read(offsetsAddr, slab, slab.Length)) {
                     return FailTelemetry(pid, SafeAttachFailureSite.OffsetsRead, "read fail", exportBypassed: false);
                 }
+                swPhase.Stop(); tSlabRead = swPhase.ElapsedMilliseconds;
                 if (Verbose) {
                     string first32 = DebugOffsetsParser.Hex(slab, 32);
                     bool cookieOk = true; for (int i = 0; i < DebugOffsetsParser.Cookie.Length && i < slab.Length; i++) if (slab[i] != (byte)DebugOffsetsParser.Cookie[i]) { cookieOk = false; break; }
@@ -92,18 +98,17 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
                 if (!DebugOffsetsParser.TryParse(slab, (ulong)pyBase.ToInt64(), IntPtr.Size, out var parsed, out var fail)) {
                     return FailTelemetry(pid, SafeAttachFailureSite.OffsetsParse, fail, exportBypassed: false);
                 }
-                if (Verbose) Debug.WriteLine($"[PTVS][ManagedSafeAttach] Parsed offsets ver=0x{parsed.Version:X} evalBreakerOff=0x{parsed.EvalBreaker:X} supportOff=0x{parsed.RemoteSupport:X} pendingOff=0x{parsed.PendingCall:X} scriptPathOff=0x{parsed.ScriptPath:X} size={parsed.ScriptPathSize} hasInterpWalk={parsed.HasInterpreterWalk}");
+                if (Verbose) Debug.WriteLine($"[PTVS][ManagedSafeAttach] Parsed offsets ver=0x{parsed.Version:X} evalBreakerOff=0x{parsed.EvalBreaker:X} supportOff=0x{parsed.RemoteSupport:X} pendingOff=0x{parsed.PendingCall:X} scriptPathOff=0x{parsed.ScriptPath:X} size={parsed.ScriptPathSize} hasInterpWalk=0x{parsed.HasInterpreterWalk}");
                 if (parsed.RemoteDebugDisabled) {
                     return FailTelemetry(pid, SafeAttachFailureSite.PolicyDisabled, "remote debug disabled", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed: true);
                 }
 
                 bool version314Plus = ((parsed.Version >> 24) & 0xFF) == 3 && ((parsed.Version >> 16) & 0xFF) >= 14;
-                // Flip default: bypass export (TLS) unless explicitly allowed
                 bool bypassExport = version314Plus && !EnvVarTrue("PTVS_SAFE_ATTACH_ALLOW_EXPORT");
                 bool exportBypassed = bypassExport;
                 bool allowHeuristic = !EnvVarTrue("PTVS_SAFE_ATTACH_MANAGED_HEURISTIC_DISABLE");
 
-                // Secondary sanity
+                // Secondary sanity checks
                 if (parsed.RemoteSupport == 0 || parsed.RemoteSupport > MAX_REMOTE_SUPPORT_OFFSET) {
                     return FailTelemetry(pid, SafeAttachFailureSite.OffsetsParse, $"remote_support offset implausible (0x{parsed.RemoteSupport:X})", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
                 }
@@ -116,9 +121,12 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
 
                 // Attempt to infer interpreter-walk offsets slab-wide if not already populated
                 if (!parsed.HasInterpreterWalk) {
-                    if (TryInferInterpreterOffsets(proc, offsetsAddr, slab, IntPtr.Size, ref parsed, out var whyNot)) {
+                    swPhase.Restart();
+                    if (TryInferInterpreterOffsets(proc, offsetsAddr, slab, IntPtr.Size, ref parsed, out var whyNot, out inferCandidates)) {
+                        inferSucceeded = true;
                         if (Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] Inferred interpreter walk offsets from slab");
                     } else if (Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] Could not infer interpreter walk offsets: " + whyNot);
+                    swPhase.Stop(); tInfer = swPhase.ElapsedMilliseconds;
                 }
 
                 // Thread state discovery
@@ -137,34 +145,35 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
 
                 // Deterministic interpreter walk
                 if (tstatePtr == 0 && parsed.HasInterpreterWalk) {
+                    swPhase.Restart(); walkAttempted = true;
                     tstatePtr = FindTStateViaWalk(proc, offsetsAddr, parsed, IntPtr.Size);
+                    swPhase.Stop(); tWalk = swPhase.ElapsedMilliseconds;
                     if (Verbose) Debug.WriteLine(tstatePtr != 0 ? $"[PTVS][ManagedSafeAttach] Walk located tstate=0x{tstatePtr:X}" : "[PTVS][ManagedSafeAttach] Walk failed");
                 }
 
-                // (Optional) heuristic disabled by default - requires absolute eval breaker (not available here)
+                // Optional heuristic (forced only)
                 if (tstatePtr == 0 && allowHeuristic && EnvVarTrue("PTVS_SAFE_ATTACH_FORCE_HEURISTIC")) {
+                    swPhase.Restart();
                     if (Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] Attempting heuristic thread state scan (forced)");
                     tstatePtr = HeuristicThreadStateLocator.TryLocate(0, parsed.RemoteSupport, parsed.ScriptPath, parsed.ScriptPathSize, IntPtr.Size, (addr, hb) => proc.Read(addr, hb, hb.Length));
+                    swPhase.Stop(); if (Verbose) Debug.WriteLine(tstatePtr != 0 ? $"[PTVS][ManagedSafeAttach] Heuristic located tstate=0x{tstatePtr:X}" : "[PTVS][ManagedSafeAttach] Heuristic scan failed");
                 }
 
-                // Optional export path ONLY if explicitly allowed (legacy / diagnostics)
+                // Optional export path
                 bool allowExportFallback = EnvVarTrue("PTVS_SAFE_ATTACH_ALLOW_EXPORT_FALLBACK");
                 if (tstatePtr == 0 && !bypassExport && allowExportFallback) {
+                    swPhase.Restart();
                     var exportTstate = LocateThreadStateCurrent(proc, pyBase, pySize);
+                    swPhase.Stop(); tWalk += swPhase.ElapsedMilliseconds; // treat export timing as walk bucket
                     if (exportTstate != 0) {
                         tstatePtr = exportTstate;
                         if (Verbose) Debug.WriteLine($"[PTVS][ManagedSafeAttach] Export-based tstate=0x{tstatePtr:X}");
-                      }
+                    }
                 }
-                // If heuristic failed earlier and export not allowed, try a second heuristic pass (disabled by default)
-                if (tstatePtr == 0 && allowHeuristic && !allowExportFallback && EnvVarTrue("PTVS_SAFE_ATTACH_FORCE_HEURISTIC2")) {
-                }
-                // Validate candidate tstate (alignment, canonical user address, readable fields)
-                if (tstatePtr != 0) {
-                    bool valid = ValidateCandidate(tstatePtr, parsed, proc);
-                    if (!valid) tstatePtr = 0;
-                }
+
+                if (tstatePtr != 0 && !ValidateCandidate(tstatePtr, parsed, proc)) tstatePtr = 0;
                 if (tstatePtr == 0) {
+                    if (Verbose) Debug.WriteLine($"[PTVS][ManagedSafeAttach][Timing] module={tModuleEnum}ms slab={tSlabRead}ms infer={tInfer}ms walk={tWalk}ms write=0ms total={attemptStart.ElapsedMilliseconds}ms candidates={inferCandidates} inferOk={inferSucceeded} walkTried={walkAttempted}");
                     return FailTelemetry(pid, SafeAttachFailureSite.ThreadStateDiscovery, "thread state unresolved", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
                 }
                 _tstateCache[pid] = new CacheEntry { ThreadState = tstatePtr, PyBase = (ulong)pyBase.ToInt64(), Version = parsed.Version, Stamp = DateTime.UtcNow };
@@ -174,7 +183,8 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
                     return FailTelemetry(pid, SafeAttachFailureSite.ScriptBufferWrite, "write gate disabled", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
                 }
 
-                // 6. Compute embedded remote_debugger_support base
+                // Write phase
+                swPhase.Restart();
                 ulong supportBase = tstatePtr + parsed.RemoteSupport;
                 ulong scriptPathBufAddr = supportBase + parsed.ScriptPath;
                 ulong pendingFlagAddr = supportBase + parsed.PendingCall;
@@ -216,7 +226,7 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
                     return FailTelemetry(pid, SafeAttachFailureSite.PendingFlagWrite, "pending flag write failed", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
                 }
 
-                // 9. Set eval breaker stop bit (use fixed _PY_EVAL_PLEASE_STOP_BIT for 3.14+)
+                // 9. Set eval breaker stop bit
                 const uint EVAL_BREAKER_MASK = 0x20; // bit 5 per PEP 768
                 bool breakerOk = false;
                 if (version314Plus) {
@@ -235,7 +245,6 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
                     breakerOk = true;
                 }
                 if (!breakerOk && !version314Plus) {
-                    // Fall back to legacy heuristic (pre-3.14) – kept for backward compatibility.
                     byte[] breakerBuf = new byte[IntPtr.Size];
                     StopBitSelection sel = EvalBreakerHelper.DetermineMask(
                         readBreaker: () => proc.Read(evalBreakerAddr, breakerBuf, breakerBuf.Length),
@@ -251,10 +260,12 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
                         }
                     }
                 }
+                swPhase.Stop(); tWrite = swPhase.ElapsedMilliseconds;
 
                 attemptStart.Stop();
                 bool reused = tstatePtr != 0 && _tstateCache.ContainsKey(pid);
                 var ok = SafeAttachResult.Ok(parsed.Version, parsed.FreeThreaded, parsed.RemoteDebugDisabled, reused, truncated, exportBypassed);
+                if (Verbose) Debug.WriteLine($"[PTVS][ManagedSafeAttach][Timing] module={tModuleEnum}ms slab={tSlabRead}ms infer={tInfer}ms walk={tWalk}ms write={tWrite}ms total={attemptStart.ElapsedMilliseconds}ms candidates={inferCandidates} inferOk={inferSucceeded} walkTried={walkAttempted}");
                 Debug.WriteLine($"[PTVS][ManagedSafeAttach] SUCCESS pid={pid} ver=0x{parsed.Version:X} tstate=0x{tstatePtr:X} exportBypassed={exportBypassed} elapsedMs={attemptStart.ElapsedMilliseconds}");
                 return ok;
             } catch (Exception ex) {
@@ -372,17 +383,14 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
         }
 
         // Slab-wide inference of interpreter walk offsets (runtime/interpreters/threads) using live memory validation.
-        private static bool TryInferInterpreterOffsets(ISafeAttachProcess proc, ulong pyRuntimeAddr, byte[] slab, int ptrSize, ref ParsedDebugOffsets off, out string whyNot) {
-            whyNot = "no candidate validated";
+        private static bool TryInferInterpreterOffsets(ISafeAttachProcess proc, ulong pyRuntimeAddr, byte[] slab, int ptrSize, ref ParsedDebugOffsets off, out string whyNot, out int candidateCount) {
+            whyNot = "no candidate validated"; candidateCount = 0;
             int qwords = slab.Length / 8;
-            // Work on a local copy to avoid capturing a ref parameter in lambdas/local funcs (C# restriction)
             var offLocal = off;
             bool ReadPtr(ulong addr, out ulong val) { var tmp = new byte[ptrSize]; if (!proc.Read(addr, tmp, tmp.Length)) { val = 0; return false; } val = ptrSize == 8 ? BitConverter.ToUInt64(tmp, 0) : BitConverter.ToUInt32(tmp, 0); return true; }
             bool IsUserPtr(ulong p) => p >= 0x10000 && p < 0x00008000_00000000UL;
             bool Small(ulong v) => v < 0x20000;
-
             bool ValidateTstate(ulong tstate) => ValidateCandidate(tstate, offLocal, proc);
-
             bool ValidateCandidateSet(ulong rt, ulong ih, ulong im, ulong th, ulong tm, ulong tn) {
                 ulong rtBase = pyRuntimeAddr + rt;
                 ulong interp = 0;
@@ -395,7 +403,6 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
                 }
                 return false;
             }
-
             for (int i = 0; i + 5 < qwords; i++) {
                 ulong rt = BitConverter.ToUInt64(slab, (i + 0) * 8);
                 ulong ih = BitConverter.ToUInt64(slab, (i + 1) * 8);
@@ -403,11 +410,10 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
                 ulong th = BitConverter.ToUInt64(slab, (i + 3) * 8);
                 ulong tm = BitConverter.ToUInt64(slab, (i + 4) * 8);
                 ulong tn = BitConverter.ToUInt64(slab, (i + 5) * 8);
+                candidateCount++;
                 if (!((rt == 0 || Small(rt)) && Small(ih) && Small(im) && Small(th | tm) && Small(tn))) continue;
                 if (tn == 0 || (tn % (ulong)ptrSize) != 0) continue;
-                if (ValidateCandidateSet(rt, ih, im, th, tm, tn)) {
-                    offLocal.RuntimeState = rt; offLocal.InterpretersHead = ih; offLocal.InterpretersMain = im; offLocal.ThreadsHead = th; offLocal.ThreadsMain = tm; offLocal.ThreadNext = tn; off = offLocal; return true;
-                }
+                if (ValidateCandidateSet(rt, ih, im, th, tm, tn)) { offLocal.RuntimeState = rt; offLocal.InterpretersHead = ih; offLocal.InterpretersMain = im; offLocal.ThreadsHead = th; offLocal.ThreadsMain = tm; offLocal.ThreadNext = tn; off = offLocal; return true; }
             }
             return false;
         }

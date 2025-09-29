@@ -69,55 +69,58 @@ namespace DebuggerTests {
             buf.Add(flags);
             while ((buf.Count % 8) != 0) buf.Add(0);
             for (int i = 0; i < skipPointers; i++) buf.AddRange(BitConverter.GetBytes((ulong)0));
-            buf.AddRange(BitConverter.GetBytes(evalBreaker));
-            buf.AddRange(BitConverter.GetBytes(remoteSupport));
-            buf.AddRange(BitConverter.GetBytes(pendingCall));
-            buf.AddRange(BitConverter.GetBytes(scriptPath));
-            buf.AddRange(BitConverter.GetBytes(scriptPathSize));
+            // Always write full qwords so the parser (which reads 8-byte units) interprets values correctly.
+            buf.AddRange(BitConverter.GetBytes((ulong)evalBreaker));
+            buf.AddRange(BitConverter.GetBytes((ulong)remoteSupport));
+            buf.AddRange(BitConverter.GetBytes((ulong)pendingCall));
+            buf.AddRange(BitConverter.GetBytes((ulong)scriptPath));
+            buf.AddRange(BitConverter.GetBytes((ulong)scriptPathSize));
             return Pad(buf, 256);
         }
 
-        private MockProcess CreateHappyProcess(out ulong evalBreakerAddr, out ulong tstatePtr, out ulong remoteSupportStructAddr) {
+        private MockProcess CreateHappyProcess(out ulong evalBreakerOff, out ulong tstatePtr) {
             var proc = new MockProcess(4242);
             ulong pyBase = 0x10000000; int pySize = 0x200000; proc.AddModule("python314.dll", pyBase, pySize);
             var module = new byte[pySize];
-            module[0] = (byte)'M'; module[1] = (byte)'Z'; int e_lfanew = 0x80; BitConverter.GetBytes(e_lfanew).CopyTo(module, 0x3C); module[e_lfanew] = (byte)'P'; module[e_lfanew + 1] = (byte)'E';
-            BitConverter.GetBytes((ushort)1).CopyTo(module, e_lfanew + 24 + 92);
-            int dataDirBase = e_lfanew + 24 + 96; uint exportRva = 0x300; BitConverter.GetBytes(exportRva).CopyTo(module, dataDirBase + 0); BitConverter.GetBytes((uint)0x40).CopyTo(module, dataDirBase + 4);
-            uint namesRva = 0x400; uint ordRva = 0x420; uint funcsRva = 0x440; BitConverter.GetBytes((uint)1).CopyTo(module, exportRva + 24);
-            BitConverter.GetBytes(funcsRva).CopyTo(module, exportRva + 28);
-            BitConverter.GetBytes(namesRva).CopyTo(module, exportRva + 32);
-            BitConverter.GetBytes(ordRva).CopyTo(module, exportRva + 36);
-            uint nameStringRva = 0x460; BitConverter.GetBytes(nameStringRva).CopyTo(module, (int)namesRva);
-            BitConverter.GetBytes((ushort)0).CopyTo(module, (int)ordRva);
-            uint symbolRva = 0x480; BitConverter.GetBytes(symbolRva).CopyTo(module, (int)funcsRva);
-            var nameBytes = Encoding.ASCII.GetBytes("_PyThreadState_Current\0"); Array.Copy(nameBytes, 0, module, nameStringRva, nameBytes.Length);
-
-            tstatePtr = 0xDEADBEEFCAFEBABE;
-            Array.Copy(BitConverter.GetBytes(tstatePtr), 0, module, symbolRva, IntPtr.Size);
-
-            evalBreakerAddr = 0x20000010;
-            ulong remoteSupportOff = 0x300; ulong pendingOff = 0x10; ulong scriptPathOff = 0x20; ulong scriptPathSize = 512;
-            var blob = BuildOffsetsBlob64(1, evalBreakerAddr, remoteSupportOff, pendingOff, scriptPathOff, scriptPathSize);
-            Array.Copy(blob, 0, module, 0x1000, blob.Length);
+            // DOS stub
+            module[0] = (byte)'M'; module[1] = (byte)'Z';
+            int e_lfanew = 0x80; BitConverter.GetBytes(e_lfanew).CopyTo(module, 0x3C);
+            // PE signature
+            module[e_lfanew + 0] = (byte)'P'; module[e_lfanew + 1] = (byte)'E'; module[e_lfanew + 2] = 0; module[e_lfanew + 3] = 0;
+            int coff = e_lfanew + 4;
+            // numberOfSections = 1
+            BitConverter.GetBytes((ushort)1).CopyTo(module, coff + 2);
+            // sizeOfOptionalHeader = 0 to keep section table immediately after COFF header
+            BitConverter.GetBytes((ushort)0).CopyTo(module, coff + 16);
+            int sectionTable = coff + 20; // opt header size 0
+            // Section 0: name "PyRuntim" (8 bytes)
+            var nameBytes = Encoding.ASCII.GetBytes("PyRuntim"); Array.Copy(nameBytes, 0, module, sectionTable, nameBytes.Length);
+            uint virtualSize = 0x4000; BitConverter.GetBytes(virtualSize).CopyTo(module, sectionTable + 8);
+            uint virtualAddress = 0x1000; BitConverter.GetBytes(virtualAddress).CopyTo(module, sectionTable + 12);
+            uint rawSize = 0x4000; BitConverter.GetBytes(rawSize).CopyTo(module, sectionTable + 16);
+            // Build _Py_DebugOffsets slab inside section at RVA 0x1000
+            evalBreakerOff = 0x128;
+            ulong remoteSupportOff = 0x200;
+            ulong pendingOff = 0x0;
+            ulong scriptPathOff = 0x4;
+            ulong scriptPathSize = 512;
+            var blob = BuildOffsetsBlob64(0, evalBreakerOff, remoteSupportOff, pendingOff, scriptPathOff, scriptPathSize);
+            Array.Copy(blob, 0, module, (int)virtualAddress, blob.Length);
             proc.SetMemory(pyBase, module);
 
-            // Allocate remote_support struct at separate address and write pointer at tstate+remoteSupportOff
-            remoteSupportStructAddr = 0x30000000;
-            proc.SetMemory(remoteSupportStructAddr, new byte[scriptPathOff + scriptPathSize]);
-            // Set pending flag storage
-            proc.SetMemory(remoteSupportStructAddr + pendingOff, new byte[1]);
-            // Provide memory for tstate remote support pointer (just the pointer value)
-            proc.SetMemory(tstatePtr + remoteSupportOff, BitConverter.GetBytes(remoteSupportStructAddr));
-            // Eval breaker memory
-            proc.SetMemory(evalBreakerAddr, new byte[IntPtr.Size]);
+            // Allocate a plausible tstate region
+            tstatePtr = 0x0000000123456000UL;
+            int tstateSize = (int)(remoteSupportOff + scriptPathOff + scriptPathSize + 0x200);
+            var tstateMem = new byte[tstateSize];
+            proc.SetMemory(tstatePtr, tstateMem);
             return proc;
         }
 
         [TestMethod]
         public void Orchestrator_Success_Path() {
-            var proc = CreateHappyProcess(out var evalBreaker, out var tstate, out var supportStruct);
+            var proc = CreateHappyProcess(out var evalBreakerOff, out var tstate);
             Environment.SetEnvironmentVariable("PTVS_SAFE_ATTACH_MANAGED_WRITE", "1");
+            // Force orchestrator to use our known tstate value
             Environment.SetEnvironmentVariable("PTVS_SAFE_ATTACH_MANAGED_TEST_TSTATE", tstate.ToString("X"));
             var res = SafeAttachOrchestrator.TryManagedSafeAttach(proc);
             Assert.IsTrue(res.Success, $"Expected success but failed: site={res.FailureSite} msg={res.Message}");

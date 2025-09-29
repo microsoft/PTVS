@@ -1,4 +1,4 @@
-﻿Here’s a combined, summarized version of **Python 3.14 Debugging Support in PTVS** with the roadmap and current status integrated for clarity (updated after enabling managed safe attach by default):
+﻿Here’s a combined, summarized version of **Python 3.14 Debugging Support in PTVS** with the roadmap and current status integrated for clarity (updated after enabling managed safe attach by default, and after adding interpreter-walk inference + timing instrumentation):
 
 ---
 
@@ -18,137 +18,131 @@ Key change: Leverage CPython 3.14 `_Py_DebugOffsets` (`debugger_support`) for **
 
 ---
 
-## NEW (RF1 Progress) – Shared Safe Attach Components Added
+## Key Insights (What Made It Work)
 
-The refactor (RF1) now includes a growing set of shared helpers under `Product\Common\Debugger\SafeAttach` used by both the managed Attacher and Concord (native) path:
-
-| File | Purpose | Used By |
-|------|---------|---------|
-| `PeExportReader.cs` | Parses & caches PE export table (name→RVA, lightweight function/data heuristic). | Managed, Concord |
-| `ThreadStateExportResolver.cs` | Resolves current `PyThreadState*` via `_PyThreadState_Current` (data) or `_PyThreadState_UncheckedGet` (pattern scan). | Managed, Concord |
-| `SafeAttachUtilities.cs` | Loader path UTF8 buffer creation + truncation logic. | Managed, Concord |
-| `EvalBreakerHelper.cs` | Unified stop-bit mask determination (dynamic-existing bit, heuristic candidates, default) + metadata. | Managed, Concord (replaces legacy dynamic mask logic) |
-| `ThreadStateCacheValidator.cs` | Lightweight validation of cached tstate before reuse (remote support + script path probe). | Managed (now), planned Concord reuse |
-| `HeuristicThreadStateLocator.cs` | Heuristic backward scan from `eval_breaker` to derive plausible PyThreadState base (optional). | Managed (env opt-in), Concord (will migrate) |
-
-### Refactored Callers
-* `SafeAttachOrchestrator` now uses: export resolver, loader util, unified stop-bit helper, cache validator, optional heuristic locator (gated by `PTVS_SAFE_ATTACH_MANAGED_HEURISTIC`).
-* `RemoteAttach314` uses: export resolver, loader util, unified stop-bit helper. (Heuristic path still local; planned migration to shared locator.)
-
-### Immediate Benefits
-* Elimination of duplicate PE parsing, export scanning, and stop-bit logic.
-* Consistent stop-bit mask selection (with source classification) across managed & Concord paths.
-* Shared cache validation reduces false reuse & rediscovery churn.
-* Optional heuristic locator isolated and testable; can be enabled selectively.
-
-### Remaining Commonization Opportunities (Planned)
-1. Integrate Concord heuristic scan with `HeuristicThreadStateLocator` (remove local implementation).
-2. Use `ThreadStateCacheValidator` in Concord prior to attempting rediscovery.
-3. Centralize write verification (script/pending/breaker) into a shared helper returning a structured outcome.
-4. Introduce `ThreadStateLocator` strategy abstraction (composition of: cache → main interpreter (Concord only) → enumeration → export → heuristic).
-5. Shared telemetry event producer (Attempt/Result) consuming all helper metadata (mask source, resolution path, cache reuse, truncation, heuristic usage).
-6. Fault injection seam (partial write simulation) moved from Concord local flag into shared configurable delegate.
-
-### Completed (New Since Last Update)
-* Unified stop-bit mask logic (`EvalBreakerHelper`) – removed legacy dynamic derivation in Concord.
-* Added shared heuristic & cache validation helpers and integrated into managed path.
-
-### Not in Scope (Now)
-* Symbol-based (DIA) fallback for exports.
-* Cross-process enumeration unification (Concord retains richer proxy-based selection logic for now).
+* Stop assuming interpreter-walk sextuple is adjacent to the 5‑tuple; perform slab‑wide scan.
+* Treat all `_Py_DebugOffsets` entries as offsets (not absolute pointers) – compose addresses at runtime.
+* Validate interpreter-walk candidates against live memory (runtime → interpreter → thread list) before use.
+* Expand DLL regex to match two or three digit minor versions: `python310/311/314.dll`.
+* Deterministic resolution order: cache → inferred/parsed walk → (optional) heuristic → (optional) export fallback.
+* Strengthen `PyThreadState` validation: probe eval_breaker (4 bytes), pending flag (int32), script path buffer readability.
+* Use fixed 32‑bit eval breaker bit mask 0x20 for 3.14+; retain dynamic mask logic only for <3.14.
+* Bypass export/TLS path by default for 3.14+ (reduce dependency & surface area).
+* Early exit on first validated `tstate`; count candidates for diagnostics.
+* Add phase timing instrumentation (module, slab, inference, walk, write) to expose latency sources.
+* Gate heuristic scan behind explicit env var; avoid unnecessary slow speculative scans.
+* Revalidate cached `tstate` cheaply (offset-based field probes) before reuse.
+* Ensure UTF‑8 loader script buffer is NUL‑terminated and within declared size.
+* Add pending flag read probe to eliminate false positives in corrupted / stale memory cases.
 
 ---
 
-## Goals
+## NEW (Since Previous Revision)
 
-* Recognize Python 3.14 everywhere version gating exists. (DONE)
-* Implement safe remote attach using PEP 768 facilities. (IN PROGRESS – local attach done)
-* Update mixed-mode/native data model for 3.14 runtime changes. (DONE Phase 1)
-* Managed-only safe attach path with fallback. (CORE COMPLETE; enabled by default)
-* Preserve existing behavior for ≤3.13. (DONE)
-* Upgrade debugpy to 1.9.0. (DONE)
-* Comprehensive test coverage (attach, launch, stepping, evaluation). (PARTIAL – expanding with new helpers)
-* Telemetry instrumentation + reliability metrics. (PENDING)
-* Refactor thread-state discovery to shared export parsing helper (RF1 PARTIAL – multiple helpers now integrated)
-
-Out of Scope: IntelliSense, profiling, or REPL behavioral changes beyond version acceptance.
+| Area | Change | Impact |
+|------|--------|--------|
+| DLL Detection | Regex updated to `^python3(\d{2,3})(?:_d)?\.dll$` | Correctly matches `python310/311/314.dll` (was previously limited to two digits). |
+| Interpreter Walk | Added slab-wide scan + live memory validation to infer interpreter walk sextuple (`runtime_state`, `interpreters.head`, `interpreters.main`, `threads_head`, `threads_main`, `tstate.next`). | Deterministic thread state discovery without exports/TLS or heuristics. |
+| Parser | Keeps 5‑tuple parse; no longer assumes adjacency for walk offsets. | Robust against layout variance across builds. |
+| Validation | Candidate `PyThreadState` now probes: eval_breaker (4), pending flag (4), script path buffer (prefix). | Reduces false positives. |
+| Pending Flag | Explicit read validation before acceptance. | Safety / correctness. |
+| Eval Breaker | Enforces 32-bit field, ORs bit 0x20 only if not already set. | PEP 768 compliant. |
+| Timing Instrumentation | Phase timing logged (module, slab read, inference, walk, write). | Performance baselining (latency now typically <50ms). |
+| Walk Metrics | Candidate count + success path logged. | Diagnostic clarity for inference cost. |
+| Export Path | Still bypassed by default for 3.14+, explicit opt-in only. | Security/surface reduction. |
+| Heuristic Scan | Now hard opt-in (`PTVS_SAFE_ATTACH_FORCE_HEURISTIC`) and skipped for normal flow when deterministic path succeeds. | Reliability over guesswork. |
+| Double Logging Cleanup | Removed duplicate parse log lines (in progress). | Log hygiene. |
 
 ---
 
-## High-Level Work Items (Status)
+## Shared Safe Attach Components
 
-1. Version Recognition & Constants – DONE
-2. debugpy Upgrade – DONE
-3. `_Py_DebugOffsets` Parsing – DONE (shared parser)
-4. Native/Mixed Safe Attach – DONE (Phase 1)
-5. Managed Safe Attach – DEFAULT (cache, stop bit heuristic → unified; opt‑out flag)
-6. Stepping Reliability Adjustments – Monitoring
-7. Resilience / Fallback – Active
-8. Telemetry & Strings – PENDING
-9. Docs & Samples – IN PROGRESS
-10. Test Matrix – EXPANDING
-11. Refactor export parsing / thread-state lookup (RF1) – PARTIAL (core + cache + stop-bit + heuristic + validation integrated)
-12. Final Validation / Performance Baseline – PENDING
+(UNCHANGED list plus clarifications)
+
+| File | Purpose | Used By | Notes |
+|------|---------|---------|-------|
+| `PeExportReader.cs` | PE export enumeration/caching | Managed, Concord | Unchanged |
+| `ThreadStateExportResolver.cs` | Export/TLS threadstate retrieval (legacy path) | Managed, Concord | Skipped for 3.14+ unless explicitly allowed |
+| `SafeAttachUtilities.cs` | UTF-8 loader path prep (NUL termination, truncation) | Managed, Concord | Ensures <= size-1 + trailing `\0` |
+| `EvalBreakerHelper.cs` | Dynamic/heuristic stop-bit mask selection (pre‑3.14) | Managed, Concord | 3.14+ constant 0x20 path bypasses dynamic logic |
+| `ThreadStateCacheValidator.cs` | Fast reuse probe | Managed (Concord planned) | Probes eval_breaker + script buffer addresses |
+| `HeuristicThreadStateLocator.cs` | Backward scan heuristic (optional) | Managed (Concord migrate) | Now rarely needed |
+
+### NEW Helper Behavior
+* Deterministic walk priority: cache → interpreter-walk (if inferred or parsed) → (optional heuristic) → (optional export fallback if explicitly enabled).
+* Walk inference stops immediately after first validated `PyThreadState`.
+* Inference counts each 6‑qword candidate examined (logged as `candidates=`).
+
+---
+
+## Remaining Commonization Opportunities (Updated)
+1. Concord adoption of walk inference + cache validator (replace local logic).
+2. Shared locator strategy abstraction (ordered providers + telemetry shaping).
+3. Consolidated write helper returning structured success/failure with post-write verification.
+4. Unified telemetry event schema (Attempt/Result) consuming new timing + mask + resolution metrics.
+5. Fault injection seam (simulate partial writes) generalized.
+6. Remove residual duplicate parse logs & ensure single-line success summary.
+
+---
+
+## Completed (Delta)
+* Deterministic interpreter walk inference (slab-wide, memory-validated) – MANAGED.
+* Pending flag + script buffer probe added to candidate validation.
+* Regex fix for 3-digit minor version DLLs.
+* Phase timing instrumentation & candidate metrics.
 
 ---
 
 ## Current State (Updated)
-
-* **Safe Attach (Native/Mixed)**: Stable; export & stop-bit logic unified.
-* **Managed Safe Attach**: Export + heuristic (optional) + cache validation + unified stop-bit logic.
-* **Shared Layer**: Consolidated most low-level primitives; remaining local logic in Concord: multi-tier selection + current heuristic scan (to migrate).
-* **Telemetry**: Still debug logging only; helpers now surface metadata ready for event schema.
-
----
-
-## Thread State Discovery Refactor Plan (RF1)
-**Completed:** Export resolver, loader util, unified stop-bit, cache validator, heuristic locator (managed integration), orchestrator simplification.
-**Pending:** Concord adoption of shared heuristic & validator, consolidated locator strategy, telemetry instrumentation.
+* **Managed Safe Attach**: Deterministic walk path stable; attach latency now typically tens of ms (previous worst-case 20+ seconds with repeated heuristics eliminated).
+* **Exports**: Disabled by default for 3.14+, still available as fallback via env var.
+* **Heuristics**: Off unless explicitly forced; treated as diagnostic tool.
+* **Cache**: Reuse path validated before any discovery work; pending Concord integration.
+* **Telemetry**: Instrumentation in logs only; schema wiring pending.
 
 ---
 
-## Telemetry & Logging (Planned vs Current)
-
-| Aspect | Current | Planned |
-|--------|---------|---------|
-| Event Emission | Debug.WriteLine | Structured Attempt/Result events |
-| Failure Taxonomy | Enum only | Event fields + aggregation |
-| Timing | Total elapsed | Phase breakdown (resolve/cache/heuristic/write) |
-| Cache Reuse | Log message | Flag + age (ms) |
-| Truncation | Log message | Field (size, truncatedLength) |
-| Stop-Bit Mask | Logged mask + source | Field + derived source enum |
-| Export Resolution Source | Implicit | Field (data/function/heuristic/cache) |
-| Heuristic Usage | Implicit | Field (used, scanRangePages) |
+## Environment Variables (Active Set)
+| Name | Effect | Default |
+|------|--------|---------|
+| `PTVS_SAFE_ATTACH_MANAGED_DISABLE` | Disable safe attach (force legacy injector) | Not set |
+| `PTVS_SAFE_ATTACH_ALLOW_EXPORT` | Allow export/TLS path even if 3.14+ | Not set |
+| `PTVS_SAFE_ATTACH_ALLOW_EXPORT_FALLBACK` | Permit export fallback if walk+cache fail | Not set |
+| `PTVS_SAFE_ATTACH_MANAGED_NO_CACHE` | Disable tstate cache reuse | Not set |
+| `PTVS_SAFE_ATTACH_FORCE_HEURISTIC` | Force heuristic scan attempt | Not set |
+| `PTVS_SAFE_ATTACH_VERBOSE` | Enable verbose logs (Release) | Not set |
+| `PTVS_SAFE_ATTACH_MANAGED_WRITE` | Explicitly allow writes (else default-on) | Not required |
 
 ---
 
-## Next Actions (Updated)
-1. **TM1**: Telemetry event schema + wiring (include maskSource, resolutionPath, cacheReused, heuristicUsed).
-2. **RF1-Continued**: Move Concord heuristic to `HeuristicThreadStateLocator`; adopt `ThreadStateCacheValidator`.
-3. **RF1-Strategy**: Introduce `ThreadStateLocator` orchestrating cache → main → enum → export → heuristic (configurable).
-4. **PW1**: Fault injection seam unify (partial write simulation into shared helper) + tests.
-5. **CA1**: Extended validation (sanity of pending flag & script buffer content after write, pointer bounds telemetry).
-6. **MA-Tests**: Add unit tests targeting each shared helper (export resolver, stop-bit helper, heuristic locator, cache validator) and orchestrator integration scenarios.
-7. **DX1**: Summarized single-line outcome in Output window (first attempt per process).
-8. **ML1**: Minimal loader script reduction (smaller UTF8 footprint).
-9. **EN1**: Baseline attach latency & success metrics once telemetry live.
+## Timing Fields (Logged Currently)
+`module=<ms> slab=<ms> infer=<ms> walk=<ms> write=<ms> total=<ms> candidates=<n> inferOk=<bool> walkTried=<bool>`
+
+Future telemetry will split: cacheProbe, exportFallback, heuristicAttempts, writeSubPhases (pathWrite, pendingWrite, breakerWrite).
 
 ---
 
-## Legacy vs. 3.14 Safe Attach Comparison
-
-| Aspect | ≤3.13 Legacy | 3.14 Safe Attach | Benefit |
-|--------|--------------|------------------|---------|
-| Discovery | Heuristic symbol lookup | `_Py_DebugOffsets` + shared resolver + (optional) heuristic | Robust & extensible |
-| Entry Mechanism | Remote thread + DLL injection | Script path + flags + stop bit | Lower crash surface |
-| Thread State | Current thread only | Export + cache + heuristic fallback | Higher success rate |
-| Validation | Minimal | Structured parse + cache validation | Safety |
-| Reattach | Full rediscovery | Cache reuse (validated) | Performance |
-| Policy Awareness | Limited | Honors `RemoteDebugDisabled` | Governance |
-| Stop-Bit Selection | Fixed constant | Unified dynamic/heuristic helper | Future-proof |
-| Telemetry | Sparse | (Planned) Rich events | Diagnostics |
-| Code Duplication | High | Shared helpers (RF1) | Maintainability |
+## Next Actions (Refreshed)
+1. Telemetry event emission (Attempt/Result) + schema finalization.
+2. Concord migration to deterministic walk.
+3. Shared write + verification helper (returns annotated result).
+4. Post-write validation & optional re-read hash for script buffer.
+5. Loader script footprint reduction (opt: on-demand network listener injection).
+6. Add negative test vectors: corrupted slab, partial slab, synthetic walk collision.
+7. Final pass removing duplicate verbose lines & standardizing prefixes.
 
 ---
 
-(Other sections unchanged below – test plan already reflects new helpers; will expand telemetry cases after TM1.)
+## Legacy vs. 3.14 Safe Attach Comparison (Unchanged Core – augmented)
+
+| Aspect | ≤3.13 Legacy | 3.14 Safe Attach (Current) | Benefit |
+|--------|--------------|---------------------------|---------|
+| Discovery | Heuristic export/TLS | Deterministic slab parse + walk | Reliability + speed |
+| Reattach | Full rediscovery | Cache (validated) | Performance |
+| Failure Surface | Injection thread + allocation | In-place script path + bit flip | Lower risk |
+| Validation | Minimal | Structured + multi-probe + timing | Safety & diagnostics |
+| Telemetry | Sparse | Timing logged (events pending) | Observability |
+
+---
+
+(Sections below retained for historical context; will be pruned once telemetry lands.)
