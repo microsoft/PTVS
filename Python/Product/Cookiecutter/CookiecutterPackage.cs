@@ -153,7 +153,7 @@ namespace Microsoft.CookiecutterTools {
                          commands[0].cmdf = KnownUIContexts.NotBuildingAndNotDebuggingContext.IsActive
                             ? (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED)
                             : (uint)(OLECMDF.OLECMDF_SUPPORTED);
-    
+                        break;
                     case PackageIds.cmdidAddFromCookiecutter:
                         commands[0].cmdf = KnownUIContexts.NotBuildingAndNotDebuggingContext.IsActive &&
                                            _projectSystem.GetSelectedFolderProjectLocation() != null
