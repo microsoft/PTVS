@@ -104,11 +104,13 @@
         <Parent guid="guidCookiecutterCmdSet" id="CookiecutterMenu"/>
         <Icon guid="guidCookiecutterImages" id="NewCookiecutter"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
+        <CommandFlag>TextMenuUseButton</CommandFlag>
         <Strings>
-          <ButtonText>From &amp;Cookiecutter...</ButtonText>
-          <ToolTipText>Creates files using a Cookiecutter template.</ToolTipText>
-          <CanonicalName>Create From</CanonicalName>
-          <LocCanonicalName>Create From</LocCanonicalName>
+          <ButtonText>New From &amp;Cookiecutter...</ButtonText>
+          <MenuText>From &amp;Cookiecutter...</MenuText>
+          <ToolTipText>New project or file using a Cookiecutter template.</ToolTipText>
+          <CanonicalName>.File.NewFromCookiecutter</CanonicalName>
+          <LocCanonicalName>.File.NewFromCookiecutter</LocCanonicalName>
         </Strings>
       </Button>
 

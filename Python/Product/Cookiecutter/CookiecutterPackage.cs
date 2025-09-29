@@ -148,8 +148,14 @@ namespace Microsoft.CookiecutterTools {
         int IOleCommandTarget.QueryStatus(ref Guid commandGroup, uint commandsCount, OLECMD[] commands, IntPtr pCmdText) {
             if (commandGroup == PackageGuids.guidCookiecutterCmdSet && commandsCount == 1) {
                 switch (commands[0].cmdID) {
+                    case PackageIds.cmdidNewProjectFromTemplate:
+                    case PackageIds.cmdidCreateFromCookiecutter:
+                         commands[0].cmdf = KnownUIContexts.NotBuildingAndNotDebuggingContext.IsActive
+                            ? (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED)
+                            : (uint)(OLECMDF.OLECMDF_SUPPORTED);
+                        break;
                     case PackageIds.cmdidAddFromCookiecutter:
-                        commands[0].cmdf = DTE.Debugger.CurrentMode == EnvDTE.dbgDebugMode.dbgDesignMode &&
+                        commands[0].cmdf = KnownUIContexts.NotBuildingAndNotDebuggingContext.IsActive &&
                                            _projectSystem.GetSelectedFolderProjectLocation() != null
                             ? (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED)
                             : (uint)(OLECMDF.OLECMDF_INVISIBLE | OLECMDF.OLECMDF_SUPPORTED);
