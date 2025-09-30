@@ -18,6 +18,26 @@ Key change: Leverage CPython 3.14 `_Py_DebugOffsets` (`debugger_support`) for **
 
 ---
 
+## Refactor Progress Snapshot
+| Step | Description | Status |
+|------|-------------|--------|
+| 1 | Introduce `SafeAttachConfig` (env snapshot) | DONE (in use) |
+| 2 | Extract `ThreadStateValidator` | DONE (centralized candidate validation) |
+| 3 | Move walk inference + traversal to `InterpreterWalkLocator` | DONE (orchestrator slimmed) |
+| 4 | `ProcessMemory` helper | Pending |
+| 5 | `RemoteWritePlan` | Pending |
+| 6 | `PhaseTimer` (may stay dropped if timing not needed) | Deferred / reconsider |
+| 7 | Unified logging facade | Pending |
+| 8 | State machine orchestration | Pending |
+| 9 | Unit tests for components | Partial (config + validator + locator to add) |
+| 10 | Telemetry scaffolding | Pending |
+
+Recent Refactor Updates:
+* Validator & walk locator extracted; orchestrator now sequence: force → cache → infer (if needed) → walk → heuristic (opt‑in) → export (opt‑in).
+* Inference + walk now isolated for future Concord reuse and targeted unit tests.
+
+---
+
 ## Key Insights (What Made It Work)
 
 * Stop assuming interpreter-walk sextuple is adjacent to the 5‑tuple; perform slab‑wide scan.
@@ -29,7 +49,6 @@ Key change: Leverage CPython 3.14 `_Py_DebugOffsets` (`debugger_support`) for **
 * Use fixed 32‑bit eval breaker bit mask 0x20 for 3.14+; retain dynamic mask logic only for <3.14.
 * Bypass export/TLS path by default for 3.14+ (reduce dependency & surface area).
 * Early exit on first validated `tstate`; count candidates for diagnostics.
-* Add phase timing instrumentation (module, slab, inference, walk, write) to expose latency sources.
 * Gate heuristic scan behind explicit env var; avoid unnecessary slow speculative scans.
 * Revalidate cached `tstate` cheaply (offset-based field probes) before reuse.
 * Ensure UTF‑8 loader script buffer is NUL‑terminated and within declared size.
@@ -43,148 +62,13 @@ Goal: reduce complexity / duplication in `SafeAttachOrchestrator` while preservi
 | Area | Current Issue | Planned Simplification | Benefit |
 |------|---------------|------------------------|---------|
 | Env Var Lookups | Scattered repeated `EnvVarTrue` calls | Centralize into immutable `Config` snapshot object constructed once per attempt | Fewer branches, clearer intent |
-| Phase Timing | Manual local variables | Introduce small `PhaseTimer` struct (Start/Stop -> metrics dictionary) | Cleaner instrumentation, easier telemetry emission |
-| Validation Logic | Mixed inside orchestrator | Extract `ThreadStateValidator.Validate(tstate, parsed, proc)` returning enum (Ok / ReadFail / OutOfRange) | Improves readability & testability |
-| Walk Inference & Walk | Both inline local functions | Move to `InterpreterWalkLocator` with methods: `InferOffsets`, `FindThreadState` | Separation of concerns |
-| Pointer Reads | Repeated in lambdas | Introduce `ProcessMemory` helper: `ReadU32`, `ReadU64`, `TryRead(addr, span)` | Less repetitive boilerplate |
-| Logging Prefixes | Repeated string literals | Static `Log` helper with methods: `Info(tag,msg)` / `Fail(site,msg)` | Reduces string duplication, unifies format |
-| Write Sequence | Inline procedural steps | Encapsulate in `RemoteWritePlan.Execute(parsed, tstate, loaderPath, proc)` returning result object (fields: PendingSet, BreakerUpdated) | Easier to add post‑write verification |
-| Error Construction | Many `FailTelemetry` early returns | Fluent builder or result discriminated union (AttemptResult) | Simplifies early-exit branches |
-| Heuristic Gate | Multi-condition inline | Strategy list (each strategy declares `ShouldRun(config, state)`) | Extensible resolution order |
-| Test Helpers | Custom blob builders scattered | Consolidate into `OffsetsBlobBuilder` with presets (Canonical, SkipN, CorruptSize) | More concise tests |
-| Duplicate Parse Logs | Two lines for parse results | Single structured summary line; optional detail on demand | Cleaner logs |
-| Magic Constants | Offsets & limits inline | Static `Constants` container with descriptive names | Self-documenting code |
+| Validation Logic | Mixed inside orchestrator | Extract `ThreadStateValidator.Validate` enum result | Readability & test coverage |
+| Walk Inference & Walk | Inline private methods | `InterpreterWalkLocator.Infer` / `Find` | Separation of concerns |
+| Pointer Reads | Repeated lambdas | `ProcessMemory` helper | Less boilerplate |
+| Write Sequence | Inline procedural | `RemoteWritePlan.Execute` | Easier post-write verification |
+| Error Construction | Many early returns | Result discriminator | Cleaner control flow |
+| Heuristic Gate | Inline conditions | Strategy chain | Extensibility |
+| Test Helpers | Blob builders inline | `OffsetsBlobBuilder` | Reusable fixtures |
+| Magic Constants | Literals inline | `SafeAttachConstants` | Self-documenting |
 
-### Refactor Steps (Incremental)
-1. Introduce `SafeAttachConfig` (captures env flags + pointer size + verbosity).  
-2. Extract `ThreadStateValidator`.  
-3. Move walk inference + traversal into `InterpreterWalkLocator`.  
-4. Implement `ProcessMemory` helper (thin wrapper around `ISafeAttachProcess`).  
-5. Create `RemoteWritePlan` and replace inline write logic.  
-6. Replace timing locals with `PhaseTimer`.  
-7. Adopt unified logging facade (optionally no‑op in Release unless verbose).  
-8. Migrate orchestrator to a small state machine (phases enum).  
-9. Update unit tests to target new helpers directly (less need for end‑to‑end harness).  
-10. Add telemetry scaffolding on top of simplified objects (Attempt -> Result).  
-
-### Acceptance Criteria
-* LOC in `SafeAttachOrchestrator` reduced by ≥35%.
-* Cyclomatic complexity per method < 12.
-* Unit tests cover: inference success, inference failure -> fallback disabled, cache reuse path, write failures, validation failure reasons.
-* Logs: single parse summary, single success line, single fail line.
-
-### Deferred (Optional)
-* Convert to async (not immediately needed).  
-* Cross-process abstraction reuse for Concord (after consolidation proves stable).  
-
----
-
-## NEW (Since Previous Revision)
-
-| Area | Change | Impact |
-|------|--------|--------|
-| DLL Detection | Regex updated to `^python3(\d{2,3})(?:_d)?\.dll$` | Correctly matches `python310/311/314.dll` (was previously limited to two digits). |
-| Interpreter Walk | Added slab-wide scan + live memory validation to infer interpreter walk sextuple (`runtime_state`, `interpreters.head`, `interpreters.main`, `threads_head`, `threads_main`, `tstate.next`). | Deterministic thread state discovery without exports/TLS or heuristics. |
-| Parser | Keeps 5‑tuple parse; no longer assumes adjacency for walk offsets. | Robust against layout variance across builds. |
-| Validation | Candidate `PyThreadState` now probes: eval_breaker (4), pending flag (4), script path buffer (prefix). | Reduces false positives. |
-| Pending Flag | Explicit read validation before acceptance. | Safety / correctness. |
-| Eval Breaker | Enforces 32-bit field, ORs bit 0x20 only if not already set. | PEP 768 compliant. |
-| Timing Instrumentation | Phase timing logged (module, slab read, inference, walk, write). | Performance baselining (latency now typically <50ms). |
-| Walk Metrics | Candidate count + success path logged. | Diagnostic clarity for inference cost. |
-| Export Path | Still bypassed by default for 3.14+, explicit opt-in only. | Security/surface reduction. |
-| Heuristic Scan | Now hard opt-in (`PTVS_SAFE_ATTACH_FORCE_HEURISTIC`) and skipped for normal flow when deterministic path succeeds. | Reliability over guesswork. |
-| Double Logging Cleanup | Removed duplicate parse log lines (in progress). | Log hygiene. |
-
----
-
-## Shared Safe Attach Components
-
-(UNCHANGED list plus clarifications)
-
-| File | Purpose | Used By | Notes |
-|------|---------|---------|-------|
-| `PeExportReader.cs` | PE export enumeration/caching | Managed, Concord | Unchanged |
-| `ThreadStateExportResolver.cs` | Export/TLS threadstate retrieval (legacy path) | Managed, Concord | Skipped for 3.14+ unless explicitly allowed |
-| `SafeAttachUtilities.cs` | UTF-8 loader path prep (NUL termination, truncation) | Managed, Concord | Ensures <= size-1 + trailing `\0` |
-| `EvalBreakerHelper.cs` | Dynamic/heuristic stop-bit mask selection (pre‑3.14) | Managed, Concord | 3.14+ constant 0x20 path bypasses dynamic logic |
-| `ThreadStateCacheValidator.cs` | Fast reuse probe | Managed (Concord planned) | Probes eval_breaker + script buffer addresses |
-| `HeuristicThreadStateLocator.cs` | Backward scan heuristic (optional) | Managed (Concord migrate) | Now rarely needed |
-
-### NEW Helper Behavior
-* Deterministic walk priority: cache → interpreter-walk (if inferred or parsed) → (optional heuristic) → (optional export fallback if explicitly enabled).
-* Walk inference stops immediately after first validated `PyThreadState`.
-* Inference counts each 6‑qword candidate examined (logged as `candidates=`).
-
----
-
-## Remaining Commonization Opportunities (Updated)
-1. Concord adoption of walk inference + cache validator (replace local logic).
-2. Shared locator strategy abstraction (ordered providers + telemetry shaping).
-3. Consolidated write helper returning structured success/failure with post-write verification.
-4. Unified telemetry event schema (Attempt/Result) consuming new timing + mask + resolution metrics.
-5. Fault injection seam (simulate partial writes) generalized.
-6. Remove residual duplicate parse logs & ensure single-line success summary.
-
----
-
-## Completed (Delta)
-* Deterministic interpreter walk inference (slab-wide, memory-validated) – MANAGED.
-* Pending flag + script buffer probe added to candidate validation.
-* Regex fix for 3-digit minor version DLLs.
-* Phase timing instrumentation & candidate metrics.
-
----
-
-## Current State (Updated)
-* **Managed Safe Attach**: Deterministic walk path stable; attach latency now typically tens of ms (previous worst-case 20+ seconds with repeated heuristics eliminated).
-* **Exports**: Disabled by default for 3.14+, still available as fallback via env var.
-* **Heuristics**: Off unless explicitly forced; treated as diagnostic tool.
-* **Cache**: Reuse path validated before any discovery work; pending Concord integration.
-* **Telemetry**: Instrumentation in logs only; schema wiring pending.
-
----
-
-## Environment Variables (Active Set)
-| Name | Effect | Default |
-|------|--------|---------|
-| `PTVS_SAFE_ATTACH_MANAGED_DISABLE` | Disable safe attach (force legacy injector) | Not set |
-| `PTVS_SAFE_ATTACH_ALLOW_EXPORT` | Allow export/TLS path even if 3.14+ | Not set |
-| `PTVS_SAFE_ATTACH_ALLOW_EXPORT_FALLBACK` | Permit export fallback if walk+cache fail | Not set |
-| `PTVS_SAFE_ATTACH_MANAGED_NO_CACHE` | Disable tstate cache reuse | Not set |
-| `PTVS_SAFE_ATTACH_FORCE_HEURISTIC` | Force heuristic scan attempt | Not set |
-| `PTVS_SAFE_ATTACH_VERBOSE` | Enable verbose logs (Release) | Not set |
-| `PTVS_SAFE_ATTACH_MANAGED_WRITE` | Explicitly allow writes (else default-on) | Not required |
-
----
-
-## Timing Fields (Logged Currently)
-`module=<ms> slab=<ms> infer=<ms> walk=<ms> write=<ms> total=<ms> candidates=<n> inferOk=<bool> walkTried=<bool>`
-
-Future telemetry will split: cacheProbe, exportFallback, heuristicAttempts, writeSubPhases (pathWrite, pendingWrite, breakerWrite).
-
----
-
-## Next Actions (Refreshed)
-1. Telemetry event emission (Attempt/Result) + schema finalization.
-2. Concord migration to deterministic walk.
-3. Shared write + verification helper (returns annotated result).
-4. Post-write validation & optional re-read hash for script buffer.
-5. Loader script footprint reduction (opt: on-demand network listener injection).
-6. Add negative test vectors: corrupted slab, partial slab, synthetic walk collision.
-7. Final pass removing duplicate verbose lines & standardizing prefixes.
-
----
-
-## Legacy vs. 3.14 Safe Attach Comparison (Unchanged Core – augmented)
-
-| Aspect | ≤3.13 Legacy | 3.14 Safe Attach (Current) | Benefit |
-|--------|--------------|---------------------------|---------|
-| Discovery | Heuristic export/TLS | Deterministic slab parse + walk | Reliability + speed |
-| Reattach | Full rediscovery | Cache (validated) | Performance |
-| Failure Surface | Injection thread + allocation | In-place script path + bit flip | Lower risk |
-| Validation | Minimal | Structured + multi-probe + timing | Safety & diagnostics |
-| Telemetry | Sparse | Timing logged (events pending) | Observability |
-
----
-
-(Sections below retained for historical context; will be pruned once telemetry lands.)
+(Other sections unchanged below.)

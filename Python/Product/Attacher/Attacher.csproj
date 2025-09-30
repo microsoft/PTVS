@@ -76,8 +76,10 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="ConnErrorMessages.cs" />
+    <Compile Include="ManagedSafeAttach\InterpreterWalkLocator.cs" />
     <Compile Include="ManagedSafeAttach\SafeAttachConfig.cs" />
     <Compile Include="ManagedSafeAttach\SafeAttachOrchestrator.cs" />
+    <Compile Include="ManagedSafeAttach\ThreadStateValidator.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="PyAttacher.cs" />
   </ItemGroup>

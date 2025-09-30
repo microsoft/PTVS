@@ -130,33 +130,40 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
                     return FailTelemetry(pid, SafeAttachFailureSite.OffsetsParse, $"pending/script ordering invalid (pending=0x{parsed.PendingCall:X} path=0x{parsed.ScriptPath:X})", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
                 }
 
-                // Interpreter walk inference
+                // 4. Attempt interpreter walk inference if not already provided
                 if (!parsed.HasInterpreterWalk) {
-                    if (TryInferInterpreterOffsets(proc, offsetsAddr, slab, IntPtr.Size, ref parsed, out var whyNot, out var _)) {
+                    if (InterpreterWalkLocator.TryInferOffsets(proc, offsetsAddr, slab, IntPtr.Size, ref parsed, out var whyNot, out var _)) {
                         if (cfg.Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] Inferred interpreter walk offsets from slab");
                     } else if (cfg.Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] Could not infer interpreter walk offsets: " + whyNot);
                 }
 
-                // Thread state discovery
+                // 5. Thread state discovery sequence: forced -> cache -> walk -> heuristic -> export
                 ulong tstatePtr = 0;
                 if (!string.IsNullOrEmpty(cfg.ForcedTStateHex) && ulong.TryParse(cfg.ForcedTStateHex, System.Globalization.NumberStyles.HexNumber, null, out var forcedVal)) tstatePtr = forcedVal;
+
                 if (tstatePtr == 0 && !cfg.DisableCache) {
                     if (_tstateCache.TryGetValue(pid, out var ce) && ce.PyBase == (ulong)pyBase.ToInt64() && ce.Version == parsed.Version) {
                         if (ThreadStateCacheValidator.Validate(ce.ThreadState, parsed, IntPtr.Size, (addr, buffer) => proc.Read(addr, buffer, buffer.Length))) tstatePtr = ce.ThreadState;
+                        else if (cfg.Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] Cache invalid; rediscovering");
                     }
                 }
+
                 if (tstatePtr == 0 && parsed.HasInterpreterWalk) {
-                    tstatePtr = FindTStateViaWalk(proc, offsetsAddr, parsed, IntPtr.Size);
+                    tstatePtr = InterpreterWalkLocator.FindThreadState(proc, offsetsAddr, parsed, IntPtr.Size, c => ThreadStateValidator.Validate(c, parsed, proc, cfg.Verbose));
                     if (cfg.Verbose && tstatePtr != 0) Debug.WriteLine($"[PTVS][ManagedSafeAttach] Walk located tstate=0x{tstatePtr:X}");
                 }
+
                 if (tstatePtr == 0 && allowHeuristic && cfg.ForceHeuristic) {
+                    if (cfg.Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] Attempting heuristic scan");
                     tstatePtr = HeuristicThreadStateLocator.TryLocate(0, parsed.RemoteSupport, parsed.ScriptPath, parsed.ScriptPathSize, IntPtr.Size, (addr, hb) => proc.Read(addr, hb, hb.Length));
                 }
+
                 if (tstatePtr == 0 && !bypassExport && cfg.AllowExportFallback) {
                     var exportTstate = LocateThreadStateCurrent(proc, pyBase, pySize);
                     if (exportTstate != 0) tstatePtr = exportTstate;
                 }
-                if (tstatePtr != 0 && !ValidateCandidate(tstatePtr, parsed, proc)) tstatePtr = 0;
+
+                if (tstatePtr != 0 && !ThreadStateValidator.Validate(tstatePtr, parsed, proc, cfg.Verbose)) tstatePtr = 0;
                 if (tstatePtr == 0) {
                     return FailTelemetry(pid, SafeAttachFailureSite.ThreadStateDiscovery, "thread state unresolved", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
                 }
@@ -166,7 +173,7 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
                     return FailTelemetry(pid, SafeAttachFailureSite.ScriptBufferWrite, "write gate disabled", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
                 }
 
-                // Write phase
+                // 6. Write phase
                 ulong supportBase = tstatePtr + parsed.RemoteSupport;
                 ulong scriptPathBufAddr = supportBase + parsed.ScriptPath;
                 ulong pendingFlagAddr = supportBase + parsed.PendingCall;
@@ -236,7 +243,7 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
                     }
                 }
 
-                var ok = SafeAttachResult.Ok(parsed.Version, parsed.FreeThreaded, parsed.RemoteDebugDisabled, reused: _tstateCache.ContainsKey(pid), truncated: false, exportBypassed: exportBypassed);
+                var ok = SafeAttachResult.Ok(parsed.Version, parsed.FreeThreaded, parsed.RemoteDebugDisabled, reused: _tstateCache.ContainsKey(pid), truncated: truncated, exportBypassed: exportBypassed);
                 Debug.WriteLine($"[PTVS][ManagedSafeAttach] SUCCESS pid={pid} ver=0x{parsed.Version:X} tstate=0x{tstatePtr:X} exportBypassed={exportBypassed}");
                 return ok;
             } catch (Exception ex) {
@@ -350,87 +357,6 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
                 }
             } catch (Exception ex) { Debug.WriteLine("[PTVS][ManagedSafeAttach] LocateDebugOffsetsAndSize exception: " + ex.Message); }
             return (0, 0);
-        }
-
-        /// <summary>
-        /// Validates a candidate PyThreadState address by probing required offset-derived fields.
-        /// </summary>
-        private static bool ValidateCandidate(ulong tstatePtr, ParsedDebugOffsets parsed, ISafeAttachProcess proc) {
-            if ((tstatePtr & (ulong)(IntPtr.Size - 1)) != 0) { if (Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] Reject candidate (align)"); return false; }
-#if X64 || AMD64
-            if (tstatePtr >= 0x0000800000000000UL) { if (Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] Reject candidate (canonical)"); return false; }
-#endif
-            byte[] probe = new byte[4];
-            if (!proc.Read(tstatePtr + parsed.EvalBreaker, probe, probe.Length)) { if (Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] Reject candidate (eval_breaker read fail)"); return false; }
-            ulong supportBase = tstatePtr + parsed.RemoteSupport;
-            byte[] pendingProbe = new byte[4];
-            if (!proc.Read(supportBase + parsed.PendingCall, pendingProbe, pendingProbe.Length)) { if (Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] Reject candidate (pending read fail)"); return false; }
-            byte[] buf = new byte[16];
-            ulong pathAddr = supportBase + parsed.ScriptPath;
-            if (!proc.Read(pathAddr, buf, buf.Length)) { if (Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] Reject candidate (script buffer read fail)"); return false; }
-            return true;
-        }
-
-        /// <summary>
-        /// Attempts a slab-wide pattern inference of interpreter walk offsets (runtime/interpreters/threads)
-        /// by testing candidate sextuples against live memory reads.
-        /// </summary>
-        private static bool TryInferInterpreterOffsets(ISafeAttachProcess proc, ulong pyRuntimeAddr, byte[] slab, int ptrSize, ref ParsedDebugOffsets off, out string whyNot, out int candidateCount) {
-            whyNot = "no candidate validated"; candidateCount = 0;
-            int qwords = slab.Length / 8;
-            var offLocal = off;
-            bool ReadPtr(ulong addr, out ulong val) { var tmp = new byte[ptrSize]; if (!proc.Read(addr, tmp, tmp.Length)) { val = 0; return false; } val = ptrSize == 8 ? BitConverter.ToUInt64(tmp, 0) : BitConverter.ToUInt32(tmp, 0); return true; }
-            bool IsUserPtr(ulong p) => p >= 0x10000 && p < 0x00008000_00000000UL;
-            bool Small(ulong v) => v < 0x20000;
-            bool ValidateTstate(ulong tstate) => ValidateCandidate(tstate, offLocal, proc);
-            bool ValidateCandidateSet(ulong rt, ulong ih, ulong im, ulong th, ulong tm, ulong tn) {
-                ulong rtBase = pyRuntimeAddr + rt;
-                ulong interp = 0;
-                if (im != 0 && ReadPtr(rtBase + im, out interp) && IsUserPtr(interp)) { }
-                else if (ih != 0 && ReadPtr(rtBase + ih, out interp) && IsUserPtr(interp)) { }
-                else return false;
-                if (tm != 0 && ReadPtr(interp + tm, out var tmain) && IsUserPtr(tmain) && ValidateTstate(tmain)) return true;
-                if (th != 0 && tn != 0 && ReadPtr(interp + th, out var head) && IsUserPtr(head)) {
-                    int limit = 256; ulong cur = head; while (cur != 0 && IsUserPtr(cur) && limit-- > 0) { if (ValidateTstate(cur)) return true; if (!ReadPtr(cur + tn, out cur)) break; }
-                }
-                return false;
-            }
-            for (int i = 0; i + 5 < qwords; i++) {
-                ulong rt = BitConverter.ToUInt64(slab, (i + 0) * 8);
-                ulong ih = BitConverter.ToUInt64(slab, (i + 1) * 8);
-                ulong im = BitConverter.ToUInt64(slab, (i + 2) * 8);
-                ulong th = BitConverter.ToUInt64(slab, (i + 3) * 8);
-                ulong tm = BitConverter.ToUInt64(slab, (i + 4) * 8);
-                ulong tn = BitConverter.ToUInt64(slab, (i + 5) * 8);
-                candidateCount++;
-                if (!((rt == 0 || Small(rt)) && Small(ih) && Small(im) && Small(th | tm) && Small(tn))) continue;
-                if (tn == 0 || (tn % (ulong)ptrSize) != 0) continue;
-                if (ValidateCandidateSet(rt, ih, im, th, tm, tn)) { offLocal.RuntimeState = rt; offLocal.InterpretersHead = ih; offLocal.InterpretersMain = im; offLocal.ThreadsHead = th; offLocal.ThreadsMain = tm; offLocal.ThreadNext = tn; off = offLocal; return true; }
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// Performs a deterministic interpreter walk using previously inferred offsets to locate a valid PyThreadState.
-        /// Returns 0 if none found.
-        /// </summary>
-        private static ulong FindTStateViaWalk(ISafeAttachProcess proc, ulong pyRuntimeAddr, ParsedDebugOffsets off, int ptrSize) {
-            bool ReadPtr(ulong addr, out ulong val) { var tmp = new byte[ptrSize]; if (!proc.Read(addr, tmp, tmp.Length)) { val = 0; return false; } val = ptrSize == 8 ? BitConverter.ToUInt64(tmp, 0) : BitConverter.ToUInt32(tmp, 0); return true; }
-            bool IsUserPtr(ulong p) => p >= 0x10000 && p < 0x00008000_00000000UL;
-            ulong rtBase = pyRuntimeAddr + off.RuntimeState; // RuntimeState may be 0
-            if (off.InterpretersMain != 0 && ReadPtr(rtBase + off.InterpretersMain, out var interp) && IsUserPtr(interp)) {
-                if (off.ThreadsMain != 0 && ReadPtr(interp + off.ThreadsMain, out var tm) && IsUserPtr(tm)) return tm;
-                if (off.ThreadsHead != 0 && off.ThreadNext != 0 && ReadPtr(interp + off.ThreadsHead, out var head) && IsUserPtr(head)) {
-                    for (ulong ts = head; ts != 0 && IsUserPtr(ts); ) { if (ValidateCandidate(ts, off, proc)) return ts; if (!ReadPtr(ts + off.ThreadNext, out ts)) break; }
-                }
-            }
-            if (off.InterpretersHead != 0 && ReadPtr(rtBase + off.InterpretersHead, out var headInterp) && IsUserPtr(headInterp)) {
-                if (off.ThreadsMain != 0 && ReadPtr(headInterp + off.ThreadsMain, out var tm2) && IsUserPtr(tm2)) return tm2;
-                if (off.ThreadsHead != 0 && off.ThreadNext != 0 && ReadPtr(headInterp + off.ThreadsHead, out var headTs) && IsUserPtr(headTs)) {
-                    for (ulong ts = headTs; ts != 0 && IsUserPtr(ts); ) { if (ValidateCandidate(ts, off, proc)) return ts; if (!ReadPtr(ts + off.ThreadNext, out ts)) break; }
-                }
-            }
-            return 0;
         }
 
         /// <summary>
