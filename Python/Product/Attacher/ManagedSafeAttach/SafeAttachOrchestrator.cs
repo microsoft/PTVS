@@ -75,6 +75,7 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
         internal static SafeAttachResult TryManagedSafeAttach(ISafeAttachProcess proc) {
             int pid = proc.Pid;
             var cfg = new SafeAttachConfig(Verbose); // snapshot env vars once
+            var mem = new ProcessMemory(proc); // new helper
             try {
                 // 1. Locate python3XY.dll module
                 IntPtr pyBase = IntPtr.Zero; int pySize = 0; int minor = -1;
@@ -97,7 +98,7 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
                 uint readSize = runtimeSize == 0 ? (uint)4096 : runtimeSize;
                 if (readSize > MAX_RUNTIME_SECTION_READ) readSize = MAX_RUNTIME_SECTION_READ;
                 byte[] slab = new byte[readSize];
-                if (!proc.Read(offsetsAddr, slab, slab.Length)) {
+                if (!mem.TryRead(offsetsAddr, slab)) {
                     return FailTelemetry(pid, SafeAttachFailureSite.OffsetsRead, "read fail", exportBypassed: false);
                 }
                 if (cfg.Verbose) {
@@ -106,7 +107,7 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
                     Debug.WriteLine($"[PTVS][ManagedSafeAttach] OffsetsAddr=0x{offsetsAddr:X} size={readSize} first32={first32} cookieOk={cookieOk}");
                 }
 
-                if (!DebugOffsetsParser.TryParse(slab, (ulong)pyBase.ToInt64(), IntPtr.Size, out var parsed, out var fail)) {
+                if (!DebugOffsetsParser.TryParse(slab, (ulong)pyBase.ToInt64(), mem.PointerSize, out var parsed, out var fail)) {
                     return FailTelemetry(pid, SafeAttachFailureSite.OffsetsParse, fail, exportBypassed: false);
                 }
                 if (cfg.Verbose) Debug.WriteLine($"[PTVS][ManagedSafeAttach] Parsed offsets ver=0x{parsed.Version:X} evalBreakerOff=0x{parsed.EvalBreaker:X} supportOff=0x{parsed.RemoteSupport:X} pendingOff=0x{parsed.PendingCall:X} scriptPathOff=0x{parsed.ScriptPath:X} size={parsed.ScriptPathSize} hasInterpWalk=0x{parsed.HasInterpreterWalk}");
@@ -132,7 +133,7 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
 
                 // 4. Attempt interpreter walk inference if not already provided
                 if (!parsed.HasInterpreterWalk) {
-                    if (InterpreterWalkLocator.TryInferOffsets(proc, offsetsAddr, slab, IntPtr.Size, ref parsed, out var whyNot, out var _)) {
+                    if (InterpreterWalkLocator.TryInferOffsets(proc, offsetsAddr, slab, mem.PointerSize, ref parsed, out var whyNot, out var _)) {
                         if (cfg.Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] Inferred interpreter walk offsets from slab");
                     } else if (cfg.Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] Could not infer interpreter walk offsets: " + whyNot);
                 }
@@ -143,19 +144,19 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
 
                 if (tstatePtr == 0 && !cfg.DisableCache) {
                     if (_tstateCache.TryGetValue(pid, out var ce) && ce.PyBase == (ulong)pyBase.ToInt64() && ce.Version == parsed.Version) {
-                        if (ThreadStateCacheValidator.Validate(ce.ThreadState, parsed, IntPtr.Size, (addr, buffer) => proc.Read(addr, buffer, buffer.Length))) tstatePtr = ce.ThreadState;
+                        if (ThreadStateCacheValidator.Validate(ce.ThreadState, parsed, mem.PointerSize, (addr, buffer) => proc.Read(addr, buffer, buffer.Length))) tstatePtr = ce.ThreadState;
                         else if (cfg.Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] Cache invalid; rediscovering");
                     }
                 }
 
                 if (tstatePtr == 0 && parsed.HasInterpreterWalk) {
-                    tstatePtr = InterpreterWalkLocator.FindThreadState(proc, offsetsAddr, parsed, IntPtr.Size, c => ThreadStateValidator.Validate(c, parsed, proc, cfg.Verbose));
+                    tstatePtr = InterpreterWalkLocator.FindThreadState(proc, offsetsAddr, parsed, mem.PointerSize, c => ThreadStateValidator.Validate(c, parsed, proc, cfg.Verbose));
                     if (cfg.Verbose && tstatePtr != 0) Debug.WriteLine($"[PTVS][ManagedSafeAttach] Walk located tstate=0x{tstatePtr:X}");
                 }
 
                 if (tstatePtr == 0 && allowHeuristic && cfg.ForceHeuristic) {
                     if (cfg.Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] Attempting heuristic scan");
-                    tstatePtr = HeuristicThreadStateLocator.TryLocate(0, parsed.RemoteSupport, parsed.ScriptPath, parsed.ScriptPathSize, IntPtr.Size, (addr, hb) => proc.Read(addr, hb, hb.Length));
+                    tstatePtr = HeuristicThreadStateLocator.TryLocate(0, parsed.RemoteSupport, parsed.ScriptPath, parsed.ScriptPathSize, mem.PointerSize, (addr, hb) => proc.Read(addr, hb, hb.Length));
                 }
 
                 if (tstatePtr == 0 && !bypassExport && cfg.AllowExportFallback) {
@@ -180,7 +181,7 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
                 ulong evalBreakerAddr = tstatePtr + parsed.EvalBreaker;
 
                 byte[] probeBuf = new byte[32];
-                if (!proc.Read(scriptPathBufAddr, probeBuf, probeBuf.Length)) {
+                if (!mem.TryRead(scriptPathBufAddr, probeBuf)) {
                     return FailTelemetry(pid, SafeAttachFailureSite.ScriptBufferWrite, "script buffer unreadable", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
                 }
 
@@ -213,7 +214,7 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
                 bool breakerOk = false;
                 if (version314Plus) {
                     var brBuf = new byte[4];
-                    if (!proc.Read(evalBreakerAddr, brBuf, brBuf.Length)) {
+                    if (!mem.TryRead(evalBreakerAddr, brBuf)) {
                         return FailTelemetry(pid, SafeAttachFailureSite.EvalBreakerWrite, "eval breaker read failed", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
                     }
                     uint brVal = BitConverter.ToUInt32(brBuf, 0);
@@ -227,16 +228,16 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
                     breakerOk = true;
                 }
                 if (!breakerOk && !version314Plus) {
-                    byte[] breakerBuf = new byte[IntPtr.Size];
+                    byte[] breakerBuf = new byte[mem.PointerSize];
                     StopBitSelection sel = EvalBreakerHelper.DetermineMask(
-                        readBreaker: () => proc.Read(evalBreakerAddr, breakerBuf, breakerBuf.Length),
-                        getValue: () => IntPtr.Size == 8 ? (ulong)BitConverter.ToUInt64(breakerBuf, 0) : BitConverter.ToUInt32(breakerBuf, 0),
+                        readBreaker: () => mem.TryRead(evalBreakerAddr, breakerBuf),
+                        getValue: () => mem.PointerSize == 8 ? (ulong)BitConverter.ToUInt64(breakerBuf, 0) : BitConverter.ToUInt32(breakerBuf, 0),
                         candidateMasks: STOP_BIT_CANDIDATES,
                         defaultMask: STOP_BIT_CANDIDATES[0]);
-                    ulong breakerVal = IntPtr.Size == 8 ? BitConverter.ToUInt64(breakerBuf, 0) : BitConverter.ToUInt32(breakerBuf, 0);
+                    ulong breakerVal = mem.PointerSize == 8 ? BitConverter.ToUInt64(breakerBuf, 0) : BitConverter.ToUInt32(breakerBuf, 0);
                     if (!sel.AlreadySet) {
                         breakerVal |= sel.Mask;
-                        byte[] newBreaker = IntPtr.Size == 8 ? BitConverter.GetBytes(breakerVal) : BitConverter.GetBytes((uint)breakerVal);
+                        byte[] newBreaker = mem.PointerSize == 8 ? BitConverter.GetBytes(breakerVal) : BitConverter.GetBytes((uint)breakerVal);
                         if (!proc.Write(evalBreakerAddr, newBreaker, newBreaker.Length)) {
                             return FailTelemetry(pid, SafeAttachFailureSite.EvalBreakerWrite, "eval breaker write failed", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
                         }

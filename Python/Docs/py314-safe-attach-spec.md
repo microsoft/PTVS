@@ -24,17 +24,18 @@ Key change: Leverage CPython 3.14 `_Py_DebugOffsets` (`debugger_support`) for **
 | 1 | Introduce `SafeAttachConfig` (env snapshot) | DONE (in use) |
 | 2 | Extract `ThreadStateValidator` | DONE (centralized candidate validation) |
 | 3 | Move walk inference + traversal to `InterpreterWalkLocator` | DONE (orchestrator slimmed) |
-| 4 | `ProcessMemory` helper | Pending |
+| 4 | `ProcessMemory` helper | DONE (integrated in orchestrator) |
 | 5 | `RemoteWritePlan` | Pending |
 | 6 | `PhaseTimer` (may stay dropped if timing not needed) | Deferred / reconsider |
 | 7 | Unified logging facade | Pending |
 | 8 | State machine orchestration | Pending |
-| 9 | Unit tests for components | Partial (config + validator + locator to add) |
+| 9 | Unit tests for components | Partial (config + validator + locator; add ProcessMemory & write plan tests) |
 | 10 | Telemetry scaffolding | Pending |
 
 Recent Refactor Updates:
-* Validator & walk locator extracted; orchestrator now sequence: force → cache → infer (if needed) → walk → heuristic (opt‑in) → export (opt‑in).
-* Inference + walk now isolated for future Concord reuse and targeted unit tests.
+* Validator & walk locator extracted; orchestrator sequence: force → cache → infer (if needed) → walk → heuristic (opt‑in) → export (opt‑in).
+* Inference + walk isolated for future Concord reuse.
+* `ProcessMemory` helper added; orchestrator now uses it for slab read, eval breaker read, script buffer probe.
 
 ---
 

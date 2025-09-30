@@ -77,6 +77,7 @@
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="ConnErrorMessages.cs" />
     <Compile Include="ManagedSafeAttach\InterpreterWalkLocator.cs" />
+    <Compile Include="ManagedSafeAttach\ProcessMemory.cs" />
     <Compile Include="ManagedSafeAttach\SafeAttachConfig.cs" />
     <Compile Include="ManagedSafeAttach\SafeAttachOrchestrator.cs" />
     <Compile Include="ManagedSafeAttach\ThreadStateValidator.cs" />
