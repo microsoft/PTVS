@@ -39,6 +39,75 @@ Recent Refactor Updates:
 
 ---
 
+## Loader Script Alignment (Managed Safe Attach)
+**Problem:** Current managed safe attach writes the path of `ptvsd_loader.py` (if present) into the target process, or falls back to a temp script that only calls `debugpy.listen(('127.0.0.1',0))`. Neither reliably establishes a VS↔debugpy session:
+* `ptvsd_loader.py` only imports symbols (`attach_process`, etc.) and asserts threading state; it does not start a listener nor connect.
+* Temp fallback picks an ephemeral port (0) and never communicates the chosen port or waits for a client.
+* Result: Safe attach may complete the memory write phase but no debugger connection is made (silent no‑op).
+
+**Required Behavior:** Executed script must (a) start or connect a debug adapter endpoint (debugpy) and (b) coordinate port/session info with VS (deterministic or discoverable). No manual native callback available in pure safe attach path.
+
+**Remediation Plan:**
+1. Introduce `safe_attach_loader.py` (new file) with logic:
+   * Read env vars: `PTVS_DEBUG_HOST` (default 127.0.0.1), `PTVS_DEBUG_PORT` (explicit port or 0), `PTVS_DEBUG_SESSION` (GUID), `PTVS_WAIT_FOR_CLIENT` (default 1).
+   * If PORT unset or 0: choose free port via debugpy.listen; if chosen dynamically write the resolved port to a temp sidecar file path from `PTVS_DEBUG_PORT_FILE`.
+   * Call `debugpy.listen((host, port))` then optional `debugpy.wait_for_client()` depending on env.
+2. Orchestrator search order for loader path: `safe_attach_loader.py` → existing `ptvsd_loader.py` (legacy) → temp bootstrap.
+3. Before writing script path: materialize `safe_attach_loader.py` into extension install dir if missing and set required env vars.
+4. (Optional) For legacy ptvsd flows still needing `ptvsd_loader.py`, keep backward compatibility behind env var `PTVS_SAFE_ATTACH_LEGACY_PTvsd=1`.
+5. Add post-write verification: if using new loader and dynamic port, poll sidecar file (or small pipe) with timeout; emit telemetry fields `loader=New/Legacy`, `dynPort=<n>`.
+6. Update Concord path to mirror search + env semantics (shared constants & env names).
+7. Tests:
+   * Unit: verify buffer truncation logic with new script name.
+   * Integration mock: confirm that dynamic port file gets written and parsed.
+   * Negative: missing env vars → script still creates listener with defaults.
+
+**Acceptance for Loader Fix:**
+* Deterministic attach (fixed port) when `PTVS_DEBUG_PORT` set.
+* Dynamic port discoverable within <500ms via sidecar when port=0.
+* No regress in legacy injection path (explicit disable of safe attach still works).
+* Telemetry includes loader type and success/failure site for script execution.
+
+---
+
+## Concord Debugger Integration Tasks (Planned)
+Goal: Align native / Concord engine safe attach flow with managed implementation to ensure consistent behavior, diagnostics, and telemetry.
+
+| Area | Task | Outcome |
+|------|------|---------|
+| Offsets Inference | Port `InterpreterWalkLocator` logic (C#) to Concord side or expose via shared assembly loaded by both | Single authoritative inference implementation |
+| Candidate Validation | Replace native validation with managed `ThreadStateValidator` parity (field probes, pending flag, script buffer) | Reduced false positives |
+| Cache Reuse | Implement cross-engine cache contract (shared key: pid + pyBase + version) with fast probe API | Faster reattach, consistent reuse semantics |
+| Memory Abstraction | Introduce `IConcordProcessMemory` adapter mirroring `ProcessMemory` API (ReadPointer, TryReadU32) | Simplifies porting managed helpers |
+| Write Plan | Factor write sequence into shared `RemoteWritePlan` (script path, pending flag, eval breaker) with verification stage | Uniform attach side effects and error codes |
+| Logging | Adopt unified prefix `[PTVS][SafeAttach][Concord]` and single success/failure summary line | Easier log correlation across engines |
+| Telemetry | Emit Attempt/Result events with phase flags (cacheUsed, inferred, walked, heuristicUsed, exportFallback) | Consistent metrics for reliability tracking |
+| Heuristic Path | Gate native heuristic behind same env var `PTVS_SAFE_ATTACH_FORCE_HEURISTIC`; remove implicit fallback | Predictable resolution order |
+| Export Fallback | Align bypass logic (3.14+ default) and env var overrides (`ALLOW_EXPORT`, `ALLOW_EXPORT_FALLBACK`) | Security surface parity |
+| Fault Injection | Add Concord-side hooks to simulate partial write / read failures for resilience tests | Robustness validation |
+| Negative Tests | Add controlled test host injecting malformed slabs, truncated script buffer, bogus pointer chains | Confidence against malformed memory |
+| Version Gating | Ensure Concord path early-outs for <3.14 to legacy behavior with clear site code | Clear diagnostics |
+| Result Object | Mirror `SafeAttachResult` shape (version, disabled, freeThreaded, reused, exportBypassed, site, message) | Simplified UI/report integration |
+| Timing (Optional) | Lightweight phase stopwatch (disabled by default) behind `PTVS_SAFE_ATTACH_VERBOSE` | On-demand perf diagnostics |
+| Shared Constants | Consolidate magic values (mask 0x20, size=512, cap offsets) into common constants module | Single source of truth |
+| Unit Tests | Add Concord unit & integration tests exercising inference, cache miss/hit, failure sites | Test parity |
+
+### Concord Migration Phases
+1. Read-only validation: implement inference + validation without performing writes (dry-run mode, asserts parity with managed discovery).  
+2. Full write enablement: integrate write plan & post-write verification.  
+3. Telemetry + logging unification.  
+4. Fault injection & negative scenarios.  
+5. Cleanup: remove duplicated native heuristics superseded by deterministic walk.  
+
+### Acceptance Criteria (Concord)
+* ≥95% of managed safe attach success scenarios replicate on Concord in CI.
+* Export fallback invoked <2% of 3.14+ attaches (only when inference + cache fail and env var allows).
+* Zero false positives in negative test suite (malformed slabs / corrupted pointers).
+* Unified structured success/failure log lines present exactly once per attempt.
+* Telemetry events emitted for 100% of attempts with consistent schema.
+
+---
+
 ## Key Insights (What Made It Work)
 
 * Stop assuming interpreter-walk sextuple is adjacent to the 5‑tuple; perform slab‑wide scan.

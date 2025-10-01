@@ -32,7 +32,8 @@ namespace Microsoft.PythonTools.Debugger.Concord {
     }
 
     public static class RemoteAttach314 {
-        private const uint DEFAULT_EVAL_PLEASE_STOP_BIT = 0x1;
+        private const uint DEFAULT_EVAL_PLEASE_STOP_BIT = 0x1; // legacy pre-3.14 dynamic selection baseline
+        private const uint EVAL_BREAKER_314_MASK = 0x20;       // fixed mask for 3.14+ (matches managed path)
         private static readonly bool SimulatePartialWrite = Environment.GetEnvironmentVariable("PTVS_SIMULATE_PARTIAL_WRITE") == "1";
         private static int _partialWriteToggle = 0;
 
@@ -41,7 +42,8 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             var outcome = new SafeAttachOutcome { Result = SafeAttachResult.WriteFail, FailSite = AttachFailSite.Unknown };
             try {
                 var pyrt = process.GetPythonRuntimeInfo();
-                // Legacy dynamic mask derivation removed; unified EvalBreakerHelper will derive at write time.
+                uint rawVersion = 0; try { rawVersion = pyrt.DebugOffsets?.Version ?? 0; } catch { }
+                bool version314Plus = ((rawVersion >> 24) & 0xFF) == 3 && ((rawVersion >> 16) & 0xFF) >= 14;
 
                 // Cached reattach short-circuit
                 if (pyrt.CachedAttachThreadState != 0 && pyrt.HasValidDebugOffsets && File.Exists(loaderPath)) {
@@ -66,12 +68,12 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 ulong supportPtr = ReadPointer(process, selection.TState + dbg.RemoteSupport);
                 if (supportPtr == 0) { outcome.Result = SafeAttachResult.BadAddress; outcome.FailSite = AttachFailSite.SupportPointerNull; return outcome; }
 
-                if (!PrepareLoaderBuffer(loaderPath, dbg.ScriptPathSize, out var pathBuf, out bool truncated)) {
+                if (!SafeAttachUtilities.TryPrepareLoaderBuffer(loaderPath, dbg.ScriptPathSize, out var pathBuf, out bool truncated)) {
                     outcome.Result = SafeAttachResult.InvalidOffsets; outcome.FailSite = AttachFailSite.Validation; return outcome; }
                 outcome.TruncatedPath = truncated;
-                if (Verbose) Debug.WriteLine($"[PTVS][SafeAttach314] Loader buffer len={pathBuf.Length} truncated={truncated}");
+                if (Verbose) Debug.WriteLine($"[PTVS][SafeAttach314] Loader buffer len={pathBuf.Length} truncated={truncated} version314Plus={version314Plus}");
 
-                PerformWrites(process, pyrt, dbg, selection.TState, supportPtr, pathBuf, ref outcome);
+                PerformWrites(process, pyrt, dbg, selection.TState, supportPtr, pathBuf, version314Plus, ref outcome);
                 if (outcome.Result == SafeAttachResult.Success) { pyrt.CachedAttachThreadState = selection.TState; }
                 return outcome;
             } catch (Exception ex) {
@@ -118,15 +120,8 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         }
         #endregion
 
-        #region Loader Path Buffer
-        // Replaced by shared SafeAttachUtilities.TryPrepareLoaderBuffer (kept for binary compat if referenced elsewhere)
-        public static bool PrepareLoaderBuffer(string loaderPath, ulong scriptPathSize, out byte[] buffer, out bool truncated) {
-            return SafeAttachUtilities.TryPrepareLoaderBuffer(loaderPath, scriptPathSize, out buffer, out truncated);
-        }
-        #endregion
-
         #region Writes & Verification
-        private static void PerformWrites(DkmProcess process, PythonRuntimeInfo pyrt, PyDebugOffsetsReader.DebuggerSupportOffsets dbg, ulong tstateBase, ulong supportPtr, byte[] pathBuf, ref SafeAttachOutcome outcome) {
+        private static void PerformWrites(DkmProcess process, PythonRuntimeInfo pyrt, PyDebugOffsetsReader.DebuggerSupportOffsets dbg, ulong tstateBase, ulong supportPtr, byte[] pathBuf, bool version314Plus, ref SafeAttachOutcome outcome) {
             ulong scriptPathAddr = supportPtr + dbg.ScriptPath; ulong pendingCallAddr = supportPtr + dbg.PendingCall; ulong evalBreakerAddr = dbg.EvalBreaker;
             Debug.WriteLine($"[PTVS][SafeAttach314] Computed addresses: TState=0x{tstateBase:X} Support=0x{supportPtr:X} ScriptPath=0x{scriptPathAddr:X} PendingCall=0x{pendingCallAddr:X} EvalBreaker=0x{evalBreakerAddr:X}");
             var hProcess = Win32Interop.OpenProcess(Win32Interop.ProcessAccessFlags.VirtualMemoryWrite | Win32Interop.ProcessAccessFlags.VirtualMemoryOperation | Win32Interop.ProcessAccessFlags.QueryInformation | Win32Interop.ProcessAccessFlags.VirtualMemoryRead, false, (int)process.LivePart.Id);
@@ -135,19 +130,25 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 if (!WriteRemote(hProcess, scriptPathAddr, pathBuf)) { outcome.Result = SafeAttachResult.WriteFail; outcome.FailSite = AttachFailSite.WriteScript; return; }
                 if (!WriteRemote(hProcess, pendingCallAddr, BitConverter.GetBytes(1))) { outcome.Result = SafeAttachResult.WriteFail; outcome.FailSite = AttachFailSite.WritePending; return; }
                 if (!ReadRemoteUInt32(hProcess, evalBreakerAddr, out uint breakerValue)) { outcome.Result = SafeAttachResult.WriteFail; outcome.FailSite = AttachFailSite.ReadBreaker; return; }
-                var sel = EvalBreakerHelper.DetermineMask(
-                    readBreaker: () => true,
-                    getValue: () => breakerValue,
-                    candidateMasks: new uint[] { 0x1, 0x2, 0x4, 0x8 },
-                    defaultMask: DEFAULT_EVAL_PLEASE_STOP_BIT);
-                if (Verbose) Debug.WriteLine($"[PTVS][SafeAttach314] Stop-bit selection mask=0x{sel.Mask:X} source={sel.Source} alreadySet={sel.AlreadySet}");
-                uint stopMask = sel.Mask;
+
+                uint stopMask; bool alreadySet; string source;
+                if (version314Plus) {
+                    stopMask = EVAL_BREAKER_314_MASK; alreadySet = (breakerValue & stopMask) != 0; source = "Fixed(3.14+)";
+                } else {
+                    var sel = EvalBreakerHelper.DetermineMask(
+                        readBreaker: () => true,
+                        getValue: () => breakerValue,
+                        candidateMasks: new uint[] { 0x1, 0x2, 0x4, 0x8 },
+                        defaultMask: DEFAULT_EVAL_PLEASE_STOP_BIT);
+                    stopMask = sel.Mask; alreadySet = sel.AlreadySet; source = sel.Source.ToString();
+                }
+
                 uint newBreaker = breakerValue | stopMask;
-                if (newBreaker != breakerValue && !WriteRemote(hProcess, evalBreakerAddr, BitConverter.GetBytes(newBreaker))) { outcome.Result = SafeAttachResult.WriteFail; outcome.FailSite = AttachFailSite.WriteBreaker; return; }
+                if (!alreadySet && newBreaker != breakerValue && !WriteRemote(hProcess, evalBreakerAddr, BitConverter.GetBytes(newBreaker))) { outcome.Result = SafeAttachResult.WriteFail; outcome.FailSite = AttachFailSite.WriteBreaker; return; }
                 ConsolidateVerification(hProcess, scriptPathAddr, pathBuf.Length, pendingCallAddr, evalBreakerAddr, stopMask, ref outcome);
-                outcome.Result = SafeAttachResult.Success; outcome.FailSite = AttachFailSite.None;
-                if (Verbose) Debug.WriteLine($"[PTVS][SafeAttach314] SUCCESS tstate=0x{outcome.TargetThreadStateAddress:X} mask=0x{stopMask:X} src={sel.Source} truncated={outcome.TruncatedPath}");
-                Debug.WriteLine($"[PTVS][SafeAttach314] Attach verification: script={outcome.VerifiedScriptPathWrite} pending={outcome.VerifiedPendingCall} breaker={outcome.BreakerBitSet} selection={(outcome.MainInterpreterThreadSelection ? "main" : outcome.ExportFallbackThreadSelection ? "export" : outcome.HeuristicThreadSelection ? "heuristic" : "enumerated")} alreadySet={outcome.AlreadySet} stopMask=0x{stopMask:X} maskSrc={sel.Source}");
+                outcome.Result = SafeAttachResult.Success; outcome.FailSite = AttachFailSite.None; outcome.BreakerBitSet = true;
+                if (Verbose) Debug.WriteLine($"[PTVS][SafeAttach314] SUCCESS tstate=0x{outcome.TargetThreadStateAddress:X} mask=0x{stopMask:X} src={source} truncated={outcome.TruncatedPath}");
+                Debug.WriteLine($"[PTVS][SafeAttach314] Attach verification: script={outcome.VerifiedScriptPathWrite} pending={outcome.VerifiedPendingCall} breaker={(alreadySet ? "already" : "updated")} selection={(outcome.MainInterpreterThreadSelection ? "main" : outcome.ExportFallbackThreadSelection ? "export" : outcome.HeuristicThreadSelection ? "heuristic" : "enumerated")} stopMask=0x{stopMask:X} src={source}");
             } finally { Win32Interop.CloseHandle(hProcess); }
         }
 
@@ -189,13 +190,18 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 return ThreadStateExportResolver.TryGetCurrentThreadState(Read, moduleBase, pointerSize);
             } catch { return 0; }
         }
-        // Removed TryGetCurrentThreadStateFromExport (superseded by ResolveCurrentThreadStateViaExport + shared resolver)
         private static bool ReadRemoteBytes(IntPtr hProcess, ulong address, byte[] buffer) { IntPtr read; return Win32Interop.ReadProcessMemory(hProcess, ToIntPtr(address), buffer, (IntPtr)buffer.Length, out read) && read.ToInt32() == buffer.Length; }
         private static bool ReadRemoteUInt32(IntPtr hProcess, ulong address, out uint value) { value = 0; var buf = new byte[4]; IntPtr read; if (!Win32Interop.ReadProcessMemory(hProcess, ToIntPtr(address), buf, (IntPtr)4, out read) || read.ToInt32() != 4) return false; value = BitConverter.ToUInt32(buf, 0); return true; }
         private static ulong HeuristicFindThreadStateBase(DkmProcess process, ulong evalBreaker, ulong remoteSupportOff, ulong scriptPathOff, ulong scriptPathSize) { try { const int page = 0x1000; ulong start = (evalBreaker & ~(ulong)(page - 1)) - (ulong)(page * 32); ulong end = evalBreaker; if (start > evalBreaker) start = 0; var h = Win32Interop.OpenProcess(Win32Interop.ProcessAccessFlags.VirtualMemoryRead | Win32Interop.ProcessAccessFlags.QueryInformation, false, (int)process.LivePart.Id); if (h == IntPtr.Zero) return 0; try { for (ulong cand = end; cand >= start; cand -= 0x10) { if (!ReadPointerRaw(h, cand + remoteSupportOff, process.GetPointerSize(), out var rsp)) { if (cand < 0x10000) break; continue; } ulong sp = rsp.ToUInt64(); if (sp == 0 || sp > evalBreaker + 0x1000000) { if (cand < 0x10000) break; continue; } ulong scriptAddr = sp + scriptPathOff; var one = new byte[1]; IntPtr r; if (Win32Interop.ReadProcessMemory(h, ToIntPtr(scriptAddr), one, (IntPtr)1, out r) && r.ToInt32() == 1) return cand; if (cand < 0x10000) break; } } finally { Win32Interop.CloseHandle(h); } } catch (Exception ex) { Debug.WriteLine($"[PTVS][SafeAttach314] HeuristicFindThreadStateBase exception: {ex.Message}"); } return 0; }
         private static bool ReadPointerRaw(IntPtr h, ulong addr, int ps, out UIntPtr val) { val = UIntPtr.Zero; var buf = new byte[ps]; IntPtr read; if (!Win32Interop.ReadProcessMemory(h, ToIntPtr(addr), buf, (IntPtr)ps, out read) || read.ToInt32() != ps) return false; val = new UIntPtr(ps == 8 ? BitConverter.ToUInt64(buf, 0) : BitConverter.ToUInt32(buf, 0)); return true; }
         private static bool WriteRemote(IntPtr h, ulong addr, byte[] data) { if (addr == 0) return false; if (SimulatePartialWrite && data.Length > 8 && _partialWriteToggle == 0) { _partialWriteToggle = 1; var partial = new byte[data.Length / 2]; Buffer.BlockCopy(data, 0, partial, 0, partial.Length); int w; Win32Interop.WriteProcessMemory(h, ToIntPtr(addr), partial, (IntPtr)partial.Length, out w); return false; } int written; return Win32Interop.WriteProcessMemory(h, ToIntPtr(addr), data, (IntPtr)data.Length, out written) && written == data.Length; }
         private static IntPtr ToIntPtr(ulong a) { if (a > long.MaxValue) throw new OverflowException("Address too large for IntPtr"); return new IntPtr(unchecked((long)a)); }
+        #endregion
+
+        #region Loader Path Buffer (public for tests)
+        public static bool PrepareLoaderBuffer(string loaderPath, ulong scriptPathSize, out byte[] buffer, out bool truncated) {
+            return SafeAttachUtilities.TryPrepareLoaderBuffer(loaderPath, scriptPathSize, out buffer, out truncated);
+        }
         #endregion
 
         #region Verbose Logging
