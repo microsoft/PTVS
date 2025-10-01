@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.IO;
 using Microsoft.PythonTools.Debugging.Shared;
 using Microsoft.PythonTools.Debugging.Shared.SafeAttach;
 using Microsoft.PythonTools.Infrastructure;
@@ -48,7 +49,7 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
         private const string EXPORT_TSTATE_UNCHECKED_GET = "_PyThreadState_UncheckedGet"; // function returning current tstate (fallback)
         private const uint IMAGE_DIRECTORY_ENTRY_EXPORT = 0; // export table index
         private static readonly uint[] STOP_BIT_CANDIDATES = new uint[] { 0x1, 0x2, 0x4, 0x8 }; // heuristic candidate bits (RT1 will refine)
-        private const ulong MAX_SCRIPT_PATH_SIZE = 4096; // spec nominal 512; allow headroom
+        private const ulong MAX_SCRIPT_PATH_SIZE = 0x100000; // allow up to 1MB (flex fallback may report non-canonical sizes)
         private const ulong MAX_REMOTE_SUPPORT_OFFSET = 0x4000;
         private const int MAX_RUNTIME_SECTION_READ = 0x20000; // 128KB safety cap
 
@@ -74,6 +75,11 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
         /// </summary>
         internal static SafeAttachResult TryManagedSafeAttach(ISafeAttachProcess proc) {
             int pid = proc.Pid;
+            // Mixed-mode guard: allow opt-out if Concord / native mixed mode signalled
+            if (Environment.GetEnvironmentVariable("PTVS_MIXED_MODE") == "1") {
+                Debug.WriteLine($"[PTVS][ManagedSafeAttach] Bypassing managed safe attach due to PTVS_MIXED_MODE for pid={pid}");
+                return FailTelemetry(pid, SafeAttachFailureSite.VersionGate, "mixed mode bypass", exportBypassed: true);
+            }
             var cfg = new SafeAttachConfig(Verbose); // snapshot env vars once
             var mem = new ProcessMemory(proc); // new helper
             try {
@@ -107,10 +113,19 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
                     Debug.WriteLine($"[PTVS][ManagedSafeAttach] OffsetsAddr=0x{offsetsAddr:X} size={readSize} first32={first32} cookieOk={cookieOk}");
                 }
 
-                if (!DebugOffsetsParser.TryParse(slab, (ulong)pyBase.ToInt64(), mem.PointerSize, out var parsed, out var fail)) {
+                // 3a. Parse with automatic flex fallback retry
+                ParsedDebugOffsets parsed; string fail;
+                bool parsedOk = DebugOffsetsParser.TryParse(slab, (ulong)pyBase.ToInt64(), mem.PointerSize, out parsed, out fail);
+                if (!parsedOk && fail == "no valid layout" && Environment.GetEnvironmentVariable("PTVS_SAFE_ATTACH_FLEX_FALLBACK") != "1") {
+                    // Force flex fallback for retry
+                    Environment.SetEnvironmentVariable("PTVS_SAFE_ATTACH_FLEX_FALLBACK", "1");
+                    if (cfg.Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] Retrying parse with forced flex fallback");
+                    parsedOk = DebugOffsetsParser.TryParse(slab, (ulong)pyBase.ToInt64(), mem.PointerSize, out parsed, out fail);
+                }
+                if (!parsedOk) {
                     return FailTelemetry(pid, SafeAttachFailureSite.OffsetsParse, fail, exportBypassed: false);
                 }
-                if (cfg.Verbose) Debug.WriteLine($"[PTVS][ManagedSafeAttach] Parsed offsets ver=0x{parsed.Version:X} evalBreakerOff=0x{parsed.EvalBreaker:X} supportOff=0x{parsed.RemoteSupport:X} pendingOff=0x{parsed.PendingCall:X} scriptPathOff=0x{parsed.ScriptPath:X} size={parsed.ScriptPathSize} hasInterpWalk=0x{parsed.HasInterpreterWalk}");
+                if (cfg.Verbose) Debug.WriteLine($"[PTVS][ManagedSafeAttach] Parsed offsets ver=0x{parsed.Version:X} evalBreakerOff=0x{parsed.EvalBreaker:X} supportOff=0x{parsed.RemoteSupport:X} pendingOff=0x{parsed.PendingCall:X} scriptPathOff=0x{parsed.ScriptPath:X} size={parsed.ScriptPathSize} flexNonCanonical={(parsed.ScriptPathSize!=512)}");
                 if (parsed.RemoteDebugDisabled) {
                     return FailTelemetry(pid, SafeAttachFailureSite.PolicyDisabled, "remote debug disabled", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed: true);
                 }
@@ -120,11 +135,11 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
                 bool exportBypassed = bypassExport;
                 bool allowHeuristic = !cfg.HeuristicDisabled;
 
-                // Sanity checks
+                // Sanity checks (relaxed for non-canonical size)
                 if (parsed.RemoteSupport == 0 || parsed.RemoteSupport > MAX_REMOTE_SUPPORT_OFFSET) {
                     return FailTelemetry(pid, SafeAttachFailureSite.OffsetsParse, $"remote_support offset implausible (0x{parsed.RemoteSupport:X})", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
                 }
-                if (parsed.ScriptPathSize != 512 || parsed.ScriptPath >= parsed.ScriptPathSize) {
+                if (parsed.ScriptPathSize < 512 || parsed.ScriptPathSize > MAX_SCRIPT_PATH_SIZE || parsed.ScriptPath >= parsed.ScriptPathSize) {
                     return FailTelemetry(pid, SafeAttachFailureSite.OffsetsParse, $"script_path tuple invalid (path=0x{parsed.ScriptPath:X} size={parsed.ScriptPathSize})", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
                 }
                 if (parsed.PendingCall >= parsed.ScriptPathSize || (parsed.PendingCall % 4) != 0 || parsed.ScriptPath <= parsed.PendingCall) {
@@ -185,11 +200,84 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
                     return FailTelemetry(pid, SafeAttachFailureSite.ScriptBufferWrite, "script buffer unreadable", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
                 }
 
-                string loaderPath = PythonToolsInstallPath.GetFile("ptvsd_loader.py") ?? PythonToolsInstallPath.GetFile("ptvsd\\ptvsd_loader.py");
+                // Loader preference: safe_attach_loader.py first (unless legacy forced)
+                string loaderPath = null;
+                bool legacyForced = Environment.GetEnvironmentVariable("PTVS_SAFE_ATTACH_LEGACY_PTvsd") == "1";
+                // ENV override root
+                string installRoot = Environment.GetEnvironmentVariable("PTVS_INSTALL_ROOT");
+                if (!string.IsNullOrEmpty(installRoot)) {
+                    try {
+                        var candidate = Path.Combine(installRoot, "safe_attach_loader.py");
+                        if (File.Exists(candidate)) loaderPath = candidate;
+                    } catch { }
+                }
+                if (!legacyForced && string.IsNullOrEmpty(loaderPath)) {
+                    try {
+                        if (!string.IsNullOrEmpty(installRoot)) {
+                            var fallback = Path.Combine(installRoot, "ptvsd_loader.py");
+                            if (File.Exists(fallback)) loaderPath = fallback; // only if safe loader missing
+                        }
+                    } catch { }
+                }
+                if (!legacyForced && string.IsNullOrEmpty(loaderPath)) {
+                    try {
+                        loaderPath = PythonToolsInstallPath.GetFile("safe_attach_loader.py");
+                    } catch (Exception exLp) {
+                        if (Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] safe_attach_loader lookup failed: " + exLp.Message);
+                        loaderPath = null; // continue to other fallbacks
+                    }
+                }
                 if (string.IsNullOrEmpty(loaderPath)) {
                     try {
-                        string temp = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "ptvs_bootstrap.py");
-                        if (!System.IO.File.Exists(temp)) System.IO.File.WriteAllText(temp, "import debugpy; debugpy.listen(('127.0.0.1',0));\n");
+                        // Try env root first for ptvsd loader
+                        if (!string.IsNullOrEmpty(installRoot)) {
+                            var ptvsd = Path.Combine(installRoot, "ptvsd_loader.py");
+                            if (File.Exists(ptvsd)) loaderPath = ptvsd;
+                        }
+                        if (string.IsNullOrEmpty(loaderPath)) {
+                            loaderPath = PythonToolsInstallPath.GetFile("ptvsd_loader.py") ?? PythonToolsInstallPath.GetFile("ptvsd\\ptvsd_loader.py");
+                        }
+                    } catch (Exception exLp2) {
+                        if (Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] ptvsd_loader lookup failed: " + exLp2.Message);
+                        loaderPath = null;
+                    }
+                }
+
+                // Option B: dynamic connect script
+                var clientPortEnv = Environment.GetEnvironmentVariable("PTVS_DEBUGPY_CLIENT_PORT");
+                var forceConnect = Environment.GetEnvironmentVariable("PTVS_SAFE_ATTACH_FORCE_CONNECT") == "1";
+                if (!string.IsNullOrEmpty(clientPortEnv) && int.TryParse(clientPortEnv, out var clientPort) && clientPort > 0) {
+                    string host = Environment.GetEnvironmentVariable("PTVS_DEBUGPY_CLIENT_HOST");
+                    if (string.IsNullOrEmpty(host)) host = "127.0.0.1";
+                    try {
+                        string dynName = $"safe_attach_connect_{pid}.py";
+                        string dynPath = Path.Combine(Path.GetTempPath(), dynName);
+                        bool breakFlag = Environment.GetEnvironmentVariable("PTVS_DEBUG_BREAK") == "1";
+                        var sb = new StringBuilder();
+                        sb.AppendLine("# Auto-generated by SafeAttachOrchestrator (Option B connect mode)");
+                        sb.AppendLine("import sys, os");
+                        sb.AppendLine("try:\n    _pkg_dir = os.path.dirname(__file__)\n    sys.path.insert(0, _pkg_dir)\nexcept Exception: pass");
+                        sb.AppendLine("try:\n    import debugpy as _dbg\nexcept Exception:\n    try:\n        import ptvsd as _dbg\n    except Exception:\n        raise SystemExit(0)");
+                        sb.AppendLine($"_host='{host}'");
+                        sb.AppendLine($"_port={clientPort}");
+                        sb.AppendLine("try:\n    _dbg.connect((_host,_port))\nexcept Exception:\n    raise SystemExit(0)");
+                        if (breakFlag) sb.AppendLine("try:_dbg.breakpoint()\nexcept Exception:pass");
+                        sb.AppendLine("# End dynamic connect script");
+                        File.WriteAllText(dynPath, sb.ToString(), Encoding.UTF8);
+                        if (Verbose) Debug.WriteLine($"[PTVS][ManagedSafeAttach] Using dynamic connect script {dynPath} host={host} port={clientPort} break={breakFlag}");
+                        loaderPath = dynPath;
+                    } catch (Exception exDyn) {
+                        if (Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] Dynamic connect script generation failed: " + exDyn.Message);
+                        if (forceConnect) {
+                            return FailTelemetry(pid, SafeAttachFailureSite.ScriptBufferWrite, "dynamic connect script generation failed", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
+                        }
+                    }
+                }
+
+                if (string.IsNullOrEmpty(loaderPath)) {
+                    try {
+                        string temp = Path.Combine(Path.GetTempPath(), "ptvs_bootstrap.py");
+                        if (!File.Exists(temp)) File.WriteAllText(temp, "import debugpy; debugpy.listen(('127.0.0.1',0));\n");
                         loaderPath = temp;
                     } catch { loaderPath = null; }
                 }
@@ -245,7 +333,7 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
                 }
 
                 var ok = SafeAttachResult.Ok(parsed.Version, parsed.FreeThreaded, parsed.RemoteDebugDisabled, reused: _tstateCache.ContainsKey(pid), truncated: truncated, exportBypassed: exportBypassed);
-                Debug.WriteLine($"[PTVS][ManagedSafeAttach] SUCCESS pid={pid} ver=0x{parsed.Version:X} tstate=0x{tstatePtr:X} exportBypassed={exportBypassed}");
+                Debug.WriteLine($"[PTVS][ManagedSafeAttach] SUCCESS pid={pid} ver=0x{parsed.Version:X} tstate=0x{tstatePtr:X} exportBypassed={exportBypassed} size={parsed.ScriptPathSize} loader={Path.GetFileName(loaderPath)}");
                 return ok;
             } catch (Exception ex) {
                 Debug.WriteLine("[PTVS][ManagedSafeAttach] Orchestrator exception: " + ex);
@@ -253,76 +341,23 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
             }
         }
 
-        /// <summary>
-        /// Reads a native pointer sized value from the target process.
-        /// Returns 0 if address is null or read fails.
-        /// </summary>
-        private static ulong ReadPointer(ISafeAttachProcess proc, ulong address, int pointerSize) {
-            if (address == 0) return 0;
-            var tmp = new byte[pointerSize];
-            if (!proc.Read(address, tmp, pointerSize)) return 0;
-            return pointerSize == 8 ? BitConverter.ToUInt64(tmp, 0) : BitConverter.ToUInt32(tmp, 0);
-        }
-
-        /// <summary>
-        /// Creates a failure result and logs a debug line with site + message.
-        /// </summary>
+        // Helper methods restored after refactor truncation
         private static SafeAttachResult FailTelemetry(int pid, SafeAttachFailureSite site, string msg, uint rawVersion = 0, bool disabled = false, bool freeThreaded = false, bool exportBypassed = false) {
             Debug.WriteLine($"[PTVS][ManagedSafeAttach] FAIL pid={pid} site={site} msg={msg} exportBypassed={exportBypassed}");
             return SafeAttachResult.Fail(site, msg, rawVersion, disabled, freeThreaded, exportBypassed);
         }
 
-        private static bool DisableCache() => EnvVarTrue("PTVS_SAFE_ATTACH_MANAGED_NO_CACHE");
-        private static bool EnvVarTrue(string name) => string.Equals(Environment.GetEnvironmentVariable(name), "1", StringComparison.Ordinal);
 #if DEBUG
         private static bool Verbose => true;
 #else
-        private static bool Verbose => EnvVarTrue("PTVS_SAFE_ATTACH_VERBOSE");
+        private static bool Verbose => string.Equals(Environment.GetEnvironmentVariable("PTVS_SAFE_ATTACH_VERBOSE"), "1", StringComparison.Ordinal);
 #endif
-        #region ThreadState / Export helpers
-        /// <summary>
-        /// Attempts to resolve current PyThreadState via exported TLS symbols (legacy path / fallback).
-        /// </summary>
-        private static ulong LocateThreadStateCurrent(ISafeAttachProcess proc, IntPtr baseAddr, int moduleSize) {
-            try {
-                ulong moduleBase = (ulong)baseAddr.ToInt64();
-                bool Read(ulong addr, byte[] buffer, int size) => proc.Read(addr, buffer, size);
-                return ThreadStateExportResolver.TryGetCurrentThreadState(Read, moduleBase, IntPtr.Size);
-            } catch (Exception ex) { Debug.WriteLine("[PTVS][ManagedSafeAttach] LocateThreadStateCurrent exception: " + ex.Message); }
-            return 0;
-        }
-        #endregion
 
-        public static SafeAttachResult LegacyProbeOnly(IntPtr hProcess, int pid) => SafeAttachResult.Fail(SafeAttachFailureSite.ThreadStateDiscovery, "legacy stub");
-
-        /// <summary>
-        /// Enumerates modules via Toolhelp snapshot. Stops when callback returns true.
-        /// </summary>
-        internal static bool EnumerateModulesInternal(int pid, Func<string, IntPtr, int, bool> onModule) {
-            IntPtr snap = NativeMethods.CreateToolhelp32Snapshot(SnapshotFlags.Module, (uint)pid);
-            if (snap == NativeMethods.INVALID_HANDLE_VALUE) return false;
-            try {
-                uint sz = (uint)Marshal.SizeOf(typeof(MODULEENTRY32));
-                var me = new MODULEENTRY32 { dwSize = sz };
-                if (NativeMethods.Module32First(snap, ref me)) {
-                    do {
-                        string name = me.szModule ?? string.Empty;
-                        if (onModule(name, me.modBaseAddr, (int)me.modBaseSize)) return true;
-                        me.dwSize = sz;
-                    } while (NativeMethods.Module32Next(snap, ref me));
-                }
-            } finally { NativeMethods.CloseHandle(snap); }
-            return false;
-        }
-
-        /// <summary>
-        /// Locates the _Py_DebugOffsets slab either via section lookup of the PyRuntim section or cookie scan fallback.
-        /// Returns (0,0) on failure.
-        /// </summary>
         private static (ulong addr, uint size) LocateDebugOffsetsAndSize(ISafeAttachProcess proc, IntPtr baseAddr, int moduleSize) {
             try {
                 if (moduleSize < 0x1000) return (0, 0);
-                byte[] hdr = new byte[HEADER_READ];
+                const int HEADER_READ_LOCAL = 0x800;
+                byte[] hdr = new byte[HEADER_READ_LOCAL];
                 if (!proc.Read((ulong)baseAddr.ToInt64(), hdr, hdr.Length)) return (0, 0);
                 if (!(hdr[0] == 'M' && hdr[1] == 'Z')) return (0, 0);
                 int e_lfanew = BitConverter.ToInt32(hdr, 0x3C);
@@ -346,13 +381,15 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
                         return ((ulong)baseAddr.ToInt64() + virtualAddress, size);
                     }
                 }
-                // Fallback: scan module for cookie
+                // fallback scan for cookie
                 int scanSize = Math.Min(moduleSize, 2 * 1024 * 1024);
                 byte[] scan = new byte[scanSize];
                 if (proc.Read((ulong)baseAddr.ToInt64(), scan, scan.Length)) {
                     for (int i = 0; i <= scan.Length - DebugOffsetsParser.Cookie.Length; i++) {
                         bool match = true;
-                        for (int j = 0; j < DebugOffsetsParser.Cookie.Length; j++) { if (scan[i + j] != (byte)DebugOffsetsParser.Cookie[j]) { match = false; break; } }
+                        for (int j = 0; j < DebugOffsetsParser.Cookie.Length; j++) {
+                            if (scan[i + j] != (byte)DebugOffsetsParser.Cookie[j]) { match = false; break; }
+                        }
                         if (match) return ((ulong)baseAddr.ToInt64() + (ulong)i, 16384);
                     }
                 }
@@ -360,17 +397,37 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
             return (0, 0);
         }
 
-        /// <summary>
-        /// Reads memory fully from target process; returns true only if requested size read.
-        /// </summary>
+        private static ulong LocateThreadStateCurrent(ISafeAttachProcess proc, IntPtr baseAddr, int moduleSize) {
+            try {
+                ulong moduleBase = (ulong)baseAddr.ToInt64();
+                bool Read(ulong addr, byte[] buffer, int size) => proc.Read(addr, buffer, size);
+                return ThreadStateExportResolver.TryGetCurrentThreadState(Read, moduleBase, IntPtr.Size);
+            } catch (Exception ex) { Debug.WriteLine("[PTVS][ManagedSafeAttach] LocateThreadStateCurrent exception: " + ex.Message); }
+            return 0;
+        }
+
         internal static bool ReadFullyInternal(IntPtr hProcess, IntPtr address, byte[] buffer, int size) {
             IntPtr read; if (!ReadProcessMemory(hProcess, address, buffer, (IntPtr)size, out read)) return false; return read.ToInt64() == size;
         }
-        /// <summary>
-        /// Writes memory fully to target process; returns true only if requested size written.
-        /// </summary>
         internal static bool WriteFullyInternal(IntPtr hProcess, IntPtr address, byte[] buffer, int size) {
             IntPtr written; if (!WriteProcessMemory(hProcess, address, buffer, (IntPtr)size, out written)) return false; return written.ToInt64() == size;
+        }
+
+        internal static bool EnumerateModulesInternal(int pid, Func<string, IntPtr, int, bool> onModule) {
+            IntPtr snap = NativeMethods.CreateToolhelp32Snapshot(SnapshotFlags.Module, (uint)pid);
+            if (snap == NativeMethods.INVALID_HANDLE_VALUE) return false;
+            try {
+                uint sz = (uint)Marshal.SizeOf(typeof(MODULEENTRY32));
+                var me = new MODULEENTRY32 { dwSize = sz };
+                if (NativeMethods.Module32First(snap, ref me)) {
+                    do {
+                        string name = me.szModule ?? string.Empty;
+                        if (onModule(name, me.modBaseAddr, (int)me.modBaseSize)) return true;
+                        me.dwSize = sz;
+                    } while (NativeMethods.Module32Next(snap, ref me));
+                }
+            } finally { NativeMethods.CloseHandle(snap); }
+            return false;
         }
 
         private static string ExtractAscii(byte[] data, int offset, int length) {

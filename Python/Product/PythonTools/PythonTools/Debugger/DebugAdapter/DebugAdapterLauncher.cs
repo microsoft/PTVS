@@ -19,6 +19,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Web;
 using System.Windows.Forms;
@@ -86,11 +88,67 @@ namespace Microsoft.PythonTools.Debugger {
                 _debugInfo = GetTcpAttachDebugInfo(adapterLaunchInfo);
             } else {
                 _debugInfo = GetLocalAttachDebugInfo(adapterLaunchInfo);
+                // Pre-configure Option B connect (dynamic debugpy.connect) env before managed safe attach.
+                PrepareConnectModeEnv();
                 TryManagedSafeAttachForLocalProcess(_debugInfo as DebugLocalAttachInfo);
+                // If managed safe attach succeeded and we prepared connect mode, transform to TCP attach so adapter listens.
+                PromoteToTcpAttachIfReady();
             }
 
             AddDebuggerOptions(adapterLaunchInfo, _debugInfo);
             adapterLaunchInfo.LaunchJson = _debugInfo.GetJsonString();
+        }
+
+        private int _connectPort = 0; private string _connectHost = null; private bool _connectEnvSet = false; private bool _managedSuccess = false;
+
+        private void PrepareConnectModeEnv() {
+            try {
+                // Skip if disabled or already set externally
+                if (Environment.GetEnvironmentVariable("PTVS_SAFE_ATTACH_FORCE_CONNECT") == "0") return;
+                // Allocate free port (bind ephemeral listener just to discover then close so adapter can bind later)
+                var l = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
+                try {
+                    l.Start();
+                    _connectPort = ((System.Net.IPEndPoint)l.LocalEndpoint).Port;
+                } finally {
+                    try { l.Stop(); } catch { }
+                }
+                _connectHost = "127.0.0.1";
+                Environment.SetEnvironmentVariable("PTVS_DEBUGPY_CLIENT_PORT", _connectPort.ToString());
+                Environment.SetEnvironmentVariable("PTVS_DEBUGPY_CLIENT_HOST", _connectHost);
+                Environment.SetEnvironmentVariable("PTVS_SAFE_ATTACH_FORCE_CONNECT", "1");
+                if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("PTVS_DEBUG_BREAK"))) {
+                    // Default to break immediately on connect
+                    Environment.SetEnvironmentVariable("PTVS_DEBUG_BREAK", "1");
+                }
+                // Enable flex + verbose to aid early adoption
+                if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("PTVS_SAFE_ATTACH_FLEX_FALLBACK")))
+                    Environment.SetEnvironmentVariable("PTVS_SAFE_ATTACH_FLEX_FALLBACK", "1");
+                if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("PTVS_SAFE_ATTACH_VERBOSE")))
+                    Environment.SetEnvironmentVariable("PTVS_SAFE_ATTACH_VERBOSE", "1");
+                _connectEnvSet = true;
+                Debug.WriteLine($"[PTVS][ManagedSafeAttach][DA] Prepared connect env host={_connectHost} port={_connectPort}");
+            } catch (Exception ex) {
+                Debug.WriteLine("[PTVS][ManagedSafeAttach][DA] PrepareConnectModeEnv failed: " + ex.Message);
+                _connectEnvSet = false; _connectPort = 0;
+            }
+        }
+
+        private void PromoteToTcpAttachIfReady() {
+            try {
+                if (!_connectEnvSet) return;
+                if (!_managedSuccess) return; // set after orchestrator result
+                if (!(_debugInfo is DebugLocalAttachInfo local)) return;
+                var tcp = new DebugTcpAttachInfo {
+                    Host = _connectHost,
+                    Port = _connectPort,
+                    Env = _debugInfo.Env // carry over env markers
+                };
+                _debugInfo = tcp;
+                Debug.WriteLine($"[PTVS][ManagedSafeAttach][DA] Promoted to DebugTcpAttachInfo host={_connectHost} port={_connectPort}");
+            } catch (Exception ex) {
+                Debug.WriteLine("[PTVS][ManagedSafeAttach][DA] PromoteToTcpAttachIfReady failed: " + ex.Message);
+            }
         }
 
         // P/Invoke locally (avoid taking hard dependency on Attacher NativeMethods here)
@@ -116,15 +174,18 @@ namespace Microsoft.PythonTools.Debugger {
                 try {
                     var res = SafeAttachOrchestrator.TryManagedSafeAttach(hProcess, pid);
                     if (res.Success) {
+                        _managedSuccess = true;
                         Debug.WriteLine($"[PTVS][ManagedSafeAttach][DA] Safe attach success pid={pid} v={res.MajorVersion}.{res.MinorVersion}");
                         if (_debugInfo.Env == null) _debugInfo.Env = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
                         _debugInfo.Env["PTVS_SAFE_ATTACH_MANAGED_DONE"] = "1";
                         _debugInfo.Env["PTVS_SAFE_ATTACH_VERSION"] = $"{res.MajorVersion}.{res.MinorVersion}";
                     } else {
+                        _managedSuccess = false;
                         Debug.WriteLine($"[PTVS][ManagedSafeAttach][DA] Safe attach failed pid={pid} site={res.FailureSite} – continuing with debugpy injector fallback.");
                     }
                 } finally { CloseHandle(hProcess); }
             } catch (Exception ex) {
+                _managedSuccess = false;
                 Debug.WriteLine("[PTVS][ManagedSafeAttach][DA] Exception attempting safe attach: " + ex.Message);
             }
         }

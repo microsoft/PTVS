@@ -18,6 +18,51 @@ Key change: Leverage CPython 3.14 `_Py_DebugOffsets` (`debugger_support`) for **
 
 ---
 
+## Recent Managed Safe Attach Failure Analysis (Oct 2025)
+**Symptoms:**
+* Offsets parse stops after Strict/Extended/Relaxed and reports "no valid layout" even though flexible fallback could succeed.
+* Attach UI test (`AttachBreakImmediately`) remains in run mode (no initial break).
+* Mixed-mode project launch stays in design mode (`dbgDesignMode`) instead of breaking.
+* Orchestrator reports offsets parse failure on 3.14 with header bytes starting `78 64 65 62 75 67 70 79` (cookie OK) and no 512 size tuple near early qwords.
+
+**Root Causes:**
+1. Flexible tuple reordering/variable size support added to parser but gated behind `PTVS_SAFE_ATTACH_FLEX_FALLBACK`; env not set in VS host → fallback never executed.
+2. Orchestrator still hard-rejects non‑canonical `script_path_size != 512` (even when parser could flag NonCanonical).
+3. Loader preference not updated: continues choosing `ptvsd_loader.py` instead of new `safe_attach_loader.py` for listen/connect scenarios → no debugpy session.
+4. Option B (dynamic `debugpy.connect`) implemented, but adapter layer not yet passing `PTVS_DEBUGPY_CLIENT_PORT` → connect script path unused.
+5. Mixed-mode (Concord) attempts managed safe attach prematurely; native + managed coordination incomplete → session never starts.
+
+**Mitigations Applied / Pending:**
+* Parser: flexible fallback implemented & gated (DONE). Need to default-enable or auto-enable upon strict failure (PENDING).
+* Loader: `safe_attach_loader.py` added with verbose + initial breakpoint option (DONE). Need orchestrator search order update (PENDING).
+* Break Immediately: loader now triggers `debugpy.breakpoint()` when `WAIT` or `PTVS_DEBUG_BREAK=1` (DONE). Adapter must set proper env (PENDING).
+* Option B dynamic connect script generation in orchestrator (DONE). Adapter must allocate a port & set `PTVS_DEBUGPY_CLIENT_PORT` (PENDING).
+* Mixed-mode guard: should disable managed safe attach until Concord parity (PENDING).
+* Non‑canonical size acceptance: orchestrator must accept validated sizes (e.g. 0x300/0x1234) within sane cap (PENDING).
+
+**Action Items:**
+1. Auto-enable flex fallback: if strict + extended + relaxed fail AND cookie matches, internally enable flexible scan (ignore env). Add telemetry flag `flexUsed`.
+2. Orchestrator size validation: replace hard check `size == 512` with `(size >= 512 && size <= 0x100000)` when `NonCanonicalSize` flagged.
+3. Loader selection order: try `safe_attach_loader.py` (connect vs listen mode) → `ptvsd_loader.py` → temp bootstrap.
+4. Adapter integration (Option B):
+   * Allocate free port prior to orchestrator.
+   * Set env: `PTVS_DEBUGPY_CLIENT_PORT`, `PTVS_DEBUGPY_CLIENT_HOST=127.0.0.1`, `PTVS_DEBUG_BREAK=1` (when AttachBreakImmediately), `PTVS_SAFE_ATTACH_FORCE_CONNECT=1`.
+   * Switch `_debugInfo` to `DebugTcpAttachInfo` pointing to chosen port.
+5. Mixed-mode detection: if native Python/Concord engine requested (or env `PTVS_MIXED_MODE=1`), set `PTVS_SAFE_ATTACH_MANAGED_DISABLE=1` and skip Option B.
+6. Telemetry extension: record phases: parseMode (strict|extended|relaxed|flex), sizeCanonical (bool), loaderType (legacy|listen|connect), breakInjected, mixedModeBypass.
+7. Add unit tests:
+   * Parser: feed synthetic slab with non‑512 size; ensure flex accepted.
+   * Orchestrator: simulate parsed NonCanonical → verify acceptance & loader write.
+   * Adapter mock: env var propagation leads to dynamic connect script path chosen.
+8. Regression test: ensure negative test `OffsetsParser_Fails_On_WrongSize` remains valid (flex gated or uses env disable).
+9. Concord parity (phase 1): port flexible parser + NonCanonical acceptance (read-only) before enabling writes.
+
+**Short-Term Fallback Guidance:**
+* For failing environments set: `PTVS_SAFE_ATTACH_FLEX_FALLBACK=1`, `PTVS_SAFE_ATTACH_VERBOSE=1` to confirm flex acceptance.
+* If attach must succeed immediately prior to adapter changes: disable managed safe attach (`PTVS_SAFE_ATTACH_MANAGED_DISABLE=1`) to revert to legacy injector.
+
+---
+
 ## Refactor Progress Snapshot
 | Step | Description | Status |
 |------|-------------|--------|

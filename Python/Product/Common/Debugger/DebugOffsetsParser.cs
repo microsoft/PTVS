@@ -1,173 +1,36 @@
 // Shared parser for CPython 3.14+ _Py_DebugOffsets (PEP 768)
-// Strict + extended scan: locate 5 consecutive qwords (eval_breaker, remote_support,
-// pending_call, script_path, script_path_size) where size == 512.
-// Extended (spec v2) may append interpreter walk offsets:
-//   runtime_state, interpreters_head, interpreters_main, threads_head, threads_main, thread_next
-// All are small ( < 0x20000 ) offsets within their respective owning structs.
+// Strict + extended scan followed by optional relaxed passes; flexible fallback gated by env var.
 using System;
 using System.Diagnostics;
 using System.Text;
 
 namespace Microsoft.PythonTools.Debugging.Shared {
     public struct ParsedDebugOffsets {
-        public uint Version;
-        public byte Flags;
-        public ulong EvalBreaker;
-        public ulong RemoteSupport;
-        public ulong PendingCall;
-        public ulong ScriptPath;
-        public ulong ScriptPathSize;
-        public bool FreeThreaded;
-        public bool RemoteDebugDisabled;
-        // Optional interpreter walk offsets (zero if unavailable)
-        public ulong RuntimeState;         // offset of _PyRuntimeState within PyRuntim section start (OR 0 if cookie already points at start)
-        public ulong InterpretersHead;     // offset of interpreters.head field within _PyRuntimeState
-        public ulong InterpretersMain;     // offset of interpreters.main field within _PyRuntimeState
-        public ulong ThreadsHead;          // offset of tstate_head field within PyInterpreterState
-        public ulong ThreadsMain;          // offset of threads_main field within PyInterpreterState (3.13+)
-        public ulong ThreadNext;           // offset of next field within PyThreadState
-        public bool HasInterpreterWalk => ThreadNext != 0 && (ThreadsHead != 0 || ThreadsMain != 0) && (InterpretersMain != 0 || InterpretersHead != 0);
-    }
+        public uint Version; public byte Flags; public ulong EvalBreaker; public ulong RemoteSupport; public ulong PendingCall; public ulong ScriptPath; public ulong ScriptPathSize; public bool FreeThreaded; public bool RemoteDebugDisabled; public ulong RuntimeState; public ulong InterpretersHead; public ulong InterpretersMain; public ulong ThreadsHead; public ulong ThreadsMain; public ulong ThreadNext; public bool HasInterpreterWalk => ThreadNext != 0 && (ThreadsHead != 0 || ThreadsMain != 0) && (InterpretersMain != 0 || InterpretersHead != 0); public bool NonCanonicalSize; public bool ReorderedTuple; }
 
     public static class DebugOffsetsParser {
-        public const string Cookie = "xdebugpy";
-        public const uint MinSupportedVersion = 0x030E0000;
-        private const byte FLAG_FREE_THREADED = 0x01;
-        private const byte FLAG_REMOTE_DEBUG_DISABLED = 0x02;
-        private const ulong EXPECTED_SCRIPT_PATH_SIZE = 512;
+        public const string Cookie="xdebugpy"; public const uint MinSupportedVersion=0x030E0000; private const byte FLAG_FREE_THREADED=0x01; private const byte FLAG_REMOTE_DEBUG_DISABLED=0x02; private const ulong EXPECTED_SCRIPT_PATH_SIZE=512; private const ulong STRICT_MAX_SMALL_OFFSET=0x10000; private const ulong RELAXED_MAX_REMOTE_SUPPORT=0x1000000; private const int RELAXED_SECOND_PASS_SCORE_FLOOR=10; private const ulong FLEX_MIN_SCRIPT_PATH_SIZE=512; private const ulong FLEX_MAX_SCRIPT_PATH_SIZE=0x100000;
 
         public static bool TryParse(byte[] data, ulong baseAddress, int pointerSize, out ParsedDebugOffsets result, out string failure) {
-            result = default; failure = string.Empty;
-            if (data == null || data.Length < 64) { failure = "buffer too small"; return false; }
-            if (pointerSize != 4 && pointerSize != 8) { failure = "invalid pointer size"; return false; }
-            if (!HasCookie(data)) { failure = "cookie mismatch"; return false; }
+            result=default; failure=string.Empty; if(data==null||data.Length<64){ failure="buffer too small"; return false;} if(pointerSize!=4&&pointerSize!=8){ failure="invalid pointer size"; return false;} if(!HasCookie(data)){ failure="cookie mismatch"; return false; }
+            uint ver=(uint)RQ(data,1); if((ver & 0xFFFF0000) < MinSupportedVersion){ failure=$"unsupported version 0x{ver:X8}"; return false; } byte rawFlags=(byte)(RQ(data,2)&0xFF); bool dump=true; if(dump) Debug.WriteLine($"[PTVS][OffsetsParser] ver=0x{ver:X8} rawFlags=0x{rawFlags:X2}");
+            if(StrictPass(data,dump,out var strict,out _)){ result=BuildResult(ver,rawFlags,strict,false,false); PopulateInterpreterOffsets(data,strict.index+5,ref result,dump); return true; }
+            if(ExtendedScan(data,dump,out var ext,out _)){ result=BuildResult(ver,rawFlags,ext,false,false); PopulateInterpreterOffsets(data,ext.index+5,ref result,dump); return true; }
+            if(RelaxedRemoteSupportScan(data,dump,out var rel)){ if(dump) Debug.WriteLine($"[PTVS][OffsetsParser.Relaxed] Accepted relaxed layout blockIndex={rel.index} eb=0x{rel.eb:X} rs=0x{rel.rs:X} pc=0x{rel.pc:X} sp=0x{rel.sp:X} size={rel.sz}"); result=BuildResult(ver,rawFlags,rel,false,false); PopulateInterpreterOffsets(data,rel.index+5,ref result,dump); return true; }
+            if(EnvVarTrue("PTVS_SAFE_ATTACH_FLEX_FALLBACK") && FlexibleFallbackScan(data,dump,out var flex)){ if(dump) Debug.WriteLine($"[PTVS][OffsetsParser.Flexible] Accepted fallback layout winIndex={flex.index} eb=0x{flex.eb:X} rs=0x{flex.rs:X} pc=0x{flex.pc:X} sp=0x{flex.sp:X} size=0x{flex.sz:X}"); result=BuildResult(ver,rawFlags,flex, flex.sz!=EXPECTED_SCRIPT_PATH_SIZE,true); PopulateInterpreterOffsets(data,flex.index+5,ref result,dump); return true; }
+            failure="no valid layout"; return false; }
 
-            ulong verQ = ReadQword(data, 1);
-            uint ver = (uint)verQ;
-            if ((ver & 0xFFFF0000) < MinSupportedVersion) { failure = string.Format("unsupported version 0x{0:X8}", ver); return false; }
-            ulong flagsQ = data.Length >= 24 ? ReadQword(data, 2) : 0UL;
-            byte rawFlags = (byte)(flagsQ & 0xFF);
-            bool dump = true;// EnvVarTrue("PTVS_SAFE_ATTACH_DUMP");
-            if (dump) Debug.WriteLine(string.Format("[PTVS][OffsetsParser] ver=0x{0:X8} rawFlags=0x{1:X2}", ver, rawFlags));
-
-            if (StrictPass(data, dump, out var strict, out _)) {
-                result = BuildResult(ver, rawFlags, strict.eb, strict.rs, strict.pc, strict.sp, strict.sz);
-                PopulateInterpreterOffsets(data, strict.index + 5, ref result, dump);
-                return true;
-            }
-            if (ExtendedScan(data, dump, out var ext, out _)) {
-                result = BuildResult(ver, rawFlags, ext.eb, ext.rs, ext.pc, ext.sp, ext.sz);
-                PopulateInterpreterOffsets(data, ext.index + 5, ref result, dump);
-                return true;
-            }
-            failure = "no valid layout";
-            return false;
-        }
-
-        private struct Block { public int index; public ulong eb, rs, pc, sp, sz; }
-
-        // Strict heuristic: scan entire slab (no artificial cap)
-        private static bool StrictPass(byte[] data, bool dump, out Block block, out string reason) {
-            block = default; reason = "not found";
-            int qwords = data.Length / 8;
-            for (int i = 2; i + 4 < qwords; i++) { // start after cookie+version
-                if (i == 1) continue; // skip version qword
-                ulong a = ReadQword(data, i);
-                ulong b = ReadQword(data, i + 1);
-                ulong c = ReadQword(data, i + 2);
-                ulong d = ReadQword(data, i + 3);
-                ulong e = ReadQword(data, i + 4);
-                if (e != EXPECTED_SCRIPT_PATH_SIZE) continue;       // size must be 512
-                if (!(a > 0 && a < 0x10000)) continue;              // eval_breaker offset
-                if (!(b > 0 && b < 0x10000)) continue;              // remote_support offset
-                if (!(c < 0x10000)) continue;                       // pending offset (may be 0/4)
-                if (!(d > 0 && d < e)) continue;                    // script_path inside buffer
-                if ((c % 4) != 0) continue;                         // int alignment
-                if (!(d >= (c + 4))) continue;                      // script follows pending
-                block = new Block { index = i, eb = a, rs = b, pc = c, sp = d, sz = e };
-                if (dump) Debug.WriteLine($"[PTVS][OffsetsParser.Strict] blockIndex={i} byteOff=0x{(i * 8):X} eb=0x{a:X} rs=0x{b:X} pc=0x{c:X} sp=0x{d:X} size={e}");
-                return true;
-            }
-            return false;
-        }
-
-        // Extended scan: still offsets-only; prefer canonical pending (0/4) and script_path == pending+4
-        private static bool ExtendedScan(byte[] data, bool dump, out Block block, out string reason) {
-            block = default; reason = "not found";
-            int qwords = data.Length / 8; Block best = default; int bestScore = -1;
-            for (int i = 2; i + 4 < qwords; i++) {
-                if (i == 1) continue;
-                ulong a = ReadQword(data, i);
-                ulong b = ReadQword(data, i + 1);
-                ulong c = ReadQword(data, i + 2);
-                ulong d = ReadQword(data, i + 3);
-                ulong e = ReadQword(data, i + 4);
-                if (e != EXPECTED_SCRIPT_PATH_SIZE) continue;
-                if (!(a > 0 && a < 0x10000)) continue;              // enforce small eval_breaker offset
-                if (!(b > 0 && b < 0x10000)) continue;              // remote_support offset
-                if (!(c < 0x10000)) continue;                       // pending offset
-                if (!(d > 0 && d < e)) continue;                    // script_path inside buffer
-                if ((c % 4) != 0) continue;
-                if (!(d >= (c + 4))) continue;
-                int score = 0;
-                if (c == 0 || c == 4) score += 30;                  // canonical pending
-                if (d == c + 4) score += 30;                        // canonical script_path
-                score += (int)(0x10000 - Math.Min(a, 0x10000UL)) / 256;
-                score += (int)(0x10000 - Math.Min(b, 0x10000UL)) / 256;
-                score += (int)(0x0200 - Math.Min(d, 0x200UL));
-                if (score > bestScore) { bestScore = score; best = new Block { index = i, eb = a, rs = b, pc = c, sp = d, sz = e }; }
-            }
-            if (bestScore >= 0) {
-                block = best; if (dump) Debug.WriteLine($"[PTVS][OffsetsParser.Extended] blockIndex={best.index} byteOff=0x{(best.index * 8):X} eb=0x{best.eb:X} rs=0x{best.rs:X} pc=0x{best.pc:X} sp=0x{best.sp:X} size={best.sz}");
-                return true;
-            }
-            return false;
-        }
-
-        private static ParsedDebugOffsets BuildResult(uint ver, byte rawFlags, ulong eb, ulong rs, ulong pc, ulong sp, ulong sz) => new ParsedDebugOffsets {
-            Version = ver,
-            Flags = rawFlags,
-            EvalBreaker = eb,
-            RemoteSupport = rs,
-            PendingCall = pc,
-            ScriptPath = sp,
-            ScriptPathSize = sz,
-            FreeThreaded = (rawFlags & FLAG_FREE_THREADED) != 0,
-            RemoteDebugDisabled = (rawFlags & FLAG_REMOTE_DEBUG_DISABLED) != 0
-        };
-
-        private static void PopulateInterpreterOffsets(byte[] data, int startQword, ref ParsedDebugOffsets r, bool dump) {
-            // If at least 6 more qwords remain treat them as optional interpreter offsets if they look sane.
-            int qwords = data.Length / 8;
-            if (startQword + 6 > qwords) {
-                if (dump) Debug.WriteLine($"[PTVS][OffsetsParser.Interpreter] Not enough qwords for walk metadata (need 6, have {qwords - startQword}) startIndex={startQword}");
-                return;
-            }
-            ulong rt = ReadQword(data, startQword + 0);
-            ulong ih = ReadQword(data, startQword + 1);
-            ulong im = ReadQword(data, startQword + 2);
-            ulong th = ReadQword(data, startQword + 3);
-            ulong tm = ReadQword(data, startQword + 4);
-            ulong tn = ReadQword(data, startQword + 5);
-            // Sanity: all small offsets (except runtime which may be 0 meaning 'section base')
-            bool small(ulong v) => v < 0x20000;
-            bool condRt = (rt == 0 || small(rt));
-            bool condIh = small(ih);
-            bool condIm = small(im);
-            bool condThTm = small(th | tm); // either may be zero
-            bool condTn = small(tn) && tn != 0;
-            bool accept = condRt && condIh && condIm && condThTm && condTn;
-            if (accept) {
-                r.RuntimeState = rt; r.InterpretersHead = ih; r.InterpretersMain = im; r.ThreadsHead = th; r.ThreadsMain = tm; r.ThreadNext = tn;
-                if (dump) Debug.WriteLine($"[PTVS][OffsetsParser.Interpreter] rt=0x{rt:X} ih=0x{ih:X} im=0x{im:X} th=0x{th:X} tm=0x{tm:X} tn=0x{tn:X}");
-            } else if (dump) {
-                Debug.WriteLine($"[PTVS][OffsetsParser.Interpreter] Rejected candidate walk metadata rt=0x{rt:X} ih=0x{ih:X} im=0x{im:X} th=0x{th:X} tm=0x{tm:X} tn=0x{tn:X} condRt={condRt} condIh={condIh} condIm={condIm} condThTm={condThTm} condTn={condTn}");
-            }
-        }
-
-        private static bool HasCookie(byte[] data) { if (data.Length < Cookie.Length) return false; for (int i = 0; i < Cookie.Length; i++) if (data[i] != (byte)Cookie[i]) return false; return true; }
-        private static ulong ReadQword(byte[] data, int index) { int off = index * 8; return (off + 8 <= data.Length) ? BitConverter.ToUInt64(data, off) : 0UL; }
-        private static bool EnvVarTrue(string name) => string.Equals(Environment.GetEnvironmentVariable(name), "1", StringComparison.Ordinal);
-        public static string Hex(byte[] data, int count = 64) { if (data == null) return string.Empty; int len = Math.Min(count, data.Length); var sb = new StringBuilder(len * 3); for (int i = 0; i < len; i++) { if (i > 0) sb.Append(' '); sb.Append(data[i].ToString("X2")); } return sb.ToString(); }
+        private struct Block { public int index; public ulong eb,rs,pc,sp,sz; }
+        private static bool StrictPass(byte[] data,bool dump,out Block block,out string reason){ block=default; reason="not found"; int qwords=data.Length/8; for(int i=2;i+4<qwords;i++){ if(i==1) continue; ulong a=RQ(data,i),b=RQ(data,i+1),c=RQ(data,i+2),d=RQ(data,i+3),e=RQ(data,i+4); if(e!=EXPECTED_SCRIPT_PATH_SIZE) continue; if(!(a>0&&a<STRICT_MAX_SMALL_OFFSET)) continue; if(!(b>0&&b<STRICT_MAX_SMALL_OFFSET)) continue; if(!(c<STRICT_MAX_SMALL_OFFSET)) continue; if(!(d>0&&d<e)) continue; if((c%4)!=0) continue; if(!(d>=c+4)) continue; block=new Block{index=i,eb=a,rs=b,pc=c,sp=d,sz=e}; if(dump) Debug.WriteLine($"[PTVS][OffsetsParser.Strict] blockIndex={i} byteOff=0x{(i*8):X} eb=0x{a:X} rs=0x{b:X} pc=0x{c:X} sp=0x{d:X} size={e}"); return true;} return false; }
+        private static bool ExtendedScan(byte[] data,bool dump,out Block block,out string reason){ block=default; reason="not found"; int qwords=data.Length/8; Block best=default; int bestScore=-1; for(int i=2;i+4<qwords;i++){ if(i==1) continue; ulong a=RQ(data,i),b=RQ(data,i+1),c=RQ(data,i+2),d=RQ(data,i+3),e=RQ(data,i+4); if(e!=EXPECTED_SCRIPT_PATH_SIZE) continue; if(!(a>0&&a<STRICT_MAX_SMALL_OFFSET)) continue; if(!(b>0&&b<STRICT_MAX_SMALL_OFFSET)) continue; if(!(c<STRICT_MAX_SMALL_OFFSET)) continue; if(!(d>0&&d<e)) continue; if((c%4)!=0) continue; if(!(d>=c+4)) continue; int score=0; if(c==0||c==4) score+=30; if(d==c+4) score+=30; score+=(int)(STRICT_MAX_SMALL_OFFSET-Math.Min(a,STRICT_MAX_SMALL_OFFSET))/256; score+=(int)(STRICT_MAX_SMALL_OFFSET-Math.Min(b,STRICT_MAX_SMALL_OFFSET))/256; score+=(int)(0x0200-Math.Min(d,0x200UL)); if(score>bestScore){bestScore=score; best=new Block{index=i,eb=a,rs=b,pc=c,sp=d,sz=e};}} if(bestScore>=0){ block=best; if(dump) Debug.WriteLine($"[PTVS][OffsetsParser.Extended] blockIndex={best.index} byteOff=0x{(best.index*8):X} eb=0x{best.eb:X} rs=0x{best.rs:X} pc=0x{best.pc:X} sp=0x{best.sp:X} size={best.sz}"); return true;} return false; }
+        private static bool RelaxedRemoteSupportScan(byte[] data,bool dump,out Block block){ block=default; int qwords=data.Length/8; Block best=default; int bestScore=-1; for(int i=2;i+4<qwords;i++){ if(i==1) continue; ulong a=RQ(data,i),b=RQ(data,i+1),c=RQ(data,i+2),d=RQ(data,i+3),e=RQ(data,i+4); if(e!=EXPECTED_SCRIPT_PATH_SIZE) continue; if(!(a>0&&a<STRICT_MAX_SMALL_OFFSET)) continue; if(!(b>0&&b<RELAXED_MAX_REMOTE_SUPPORT)) continue; if(!(c<RELAXED_MAX_REMOTE_SUPPORT)) continue; if((c%4)!=0) continue; if(!(d>0&&d<e)) continue; if(!(d>=c+4)) continue; int score=0; if(c==0||c==4) score+=25; if(d==c+4) score+=25; if(b<0x200000) score+=30; score+=(int)(0x200-Math.Min(d,0x200UL)); if(score>bestScore){bestScore=score; best=new Block{index=i,eb=a,rs=b,pc=c,sp=d,sz=e};}} if(bestScore>=RELAXED_SECOND_PASS_SCORE_FLOOR){ block=best; return true;} if(dump) Debug.WriteLine("[PTVS][OffsetsParser.Relaxed] No candidate met relaxed criteria"); return false; }
+        private static bool FlexibleFallbackScan(byte[] data,bool dump,out Block block){ block=default; int qwords=data.Length/8; Block best=default; int bestScore=-1; int maxWindows=Math.Min(qwords-5,256); for(int i=0;i<=maxWindows;i++){ ulong v0=RQ(data,i),v1=RQ(data,i+1),v2=RQ(data,i+2),v3=RQ(data,i+3),v4=RQ(data,i+4); ulong[] vals={v0,v1,v2,v3,v4}; bool anySize=false; for(int s=0;s<5;s++){ if(vals[s]>=FLEX_MIN_SCRIPT_PATH_SIZE && vals[s]<=FLEX_MAX_SCRIPT_PATH_SIZE){ anySize=true; break; }} if(!anySize) continue; for(int sIdx=0;sIdx<5;sIdx++){ ulong size=vals[sIdx]; if(size<FLEX_MIN_SCRIPT_PATH_SIZE||size>FLEX_MAX_SCRIPT_PATH_SIZE) continue; for(int spIdx=0; spIdx<5; spIdx++){ if(spIdx==sIdx) continue; ulong sp=vals[spIdx]; if(!(sp>0&&sp<size)) continue; for(int pcIdx=0; pcIdx<5; pcIdx++){ if(pcIdx==sIdx||pcIdx==spIdx) continue; ulong pc=vals[pcIdx]; if(pc>=sp||(pc%4)!=0) continue; if(sp-pc<4||sp-pc>0x200) continue; for(int r1=0;r1<5;r1++){ if(r1==sIdx||r1==spIdx||r1==pcIdx) continue; int r2=-1; for(int t=0;t<5;t++){ if(t!=sIdx && t!=spIdx && t!=pcIdx && t!=r1){ r2=t; break; }} ulong c1=vals[r1], c2=vals[r2]; EvalFlex(i,c1,c2,pc,sp,size,dump,ref bestScore,ref best); EvalFlex(i,c2,c1,pc,sp,size,dump,ref bestScore,ref best); }}}}} if(bestScore>=0){ block=best; return true;} return false; }
+        private static void EvalFlex(int win,ulong eb,ulong rs,ulong pc,ulong sp,ulong size,bool dump,ref int bestScore,ref Block best){ if(eb==0||rs==0) return; if(eb>=0x1000000UL) return; if(rs>=0x10000000UL) return; int score=0; if(pc==0||pc==4) score+=20; if(sp==pc+4) score+=25; if(size==EXPECTED_SCRIPT_PATH_SIZE) score+=40; else score+= (int)Math.Max(0,30-(int)(Math.Abs((long)size-(long)EXPECTED_SCRIPT_PATH_SIZE)/32)); if(eb<0x4000) score+=10; if(rs<0x40000) score+=10; if(score>bestScore){ bestScore=score; best=new Block{index=win,eb=eb,rs=rs,pc=pc,sp=sp,sz=size}; if(dump) Debug.WriteLine($"[PTVS][OffsetsParser.FlexEval] win={win} eb=0x{eb:X} rs=0x{rs:X} pc=0x{pc:X} sp=0x{sp:X} size=0x{size:X} score={score}"); }}
+        private static ParsedDebugOffsets BuildResult(uint ver,byte rawFlags,Block b,bool nonCanonical,bool reordered)=> new ParsedDebugOffsets{ Version=ver,Flags=rawFlags,EvalBreaker=b.eb,RemoteSupport=b.rs,PendingCall=b.pc,ScriptPath=b.sp,ScriptPathSize=b.sz,FreeThreaded=(rawFlags & FLAG_FREE_THREADED)!=0,RemoteDebugDisabled=(rawFlags & FLAG_REMOTE_DEBUG_DISABLED)!=0,NonCanonicalSize=nonCanonical,ReorderedTuple=reordered};
+        private static void PopulateInterpreterOffsets(byte[] data,int startQword,ref ParsedDebugOffsets r,bool dump){ int qwords=data.Length/8; if(startQword+6>qwords){ if(dump) Debug.WriteLine($"[PTVS][OffsetsParser.Interpreter] Not enough qwords for walk metadata (need 6, have {qwords-startQword}) startIndex={startQword}"); return;} ulong rt=RQ(data,startQword+0), ih=RQ(data,startQword+1), im=RQ(data,startQword+2), th=RQ(data,startQword+3), tm=RQ(data,startQword+4), tn=RQ(data,startQword+5); bool small(ulong v)=> v<0x20000; bool condRt=(rt==0||small(rt)); bool condIh=small(ih); bool condIm=small(im); bool condThTm=small(th|tm); bool condTn=small(tn)&&tn!=0; bool accept=condRt&&condIh&&condIm&&condThTm&&condTn; if(accept){ r.RuntimeState=rt; r.InterpretersHead=ih; r.InterpretersMain=im; r.ThreadsHead=th; r.ThreadsMain=tm; r.ThreadNext=tn; if(dump) Debug.WriteLine($"[PTVS][OffsetsParser.Interpreter] rt=0x{rt:X} ih=0x{ih:X} im=0x{im:X} th=0x{th:X} tm=0x{tm:X} tn=0x{tn:X}"); } else if(dump){ Debug.WriteLine($"[PTVS][OffsetsParser.Interpreter] Rejected candidate walk metadata rt=0x{rt:X} ih=0x{ih:X} im=0x{im:X} th=0x{th:X} tm=0x{tm:X} tn=0x{tn:X} condRt={condRt} condIh={condIh} condIm={condIm} condThTm={condThTm} condTn={condTn}"); }}
+        private static bool HasCookie(byte[] data){ if(data.Length<Cookie.Length) return false; for(int i=0;i<Cookie.Length;i++) if(data[i]!=(byte)Cookie[i]) return false; return true; }
+        private static ulong RQ(byte[] data,int index){ int off=index*8; return (off+8<=data.Length)? BitConverter.ToUInt64(data,off):0UL; }
+        private static bool EnvVarTrue(string name)=> string.Equals(Environment.GetEnvironmentVariable(name),"1",StringComparison.Ordinal);
+        public static string Hex(byte[] data,int count=64){ if(data==null) return string.Empty; int len=Math.Min(count,data.Length); var sb=new StringBuilder(len*3); for(int i=0;i<len;i++){ if(i>0) sb.Append(' '); sb.Append(data[i].ToString("X2")); } return sb.ToString(); }
     }
 }
