@@ -18,6 +18,53 @@ Key change: Leverage CPython 3.14 `_Py_DebugOffsets` (`debugger_support`) for **
 
 ---
 
+## Debugpy Dependency: Legacy vs Current (Safe Attach)
+**Goal:** Clarify how the requirement for `debugpy` changed with the new `safe_attach_loader.py`.
+
+| Aspect | Legacy Attach / Transitional (ptvsd_loader) | Current Safe Attach (safe_attach_loader) |
+|--------|---------------------------------------------|------------------------------------------|
+| Primary loader file | `ptvsd_loader.py` (sometimes temp bootstrap) | `safe_attach_loader.py` (single canonical) |
+| Bundled package | `ptvsd` + (later) `debugpy` directory in VSIX | `debugpy` directory in VSIX (fallback to legacy `ptvsd`) |
+| sys.path handling | Loader typically inserted its dir; dynamic scripts inconsistent | Loader always prepends its directory and explicitly adds adjacent `debugpy` dir |
+| Environment needs `pip install debugpy` | Not required, but environment install could shadow bundled version | Not required; bundled copy always reachable and preferred |
+| Fallback behavior | `import debugpy` then `import ptvsd as debugpy` | Same, but debugpy import nearly deterministic due to path injection |
+| Multiple loader variants | Yes (legacy, dynamic connect, bootstrap) | No (single script) |
+| Role confusion (listen vs connect) | Possible (dynamic connect + host connect -> timeouts) | Target always listens, host always connects |
+| Initial breakpoint logic | Varied; different scripts | Unified: `PTVS_WAIT_FOR_CLIENT=1` and/or `PTVS_DEBUG_BREAK=1` triggers breakpoint |
+| Missing loader failure mode | Silent timeout in many cases | Immediate telemetry: site=ScriptBufferWrite msg=loader file not found |
+| Need for sidecar port file | Ad-hoc / absent in dynamic scripts | Supported via `PTVS_DEBUG_PORT_FILE` when dynamic port chosen |
+
+### Current Environment Variables (Supported / Simplified)
+| Variable | Meaning | Default |
+|----------|---------|---------|
+| `PTVS_DEBUG_HOST` | Interface to bind listener | `127.0.0.1` |
+| `PTVS_DEBUG_PORT` | Port to listen on (`0` = allocate ephemeral) | `0` |
+| `PTVS_WAIT_FOR_CLIENT` | Wait for debugger before resuming | `1` |
+| `PTVS_DEBUG_BREAK` | Force initial breakpoint (OR with WAIT) | Off |
+| `PTVS_DEBUG_PORT_FILE` | Path to write selected port number | None |
+| `PTVS_DEBUG_SESSION` | Correlation / session GUID | None |
+| `PTVS_SAFE_ATTACH_LOADER_VERBOSE` | Verbose loader logging (`0` disables) | `1` |
+| `PTVS_DEBUG_LOG_FILE` | File sink for loader logs (else stderr) | None |
+| (Orchestrator) `PTVS_SAFE_ATTACH_MANAGED_DISABLE` | Force legacy injection path | Off |
+| (Orchestrator) `PTVS_MIXED_MODE` | Bypass managed safe attach in mixed mode | Off |
+
+### Migration Guidance
+1. Remove any docs telling users to manually install `debugpy` just for attach.
+2. Refer only to `safe_attach_loader.py`; retire references to `ptvsd_loader.py` except in legacy troubleshooting appendix.
+3. Document single listener role: process listens, VS connects.
+4. For Break Immediately scenarios: set `PTVS_WAIT_FOR_CLIENT=1` (optionally also `PTVS_DEBUG_BREAK=1` – they both trigger a breakpoint now).
+5. Troubleshooting timeouts: check loader log for `listener started` or failures (`listen failed`). No more silent dependency on environment debugpy.
+
+### Failure Differentiation (Now)
+| Symptom | Likely Cause | Action |
+|---------|--------------|--------|
+| `loader file not found` | VSIX deployment missing / not copied yet | Redeploy / ensure `<IncludeInVSIX>true</IncludeInVSIX>` for loader |
+| Socket timeout (no connection) | Listener never started (port bind, path import failure) | Enable verbose loader logs; inspect `listen failed` lines |
+| Fallback to `ptvsd` | Bundled debugpy corrupt / missing | Repair VSIX; verify debugpy directory present |
+| No breakpoint on attach | WAIT & BREAK both unset | Set `PTVS_WAIT_FOR_CLIENT=1` or `PTVS_DEBUG_BREAK=1` |
+
+---
+
 ## Recent Managed Safe Attach Failure Analysis (Oct 2025)
 **Symptoms:**
 * Offsets parse stops after Strict/Extended/Relaxed and reports "no valid layout" even though flexible fallback could succeed.

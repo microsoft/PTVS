@@ -30,6 +30,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Product\PythonTools\PythonTools.csproj">
+      <Project>{fa7be5f5-e04f-4613-b7ac-70ce10d1bb68}</Project>
+      <Name>PythonTools</Name>
+    </ProjectReference>
     <ProjectReference Include="..\DebuggerUITests\DebuggerUITests.csproj">
       <Project>{82bb3890-c943-421e-8643-7244421e8ade}</Project>
       <Name>DebuggerUITests</Name>

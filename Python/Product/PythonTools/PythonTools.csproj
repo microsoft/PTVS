@@ -715,7 +715,10 @@
     </Content>
     <Content Include="images\AddPackage_16x.png" />
     <Content Include="images\AddPackage_16x.svg" />
-    <Content Include="safe_attach_loader.py" />
+    <Content Include="safe_attach_loader.py">
+	  <IncludeInVSIX>true</IncludeInVSIX> 
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Theme\Microsoft.PythonTools.theme.v16.0.pkgdef" />
     <Content Include="Theme\Repl\Microsoft.PythonTools.Repl.theme.v15.0.pkgdef" />
     <Content Include="Theme\Repl\Microsoft.PythonTools.Repl.theme.v16.0.pkgdef" />

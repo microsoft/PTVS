@@ -195,94 +195,67 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
                 ulong pendingFlagAddr = supportBase + parsed.PendingCall;
                 ulong evalBreakerAddr = tstatePtr + parsed.EvalBreaker;
 
+                // Ensure PTVS_DEBUG_PORT is explicitly set (even if dynamic 0) so loader doesn't see <null>.
+                string chosenPort = Environment.GetEnvironmentVariable("PTVS_DEBUG_PORT");
+                if (string.IsNullOrEmpty(chosenPort)) {
+                    // If host hasn't provided a port, default to dynamic selection (0).
+                    chosenPort = "0";
+                    Environment.SetEnvironmentVariable("PTVS_DEBUG_PORT", chosenPort);
+                }
+                Debug.WriteLine($"[PTVS][ManagedSafeAttach] Using PTVS_DEBUG_PORT={chosenPort}");
+
+                // For dynamic port (0) create / assign a port file so the actual listener port can be discovered.
+                try {
+                    var portFile = Environment.GetEnvironmentVariable("PTVS_DEBUG_PORT_FILE");
+                    if (chosenPort == "0") {
+                        if (string.IsNullOrEmpty(portFile)) {
+                            portFile = Path.Combine(Path.GetTempPath(), $"ptvs_attach_{pid}.port");
+                            Environment.SetEnvironmentVariable("PTVS_DEBUG_PORT_FILE", portFile);
+                            Debug.WriteLine($"[PTVS][ManagedSafeAttach] Assigned PTVS_DEBUG_PORT_FILE='{portFile}' for dynamic port");
+                        }
+                    } else if (!string.IsNullOrEmpty(portFile)) {
+                        // Fixed port scenario: remove the port file env to avoid ambiguity.
+                        Environment.SetEnvironmentVariable("PTVS_DEBUG_PORT_FILE", null);
+                        Debug.WriteLine("[PTVS][ManagedSafeAttach] Removed PTVS_DEBUG_PORT_FILE for fixed port attach");
+                    }
+                } catch { }
+
                 byte[] probeBuf = new byte[32];
                 if (!mem.TryRead(scriptPathBufAddr, probeBuf)) {
                     return FailTelemetry(pid, SafeAttachFailureSite.ScriptBufferWrite, "script buffer unreadable", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
                 }
 
-                // Loader preference: safe_attach_loader.py first (unless legacy forced)
-                string loaderPath = null;
-                bool legacyForced = Environment.GetEnvironmentVariable("PTVS_SAFE_ATTACH_LEGACY_PTvsd") == "1";
-                // ENV override root
-                string installRoot = Environment.GetEnvironmentVariable("PTVS_INSTALL_ROOT");
-                if (!string.IsNullOrEmpty(installRoot)) {
-                    try {
-                        var candidate = Path.Combine(installRoot, "safe_attach_loader.py");
-                        if (File.Exists(candidate)) loaderPath = candidate;
-                    } catch { }
-                }
-                if (!legacyForced && string.IsNullOrEmpty(loaderPath)) {
-                    try {
-                        if (!string.IsNullOrEmpty(installRoot)) {
-                            var fallback = Path.Combine(installRoot, "ptvsd_loader.py");
-                            if (File.Exists(fallback)) loaderPath = fallback; // only if safe loader missing
-                        }
-                    } catch { }
-                }
-                if (!legacyForced && string.IsNullOrEmpty(loaderPath)) {
-                    try {
-                        loaderPath = PythonToolsInstallPath.GetFile("safe_attach_loader.py");
-                    } catch (Exception exLp) {
-                        if (Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] safe_attach_loader lookup failed: " + exLp.Message);
-                        loaderPath = null; // continue to other fallbacks
-                    }
-                }
+                // Simplified loader resolution: prefer only safe_attach_loader.py.
+                // Optional legacy fallback (ptvsd_loader.py) enabled only when PTVS_SAFE_ATTACH_ALLOW_LEGACY=1.
+                string loaderPath = ResolveLoaderPath();
+                if (Verbose) Debug.WriteLine($"[PTVS][ManagedSafeAttach] Loader resolution final: {(string.IsNullOrEmpty(loaderPath)?"<none>":loaderPath)}");
                 if (string.IsNullOrEmpty(loaderPath)) {
-                    try {
-                        // Try env root first for ptvsd loader
-                        if (!string.IsNullOrEmpty(installRoot)) {
-                            var ptvsd = Path.Combine(installRoot, "ptvsd_loader.py");
-                            if (File.Exists(ptvsd)) loaderPath = ptvsd;
-                        }
-                        if (string.IsNullOrEmpty(loaderPath)) {
-                            loaderPath = PythonToolsInstallPath.GetFile("ptvsd_loader.py") ?? PythonToolsInstallPath.GetFile("ptvsd\\ptvsd_loader.py");
-                        }
-                    } catch (Exception exLp2) {
-                        if (Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] ptvsd_loader lookup failed: " + exLp2.Message);
-                        loaderPath = null;
-                    }
+                    return FailTelemetry(pid, SafeAttachFailureSite.ScriptBufferWrite, "loader file not found", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
                 }
 
-                // Option B: dynamic connect script
-                var clientPortEnv = Environment.GetEnvironmentVariable("PTVS_DEBUGPY_CLIENT_PORT");
-                var forceConnect = Environment.GetEnvironmentVariable("PTVS_SAFE_ATTACH_FORCE_CONNECT") == "1";
-                if (!string.IsNullOrEmpty(clientPortEnv) && int.TryParse(clientPortEnv, out var clientPort) && clientPort > 0) {
-                    string host = Environment.GetEnvironmentVariable("PTVS_DEBUGPY_CLIENT_HOST");
-                    if (string.IsNullOrEmpty(host)) host = "127.0.0.1";
+                // If we have a fixed port (non-zero) we cannot set env vars inside the already running target process
+                // so generate a small wrapper that sets them before invoking the real loader.
+                if (chosenPort != "0") {
                     try {
-                        string dynName = $"safe_attach_connect_{pid}.py";
-                        string dynPath = Path.Combine(Path.GetTempPath(), dynName);
-                        bool breakFlag = Environment.GetEnvironmentVariable("PTVS_DEBUG_BREAK") == "1";
-                        var sb = new StringBuilder();
-                        sb.AppendLine("# Auto-generated by SafeAttachOrchestrator (Option B connect mode)");
-                        sb.AppendLine("import sys, os");
-                        sb.AppendLine("try:\n    _pkg_dir = os.path.dirname(__file__)\n    sys.path.insert(0, _pkg_dir)\nexcept Exception: pass");
-                        sb.AppendLine("try:\n    import debugpy as _dbg\nexcept Exception:\n    try:\n        import ptvsd as _dbg\n    except Exception:\n        raise SystemExit(0)");
-                        sb.AppendLine($"_host='{host}'");
-                        sb.AppendLine($"_port={clientPort}");
-                        sb.AppendLine("try:\n    _dbg.connect((_host,_port))\nexcept Exception:\n    raise SystemExit(0)");
-                        if (breakFlag) sb.AppendLine("try:_dbg.breakpoint()\nexcept Exception:pass");
-                        sb.AppendLine("# End dynamic connect script");
-                        File.WriteAllText(dynPath, sb.ToString(), Encoding.UTF8);
-                        if (Verbose) Debug.WriteLine($"[PTVS][ManagedSafeAttach] Using dynamic connect script {dynPath} host={host} port={clientPort} break={breakFlag}");
-                        loaderPath = dynPath;
-                    } catch (Exception exDyn) {
-                        if (Verbose) Debug.WriteLine("[PTVS][ManagedSafeAttach] Dynamic connect script generation failed: " + exDyn.Message);
-                        if (forceConnect) {
-                            return FailTelemetry(pid, SafeAttachFailureSite.ScriptBufferWrite, "dynamic connect script generation failed", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
+                        string hostEnv = Environment.GetEnvironmentVariable("PTVS_DEBUG_HOST") ?? "127.0.0.1";
+                        bool breakFlag = (Environment.GetEnvironmentVariable("PTVS_DEBUG_BREAK") == "1") || (Environment.GetEnvironmentVariable("PTVS_WAIT_FOR_CLIENT") == "1");
+                        string wrapperPath = Path.Combine(Path.GetTempPath(), $"safe_attach_wrapper_{pid}.py");
+                        var sbw = new StringBuilder();
+                        sbw.AppendLine("# Auto-generated safe attach wrapper");
+                        sbw.AppendLine("import os, runpy");
+                        sbw.AppendLine($"os.environ['PTVS_DEBUG_HOST'] = '{hostEnv}'");
+                        sbw.AppendLine($"os.environ['PTVS_DEBUG_PORT'] = '{chosenPort}'");
+                        if (breakFlag) {
+                            sbw.AppendLine("os.environ.setdefault('PTVS_WAIT_FOR_CLIENT','1')");
+                            sbw.AppendLine("os.environ.setdefault('PTVS_DEBUG_BREAK','1')");
                         }
+                        sbw.AppendLine($"runpy.run_path(r'{loaderPath}', run_name='__main__')");
+                        File.WriteAllText(wrapperPath, sbw.ToString(), Encoding.UTF8);
+                        loaderPath = wrapperPath;
+                        Debug.WriteLine($"[PTVS][ManagedSafeAttach] Using wrapper loader {wrapperPath} host={hostEnv} port={chosenPort} break={breakFlag}");
+                    } catch (Exception exWrap) {
+                        Debug.WriteLine("[PTVS][ManagedSafeAttach] Wrapper generation failed: " + exWrap.Message);
                     }
-                }
-
-                if (string.IsNullOrEmpty(loaderPath)) {
-                    try {
-                        string temp = Path.Combine(Path.GetTempPath(), "ptvs_bootstrap.py");
-                        if (!File.Exists(temp)) File.WriteAllText(temp, "import debugpy; debugpy.listen(('127.0.0.1',0));\n");
-                        loaderPath = temp;
-                    } catch { loaderPath = null; }
-                }
-                if (string.IsNullOrEmpty(loaderPath)) {
-                    return FailTelemetry(pid, SafeAttachFailureSite.ScriptBufferWrite, "no loader file path", parsed.Version, parsed.RemoteDebugDisabled, parsed.FreeThreaded, exportBypassed);
                 }
 
                 if (!SafeAttachUtilities.TryPrepareLoaderBuffer(loaderPath, parsed.ScriptPathSize, out var scriptWrite, out var truncated)) {
@@ -434,6 +407,22 @@ namespace Microsoft.PythonTools.Debugger.ManagedSafeAttach {
             int end = offset + length; if (end > data.Length) end = data.Length;
             int realEnd = offset; while (realEnd < end && data[realEnd] != 0) realEnd++;
             return Encoding.ASCII.GetString(data, offset, realEnd - offset);
+        }
+
+        private static string ResolveLoaderPath() {
+            // 1. Explicit override (for tests / custom scenarios)
+            try {
+                var overridePath = Environment.GetEnvironmentVariable("PTVS_SAFE_ATTACH_LOADER_OVERRIDE");
+                if (!string.IsNullOrEmpty(overridePath) && File.Exists(overridePath)) {
+                    return overridePath;
+                }
+            } catch { }
+
+            // 2. Normal preferred loader
+            string path = PythonToolsInstallPath.TryGetFile("safe_attach_loader.py");
+            if (!string.IsNullOrEmpty(path)) return path;
+
+            return string.Empty;
         }
     }
 }

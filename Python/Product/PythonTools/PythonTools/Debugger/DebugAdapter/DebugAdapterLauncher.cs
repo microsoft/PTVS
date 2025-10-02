@@ -44,19 +44,20 @@ namespace Microsoft.PythonTools.Debugger {
         private IDebugAdapterHostContext _adapterHostContext;
         private DebugInfo _debugInfo;
 
+        // Fixed port attach state
+        private int _connectPort = 0;
+        private string _connectHost = "127.0.0.1";
+        private bool _managedSuccess = false;
+
         public DebugAdapterLauncher() { }
 
         public void Initialize(IDebugAdapterHostContext context) {
             _adapterHostContext = context ?? throw new ArgumentNullException(nameof(context));
-
-            // We need various PTVS services to retrieve debug options and interpreters, but it's
-            // possible for the package to not be loaded yet if Attach to Process dialog is used
-            // before loading a Python project or using some PTVS command.
             PythonToolsPackage.EnsureLoaded();
         }
 
         public ITargetHostProcess LaunchAdapter(IAdapterLaunchInfo launchInfo, ITargetHostInterop targetInterop) {
-            if (_debugInfo is DebugTcpAttachInfo tcpAttach) { 
+            if (_debugInfo is DebugTcpAttachInfo tcpAttach) {
                 return DebugAdapterRemoteProcess.Attach(tcpAttach);
             }
 
@@ -66,9 +67,7 @@ namespace Microsoft.PythonTools.Debugger {
                 webPageUrl = launch.LaunchWebPageUrl;
             } else if (_debugInfo is DebugLocalAttachInfo) {
                 var interp = ((PythonToolsService)Package.GetGlobalService(typeof(PythonToolsService))).InterpreterOptionsService.DefaultInterpreter;
-                if (interp == null) {
-                    throw new Exception(Strings.NoInterpretersAvailable);
-                }
+                if (interp == null) throw new Exception(Strings.NoInterpretersAvailable);
                 interp.ThrowIfNotRunnable();
                 pythonExe = interp.Configuration.InterpreterPath;
                 webPageUrl = null;
@@ -86,91 +85,176 @@ namespace Microsoft.PythonTools.Debugger {
                 _debugInfo = GetLaunchDebugInfo(adapterLaunchInfo.LaunchJson);
             } else if (adapterLaunchInfo.DebugPort is PythonRemoteDebugPort) {
                 _debugInfo = GetTcpAttachDebugInfo(adapterLaunchInfo);
-            } else {
+            } else { // local attach
                 _debugInfo = GetLocalAttachDebugInfo(adapterLaunchInfo);
-                // Pre-configure Option B connect (dynamic debugpy.connect) env before managed safe attach.
-                PrepareConnectModeEnv();
+                PrepareFixedPortAttach();
                 TryManagedSafeAttachForLocalProcess(_debugInfo as DebugLocalAttachInfo);
-                // If managed safe attach succeeded and we prepared connect mode, transform to TCP attach so adapter listens.
-                PromoteToTcpAttachIfReady();
+                PromoteToTcpAttachFixed();
             }
 
             AddDebuggerOptions(adapterLaunchInfo, _debugInfo);
             adapterLaunchInfo.LaunchJson = _debugInfo.GetJsonString();
         }
 
-        private int _connectPort = 0; private string _connectHost = null; private bool _connectEnvSet = false; private bool _managedSuccess = false;
-
-        private void PrepareConnectModeEnv() {
+        private void PrepareFixedPortAttach() {
             try {
-                // Skip if disabled or already set externally
-                if (Environment.GetEnvironmentVariable("PTVS_SAFE_ATTACH_FORCE_CONNECT") == "0") return;
-                // Allocate free port (bind ephemeral listener just to discover then close so adapter can bind later)
-                var l = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
+                // Allocate a free TCP port (listener will be inside target process via wrapper + loader)
+                var l = new TcpListener(IPAddress.Loopback, 0);
                 try {
                     l.Start();
-                    _connectPort = ((System.Net.IPEndPoint)l.LocalEndpoint).Port;
-                } finally {
-                    try { l.Stop(); } catch { }
+                    _connectPort = ((IPEndPoint)l.LocalEndpoint).Port;
+                } finally { try { l.Stop(); } catch { } }
+                _connectHost = Environment.GetEnvironmentVariable("PTVS_DEBUG_HOST");
+                if (string.IsNullOrEmpty(_connectHost)) _connectHost = "127.0.0.1";
+                Environment.SetEnvironmentVariable("PTVS_DEBUG_PORT", _connectPort.ToString());
+                // Unified pause flag; preserve legacy envs if already set
+                if (Environment.GetEnvironmentVariable("PTVS_DEBUG_BREAK") == null && Environment.GetEnvironmentVariable("PTVS_DEBUG_PAUSE") == null) {
+                    // Break Immediately default for Attach UI scenario
+                    Environment.SetEnvironmentVariable("PTVS_DEBUG_PAUSE", "1");
                 }
-                _connectHost = "127.0.0.1";
-                Environment.SetEnvironmentVariable("PTVS_DEBUGPY_CLIENT_PORT", _connectPort.ToString());
-                Environment.SetEnvironmentVariable("PTVS_DEBUGPY_CLIENT_HOST", _connectHost);
-                Environment.SetEnvironmentVariable("PTVS_SAFE_ATTACH_FORCE_CONNECT", "1");
-                if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("PTVS_DEBUG_BREAK"))) {
-                    // Default to break immediately on connect
-                    Environment.SetEnvironmentVariable("PTVS_DEBUG_BREAK", "1");
-                }
-                // Enable flex + verbose to aid early adoption
-                if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("PTVS_SAFE_ATTACH_FLEX_FALLBACK")))
-                    Environment.SetEnvironmentVariable("PTVS_SAFE_ATTACH_FLEX_FALLBACK", "1");
-                if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("PTVS_SAFE_ATTACH_VERBOSE")))
-                    Environment.SetEnvironmentVariable("PTVS_SAFE_ATTACH_VERBOSE", "1");
-                _connectEnvSet = true;
-                Debug.WriteLine($"[PTVS][ManagedSafeAttach][DA] Prepared connect env host={_connectHost} port={_connectPort}");
+                if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("PTVS_SAFE_ATTACH_LOADER_VERBOSE")))
+                    Environment.SetEnvironmentVariable("PTVS_SAFE_ATTACH_LOADER_VERBOSE", "1");
+                Debug.WriteLine($"[PTVS][ManagedSafeAttach][DA] Fixed port prepared host={_connectHost} port={_connectPort}");
             } catch (Exception ex) {
-                Debug.WriteLine("[PTVS][ManagedSafeAttach][DA] PrepareConnectModeEnv failed: " + ex.Message);
-                _connectEnvSet = false; _connectPort = 0;
+                Debug.WriteLine("[PTVS][ManagedSafeAttach][DA] PrepareFixedPortAttach failed: " + ex.Message);
+                _connectPort = 0;
             }
         }
 
-        private void PromoteToTcpAttachIfReady() {
-            try {
-                if (!_connectEnvSet) return;
-                if (!_managedSuccess) return; // set after orchestrator result
-                if (!(_debugInfo is DebugLocalAttachInfo local)) return;
-                var tcp = new DebugTcpAttachInfo {
-                    Host = _connectHost,
-                    Port = _connectPort,
-                    Env = _debugInfo.Env // carry over env markers
-                };
-                _debugInfo = tcp;
-                Debug.WriteLine($"[PTVS][ManagedSafeAttach][DA] Promoted to DebugTcpAttachInfo host={_connectHost} port={_connectPort}");
-            } catch (Exception ex) {
-                Debug.WriteLine("[PTVS][ManagedSafeAttach][DA] PromoteToTcpAttachIfReady failed: " + ex.Message);
+        private void PromoteToTcpAttachFixed() {
+            if (!_managedSuccess) return;
+            if (!(_debugInfo is DebugLocalAttachInfo)) return;
+            if (_connectPort <= 0) {
+                Debug.WriteLine("[PTVS][ManagedSafeAttach][DA] Cannot promote to TCP attach; port unavailable");
+                return;
+            }
+            _debugInfo = new DebugTcpAttachInfo {
+                Host = _connectHost,
+                Port = _connectPort,
+                Env = _debugInfo.Env
+            };
+            Debug.WriteLine($"[PTVS][ManagedSafeAttach][DA] Promoted to DebugTcpAttachInfo host={_connectHost} port={_connectPort}");
+        }
+
+        #region Launch
+        private static DebugLaunchInfo GetLaunchDebugInfo(string adapterLaunchJson) {
+            var adapterLaunchInfoJson = JObject.Parse(adapterLaunchJson);
+            adapterLaunchInfoJson = adapterLaunchInfoJson.Value<JObject>("ConfigurationProperties") ?? adapterLaunchInfoJson;
+            var debugLaunchInfo = new DebugLaunchInfo() {
+                CurrentWorkingDirectory = adapterLaunchInfoJson.Value<string>("cwd"),
+                Console = "externalTerminal",
+            };
+            SetInterpreterPathAndArguments(debugLaunchInfo, adapterLaunchInfoJson);
+            SetScriptPathAndArguments(debugLaunchInfo, adapterLaunchInfoJson);
+            SetEnvVariables(debugLaunchInfo, adapterLaunchInfoJson);
+            SetLaunchDebugOptions(debugLaunchInfo, adapterLaunchInfoJson);
+            return debugLaunchInfo;
+        }
+
+        private static void SetInterpreterPathAndArguments(DebugLaunchInfo info, JObject json) {
+            info.InterpreterPathAndArguments = new List<string>() { json.Value<string>("exe").Replace("\"", "") };
+            string interpreterArgs = json.Value<string>("interpreterArgs");
+            try { info.InterpreterPathAndArguments.AddRange(GetParsedCommandLineArguments(interpreterArgs)); }
+            catch { MessageBox.Show(Strings.UnableToParseInterpreterArgs.FormatUI(interpreterArgs), Strings.ProductTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+        }
+
+        private static void SetScriptPathAndArguments(DebugLaunchInfo info, JObject json) {
+            info.Script = json.Value<string>("scriptName");
+            info.ScriptArguments = new List<string>();
+            string scriptArgs = json.Value<string>("scriptArgs");
+            try { info.ScriptArguments.AddRange(GetParsedCommandLineArguments(scriptArgs)); }
+            catch { MessageBox.Show(Strings.UnableToParseScriptArgs.FormatUI(scriptArgs), Strings.ProductTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+        }
+
+        private static void SetEnvVariables(DebugLaunchInfo info, JObject json) {
+            var env = new Dictionary<string, string>();
+            foreach (var envVariable in json.Value<JArray>("env")) {
+                env[envVariable.Value<string>("name")] = envVariable.Value<string>("value");
+            }
+            info.Env = env.Count == 0 ? null : env;
+        }
+
+        private static void SetLaunchDebugOptions(DebugLaunchInfo info, JObject json) {
+            string[] options = SplitDebugOptions(json.Value<string>("options"));
+            var djangoOption = options.FirstOrDefault(x => x.StartsWith("DJANGO_DEBUG"));
+            if (djangoOption != null) {
+                var parsed = djangoOption.Split('=');
+                if (parsed.Length == 2) info.DebugDjango = parsed[1].Trim().Equals("true", StringComparison.OrdinalIgnoreCase);
+            }
+            var webPageUrlOption = options.FirstOrDefault(x => x.StartsWith("WEB_BROWSER_URL"));
+            if (webPageUrlOption != null) {
+                var parsed = webPageUrlOption.Split('=');
+                if (parsed.Length == 2) info.LaunchWebPageUrl = HttpUtility.UrlDecode(parsed[1]);
             }
         }
 
-        // P/Invoke locally (avoid taking hard dependency on Attacher NativeMethods here)
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern IntPtr OpenProcess(uint dwDesiredAccess, bool bInheritHandle, int dwProcessId);
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern bool CloseHandle(IntPtr hObject);
-        private const uint PROCESS_ALL_ACCESS = 0x001F0FFF; // sufficient for our read/write operations (will gracefully fail if denied)
+        private static string[] SplitDebugOptions(string options) {
+            if (string.IsNullOrEmpty(options)) return Array.Empty<string>();
+            var res = new List<string>(); int lastStart = 0;
+            for (int i = 0; i < options.Length; i++) {
+                if (options[i] == ';') {
+                    if (i < options.Length - 1 && options[i + 1] != ';') { res.Add(options.Substring(lastStart, i - lastStart)); lastStart = i + 1; }
+                    else i++; // skip escaped ;
+                }
+            }
+            if (options.Length - lastStart > 0) res.Add(options.Substring(lastStart));
+            return res.ToArray();
+        }
+        #endregion
+
+        #region Attach
+        private static DebugTcpAttachInfo GetTcpAttachDebugInfo(IAdapterLaunchInfo adapterLaunchInfo) {
+            var info = new DebugTcpAttachInfo();
+            adapterLaunchInfo.DebugPort.GetPortName(out var adapterHostPortInfo);
+            info.RemoteUri = new Uri(adapterHostPortInfo);
+            var uri = new Uri(adapterHostPortInfo);
+            info.Host = uri.Host; info.Port = uri.Port; return info;
+        }
+        private static DebugLocalAttachInfo GetLocalAttachDebugInfo(IAdapterLaunchInfo adapterLaunchInfo) => new DebugLocalAttachInfo { ProcessId = adapterLaunchInfo.AttachProcessId };
+        #endregion
+
+        private static void AddDebuggerOptions(IAdapterLaunchInfo adapterLaunchInfo, DebugInfo launchJson) {
+            var debugService = (IPythonDebugOptionsService)Package.GetGlobalService(typeof(IPythonDebugOptionsService));
+            launchJson.StopOnEntry = true;
+            launchJson.SubProcess = false;
+            launchJson.PromptBeforeRunningWithBuildError = debugService.PromptBeforeRunningWithBuildError;
+            launchJson.RedirectOutput = debugService.TeeStandardOutput;
+            launchJson.WaitOnAbnormalExit = debugService.WaitOnAbnormalExit;
+            launchJson.WaitOnNormalExit = debugService.WaitOnNormalExit;
+            launchJson.BreakOnSystemExitZero = debugService.BreakOnSystemExitZero;
+            launchJson.DebugStdLib = debugService.DebugStdLib;
+            launchJson.ShowReturnValue = debugService.ShowFunctionReturnValue;
+            var variablePresentation = new VariablePresentation {
+                Class = debugService.VariablePresentationForClasses,
+                Function = debugService.VariablePresentationForFunctions,
+                Protected = debugService.VariablePresentationForProtected,
+                Special = debugService.VariablePresentationForSpecial
+            };
+            launchJson.VariablePresentation = variablePresentation;
+            launchJson.Rules = new List<PathRule> { new PathRule { Path = PathUtils.GetParent(typeof(DebugAdapterLauncher).Assembly.Location), Include = false } };
+        }
+
+        [DllImport("shell32.dll", SetLastError = true)]
+        private static extern IntPtr CommandLineToArgvW([MarshalAs(UnmanagedType.LPWStr)] string lpCmdLine, out int pNumArgs);
+        private static IEnumerable<string> GetParsedCommandLineArguments(string command) {
+            if (string.IsNullOrEmpty(command)) yield break;
+            IntPtr argPtr = CommandLineToArgvW(command, out var count);
+            if (argPtr == IntPtr.Zero) throw new System.ComponentModel.Win32Exception();
+            try { for (int i = 0; i < count; i++) yield return Marshal.PtrToStringUni(Marshal.ReadIntPtr(argPtr, i * IntPtr.Size)); }
+            finally { Marshal.FreeHGlobal(argPtr); }
+        }
+
+        [DllImport("kernel32.dll", SetLastError = true)] private static extern IntPtr OpenProcess(uint access, bool inherit, int pid);
+        [DllImport("kernel32.dll", SetLastError = true)] private static extern bool CloseHandle(IntPtr hObject);
+        private const uint PROCESS_ALL_ACCESS = 0x001F0FFF;
 
         private void TryManagedSafeAttachForLocalProcess(DebugLocalAttachInfo localInfo) {
             try {
                 if (localInfo == null) return;
-                if (Environment.GetEnvironmentVariable("PTVS_SAFE_ATTACH_MANAGED_DISABLE") == "1") {
-                    Debug.WriteLine("[PTVS][ManagedSafeAttach][DA] Disabled via env var – skipping orchestrator.");
-                    return;
-                }
+                if (Environment.GetEnvironmentVariable("PTVS_SAFE_ATTACH_MANAGED_DISABLE") == "1") { Debug.WriteLine("[PTVS][ManagedSafeAttach][DA] Disabled via env var – skipping orchestrator."); return; }
                 int pid = (int)localInfo.ProcessId;
                 IntPtr hProcess = OpenProcess(PROCESS_ALL_ACCESS, false, pid);
-                if (hProcess == IntPtr.Zero) {
-                    Debug.WriteLine($"[PTVS][ManagedSafeAttach][DA] OpenProcess failed pid={pid} (GetLastError={Marshal.GetLastWin32Error()}) – skipping.");
-                    return;
-                }
+                if (hProcess == IntPtr.Zero) { Debug.WriteLine($"[PTVS][ManagedSafeAttach][DA] OpenProcess failed pid={pid} (GLE={Marshal.GetLastWin32Error()})"); return; }
                 try {
                     var res = SafeAttachOrchestrator.TryManagedSafeAttach(hProcess, pid);
                     if (res.Success) {
@@ -181,188 +265,10 @@ namespace Microsoft.PythonTools.Debugger {
                         _debugInfo.Env["PTVS_SAFE_ATTACH_VERSION"] = $"{res.MajorVersion}.{res.MinorVersion}";
                     } else {
                         _managedSuccess = false;
-                        Debug.WriteLine($"[PTVS][ManagedSafeAttach][DA] Safe attach failed pid={pid} site={res.FailureSite} – continuing with debugpy injector fallback.");
+                        Debug.WriteLine($"[PTVS][ManagedSafeAttach][DA] Safe attach failed pid={pid} site={res.FailureSite}");
                     }
                 } finally { CloseHandle(hProcess); }
-            } catch (Exception ex) {
-                _managedSuccess = false;
-                Debug.WriteLine("[PTVS][ManagedSafeAttach][DA] Exception attempting safe attach: " + ex.Message);
-            }
-        }
-
-        #region Launch
-        private static DebugLaunchInfo GetLaunchDebugInfo(string adapterLaunchJson) {
-            var adapterLaunchInfoJson = JObject.Parse(adapterLaunchJson);
-            adapterLaunchInfoJson = adapterLaunchInfoJson.Value<JObject>("ConfigurationProperties") ?? adapterLaunchInfoJson;//Based on the VS version, the JSON could be nested in ConfigurationProperties
-
-            var debugLaunchInfo = new DebugLaunchInfo() {
-                CurrentWorkingDirectory = adapterLaunchInfoJson.Value<string>("cwd"),
-                Console = "externalTerminal",
-            };
-
-            SetInterpreterPathAndArguments(debugLaunchInfo, adapterLaunchInfoJson);
-            SetScriptPathAndArguments(debugLaunchInfo, adapterLaunchInfoJson);
-            SetEnvVariables(debugLaunchInfo, adapterLaunchInfoJson);
-            SetLaunchDebugOptions(debugLaunchInfo, adapterLaunchInfoJson);
-
-            return debugLaunchInfo;
-        }
-
-        private static void SetInterpreterPathAndArguments(DebugLaunchInfo debugLaunchInfo, JObject adapterLaunchInfoJson) {
-            debugLaunchInfo.InterpreterPathAndArguments = new List<string>() {
-                adapterLaunchInfoJson.Value<string>("exe").Replace("\"", "")
-            };
-
-            string interpreterArgs = adapterLaunchInfoJson.Value<string>("interpreterArgs");
-            try {
-                debugLaunchInfo.InterpreterPathAndArguments.AddRange(GetParsedCommandLineArguments(interpreterArgs));
-            } catch (Exception) {
-                MessageBox.Show(Strings.UnableToParseInterpreterArgs.FormatUI(interpreterArgs), Strings.ProductTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                debugLaunchInfo.ScriptArguments = new List<string> {
-                    adapterLaunchInfoJson.Value<string>("exe")
-                };
-            }
-        }
-
-        private static void SetScriptPathAndArguments(DebugLaunchInfo debugLaunchInfo, JObject adapterLaunchInfoJson) {
-            debugLaunchInfo.Script = adapterLaunchInfoJson.Value<string>("scriptName");
-            debugLaunchInfo.ScriptArguments = new List<string>();
-
-            string scriptArgs = adapterLaunchInfoJson.Value<string>("scriptArgs");
-            try {
-                debugLaunchInfo.ScriptArguments.AddRange(GetParsedCommandLineArguments(scriptArgs));
-            } catch (Exception) {
-                MessageBox.Show(Strings.UnableToParseScriptArgs.FormatUI(scriptArgs), Strings.ProductTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
-        }
-
-        private static void SetEnvVariables(DebugLaunchInfo debugLaunchInfo, JObject adapterLaunchInfoJson) {
-            var env = new Dictionary<string, string>();
-            foreach (var envVariable in adapterLaunchInfoJson.Value<JArray>("env")) {
-                env[envVariable.Value<string>("name")] = envVariable.Value<string>("value");
-            }
-
-            debugLaunchInfo.Env = env.Count == 0 ? null : env;
-        }
-
-        private static void SetLaunchDebugOptions(DebugLaunchInfo debugLaunchInfo, JObject adapterLaunchInfoJson) {
-            string[] options = SplitDebugOptions(adapterLaunchInfoJson.Value<string>("options"));
-
-            var djangoOption = options.FirstOrDefault(x => x.StartsWith("DJANGO_DEBUG"));
-            if (djangoOption != null) {
-                var parsedOption = djangoOption.Split('=');
-                if (parsedOption.Length == 2) {
-                    debugLaunchInfo.DebugDjango = parsedOption[1].Trim().ToLower().Equals("true");
-                }
-            }
-
-            string webPageUrlOption = options.FirstOrDefault(x => x.StartsWith("WEB_BROWSER_URL"));
-            if (webPageUrlOption != null) {
-                string[] parsedOption = webPageUrlOption.Split('=');
-                if (parsedOption.Length == 2) {
-                    debugLaunchInfo.LaunchWebPageUrl = HttpUtility.UrlDecode(parsedOption[1]);
-                }
-            }
-        }
-
-        private static string[] SplitDebugOptions(string options) {
-            var res = new List<string>();
-            var lastStart = 0;
-            for (int i = 0; i < options.Length; i++) {
-                if (options[i] == ';') {
-                    if (i < options.Length - 1 && options[i + 1] != ';') {
-                        // valid option boundary
-                        res.Add(options.Substring(lastStart, i - lastStart));
-                        lastStart = i + 1;
-                    } else {
-                        i++;
-                    }
-                }
-            }
-            if (options.Length - lastStart > 0) {
-                res.Add(options.Substring(lastStart, options.Length - lastStart));
-            }
-            return res.ToArray();
-        }
-
-        #endregion
-
-        #region Attach
-        private static DebugTcpAttachInfo GetTcpAttachDebugInfo(IAdapterLaunchInfo adapterLaunchInfo) {
-            var debugAttachInfo = new DebugTcpAttachInfo();
-
-            adapterLaunchInfo.DebugPort.GetPortName(out var adapterHostPortInfo);
-            debugAttachInfo.RemoteUri = new Uri(adapterHostPortInfo);
-
-            var uriInfo = new Uri(adapterHostPortInfo);
-            debugAttachInfo.Host = uriInfo.Host;
-            debugAttachInfo.Port = uriInfo.Port;
-
-            return debugAttachInfo;
-        }
-
-        private static DebugLocalAttachInfo GetLocalAttachDebugInfo(IAdapterLaunchInfo adapterLaunchInfo) =>
-            new DebugLocalAttachInfo { ProcessId = adapterLaunchInfo.AttachProcessId };
-
-        #endregion
-
-        private static void AddDebuggerOptions(IAdapterLaunchInfo adapterLaunchInfo, DebugInfo launchJson) {
-            var debugService = (IPythonDebugOptionsService)Package.GetGlobalService(typeof(IPythonDebugOptionsService));
-
-            // Stop on entry should always be true for VS Debug Adapter Host.
-            // If stop on entry is disabled then VS will automatically issue
-            // continue when it sees "stopped" event with "reason=entry".
-            launchJson.StopOnEntry = true;
-
-            // Force this to false to prevent subprocess debugging, which we do not support yet in PTVS
-            launchJson.SubProcess = false;
-
-            launchJson.PromptBeforeRunningWithBuildError = debugService.PromptBeforeRunningWithBuildError;
-            launchJson.RedirectOutput = debugService.TeeStandardOutput;
-            launchJson.WaitOnAbnormalExit = debugService.WaitOnAbnormalExit;
-            launchJson.WaitOnNormalExit = debugService.WaitOnNormalExit;
-            launchJson.BreakOnSystemExitZero = debugService.BreakOnSystemExitZero;
-            launchJson.DebugStdLib = debugService.DebugStdLib;
-            launchJson.ShowReturnValue = debugService.ShowFunctionReturnValue;
-
-            var variablePresentation = new VariablePresentation();
-            variablePresentation.Class = debugService.VariablePresentationForClasses;
-            variablePresentation.Function = debugService.VariablePresentationForFunctions;
-            variablePresentation.Protected = debugService.VariablePresentationForProtected;
-            variablePresentation.Special = debugService.VariablePresentationForSpecial;
-            launchJson.VariablePresentation = variablePresentation;
-
-            var excludePTVSInstallDirectory = new PathRule() {
-                Path = PathUtils.GetParent(typeof(DebugAdapterLauncher).Assembly.Location),
-                Include = false,
-            };
-
-            launchJson.Rules = new List<PathRule>() {
-                excludePTVSInstallDirectory
-            };
-        }
-
-        [DllImport("shell32.dll", SetLastError = true)]
-        private static extern IntPtr CommandLineToArgvW([MarshalAs(UnmanagedType.LPWStr)] string lpCmdLine, out int pNumArgs);
-
-        private static IEnumerable<string> GetParsedCommandLineArguments(string command) {
-            if (string.IsNullOrEmpty(command)) {
-                yield break;
-            }
-
-            IntPtr argPointer = CommandLineToArgvW(command, out var argumentCount);
-            if (argPointer == IntPtr.Zero) {
-                throw new System.ComponentModel.Win32Exception();
-            }
-
-            try {
-                for (int i = 0; i < argumentCount; i++) {
-                    yield return Marshal.PtrToStringUni(Marshal.ReadIntPtr(argPointer, i * IntPtr.Size));
-                }
-
-            } finally {
-                Marshal.FreeHGlobal(argPointer);
-            }
+            } catch (Exception ex) { _managedSuccess = false; Debug.WriteLine("[PTVS][ManagedSafeAttach][DA] Exception attempting safe attach: " + ex.Message); }
         }
     }
 }
