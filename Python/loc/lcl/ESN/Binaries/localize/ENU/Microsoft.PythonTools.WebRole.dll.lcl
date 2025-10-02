@@ -1,0 +1,104 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<LCX SchemaVersion="6.0" Name="D:\a\_work\1\b\raw\binaries\Microsoft.PythonTools.WebRole.dll" PsrId="211" SrcCul="en-US" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx" TgtCul="es-ES">
+  <OwnedComments>
+    <Cmt Name="Dev" />
+    <Cmt Name="LcxAdmin" />
+    <Cmt Name="Rccx" />
+  </OwnedComments>
+  <Item ItemId=";HTML" ItemType="0" PsrId="22" Leaf="true">
+    <Disp Icon="Expand" Expand="true" Disp="true" LocTbl="false" />
+  </Item>
+  <Item ItemId=";Managed Resources" ItemType="0" PsrId="211" Leaf="true">
+    <Disp Icon="Expand" Expand="true" Disp="true" LocTbl="false" />
+  </Item>
+  <Item ItemId=";Microsoft.PythonTools.WebRole.WebSocketProxy.html" ItemType="0" PsrId="22" Leaf="false">
+    <Disp Icon="Expand" Expand="true" Disp="true" LocTbl="false" Path=" \ ;HTML \ 0 \ 0" />
+    <Item ItemId=";HTML Content" ItemType="0" PsrId="22" Leaf="false">
+      <Disp Icon="Expand" Expand="true" Disp="true" LocTbl="false" />
+      <Item ItemId=";Formatted Raw Content" ItemType="0" PsrId="22" Leaf="false">
+        <Disp Icon="Str" Disp="true" LocTbl="false" />
+        <Item ItemId="0;Title" ItemType="21;HTML" PsrId="22" Leaf="true">
+          <Str Cat="HTML Title">
+            <Val><![CDATA[PTVS remote debugging proxy for Microsoft Azure Web Sites]]></Val>
+          </Str>
+          <Disp Icon="Str" Order="1" />
+        </Item>
+      </Item>
+      <Item ItemId=";Regular Content" ItemType="0" PsrId="22" Leaf="false">
+        <Disp Icon="Str" Disp="true" LocTbl="false" />
+        <Item ItemId="0;7e1c966364b493453c3478e6fa8915f4" ItemType="18;HTML" PsrId="22" Leaf="true">
+          <Str Cat="HTML Text">
+            <Val><![CDATA[where <span class="secret">secret</span> is the value of <code>WSGI_PTVSD_SECRET</code> in web.debug.config]A;    of the project from which this web site was deployed.]]></Val>
+          </Str>
+          <Disp Icon="Str" Order="5" />
+        </Item>
+        <Item ItemId="0;b9fec04c5f853ec2672acae6ea387def" ItemType="18;HTML" PsrId="22" Leaf="true">
+          <Str Cat="HTML Text">
+            <Val><![CDATA[Python remote debugging is enabled for this Microsoft Azure web site, and it can be attached to using]A;    <a href='https://aka.ms/ptvs'>Visual Studio's Python support</a>. To attach, go to]A;    Debug → Attach to Process, switch Transport to "Python remote debugging", and enter the following]A;    URL in the Qualifier textbox:]]></Val>
+          </Str>
+          <Disp Icon="Str" Order="3" />
+        </Item>
+        <Item ItemId="0;cebdcd8c214c03634153b9587ffdabed" ItemType="18;HTML" PsrId="22" Leaf="true">
+          <Str Cat="HTML Text">
+            <Val><![CDATA[PTVS remote debugging proxy for Microsoft Azure Web Sites]]></Val>
+          </Str>
+          <Disp Icon="Str" Order="2" />
+        </Item>
+        <Item ItemId="0;d7c5f29997cd23b32db839f71018619a" ItemType="18;HTML" PsrId="22" Leaf="true">
+          <Str Cat="HTML Text">
+            <Val><![CDATA[<strong>{{WS_URI}}</strong>]]></Val>
+          </Str>
+          <Disp Icon="Str" Order="4" />
+        </Item>
+      </Item>
+    </Item>
+  </Item>
+  <Item ItemId=";Version" ItemType="0" PsrId="211" Leaf="false">
+    <Disp Icon="Ver" Disp="true" LocTbl="false" Path=" \ ;Version \ 8 \ 0" />
+    <Item ItemId=";Comments" ItemType="0" PsrId="211" Leaf="true">
+      <Str Cat="Text">
+        <Val><![CDATA[Supports Azure deployment and remote debugging of Python projects.]]></Val>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId=";CompanyName" ItemType="0" PsrId="211" Leaf="true">
+      <Str Cat="Text">
+        <Val><![CDATA[Microsoft Corporation]]></Val>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId=";FileDescription" ItemType="0" PsrId="211" Leaf="true">
+      <Str Cat="Text">
+        <Val><![CDATA[Python web role]]></Val>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId=";InternalName" ItemType="0" PsrId="211" Leaf="true">
+      <Str Cat="Text" DevLk="true">
+        <Val><![CDATA[Microsoft.PythonTools.WebRole.dll]]></Val>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId=";LegalCopyright" ItemType="0" PsrId="211" Leaf="true">
+      <Str Cat="Text">
+        <Val><![CDATA[© Microsoft Corporation]]></Val>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId=";OriginalFilename" ItemType="0" PsrId="211" Leaf="true">
+      <Str Cat="Text" DevLk="true">
+        <Val><![CDATA[Microsoft.PythonTools.WebRole.dll]]></Val>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId=";ProductName" ItemType="0" PsrId="211" Leaf="true">
+      <Str Cat="Text">
+        <Val><![CDATA[Python support for Microsoft® Visual Studio®]]></Val>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+  </Item>
+  <Item ItemId=";Version" ItemType="8" PsrId="211" Leaf="true">
+    <Disp Icon="Expand" Expand="true" Disp="true" LocTbl="false" />
+  </Item>
+<Settings Name="@SettingsPath@\default.lss" Type="Lss" /></LCX>
