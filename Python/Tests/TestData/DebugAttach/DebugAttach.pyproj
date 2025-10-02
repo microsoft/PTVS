@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{5aa7ed80-5f9d-4148-891a-44d9c852acd5}</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>ThreadJoin.py</StartupFile>
+    <StartupFile>Simple.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -13,7 +13,7 @@
     <Name>DebugAttach</Name>
     <RootNamespace>DebugAttach</RootNamespace>
     <IsWindowsApplication>False</IsWindowsApplication>
-    <InterpreterId>Global|PythonCore|2.7-32</InterpreterId>
+    <InterpreterId>Global|PythonCore|3.14</InterpreterId>
     <OutputPath>.</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -33,7 +33,7 @@
     <Compile Include="VerySimple.py" />
   </ItemGroup>
   <ItemGroup>
-    <InterpreterReference Include="Global|PythonCore|2.7-32" />
+    <InterpreterReference Include="Global|PythonCore|3.14" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
 </Project>

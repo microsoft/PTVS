@@ -49,6 +49,7 @@ namespace TestUtilities {
         public static readonly PythonVersion Python311 = GetCPythonVersion(PythonLanguageVersion.V311, InterpreterArchitecture.x86);
         public static readonly PythonVersion Python312 = GetCPythonVersion(PythonLanguageVersion.V312, InterpreterArchitecture.x86);
         public static readonly PythonVersion Python313 = GetCPythonVersion(PythonLanguageVersion.V313, InterpreterArchitecture.x86);
+        public static readonly PythonVersion Python314 = GetCPythonVersion(PythonLanguageVersion.V314, InterpreterArchitecture.x86); // Added 3.14
         public static readonly PythonVersion Python27_x64 = GetCPythonVersion(PythonLanguageVersion.V27, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python35_x64 = GetCPythonVersion(PythonLanguageVersion.V35, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python36_x64 = GetCPythonVersion(PythonLanguageVersion.V36, InterpreterArchitecture.x64);
@@ -59,6 +60,7 @@ namespace TestUtilities {
         public static readonly PythonVersion Python311_x64 = GetCPythonVersion(PythonLanguageVersion.V311, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python312_x64 = GetCPythonVersion(PythonLanguageVersion.V312, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python313_x64 = GetCPythonVersion(PythonLanguageVersion.V313, InterpreterArchitecture.x64);
+        public static readonly PythonVersion Python314_x64 = GetCPythonVersion(PythonLanguageVersion.V314, InterpreterArchitecture.x64); // Added 3.14
         public static readonly PythonVersion Anaconda27 = GetAnacondaVersion(PythonLanguageVersion.V27, InterpreterArchitecture.x86);
         public static readonly PythonVersion Anaconda27_x64 = GetAnacondaVersion(PythonLanguageVersion.V27, InterpreterArchitecture.x64);
         public static readonly PythonVersion Anaconda36 = GetAnacondaVersion(PythonLanguageVersion.V36, InterpreterArchitecture.x86);
@@ -131,35 +133,36 @@ namespace TestUtilities {
 
         public static IEnumerable<PythonVersion> Versions {
             get {
-                if (Python27 != null) yield return Python27;
-                if (Python35 != null) yield return Python35;
-                if (Python36 != null) yield return Python36;
-                if (Python37 != null) yield return Python37;
-                if (Python38 != null) yield return Python38;
+               
                 if (Python39 != null) yield return Python39;
-                if (Python27_x64 != null) yield return Python27_x64;
-                if (Python35_x64 != null) yield return Python35_x64;
-                if (Python36_x64 != null) yield return Python36_x64;
-                if (Python37_x64 != null) yield return Python37_x64;
-                if (Python38_x64 != null) yield return Python38_x64;
+                if (Python310 != null) yield return Python310;
+                if (Python311 != null) yield return Python311;
+                if (Python312 != null) yield return Python312;
+                if (Python313 != null) yield return Python313;
+                if (Python314 != null) yield return Python314; // Added 3.14
                 if (Python39_x64 != null) yield return Python39_x64;
+                if (Python310_x64 != null) yield return Python310_x64;
+                if (Python311_x64 != null) yield return Python311_x64;
+                if (Python312_x64 != null) yield return Python312_x64;
+                if (Python313_x64 != null) yield return Python313_x64;
+                if (Python314_x64 != null) yield return Python314_x64; // Added 3.14
             }
         }
 
         public static PythonVersion LatestVersion {
             get {
+                if (Python314 != null) return Python314; // Added 3.14 priority
+                if (Python313 != null) return Python313;
+                if (Python312 != null) return Python312;
+                if (Python311 != null) return Python311;
+                if (Python310 != null) return Python310;
                 if (Python39 != null) return Python39;
-                if (Python38 != null) return Python38;
-                if (Python37 != null) return Python37;
-                if (Python36 != null) return Python36;
-                if (Python35 != null) return Python35;
-                if (Python27 != null) return Python27;
+                if (Python314_x64 != null) return Python314_x64; // Added 3.14 priority
+                if (Python313_x64 != null) return Python313_x64;
+                if (Python312_x64 != null) return Python312_x64;
+                if (Python311_x64 != null) return Python311_x64;
+                if (Python310_x64 != null) return Python310_x64;
                 if (Python39_x64 != null) return Python39_x64;
-                if (Python38_x64 != null) return Python38_x64;
-                if (Python37_x64 != null) return Python37_x64;
-                if (Python36_x64 != null) return Python36_x64;
-                if (Python35_x64 != null) return Python35_x64;
-                if (Python27_x64 != null) return Python27_x64;
                 return null;
             }
         }

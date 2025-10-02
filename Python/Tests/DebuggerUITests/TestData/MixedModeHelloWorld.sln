@@ -1,0 +1,22 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 17
+Project("{888888a0-9f3d-457c-b088-3a5042f75d52}") = "MixedModeHelloWorld", "MixedModeHelloWorld\MixedModeHelloWorld.pyproj", "{4F6A9B9E-AB9B-4D2C-9E31-6F9F6F0F0001}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MixedModeNative", "MixedModeHelloWorld\MixedModeNative\MixedModeNative.vcxproj", "{6E3F3E8A-5C7A-44B1-9A6E-2A5C3D9FA001}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4F6A9B9E-AB9B-4D2C-9E31-6F9F6F0F0001}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F6A9B9E-AB9B-4D2C-9E31-6F9F6F0F0001}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E3F3E8A-5C7A-44B1-9A6E-2A5C3D9FA001}.Debug|x64.ActiveCfg = Debug|x64
+		{6E3F3E8A-5C7A-44B1-9A6E-2A5C3D9FA001}.Debug|x64.Build.0 = Debug|x64
+		{6E3F3E8A-5C7A-44B1-9A6E-2A5C3D9FA001}.Release|x64.ActiveCfg = Release|x64
+		{6E3F3E8A-5C7A-44B1-9A6E-2A5C3D9FA001}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+EndGlobal

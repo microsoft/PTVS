@@ -193,16 +193,33 @@ namespace TestRunnerInterop {
             var queue = new Queue<string>();
             queue.Enqueue(path);
 
-            foreach(var d in FileUtils.EnumerateDirectories(path)) {
-                //if (!Path.GetFileName(d).Contains(".vs")) {
-                if (Path.GetFileName(d) != ".vs") {
-                    queue.Enqueue(d);
-                    result[d] = DateTime.MinValue;
+            bool IsVsArtifactsPath(string p) {
+                // Normalize directory separators and check if any segment is '.vs'
+                // We only want to ignore .vs directories and all of their descendants.
+                // Example: C:\root\TestData\.vs or C:\root\TestData\.vs\Something
+                var parts = p.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                foreach (var part in parts) {
+                    if (string.Equals(part, ".vs", StringComparison.OrdinalIgnoreCase)) {
+                        return true;
+                    }
                 }
+                return false;
+            }
+
+            foreach(var d in FileUtils.EnumerateDirectories(path)) {
+                // Skip any .vs directory and any directory beneath a .vs directory
+                if (IsVsArtifactsPath(d)) {
+                    continue;
+                }
+                queue.Enqueue(d);
+                result[d] = DateTime.MinValue;
             }
             while (queue.Count > 0) {
                 var dir = queue.Dequeue();
                 foreach (var f in FileUtils.EnumerateFiles(dir, recurse: false)) {
+                    if (IsVsArtifactsPath(f)) {
+                        continue; // ignore files generated under .vs
+                    }
                     for (int retries = 10; retries > 0; --retries) {
                         try {
                             result[f] = File.GetLastWriteTimeUtc(f);
