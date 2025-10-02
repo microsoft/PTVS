@@ -1487,6 +1487,30 @@
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4103" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
+            <Val><![CDATA[New From &Cookiecutter...]]></Val>
+            <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
+              <Val><![CDATA[Nuovo da &Cookiecutter...]]></Val>
+            </Tgt>
+            <Prev Cat="Button" IgnoreHK="true">
+              <Val><![CDATA[From &Cookiecutter...]]></Val>
+            </Prev>
+          </Str>
+          <Disp Icon="Str" Expand="true" />
+        </Item>
+        <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4103" ItemType=";LocCanonical" PsrId="240" Leaf="true">
+          <Str Cat="Button">
+            <Val><![CDATA[.File.NewFromCookiecutter]]></Val>
+            <Tgt Cat="Button" Stat="Loc" Orig="New">
+              <Val><![CDATA[.File.NewFromCookiecutter]]></Val>
+            </Tgt>
+            <Prev Cat="Button">
+              <Val><![CDATA[Create From]]></Val>
+            </Prev>
+          </Str>
+          <Disp Icon="Str" Expand="true" />
+        </Item>
+        <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4103" ItemType=";Menu" PsrId="240" Leaf="true">
+          <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[From &Cookiecutter...]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
               <Val><![CDATA[Da &Cookiecutter...]]></Val>
@@ -1494,21 +1518,15 @@
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
-        <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4103" ItemType=";LocCanonical" PsrId="240" Leaf="true">
-          <Str Cat="Button">
-            <Val><![CDATA[Create From]]></Val>
-            <Tgt Cat="Button" Stat="Loc" Orig="New">
-              <Val><![CDATA[Crea da]]></Val>
-            </Tgt>
-          </Str>
-          <Disp Icon="Str" Expand="true" />
-        </Item>
         <Item ItemId=";{6c1555d3-b9b7-4d39-b657-1a35a0f3c461},4103" ItemType=";Tooltip" PsrId="240" Leaf="true">
           <Str Cat="Button">
-            <Val><![CDATA[Creates files using a Cookiecutter template.]]></Val>
+            <Val><![CDATA[New project or file using a Cookiecutter template.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
-              <Val><![CDATA[Crea i file usando un modello Cookiecutter.]]></Val>
+              <Val><![CDATA[Nuovo file o progetto usando un modello Cookiecutter.]]></Val>
             </Tgt>
+            <Prev Cat="Button">
+              <Val><![CDATA[Creates files using a Cookiecutter template.]]></Val>
+            </Prev>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
