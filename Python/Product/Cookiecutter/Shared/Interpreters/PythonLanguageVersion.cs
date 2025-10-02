@@ -43,6 +43,7 @@ namespace Microsoft.CookiecutterTools.Interpreters {
         V311 = 0x030b,
         V312 = 0x030c,
         V313 = 0x030d,
+        V314 = 0x030e, // Added for Python 3.14 support
     }
 
     public static class PythonLanguageVersionExtensions {
@@ -93,6 +94,7 @@ namespace Microsoft.CookiecutterTools.Interpreters {
                         case 11: return PythonLanguageVersion.V311;
                         case 12: return PythonLanguageVersion.V312;
                         case 13: return PythonLanguageVersion.V313;
+                        case 14: return PythonLanguageVersion.V314; // Added for Python 3.14 support
                     }
                     break;
             }

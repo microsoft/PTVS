@@ -13,7 +13,7 @@
     <Name>HelloWorld</Name>
     <RootNamespace>HelloWorld</RootNamespace>
     <IsWindowsApplication>False</IsWindowsApplication>
-    <InterpreterId>Global|PythonCore|2.7-32</InterpreterId>
+    <InterpreterId>Global|PythonCore|3.14</InterpreterId>
     <OutputPath>.</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -32,7 +32,7 @@
     <Folder Include="Sub\" />
   </ItemGroup>
   <ItemGroup>
-    <InterpreterReference Include="Global|PythonCore|2.7-32" />
+    <InterpreterReference Include="Global|PythonCore|3.14" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
 </Project>

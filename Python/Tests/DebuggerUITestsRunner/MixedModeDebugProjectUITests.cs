@@ -16,6 +16,7 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestRunnerInterop;
+using TestUtilities;
 
 namespace DebuggerUITestsRunner {
     [TestClass, Ignore]
@@ -46,6 +47,12 @@ namespace DebuggerUITestsRunner {
         public void DebugPurePythonProject() {
             _vs.RunTest(nameof(DebuggerUITests.MixedModeDebugProjectUITests.DebugPurePythonProject), Interpreter);
         }
+
+        [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
+        [TestCategory("Installed")]
+        public void DebugMixedModePythonProject() {
+            _vs.RunTest(nameof(DebuggerUITests.MixedModeDebugProjectUITests.DebugMixedModePythonProject), Interpreter);
+        }
     }
 
     [TestClass]
@@ -60,11 +67,11 @@ namespace DebuggerUITestsRunner {
 
     [TestClass]
     public class MixedModeDebugProjectUITests3x_32 : MixedModeDebugProjectUITests {
-        protected override string Interpreter => "Python37|Python36|Python35";
+        protected override string Interpreter => "Python314";
     }
 
     [TestClass]
     public class MixedModeDebugProjectUITests3x_64 : MixedModeDebugProjectUITests {
-        protected override string Interpreter => "Python37_x64|Python36_x64|Python35_x64";
+        protected override string Interpreter => "Python314_x64";
     }
 }
