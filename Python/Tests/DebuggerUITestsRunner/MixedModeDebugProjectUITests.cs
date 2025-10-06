@@ -56,22 +56,12 @@ namespace DebuggerUITestsRunner {
     }
 
     [TestClass]
-    public class MixedModeDebugProjectUITests27_32 : MixedModeDebugProjectUITests {
-        protected override string Interpreter => "Python27";
-    }
-
-    [TestClass]
-    public class MixedModeDebugProjectUITests27_64 : MixedModeDebugProjectUITests {
-        protected override string Interpreter => "Python27_x64";
-    }
-
-    [TestClass]
     public class MixedModeDebugProjectUITests3x_32 : MixedModeDebugProjectUITests {
-        protected override string Interpreter => "Python314";
+        protected override string Interpreter => "Python39|Python310|Python311|Python312|Python313|Python314";
     }
 
     [TestClass]
     public class MixedModeDebugProjectUITests3x_64 : MixedModeDebugProjectUITests {
-        protected override string Interpreter => "Python314_x64";
+        protected override string Interpreter => "Python39_x64|Python310_x64|Python311_x64|Python312_x64|Python313_x64|Python314_x64";
     }
 }
