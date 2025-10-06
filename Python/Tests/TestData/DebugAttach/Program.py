@@ -1,7 +1,7 @@
 from threading import Thread
 import threading
 import time
-from exceptions import KeyboardInterrupt
+
 
 class C(object): pass
 global thread_abort

@@ -30,7 +30,6 @@
     <Compile Include="ThreadJoin.py" />
     <Compile Include="Simple.py" />
     <Compile Include="Program.py" />
-    <Compile Include="VerySimple.py" />
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="Global|PythonCore|3.14" />

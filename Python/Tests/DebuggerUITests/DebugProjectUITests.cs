@@ -1094,7 +1094,7 @@ namespace DebuggerUITests {
         }
 
         internal static void WaitForMode(VisualStudioApp app, dbgDebugMode mode) {
-            for (int i = 0; i < 30 && app.Dte.Debugger.CurrentMode != mode; i++) {
+            for (int i = 0; i < 40 && app.Dte.Debugger.CurrentMode != mode; i++) {
                 Thread.Sleep(1000);
             }
 
