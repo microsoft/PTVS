@@ -1,5 +1,6 @@
 from threading import Thread, current_thread, Lock
 from time import sleep
+import time
 
 report_progress_now = []
 progress_lock = Lock()
@@ -9,7 +10,7 @@ def check_report_progress(me, id):
     if report_progress_now[id]:
         progress_lock.acquire()
         print("{} [{}] is making progress.".format(me.name, me.ident))
-        report_progress_now[id] = False
+        time.sleep(1)
         progress_lock.release()
 
 def exception_spam(id):

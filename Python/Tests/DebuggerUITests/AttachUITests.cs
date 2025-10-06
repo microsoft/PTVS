@@ -21,7 +21,6 @@ using EnvDTE;
 using EnvDTE80;
 using EnvDTE90;
 using Microsoft.PythonTools;
-using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 using TestUtilities.UI;
@@ -29,16 +28,18 @@ using SD = System.Diagnostics;
 
 namespace DebuggerUITests {
     public class AttachUITests {
+        private readonly Guid PythonDebugEngineGuid = new Guid("86432F39-ADFD-4C56-AA8F-AF8FCDC66039");
+        
         #region Test Cases
         public void AttachBasic(VisualStudioApp app) {
             string debugSolution = app.CopyProjectForTest(@"TestData\DebugAttach\DebugAttach.sln");
             string startFile = "Simple.py";
 
             var dbg2 = (Debugger2)app.Dte.Debugger;
-            SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
+            SD.Process processToAttach = OpenSolutionAndLaunchFileWithoutDebugging(app, debugSolution, startFile, "", "");
 
             try {
-                AttachAndWaitForMode(app, processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
+                AttachAndWaitForMode(app, processToAttach, PythonDebugEngineGuid.ToString("B"), dbgDebugMode.dbgRunMode);
             } finally {
                 dbg2.DetachAll();
                 DebugProjectUITests.WaitForMode(app, dbgDebugMode.dbgDesignMode);
@@ -52,12 +53,12 @@ namespace DebuggerUITests {
             int breakLine = 22;
 
             var dbg2 = (Debugger2)app.Dte.Debugger;
-            SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
+            SD.Process processToAttach = OpenSolutionAndLaunchFileWithoutDebugging(app, debugSolution, startFile, "", "");
 
             app.Dte.Debugger.Breakpoints.Add(File: startFile, Line: breakLine);
 
             try {
-                AttachAndWaitForMode(app, processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgBreakMode);
+                AttachAndWaitForMode(app, processToAttach, PythonDebugEngineGuid.ToString("B"), dbgDebugMode.dbgBreakMode);
             } finally {
                 dbg2.DetachAll();
                 DebugProjectUITests.WaitForMode(app, dbgDebugMode.dbgDesignMode);
@@ -68,14 +69,18 @@ namespace DebuggerUITests {
         public void AttachUserSetsBreakpoint(VisualStudioApp app) {
             string debugSolution = app.CopyProjectForTest(@"TestData\DebugAttach\DebugAttach.sln");
             string startFile = "Simple.py";
-            int breakLine = 22;
+            int breakLine = 13;
 
             var dbg2 = (Debugger2)app.Dte.Debugger;
-            SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
+            SD.Process processToAttach = OpenSolutionAndLaunchFileWithoutDebugging(app, debugSolution, startFile, "", "");
 
             try {
-                AttachAndWaitForMode(app, processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
+                
+
+                
+                AttachAndWaitForMode(app, processToAttach, PythonDebugEngineGuid.ToString("B"), dbgDebugMode.dbgRunMode);
                 dbg2.Breakpoints.Add(File: startFile, Line: breakLine);
+                
                 DebugProjectUITests.WaitForMode(app, dbgDebugMode.dbgBreakMode);
             } finally {
                 dbg2.DetachAll();
@@ -89,10 +94,10 @@ namespace DebuggerUITests {
             string startFile = "fg.py";
 
             var dbg2 = (Debugger2)app.Dte.Debugger;
-            SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
+            SD.Process processToAttach = OpenSolutionAndLaunchFileWithoutDebugging(app, debugSolution, startFile, "", "");
 
             try {
-                Process2 proc = AttachAndWaitForMode(app, processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
+                Process2 proc = AttachAndWaitForMode(app, processToAttach, PythonDebugEngineGuid.ToString("B"), dbgDebugMode.dbgRunMode);
                 dbg2.Break(WaitForBreakMode: false);
                 DebugProjectUITests.WaitForMode(app, dbgDebugMode.dbgBreakMode);
 
@@ -116,13 +121,13 @@ namespace DebuggerUITests {
         public void AttachThreadsBreakOneAndSetExitFlag(VisualStudioApp app) {
             string debugSolution = app.CopyProjectForTest(@"TestData\DebugAttach\DebugAttach.sln");
             string startFile = "fg.py";
-            int breakLine = 8;
+            int breakLine = 9;
 
             var dbg2 = (Debugger2)app.Dte.Debugger;
-            SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
+            SD.Process processToAttach = OpenSolutionAndLaunchFileWithoutDebugging(app, debugSolution, startFile, "", "");
 
             try {
-                Process2 proc = AttachAndWaitForMode(app, processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
+                Process2 proc = AttachAndWaitForMode(app, processToAttach, PythonDebugEngineGuid.ToString("B"), dbgDebugMode.dbgRunMode);
                 dbg2.Breakpoints.Add(File: startFile, Line: breakLine);
                 DebugProjectUITests.WaitForMode(app, dbgDebugMode.dbgBreakMode);
                 dbg2.BreakpointLastHit.Delete();
@@ -149,11 +154,11 @@ namespace DebuggerUITests {
             string startFile = "LotsOfThreads.py";
 
             var dbg2 = (Debugger2)app.Dte.Debugger;
-            SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
+            SD.Process processToAttach = OpenSolutionAndLaunchFileWithoutDebugging(app, debugSolution, startFile, "", "");
             System.Threading.Thread.Sleep(2000);
 
             try {
-                Process2 proc = AttachAndWaitForMode(app, processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
+                Process2 proc = AttachAndWaitForMode(app, processToAttach, PythonDebugEngineGuid.ToString("B"), dbgDebugMode.dbgRunMode);
 
             } finally {
                 if (!processToAttach.HasExited) processToAttach.Kill();
@@ -164,9 +169,9 @@ namespace DebuggerUITests {
 
         #region Helper methods
 
-        private static SD.Process OpenSolutionAndLaunchFile(VisualStudioApp app, string debugSolution, string startFile, string interpreterArgs, string programArgs) {
+        private static SD.Process OpenSolutionAndLaunchFileWithoutDebugging(VisualStudioApp app, string debugSolution, string startFile, string interpreterArgs, string programArgs) {
             var project = app.OpenProject(debugSolution, startFile);
-            return LaunchFileFromProject(app, project, startFile, interpreterArgs, programArgs);
+            return LaunchFileFromProjectWithoutDebugging(app, project, startFile, interpreterArgs, programArgs);
         }
 
         private static Process2 AttachAndWaitForMode(VisualStudioApp app, SD.Process processToAttach, object debugEngines, dbgDebugMode expectedMode) {
@@ -188,41 +193,52 @@ namespace DebuggerUITests {
             return result;
         }
 
-        private static SD.Process LaunchFileFromProject(VisualStudioApp app, EnvDTE.Project project, string filename, string interpreterArgs, string programArgs) {
+        private static SD.Process LaunchFileFromProjectWithoutDebugging(VisualStudioApp app, EnvDTE.Project project, string filename, string interpreterArgs, string programArgs) {
             var item = project.ProjectItems.Item(filename);
             var window = item.Open();
             window.Activate();
             var doc = item.Document;
             var docFN = doc.FullName;
             string fullFilename = Path.GetFullPath(docFN);
-
-            string cmdlineArgs = String.Format("{0} \"{1}\" {2}", interpreterArgs, fullFilename, programArgs);
-
+            // Use VS "Start Without Debugging" so launch closely matches user scenario.
+            // (interpreterArgs/programArgs currently unused in existing tests – passed as empty strings.)
             var uiThread = app.GetService<UIThreadBase>();
             var projectInterpreter = uiThread.Invoke(() => project.GetPythonProject().GetLaunchConfigurationOrThrow().GetInterpreterPath());
+            var exeName = Path.GetFileName(projectInterpreter);
+            var before = SD.Process.GetProcesses()
+                .Where(pr => {
+                    try { return string.Equals(pr.MainModule.FileName, projectInterpreter, StringComparison.OrdinalIgnoreCase); } catch { return false; }
+                })
+                .Select(pr => pr.Id)
+                .ToHashSet();
 
-            var psi = new SD.ProcessStartInfo(projectInterpreter, cmdlineArgs);
-            psi.RedirectStandardError = true;
-            psi.RedirectStandardOutput = true;
-            psi.UseShellExecute = false;
-            var p = SD.Process.Start(psi);
-            p.EnableRaisingEvents = true;
-            string output = "";
-            p.OutputDataReceived += (sender, args) => {
-                output += args.Data;
-            };
-            p.ErrorDataReceived += (sender, args) => {
-                output += args.Data;
-            };
-            p.BeginErrorReadLine();
-            p.BeginOutputReadLine();
-            p.Exited += (sender, args) => {
-                SD.Debug.WriteLine("Process Id ({0}) exited with ExitCode: {1}", p.Id, p.ExitCode);
-                SD.Debug.WriteLine(String.Format("Output: {0}", output));
-            };
+            // Ensure document is active (some VS versions require focus for StartWithoutDebugging)
+            try { doc.Activate(); } catch { }
 
-            Assert.IsNotNull(p, "Failure to start process, {0} {1} ", projectInterpreter, cmdlineArgs);
-            return p;
+            app.Dte.ExecuteCommand("Debug.StartWithoutDebugging");
+
+            SD.Process launched = null;
+            const int timeoutMs = 15000;
+            var sw = SD.Stopwatch.StartNew();
+            while (sw.ElapsedMilliseconds < timeoutMs && launched == null) {
+                foreach (var proc in SD.Process.GetProcesses()) {
+                    if (before.Contains(proc.Id)) continue;
+                    try {
+                        if (string.Equals(proc.MainModule.FileName, projectInterpreter, StringComparison.OrdinalIgnoreCase)) {
+                            launched = proc;
+                            break;
+                        }
+                    } catch { /* access denied / race */ }
+                }
+                if (launched == null) System.Threading.Thread.Sleep(200);
+            }
+
+            Assert.IsNotNull(launched, $"Failed to detect launched process for interpreter '{projectInterpreter}'");
+            launched.EnableRaisingEvents = true;
+            launched.Exited += (sender, args) => {
+                SD.Debug.WriteLine("Process Id ({0}) exited with ExitCode: {1}", launched.Id, launched.ExitCode);
+            };
+            return launched;
         }
 
         #endregion
