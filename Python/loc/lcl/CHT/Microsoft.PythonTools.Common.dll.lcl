@@ -4898,7 +4898,7 @@
         <Str Cat="Text">
           <Val><![CDATA[To install your Python package, we will install setuptools and the pip package manager.]D;]A;]D;]A;Continue?]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[為了安裝您的 Python 套件，我們將安裝 setuptools 與 pip 套件管理員。]D;]A;]D;]A;要繼續嗎?]]></Val>
+            <Val><![CDATA[為了安裝您的 Python 套件，我們將安裝 setuptools 與 pip 套件管理器。]D;]A;]D;]A;要繼續嗎?]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5915,7 +5915,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Installing 'pip' package manager.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[正在安裝 'pip' 套件管理員。]]></Val>
+            <Val><![CDATA[正在安裝 'pip' 套件管理器。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
