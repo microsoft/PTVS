@@ -20,8 +20,12 @@ permissions and limitations under the License.
   <PropertyGroup>
     <!-- Enable logging for publish/preview -->
     <EnablePackageProcessLoggingAndAssert>true</EnablePackageProcessLoggingAndAssert>
+    <!-- Allow override; fallback to current VS install root -->
+    <_VSVer Condition="'$(VisualStudioVersion)' == ''">18.0</_VSVer>
+    <PythonToolsTargetsDir Condition="'$(PythonToolsTargetsDir)' == ''">$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(_VSVer)\Python Tools</PythonToolsTargetsDir>
   </PropertyGroup>
 
-  <!-- _PythonToolsPath must be provided or defined in the environment -->
-  <Import Project="$(_PythonToolsPath)\..\..\Python - Django\17.0.0\Microsoft.PythonTools.Django.targets" />
+  <!-- Only import if an updated Django targets file actually exists -->
+  <Import Project="$(PythonToolsTargetsDir)\Microsoft.PythonTools.Django.Core.targets"
+          Condition="Exists('$(PythonToolsTargetsDir)\Microsoft.PythonTools.Django.Core.targets')" />
 </Project>
