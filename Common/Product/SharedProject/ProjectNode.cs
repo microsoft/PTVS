@@ -3124,7 +3124,6 @@ namespace Microsoft.VisualStudioTools.Project {
                 }
             } catch (System.Runtime.InteropServices.COMException) {
                 // During solution loading/document restoration, VS services might not be ready yet
-                // This is expected and we should just return gracefully
                 return;
             } catch (System.InvalidOperationException) {
                 // Similar to COMException - service might not be available yet
