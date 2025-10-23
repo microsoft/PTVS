@@ -3097,19 +3097,40 @@ namespace Microsoft.VisualStudioTools.Project {
         /// which are based on the $(Configuration) property.
         /// </summary>
         protected internal virtual void SetCurrentConfiguration() {
-            // Can't ask for the active config until the project is opened, so do nothing in that scenario
-            if (!IsProjectOpened)
-                return;
+    // Can't ask for the active config until the project is opened, so do nothing in that scenario
+    if (!IsProjectOpened)
+        return;
 
-            var solutionBuild = (IVsSolutionBuildManager)GetService(typeof(SVsSolutionBuildManager));
-            IVsProjectCfg[] cfg = new IVsProjectCfg[1];
-            ErrorHandler.ThrowOnFailure(
-                solutionBuild.FindActiveProjectCfg(IntPtr.Zero, IntPtr.Zero, GetOuterHierarchy(), cfg));
+    try {
+        var solutionBuild = (IVsSolutionBuildManager)GetService(typeof(SVsSolutionBuildManager));
+        if (solutionBuild == null) {
+            // Solution build manager not available yet
+            return;
+        }
 
-            string name;
-            ErrorHandler.ThrowOnFailure(cfg[0].get_CanonicalName(out name));
+        IVsProjectCfg[] cfg = new IVsProjectCfg[1];
+        int hr = solutionBuild.FindActiveProjectCfg(IntPtr.Zero, IntPtr.Zero, GetOuterHierarchy(), cfg);
+        
+        // If we can't get the active config yet (e.g., during solution loading), just return
+        // The configuration will be set later when VS is fully initialized
+        if (ErrorHandler.Failed(hr) || cfg[0] == null) {
+            return;
+        }
+
+        string name;
+        hr = cfg[0].get_CanonicalName(out name);
+        if (ErrorHandler.Succeeded(hr) && !string.IsNullOrEmpty(name)) {
             SetConfiguration(name);
         }
+    } catch (System.Runtime.InteropServices.COMException) {
+        // During solution loading/document restoration, VS services might not be ready yet
+        // This is expected and we should just return gracefully
+        return;
+    } catch (System.InvalidOperationException) {
+        // Similar to COMException - service might not be available yet
+        return;
+    }
+}
 
         /// <summary>
         /// Set the configuration property in MSBuild.

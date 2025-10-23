@@ -124,6 +124,11 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
+            // Add this check to prevent accessing project properties before project is fully opened
+            if (!Project.IsProjectOpened) {
+                return;
+            }
+
             EnvironmentYmlPath = Project.GetEnvironmentYmlPath();
             Caption = Project.Caption;
             Context = InfoBarContexts.Project;
