@@ -268,6 +268,11 @@ namespace Microsoft.PythonTools.Project {
         public override async Task CheckAsync() {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
+            // Add this check to prevent accessing project properties before project is fully opened
+            if (!Project.IsProjectOpened) {
+                return;
+            }
+
             var infoBarData = new TestFrameworkInfoBarData {
                 InterpreterOptionsService = Site.GetPythonToolsService().InterpreterOptionsService,
                 InterpreterFactory = Project.ActiveInterpreter,
