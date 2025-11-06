@@ -90,7 +90,8 @@ namespace PythonToolsTests {
             }
 
             public IEnumerable<IPackageManager> GetPackageManagers(IPythonInterpreterFactory factory) {
-                throw new NotImplementedException();
+                // Tests do not exercise package management; return empty to satisfy initialization.
+                return Enumerable.Empty<IPackageManager>();
             }
 
             public bool IsConfigurable(string id) {
