@@ -4871,7 +4871,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Toggle inlay hints for function return types.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Schalten Sie Einblendhinweise für Funktionsrückgabetypen um.]]></Val>
+            <Val><![CDATA[Schalten Sie Inlay-Hinweise für Funktionsrückgabetypen um.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -4880,7 +4880,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Toggle inlay hints for variable types.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Schalten Sie Einblendhinweise für Variablentypen um.]]></Val>
+            <Val><![CDATA[Schalten Sie Inlay-Hinweise für Variablentypen um.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
