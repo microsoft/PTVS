@@ -19,7 +19,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.PythonTools.TestAdapter.Pytest;
