@@ -108,10 +108,26 @@ namespace Microsoft.PythonTools.TestAdapter {
         ) {
             var sourceToProjSettings = RunSettingsUtil.GetSourceToProjSettings(runContext.RunSettings, filterType:TestFrameworkType.Pytest);
 
-            foreach (var testGroup in tests.GroupBy(t => sourceToProjSettings.TryGetValue(t.Source ?? String.Empty, out PythonProjectSettings proj) ? proj : null)) {
+            // Group tests by resolved project settings; attempt robust path matching (case-insensitive, normalized)
+            var groups = tests.GroupBy(t => {
+                var sourcePath = t.Source ?? String.Empty;
+                PythonProjectSettings proj;
+                if (sourceToProjSettings.TryGetValue(sourcePath, out proj)) {
+                    return proj;
+                }
+                // try normalized path match
+                var normalized = Microsoft.PythonTools.Infrastructure.PathUtils.NormalizePath(sourcePath);
+                var key = sourceToProjSettings.Keys.FirstOrDefault(k => Microsoft.PythonTools.Infrastructure.PathUtils.IsSamePath(k, normalized));
+                if (key != null && sourceToProjSettings.TryGetValue(key, out proj)) {
+                    return proj;
+                }
+                return null; // will trigger error trace and skipped outcome logic
+            });
+
+            foreach (var testGroup in groups) {
                 if (testGroup.Key == null) {
                     Debug.WriteLine("Missing projectSettings for TestCases:");
-                    Debug.WriteLine(String.Join(",\n", testGroup));
+                    Debug.WriteLine(String.Join(",\n", testGroup.Select(tc => tc.FullyQualifiedName)));
                 }
 
                 if (_cancelRequested.WaitOne(0)) {

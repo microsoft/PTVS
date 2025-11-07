@@ -43,7 +43,8 @@ namespace TestAdapterTests {
         
         public static TestEnvironment GetOrCreate(PythonVersion pythonVersion, string testFramework, bool installFramework = true, bool installCoverage = false) {
             var testEnvironmentId = $"{pythonVersion.ToString().ToLower()}:{testFramework.ToLower()}:{installFramework.ToString()}:{installCoverage.ToString()}";
-            if (_environmentsMap.TryGetValue(testEnvironmentId, out TestEnvironment foundEnv)) {
+            bool allowCache = !(testFramework == "Pytest" && !installFramework); // do not cache pytest with installFramework=false
+            if (allowCache && _environmentsMap.TryGetValue(testEnvironmentId, out TestEnvironment foundEnv)) {
                 SetDirectories(foundEnv);
                 return foundEnv;
             }
@@ -62,7 +63,9 @@ namespace TestAdapterTests {
                         if (installCoverage) {
                             packages.Add("coverage");
                         }
-                        var envDir = pythonVersion.CreateVirtualEnv(VirtualEnvName.First, packages);
+                        // Use different virtual env name when not installing pytest to avoid reusing one that already has it.
+                        var venvName = installFramework ? VirtualEnvName.First : VirtualEnvName.Second;
+                        var envDir = pythonVersion.CreateVirtualEnv(venvName, packages);
                         env.InterpreterPath = Path.Combine(envDir, "scripts", "python.exe");
                     }
                     break;
@@ -70,7 +73,6 @@ namespace TestAdapterTests {
                     if (HasPackage(pythonVersion.PrefixPath, "pytest") || installCoverage) {
                         // Create an empty virtual env to ensure we don't accidentally rely on pytest
                         // (which was bug https://github.com/microsoft/PTVS/issues/5454)
-                        var envDir = TestData.GetTempPath();
                         var packages = new List<string>();
                         if (installCoverage) {
                             packages.Add("coverage");
@@ -83,7 +85,9 @@ namespace TestAdapterTests {
                     break;
             }
 
-            _environmentsMap.Add(testEnvironmentId, env);
+            if (allowCache) {
+                _environmentsMap[testEnvironmentId] = env;
+            }
 
             return env;
         }
