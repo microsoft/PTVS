@@ -18,13 +18,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestAdapterTests.Mocks {
     class MockMessageLogger : IMessageLogger {
+        private readonly TestContext _ctx;
         public readonly List<Tuple<TestMessageLevel, string>> Messages = new List<Tuple<TestMessageLevel, string>>();
 
-        public void SendMessage(TestMessageLevel testMessageLevel, string message) {
-            Messages.Add(new Tuple<TestMessageLevel, string>(testMessageLevel, message));
+        public MockMessageLogger(TestContext ctx) => _ctx = ctx;
+
+
+        public void SendMessage(TestMessageLevel level, string message) {
+            Messages.Add(new Tuple<TestMessageLevel, string>(level, message));
+            _ctx?.WriteLine($"[{level}] {message}");
         }
 
         public IEnumerable<string> GetErrors() => Messages.Where(m => m.Item1 == TestMessageLevel.Error).Select(m => m.Item2);

@@ -115,7 +115,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
 
                 foreach (var tc in testcases) {
                     // Note: Test Explorer will show a key not found exception if we use a source path that doesn't match a test container's source.
-                    if (settings.TestContainerSources.TryGetValue(tc.Source, out _)) {
+                    if (settings.TestContainerSources.TryGetValue(tc.CodeFilePath, out _)) {
                         discoverySink.SendTestCase(tc);
                     }
                 }

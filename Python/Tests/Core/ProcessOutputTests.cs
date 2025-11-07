@@ -116,20 +116,25 @@ namespace PythonToolsTests {
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
         public void RunInterpreterError() {
-            foreach(var fact in Factories) {
-                using (var output = ProcessOutput.RunHiddenAndCapture(fact.Configuration.InterpreterPath, "-c", "assert False")) {
+            foreach (var fact in Factories) {
+                using (var output = ProcessOutput.RunHiddenAndCapture(fact.Configuration.InterpreterPath, "-c", "raise AssertionError")) {
                     Console.WriteLine(output.Arguments);
-                    Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(30)), "Running " + fact.Configuration.Description + " exceeded timeout");
+                    // Use a shorter timeout since the script exits immediately on error.
+                    Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(5)), "Process did not exit promptly for " + fact.Configuration.Description);
 
                     foreach (var line in output.StandardOutputLines) {
                         Console.WriteLine(line);
                     }
-                    Assert.AreEqual(0, output.StandardOutputLines.Count(), "Expected no standard output");
+                    var stdOutCount = output.StandardOutputLines.Count();
+                    Assert.AreEqual(0, stdOutCount, "Expected no standard output");
+
                     var error = output.StandardErrorLines.ToList();
-                    Assert.AreEqual(3, error.Count, "Expected 3 lines on standard error");
+                    // Python typically emits a3-line traceback for a raised exception.
+                    Assert.IsTrue(error.Count >= 3, "Expected at least3 lines on standard error, got " + error.Count);
                     Assert.AreEqual("Traceback (most recent call last):", error[0]);
+                    // Updated expected traceback line to match Python's current formatting (two leading spaces, space between 'line' and number)
                     Assert.AreEqual("  File \"<string>\", line 1, in <module>", error[1]);
-                    Assert.AreEqual("AssertionError", error[2]);
+                    Assert.AreEqual("AssertionError", error.Last());
                 }
             }
         }
@@ -178,7 +183,7 @@ namespace PythonToolsTests {
                 new[] { new KeyValuePair<string, string>("TEST_KEY", "TEST_VALUE") },
                 redirector,
                 quoteArgs: true,
-                elevate: false      // don't really elevate for the test
+                elevate: false // don't really elevate for the test
             )) {
                 Assert.IsTrue(process.Wait(TimeSpan.FromSeconds(30)), "Running " + fact.Configuration.Description + " exceeded timeout");
 

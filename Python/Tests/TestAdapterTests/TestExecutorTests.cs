@@ -43,6 +43,8 @@ namespace TestAdapterTests {
         private const string FrameworkPytest = "Pytest";
         private const string FrameworkUnittest = "Unittest";
 
+        public TestContext TestContext { get; set; }
+
         protected abstract PythonVersion Version { get; }
 
         [ClassCleanup]
@@ -211,7 +213,7 @@ if __name__ == '__main__':
             );
             var discoveryContext = new MockDiscoveryContext(runSettings);
             var discoverySink = new MockTestCaseDiscoverySink();
-            var logger = new MockMessageLogger();
+            var logger = new MockMessageLogger(TestContext);
             var discoverer = new PytestTestDiscoverer();
             discoverer.DiscoverTests(new[] { testFilePath1, testFilePath2 }, discoveryContext, logger, discoverySink);
 
@@ -258,7 +260,7 @@ if __name__ == '__main__':
             );
             var discoveryContext = new MockDiscoveryContext(runSettings);
             var discoverySink = new MockTestCaseDiscoverySink();
-            var logger = new MockMessageLogger();
+            var logger = new MockMessageLogger(TestContext);
             var discoverer = new PytestTestDiscoverer();
             discoverer.DiscoverTests(new[] { testFilePath1 }, discoveryContext, logger, discoverySink);
 
@@ -299,7 +301,7 @@ if __name__ == '__main__':
             );
             var discoveryContext = new MockDiscoveryContext(runSettings);
             var discoverySink = new MockTestCaseDiscoverySink();
-            var logger = new MockMessageLogger();
+            var logger = new MockMessageLogger(TestContext);
             var discoverer = new PytestTestDiscoverer();
             discoverer.DiscoverTests(new[] { testFilePath1 }, discoveryContext, logger, discoverySink);
 
