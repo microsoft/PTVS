@@ -4871,7 +4871,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Toggle inlay hints for function return types.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Alterne las sugerencias de incrustación para los tipos de valor devuelto de función.]]></Val>
+            <Val><![CDATA[Alterne las Indicaciones incrustadas para los tipos de valor devuelto de función.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -4880,7 +4880,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Toggle inlay hints for variable types.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Alternar sugerencias de incrustación para tipos de variables.]]></Val>
+            <Val><![CDATA[Alternar Indicaciones incrustadas para tipos de variables.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

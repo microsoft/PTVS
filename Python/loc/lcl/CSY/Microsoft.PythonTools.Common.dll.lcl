@@ -4871,7 +4871,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Toggle inlay hints for function return types.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Přepněte vložené nápovědy pro návratové typy funkcí.]]></Val>
+            <Val><![CDATA[Přepněte vložené upozornění pro návratové typy funkcí.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -4880,7 +4880,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Toggle inlay hints for variable types.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Přepněte vložené nápovědy pro typy proměnných.]]></Val>
+            <Val><![CDATA[Přepněte vložené upozornění pro typy proměnných.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
