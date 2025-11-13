@@ -63,12 +63,12 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
 
             var pytestId = CreateProperCasedPytestId(sourceFullPath, projectHome, test.Id);
             var fullyQualifiedName = CreateFullyQualifiedTestNameFromId(sourceFullPath, pytestId);
-            var tc = new TestCase(fullyQualifiedName, PythonConstants.PytestExecutorUri, sourceFullPath) {
+            var tc = new TestCase(fullyQualifiedName, PythonConstants.PytestExecutorUri, projectHome) {
                 DisplayName = FixupParameterSets(test.Name),
                 LineNumber = line,
                 CodeFilePath = sourceFullPath
             };
-
+            
             tc.SetPropertyValue(Constants.PytestIdProperty, pytestId);
 
             foreach (var marker in test.Markers.MaybeEnumerate()) {
