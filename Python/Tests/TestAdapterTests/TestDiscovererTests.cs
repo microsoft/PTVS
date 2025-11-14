@@ -75,7 +75,7 @@ namespace TestAdapterTests {
                     .ToXml()
             );
 
-            DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
+            DiscoverTests(testEnv, new[] { testEnv.SourceFolderPath }, runSettings, expectedTests);
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
@@ -96,7 +96,7 @@ namespace TestAdapterTests {
                     .ToXml()
             );
 
-            DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
+            DiscoverTests(testEnv, new[] { testEnv.SourceFolderPath }, runSettings, expectedTests);
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
@@ -119,7 +119,7 @@ namespace TestAdapterTests {
             var logger = new MockMessageLogger(TestContext);
             var discoverer = new PytestTestDiscoverer();
 
-            discoverer.DiscoverTests(new[] { testFilePath }, discoveryContext, logger, discoverySink);
+            discoverer.DiscoverTests(new[] { testEnv.SourceFolderPath }, discoveryContext, logger, discoverySink);
             Assert.AreEqual(0, discoverySink.Tests.Count);
 
             var errors = string.Join(Environment.NewLine, logger.GetErrors());
@@ -155,7 +155,7 @@ namespace TestAdapterTests {
                     .ToXml()
             );
 
-            DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
+            DiscoverTests(testEnv, new[] { testEnv.SourceFolderPath }, runSettings, expectedTests);
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
@@ -181,7 +181,7 @@ namespace TestAdapterTests {
                     .ToXml()
             );
 
-            DiscoverTests(testEnv, new[] { testFilePath1, testFilePath2 }, runSettings, expectedTests);
+            DiscoverTests(testEnv, new[] { testEnv.SourceFolderPath }, runSettings, expectedTests);
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
@@ -212,7 +212,7 @@ namespace TestAdapterTests {
             var logger = new MockMessageLogger(TestContext);
             var discoverer = new PytestTestDiscoverer();
 
-            discoverer.DiscoverTests(new[] { testFilePath1, testFilePath2 }, discoveryContext, logger, discoverySink);
+            discoverer.DiscoverTests(new[] { testEnv.SourceFolderPath }, discoveryContext, logger, discoverySink);
 
             var errors = string.Join(Environment.NewLine, logger.GetErrors());
 
@@ -243,7 +243,7 @@ namespace TestAdapterTests {
                     .ToXml()
             );
 
-            DiscoverTests(testEnv, new[] { testFilePath1, testFilePath2 }, runSettings, expectedTests);
+            DiscoverTests(testEnv, new[] { testEnv.SourceFolderPath }, runSettings, expectedTests);
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
@@ -269,7 +269,7 @@ namespace TestAdapterTests {
                     .ToXml()
             );
 
-            DiscoverTests(testEnv, new[] { testFilePath1, testFilePath2 }, runSettings, expectedTests);
+            DiscoverTests(testEnv, new[] { testEnv.SourceFolderPath }, runSettings, expectedTests);
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
@@ -301,7 +301,7 @@ namespace TestAdapterTests {
             var logger = new MockMessageLogger(TestContext);
             var discoverer = new UnittestTestDiscoverer();
 
-            discoverer.DiscoverTests(new[] { testFilePath1, testFilePath2 }, discoveryContext, logger, discoverySink);
+            discoverer.DiscoverTests(new[] { testEnv.SourceFolderPath }, discoveryContext, logger, discoverySink);
 
             ValidateDiscoveredTests(testEnv.TestFramework, discoverySink.Tests, expectedTests);
         }
@@ -336,7 +336,7 @@ namespace TestAdapterTests {
             var logger = new MockMessageLogger(TestContext);
             var discoverer = new UnittestTestDiscoverer();
 
-            discoverer.DiscoverTests(new[] { testFilePath1, testFilePath2 }, discoveryContext, logger, discoverySink);
+            discoverer.DiscoverTests(new[] { testEnv.SourceFolderPath }, discoveryContext, logger, discoverySink);
             
             var errors = string.Join(Environment.NewLine, logger.GetErrors());
 
@@ -375,7 +375,7 @@ namespace TestAdapterTests {
                     .ToXml()
             );
 
-            DiscoverTests(testEnv, new[] { checkFilePath, testFilePath, exampleFilePath }, runSettings, expectedTests);
+            DiscoverTests(testEnv, new[] { testEnv.SourceFolderPath }, runSettings, expectedTests);
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
@@ -400,7 +400,7 @@ namespace TestAdapterTests {
                     .ToXml()
             );
 
-            DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
+            DiscoverTests(testEnv, new[] { testEnv.SourceFolderPath }, runSettings, expectedTests);
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
@@ -422,7 +422,7 @@ namespace TestAdapterTests {
             var logger = new MockMessageLogger(TestContext);
             var discoverer = new PytestTestDiscoverer();
 
-            discoverer.DiscoverTests(new[] { testFilePath }, discoveryContext, logger, discoverySink);
+            discoverer.DiscoverTests(new[] { testEnv.SourceFolderPath }, discoveryContext, logger, discoverySink);
             Assert.AreEqual(0, discoverySink.Tests.Count);
 
             var errors = string.Join(Environment.NewLine, logger.GetErrors());
@@ -452,7 +452,7 @@ namespace TestAdapterTests {
                     .ToXml()
             );
 
-            DiscoverTests(testEnv, new[] { testFile1Path }, runSettings, expectedTests);
+            DiscoverTests(testEnv, new[] { testEnv.SourceFolderPath }, runSettings, expectedTests);
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
@@ -480,7 +480,7 @@ namespace TestAdapterTests {
                     .ToXml()
             );
 
-            DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
+            DiscoverTests(testEnv, new[] { testEnv.SourceFolderPath }, runSettings, expectedTests);
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
@@ -501,7 +501,7 @@ namespace TestAdapterTests {
                     .ToXml()
             );
 
-            DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
+            DiscoverTests(testEnv, new[] { testEnv.SourceFolderPath }, runSettings, expectedTests);
         }
 
      
@@ -525,7 +525,7 @@ namespace TestAdapterTests {
             var logger = new MockMessageLogger(TestContext);
             var discoverer = new UnittestTestDiscoverer();
 
-            discoverer.DiscoverTests(new[] { testFilePath }, discoveryContext, logger, discoverySink);
+            discoverer.DiscoverTests(new[] { testEnv.SourceFolderPath }, discoveryContext, logger, discoverySink);
             Assert.AreEqual(0, discoverySink.Tests.Count);
 
             var errors = string.Join(Environment.NewLine, logger.GetErrors());
@@ -556,7 +556,7 @@ namespace TestAdapterTests {
                     .ToXml()
             );
 
-            DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
+            DiscoverTests(testEnv, new[] { testEnv.SourceFolderPath }, runSettings, expectedTests);
         }
 
         [Ignore] //until we fix https://github.com/microsoft/PTVS/issues/5497
@@ -607,7 +607,7 @@ namespace TestAdapterTests {
                     .ToXml()
             );
 
-            DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
+            DiscoverTests(testEnv, new[] { testEnv.SourceFolderPath }, runSettings, expectedTests);
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
@@ -637,7 +637,7 @@ namespace TestAdapterTests {
                     .ToXml()
             );
 
-            DiscoverTests(testEnv, new[] { baseTestFilePath, derivedTestFilePath }, runSettings, expectedTests);
+            DiscoverTests(testEnv, new[] { testEnv.SourceFolderPath }, runSettings, expectedTests);
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
@@ -660,7 +660,7 @@ namespace TestAdapterTests {
                     .ToXml()
             );
 
-            DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
+            DiscoverTests(testEnv, new[] { testEnv.SourceFolderPath }, runSettings, expectedTests);
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
@@ -683,7 +683,7 @@ namespace TestAdapterTests {
                     .ToXml()
             );
 
-            DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
+            DiscoverTests(testEnv, new[] { testEnv.SourceFolderPath }, runSettings, expectedTests);
         }
 
 
@@ -754,31 +754,6 @@ namespace TestAdapterTests {
                 Console.WriteLine("");
             }
         }
-    }
-
-    [TestClass]
-    [Ignore]
-    public class TestDiscovererTests27 : TestDiscovererTests {
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-        }
-
-        protected override PythonVersion Version => PythonPaths.Python27_x64 ?? PythonPaths.Python27;
-
-        protected override string ImportErrorFormat => "ImportError: No module named {0}";
-    }
-
-    [TestClass]
-    public class TestDiscovererTests35 : TestDiscovererTests {
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-        }
-
-        protected override PythonVersion Version => PythonPaths.Python35_x64 ?? PythonPaths.Python35;
-
-        protected override string ImportErrorFormat => "ImportError: No module named '{0}'";
     }
 
     [TestClass]

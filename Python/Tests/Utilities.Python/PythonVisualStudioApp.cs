@@ -225,17 +225,18 @@ namespace TestUtilities.UI.Python {
                             System.Threading.Thread.Sleep(500);
                         }
                     }
-                    Assert.IsNotNull(element, "Missing Text Explorer window");
+                    CheckNullElement(element, "Missing Text Explorer window");
                     var testExplorer = new AutomationWrapper(element);
               
-                    var searchBox = testExplorer.FindByName("Search Test Explorer");
-                    Assert.IsNotNull(searchBox, "Missing Search Bar Textbox");
+                    var searchBox = testExplorer.FindByName("Search (Ctrl+I)");
+                    CheckNullElement(searchBox, "Missing Search Bar Textbox");
 
                     _testExplorer = new PythonTestExplorer(this, element, new AutomationWrapper(searchBox));
                 }
                 return _testExplorer;
             }
         }
+
 
         public AutomationElementCollection GetInfoBars() {
             return Element.FindAll(

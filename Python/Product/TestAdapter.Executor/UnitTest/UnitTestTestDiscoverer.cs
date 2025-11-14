@@ -112,8 +112,10 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
 
                 foreach (var tc in testcases) {
                     // Note: Test Explorer will show a key not found exception if we use a source path that doesn't match a test container's source.
-                    if (settings.TestContainerSources.TryGetValue(tc.CodeFilePath, out _)) {
+                    if (settings.TestContainerSources.TryGetValue(tc.Source, out _)) {
                         discoverySink.SendTestCase(tc);
+                    }else {
+                        Warn($"Test container not found for source '{tc.Source}', test '{tc.FullyQualifiedName}'.");
                     }
                 }
             } catch (InvalidOperationException ex) {
@@ -139,8 +141,7 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
         private TestCase TryCreateVsTestCase(UnittestTestCase test, string projectHome) {
             try {
                 // Note: Test Explorer will show a key not found exception if we use a source path that doesn't match a test container's source.
-                TestCase tc = test.ToVsTestCase(projectHome);
-                tc.Source = projectHome;
+                TestCase tc = test.ToVsTestCase(projectHome);                
                 return tc;
             } catch (Exception ex) {
                 Error(ex.Message);

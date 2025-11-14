@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
         public static TestCase ToVsTestCase(this UnittestTestCase test, string projectHome) {
             var relativeModulePath = PathUtils.CreateFriendlyFilePath(projectHome, test.Source);
             var fullyQualifiedName = MakeFullyQualifiedTestName(relativeModulePath, test.Id);
-            var testCase = new TestCase(fullyQualifiedName, PythonConstants.UnitTestExecutorUri, test.Source) {
+            var testCase = new TestCase(fullyQualifiedName, PythonConstants.UnitTestExecutorUri, projectHome) {
                 DisplayName = test.Name,
                 LineNumber = test.Line,
                 CodeFilePath = test.Source
