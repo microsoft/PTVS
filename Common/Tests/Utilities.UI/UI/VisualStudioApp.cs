@@ -271,7 +271,8 @@ namespace TestUtilities.UI {
         }
 
         public void WaitForCommandAvailable(string commandName, TimeSpan timeout) {
-            WaitForCommandAvailable(Dte.Commands.Item(commandName).ToString(), timeout);
+            var cmd = Dte.Commands.Item(commandName);
+            WaitForCommandAvailable(cmd, timeout);
         }
 
         public void WaitForCommandAvailable(EnvDTE.Command cmd, TimeSpan timeout) {

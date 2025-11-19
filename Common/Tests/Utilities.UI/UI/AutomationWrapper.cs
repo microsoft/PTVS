@@ -244,13 +244,19 @@ namespace TestUtilities.UI {
             }
         }
 
-        internal static void CheckNullElement(AutomationElement element) {
-            if (element == null) {
-                Console.WriteLine("Attempting to invoke pattern on null element");
+        public static void CheckNullElement(AutomationElement element, string message = null)
+        {
+            if (element == null)
+            {
+                var msg = string.IsNullOrWhiteSpace(message)
+                    ? "Attempting to invoke pattern on null element"
+                    : message;
+                Console.WriteLine(msg);
                 AutomationWrapper.DumpVS();
-                throw new InvalidOperationException();
+                throw new InvalidOperationException(msg);
             }
         }
+
 
         /// <summary>
         /// Invokes the specified invokable item.  The item must support the invoke pattern.

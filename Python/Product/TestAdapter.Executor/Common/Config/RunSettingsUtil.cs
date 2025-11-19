@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
             var res = new Dictionary<string, PythonProjectSettings>(StringComparer.OrdinalIgnoreCase);
 
             foreach (XPathNavigator project in nodes) {
-                
+
                 PythonProjectSettings projSettings = new PythonProjectSettings(
                     project.GetAttribute("name", ""),
                     project.GetAttribute("home", ""),
@@ -44,7 +44,7 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
                     project.GetAttribute("unitTestPattern", ""),
                     project.GetAttribute("unitTestRootDir", ""),
                     project.GetAttribute("discoveryWaitTime", "")
-                ); 
+                );
 
                 if (projSettings.TestFramework != filterType) {
                     continue;
@@ -63,11 +63,11 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
                     projSettings.SearchPath.Add(searchPath.GetAttribute("value", ""));
                 }
 
-                foreach (XPathNavigator test in project.Select("Test")) {
-                    string testFile = test.GetAttribute("file", "");
-                    projSettings.TestContainerSources.Add(testFile, testFile);
-                    res[testFile] = projSettings;
-                }
+                // Add the project home directory as a test container source (for directory-based containers)
+                if (!string.IsNullOrEmpty(projSettings.ProjectHome) && !projSettings.TestContainerSources.ContainsKey(projSettings.ProjectHome)) {
+                    projSettings.TestContainerSources[projSettings.ProjectHome] = projSettings.ProjectHome;
+                    res[projSettings.ProjectHome] = projSettings;
+                }     
             }
             return res;
         }

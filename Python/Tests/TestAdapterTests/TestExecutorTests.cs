@@ -215,7 +215,7 @@ if __name__ == '__main__':
             var discoverySink = new MockTestCaseDiscoverySink();
             var logger = new MockMessageLogger(TestContext);
             var discoverer = new PytestTestDiscoverer();
-            discoverer.DiscoverTests(new[] { testFilePath1, testFilePath2 }, discoveryContext, logger, discoverySink);
+            discoverer.DiscoverTests(new[] { testEnv.SourceFolderPath }, discoveryContext, logger, discoverySink);
 
             Console.WriteLine($"Discovered Tests");
             foreach (var test in discoverySink.Tests) {
@@ -262,7 +262,7 @@ if __name__ == '__main__':
             var discoverySink = new MockTestCaseDiscoverySink();
             var logger = new MockMessageLogger(TestContext);
             var discoverer = new PytestTestDiscoverer();
-            discoverer.DiscoverTests(new[] { testFilePath1 }, discoveryContext, logger, discoverySink);
+            discoverer.DiscoverTests(new[] { testEnv.SourceFolderPath }, discoveryContext, logger, discoverySink);
 
             Console.WriteLine($"Discovered Tests");
             foreach (var test in discoverySink.Tests) {
@@ -303,7 +303,7 @@ if __name__ == '__main__':
             var discoverySink = new MockTestCaseDiscoverySink();
             var logger = new MockMessageLogger(TestContext);
             var discoverer = new PytestTestDiscoverer();
-            discoverer.DiscoverTests(new[] { testFilePath1 }, discoveryContext, logger, discoverySink);
+            discoverer.DiscoverTests(new[] { testEnv.SourceFolderPath }, discoveryContext, logger, discoverySink);
 
             Console.WriteLine($"Discovered Tests");
             foreach (var test in discoverySink.Tests) {
@@ -1055,7 +1055,7 @@ if __name__ == '__main__':
 
         private static List<TestCase> CreateTestCasesFromTestInfo(TestEnvironment testEnv, IEnumerable<TestInfo> expectedTests) {
             return Enumerable.Select(expectedTests, ti => {
-                var testCase = new TestCase(ti.FullyQualifiedName, testEnv.ExecutionUri, ti.FilePath) {
+                var testCase = new TestCase(ti.FullyQualifiedName, testEnv.ExecutionUri, testEnv.SourceFolderPath) {
                     DisplayName = ti.DisplayName,
                     CodeFilePath = ti.FilePath,
                     LineNumber = ti.LineNumber,
@@ -1230,17 +1230,6 @@ if __name__ == '__main__':
                 return 0;
             }
         }
-    }
-
-    [TestClass]
-    [Ignore]
-    public class TestExecutorTests27 : TestExecutorTests {
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-        }
-
-        protected override PythonVersion Version => PythonPaths.Python27_x64 ?? PythonPaths.Python27;
     }
 
     [TestClass]

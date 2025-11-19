@@ -16,10 +16,8 @@
 
 using System;
 using System.Threading;
-using System.Windows;
 using System.Windows.Automation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudioTools;
 
 namespace TestUtilities.UI {
     public class PythonTestExplorer : AutomationWrapper {
@@ -64,27 +62,49 @@ namespace TestUtilities.UI {
             }
         }
 
-        /// <summary>
-        /// Copies the selected test details to the clipboard.
-        /// </summary>
-        private void CopyDetails() {
-            _app.WaitForCommandAvailable(TestCommands.CopyDetails, TimeSpan.FromSeconds(2));
-            _app.ExecuteCommand(TestCommands.CopyDetails);
+        public string GetTestDetailSummary() {
+            // Root is the Test Explorer tool window element you already have.
+            var summaryControl = Element.FindFirst(
+                TreeScope.Descendants,
+                new PropertyCondition(AutomationElement.ClassNameProperty, "SummaryControl")
+            );
+            if (summaryControl == null) {
+                return string.Empty;
+            }
+
+            // Find the WpfTextView inside the host.
+            var textView = summaryControl.FindFirst(
+                TreeScope.Descendants,
+                new PropertyCondition(AutomationElement.ClassNameProperty, "WpfTextView")
+            );
+            if (textView == null) {
+                return string.Empty;
+            }
+
+            // Try TextPattern.
+            object p;
+            if (textView.TryGetCurrentPattern(TextPattern.Pattern, out p)) {
+                return ((TextPattern)p).DocumentRange.GetText(int.MaxValue);
+            }
+            // Fallback ValuePattern.
+            if (textView.TryGetCurrentPattern(ValuePattern.Pattern, out p)) {
+                return ((ValuePattern)p).Current.Value;
+            }
+
+            // Last resort: Name.
+            return textView.Current.Name ?? string.Empty;
         }
 
         public string GetDetailsWithRetry() {
             string details = string.Empty;
             for (int i = 0; i < 5; i++) {
-                // Clear the clipboard, so if copy fails, we don't end up using
-                // previous clipboard contents.
-                _app.ServiceProvider.GetUIThread().Invoke(() => Clipboard.SetText(string.Empty));
+                var detailsTextBox = this.FindByName("Test Detail Summary");
+                AutomationWrapper.CheckNullElement(detailsTextBox, "Missing: Test Detail Summary");
 
                 // Copy to clipboard
-                CopyDetails();
+                details = GetTestDetailSummary();
 
-                // Retrieve from clipboard
-                details = _app.ServiceProvider.GetUIThread().Invoke(() => Clipboard.GetText());
-                if (details.Contains("Test Name:")) {
+                if (details.Contains("Source:")) {
                     return details;
                 }
 
@@ -139,7 +159,7 @@ namespace TestUtilities.UI {
 
         private void WaitForTestsGrid() {
             // Wait for the test list to be created
-            int retry = 5;
+            int retry = 10;
             while (Tests == null) {
                 Thread.Sleep(250);
                 retry--;

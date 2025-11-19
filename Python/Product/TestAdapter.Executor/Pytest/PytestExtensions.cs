@@ -56,14 +56,14 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             (string parsedSource, int line) = test.ParseSourceAndLine();
             // Note: we use _settings.ProjectHome and not result.root since it is being lowercased
             var sourceFullPath = Path.IsPathRooted(parsedSource) ? parsedSource : PathUtils.GetAbsoluteFilePath(projectHome, parsedSource);
-            
+
             if (String.IsNullOrWhiteSpace(sourceFullPath)) {
                 throw new FormatException(nameof(sourceFullPath) + " " + test.ToString());
             }
 
             var pytestId = CreateProperCasedPytestId(sourceFullPath, projectHome, test.Id);
             var fullyQualifiedName = CreateFullyQualifiedTestNameFromId(sourceFullPath, pytestId);
-            var tc = new TestCase(fullyQualifiedName, PythonConstants.PytestExecutorUri, sourceFullPath) {
+            var tc = new TestCase(fullyQualifiedName, PythonConstants.PytestExecutorUri, projectHome) {
                 DisplayName = FixupParameterSets(test.Name),
                 LineNumber = line,
                 CodeFilePath = sourceFullPath
