@@ -233,6 +233,7 @@ namespace PythonToolsUITests {
                     AssertUtil.Contains(normalizedDetails, $"{resultMessageSection} \n    {test.ResultMessage}");
                 }
 
+                // Todo: verify callstack if desired
                 //if (test.CallStack != null) {
                 //    var actualStack = ParseCallStackFromResultDetails(normalizedDetails);
 

@@ -56,7 +56,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             (string parsedSource, int line) = test.ParseSourceAndLine();
             // Note: we use _settings.ProjectHome and not result.root since it is being lowercased
             var sourceFullPath = Path.IsPathRooted(parsedSource) ? parsedSource : PathUtils.GetAbsoluteFilePath(projectHome, parsedSource);
-            
+
             if (String.IsNullOrWhiteSpace(sourceFullPath)) {
                 throw new FormatException(nameof(sourceFullPath) + " " + test.ToString());
             }
@@ -68,7 +68,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                 LineNumber = line,
                 CodeFilePath = sourceFullPath
             };
-            
+
             tc.SetPropertyValue(Constants.PytestIdProperty, pytestId);
 
             foreach (var marker in test.Markers.MaybeEnumerate()) {

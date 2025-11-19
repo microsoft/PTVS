@@ -257,7 +257,6 @@ namespace TestUtilities.UI {
             }
         }
 
-        // assert that the element is not null
 
         /// <summary>
         /// Invokes the specified invokable item.  The item must support the invoke pattern.

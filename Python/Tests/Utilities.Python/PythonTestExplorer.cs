@@ -16,10 +16,8 @@
 
 using System;
 using System.Threading;
-using System.Windows;
 using System.Windows.Automation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudioTools;
 
 namespace TestUtilities.UI {
     public class PythonTestExplorer : AutomationWrapper {
@@ -64,13 +62,6 @@ namespace TestUtilities.UI {
             }
         }
 
-        /// <summary>
-        /// Copies the selected test details to the clipboard.
-        /// </summary>
-        private void CopyDetails() {
-            _app.WaitForCommandAvailable(TestCommands.CopyDetails, TimeSpan.FromSeconds(3));
-            _app.ExecuteCommand(TestCommands.CopyDetails);
-        }
         public string GetTestDetailSummary() {
             // Root is the Test Explorer tool window element you already have.
             var summaryControl = Element.FindFirst(
