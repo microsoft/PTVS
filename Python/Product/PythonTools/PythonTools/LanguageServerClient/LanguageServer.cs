@@ -62,6 +62,9 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 return null;
             }
 
+            // Switch to a background thread before starting the process
+            await TaskScheduler.Default;
+
             var serverFolderPath = Path.GetDirectoryName(serverFilePath);
 
             var info = new ProcessStartInfo {
