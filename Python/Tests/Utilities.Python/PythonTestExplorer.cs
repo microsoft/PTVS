@@ -192,22 +192,7 @@ namespace TestUtilities.UI {
                 Tests.ExpandAll();
             }
 
-            return Tests.WaitForItem(path);
-            //AutomationElement found = null;
-            //// Retry expand/find to allow Test Explorer to populate
-            //for (int attempt = 0; attempt < 20 && found == null; attempt++) {
-            //    for (int i = 0; i < path.Length + 3; i++) {
-            //        Tests.ExpandAll();
-            //        Thread.Sleep(100);
-            //    }
-
-            //    found = Tests.WaitForItem(path);
-            //    if (found == null) {
-            //        Thread.Sleep(250);
-            //    }
-            //}
-
-            //return found;
+            return Tests.WaitForItem(path);            
         }
 
         /// <summary>
