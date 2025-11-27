@@ -118,41 +118,46 @@ namespace TestUtilities.UI {
         /// Set the grouping to namespace.
         /// </summary>
         public void GroupByProjectNamespaceClass() {
-            // TODO: figure out how to programmatically change this
-            // it's now a popup window that appears on TestExplorer.GroupBy command
-            // well, at least when you click on it with the mouse
-            // It's not coming up when invoking the command programmatically
+            // Try execute the GroupBy command to display grouping popup.
+            try {
+                _app.Dte.ExecuteCommand(TestCommands.GroupBy);
+            } catch {
+                // Swallow if command not available; we'll still try to locate the option.
+            }
 
-            //var groupCommand = _app.Dte.Commands.Item(TestCommands.GroupBy);
-            //Assert.IsNotNull(groupCommand, "GroupBy command not found");
+            // Allow UI to render the popup
+            Thread.Sleep(200);
 
+            // Attempt to find the "Project, Namespace, Class" option and invoke it.
+            AutomationElement element = null;
+            for (int i = 0; i < 5 && element == null; i++) {
+                element = _app.Element.FindFirst(
+                    TreeScope.Descendants,
+                    new AndCondition(
+                        new PropertyCondition(AutomationElement.NameProperty, "Project, Namespace, Class"),
+                        new PropertyCondition(AutomationElement.ClassNameProperty, "TextBlock")
+                    )
+                );
+                if (element == null) {
+                    Thread.Sleep(200);
+                }
+            }
 
-            //if (!groupCommand.IsAvailable) {
-            //    // Group command is not available when show hierarchy is on
-            //    //_app.ExecuteCommand(TestCommands.ToggleShowTestHierarchy);
-            //    _app.WaitForCommandAvailable(groupCommand, TimeSpan.FromSeconds(5));
-            //}
+            if (element != null) {
+                // Use TreeWalker to get parent; CachedParent may be null depending on cache policy
+                var menuItem = element.CachedParent;
+                if (menuItem == null) {
+                    var walker = TreeWalker.RawViewWalker;
+                    menuItem = walker.GetParent(element);
+                }
 
-            //_app.ExecuteCommand(TestCommands.GroupBy); // by class
-
-            //Thread.Sleep(100);
-
-            //var element = _app.Element.FindFirst(TreeScope.Descendants, new AndCondition(
-            //    new PropertyCondition(
-            //        AutomationElement.NameProperty,
-            //        "Project, Namespace, Class"
-            //    ),
-            //    new PropertyCondition(
-            //        AutomationElement.ClassNameProperty,
-            //        "TextBlock"
-            //    )
-            //));
-            //Assert.IsNotNull(element);
-
-            //var menuItem = element.CachedParent;
-            //Assert.IsNotNull(menuItem);
-
-            //menuItem.GetInvokePattern().Invoke();
+                if (menuItem != null) {
+                    var inv = menuItem.GetInvokePattern() ?? element.GetInvokePattern();
+                    if (inv != null) {
+                        inv.Invoke();
+                    }
+                }
+            }
 
             WaitForTestsGrid();
         }
@@ -188,6 +193,21 @@ namespace TestUtilities.UI {
             }
 
             return Tests.WaitForItem(path);
+            //AutomationElement found = null;
+            //// Retry expand/find to allow Test Explorer to populate
+            //for (int attempt = 0; attempt < 20 && found == null; attempt++) {
+            //    for (int i = 0; i < path.Length + 3; i++) {
+            //        Tests.ExpandAll();
+            //        Thread.Sleep(100);
+            //    }
+
+            //    found = Tests.WaitForItem(path);
+            //    if (found == null) {
+            //        Thread.Sleep(250);
+            //    }
+            //}
+
+            //return found;
         }
 
         /// <summary>
