@@ -14,18 +14,21 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Threading;
 using System.Windows.Automation;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace TestUtilities.UI {
-    public class PythonTestExplorer : AutomationWrapper {
+namespace TestUtilities.UI
+{
+    public class PythonTestExplorer : AutomationWrapper
+    {
         private readonly VisualStudioApp _app;
         private readonly AutomationWrapper _searchBar;
         private PythonTestExplorerGridView _tests;
 
-        private static class TestCommands {
+        private static class TestCommands
+        {
             public const string GroupBy = "TestExplorer.GroupBy";
             public const string RunAllTests = "TestExplorer.RunAllTests";
             public const string CopyDetails = "TestExplorer.CopyDetails";
@@ -33,14 +36,18 @@ namespace TestUtilities.UI {
         }
 
         public PythonTestExplorer(VisualStudioApp app, AutomationElement element, AutomationWrapper searchBarTextBox)
-            : base(element) {
+            : base(element)
+        {
             _app = app;
             _searchBar = searchBarTextBox ?? throw new ArgumentNullException(nameof(searchBarTextBox));
         }
 
-        public PythonTestExplorerGridView Tests {
-            get {
-                if (_tests == null) {
+        public PythonTestExplorerGridView Tests
+        {
+            get
+            {
+                if (_tests == null)
+                {
                     var el = this.Element.FindFirst(
                         TreeScope.Descendants,
                         new AndCondition(
@@ -54,7 +61,8 @@ namespace TestUtilities.UI {
                             )
                         )
                     );
-                    if (el != null) {
+                    if (el != null)
+                    {
                         _tests = new PythonTestExplorerGridView(el);
                     }
                 }
@@ -62,13 +70,15 @@ namespace TestUtilities.UI {
             }
         }
 
-        public string GetTestDetailSummary() {
+        public string GetTestDetailSummary()
+        {
             // Root is the Test Explorer tool window element you already have.
             var summaryControl = Element.FindFirst(
                 TreeScope.Descendants,
                 new PropertyCondition(AutomationElement.ClassNameProperty, "SummaryControl")
             );
-            if (summaryControl == null) {
+            if (summaryControl == null)
+            {
                 return string.Empty;
             }
 
@@ -77,17 +87,20 @@ namespace TestUtilities.UI {
                 TreeScope.Descendants,
                 new PropertyCondition(AutomationElement.ClassNameProperty, "WpfTextView")
             );
-            if (textView == null) {
+            if (textView == null)
+            {
                 return string.Empty;
             }
 
             // Try TextPattern.
             object p;
-            if (textView.TryGetCurrentPattern(TextPattern.Pattern, out p)) {
+            if (textView.TryGetCurrentPattern(TextPattern.Pattern, out p))
+            {
                 return ((TextPattern)p).DocumentRange.GetText(int.MaxValue);
             }
             // Fallback ValuePattern.
-            if (textView.TryGetCurrentPattern(ValuePattern.Pattern, out p)) {
+            if (textView.TryGetCurrentPattern(ValuePattern.Pattern, out p))
+            {
                 return ((ValuePattern)p).Current.Value;
             }
 
@@ -95,16 +108,19 @@ namespace TestUtilities.UI {
             return textView.Current.Name ?? string.Empty;
         }
 
-        public string GetDetailsWithRetry() {
+        public string GetDetailsWithRetry()
+        {
             string details = string.Empty;
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 5; i++)
+            {
                 var detailsTextBox = this.FindByName("Test Detail Summary");
                 AutomationWrapper.CheckNullElement(detailsTextBox, "Missing: Test Detail Summary");
 
                 // Copy to clipboard
                 details = GetTestDetailSummary();
 
-                if (details.Contains("Source:")) {
+                if (details.Contains("Source:"))
+                {
                     return details;
                 }
 
@@ -117,11 +133,15 @@ namespace TestUtilities.UI {
         /// <summary>
         /// Set the grouping to namespace.
         /// </summary>
-        public void GroupByProjectNamespaceClass() {
+        public void GroupByProjectNamespaceClass()
+        {
             // Try execute the GroupBy command to display grouping popup.
-            try {
+            try
+            {
                 _app.Dte.ExecuteCommand(TestCommands.GroupBy);
-            } catch {
+            }
+            catch
+            {
                 // Swallow if command not available; we'll still try to locate the option.
             }
 
@@ -130,7 +150,8 @@ namespace TestUtilities.UI {
 
             // Attempt to find the "Project, Namespace, Class" option and invoke it.
             AutomationElement element = null;
-            for (int i = 0; i < 5 && element == null; i++) {
+            for (int i = 0; i < 5 && element == null; i++)
+            {
                 element = _app.Element.FindFirst(
                     TreeScope.Descendants,
                     new AndCondition(
@@ -138,22 +159,27 @@ namespace TestUtilities.UI {
                         new PropertyCondition(AutomationElement.ClassNameProperty, "TextBlock")
                     )
                 );
-                if (element == null) {
+                if (element == null)
+                {
                     Thread.Sleep(200);
                 }
             }
 
-            if (element != null) {
+            if (element != null)
+            {
                 // Use TreeWalker to get parent; CachedParent may be null depending on cache policy
                 var menuItem = element.CachedParent;
-                if (menuItem == null) {
+                if (menuItem == null)
+                {
                     var walker = TreeWalker.RawViewWalker;
                     menuItem = walker.GetParent(element);
                 }
 
-                if (menuItem != null) {
+                if (menuItem != null)
+                {
                     var inv = menuItem.GetInvokePattern() ?? element.GetInvokePattern();
-                    if (inv != null) {
+                    if (inv != null)
+                    {
                         inv.Invoke();
                     }
                 }
@@ -162,25 +188,30 @@ namespace TestUtilities.UI {
             WaitForTestsGrid();
         }
 
-        private void WaitForTestsGrid() {
+        private void WaitForTestsGrid()
+        {
             // Wait for the test list to be created
             int retry = 10;
-            while (Tests == null) {
+            while (Tests == null)
+            {
                 Thread.Sleep(250);
                 retry--;
-                if (retry == 0) {
+                if (retry == 0)
+                {
                     break;
                 }
             }
             Assert.IsNotNull(Tests, "Tests list is null");
         }
 
-        public void ClearSearchBar() {
+        public void ClearSearchBar()
+        {
             _searchBar.SetValue("");
             Thread.Sleep(1000);
         }
 
-        public AutomationElement WaitForItem(params string[] path) {
+        public AutomationElement WaitForItem(params string[] path)
+        {
             // WaitForItem doesn't work well with offscreen items
             // so we use the search bar to filter by function name to 
             // limit the items on screen and then expand all tree items. 
@@ -188,17 +219,19 @@ namespace TestUtilities.UI {
             // it multiple times with delay as a work around.
             _searchBar.SetValue(path[path.Length - 1]);
 
-            for (int i = 0; i < path.Length + 2; i++) {
+            for (int i = 0; i < path.Length + 2; i++)
+            {
                 Tests.ExpandAll();
             }
 
-            return Tests.WaitForItem(path);            
+            return Tests.WaitForItem(path);
         }
 
         /// <summary>
         /// Run all tests and wait for the command to be available again.
         /// </summary>
-        public void RunAll(TimeSpan timeout) {
+        public void RunAll(TimeSpan timeout)
+        {
             ClearSearchBar();
             _app.Dte.ExecuteCommand(TestCommands.RunAllTests);
             Thread.Sleep(100);
@@ -208,7 +241,8 @@ namespace TestUtilities.UI {
         /// <summary>
         /// Debug all tests and wait for the command to be available again.
         /// </summary>
-        public void DebugAll() {
+        public void DebugAll()
+        {
             _app.Dte.ExecuteCommand(TestCommands.DebugAllTests);
             Thread.Sleep(100);
         }
