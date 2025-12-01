@@ -17,7 +17,8 @@ DWORD WINAPI runner(LPVOID lpParam)
     const char * startFileStr = str.c_str();
 
     PyObject* startObj = Py_BuildValue("s", startFileStr);
-    FILE* file = _Py_fopen_obj(startObj, "rb+");
+    // Avoid deprecated _Py_fopen_obj (Python 3.14+). Use standard fopen with the path string.
+    FILE* file = fopen(startFileStr, "rb+");
     if (file != NULL) {
         PyRun_SimpleFileEx(file, startFileStr, 1);
     }
@@ -89,7 +90,14 @@ int main()
 
 
     // Wait for the thread to exit
-    WaitForSingleObject(runnerThread, -1);
+    if (runnerThread != NULL)
+    {
+        WaitForSingleObject(runnerThread, INFINITE);
+    }
+    else
+    {
+        std::cout << "Error: runnerThread handle is NULL." << std::endl;
+    }
 
     CloseHandle(pipe);
 }
