@@ -119,7 +119,7 @@ variables:
       value: ${{ parameters.ptvsPackageVersion }}
 
   # Import variables from PTVS-Dev18 variable group
-  - group: PTVS-Dev17
+  - group: PTVS-Dev18
 
 # The `resources` specify the location and version of the 1ES PT.
 # The ref of the repository is set to release tag which is intended to be used by most pipelines.
