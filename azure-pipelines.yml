@@ -41,6 +41,11 @@ parameters:
   type: boolean
   default: false
 
+- name: skipSigning
+  displayName: Skip Signing
+  type: boolean
+  default: false
+
 # build number format 
 name: $(date:yy)$(DayOfYear)$(rev:.r)
 
@@ -117,6 +122,13 @@ variables:
       value: $(Build.BuildNumber)
     ${{ else }}:
       value: ${{ parameters.ptvsPackageVersion }}
+
+  # Skip signing for PR builds by default, use parameter override for manual builds
+  - name: skipSigningVar
+    ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+      value: true
+    ${{ else }}:
+      value: ${{ parameters.skipSigning }}
 
   # Import variables from PTVS-Dev18 variable group
   - group: PTVS-Dev17
@@ -234,6 +246,7 @@ extends:
         - template: /Build/templates/build.yml@self
           parameters:
             ptvsPackageVersion: ${{ variables.ptvsPackageVersionVar }}
+            skipSigning: ${{ variables.skipSigningVar }}
         
         # Non-PR steps
         - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
