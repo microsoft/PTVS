@@ -226,6 +226,7 @@ extends:
         - checkout: self
           clean: true
           fetchDepth: 1
+          persistCredentials: true
 
         # Non-PR steps  
         - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
