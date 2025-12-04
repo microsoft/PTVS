@@ -211,6 +211,7 @@ extends:
         # check out code clean from source control
         - checkout: self
           clean: true
+          fetchDepth: 1
 
         # Non-PR steps  
         - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
@@ -275,6 +276,9 @@ extends:
       #     - template: /Build/templates/run_tests.yml@self
       #       parameters:
       #         skipGlassCache: ${{ parameters.skipGlassCache }}
+
+
+
 
 
 
