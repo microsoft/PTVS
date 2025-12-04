@@ -175,6 +175,8 @@ extends:
                 enabled: false
             codeSignValidation:
               enabled: false
+            sbom:
+              enabled: false # Disable global SBOM generation; we'll enable selectively per artifact output
           outputs:
           - output: artifactsDrop
             displayName: 'Upload Test Data to Artifact Services'
