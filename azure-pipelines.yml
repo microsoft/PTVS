@@ -178,13 +178,7 @@ extends:
             sbom:
               enabled: false # Disable global SBOM generation; we'll enable selectively per artifact output
           outputs:
-          - output: artifactsDrop
-            displayName: 'Upload Test Data to Artifact Services'
-            dropServiceURI: 'https://devdiv.artifacts.visualstudio.com/DefaultCollection'
-            buildNumber: PTVS\$(Build.SourceBranchName)\$(Build.BuildNumber)
-            sourcePath: '$(Build.ArtifactStagingDirectory)/TestDataFolder/TestData.zip'
-            detailedLog: true
-            toLowerCase: false
+          
           - output: pipelineArtifact
             displayName: 'Publish build artifact: binaries'
             targetPath: '$(Build.BinariesDirectory)/raw/binaries'
@@ -198,17 +192,7 @@ extends:
             displayName: 'Publish build artifact: logs'
             condition: succeededOrFailed()
             targetPath: '$(Build.SourcesDirectory)\logs'
-            artifactName: Logs
-          - output: pipelineArtifact
-            displayName: 'Publish build artifact: TestData'
-            targetPath: '$(Build.ArtifactStagingDirectory)/TestDataFolder/TestData.zip'
-            sbomBuildDropPath: '$(Build.ArtifactStagingDirectory)/TestDataFolder'
-            artifactName: 'TestData'
-          - output: pipelineArtifact
-            displayName: 'Publish build artifact: RunSettings'
-            targetPath: '$(Build.SourcesDirectory)/Python/Tests/TestData/default.runsettings'
-            sbomBuildDropPath: '$(Build.SourcesDirectory)/Python/Tests/TestData'
-            artifactName: 'RunSettings'
+            artifactName: Logs                   
           - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
             - output: pipelineArtifact
               displayName: 'Publish build artifact: BoM'
@@ -280,6 +264,41 @@ extends:
         - task: MicroBuildCleanup@1
           displayName: 'Execute cleanup tasks'
           condition: succeededOrFailed()
+
+      # Separate job for TestData generation - runs in parallel with build job
+      - job: testdata
+        displayName: Publish TestData
+        templateContext:
+          sdl:
+            codeSignValidation:
+              enabled: false
+            sbom:
+              enabled: false
+          outputs:
+          - output: artifactsDrop
+            displayName: 'Upload Test Data to Artifact Services'
+            dropServiceURI: 'https://devdiv.artifacts.visualstudio.com/DefaultCollection'
+            buildNumber: PTVS\$(Build.SourceBranchName)\$(Build.BuildNumber)
+            sourcePath: '$(Build.ArtifactStagingDirectory)/TestDataFolder/TestData.zip'
+            detailedLog: true
+            toLowerCase: false
+          - output: pipelineArtifact
+            displayName: 'Publish build artifact: TestData'
+            targetPath: '$(Build.ArtifactStagingDirectory)/TestDataFolder/TestData.zip'
+            sbomBuildDropPath: '$(Build.ArtifactStagingDirectory)/TestDataFolder'
+            artifactName: 'TestData'
+          - output: pipelineArtifact
+            displayName: 'Publish build artifact: RunSettings'
+            targetPath: '$(Build.SourcesDirectory)/Python/Tests/TestData/default.runsettings'
+            sbomBuildDropPath: '$(Build.SourcesDirectory)/Python/Tests/TestData'
+            artifactName: 'RunSettings'
+
+        steps:
+        # check out code clean from source control
+        - checkout: self
+          clean: true
+          fetchDepth: 1
+          prersistCredentials: true
 
         # Publish test data
         - template: /Build/templates/publish_test_data.yml@self
