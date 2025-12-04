@@ -158,6 +158,13 @@ extends:
             codeSignValidation:
               enabled: false
           outputs:
+          - output: artifactsDrop
+            displayName: 'Upload Test Data to Artifact Services'
+            dropServiceURI: 'https://devdiv.artifacts.visualstudio.com/DefaultCollection'
+            buildNumber: PTVS\$(Build.SourceBranchName)\$(Build.BuildNumber)
+            sourcePath: '$(Build.ArtifactStagingDirectory)/TestDataFolder/TestData.zip'
+            detailedLog: true
+            toLowerCase: false
           - output: pipelineArtifact
             displayName: 'Publish build artifact: binaries'
             targetPath: '$(Build.BinariesDirectory)/raw/binaries'
