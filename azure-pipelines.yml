@@ -155,6 +155,12 @@ extends:
           # Disable code signing validation because we don't ship ANY of the artifacts that we publish.
           # The only released artifacts are uploaded via the 1ES.MicroBuildVstsDrop@1 below.
           sdl:
+            codeql:
+              # disable if not commit in main or release
+              ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
+                enabled: true
+              ${{ else }}:
+                enabled: false
             codeSignValidation:
               enabled: false
           outputs:
