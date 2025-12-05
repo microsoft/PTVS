@@ -50,10 +50,10 @@ stages:
     # as the machine running the actual tests
     preTestMachineConfigurationStepList:
     
-    - download: ComponentBuildUnderTest
-      artifact: MicroBuildOutputs
-      patterns: '**\BootstrapperInfo.json'
-      displayName: Download Bootstrapper Information
+    # - download: ComponentBuildUnderTest
+    #   artifact: MicroBuildOutputs
+    #   patterns: '**\BootstrapperInfo.json'
+    #   displayName: Download Bootstrapper Information
     
     - download: ComponentBuildUnderTest
       artifact: RunSettings
@@ -74,3 +74,12 @@ stages:
       artifact: RunSettings
       patterns: '**\default.runsettings'
       displayName: Download RunSettings
+
+    - task: ArtifactDropDownloadTask@1
+      displayName: 'Download TestData from Artifacts Drop'
+      inputs:
+        dropServiceURI: 'https://devdiv.artifacts.visualstudio.com/DefaultCollection'
+        buildNumber: '$(resources.pipeline.ComponentBuildUnderTest.sourceBranch).$(resources.pipeline.ComponentBuildUnderTest.runName)'
+        dropMetadataContainerName: 'PTVS-TestData'
+        destinationPath: '$(Pipeline.Workspace)/TestData'
+        usePat: false
