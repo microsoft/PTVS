@@ -61,8 +61,7 @@ stages:
         dropServiceURI: 'https://devdiv.artifacts.visualstudio.com/DefaultCollection'
         dropMetadataContainerBuild: $(resources.pipeline.ComponentBuildUnderTest.runId)
         dropMetadataContainerName: 'PTVS-TestData'
-        destinationPath: '$(Pipeline.Workspace)/TestData'
-        usePat: false
+        destinationPath: '$(Pipeline.Workspace)/TestData'        
 
     
     - download: ComponentBuildUnderTest
