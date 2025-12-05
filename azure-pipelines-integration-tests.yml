@@ -59,7 +59,7 @@ stages:
       displayName: 'Download TestData from Artifacts Drop'
       inputs:
         dropServiceURI: 'https://devdiv.artifacts.visualstudio.com/DefaultCollection'
-        buildNumber: '$(resources.pipeline.ComponentBuildUnderTest.sourceBranch).$(resources.pipeline.ComponentBuildUnderTest.runName)'
+        buildId: '$(resources.pipeline.ComponentBuildUnderTest.runId)'
         dropMetadataContainerName: 'PTVS-TestData'
         destinationPath: '$(Pipeline.Workspace)/TestData'
         usePat: false
