@@ -278,9 +278,11 @@ extends:
           - output: artifactsDrop
             displayName: 'Upload Test Data to Artifact Services'
             dropServiceURI: 'https://devdiv.artifacts.visualstudio.com/DefaultCollection'
-            buildNumber: PTVS\$(Build.SourceBranchName)\$(Build.BuildNumber)
+            buildNumber: $(Build.SourceBranchName)\$(Build.BuildNumber)
             sourcePath: '$(Build.ArtifactStagingDirectory)/TestDataFolder/TestData.zip'
+            dropMetadataContainerName: PTVS-TestData
             detailedLog: true
+            usePat: true
             toLowerCase: false
           - output: pipelineArtifact
             displayName: 'Publish build artifact: TestData'
