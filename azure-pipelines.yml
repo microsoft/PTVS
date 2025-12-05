@@ -276,6 +276,7 @@ extends:
               enabled: false
           outputs:
           - output: artifactsDrop
+            displayName: 'Upload Test Data to Artifact Services'
             sourcePath: $(Build.ArtifactStagingDirectory)/TestDataFolder
             dropServiceURI: https://devdiv.artifacts.visualstudio.com/DefaultCollection/
             dropMetadataContainerName: PTVS-TestData
