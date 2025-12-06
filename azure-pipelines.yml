@@ -277,16 +277,11 @@ extends:
             sbom:
               enabled: false
           outputs:
-          - output: artifactsDrop
+          - output: artifactsDrop # upload to artifact drop service for azure_pipelines_integration_tests.yml pipeline
             displayName: 'Upload Test Data to Artifact Services'
             sourcePath: $(Build.ArtifactStagingDirectory)/TestDataFolder
             dropServiceURI: https://devdiv.artifacts.visualstudio.com/DefaultCollection/
-            dropMetadataContainerName: PTVS-TestData
-          - output: artifactsDrop
-            displayName: 'RunSettings to Artifact Services'
-            sourcePath: '$(Build.SourcesDirectory)/Python/Tests/TestData/default.runsettings'
-            dropServiceURI: https://devdiv.artifacts.visualstudio.com/DefaultCollection/
-            dropMetadataContainerName: PTVS-RunSettings
+            dropMetadataContainerName: PTVS-TestData            
           - output: pipelineArtifact
             displayName: 'Publish build artifact: TestData'
             targetPath: '$(Build.ArtifactStagingDirectory)/TestDataFolder/TestData.zip'
@@ -305,6 +300,14 @@ extends:
 
         # Publish test data
         - template: /Build/templates/publish_test_data.yml@self
+
+        # Copy runsettings to TestDataFolder for azure_pipelines_integration_tests.yml pipeline
+        - task: CopyFiles@2
+          displayName: 'Copy runsettings to TestDataFolder'
+          inputs:
+            SourceFolder: '$(Build.SourcesDirectory)/Python/Tests/TestData'
+            Contents: 'default.runsettings'
+            TargetFolder: '$(Build.ArtifactStagingDirectory)/TestDataFolder'
 
         # Run tests on mixed mode debugger but only for PR builds
       # - ${{ if or(eq(variables['Build.Reason'], 'PullRequest'), eq(variables['SkipGlassCache'], true)) }}:
