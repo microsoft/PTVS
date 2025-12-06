@@ -282,15 +282,18 @@ extends:
             sourcePath: $(Build.ArtifactStagingDirectory)/TestDataFolder
             dropServiceURI: https://devdiv.artifacts.visualstudio.com/DefaultCollection/
             dropMetadataContainerName: PTVS-TestData
+          - output: artifactsDrop
+            displayName: 'RunSettings to Artifact Services'
+            sourcePath: '$(Build.SourcesDirectory)/Python/Tests/TestData/default.runsettings'
+            dropServiceURI: https://devdiv.artifacts.visualstudio.com/DefaultCollection/
+            dropMetadataContainerName: PTVS-RunSettings
           - output: pipelineArtifact
             displayName: 'Publish build artifact: TestData'
             targetPath: '$(Build.ArtifactStagingDirectory)/TestDataFolder/TestData.zip'
-            sbomBuildDropPath: '$(Build.ArtifactStagingDirectory)/TestDataFolder'
             artifactName: 'TestData'
           - output: pipelineArtifact
             displayName: 'Publish build artifact: RunSettings'
-            targetPath: '$(Build.SourcesDirectory)/Python/Tests/TestData/default.runsettings'
-            sbomBuildDropPath: '$(Build.SourcesDirectory)/Python/Tests/TestData'
+            targetPath: '$(Build.SourcesDirectory)/Python/Tests/TestData/default.runsettings'            
             artifactName: 'RunSettings'
 
         steps:
