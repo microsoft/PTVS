@@ -181,16 +181,16 @@ extends:
             sbom:
               enabled: false # Disable global SBOM generation; we'll enable selectively per artifact output
           outputs:
-          # - output: artifactsDrop # upload to artifact drop service for azure_pipelines_integration_tests.yml pipeline
-          #   displayName: 'Upload MicroBuild to Artifact Services'
-          #   sourcePath: $(Build.ArtifactStagingDirectory)\MicroBuild\Output
-          #   dropServiceURI: https://devdiv.artifacts.visualstudio.com/DefaultCollection/
-          #   dropMetadataContainerName: PTVS-Bootloader
-          #   buildNumber: '$(BootloaderDropName)'
-          - output: pipelineArtifact
-            displayName: 📢 Publish MicroBuildOutputs
-            targetPath: $(Build.ArtifactStagingDirectory)\MicroBuild\Output
-            artifactName: MicroBuildOutputs
+          - output: artifactsDrop # upload to artifact drop service for azure_pipelines_integration_tests.yml pipeline
+            displayName: 'Upload MicroBuild to Artifact Services'
+            sourcePath: $(Build.ArtifactStagingDirectory)\MicroBuild\Output
+            dropServiceURI: https://devdiv.artifacts.visualstudio.com/DefaultCollection/
+            dropMetadataContainerName: MicroBuildOutputs
+            buildNumber: '$(BootloaderDropName)'
+          # - output: pipelineArtifact
+          #   displayName: 📢 Publish MicroBuildOutputs
+          #   targetPath: $(Build.ArtifactStagingDirectory)\MicroBuild\Output
+          #   artifactName: MicroBuildOutputs
           - output: pipelineArtifact
             displayName: 'Publish build artifact: binaries'
             targetPath: '$(Build.BinariesDirectory)/raw/binaries'
