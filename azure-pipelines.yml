@@ -183,7 +183,7 @@ extends:
           outputs:
           - output: artifactsDrop # upload to artifact drop service for azure_pipelines_integration_tests.yml pipeline
             displayName: 'Upload MicroBuild to Artifact Services'
-            sourcePath: $(Build.ArtifactStagingDirectory)\MicroBuild\Output
+            sourcePath: $(Build.StagingDirectory)\release
             dropServiceURI: https://devdiv.artifacts.visualstudio.com/DefaultCollection/
             dropMetadataContainerName: PTVS-Bootloader
             buildNumber: '$(BootloaderDropName)'  
