@@ -1,4 +1,4 @@
-# This pipeline is used to build the PTVS product and installer.
+﻿# This pipeline is used to build the PTVS product and installer.
 # A seperate release pipeline is used to create insertion PR's into Visual Studio.
 
 # The pipeline extends v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates from 1esPipelines repository defined in resources section.
@@ -181,12 +181,16 @@ extends:
             sbom:
               enabled: false # Disable global SBOM generation; we'll enable selectively per artifact output
           outputs:
-          - output: artifactsDrop # upload to artifact drop service for azure_pipelines_integration_tests.yml pipeline
-            displayName: 'Upload MicroBuild to Artifact Services'
-            sourcePath: $(Build.StagingDirectory)\release
-            dropServiceURI: https://devdiv.artifacts.visualstudio.com/DefaultCollection/
-            dropMetadataContainerName: PTVS-Bootloader
-            buildNumber: '$(BootloaderDropName)'  
+          # - output: artifactsDrop # upload to artifact drop service for azure_pipelines_integration_tests.yml pipeline
+          #   displayName: 'Upload MicroBuild to Artifact Services'
+          #   sourcePath: $(Build.ArtifactStagingDirectory)\MicroBuild\Output
+          #   dropServiceURI: https://devdiv.artifacts.visualstudio.com/DefaultCollection/
+          #   dropMetadataContainerName: PTVS-Bootloader
+          #   buildNumber: '$(BootloaderDropName)'
+          - output: pipelineArtifact
+            displayName: 📢 Publish MicroBuildOutputs
+            targetPath: $(Build.ArtifactStagingDirectory)\MicroBuild\Output
+            artifactName: MicroBuildOutputs
           - output: pipelineArtifact
             displayName: 'Publish build artifact: binaries'
             targetPath: '$(Build.BinariesDirectory)/raw/binaries'
