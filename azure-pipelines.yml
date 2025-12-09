@@ -162,7 +162,7 @@ extends:
         timeoutInMinutes: 120
         displayName: Build
         variables:          
-          BootloaderDropName: 'Bootloader/$(System.TeamProject)/$(Build.Repository.Name)/$(SourceBranch)/$(Build.BuildId)'
+          BootloaderDropName: 'Bootloader/$(System.TeamProject)/$(Build.BuildNumber)/$(Build.BuildId)'
         # If the pipeline publishes artifacts, use `templateContext` to define the artifacts.
         # This will enable 1ES PT to run SDL analysis tools on the artifacts and then upload them.
         templateContext:
@@ -277,7 +277,7 @@ extends:
       - job: testdata
         displayName: Publish TestData
         variables:
-          TestDataDropName: 'TestData/$(System.TeamProject)/$(Build.Repository.Name)/$(SourceBranch)/$(Build.BuildId)'
+          TestDataDropName: 'TestData/$(System.TeamProject)/$(Build.BuildNumber)/$(Build.BuildId)'
         templateContext:
           isProduction: false
           sdl:
