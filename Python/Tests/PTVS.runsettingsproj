@@ -1,0 +1,29 @@
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">	
+	<Import Project="TestProjectBefore.settings" />
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <RunName>DDRITs</RunName>
+    <OutputPath>bin\RunSettings</OutputPath>
+    <!--<TestCaseFilter>TestCategory=RunAllUnittest</TestCaseFilter>-->
+	
+  </PropertyGroup>
+
+  <ItemGroup Label="Test Stores">
+    <TestStore Include="vstsdrop:$(TestStoreDropName)" />
+  </ItemGroup>
+
+  <ItemGroup Label="Test Containers">
+    <TestContainer Include="PythonToolsUITestsRunner" />
+  </ItemGroup>
+
+
+	<Target Name="PrintPackagesPath" BeforeTargets="Build">
+		<Message Importance="High" Text="PackagesPath=$(PackagesPath)" />
+	</Target>
+	<!--<ItemGroup>
+		<PackageReference Include="Microsoft.DevDiv.Validation.TestPlatform.Settings.Tasks" Version="1.0.1108" />
+	</ItemGroup>-->
+
+	
+	<Import Project="$(PackagesPath)\Microsoft.DevDiv.Validation.TestPlatform.Settings.Tasks.1.0.1108\build\net472\Microsoft.DevDiv.Validation.TestPlatform.Settings.Tasks.targets"/>
+</Project>

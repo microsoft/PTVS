@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.31211.46
+# Visual Studio Version 18
+VisualStudioVersion = 18.3.11227.31 main
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Product", "Product", "{C0C7AD6F-5E39-4D3F-A6B6-FD30713B0464}"
 EndProject
@@ -16,6 +16,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestUtilities.UI", "..\Common\Tests\Utilities.UI\TestUtilities.UI.csproj", "{E8150EBC-6B62-40BF-BF91-1DC60149B530}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{3D21C7AC-6F9D-448C-8356-44EAFB2D14FC}"
+	ProjectSection(SolutionItems) = preProject
+		Tests\PTVS.runsettingsproj = Tests\PTVS.runsettingsproj
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Attacher", "Product\Attacher\Attacher.csproj", "{666A22BB-0CB5-4C08-A20F-E17450DA6573}"
 EndProject
