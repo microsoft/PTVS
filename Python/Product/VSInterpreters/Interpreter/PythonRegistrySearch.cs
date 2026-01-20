@@ -108,7 +108,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         using (var tagKey = companyKey.OpenSubKey(tag))
                         using (var installKey = tagKey?.OpenSubKey("InstallPath")) {
                             var config = TryReadConfiguration(company, tag, tagKey, installKey, pythonCore, assumedArch);
-                            if config == null) {
+                            if (config == null) {
                                 continue;
                             }
 
