@@ -344,7 +344,12 @@ namespace Microsoft.PythonTools.Project {
         }
 
         protected override bool PythonTestFileFound(Predicate<string> fileFilter) {
-            return WorkspaceContext.EnumerateUserFiles(fileFilter).Any();
+            try {
+                return WorkspaceContext.EnumerateUserFiles(fileFilter).Any();
+            } catch (IOException) {
+                // Handle inaccessible directories gracefully
+                return false;
+            }
         }
     }
 }
