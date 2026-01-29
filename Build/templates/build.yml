@@ -2,6 +2,9 @@ parameters:
 - name: ptvsPackageVersion
   type: string
   default: $(Build.BuildNumber)
+- name: skipSigning
+  type: boolean
+  default: false
 
 steps:
 
@@ -57,4 +60,5 @@ steps:
                           /p:BuildNumber=${{ parameters.ptvsPackageVersion }} 
                           /p:BUILD_BINARIESDIRECTORY=$(Build.BinariesDirectory)
                           /p:BUILD_STAGINGDIRECTORY=$(Build.StagingDirectory) 
+                          /p:SkipSigning=${{ parameters.skipSigning }}
                           /bl:$(Build.SourcesDirectory)\logs\BuildInstaller.binlog'

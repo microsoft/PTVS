@@ -1,4 +1,4 @@
-# This pipeline is used to build the PTVS product and installer.
+﻿# This pipeline is used to build the PTVS product and installer.
 # A seperate release pipeline is used to create insertion PR's into Visual Studio.
 
 # The pipeline extends v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates from 1esPipelines repository defined in resources section.
@@ -38,6 +38,11 @@ parameters:
 
 - name: skipGlassCache
   displayName: Skip Glass Cache
+  type: boolean
+  default: false
+
+- name: skipSigning
+  displayName: Skip Signing
   type: boolean
   default: false
 
@@ -118,6 +123,13 @@ variables:
     ${{ else }}:
       value: ${{ parameters.ptvsPackageVersion }}
 
+  # Skip signing for PR builds by default, use parameter override for manual builds
+  - name: skipSigningVar
+    ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+      value: true
+    ${{ else }}:
+      value: ${{ parameters.skipSigning }}
+
   # Import variables from PTVS-Dev18 variable group
   - group: PTVS-Dev17
 
@@ -149,15 +161,36 @@ extends:
         # Set pipeline timeout to 2 hours (120 minutes)
         timeoutInMinutes: 120
         displayName: Build
+        variables:          
+          BootloaderDropName: 'Bootloader/$(System.TeamProject)/$(Build.BuildNumber)/$(Build.BuildId)'
         # If the pipeline publishes artifacts, use `templateContext` to define the artifacts.
         # This will enable 1ES PT to run SDL analysis tools on the artifacts and then upload them.
         templateContext:
+          isProduction: false
           # Disable code signing validation because we don't ship ANY of the artifacts that we publish.
           # The only released artifacts are uploaded via the 1ES.MicroBuildVstsDrop@1 below.
           sdl:
+            codeql:
+              # disable if not commit in main or release
+              ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
+                enabled: true
+              ${{ else }}:
+                enabled: false
             codeSignValidation:
               enabled: false
+            sbom:
+              enabled: false # Disable global SBOM generation; we'll enable selectively per artifact output
           outputs:
+          # - output: artifactsDrop # upload to artifact drop service for azure_pipelines_integration_tests.yml pipeline
+          #   displayName: 'Upload MicroBuild to Artifact Services'
+          #   sourcePath: $(Build.ArtifactStagingDirectory)\MicroBuild\Output
+          #   dropServiceURI: https://devdiv.artifacts.visualstudio.com/DefaultCollection/
+          #   dropMetadataContainerName: MicroBuildOutputs
+          #   buildNumber: '$(BootloaderDropName)'
+          - output: pipelineArtifact
+            displayName: 📢 Publish MicroBuildOutputs
+            targetPath: $(Build.ArtifactStagingDirectory)\MicroBuild\Output
+            artifactName: MicroBuildOutputs
           - output: pipelineArtifact
             displayName: 'Publish build artifact: binaries'
             targetPath: '$(Build.BinariesDirectory)/raw/binaries'
@@ -171,17 +204,7 @@ extends:
             displayName: 'Publish build artifact: logs'
             condition: succeededOrFailed()
             targetPath: '$(Build.SourcesDirectory)\logs'
-            artifactName: Logs
-          - output: pipelineArtifact
-            displayName: 'Publish build artifact: TestData'
-            targetPath: '$(Build.ArtifactStagingDirectory)/TestDataFolder/TestData.zip'
-            sbomBuildDropPath: '$(Build.ArtifactStagingDirectory)/TestDataFolder'
-            artifactName: 'TestData'
-          - output: pipelineArtifact
-            displayName: 'Publish build artifact: RunSettings'
-            targetPath: '$(Build.SourcesDirectory)/Python/Tests/TestData/default.runsettings'
-            sbomBuildDropPath: '$(Build.SourcesDirectory)/Python/Tests/TestData'
-            artifactName: 'RunSettings'
+            artifactName: Logs                   
           - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
             - output: pipelineArtifact
               displayName: 'Publish build artifact: BoM'
@@ -198,6 +221,8 @@ extends:
         # check out code clean from source control
         - checkout: self
           clean: true
+          fetchDepth: 1
+          persistCredentials: true
 
         # Non-PR steps  
         - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
@@ -220,6 +245,7 @@ extends:
         - template: /Build/templates/build.yml@self
           parameters:
             ptvsPackageVersion: ${{ variables.ptvsPackageVersionVar }}
+            skipSigning: ${{ variables.skipSigningVar }}
         
         # Non-PR steps
         - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
@@ -251,8 +277,51 @@ extends:
           displayName: 'Execute cleanup tasks'
           condition: succeededOrFailed()
 
+      # Separate job for TestData generation - runs in parallel with build job
+      - job: testdata
+        displayName: Publish TestData
+        variables:
+          TestDataDropName: 'TestData/$(System.TeamProject)/$(Build.BuildNumber)/$(Build.BuildId)'
+        templateContext:
+          isProduction: false
+          sdl:
+            codeSignValidation:
+              enabled: false
+            sbom:
+              enabled: false
+          outputs:
+          - output: artifactsDrop # upload to artifact drop service for azure_pipelines_integration_tests.yml pipeline
+            displayName: 'Upload Test Data to Artifact Services'
+            sourcePath: $(Build.ArtifactStagingDirectory)/TestDataFolder
+            dropServiceURI: https://devdiv.artifacts.visualstudio.com/DefaultCollection/
+            # buildNumber: '$(TestDataDropName)'
+            dropMetadataContainerName: PTVS-TestData            
+          - output: pipelineArtifact
+            displayName: 'Publish build artifact: TestData'
+            targetPath: '$(Build.ArtifactStagingDirectory)/TestDataFolder/TestData.zip'
+            artifactName: 'TestData'
+          - output: pipelineArtifact
+            displayName: 'Publish build artifact: RunSettings'
+            targetPath: '$(Build.SourcesDirectory)/Python/Tests/TestData/default.runsettings'            
+            artifactName: 'RunSettings'
+
+        steps:
+        # check out code clean from source control
+        - checkout: self
+          clean: true
+          fetchDepth: 1
+          persistCredentials: true
+
         # Publish test data
         - template: /Build/templates/publish_test_data.yml@self
+
+        # Copy runsettings to TestDataFolder for azure_pipelines_integration_tests.yml pipeline
+        - task: CopyFiles@2
+          displayName: 'Copy runsettings to TestDataFolder'
+          inputs:
+            SourceFolder: '$(Build.SourcesDirectory)/Python/Tests/TestData'
+            Contents: 'default.runsettings'
+            TargetFolder: '$(Build.ArtifactStagingDirectory)/TestDataFolder'
 
         # Run tests on mixed mode debugger but only for PR builds
       # - ${{ if or(eq(variables['Build.Reason'], 'PullRequest'), eq(variables['SkipGlassCache'], true)) }}:
@@ -262,6 +331,9 @@ extends:
       #     - template: /Build/templates/run_tests.yml@self
       #       parameters:
       #         skipGlassCache: ${{ parameters.skipGlassCache }}
+
+
+
 
 
 

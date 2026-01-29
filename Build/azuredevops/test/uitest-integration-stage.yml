@@ -1,0 +1,149 @@
+parameters:
+  - name: BinariesDirectory
+    type: string
+    default: '$(Drop)/binaries'
+  - name: CleanupProcesses
+    type: string
+    default: 'devenv, vshub, microsoft.vshub.server.httphost, python, ipy, microsoft.pythontools.analyzer, vstest.executionengine.x86, vstest.discoveryengine.x86'
+  - name: Drop
+    type: string
+    default: '$(System.ArtifactsDirectory)/$(DefinitionName)'
+  - name: TestFilterCriteria
+    type: string
+    default: 'Priority=0'
+  - name: UITestNames
+    type: string
+    default: ''
+
+steps:
+  - task: ExtractFiles@1
+    displayName: Extract files
+    condition: succeeded()
+    inputs:
+      archiveFilePatterns: '${{ parameters.Drop }}/TestData/TestData.zip'
+      destinationFolder: '${{ parameters.Drop }}/TestData'
+      cleanDestinationFolder: false
+      overwriteExistingFiles: false
+
+  - task: PowerShell@2
+    displayName: Cleanup
+    condition: succeeded()
+    continueOnError: true
+    timeoutInMinutes: 5
+    inputs:
+      targetType: inline
+      arguments: '${{ parameters.CleanupProcesses }}'
+      script: |
+        param ([string[]]$names)
+        $running = Get-Process -Name $names -ErrorAction SilentlyContinue
+        while ($running) {
+          Write-Host 'Killing:'
+          $running
+          try {
+            $running | Stop-Process -Force
+          } catch {
+          }
+          Start-Sleep -Seconds 3
+          $running = Get-Process -Name $names -ErrorAction SilentlyContinue
+        }
+      errorActionPreference: stop
+      failOnStderr: true
+
+  - task: CopyFiles@2
+    displayName: Copy TestData into binaries
+    condition: succeeded()
+    continueOnError: true
+    inputs:
+      SourceFolder: '${{ parameters.Drop }}/TestData'
+      Contents: '**'
+      TargetFolder: '${{ parameters.BinariesDirectory }}/TestData'
+      CleanTargetFolder: 'true'
+      OverWrite: 'false'
+      flattenFolders: 'false'
+      preserveTimestamp: 'false'
+      retryCount: '0'
+
+  - task: CopyFiles@2
+    displayName: Copy runsettings to binary folder
+    condition: succeeded()
+    inputs:
+      SourceFolder: '${{ parameters.BinariesDirectory }}/TestData'
+      Contents: 'default.runsettings'
+      TargetFolder: '${{ parameters.BinariesDirectory }}'
+      CleanTargetFolder: 'false'
+      OverWrite: 'false'
+      flattenFolders: 'false'
+      preserveTimestamp: 'false'
+      retryCount: '0'
+
+  - task: PowerShell@2
+    displayName: Skip Verification
+    condition: succeeded()
+    inputs:
+      targetType: inline
+      script: |
+        reg import "${{ parameters.BinariesDirectory }}\TestData\EnableSkipVerification.reg"
+      errorActionPreference: stop
+      failOnStderr: false
+
+  - task: VSTest@2
+    displayName: '[MultiConfiguration] Run UI Test ${{ parameters.UITestNames }}'
+    condition: succeeded()
+    continueOnError: true
+    inputs:
+      testSelector: testAssemblies
+      testAssemblyVer2: '${{ parameters.UITestNames }}UITestsRunner.dll'
+      tcmTestRun: '$(test.RunId)'
+      searchFolder: '${{ parameters.BinariesDirectory }}'
+      resultsFolder: '$(Agent.TempDirectory)/TestResults'
+      testFiltercriteria: '${{ parameters.TestFilterCriteria }}'
+      runOnlyImpactedTests: false
+      runAllTestsAfterXBuilds: 50
+      uiTests: true
+      vstestLocationMethod: version
+      vsTestVersion: latest
+      runSettingsFile: '${{ parameters.BinariesDirectory }}/default.runsettings'
+      overrideTestrunParameters: '-TargetFrameworkVersion .NETFramework,Version=v4.7.2'
+      runInParallel: false
+      runTestsInIsolation: false
+      codeCoverageEnabled: true
+      distributionBatchType: basedOnExecutionTime
+      batchingBasedOnAgentsOption: autoBatchSize
+      customBatchSizeValue: 10
+      batchingBasedOnExecutionTimeOption: customTimeBatchSize
+      customRunTimePerBatchValue: 300
+      dontDistribute: false
+      testRunTitle: '${{ parameters.UITestNames }} UI Tests'
+      publishRunAttachments: true
+      failOnMinTestsNotRun: false
+      minimumExpectedTests: 1
+      diagnosticsEnabled: true
+      collectDumpOn: onAbortOnly
+      rerunFailedTests: true
+      rerunType: basedOnTestFailurePercentage
+      rerunFailedThreshold: 50
+      rerunFailedTestCasesMaxLimit: 5
+      rerunMaxAttempts: 2
+
+  - task: PowerShell@2
+    displayName: Cleanup
+    condition: succeeded()
+    timeoutInMinutes: 5
+    inputs:
+      targetType: inline
+      arguments: '${{ parameters.CleanupProcesses }}'
+      script: |
+        param ([string[]]$names)
+        $running = Get-Process -Name $names -ErrorAction SilentlyContinue
+        while ($running) {
+          Write-Host 'Killing:'
+          $running
+          try {
+            $running | Stop-Process -Force
+          } catch {
+          }
+          Start-Sleep -Seconds 3
+          $running = Get-Process -Name $names -ErrorAction SilentlyContinue
+        }
+      errorActionPreference: stop
+      failOnStderr: true

@@ -208,7 +208,7 @@ try {
     if (-not $interactive) {
         $arglist += "-NonInteractive"
     }
-    $nuget = Get-Command nuget.exe -EA 0
+    $nuget = Get-Command .\nuget.exe -EA 0
     if (-not $nuget) {
         $nuget = Get-Command .\nuget.exe
     }

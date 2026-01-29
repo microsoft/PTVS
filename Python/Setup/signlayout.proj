@@ -9,6 +9,10 @@
   <PropertyGroup>
     <OutputPath>$(BinariesOutputPath)</OutputPath>
     <OutDir>$(BinariesOutputPath)</OutDir>
+    <!-- Opt-in flag to skip signing work -->
+    <SkipSigning Condition="'$(SkipSigning)'==''">false</SkipSigning>
+    <!-- When skipping, set MicroBuildSignType to None so MicroBuild signing targets are disabled -->
+    <MicroBuildSignType Condition="'$(SkipSigning)'=='true'">None</MicroBuildSignType>
   </PropertyGroup>
   
   <ItemDefinitionGroup>
@@ -17,7 +21,7 @@
     </ManagedFiles>
   </ItemDefinitionGroup>
   
-  <ItemGroup>
+  <ItemGroup Condition="'$(SkipSigning)'!='true'">
     <_Languages Include="$(Languages)" />
   
     <ManagedFiles Include="
@@ -73,7 +77,7 @@
     </FilesToSign>
   </ItemGroup>
 
-  <Target Name="_AddLocFiles" BeforeTargets="_PreserveUnsigned;ListFiles">
+  <Target Name="_AddLocFiles" BeforeTargets="_PreserveUnsigned;ListFiles" Condition="'$(SkipSigning)'!='true'">
     <ItemGroup>
       <LocFilesToSign Include="$(BinariesOutputPath)localize\**\*.resources.dll" />
       <FilesToSign Include="@(LocFilesToSign)">
@@ -84,7 +88,7 @@
       </FilesToSign>
     </ItemGroup>
   </Target>
-  <Target Name="_AddPylanceFiles" BeforeTargets="_PreserveUnsigned;ListFiles">
+  <Target Name="_AddPylanceFiles" BeforeTargets="_PreserveUnsigned;ListFiles" Condition="'$(SkipSigning)'!='true'">
     <ItemGroup>
       <PylanceFilesToSign Include="$(BinariesOutputPath)pylance\**\*.js" />
       <FilesToSign Include="@(PylanceFilesToSign)">
@@ -96,17 +100,17 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="_PreserveUnsigned" Inputs="%(FilesToSign.FullPath)" Outputs="%(FilesToSign.UnsignedPath)" BeforeTargets="SignFiles">
+  <Target Name="_PreserveUnsigned" Inputs="%(FilesToSign.FullPath)" Outputs="%(FilesToSign.UnsignedPath)" BeforeTargets="SignFiles" Condition="'$(SkipSigning)'!='true' and '@(FilesToSign)'!=''">
     <Copy SourceFiles="%(FilesToSign.FullPath)" DestinationFiles="%(FilesToSign.UnsignedPath)" />
   </Target>
 
-  <Target Name="ListFiles">
+  <Target Name="ListFiles" Condition="'$(SkipSigning)'!='true'">
     <Message Text="OutputPath: $(OutputPath)" Importance="high" />
     <Message Text="@(FilesToSign->'%(Identity) (%(Authenticode), %(StrongName)) - %(SignedPath)', '
 ')" Importance="high" />
   </Target>
 
-  <Target Name="_GetBinariesInLayout">
+  <Target Name="_GetBinariesInLayout" Condition="'$(SkipSigning)'!='true'">
     <ItemGroup>
       <_BinariesInLayout Include="$(LayoutOutputPath)**\*.exe;$(LayoutOutputPath)**\*.dll" />
       <_BinariesWithSignedSource Include="$(BinariesOutputPath)%(_BinariesInLayout.Filename)%(_BinariesInLayout.Extension)">
@@ -116,7 +120,7 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="_GetJSFilesInLayout">
+  <Target Name="_GetJSFilesInLayout" Condition="'$(SkipSigning)'!='true'">
     <ItemGroup>
       <!-- Special case the pylance files -->
       <_FilesInLayout Include="$(LayoutOutputPath)\Microsoft.PythonTools.Core\pylance\**\*.js" />
@@ -127,10 +131,10 @@
     </ItemGroup>
   </Target>
 
-
   <Target Name="_UpdateLayoutWithSignedBinaries"
           DependsOnTargets="_GetBinariesInLayout;_GetJsFilesInLayout"
-          AfterTargets="SignFiles">
+          AfterTargets="SignFiles"
+          Condition="'$(SkipSigning)'!='true'">
     <Copy SourceFiles="%(_BinariesToCopy.FullPath)" DestinationFiles="%(_BinariesToCopy.TargetPath)" />
   </Target>
 
