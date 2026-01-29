@@ -1,0 +1,16 @@
+# Dummy pipeline: does not auto-trigger; prints hello world.
+trigger: none
+pr: none
+
+pool:
+  vmImage: windows-latest
+
+stages:
+- stage: Hello
+  displayName: Hello World
+  jobs:
+  - job: hello
+    displayName: Print hello
+    steps:
+    - script: echo Hello world
+      displayName: Hello world
