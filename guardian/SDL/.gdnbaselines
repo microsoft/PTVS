@@ -1,0 +1,68 @@
+{
+  "hydrated": true,
+  "properties": {
+    "helpUri": "https://eng.ms/docs/microsoft-security/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/microsoft-guardian/general/baselines"
+  },
+  "version": "1.0.0",
+  "baselines": {
+    "default": {
+      "name": "default",
+      "createdDate": "2026-01-29 08:44:49Z",
+      "lastUpdatedDate": "2026-01-29 08:44:49Z"
+    }
+  },
+  "results": {
+    "c08e129858937eb35d81715ff99e062114bb30774ae8347304d94928d5a5efaa": {
+      "signature": "c08e129858937eb35d81715ff99e062114bb30774ae8347304d94928d5a5efaa",
+      "alternativeSignatures": [
+        "4422def5142b06473e4f01ac3063046f42a907c45e3680bd60fb4989c488e0fd"
+      ],
+      "target": "file:///D:/a/_work/1/b/raw/binaries/Microsoft.PythonTools.Debugger.Helper.x64.dll",
+      "memberOf": [
+        "default"
+      ],
+      "tool": "binskim",
+      "ruleId": "BA2007",
+      "createdDate": "2026-01-29 08:44:49Z"
+    },
+    "3453d9482dfb9c362728ad6c33becfe7640c80ea7a6c01e9c1ab4fbf7e7f8bbe": {
+      "signature": "3453d9482dfb9c362728ad6c33becfe7640c80ea7a6c01e9c1ab4fbf7e7f8bbe",
+      "alternativeSignatures": [
+        "6747c25f4479f5b46e664dcc803ceabda8de583b9ae384831baa0c33a5f25ba8"
+      ],
+      "target": "file:///D:/a/_work/1/b/raw/binaries/Microsoft.PythonTools.Debugger.Helper.x86.dll",
+      "memberOf": [
+        "default"
+      ],
+      "tool": "binskim",
+      "ruleId": "BA2007",
+      "createdDate": "2026-01-29 08:44:49Z"
+    },
+    "a07b5bf119c8caf1c04cd4f4a1504164badabc08111805feebd02eb95b19f840": {
+      "signature": "a07b5bf119c8caf1c04cd4f4a1504164badabc08111805feebd02eb95b19f840",
+      "alternativeSignatures": [
+        "b74b03299532ab9e7c50c9d7c7729c1c586fe0450016d2c2b8f20b9767477790"
+      ],
+      "target": "file:///D:/a/_work/1/b/raw/binaries/PyDebugAttach.dll",
+      "memberOf": [
+        "default"
+      ],
+      "tool": "binskim",
+      "ruleId": "BA2007",
+      "createdDate": "2026-01-29 08:44:49Z"
+    },
+    "116b2046b476b0408fd5f38264bf93a22d6a26f2f21fe2f8529607c7cb0276dd": {
+      "signature": "116b2046b476b0408fd5f38264bf93a22d6a26f2f21fe2f8529607c7cb0276dd",
+      "alternativeSignatures": [
+        "1437a8e742141b5bbaf723efae59a6647f428e0708c870d19e7c133614c0f1ab"
+      ],
+      "target": "file:///D:/a/_work/1/b/raw/binaries/PyDebugAttachX86.dll",
+      "memberOf": [
+        "default"
+      ],
+      "tool": "binskim",
+      "ruleId": "BA2007",
+      "createdDate": "2026-01-29 08:44:49Z"
+    }
+  }
+}
