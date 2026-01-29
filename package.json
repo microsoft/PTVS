@@ -2,6 +2,6 @@
     "name":  "ptvs",
     "private":  true,
     "devDependencies":  {
-                            "@pylance/pylance":  "2025.9.1"
+                            "@pylance/pylance":  "2025.10.4"
                         }
 }
