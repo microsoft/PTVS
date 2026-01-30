@@ -157,8 +157,6 @@ extends:
           sdl:
             codeSignValidation:
               enabled: false
-            baseline:
-              baselineFile: $(Build.SourcesDirectory)\guardian\SDL\.gdnbaselines
           outputs:
           - output: pipelineArtifact
             displayName: 'Publish build artifact: binaries'
