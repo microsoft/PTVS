@@ -66,6 +66,42 @@ stages:
       patterns: '**\VSTSDrop.json'
       displayName: Download drop Information
 
+    - task: PowerShell@2
+      displayName: List downloaded files before setting 'RunSettings.DropName'
+      inputs:
+        targetType: inline
+        script: |
+          Write-Host "Pipeline.Workspace: $(Pipeline.Workspace)"
+          Write-Host "System.DefaultWorkingDirectory: $(System.DefaultWorkingDirectory)"
+
+          $componentRoot = Join-Path "$(Pipeline.Workspace)" "ComponentBuildUnderTest"
+          $testDataRoot = Join-Path $componentRoot "PTVS-TestData"
+
+          Write-Host "Listing: $componentRoot"
+          if (Test-Path -LiteralPath $componentRoot) {
+            Get-ChildItem -LiteralPath $componentRoot -Force | Select-Object Name, FullName, Mode, Length, LastWriteTime | Format-Table -AutoSize
+          } else {
+            Write-Warning "Path not found: $componentRoot"
+          }
+
+          Write-Host "Listing (recursive): $testDataRoot"
+          if (Test-Path -LiteralPath $testDataRoot) {
+            Get-ChildItem -LiteralPath $testDataRoot -Recurse -Force |
+              Select-Object FullName, Length, LastWriteTime |
+              Sort-Object FullName |
+              Format-Table -AutoSize
+
+            Write-Host "Searching for VSTSDrop.json under: $testDataRoot"
+            $matches = Get-ChildItem -LiteralPath $testDataRoot -Recurse -Force -File -Filter "VSTSDrop.json" -ErrorAction SilentlyContinue
+            if ($matches) {
+              $matches | Select-Object FullName, Length, LastWriteTime | Format-Table -AutoSize
+            } else {
+              Write-Warning "No VSTSDrop.json found under: $testDataRoot"
+            }
+          } else {
+            Write-Warning "Path not found: $testDataRoot"
+          }
+
     - template: \steps\powershell\execute-script.yml@DartLabTemplates
       parameters:
         displayName: Set 'RunSettings.DropName'
