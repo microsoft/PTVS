@@ -7,8 +7,8 @@
   "baselines": {
     "default": {
       "name": "default",
-      "createdDate": "2026-01-29 08:44:49Z",
-      "lastUpdatedDate": "2026-01-29 08:44:49Z"
+      "createdDate": "2026-01-30 00:08:59Z",
+      "lastUpdatedDate": "2026-01-30 00:08:59Z"
     }
   },
   "results": {
@@ -23,7 +23,7 @@
       ],
       "tool": "binskim",
       "ruleId": "BA2007",
-      "createdDate": "2026-01-29 08:44:49Z"
+      "createdDate": "2026-01-30 00:08:59Z"
     },
     "3453d9482dfb9c362728ad6c33becfe7640c80ea7a6c01e9c1ab4fbf7e7f8bbe": {
       "signature": "3453d9482dfb9c362728ad6c33becfe7640c80ea7a6c01e9c1ab4fbf7e7f8bbe",
@@ -36,7 +36,7 @@
       ],
       "tool": "binskim",
       "ruleId": "BA2007",
-      "createdDate": "2026-01-29 08:44:49Z"
+      "createdDate": "2026-01-30 00:08:59Z"
     },
     "a07b5bf119c8caf1c04cd4f4a1504164badabc08111805feebd02eb95b19f840": {
       "signature": "a07b5bf119c8caf1c04cd4f4a1504164badabc08111805feebd02eb95b19f840",
@@ -49,7 +49,7 @@
       ],
       "tool": "binskim",
       "ruleId": "BA2007",
-      "createdDate": "2026-01-29 08:44:49Z"
+      "createdDate": "2026-01-30 00:08:59Z"
     },
     "116b2046b476b0408fd5f38264bf93a22d6a26f2f21fe2f8529607c7cb0276dd": {
       "signature": "116b2046b476b0408fd5f38264bf93a22d6a26f2f21fe2f8529607c7cb0276dd",
@@ -62,7 +62,33 @@
       ],
       "tool": "binskim",
       "ruleId": "BA2007",
-      "createdDate": "2026-01-29 08:44:49Z"
+      "createdDate": "2026-01-30 00:08:59Z"
+    },
+    "4b7fb2882e82bc417908fcbe6e0932993eb67e1e6d08cbcfd71a7ead17b338df": {
+      "signature": "4b7fb2882e82bc417908fcbe6e0932993eb67e1e6d08cbcfd71a7ead17b338df",
+      "alternativeSignatures": [
+        "1577cf12d229e036d3f333ee15202dfb25223754e4d220c94ad14da4186ec157"
+      ],
+      "target": "file:///D:/a/_work/1/b/raw/binaries/debugpy/_vendored/pydevd/pydevd_attach_to_process/inject_dll_amd64.exe",
+      "memberOf": [
+        "default"
+      ],
+      "tool": "binskim",
+      "ruleId": "BA2007",
+      "createdDate": "2026-01-30 00:08:59Z"
+    },
+    "3081ce6ae12e9078cc1ebb2f34cd942d10c187ced7868e2ad0e04d59f63dc87d": {
+      "signature": "3081ce6ae12e9078cc1ebb2f34cd942d10c187ced7868e2ad0e04d59f63dc87d",
+      "alternativeSignatures": [
+        "8e425716bbde468dba75b1a53cfc2b38e3bbc5f17317c3d039ab03175191d6e7"
+      ],
+      "target": "file:///D:/a/_work/1/b/raw/binaries/debugpy/_vendored/pydevd/pydevd_attach_to_process/inject_dll_x86.exe",
+      "memberOf": [
+        "default"
+      ],
+      "tool": "binskim",
+      "ruleId": "BA2007",
+      "createdDate": "2026-01-30 00:08:59Z"
     }
   }
 }
