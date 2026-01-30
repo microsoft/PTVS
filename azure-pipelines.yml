@@ -286,12 +286,16 @@ extends:
                 sbom:
                   enabled: false
               outputs:
-                - output: artifactsDrop # upload to artifact drop service for azure_pipelines_integration_tests.yml pipeline
-                  displayName: "Upload Test Data to Artifact Services"
-                  sourcePath: $(Build.ArtifactStagingDirectory)/TestDataFolder
-                  dropServiceURI: https://devdiv.artifacts.visualstudio.com/DefaultCollection/
-                  buildNumber: "$(TestDataDropName)"
-                  dropMetadataContainerName: PTVS-TestData
+                - output: pipelineArtifact
+                  displayName: 📢 Publish PTVS-TestData
+                  targetPath: $(Build.ArtifactStagingDirectory)\PTVS-TestData\
+                  artifactName: PTVS-TestData
+                # - output: artifactsDrop # upload to artifact drop service for azure_pipelines_integration_tests.yml pipeline
+                #   displayName: "Upload Test Data to Artifact Services"
+                #   sourcePath: $(Build.ArtifactStagingDirectory)/TestDataFolder
+                #   dropServiceURI: https://devdiv.artifacts.visualstudio.com/DefaultCollection/
+                #   buildNumber: "$(TestDataDropName)"
+                #  dropMetadataContainerName: PTVS-TestData
                 - output: pipelineArtifact
                   displayName: "Publish build artifact: TestData"
                   targetPath: "$(Build.ArtifactStagingDirectory)/TestDataFolder/TestData.zip"
