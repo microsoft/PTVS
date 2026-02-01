@@ -289,7 +289,7 @@ extends:
               outputs:
                 - output: pipelineArtifact
                   displayName: 📢 Publish PTVS-TestData
-                  targetPath: $(Build.ArtifactStagingDirectory)\PTVS-TestData\
+                  targetPath: $(Build.ArtifactStagingDirectory)/TestDataFolder/
                   artifactName: PTVS-TestData
                 # - output: artifactsDrop # upload to artifact drop service for azure_pipelines_integration_tests.yml pipeline
                 #   displayName: "Upload Test Data to Artifact Services"
