@@ -1,5 +1,17 @@
 steps:
 
+  - task: NuGetToolInstaller@1
+    displayName: Install NuGet
+
+  - task: NuGetCommand@2
+    displayName: Restore runsettings build tasks
+    inputs:
+      command: restore
+      feedsToUse: config
+      restoreSolution: '$(Build.SourcesDirectory)/Build/testdata.packages.config'
+      restoreDirectory: '$(Build.SourcesDirectory)/packages'
+      nugetConfigPath: '$(Build.SourcesDirectory)/Build/nuget.testdata.config'
+
   # Generate a runsettings file that points at the correct Test Store drop.
   - task: MSBuild@1
     displayName: 'Build PTVS.runsettingsproj'
