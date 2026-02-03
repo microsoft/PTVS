@@ -43,7 +43,7 @@ parameters:
   - name: skipSigning
     displayName: Skip Signing
     type: boolean
-    default: false
+    default: true
 
 # build number format
 name: $(date:yy)$(DayOfYear)$(rev:.r)
