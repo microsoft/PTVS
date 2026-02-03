@@ -8,7 +8,7 @@ steps:
     inputs:
       command: restore
       feedsToUse: config
-      restoreSolution: '$(Build.SourcesDirectory)/Build/testdata.packages.config'
+      restoreSolution: '$(Build.SourcesDirectory)/Build/packages.testdata.config'
       restoreDirectory: '$(Build.SourcesDirectory)/packages'
       nugetConfigPath: '$(Build.SourcesDirectory)/Build/nuget.testdata.config'
 
