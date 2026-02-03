@@ -301,10 +301,10 @@ extends:
                   displayName: "Publish build artifact: TestData"
                   targetPath: "$(Build.ArtifactStagingDirectory)/TestDataFolder/TestData.zip"
                   artifactName: "TestData"
-                - output: pipelineArtifact
-                  displayName: "Publish build artifact: RunSettings"
-                  targetPath: "$(Build.SourcesDirectory)/Python/Tests/TestData/default.runsettings"
-                  artifactName: "RunSettings"
+                # - output: pipelineArtifact
+                #   displayName: "Publish build artifact: RunSettings"
+                #   targetPath: "$(Build.SourcesDirectory)/Python/Tests/TestData/default.runsettings"
+                #   artifactName: "RunSettings"
 
             steps:
               # check out code clean from source control
@@ -317,12 +317,12 @@ extends:
               - template: /Build/templates/publish_test_data.yml@self
 
               # Copy runsettings to TestDataFolder for azure_pipelines_integration_tests.yml pipeline
-              - task: CopyFiles@2
-                displayName: "Copy runsettings to TestDataFolder"
-                inputs:
-                  SourceFolder: "$(Build.SourcesDirectory)/Python/Tests/TestData"
-                  Contents: "default.runsettings"
-                  TargetFolder: "$(Build.ArtifactStagingDirectory)/TestDataFolder"
+              # - task: CopyFiles@2
+              #   displayName: "Copy runsettings to TestDataFolder"
+              #   inputs:
+              #     SourceFolder: "$(Build.SourcesDirectory)/Python/Tests/TestData"
+              #     Contents: "DDRITs.runsettings"
+              #     TargetFolder: "$(Build.ArtifactStagingDirectory)/TestDataFolder"
 
             # Run tests on mixed mode debugger but only for PR builds
         # - ${{ if or(eq(variables['Build.Reason'], 'PullRequest'), eq(variables['SkipGlassCache'], true)) }}:
