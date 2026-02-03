@@ -148,7 +148,7 @@ extends:
     # specify the image type. Here are the allowed values: windows, linux, or macOS. The default value is windows.
     # Hence, this property must be specified for linux and macOS.
     pool:
-      name: VSEngSS-MicroBuild2022-1ES
+      name: VSEngSS-MicroBuild2022-large-1ES
     settings:
       skipBuildTagsForGitHubPullRequests: true
     stages:
