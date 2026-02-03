@@ -148,7 +148,8 @@ extends:
     # specify the image type. Here are the allowed values: windows, linux, or macOS. The default value is windows.
     # Hence, this property must be specified for linux and macOS.
     pool:
-      name: VSEngSS-MicroBuild2022-large-1ES
+      name: AzurePipelines-EO
+      image: 1ESPT-Windows2022
     settings:
       skipBuildTagsForGitHubPullRequests: true
     stages:
