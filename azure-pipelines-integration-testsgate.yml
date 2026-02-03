@@ -63,7 +63,7 @@ stages:
 
     - download: ComponentBuildUnderTest
       artifact: PTVS-TestData
-      patterns: '**\VSTSDrop.json'
+      patterns: '**\*'
       displayName: Download drop Information
 
     - task: PowerShell@2
