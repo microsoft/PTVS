@@ -1,5 +1,31 @@
 steps:
 
+  # Generate a runsettings file that points at the correct Test Store drop.
+  - task: MSBuild@1
+    displayName: 'Build PTVS.runsettingsproj'
+    inputs:
+      solution: '$(Build.SourcesDirectory)/Python/Tests/PTVS.runsettingsproj'
+      msbuildArguments: >
+        /p:PackagesPath=$(Build.SourcesDirectory)\packages
+        /p:TestStoreDropName=$(TestStoreDropName)
+
+  - task: PowerShell@2
+    displayName: 'Update default.runsettings from generated DDRITs.runsettings'
+    inputs:
+      targetType: 'inline'
+      script: |
+        $ErrorActionPreference = 'Stop'
+
+        $source = "$(Build.SourcesDirectory)\Python\Tests\bin\RunSettings\DDRITs.runsettings"
+        $dest = "$(Build.SourcesDirectory)\Python\Tests\TestData\DDRITs.runsettings"
+
+        if (-not (Test-Path -LiteralPath $source)) {
+          throw "Expected generated runsettings file not found: $source"
+        }
+
+        Copy-Item -LiteralPath $source -Destination $dest -Force
+
+
   # Compress just the test data
   # Used in this release task to run tests: https://devdiv.visualstudio.com/DevDiv/_taskgroup/a7b18468-aab5-4be7-b718-02f85b0828c4
   - task: ArchiveFiles@2
@@ -18,6 +44,13 @@ steps:
     inputs:
       SourceFolder: '$(Build.ArtifactStagingDirectory)'
       Contents: 'TestData.zip'
+      TargetFolder: '$(Build.ArtifactStagingDirectory)/TestDataFolder'
+
+  - task: CopyFiles@2
+    displayName: 'Copy DDRITs.runsettings to subfolder'
+    inputs:
+      SourceFolder: '$(Build.SourcesDirectory)/Python/Tests/TestData'
+      Contents: 'DDRITs.runsettings'
       TargetFolder: '$(Build.ArtifactStagingDirectory)/TestDataFolder'
 
 
