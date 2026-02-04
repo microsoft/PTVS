@@ -131,23 +131,47 @@ stages:
 
           Write-RecursiveListing -RootPath $componentRoot -Title "Downloaded artifacts under ComponentBuildUnderTest"
 
-          $testDataRoot = Join-Path $componentRoot "PTVS-TestData"
           Write-Host ""
-          Write-Host "Searching for VSTSDrop.json under: $testDataRoot"
-          if (Test-Path -LiteralPath $testDataRoot) {
-            $matches = Get-ChildItem -LiteralPath $testDataRoot -Recurse -Force -File -Filter "VSTSDrop.json" -ErrorAction SilentlyContinue
+          Write-Host "Searching for VSTSDrop.json under: $componentRoot"
+          if (Test-Path -LiteralPath $componentRoot) {
+            $matches = Get-ChildItem -LiteralPath $componentRoot -Recurse -Force -File -Filter "VSTSDrop.json" -ErrorAction SilentlyContinue
             if ($matches) {
               $matches | Select-Object FullName, Length, LastWriteTime | Sort-Object FullName | Format-Table -AutoSize
             } else {
-              Write-Warning "No VSTSDrop.json found under: $testDataRoot"
+              Write-Warning "No VSTSDrop.json found under: $componentRoot"
             }
           } else {
-            Write-Warning "Path not found: $testDataRoot"
+            Write-Warning "Path not found: $componentRoot"
           }
+
+    - task: PowerShell@2
+      displayName: Find VSTSDrop.json path
+      inputs:
+        targetType: inline
+        script: |
+          $componentRoot = Join-Path "$(Pipeline.Workspace)" "ComponentBuildUnderTest"
+          Write-Host "Searching for VSTSDrop.json under: $componentRoot"
+          if (-not (Test-Path -LiteralPath $componentRoot)) {
+            throw "ComponentBuildUnderTest root not found: $componentRoot"
+          }
+
+          $matches = Get-ChildItem -LiteralPath $componentRoot -Recurse -Force -File -Filter "VSTSDrop.json" -ErrorAction SilentlyContinue
+          if (-not $matches) {
+            throw "No VSTSDrop.json found under: $componentRoot"
+          }
+
+          if ($matches.Count -gt 1) {
+            Write-Warning "Multiple VSTSDrop.json files found; selecting the most recent."
+            $matches | Select-Object FullName, Length, LastWriteTime | Sort-Object LastWriteTime -Descending | Format-Table -AutoSize
+          }
+
+          $selected = $matches | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          Write-Host "Selected VSTSDrop.json: $($selected.FullName)"
+          Write-Host "##vso[task.setvariable variable=VSTSDropJsonURI]$($selected.FullName)"
 
     - template: \steps\powershell\execute-script.yml@DartLabTemplates
       parameters:
         displayName: Set 'RunSettings.DropName'
         filePath: $(DartLab.Path)\Scripts\AzureDevOps\Artifacts\Drop\Get-DropName.ps1
-        arguments: -VSTSDropJsonURI '$(Pipeline.Workspace)\ComponentBuildUnderTest\PTVS-TestData\VSTSDrop.json' -OutVariableName '$(Pipeline.Workspace)\ComponentBuildUnderTest\TestDataFolder\DDRITs.runsettings'
+        arguments: -VSTSDropJsonURI '$(VSTSDropJsonURI)' -OutVariableName 'RunSettings.DropName'
  
