@@ -4,6 +4,7 @@
     <TargetFramework>net472</TargetFramework>
     <RunName>DDRITs</RunName>
     <OutputPath>bin\RunSettings</OutputPath>
+    <TestSessionTimeout>3600000</TestSessionTimeout>
     <!--<TestCaseFilter>TestCategory=RunAllUnittest</TestCaseFilter>-->
 	
   </PropertyGroup>
