@@ -149,5 +149,5 @@ stages:
       parameters:
         displayName: Set 'RunSettings.DropName'
         filePath: $(DartLab.Path)\Scripts\AzureDevOps\Artifacts\Drop\Get-DropName.ps1
-        arguments: -VSTSDropJsonURI '$(Pipeline.Workspace)\ComponentBuildUnderTest\PTVS-TestData\VSTSDrop.json' -OutVariableName 'RunSettings.DropName'
+        arguments: -VSTSDropJsonURI '$(Pipeline.Workspace)\ComponentBuildUnderTest\PTVS-TestData\VSTSDrop.json' -OutVariableName '$(Pipeline.Workspace)\ComponentBuildUnderTest\TestDataFolder\DDRITs.runsettings'
  
