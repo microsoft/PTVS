@@ -66,6 +66,11 @@ stages:
       patterns: '**\*'
       displayName: Download drop Information
 
+    - download: ComponentBuildUnderTest
+      artifact: TestDataFolder
+      patterns: '**\*'
+      displayName: Download TestDataFolder Information
+
     - task: PowerShell@2
       displayName: List downloaded files before setting 'RunSettings.DropName'
       inputs:
@@ -75,26 +80,64 @@ stages:
           Write-Host "System.DefaultWorkingDirectory: $(System.DefaultWorkingDirectory)"
 
           $componentRoot = Join-Path "$(Pipeline.Workspace)" "ComponentBuildUnderTest"
-          $testDataRoot = Join-Path $componentRoot "PTVS-TestData"
 
-          Write-Host "Listing: $componentRoot"
-          if (Test-Path -LiteralPath $componentRoot) {
-            Get-ChildItem -LiteralPath $componentRoot -Force | Select-Object Name, FullName, Mode, Length, LastWriteTime | Format-Table -AutoSize
-          } else {
-            Write-Warning "Path not found: $componentRoot"
-          }
+          function Write-RecursiveListing {
+            param(
+              [Parameter(Mandatory = $true)][string]$RootPath,
+              [Parameter(Mandatory = $true)][string]$Title
+            )
 
-          Write-Host "Listing (recursive): $testDataRoot"
-          if (Test-Path -LiteralPath $testDataRoot) {
-            Get-ChildItem -LiteralPath $testDataRoot -Recurse -Force |
-              Select-Object FullName, Length, LastWriteTime |
+            Write-Host ""
+            Write-Host "==== $Title ===="
+            Write-Host "Root: $RootPath"
+
+            if (-not (Test-Path -LiteralPath $RootPath)) {
+              Write-Warning "Path not found: $RootPath"
+              return
+            }
+
+            Write-Host "Top-level entries:"
+            Get-ChildItem -LiteralPath $RootPath -Force |
+              Select-Object Name, FullName, Mode, Length, LastWriteTime |
               Sort-Object FullName |
               Format-Table -AutoSize
 
-            Write-Host "Searching for VSTSDrop.json under: $testDataRoot"
+            Write-Host ""
+            Write-Host "All files (recursive):"
+            $allFiles = Get-ChildItem -LiteralPath $RootPath -Recurse -Force -File -ErrorAction SilentlyContinue
+            if ($allFiles) {
+              $allFiles |
+                Select-Object FullName, Length, LastWriteTime |
+                Sort-Object FullName |
+                Format-Table -AutoSize
+              Write-Host "Total files: $($allFiles.Count)"
+            } else {
+              Write-Warning "No files found under: $RootPath"
+            }
+
+            Write-Host ""
+            Write-Host "All directories (recursive):"
+            $allDirs = Get-ChildItem -LiteralPath $RootPath -Recurse -Force -Directory -ErrorAction SilentlyContinue
+            if ($allDirs) {
+              $allDirs |
+                Select-Object FullName, LastWriteTime |
+                Sort-Object FullName |
+                Format-Table -AutoSize
+              Write-Host "Total directories: $($allDirs.Count)"
+            } else {
+              Write-Warning "No directories found under: $RootPath"
+            }
+          }
+
+          Write-RecursiveListing -RootPath $componentRoot -Title "Downloaded artifacts under ComponentBuildUnderTest"
+
+          $testDataRoot = Join-Path $componentRoot "PTVS-TestData"
+          Write-Host ""
+          Write-Host "Searching for VSTSDrop.json under: $testDataRoot"
+          if (Test-Path -LiteralPath $testDataRoot) {
             $matches = Get-ChildItem -LiteralPath $testDataRoot -Recurse -Force -File -Filter "VSTSDrop.json" -ErrorAction SilentlyContinue
             if ($matches) {
-              $matches | Select-Object FullName, Length, LastWriteTime | Format-Table -AutoSize
+              $matches | Select-Object FullName, Length, LastWriteTime | Sort-Object FullName | Format-Table -AutoSize
             } else {
               Write-Warning "No VSTSDrop.json found under: $testDataRoot"
             }
