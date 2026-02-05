@@ -40,7 +40,7 @@ stages:
     owner: ptvs
     testMachineLab: DDRITs-PR
     # This assumes the PTVS build has published a build artifact called "RunSettings" that contains the default.runsettings file
-    runSettingsURI: https://vsdrop.microsoft.com/file/v1/$(RunSettings.DropName);default.runsettings
+    runSettingsURI: https://vsdrop.microsoft.com/file/v1/$(RunSettings.DropName);DDRITs.runsettings
     visualStudioBootstrapperURI: $(VisualStudio.InstallationUnderTest.BootstrapperURL)
     visualStudioSigning: Test
     testMachineConfigurationJobVariables:
