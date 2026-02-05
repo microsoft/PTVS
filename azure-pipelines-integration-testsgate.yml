@@ -174,4 +174,26 @@ stages:
         displayName: Set 'RunSettings.DropName'
         filePath: $(DartLab.Path)\Scripts\AzureDevOps\Artifacts\Drop\Get-DropName.ps1
         arguments: -VSTSDropJsonURI '$(VSTSDropJsonURI)' -OutVariableName 'RunSettings.DropName'
+
+    - task: PowerShell@2
+      displayName: Debug arguments for 'Set RunSettings.DropName'
+      inputs:
+        targetType: inline
+        script: |
+          Write-Host "Resolved arguments for Get-DropName.ps1:"
+          Write-Host "  -VSTSDropJsonURI '$($("VSTSDropJsonURI"))'"
+          Write-Host "  -OutVariableName 'RunSettings.DropName'"
+          Write-Host ""
+          Write-Host "Raw argument string (as authored in YAML):"
+          Write-Host "  -VSTSDropJsonURI '$(VSTSDropJsonURI)' -OutVariableName 'RunSettings.DropName'"
+          Write-Host ""
+          $path = "$(VSTSDropJsonURI)"
+          Write-Host "VSTSDropJsonURI points to: $path"
+          if ([string]::IsNullOrWhiteSpace($path)) {
+            Write-Warning "VSTSDropJsonURI is empty."
+          } elseif (Test-Path -LiteralPath $path) {
+            Write-Host "VSTSDropJsonURI exists on disk."
+          } else {
+            Write-Warning "VSTSDropJsonURI does not exist on disk (it may be a URI or incorrect path)."
+          }
  
