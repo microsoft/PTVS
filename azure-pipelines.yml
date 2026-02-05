@@ -277,7 +277,7 @@ extends:
           - job: testdata
             displayName: Publish TestData
             variables:
-              TestDataDropName: "DevDiv/PTVS/Tests/$(Build.BuildNumber)/$(Build.BuildId)"
+              TestDataDropName: "devdiv/ptvs/tests/$(Build.BuildNumber)/$(Build.BuildId)"
               TestStoreDropName: "$(TestDataDropName)"
             templateContext:
               isProduction: false

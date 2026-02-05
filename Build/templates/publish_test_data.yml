@@ -29,7 +29,7 @@ steps:
         $ErrorActionPreference = 'Stop'
 
         $source = "$(Build.SourcesDirectory)\Python\Tests\bin\RunSettings\DDRITs.runsettings"
-        $dest = "$(Build.SourcesDirectory)\Python\Tests\TestData\DDRITs.runsettings"
+        $dest = "$(Build.SourcesDirectory)\Python\Tests\TestData\ddrits.runsettings"
 
         if (-not (Test-Path -LiteralPath $source)) {
           throw "Expected generated runsettings file not found: $source"
@@ -59,10 +59,10 @@ steps:
       TargetFolder: '$(Build.ArtifactStagingDirectory)/TestDataFolder'
 
   - task: CopyFiles@2
-    displayName: 'Copy DDRITs.runsettings to subfolder'
+    displayName: 'Copy ddrits.runsettings to subfolder'
     inputs:
       SourceFolder: '$(Build.SourcesDirectory)/Python/Tests/TestData'
-      Contents: 'DDRITs.runsettings'
+      Contents: 'ddrits.runsettings'
       TargetFolder: '$(Build.ArtifactStagingDirectory)/TestDataFolder'
 
 
