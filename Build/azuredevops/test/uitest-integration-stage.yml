@@ -20,7 +20,7 @@ steps:
     displayName: Extract files
     condition: succeeded()
     inputs:
-      archiveFilePatterns: '${{ parameters.Drop }}/TestData/TestData.zip'
+      archiveFilePatterns: '${{ parameters.Drop }}/TestData.zip'
       destinationFolder: '${{ parameters.Drop }}/TestData'
       cleanDestinationFolder: false
       overwriteExistingFiles: false
@@ -68,7 +68,7 @@ steps:
     condition: succeeded()
     inputs:
       SourceFolder: '${{ parameters.BinariesDirectory }}/TestData'
-      Contents: 'default.runsettings'
+      Contents: 'ptvs.runsettings'
       TargetFolder: '${{ parameters.BinariesDirectory }}'
       CleanTargetFolder: 'false'
       OverWrite: 'false'
@@ -102,7 +102,7 @@ steps:
       uiTests: true
       vstestLocationMethod: version
       vsTestVersion: latest
-      runSettingsFile: '${{ parameters.BinariesDirectory }}/default.runsettings'
+      runSettingsFile: '${{ parameters.BinariesDirectory }}/ptvs.runsettings'
       overrideTestrunParameters: '-TargetFrameworkVersion .NETFramework,Version=v4.7.2'
       runInParallel: false
       runTestsInIsolation: false

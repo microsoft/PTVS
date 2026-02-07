@@ -22,14 +22,14 @@ steps:
         /p:TestStoreDropName=$(TestStoreDropName)
 
   - task: PowerShell@2
-    displayName: 'Update default.runsettings from generated DDRITs.runsettings'
+    displayName: 'Update default.runsettings from generated ptvs.runsettings'
     inputs:
       targetType: 'inline'
       script: |
         $ErrorActionPreference = 'Stop'
 
-        $source = "$(Build.SourcesDirectory)\Python\Tests\bin\RunSettings\DDRITs.runsettings"
-        $dest = "$(Build.SourcesDirectory)\Python\Tests\TestData\ddrits.runsettings"
+        $source = "$(Build.SourcesDirectory)\Python\Tests\bin\RunSettings\ptvs.runsettings"
+        $dest = "$(Build.SourcesDirectory)\Python\Tests\TestData\ptvs.runsettings"
 
         if (-not (Test-Path -LiteralPath $source)) {
           throw "Expected generated runsettings file not found: $source"
@@ -59,10 +59,10 @@ steps:
       TargetFolder: '$(Build.ArtifactStagingDirectory)/TestDataFolder'
 
   - task: CopyFiles@2
-    displayName: 'Copy ddrits.runsettings to subfolder'
+    displayName: 'Copy ptvs.runsettings to subfolder'
     inputs:
       SourceFolder: '$(Build.SourcesDirectory)/Python/Tests/TestData'
-      Contents: 'ddrits.runsettings'
+      Contents: 'ptvs.runsettings'
       TargetFolder: '$(Build.ArtifactStagingDirectory)/TestDataFolder'
 
 

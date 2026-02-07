@@ -1,13 +1,21 @@
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">	
 	<Import Project="TestProjectBefore.settings" />
   <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
-    <RunName>DDRITs</RunName>
+    <TargetFramework>v4.6.1</TargetFramework>
+    <RunName>ptvs</RunName>
     <OutputPath>bin\RunSettings</OutputPath>
+    <ResultsDirectory>.\TestResults</ResultsDirectory>
+    <TargetPlatform>x86</TargetPlatform>
+    <MaxCpuCount>1</MaxCpuCount>
     <TestSessionTimeout>3600000</TestSessionTimeout>
     <!--<TestCaseFilter>TestCategory=RunAllUnittest</TestCaseFilter>-->
 	
   </PropertyGroup>
+<!--
+  <ItemGroup Label="Base RunSettings">
+    <!-- Merge shared MSTest + VisualStudioConfiguration settings. -->
+    <AdditionalSettings Include="$(BuildRoot)\Build\default.runsettings" />
+  </ItemGroup> -->
 
   <ItemGroup Label="Test Stores">
     <TestStore Include="vstsdrop:$(TestStoreDropName)" />

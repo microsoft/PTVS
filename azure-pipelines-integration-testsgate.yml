@@ -40,7 +40,7 @@ stages:
     owner: ptvs
     testMachineLab: DDRITs-PR
     # This assumes the PTVS build has published a build artifact called "RunSettings" that contains the default.runsettings file
-    runSettingsURI: https://vsdrop.microsoft.com/file/v1/$(RunSettings.DropName);DDRITs.runsettings
+    runSettingsURI: https://vsdrop.microsoft.com/file/v1/$(RunSettings.DropName);ptvs.runsettings
     visualStudioBootstrapperURI: $(VisualStudio.InstallationUnderTest.BootstrapperURL)
     visualStudioSigning: Test
     testMachineConfigurationJobVariables:
@@ -168,6 +168,14 @@ stages:
           $selected = $matches | Sort-Object LastWriteTime -Descending | Select-Object -First 1
           Write-Host "Selected VSTSDrop.json: $($selected.FullName)"
           Write-Host "##vso[task.setvariable variable=VSTSDropJsonURI]$($selected.FullName)"
+
+
+    - template: \build\azuredevops\test\uitest-integration-stage.yml
+      parameters:
+        BinariesDirectory: Run UI Tests
+        Drop: $(Pipeline.Workspace)\ComponentBuildUnderTest\
+        TestFilterCriteria: $(Pipeline.Workspace)\UITestResults
+        UITestNames: PTVS UI Tests
 
     - template: \steps\powershell\execute-script.yml@DartLabTemplates
       parameters:
