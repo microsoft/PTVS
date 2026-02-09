@@ -170,7 +170,7 @@ stages:
           Write-Host "##vso[task.setvariable variable=VSTSDropJsonURI]$($selected.FullName)"
 
 
-    - template: \build\azuredevops\test\uitest-integration-stage.yml
+    - template: Build/azuredevops/test/uitest-integration-stage.yml
       parameters:
         BinariesDirectory: Run UI Tests
         Drop: $(Pipeline.Workspace)\ComponentBuildUnderTest\
