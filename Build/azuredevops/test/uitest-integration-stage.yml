@@ -106,7 +106,7 @@ steps:
       uiTests: true
       vstestLocationMethod: version
       vsTestVersion: latest
-      runSettingsFile: '${{ parameters.BinariesDirectory }}/ptvs.runsettings'
+      runSettingsFile: '${{ parameters.BinariesDirectory }}\\TestData\\ptvs.runsettings'
       overrideTestrunParameters: '-TargetFrameworkVersion .NETFramework,Version=v4.7.2'
       runInParallel: false
       runTestsInIsolation: false
