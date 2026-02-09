@@ -71,6 +71,11 @@ stages:
       patterns: '**\*'
       displayName: Download TestDataFolder Information
 
+    - download: ComponentBuildUnderTest
+      artifact: Binaries
+      patterns: '**\*'
+      displayName: Download Binaries
+
     - task: PowerShell@2
       displayName: List downloaded files before setting 'RunSettings.DropName'
       inputs:
@@ -172,10 +177,9 @@ stages:
 
     - template: Build/azuredevops/test/uitest-integration-stage.yml
       parameters:
-        BinariesDirectory: Run UI Tests
-        Drop: $(Pipeline.Workspace)\ComponentBuildUnderTest\
-        TestFilterCriteria: $(Pipeline.Workspace)\UITestResults
-        UITestNames: PTVS UI Tests
+        BinariesDirectory: $(Pipeline.Workspace)\ComponentBuildUnderTest\Binaries
+        Drop: $(Pipeline.Workspace)\ComponentBuildUnderTest\TestDataFolder
+        UITestNames: PythonTools
 
     - template: \steps\powershell\execute-script.yml@DartLabTemplates
       parameters:
