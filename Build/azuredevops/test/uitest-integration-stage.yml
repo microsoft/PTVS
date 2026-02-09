@@ -32,9 +32,13 @@ steps:
     timeoutInMinutes: 5
     inputs:
       targetType: inline
-      arguments: '${{ parameters.CleanupProcesses }}'
       script: |
-        param ([string[]]$names)
+        $names = @(
+          '${{ parameters.CleanupProcesses }}'
+            -split ',' |
+            ForEach-Object { $_.Trim() } |
+            Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+        )
         $running = Get-Process -Name $names -ErrorAction SilentlyContinue
         while ($running) {
           Write-Host 'Killing:'
@@ -131,9 +135,13 @@ steps:
     timeoutInMinutes: 5
     inputs:
       targetType: inline
-      arguments: '${{ parameters.CleanupProcesses }}'
       script: |
-        param ([string[]]$names)
+        $names = @(
+          '${{ parameters.CleanupProcesses }}'
+            -split ',' |
+            ForEach-Object { $_.Trim() } |
+            Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+        )
         $running = Get-Process -Name $names -ErrorAction SilentlyContinue
         while ($running) {
           Write-Host 'Killing:'
