@@ -13,7 +13,6 @@
   </PropertyGroup>
 <!--
   <ItemGroup Label="Base RunSettings">
-    <!-- Merge shared MSTest + VisualStudioConfiguration settings. -->
     <AdditionalSettings Include="$(BuildRoot)\Build\default.runsettings" />
   </ItemGroup> -->
 
