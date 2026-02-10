@@ -89,6 +89,56 @@
       "tool": "binskim",
       "ruleId": "BA2007",
       "createdDate": "2026-02-10 02:36:06Z"
+    },
+    "dd3bca0bf666a05fa143911465aca98d07209ea091cda018ca7b57f3bb7a9604": {
+      "signature": "dd3bca0bf666a05fa143911465aca98d07209ea091cda018ca7b57f3bb7a9604",
+      "target": "file:///D:/a/_work/1/b/raw/binaries/debugpy/_vendored/pydevd/pydevd_attach_to_process/run_code_on_dllmain_amd64.dll",
+      "memberOf": [
+        "default"
+      ],
+      "tool": "binskim",
+      "ruleId": "BA6005",
+      "createdDate": "2026-02-10 19:57:00Z"
+    },
+    "8688050acd106ccfb0dd36521c8a57d0e44f33aef8d2f5e973506b61ff8b2e40": {
+      "signature": "8688050acd106ccfb0dd36521c8a57d0e44f33aef8d2f5e973506b61ff8b2e40",
+      "target": "file:///D:/a/_work/1/b/raw/binaries/debugpy/_vendored/pydevd/pydevd_attach_to_process/run_code_on_dllmain_x86.dll",
+      "memberOf": [
+        "default"
+      ],
+      "tool": "binskim",
+      "ruleId": "BA2027",
+      "createdDate": "2026-02-10 19:57:00Z"
+    },
+    "c96e6190005b6a123254375cec8c845fd884b3261d528edbb986e6369f7b0f53": {
+      "signature": "c96e6190005b6a123254375cec8c845fd884b3261d528edbb986e6369f7b0f53",
+      "target": "file:///D:/a/_work/1/b/raw/binaries/debugpy/_vendored/pydevd/pydevd_attach_to_process/run_code_on_dllmain_x86.dll",
+      "memberOf": [
+        "default"
+      ],
+      "tool": "binskim",
+      "ruleId": "BA2028",
+      "createdDate": "2026-02-10 19:57:00Z"
+    },
+    "7bffaa9db8aa6a6bf53507d9478d17fd266d6bc7047886af88c2a01712f5d253": {
+      "signature": "7bffaa9db8aa6a6bf53507d9478d17fd266d6bc7047886af88c2a01712f5d253",
+      "target": "file:///D:/a/_work/1/b/raw/binaries/debugpy/_vendored/pydevd/pydevd_attach_to_process/run_code_on_dllmain_x86.dll",
+      "memberOf": [
+        "default"
+      ],
+      "tool": "binskim",
+      "ruleId": "BA6004",
+      "createdDate": "2026-02-10 19:57:00Z"
+    },
+    "4a9a810c2ef3859895c9c8ca031c3093bdd6fc52d6de416b43e73798e3197f30": {
+      "signature": "4a9a810c2ef3859895c9c8ca031c3093bdd6fc52d6de416b43e73798e3197f30",
+      "target": "file:///D:/a/_work/1/b/raw/binaries/debugpy/_vendored/pydevd/pydevd_attach_to_process/run_code_on_dllmain_x86.dll",
+      "memberOf": [
+        "default"
+      ],
+      "tool": "binskim",
+      "ruleId": "BA6005",
+      "createdDate": "2026-02-10 19:57:00Z"
     }
   }
 }
