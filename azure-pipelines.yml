@@ -157,11 +157,6 @@ extends:
           sdl:
             codeSignValidation:
               enabled: false
-            binskim:
-              enabled: true
-              # Exclude third-party debugpy vendored native binaries from BinSkim analysis.
-              # These are pre-compiled binaries from the debugpy pip package that we cannot rebuild.
-              targetPathExclusionPattern: '".*[/\\\\]debugpy[/\\\\].*\.(exe|dll)"'
           outputs:
           - output: pipelineArtifact
             displayName: 'Publish build artifact: binaries'
