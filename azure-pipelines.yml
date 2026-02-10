@@ -178,6 +178,7 @@ extends:
             displayName: 'Publish build artifact: binaries'
             targetPath: '$(Build.BinariesDirectory)/raw/binaries'
             artifactName: Binaries
+            sbomEnabled: false
           - output: pipelineArtifact
             displayName: 'Publish build artifact: raw'
             condition: failed()
@@ -193,13 +194,13 @@ extends:
           - output: pipelineArtifact
             displayName: 'Publish build artifact: TestData'
             targetPath: '$(Build.ArtifactStagingDirectory)/TestDataFolder/TestData.zip'
-            sbomBuildDropPath: '$(Build.ArtifactStagingDirectory)/TestDataFolder'
             artifactName: 'TestData'
+            sbomEnabled: false
           - output: pipelineArtifact
             displayName: 'Publish build artifact: RunSettings'
             targetPath: '$(Build.SourcesDirectory)/Python/Tests/TestData/default.runsettings'
-            sbomBuildDropPath: '$(Build.SourcesDirectory)/Python/Tests/TestData'
             artifactName: 'RunSettings'
+            sbomEnabled: false
           - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
             - output: pipelineArtifact
               displayName: 'Publish build artifact: BoM'

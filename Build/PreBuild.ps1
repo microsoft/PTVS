@@ -230,8 +230,13 @@ try {
                 Remove-Item -Recurse -Force $existing
             }
         }
-        Write-Host "Creating symlink for $_.$($versions[$_])"
-        New-Item -ItemType Junction "$outdir\$_" -Value "$outdir\$_.$($versions[$_])"
+        $targetDir = "$outdir\$_.$($versions[$_])"
+        if (Test-Path $targetDir) {
+            Write-Host "Creating symlink for $_.$($versions[$_])"
+            New-Item -ItemType Junction "$outdir\$_" -Value $targetDir
+        } else {
+            Write-Host "WARNING: Package directory not found: $targetDir (skipping symlink for $_)"
+        }
     } | Out-Null
         
     # The following installs must come AFTER package restore because they use python which is symlinked as part of the previous step

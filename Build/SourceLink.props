@@ -5,11 +5,6 @@
     <!-- Required for deterministic builds and SourceLink in CI -->
     <ContinuousIntegrationBuild Condition="'$(BUILD_BUILDID)' != ''">true</ContinuousIntegrationBuild>
   </PropertyGroup>
-  <Target Name="_DiagnoseSourceLink" BeforeTargets="CoreCompile" Condition="'$(MSBuildProjectExtension)' == '.csproj'">
-    <Warning Text="SourceLink: PackagesPath=$(PackagesPath)" />
-    <Warning Condition="!Exists('$(PackagesPath)Microsoft.SourceLink.GitHub\build\Microsoft.SourceLink.GitHub.props')" Text="SourceLink: Microsoft.SourceLink.GitHub.props NOT FOUND at $(PackagesPath)Microsoft.SourceLink.GitHub\build\" />
-    <Warning Condition="Exists('$(PackagesPath)Microsoft.SourceLink.GitHub\build\Microsoft.SourceLink.GitHub.props')" Text="SourceLink: Microsoft.SourceLink.GitHub.props FOUND" />
-  </Target>
   <Import Project="$(PackagesPath)Microsoft.Build.Tasks.Git\buildTransitive\Microsoft.Build.Tasks.Git.props" Condition="'$(MSBuildProjectExtension)' != '.vcxproj' and Exists('$(PackagesPath)Microsoft.Build.Tasks.Git\buildTransitive\Microsoft.Build.Tasks.Git.props')" />
   <Import Project="$(PackagesPath)Microsoft.Build.Tasks.Git\build\Microsoft.Build.Tasks.Git.props" Condition="'$(MSBuildProjectExtension)' != '.vcxproj' and !Exists('$(PackagesPath)Microsoft.Build.Tasks.Git\buildTransitive\Microsoft.Build.Tasks.Git.props') and Exists('$(PackagesPath)Microsoft.Build.Tasks.Git\build\Microsoft.Build.Tasks.Git.props')" />
   <Import Project="$(PackagesPath)Microsoft.SourceLink.Common\build\Microsoft.SourceLink.Common.props" Condition="'$(MSBuildProjectExtension)' != '.vcxproj' and Exists('$(PackagesPath)Microsoft.SourceLink.Common\build\Microsoft.SourceLink.Common.props')" />
