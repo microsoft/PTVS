@@ -3,4 +3,15 @@
   <Import Project="$(PackagesPath)Microsoft.Build.Tasks.Git\build\Microsoft.Build.Tasks.Git.targets" Condition="'$(MSBuildProjectExtension)' != '.vcxproj' and !Exists('$(PackagesPath)Microsoft.Build.Tasks.Git\buildTransitive\Microsoft.Build.Tasks.Git.targets') and Exists('$(PackagesPath)Microsoft.Build.Tasks.Git\build\Microsoft.Build.Tasks.Git.targets')" />
   <Import Project="$(PackagesPath)Microsoft.SourceLink.Common\build\Microsoft.SourceLink.Common.targets" Condition="'$(MSBuildProjectExtension)' != '.vcxproj' and Exists('$(PackagesPath)Microsoft.SourceLink.Common\build\Microsoft.SourceLink.Common.targets')" />
   <Import Project="$(PackagesPath)Microsoft.SourceLink.GitHub\build\Microsoft.SourceLink.GitHub.targets" Condition="'$(MSBuildProjectExtension)' != '.vcxproj' and Exists('$(PackagesPath)Microsoft.SourceLink.GitHub\build\Microsoft.SourceLink.GitHub.targets')" />
+
+  <!-- Workaround for WPF temp projects: XAML source files are not copied to the temp directory,
+       causing CS1504 errors when EmbedUntrackedSources and ContinuousIntegrationBuild are enabled.
+       This target resolves relative XAML source paths to absolute paths before compilation. -->
+  <Target Name="_ResolveWpfSourcesForSourceLink" BeforeTargets="CoreCompile"
+          Condition="'$(ContinuousIntegrationBuild)' == 'true' and '$(MSBuildProjectExtension)' == '.csproj'">
+    <ItemGroup>
+      <EmbeddedFiles Include="@(Page->'%(FullPath)')" />
+      <EmbeddedFiles Include="@(ApplicationDefinition->'%(FullPath)')" />
+    </ItemGroup>
+  </Target>
 </Project>
