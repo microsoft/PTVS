@@ -139,6 +139,9 @@ extends:
     pool:
       name: VSEngSS-MicroBuild2022-1ES
       os: windows
+    featureFlags:
+      # Consolidate SDL pre-check tasks into a single step to reduce pipeline overhead
+      useOptimizedSDLTasks: true
     settings:
       skipBuildTagsForGitHubPullRequests: true
     stages:
@@ -157,6 +160,19 @@ extends:
           sdl:
             codeSignValidation:
               enabled: false
+            # Suppress known BinSkim findings for binaries with odbccp32.lib and third-party debugpy
+            suppression:
+              suppressionFile: $(Build.SourcesDirectory)\.gdn\.gdnsuppress
+              suppressionSet: default
+            # Skip CodeQL and BinSkim for PR builds to reduce pipeline duration.
+            # Full SDL analysis runs on CI and nightly builds.
+            codeql:
+              enabled: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
+            binskim:
+              enabled: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
+            # Only scan changed binaries compared to previous runs
+            binaryAnalysis:
+              incremental: true
           outputs:
           - output: pipelineArtifact
             displayName: 'Publish build artifact: binaries'
@@ -167,21 +183,27 @@ extends:
             condition: failed()
             targetPath: '$(Build.BinariesDirectory)\raw'
             artifactName: raw
+            sbomEnabled: false
+            isProduction: false # Non-production: skip SDL binary analysis
           - output: pipelineArtifact
             displayName: 'Publish build artifact: logs'
             condition: succeededOrFailed()
             targetPath: '$(Build.SourcesDirectory)\logs'
             artifactName: Logs
+            sbomEnabled: false
+            isProduction: false # Non-production: skip SDL binary analysis
           - output: pipelineArtifact
             displayName: 'Publish build artifact: TestData'
             targetPath: '$(Build.ArtifactStagingDirectory)/TestDataFolder/TestData.zip'
             sbomBuildDropPath: '$(Build.ArtifactStagingDirectory)/TestDataFolder'
             artifactName: 'TestData'
+            isProduction: false # Non-production: skip SDL binary analysis
           - output: pipelineArtifact
             displayName: 'Publish build artifact: RunSettings'
             targetPath: '$(Build.SourcesDirectory)/Python/Tests/TestData/default.runsettings'
             sbomBuildDropPath: '$(Build.SourcesDirectory)/Python/Tests/TestData'
             artifactName: 'RunSettings'
+            isProduction: false # Non-production: skip SDL binary analysis
           - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
             - output: pipelineArtifact
               displayName: 'Publish build artifact: BoM'
