@@ -1,0 +1,6 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(PackagesPath)Microsoft.Build.Tasks.Git\buildTransitive\Microsoft.Build.Tasks.Git.targets" Condition="'$(MSBuildProjectExtension)' != '.vcxproj' and Exists('$(PackagesPath)Microsoft.Build.Tasks.Git\buildTransitive\Microsoft.Build.Tasks.Git.targets')" />
+  <Import Project="$(PackagesPath)Microsoft.Build.Tasks.Git\build\Microsoft.Build.Tasks.Git.targets" Condition="'$(MSBuildProjectExtension)' != '.vcxproj' and !Exists('$(PackagesPath)Microsoft.Build.Tasks.Git\buildTransitive\Microsoft.Build.Tasks.Git.targets') and Exists('$(PackagesPath)Microsoft.Build.Tasks.Git\build\Microsoft.Build.Tasks.Git.targets')" />
+  <Import Project="$(PackagesPath)Microsoft.SourceLink.Common\build\Microsoft.SourceLink.Common.targets" Condition="'$(MSBuildProjectExtension)' != '.vcxproj' and Exists('$(PackagesPath)Microsoft.SourceLink.Common\build\Microsoft.SourceLink.Common.targets')" />
+  <Import Project="$(PackagesPath)Microsoft.SourceLink.GitHub\build\Microsoft.SourceLink.GitHub.targets" Condition="'$(MSBuildProjectExtension)' != '.vcxproj' and Exists('$(PackagesPath)Microsoft.SourceLink.GitHub\build\Microsoft.SourceLink.GitHub.targets')" />
+</Project>

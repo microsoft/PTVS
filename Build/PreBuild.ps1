@@ -92,7 +92,10 @@ $need_symlink = @(
     "Microsoft.VSSDK.BuildTools",
     "Microsoft.VSSDK.Debugger.VSDConfigTool",
     "Newtonsoft.Json",
-    $microBuildCorePackageName
+    $microBuildCorePackageName,
+    "Microsoft.SourceLink.GitHub",
+    "Microsoft.SourceLink.Common",
+    "Microsoft.Build.Tasks.Git"
 )
 
 $buildroot = $MyInvocation.MyCommand.Definition | Split-Path -Parent | Split-Path -Parent
