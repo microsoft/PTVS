@@ -5,8 +5,8 @@
     <!-- Required for deterministic builds and SourceLink in CI -->
     <ContinuousIntegrationBuild Condition="'$(BUILD_BUILDID)' != ''">true</ContinuousIntegrationBuild>
   </PropertyGroup>
-  <Import Project="$(PackagesPath)Microsoft.Build.Tasks.Git\buildTransitive\Microsoft.Build.Tasks.Git.props" Condition="'$(MSBuildProjectExtension)' != '.vcxproj' and Exists('$(PackagesPath)Microsoft.Build.Tasks.Git\buildTransitive\Microsoft.Build.Tasks.Git.props')" />
-  <Import Project="$(PackagesPath)Microsoft.Build.Tasks.Git\build\Microsoft.Build.Tasks.Git.props" Condition="'$(MSBuildProjectExtension)' != '.vcxproj' and !Exists('$(PackagesPath)Microsoft.Build.Tasks.Git\buildTransitive\Microsoft.Build.Tasks.Git.props') and Exists('$(PackagesPath)Microsoft.Build.Tasks.Git\build\Microsoft.Build.Tasks.Git.props')" />
-  <Import Project="$(PackagesPath)Microsoft.SourceLink.Common\build\Microsoft.SourceLink.Common.props" Condition="'$(MSBuildProjectExtension)' != '.vcxproj' and Exists('$(PackagesPath)Microsoft.SourceLink.Common\build\Microsoft.SourceLink.Common.props')" />
-  <Import Project="$(PackagesPath)Microsoft.SourceLink.GitHub\build\Microsoft.SourceLink.GitHub.props" Condition="'$(MSBuildProjectExtension)' != '.vcxproj' and Exists('$(PackagesPath)Microsoft.SourceLink.GitHub\build\Microsoft.SourceLink.GitHub.props')" />
+  <Import Project="$(PackagesPath)Microsoft.Build.Tasks.Git\buildTransitive\Microsoft.Build.Tasks.Git.props" Condition="'$(MSBuildProjectExtension)' == '.csproj' and Exists('$(PackagesPath)Microsoft.Build.Tasks.Git\buildTransitive\Microsoft.Build.Tasks.Git.props')" />
+  <Import Project="$(PackagesPath)Microsoft.Build.Tasks.Git\build\Microsoft.Build.Tasks.Git.props" Condition="'$(MSBuildProjectExtension)' == '.csproj' and !Exists('$(PackagesPath)Microsoft.Build.Tasks.Git\buildTransitive\Microsoft.Build.Tasks.Git.props') and Exists('$(PackagesPath)Microsoft.Build.Tasks.Git\build\Microsoft.Build.Tasks.Git.props')" />
+  <Import Project="$(PackagesPath)Microsoft.SourceLink.Common\build\Microsoft.SourceLink.Common.props" Condition="'$(MSBuildProjectExtension)' == '.csproj' and Exists('$(PackagesPath)Microsoft.SourceLink.Common\build\Microsoft.SourceLink.Common.props')" />
+  <Import Project="$(PackagesPath)Microsoft.SourceLink.GitHub\build\Microsoft.SourceLink.GitHub.props" Condition="'$(MSBuildProjectExtension)' == '.csproj' and Exists('$(PackagesPath)Microsoft.SourceLink.GitHub\build\Microsoft.SourceLink.GitHub.props')" />
 </Project>
