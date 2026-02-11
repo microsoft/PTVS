@@ -164,12 +164,6 @@ extends:
             suppression:
               suppressionFile: $(Build.SourcesDirectory)\.gdn\.gdnsuppress
               suppressionSet: default
-            # Skip CodeQL and BinSkim for PR builds to reduce pipeline duration.
-            # Full SDL analysis runs on CI and nightly builds.
-            codeql:
-              enabled: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
-            binskim:
-              enabled: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
             # Only scan changed binaries compared to previous runs
             binaryAnalysis:
               incremental: true

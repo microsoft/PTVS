@@ -1,4 +1,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- SourceLink is restricted to .csproj only. WPF generates *_wpftmp.csproj temp projects (also .csproj extension)
+       that inherit these properties from the parent. Including .tmp_proj would cause CS1504 errors because
+       WPF temp projects lack XAML source files referenced by #line directives in generated .g.cs files. -->
   <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <!-- EmbedUntrackedSources is intentionally not set because it breaks WPF projects

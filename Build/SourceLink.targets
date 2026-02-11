@@ -1,4 +1,5 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- Only import for .csproj — see SourceLink.props for rationale on excluding .tmp_proj -->
   <Import Project="$(PackagesPath)Microsoft.Build.Tasks.Git\buildTransitive\Microsoft.Build.Tasks.Git.targets" Condition="'$(MSBuildProjectExtension)' == '.csproj' and Exists('$(PackagesPath)Microsoft.Build.Tasks.Git\buildTransitive\Microsoft.Build.Tasks.Git.targets')" />
   <Import Project="$(PackagesPath)Microsoft.Build.Tasks.Git\build\Microsoft.Build.Tasks.Git.targets" Condition="'$(MSBuildProjectExtension)' == '.csproj' and !Exists('$(PackagesPath)Microsoft.Build.Tasks.Git\buildTransitive\Microsoft.Build.Tasks.Git.targets') and Exists('$(PackagesPath)Microsoft.Build.Tasks.Git\build\Microsoft.Build.Tasks.Git.targets')" />
   <Import Project="$(PackagesPath)Microsoft.SourceLink.Common\build\Microsoft.SourceLink.Common.targets" Condition="'$(MSBuildProjectExtension)' == '.csproj' and Exists('$(PackagesPath)Microsoft.SourceLink.Common\build\Microsoft.SourceLink.Common.targets')" />
