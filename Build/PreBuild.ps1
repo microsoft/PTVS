@@ -235,7 +235,7 @@ try {
             Write-Host "Creating symlink for $_.$($versions[$_])"
             New-Item -ItemType Junction "$outdir\$_" -Value $targetDir
         } else {
-            Write-Host "WARNING: Package directory not found: $targetDir (skipping symlink for $_)"
+            Write-Error "Package directory not found: $targetDir (symlink for $_ will not be created)"
         }
     } | Out-Null
         
