@@ -1,7 +1,8 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <!-- EmbedUntrackedSources is intentionally not set because it breaks WPF projects
+         (CS1504 errors from .g.cs #line directives referencing XAML files via relative paths) -->
     <!-- Required for deterministic builds and SourceLink in CI -->
     <ContinuousIntegrationBuild Condition="'$(BUILD_BUILDID)' != ''">true</ContinuousIntegrationBuild>
   </PropertyGroup>
