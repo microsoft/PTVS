@@ -41,6 +41,11 @@ parameters:
   type: boolean
   default: false
 
+- name: enableSDLOnPR
+  displayName: Enable SDL Analysis on PR Builds
+  type: boolean
+  default: false
+
 # build number format 
 name: $(date:yy)$(DayOfYear)$(rev:.r)
 
@@ -164,12 +169,13 @@ extends:
             suppression:
               suppressionFile: $(Build.SourcesDirectory)\.gdn\.gdnsuppress
               suppressionSet: default
-            # Skip CodeQL and BinSkim for PR builds to reduce pipeline duration.
+            # Skip CodeQL and BinSkim for PR builds by default to reduce pipeline duration.
             # Full SDL analysis runs on CI and nightly builds.
+            # Can be enabled for PR builds via the enableSDLOnPR parameter.
             codeql:
-              enabled: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
+              enabled: ${{ or(ne(variables['Build.Reason'], 'PullRequest'), eq(parameters.enableSDLOnPR, true)) }}
             binskim:
-              enabled: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
+              enabled: ${{ or(ne(variables['Build.Reason'], 'PullRequest'), eq(parameters.enableSDLOnPR, true)) }}
             # Only scan changed binaries compared to previous runs
             binaryAnalysis:
               incremental: true
