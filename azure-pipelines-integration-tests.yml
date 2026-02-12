@@ -10,7 +10,7 @@ resources:
   # All PTVS build artifacts come from this pipeline and are referenced like this:
   # $(Pipeline.Workspace)\ComponentBuildUnderTest\<artifactName>\<filePath>
   - pipeline: ComponentBuildUnderTest
-    source: PTVS-Build-Dev17
+    source: PTVS-Build-Dev18
     branch: main # This is only used for manual/scheduled runs of this pipeline
     trigger:
       branches:

@@ -45,10 +45,9 @@ steps:
                           /p:BuildNumber=${{ parameters.ptvsPackageVersion }} 
                           /bl:$(Build.SourcesDirectory)\logs\BuildTests.binlog'
 
-  # Build the installer (skip for PR builds since no VstsDrop upload is needed)
+  # Build the installer
   - task: MSBuild@1
     displayName: 'Build installer'
-    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
     inputs:
       solution: $(Build.SourcesDirectory)/Python/Setup/dirs.proj
       msbuildVersion: $(MsBuildVersion)
