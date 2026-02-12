@@ -92,7 +92,10 @@ $need_symlink = @(
     "Microsoft.VSSDK.BuildTools",
     "Microsoft.VSSDK.Debugger.VSDConfigTool",
     "Newtonsoft.Json",
-    $microBuildCorePackageName
+    $microBuildCorePackageName,
+    "Microsoft.SourceLink.GitHub",
+    "Microsoft.SourceLink.Common",
+    "Microsoft.Build.Tasks.Git"
 )
 
 $buildroot = $MyInvocation.MyCommand.Definition | Split-Path -Parent | Split-Path -Parent
@@ -227,8 +230,13 @@ try {
                 Remove-Item -Recurse -Force $existing
             }
         }
-        Write-Host "Creating symlink for $_.$($versions[$_])"
-        New-Item -ItemType Junction "$outdir\$_" -Value "$outdir\$_.$($versions[$_])"
+        $targetDir = "$outdir\$_.$($versions[$_])"
+        if (Test-Path $targetDir) {
+            Write-Host "Creating symlink for $_.$($versions[$_])"
+            New-Item -ItemType Junction "$outdir\$_" -Value $targetDir
+        } else {
+            Write-Error "Package directory not found: $targetDir (symlink for $_ will not be created)"
+        }
     } | Out-Null
         
     # The following installs must come AFTER package restore because they use python which is symlinked as part of the previous step
