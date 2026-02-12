@@ -324,7 +324,7 @@ extends:
           dependsOn: build
           continueOnError: true
           pool:
-            vmImage: 'windows-latest'
+            name: VSEngSS-MicroBuild2019-1ES
           steps:
           - checkout: self
             clean: true
