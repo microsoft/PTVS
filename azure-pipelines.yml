@@ -265,6 +265,7 @@ extends:
       - ${{ if or(eq(variables['Build.Reason'], 'PullRequest'), eq(variables['SkipGlassCache'], true)) }}:
         - job: test
           displayName: Test
+          dependsOn: build
           continueOnError: true
           steps:
           - template: /Build/templates/run_tests.yml@self
