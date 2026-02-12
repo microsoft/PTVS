@@ -2,6 +2,9 @@ parameters:
 - name: ptvsPackageVersion
   type: string
   default: $(Build.BuildNumber)
+- name: buildInstaller
+  type: boolean
+  default: true
 
 steps:
 
@@ -45,9 +48,10 @@ steps:
                           /p:BuildNumber=${{ parameters.ptvsPackageVersion }} 
                           /bl:$(Build.SourcesDirectory)\logs\BuildTests.binlog'
 
-  # Build the installer
+  # Build the installer (skipped for PR builds unless buildInstaller parameter is set)
   - task: MSBuild@1
     displayName: 'Build installer'
+    condition: and(succeeded(), eq('${{ parameters.buildInstaller }}', 'True'))
     inputs:
       solution: $(Build.SourcesDirectory)/Python/Setup/dirs.proj
       msbuildVersion: $(MsBuildVersion)
