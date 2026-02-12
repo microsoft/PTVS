@@ -63,6 +63,17 @@ steps:
       Copy-Item -Path "$source\*" -Destination $dest -Recurse -Force
     displayName: 'Copy binaries to expected location'
 
+  # Build the tests
+  - task: MSBuild@1
+    displayName: 'Build tests'
+    inputs:
+      solution: $(Build.SourcesDirectory)/Python/Tests/dirs.proj
+      msbuildVersion: $(MsBuildVersion)
+      platform: $(Platform)
+      configuration: $(BuildConfiguration)
+      msbuildArguments: ' /p:VSTarget=$(VSTarget) 
+                          /bl:$(Build.SourcesDirectory)\logs\BuildTests.binlog'
+
   - task: CacheBeta@2
     displayName: 'Restore glass binaries from cache'
     condition: eq('${{ parameters.skipGlassCache }}', 'false')

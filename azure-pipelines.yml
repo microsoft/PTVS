@@ -334,6 +334,16 @@ extends:
           dependsOn: build
           continueOnError: true
           steps:
+          - checkout: self
+            clean: true
+
+          # Restore packages needed for test build
+          - template: /Build/templates/restore_packages.yml@self
+            parameters:
+              pylanceVersion: ${{ parameters.pylanceVersion }}
+              pylanceReleaseType: ${{ variables.pylanceReleaseTypeVar }}
+              debugpyVersion: ${{ parameters.debugpyVersion }}
+
           - template: /Build/templates/run_tests.yml@self
             parameters:
               skipGlassCache: ${{ parameters.skipGlassCache }}
