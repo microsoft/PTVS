@@ -35,10 +35,9 @@ steps:
         PackageVersion: '$(VSTarget)'
       continueOnError: true
 
-  # Build the tests (skip for PR builds since tests are not run in this pipeline)
+  # Build the tests
   - task: MSBuild@1
     displayName: 'Build tests'
-    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
     inputs:
       solution: $(Build.SourcesDirectory)/Python/Tests/dirs.proj
       msbuildVersion: $(MsBuildVersion)
