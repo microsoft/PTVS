@@ -16,15 +16,3 @@ steps:
       msbuildArguments: ' /p:VSTarget=$(VSTarget) 
                           /p:BuildNumber=${{ parameters.ptvsPackageVersion }} 
                           /bl:$(Build.SourcesDirectory)\logs\BuildProduct.binlog'
-
-  # Build the tests
-  - task: MSBuild@1
-    displayName: 'Build tests'
-    inputs:
-      solution: $(Build.SourcesDirectory)/Python/Tests/dirs.proj
-      msbuildVersion: $(MsBuildVersion)
-      platform: $(Platform)
-      configuration: $(BuildConfiguration)
-      msbuildArguments: ' /p:VSTarget=$(VSTarget) 
-                          /p:BuildNumber=${{ parameters.ptvsPackageVersion }} 
-                          /bl:$(Build.SourcesDirectory)\logs\BuildTests.binlog'
