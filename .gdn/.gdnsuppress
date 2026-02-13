@@ -7,138 +7,88 @@
   "suppressionSets": {
     "default": {
       "name": "default",
-      "createdDate": "2026-02-10 02:36:06Z",
-      "lastUpdatedDate": "2026-02-10 02:36:06Z"
+      "createdDate": "2026-02-13 08:45:16Z",
+      "lastUpdatedDate": "2026-02-13 08:45:16Z"
     }
   },
   "results": {
-    "c08e129858937eb35d81715ff99e062114bb30774ae8347304d94928d5a5efaa": {
-      "signature": "c08e129858937eb35d81715ff99e062114bb30774ae8347304d94928d5a5efaa",
+    "85de5b2f8ebc417ef67b99c69f25996ec8204d829b840f359f595f76587d9216": {
+      "signature": "85de5b2f8ebc417ef67b99c69f25996ec8204d829b840f359f595f76587d9216",
       "alternativeSignatures": [
-        "4422def5142b06473e4f01ac3063046f42a907c45e3680bd60fb4989c488e0fd"
+        "a6386ed8071718f156024cfadb95f016fcc8e22c915a5844258a3a481e28a401"
       ],
-      "target": "file:///D:/a/_work/1/b/raw/binaries/Microsoft.PythonTools.Debugger.Helper.x64.dll",
+      "target": "file:///D:/a/_work/1/b/layout/Microsoft.PythonTools.Core/Microsoft.PythonTools.Debugger.Helper.x64.dll",
       "memberOf": [
         "default"
       ],
       "tool": "binskim",
       "ruleId": "BA2007",
-      "createdDate": "2026-02-10 02:36:06Z"
+      "createdDate": "2026-02-13 08:45:16Z"
     },
-    "3453d9482dfb9c362728ad6c33becfe7640c80ea7a6c01e9c1ab4fbf7e7f8bbe": {
-      "signature": "3453d9482dfb9c362728ad6c33becfe7640c80ea7a6c01e9c1ab4fbf7e7f8bbe",
+    "00e0534110ed455721f93423f46a4f029485c3b604ffb75c6c481cf811cd29f6": {
+      "signature": "00e0534110ed455721f93423f46a4f029485c3b604ffb75c6c481cf811cd29f6",
       "alternativeSignatures": [
-        "6747c25f4479f5b46e664dcc803ceabda8de583b9ae384831baa0c33a5f25ba8"
+        "78f76b89a7f268f5681d9da158fec3cdb9fe70114328a687d404993f27865c65"
       ],
-      "target": "file:///D:/a/_work/1/b/raw/binaries/Microsoft.PythonTools.Debugger.Helper.x86.dll",
+      "target": "file:///D:/a/_work/1/b/layout/Microsoft.PythonTools.Core/Microsoft.PythonTools.Debugger.Helper.x86.dll",
       "memberOf": [
         "default"
       ],
       "tool": "binskim",
       "ruleId": "BA2007",
-      "createdDate": "2026-02-10 02:36:06Z"
+      "createdDate": "2026-02-13 08:45:16Z"
     },
-    "a07b5bf119c8caf1c04cd4f4a1504164badabc08111805feebd02eb95b19f840": {
-      "signature": "a07b5bf119c8caf1c04cd4f4a1504164badabc08111805feebd02eb95b19f840",
+    "244f58a7478988efc280e59db61d22363ad1bd68b656811272028238634e4aea": {
+      "signature": "244f58a7478988efc280e59db61d22363ad1bd68b656811272028238634e4aea",
       "alternativeSignatures": [
-        "b74b03299532ab9e7c50c9d7c7729c1c586fe0450016d2c2b8f20b9767477790"
+        "d4197817a2270835fbd78a558645edaa8c8678dc0762331b64b4401ec7de8857"
       ],
-      "target": "file:///D:/a/_work/1/b/raw/binaries/PyDebugAttach.dll",
+      "target": "file:///D:/a/_work/1/b/layout/Microsoft.PythonTools.Core/PyDebugAttach.dll",
       "memberOf": [
         "default"
       ],
       "tool": "binskim",
       "ruleId": "BA2007",
-      "createdDate": "2026-02-10 02:36:06Z"
+      "createdDate": "2026-02-13 08:45:16Z"
     },
-    "116b2046b476b0408fd5f38264bf93a22d6a26f2f21fe2f8529607c7cb0276dd": {
-      "signature": "116b2046b476b0408fd5f38264bf93a22d6a26f2f21fe2f8529607c7cb0276dd",
+    "7bb069b996f563f97c38d56e879f2d6cfa5b615d58b59050054ebb104db34427": {
+      "signature": "7bb069b996f563f97c38d56e879f2d6cfa5b615d58b59050054ebb104db34427",
       "alternativeSignatures": [
-        "1437a8e742141b5bbaf723efae59a6647f428e0708c870d19e7c133614c0f1ab"
+        "3287cce5280ba9993d466379d9cccb932dfda3e2ce328c4f49cf7489e755ddaa"
       ],
-      "target": "file:///D:/a/_work/1/b/raw/binaries/PyDebugAttachX86.dll",
+      "target": "file:///D:/a/_work/1/b/layout/Microsoft.PythonTools.Core/PyDebugAttachX86.dll",
       "memberOf": [
         "default"
       ],
       "tool": "binskim",
       "ruleId": "BA2007",
-      "createdDate": "2026-02-10 02:36:06Z"
+      "createdDate": "2026-02-13 08:45:16Z"
     },
-    "4b7fb2882e82bc417908fcbe6e0932993eb67e1e6d08cbcfd71a7ead17b338df": {
-      "signature": "4b7fb2882e82bc417908fcbe6e0932993eb67e1e6d08cbcfd71a7ead17b338df",
+    "dabbbc419823be4bd4cc102a40156b7b7815e48356cac8bb37e0bb9a31090ccf": {
+      "signature": "dabbbc419823be4bd4cc102a40156b7b7815e48356cac8bb37e0bb9a31090ccf",
       "alternativeSignatures": [
-        "1577cf12d229e036d3f333ee15202dfb25223754e4d220c94ad14da4186ec157"
+        "6f9aa9b1bf47ba9c12904d21d2db663a397915d0c18f16151986386ad7fae5e5"
       ],
-      "target": "file:///D:/a/_work/1/b/raw/binaries/debugpy/_vendored/pydevd/pydevd_attach_to_process/inject_dll_amd64.exe",
+      "target": "file:///D:/a/_work/1/b/layout/Microsoft.PythonTools.Core/debugpy/_vendored/pydevd/pydevd_attach_to_process/inject_dll_amd64.exe",
       "memberOf": [
         "default"
       ],
       "tool": "binskim",
       "ruleId": "BA2007",
-      "createdDate": "2026-02-10 02:36:06Z"
+      "createdDate": "2026-02-13 08:45:16Z"
     },
-    "3081ce6ae12e9078cc1ebb2f34cd942d10c187ced7868e2ad0e04d59f63dc87d": {
-      "signature": "3081ce6ae12e9078cc1ebb2f34cd942d10c187ced7868e2ad0e04d59f63dc87d",
+    "d9a2b33d30acbba3c4c2a1f0ea4642519200203a244d60280ee6c0df3d71fca0": {
+      "signature": "d9a2b33d30acbba3c4c2a1f0ea4642519200203a244d60280ee6c0df3d71fca0",
       "alternativeSignatures": [
-        "8e425716bbde468dba75b1a53cfc2b38e3bbc5f17317c3d039ab03175191d6e7"
+        "7561bc4d0870907c9303138285d0598a2cba607be9e8ef17f7bdd43fcfbe5da1"
       ],
-      "target": "file:///D:/a/_work/1/b/raw/binaries/debugpy/_vendored/pydevd/pydevd_attach_to_process/inject_dll_x86.exe",
+      "target": "file:///D:/a/_work/1/b/layout/Microsoft.PythonTools.Core/debugpy/_vendored/pydevd/pydevd_attach_to_process/inject_dll_x86.exe",
       "memberOf": [
         "default"
       ],
       "tool": "binskim",
       "ruleId": "BA2007",
-      "createdDate": "2026-02-10 02:36:06Z"
-    },
-    "dd3bca0bf666a05fa143911465aca98d07209ea091cda018ca7b57f3bb7a9604": {
-      "signature": "dd3bca0bf666a05fa143911465aca98d07209ea091cda018ca7b57f3bb7a9604",
-      "target": "file:///D:/a/_work/1/b/raw/binaries/debugpy/_vendored/pydevd/pydevd_attach_to_process/run_code_on_dllmain_amd64.dll",
-      "memberOf": [
-        "default"
-      ],
-      "tool": "binskim",
-      "ruleId": "BA6005",
-      "createdDate": "2026-02-10 19:57:00Z"
-    },
-    "8688050acd106ccfb0dd36521c8a57d0e44f33aef8d2f5e973506b61ff8b2e40": {
-      "signature": "8688050acd106ccfb0dd36521c8a57d0e44f33aef8d2f5e973506b61ff8b2e40",
-      "target": "file:///D:/a/_work/1/b/raw/binaries/debugpy/_vendored/pydevd/pydevd_attach_to_process/run_code_on_dllmain_x86.dll",
-      "memberOf": [
-        "default"
-      ],
-      "tool": "binskim",
-      "ruleId": "BA2027",
-      "createdDate": "2026-02-10 19:57:00Z"
-    },
-    "c96e6190005b6a123254375cec8c845fd884b3261d528edbb986e6369f7b0f53": {
-      "signature": "c96e6190005b6a123254375cec8c845fd884b3261d528edbb986e6369f7b0f53",
-      "target": "file:///D:/a/_work/1/b/raw/binaries/debugpy/_vendored/pydevd/pydevd_attach_to_process/run_code_on_dllmain_x86.dll",
-      "memberOf": [
-        "default"
-      ],
-      "tool": "binskim",
-      "ruleId": "BA2028",
-      "createdDate": "2026-02-10 19:57:00Z"
-    },
-    "7bffaa9db8aa6a6bf53507d9478d17fd266d6bc7047886af88c2a01712f5d253": {
-      "signature": "7bffaa9db8aa6a6bf53507d9478d17fd266d6bc7047886af88c2a01712f5d253",
-      "target": "file:///D:/a/_work/1/b/raw/binaries/debugpy/_vendored/pydevd/pydevd_attach_to_process/run_code_on_dllmain_x86.dll",
-      "memberOf": [
-        "default"
-      ],
-      "tool": "binskim",
-      "ruleId": "BA6004",
-      "createdDate": "2026-02-10 19:57:00Z"
-    },
-    "4a9a810c2ef3859895c9c8ca031c3093bdd6fc52d6de416b43e73798e3197f30": {
-      "signature": "4a9a810c2ef3859895c9c8ca031c3093bdd6fc52d6de416b43e73798e3197f30",
-      "target": "file:///D:/a/_work/1/b/raw/binaries/debugpy/_vendored/pydevd/pydevd_attach_to_process/run_code_on_dllmain_x86.dll",
-      "memberOf": [
-        "default"
-      ],
-      "tool": "binskim",
-      "ruleId": "BA6005",
-      "createdDate": "2026-02-10 19:57:00Z"
+      "createdDate": "2026-02-13 08:45:16Z"
     }
   }
 }
