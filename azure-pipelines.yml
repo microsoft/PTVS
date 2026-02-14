@@ -211,6 +211,7 @@ extends:
         # check out code clean from source control
         - checkout: self
           clean: true
+          fetchDepth: 1
 
         # add VSTarget build tag
         - powershell: 'Write-Host "##vso[build.addbuildtag]$env:VSTarget"'
@@ -251,6 +252,7 @@ extends:
           steps:
           - checkout: self
             clean: true
+            fetchDepth: 1
 
           # install microbuild plugins needed for swixproj/vsmanproj
           - template: /Build/templates/install_microbuild_plugins.yml@self
@@ -328,6 +330,7 @@ extends:
           steps:
           - checkout: self
             clean: true
+            fetchDepth: 1
 
           - template: /Build/templates/run_tests.yml@self
             parameters:
@@ -341,6 +344,7 @@ extends:
           steps:
           - checkout: self
             clean: true
+            fetchDepth: 1
 
           # install microbuild plugins needed for signing
           - template: /Build/templates/install_microbuild_plugins.yml@self
