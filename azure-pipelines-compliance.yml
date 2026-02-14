@@ -35,10 +35,10 @@ jobs:
 
   # The agent pool the build will run on
   pool:
-    name: VSEngSS-MicroBuild2022-1ES
+    name: VSEng-MicroBuildVSStable
     demands: 
     - msbuild
-    - VisualStudio_17.0
+    - VisualStudio_18.0
 
   # Job variables
   variables:
@@ -47,7 +47,7 @@ jobs:
 
     # PTVS variable group
     # This contains variables shared between various PTVS pipelines
-    - group: PTVS-Dev17
+    - group: PTVS-Dev18
 
   steps:
 

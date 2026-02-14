@@ -13,10 +13,10 @@ pr:
   none
 
 pool:
-  name: VSEngSS-MicroBuild2022-1ES
+  name: VSEng-MicroBuildVSStable
   demands: 
   - msbuild
-  - VisualStudio_17.0
+  - VisualStudio_18.0
 
 variables:
   ORGANIZATION: 'DevDiv'
