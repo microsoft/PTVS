@@ -326,7 +326,7 @@ extends:
           dependsOn: build
           continueOnError: true
           pool:
-            name: VSEngSS-MicroBuild2019-1ES
+            name: VSEng-MicroBuildVSStable
           steps:
           - checkout: self
             clean: true
