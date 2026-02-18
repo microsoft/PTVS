@@ -859,6 +859,15 @@
     <Disp Icon="Dlg" Expand="true" Disp="true" LocTbl="false" Path=" \ ;Managed Resources \ 0 \ 0" />
     <Item ItemId=";DefaultPythonLauncherOptions" ItemType="4" PsrId="211" Leaf="false">
       <Disp Edtr="External" Icon="Dlg" Disp="true" LocTbl="false" />
+      <Item ItemId=";_arguments.AccessibleDescription" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Edit Box">
+          <Val><![CDATA[Script Arguments. Tooltip: Specifies arguments which are passed to the script and available via sys.argv.]]></Val>
+          <Tgt Cat="Edit Box" Stat="Loc" Orig="New">
+            <Val><![CDATA[Betik Bağımsız Değişkenleri. Araç İpucu: Betiğe geçirilen ve sys.argv aracılığıyla kullanılabilen bağımsız değişkenleri belirtir.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Dlg" />
+      </Item>
       <Item ItemId=";_arguments.AccessibleName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Edit Box">
           <Val><![CDATA[Script Arguments]]></Val>
@@ -898,15 +907,6 @@
         </Bin>
         <Disp Icon="Dlg" />
       </Item>
-      <Item ItemId=";_argumentsLabel.ToolTip" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Static Text">
-          <Val><![CDATA[Specifies arguments which are passed to the script and available via sys.argv.]]></Val>
-          <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Betiğe geçirilen ve sys.argv aracılığıyla kullanılabilen bağımsız değişkenleri belirtir.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Dlg" />
-      </Item>
       <Item ItemId=";_debugGroup.Text" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Group Box Title">
           <Val><![CDATA[Debug]]></Val>
@@ -917,6 +917,15 @@
         <Bin BinId="1">
           <Val><![CDATA[AAEAAAD/////AQAAAAAAAAAEAQAAAAxTeXN0ZW0uSW50MzIBAAAAB21fdmFsdWUACAEAAAALAAEAAAD/////AQAAAAAAAAAGAQAAAAtfZGVidWdHcm91cAsAAQAAAP////8BAAAAAAAAAAQBAAAADlN5c3RlbS5Cb29sZWFuAQAAAAdtX3ZhbHVlAAEACwABAAAA/////wEAAAAAAAAABAEAAAAOU3lzdGVtLkJvb2xlYW4BAAAAB21fdmFsdWUAAQALAAEAAAD/////AQAAAAAAAAAEAQAAAJMCU3lzdGVtLkNvbGxlY3Rpb25zLkdlbmVyaWMuRGljdGlvbmFyeWAyW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldLFtNaWNyb3NvZnQuTWFuYWdlZFJlc291cmNlUGFyc2VyLkRpYWxvZ0JpbmFyeStQcm9wZXJ0eUluZm8sIE1hbmFnZWRQYXJzZXIsIFZlcnNpb249Mi4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj00MWFmOGY0MzYwMDEwOWUyXV0EAAAAB1ZlcnNpb24IQ29tcGFyZXIISGFzaFNpemUNS2V5VmFsdWVQYWlycwADAAMIkgFTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5HZW5lcmljRXF1YWxpdHlDb21wYXJlcmAxW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldXQiXAlN5c3RlbS5Db2xsZWN0aW9ucy5HZW5lcmljLktleVZhbHVlUGFpcmAyW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldLFtNaWNyb3NvZnQuTWFuYWdlZFJlc291cmNlUGFyc2VyLkRpYWxvZ0JpbmFyeStQcm9wZXJ0eUluZm8sIE1hbmFnZWRQYXJzZXIsIFZlcnNpb249Mi4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj00MWFmOGY0MzYwMDEwOWUyXV1bXQkAAAAJAgAAABEAAAAJAwAAAAQCAAAAkgFTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5HZW5lcmljRXF1YWxpdHlDb21wYXJlcmAxW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldXQAAAAAHAwAAAAABAAAACQAAAAOVAlN5c3RlbS5Db2xsZWN0aW9ucy5HZW5lcmljLktleVZhbHVlUGFpcmAyW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldLFtNaWNyb3NvZnQuTWFuYWdlZFJlc291cmNlUGFyc2VyLkRpYWxvZ0JpbmFyeStQcm9wZXJ0eUluZm8sIE1hbmFnZWRQYXJzZXIsIFZlcnNpb249Mi4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj00MWFmOGY0MzYwMDEwOWUyXV0MBQAAAFBNYW5hZ2VkUGFyc2VyLCBWZXJzaW9uPTIuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49NDFhZjhmNDM2MDAxMDllMgT8////lQJTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5LZXlWYWx1ZVBhaXJgMltbU3lzdGVtLlN0cmluZywgbXNjb3JsaWIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5XSxbTWljcm9zb2Z0Lk1hbmFnZWRSZXNvdXJjZVBhcnNlci5EaWFsb2dCaW5hcnkrUHJvcGVydHlJbmZvLCBNYW5hZ2VkUGFyc2VyLCBWZXJzaW9uPTIuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49NDFhZjhmNDM2MDAxMDllMl1dAgAAAANrZXkFdmFsdWUBBDlNaWNyb3NvZnQuTWFuYWdlZFJlc291cmNlUGFyc2VyLkRpYWxvZ0JpbmFyeStQcm9wZXJ0eUluZm8FAAAABgYAAAATX2RlYnVnR3JvdXAuVmlzaWJsZQkHAAAAAfj////8////BgkAAAAUX2RlYnVnR3JvdXAuTG9jYXRpb24JCgAAAAH1/////P///wYMAAAAEl9kZWJ1Z0dyb3VwLk1hcmdpbgkNAAAAAfL////8////Bg8AAAAUX2RlYnVnR3JvdXAuVGFiSW5kZXgJEAAAAAHv/////P///wYSAAAAEF9kZWJ1Z0dyb3VwLlNpemUJEwAAAAHs/////P///wYVAAAAEF9kZWJ1Z0dyb3VwLkRvY2sJFgAAAAHp/////P///wYYAAAAGF9kZWJ1Z0dyb3VwLkF1dG9TaXplTW9kZQkZAAAAAeb////8////BhsAAAATX2RlYnVnR3JvdXAuUGFkZGluZwkcAAAAAeP////8////Bh4AAAAUX2RlYnVnR3JvdXAuQXV0b1NpemUJHwAAAAUHAAAAOU1pY3Jvc29mdC5NYW5hZ2VkUmVzb3VyY2VQYXJzZXIuRGlhbG9nQmluYXJ5K1Byb3BlcnR5SW5mbwIAAAAGbV90eXBlBm1fZGF0YQEHAgUAAAAGIAAAABhSZXNvdXJjZVR5cGVDb2RlLkJvb2xlYW4JIQAAAAEKAAAABwAAAAYiAAAAZ1N5c3RlbS5EcmF3aW5nLlBvaW50LCBTeXN0ZW0uRHJhd2luZywgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWIwM2Y1ZjdmMTFkNTBhM2EJIwAAAAENAAAABwAAAAYkAAAAdVN5c3RlbS5XaW5kb3dzLkZvcm1zLlBhZGRpbmcsIFN5c3RlbS5XaW5kb3dzLkZvcm1zLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49Yjc3YTVjNTYxOTM0ZTA4OQklAAAAARAAAAAHAAAABiYAAAAWUmVzb3VyY2VUeXBlQ29kZS5JbnQzMgknAAAAARMAAAAHAAAABigAAABmU3lzdGVtLkRyYXdpbmcuU2l6ZSwgU3lzdGVtLkRyYXdpbmcsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iMDNmNWY3ZjExZDUwYTNhCSkAAAABFgAAAAcAAAAGKgAAAHdTeXN0ZW0uV2luZG93cy5Gb3Jtcy5Eb2NrU3R5bGUsIFN5c3RlbS5XaW5kb3dzLkZvcm1zLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49Yjc3YTVjNTYxOTM0ZTA4OQkrAAAAARkAAAAHAAAABiwAAAB6U3lzdGVtLldpbmRvd3MuRm9ybXMuQXV0b1NpemVNb2RlLCBTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkJLQAAAAEcAAAABwAAAAYuAAAAdVN5c3RlbS5XaW5kb3dzLkZvcm1zLlBhZGRpbmcsIFN5c3RlbS5XaW5kb3dzLkZvcm1zLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49Yjc3YTVjNTYxOTM0ZTA4OQkvAAAAAR8AAAAHAAAABjAAAAAYUmVzb3VyY2VUeXBlQ29kZS5Cb29sZWFuCTEAAAAPIQAAAAEAAAACAA8jAAAAmwAAAAIAAQAAAP////8BAAAAAAAAAAwCAAAAUVN5c3RlbS5EcmF3aW5nLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49YjAzZjVmN2YxMWQ1MGEzYQUBAAAAFFN5c3RlbS5EcmF3aW5nLlBvaW50AgAAAAF4AXkAAAgIAgAAAAYAAADVAAAACw8lAAAA0wAAAAIAAQAAAP////8BAAAAAAAAAAwCAAAAV1N5c3RlbS5XaW5kb3dzLkZvcm1zLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49Yjc3YTVjNTYxOTM0ZTA4OQUBAAAAHFN5c3RlbS5XaW5kb3dzLkZvcm1zLlBhZGRpbmcFAAAABF9hbGwEX3RvcAVfbGVmdAZfcmlnaHQHX2JvdHRvbQAAAAAAAQgICAgCAAAAAAgAAAAGAAAABgAAAAgAAAALDycAAAAEAAAAAgEAAAAPKQAAAKMAAAACAAEAAAD/////AQAAAAAAAAAMAgAAAFFTeXN0ZW0uRHJhd2luZywgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWIwM2Y1ZjdmMTFkNTBhM2EFAQAAABNTeXN0ZW0uRHJhd2luZy5TaXplAgAAAAV3aWR0aAZoZWlnaHQAAAgIAgAAALoBAAA0AAAACw8rAAAAqQAAAAIAAQAAAP////8BAAAAAAAAAAwCAAAAV1N5c3RlbS5XaW5kb3dzLkZvcm1zLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49Yjc3YTVjNTYxOTM0ZTA4OQUBAAAAHlN5c3RlbS5XaW5kb3dzLkZvcm1zLkRvY2tTdHlsZQEAAAAHdmFsdWVfXwAIAgAAAAUAAAALDy0AAACsAAAAAgABAAAA/////wEAAAAAAAAADAIAAABXU3lzdGVtLldpbmRvd3MuRm9ybXMsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5BQEAAAAhU3lzdGVtLldpbmRvd3MuRm9ybXMuQXV0b1NpemVNb2RlAQAAAAd2YWx1ZV9fAAgCAAAAAAAAAAsPLwAAANMAAAACAAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAABxTeXN0ZW0uV2luZG93cy5Gb3Jtcy5QYWRkaW5nBQAAAARfYWxsBF90b3AFX2xlZnQGX3JpZ2h0B19ib3R0b20AAAAAAAEICAgIAgAAAAAIAAAABgAAAAYAAAAIAAAACw8xAAAAAQAAAAIBCwABAAAA/////wEAAAAAAAAABAEAAACTAlN5c3RlbS5Db2xsZWN0aW9ucy5HZW5lcmljLkRpY3Rpb25hcnlgMltbU3lzdGVtLlN0cmluZywgbXNjb3JsaWIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5XSxbTWljcm9zb2Z0Lk1hbmFnZWRSZXNvdXJjZVBhcnNlci5EaWFsb2dCaW5hcnkrUHJvcGVydHlJbmZvLCBNYW5hZ2VkUGFyc2VyLCBWZXJzaW9uPTIuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49NDFhZjhmNDM2MDAxMDllMl1dBAAAAAdWZXJzaW9uCENvbXBhcmVyCEhhc2hTaXplDUtleVZhbHVlUGFpcnMAAwADCJIBU3lzdGVtLkNvbGxlY3Rpb25zLkdlbmVyaWMuR2VuZXJpY0VxdWFsaXR5Q29tcGFyZXJgMVtbU3lzdGVtLlN0cmluZywgbXNjb3JsaWIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5XV0IlwJTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5LZXlWYWx1ZVBhaXJgMltbU3lzdGVtLlN0cmluZywgbXNjb3JsaWIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5XSxbTWljcm9zb2Z0Lk1hbmFnZWRSZXNvdXJjZVBhcnNlci5EaWFsb2dCaW5hcnkrUHJvcGVydHlJbmZvLCBNYW5hZ2VkUGFyc2VyLCBWZXJzaW9uPTIuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49NDFhZjhmNDM2MDAxMDllMl1dW10EAAAACQIAAAAHAAAACQMAAAAEAgAAAJIBU3lzdGVtLkNvbGxlY3Rpb25zLkdlbmVyaWMuR2VuZXJpY0VxdWFsaXR5Q29tcGFyZXJgMVtbU3lzdGVtLlN0cmluZywgbXNjb3JsaWIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5XV0AAAAABwMAAAAAAQAAAAQAAAADlQJTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5LZXlWYWx1ZVBhaXJgMltbU3lzdGVtLlN0cmluZywgbXNjb3JsaWIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5XSxbTWljcm9zb2Z0Lk1hbmFnZWRSZXNvdXJjZVBhcnNlci5EaWFsb2dCaW5hcnkrUHJvcGVydHlJbmZvLCBNYW5hZ2VkUGFyc2VyLCBWZXJzaW9uPTIuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49NDFhZjhmNDM2MDAxMDllMl1dDAUAAABQTWFuYWdlZFBhcnNlciwgVmVyc2lvbj0yLjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPTQxYWY4ZjQzNjAwMTA5ZTIE/P///5UCU3lzdGVtLkNvbGxlY3Rpb25zLkdlbmVyaWMuS2V5VmFsdWVQYWlyYDJbW1N5c3RlbS5TdHJpbmcsIG1zY29ybGliLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49Yjc3YTVjNTYxOTM0ZTA4OV0sW01pY3Jvc29mdC5NYW5hZ2VkUmVzb3VyY2VQYXJzZXIuRGlhbG9nQmluYXJ5K1Byb3BlcnR5SW5mbywgTWFuYWdlZFBhcnNlciwgVmVyc2lvbj0yLjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPTQxYWY4ZjQzNjAwMTA5ZTJdXQIAAAADa2V5BXZhbHVlAQQ5TWljcm9zb2Z0Lk1hbmFnZWRSZXNvdXJjZVBhcnNlci5EaWFsb2dCaW5hcnkrUHJvcGVydHlJbmZvBQAAAAYGAAAAFD4+X2RlYnVnR3JvdXAuWk9yZGVyCQcAAAAB+P////z///8GCQAAABQ+Pl9kZWJ1Z0dyb3VwLlBhcmVudAkKAAAAAfX////8////BgwAAAASPj5fZGVidWdHcm91cC5UeXBlCQ0AAAAB8v////z///8GDwAAABI+Pl9kZWJ1Z0dyb3VwLk5hbWUJEAAAAAUHAAAAOU1pY3Jvc29mdC5NYW5hZ2VkUmVzb3VyY2VQYXJzZXIuRGlhbG9nQmluYXJ5K1Byb3BlcnR5SW5mbwIAAAAGbV90eXBlBm1fZGF0YQEHAgUAAAAGEQAAABdSZXNvdXJjZVR5cGVDb2RlLlN0cmluZwkSAAAAAQoAAAAHAAAABhMAAAAXUmVzb3VyY2VUeXBlQ29kZS5TdHJpbmcJFAAAAAENAAAABwAAAAYVAAAAF1Jlc291cmNlVHlwZUNvZGUuU3RyaW5nCRYAAAABEAAAAAcAAAAGFwAAABdSZXNvdXJjZVR5cGVDb2RlLlN0cmluZwkYAAAADxIAAAACAAAAAgEwDxQAAAASAAAAAhF0YWJsZUxheW91dFBhbmVsMQ8WAAAAdwAAAAJ2U3lzdGVtLldpbmRvd3MuRm9ybXMuR3JvdXBCb3gsIFN5c3RlbS5XaW5kb3dzLkZvcm1zLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49Yjc3YTVjNTYxOTM0ZTA4OQ8YAAAADAAAAAILX2RlYnVnR3JvdXALAAEAAAD/////AQAAAAAAAAAEAQAAAJMCU3lzdGVtLkNvbGxlY3Rpb25zLkdlbmVyaWMuRGljdGlvbmFyeWAyW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldLFtNaWNyb3NvZnQuTWFuYWdlZFJlc291cmNlUGFyc2VyLkRpYWxvZ0JpbmFyeStQcm9wZXJ0eUluZm8sIE1hbmFnZWRQYXJzZXIsIFZlcnNpb249Mi4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj00MWFmOGY0MzYwMDEwOWUyXV0DAAAAB1ZlcnNpb24IQ29tcGFyZXIISGFzaFNpemUAAwAIkgFTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5HZW5lcmljRXF1YWxpdHlDb21wYXJlcmAxW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldXQgAAAAACQIAAAAAAAAABAIAAACSAVN5c3RlbS5Db2xsZWN0aW9ucy5HZW5lcmljLkdlbmVyaWNFcXVhbGl0eUNvbXBhcmVyYDFbW1N5c3RlbS5TdHJpbmcsIG1zY29ybGliLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49Yjc3YTVjNTYxOTM0ZTA4OV1dAAAAAAs=]]></Val>
         </Bin>
+        <Disp Icon="Dlg" />
+      </Item>
+      <Item ItemId=";_envVars.AccessibleDescription" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Edit Box">
+          <Val><![CDATA[Environment Variables. Tooltip: Specifies environment variables to be set in the spawned process in the form:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
+          <Tgt Cat="Edit Box" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ortam Değişkenleri. Araç İpucu: Üretilen işlemde ayarlanacak ortam değişkenlerini şu biçimde belirtir:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
+          </Tgt>
+        </Str>
         <Disp Icon="Dlg" />
       </Item>
       <Item ItemId=";_envVars.AccessibleName" ItemType="0" PsrId="211" Leaf="true">
@@ -939,10 +948,13 @@
       </Item>
       <Item ItemId=";_envVarsLabel.AccessibleName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Static Text">
-          <Val><![CDATA[Specifies environment variables to be set in the spawned process in the form:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
+          <Val><![CDATA[Environment Variables]]></Val>
           <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Üretilen işlemde ayarlanacak ortam değişkenlerini şu biçimde belirtir:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
+            <Val><![CDATA[Ortam Değişkenleri]]></Val>
           </Tgt>
+          <Prev Cat="Static Text">
+            <Val><![CDATA[Specifies environment variables to be set in the spawned process in the form:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Dlg" />
       </Item>
@@ -958,11 +970,11 @@
         </Bin>
         <Disp Icon="Dlg" />
       </Item>
-      <Item ItemId=";_envVarsLabel.ToolTip" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Static Text">
-          <Val><![CDATA[Specifies environment variables to be set in the spawned process in the form:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
-          <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Üretilen işlemde ayarlanacak ortam değişkenlerini şu biçimde belirtir:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
+      <Item ItemId=";_interpArgs.AccessibleDescription" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Edit Box">
+          <Val><![CDATA[Interpreter Arguments. Tooltip: Specifies arguments for the interpreter before the script (for example, -Wall, -O or -B).]]></Val>
+          <Tgt Cat="Edit Box" Stat="Loc" Orig="New">
+            <Val><![CDATA[Yorumlayıcı Bağımsız Değişkenleri. Araç İpucu: Betikten önce yorumlayıcının bağımsız değişkenlerini belirtir (örneğin, -Wall, -O veya -B).]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Dlg" />
@@ -1006,11 +1018,11 @@
         </Bin>
         <Disp Icon="Dlg" />
       </Item>
-      <Item ItemId=";_interpArgsLabel.ToolTip" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Static Text">
-          <Val><![CDATA[Specifies arguments for the interpreter before the script (for example, -Wall, -O or -B)]]></Val>
-          <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Betikten önce yorumlayıcının bağımsız değişkenlerini belirtir (örneğin, -Wall, -O veya -B)]]></Val>
+      <Item ItemId=";_interpreterPath.AccessibleDescription" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Edit Box">
+          <Val><![CDATA[Interpreter Path. Tooktip: Overrides the path of the interpreter to use when launching the project.]]></Val>
+          <Tgt Cat="Edit Box" Stat="Loc" Orig="New">
+            <Val><![CDATA[Yorumlayıcı Yolu. Araç İpucu: Projeyi başlatırken kullanılacak yorumlayıcının yolunu geçersiz kılar.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Dlg" />
@@ -1054,15 +1066,6 @@
         </Bin>
         <Disp Icon="Dlg" />
       </Item>
-      <Item ItemId=";_interpreterPathLabel.ToolTip" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Static Text">
-          <Val><![CDATA[Overrides the path of the interpreter to use when launching the project.]]></Val>
-          <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Projeyi başlatırken kullanılacak yorumlayıcının yolunu geçersiz kılar.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Dlg" />
-      </Item>
       <Item ItemId=";_mixedMode.Text" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Check Box">
           <Val><![CDATA[Enable na&tive code debugging]]></Val>
@@ -1089,10 +1092,13 @@
       </Item>
       <Item ItemId=";_searchPathLabel.AccessibleName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Static Text">
-          <Val><![CDATA[Semicolon separated list of import directories to be added to sys.path.]]></Val>
+          <Val><![CDATA[Search Paths]]></Val>
           <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Sys.path dosyasına eklenecek noktalı virgülle ayrılmış içeri aktarma dizinleri listesi.]]></Val>
+            <Val><![CDATA[Arama Yolları]]></Val>
           </Tgt>
+          <Prev Cat="Static Text">
+            <Val><![CDATA[Semicolon separated list of import directories to be added to sys.path.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Dlg" />
       </Item>
@@ -1108,11 +1114,11 @@
         </Bin>
         <Disp Icon="Dlg" />
       </Item>
-      <Item ItemId=";_searchPathLabel.ToolTip" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Static Text">
-          <Val><![CDATA[Semicolon separated list of import directories to be added to sys.path.]]></Val>
-          <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Sys.path dosyasına eklenecek noktalı virgülle ayrılmış içeri aktarma dizinleri listesi.]]></Val>
+      <Item ItemId=";_searchPaths.AccessibleDescription" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Edit Box">
+          <Val><![CDATA[Search Paths. Tooltip: Semicolon separated list of import directories to be added to sys.path.]]></Val>
+          <Tgt Cat="Edit Box" Stat="Loc" Orig="New">
+            <Val><![CDATA[Arama Yolları. Araç İpucu: Sys.path dosyasına eklenecek noktalı virgülle ayrılmış içeri aktarma dizinleri listesi.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Dlg" />
@@ -1411,6 +1417,15 @@
     <Disp Icon="Dlg" Expand="true" Disp="true" LocTbl="false" Path=" \ ;Managed Resources \ 0 \ 0" />
     <Item ItemId=";PythonWebLauncherOptions" ItemType="4" PsrId="211" Leaf="false">
       <Disp Edtr="External" Icon="Dlg" Disp="true" LocTbl="false" />
+      <Item ItemId=";_arguments.AccessibleDescription" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Edit Box">
+          <Val><![CDATA[Script Arguments. Tooltip: Specifies arguments which are passed to the script and available via sys.argv.]]></Val>
+          <Tgt Cat="Edit Box" Stat="Loc" Orig="New">
+            <Val><![CDATA[Betik Bağımsız Değişkenleri. Araç İpucu: Betiğe geçirilen ve sys.argv aracılığıyla kullanılabilen bağımsız değişkenleri belirtir.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Dlg" />
+      </Item>
       <Item ItemId=";_arguments.AccessibleName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Edit Box">
           <Val><![CDATA[Script Arguments]]></Val>
@@ -1431,10 +1446,13 @@
       </Item>
       <Item ItemId=";_argumentsLabel.AccessibleName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Static Text">
-          <Val><![CDATA[Specifies arguments which are passed to the script and available via sys.argv.]]></Val>
+          <Val><![CDATA[Script Arguments]]></Val>
           <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Betiğe geçirilen ve sys.argv aracılığıyla kullanılabilen bağımsız değişkenleri belirtir.]]></Val>
+            <Val><![CDATA[Betik Değişkenleri]]></Val>
           </Tgt>
+          <Prev Cat="Static Text">
+            <Val><![CDATA[Specifies arguments which are passed to the script and available via sys.argv.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Dlg" />
       </Item>
@@ -1450,15 +1468,6 @@
         </Bin>
         <Disp Icon="Dlg" />
       </Item>
-      <Item ItemId=";_argumentsLabel.ToolTip" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Static Text">
-          <Val><![CDATA[Specifies arguments which are passed to the script and available via sys.argv.]]></Val>
-          <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Betiğe geçirilen ve sys.argv aracılığıyla kullanılabilen bağımsız değişkenleri belirtir.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Dlg" />
-      </Item>
       <Item ItemId=";_debugGroup.Text" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Group Box Title">
           <Val><![CDATA[Run]]></Val>
@@ -1469,6 +1478,15 @@
         <Bin BinId="1">
           <Val><![CDATA[AAEAAAD/////AQAAAAAAAAAEAQAAAAxTeXN0ZW0uSW50MzIBAAAAB21fdmFsdWUACAEAAAALAAEAAAD/////AQAAAAAAAAAGAQAAAAtfZGVidWdHcm91cAsAAQAAAP////8BAAAAAAAAAAQBAAAADlN5c3RlbS5Cb29sZWFuAQAAAAdtX3ZhbHVlAAEACwABAAAA/////wEAAAAAAAAABAEAAAAOU3lzdGVtLkJvb2xlYW4BAAAAB21fdmFsdWUAAQALAAEAAAD/////AQAAAAAAAAAEAQAAAJMCU3lzdGVtLkNvbGxlY3Rpb25zLkdlbmVyaWMuRGljdGlvbmFyeWAyW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldLFtNaWNyb3NvZnQuTWFuYWdlZFJlc291cmNlUGFyc2VyLkRpYWxvZ0JpbmFyeStQcm9wZXJ0eUluZm8sIE1hbmFnZWRQYXJzZXIsIFZlcnNpb249Mi4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj00MWFmOGY0MzYwMDEwOWUyXV0EAAAAB1ZlcnNpb24IQ29tcGFyZXIISGFzaFNpemUNS2V5VmFsdWVQYWlycwADAAMIkgFTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5HZW5lcmljRXF1YWxpdHlDb21wYXJlcmAxW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldXQiXAlN5c3RlbS5Db2xsZWN0aW9ucy5HZW5lcmljLktleVZhbHVlUGFpcmAyW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldLFtNaWNyb3NvZnQuTWFuYWdlZFJlc291cmNlUGFyc2VyLkRpYWxvZ0JpbmFyeStQcm9wZXJ0eUluZm8sIE1hbmFnZWRQYXJzZXIsIFZlcnNpb249Mi4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj00MWFmOGY0MzYwMDEwOWUyXV1bXQgAAAAJAgAAABEAAAAJAwAAAAQCAAAAkgFTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5HZW5lcmljRXF1YWxpdHlDb21wYXJlcmAxW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldXQAAAAAHAwAAAAABAAAACAAAAAOVAlN5c3RlbS5Db2xsZWN0aW9ucy5HZW5lcmljLktleVZhbHVlUGFpcmAyW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldLFtNaWNyb3NvZnQuTWFuYWdlZFJlc291cmNlUGFyc2VyLkRpYWxvZ0JpbmFyeStQcm9wZXJ0eUluZm8sIE1hbmFnZWRQYXJzZXIsIFZlcnNpb249Mi4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj00MWFmOGY0MzYwMDEwOWUyXV0MBQAAAFBNYW5hZ2VkUGFyc2VyLCBWZXJzaW9uPTIuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49NDFhZjhmNDM2MDAxMDllMgT8////lQJTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5LZXlWYWx1ZVBhaXJgMltbU3lzdGVtLlN0cmluZywgbXNjb3JsaWIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5XSxbTWljcm9zb2Z0Lk1hbmFnZWRSZXNvdXJjZVBhcnNlci5EaWFsb2dCaW5hcnkrUHJvcGVydHlJbmZvLCBNYW5hZ2VkUGFyc2VyLCBWZXJzaW9uPTIuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49NDFhZjhmNDM2MDAxMDllMl1dAgAAAANrZXkFdmFsdWUBBDlNaWNyb3NvZnQuTWFuYWdlZFJlc291cmNlUGFyc2VyLkRpYWxvZ0JpbmFyeStQcm9wZXJ0eUluZm8FAAAABgYAAAAUX2RlYnVnR3JvdXAuTG9jYXRpb24JBwAAAAH4/////P///wYJAAAAEl9kZWJ1Z0dyb3VwLk1hcmdpbgkKAAAAAfX////8////BgwAAAAUX2RlYnVnR3JvdXAuVGFiSW5kZXgJDQAAAAHy/////P///wYPAAAAEF9kZWJ1Z0dyb3VwLlNpemUJEAAAAAHv/////P///wYSAAAAEF9kZWJ1Z0dyb3VwLkRvY2sJEwAAAAHs/////P///wYVAAAAGF9kZWJ1Z0dyb3VwLkF1dG9TaXplTW9kZQkWAAAAAen////8////BhgAAAATX2RlYnVnR3JvdXAuUGFkZGluZwkZAAAAAeb////8////BhsAAAAUX2RlYnVnR3JvdXAuQXV0b1NpemUJHAAAAAUHAAAAOU1pY3Jvc29mdC5NYW5hZ2VkUmVzb3VyY2VQYXJzZXIuRGlhbG9nQmluYXJ5K1Byb3BlcnR5SW5mbwIAAAAGbV90eXBlBm1fZGF0YQEHAgUAAAAGHQAAAGdTeXN0ZW0uRHJhd2luZy5Qb2ludCwgU3lzdGVtLkRyYXdpbmcsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iMDNmNWY3ZjExZDUwYTNhCR4AAAABCgAAAAcAAAAGHwAAAHVTeXN0ZW0uV2luZG93cy5Gb3Jtcy5QYWRkaW5nLCBTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkJIAAAAAENAAAABwAAAAYhAAAAFlJlc291cmNlVHlwZUNvZGUuSW50MzIJIgAAAAEQAAAABwAAAAYjAAAAZlN5c3RlbS5EcmF3aW5nLlNpemUsIFN5c3RlbS5EcmF3aW5nLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49YjAzZjVmN2YxMWQ1MGEzYQkkAAAAARMAAAAHAAAABiUAAAB3U3lzdGVtLldpbmRvd3MuRm9ybXMuRG9ja1N0eWxlLCBTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkJJgAAAAEWAAAABwAAAAYnAAAAelN5c3RlbS5XaW5kb3dzLkZvcm1zLkF1dG9TaXplTW9kZSwgU3lzdGVtLldpbmRvd3MuRm9ybXMsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5CSgAAAABGQAAAAcAAAAGKQAAAHVTeXN0ZW0uV2luZG93cy5Gb3Jtcy5QYWRkaW5nLCBTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkJKgAAAAEcAAAABwAAAAYrAAAAGFJlc291cmNlVHlwZUNvZGUuQm9vbGVhbgksAAAADx4AAACbAAAAAgABAAAA/////wEAAAAAAAAADAIAAABRU3lzdGVtLkRyYXdpbmcsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iMDNmNWY3ZjExZDUwYTNhBQEAAAAUU3lzdGVtLkRyYXdpbmcuUG9pbnQCAAAAAXgBeQAACAgCAAAABgAAAAgAAAALDyAAAADTAAAAAgABAAAA/////wEAAAAAAAAADAIAAABXU3lzdGVtLldpbmRvd3MuRm9ybXMsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5BQEAAAAcU3lzdGVtLldpbmRvd3MuRm9ybXMuUGFkZGluZwUAAAAEX2FsbARfdG9wBV9sZWZ0Bl9yaWdodAdfYm90dG9tAAAAAAABCAgICAIAAAAACAAAAAYAAAAGAAAACAAAAAsPIgAAAAQAAAACAAAAAA8kAAAAowAAAAIAAQAAAP////8BAAAAAAAAAAwCAAAAUVN5c3RlbS5EcmF3aW5nLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49YjAzZjVmN2YxMWQ1MGEzYQUBAAAAE1N5c3RlbS5EcmF3aW5nLlNpemUCAAAABXdpZHRoBmhlaWdodAAACAgCAAAATwIAAPcAAAALDyYAAACpAAAAAgABAAAA/////wEAAAAAAAAADAIAAABXU3lzdGVtLldpbmRvd3MuRm9ybXMsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5BQEAAAAeU3lzdGVtLldpbmRvd3MuRm9ybXMuRG9ja1N0eWxlAQAAAAd2YWx1ZV9fAAgCAAAABQAAAAsPKAAAAKwAAAACAAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACFTeXN0ZW0uV2luZG93cy5Gb3Jtcy5BdXRvU2l6ZU1vZGUBAAAAB3ZhbHVlX18ACAIAAAAAAAAACw8qAAAA0wAAAAIAAQAAAP////8BAAAAAAAAAAwCAAAAV1N5c3RlbS5XaW5kb3dzLkZvcm1zLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49Yjc3YTVjNTYxOTM0ZTA4OQUBAAAAHFN5c3RlbS5XaW5kb3dzLkZvcm1zLlBhZGRpbmcFAAAABF9hbGwEX3RvcAVfbGVmdAZfcmlnaHQHX2JvdHRvbQAAAAAAAQgICAgCAAAAAAgAAAAGAAAABgAAAAgAAAALDywAAAABAAAAAgELAAEAAAD/////AQAAAAAAAAAEAQAAAJMCU3lzdGVtLkNvbGxlY3Rpb25zLkdlbmVyaWMuRGljdGlvbmFyeWAyW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldLFtNaWNyb3NvZnQuTWFuYWdlZFJlc291cmNlUGFyc2VyLkRpYWxvZ0JpbmFyeStQcm9wZXJ0eUluZm8sIE1hbmFnZWRQYXJzZXIsIFZlcnNpb249Mi4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj00MWFmOGY0MzYwMDEwOWUyXV0EAAAAB1ZlcnNpb24IQ29tcGFyZXIISGFzaFNpemUNS2V5VmFsdWVQYWlycwADAAMIkgFTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5HZW5lcmljRXF1YWxpdHlDb21wYXJlcmAxW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldXQiXAlN5c3RlbS5Db2xsZWN0aW9ucy5HZW5lcmljLktleVZhbHVlUGFpcmAyW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldLFtNaWNyb3NvZnQuTWFuYWdlZFJlc291cmNlUGFyc2VyLkRpYWxvZ0JpbmFyeStQcm9wZXJ0eUluZm8sIE1hbmFnZWRQYXJzZXIsIFZlcnNpb249Mi4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj00MWFmOGY0MzYwMDEwOWUyXV1bXQQAAAAJAgAAAAcAAAAJAwAAAAQCAAAAkgFTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5HZW5lcmljRXF1YWxpdHlDb21wYXJlcmAxW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldXQAAAAAHAwAAAAABAAAABAAAAAOVAlN5c3RlbS5Db2xsZWN0aW9ucy5HZW5lcmljLktleVZhbHVlUGFpcmAyW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldLFtNaWNyb3NvZnQuTWFuYWdlZFJlc291cmNlUGFyc2VyLkRpYWxvZ0JpbmFyeStQcm9wZXJ0eUluZm8sIE1hbmFnZWRQYXJzZXIsIFZlcnNpb249Mi4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj00MWFmOGY0MzYwMDEwOWUyXV0MBQAAAFBNYW5hZ2VkUGFyc2VyLCBWZXJzaW9uPTIuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49NDFhZjhmNDM2MDAxMDllMgT8////lQJTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5LZXlWYWx1ZVBhaXJgMltbU3lzdGVtLlN0cmluZywgbXNjb3JsaWIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5XSxbTWljcm9zb2Z0Lk1hbmFnZWRSZXNvdXJjZVBhcnNlci5EaWFsb2dCaW5hcnkrUHJvcGVydHlJbmZvLCBNYW5hZ2VkUGFyc2VyLCBWZXJzaW9uPTIuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49NDFhZjhmNDM2MDAxMDllMl1dAgAAAANrZXkFdmFsdWUBBDlNaWNyb3NvZnQuTWFuYWdlZFJlc291cmNlUGFyc2VyLkRpYWxvZ0JpbmFyeStQcm9wZXJ0eUluZm8FAAAABgYAAAAUPj5fZGVidWdHcm91cC5aT3JkZXIJBwAAAAH4/////P///wYJAAAAFD4+X2RlYnVnR3JvdXAuUGFyZW50CQoAAAAB9f////z///8GDAAAABI+Pl9kZWJ1Z0dyb3VwLlR5cGUJDQAAAAHy/////P///wYPAAAAEj4+X2RlYnVnR3JvdXAuTmFtZQkQAAAABQcAAAA5TWljcm9zb2Z0Lk1hbmFnZWRSZXNvdXJjZVBhcnNlci5EaWFsb2dCaW5hcnkrUHJvcGVydHlJbmZvAgAAAAZtX3R5cGUGbV9kYXRhAQcCBQAAAAYRAAAAF1Jlc291cmNlVHlwZUNvZGUuU3RyaW5nCRIAAAABCgAAAAcAAAAGEwAAABdSZXNvdXJjZVR5cGVDb2RlLlN0cmluZwkUAAAAAQ0AAAAHAAAABhUAAAAXUmVzb3VyY2VUeXBlQ29kZS5TdHJpbmcJFgAAAAEQAAAABwAAAAYXAAAAF1Jlc291cmNlVHlwZUNvZGUuU3RyaW5nCRgAAAAPEgAAAAIAAAACATIPFAAAABIAAAACEXRhYmxlTGF5b3V0UGFuZWwxDxYAAAB3AAAAAnZTeXN0ZW0uV2luZG93cy5Gb3Jtcy5Hcm91cEJveCwgU3lzdGVtLldpbmRvd3MuRm9ybXMsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5DxgAAAAMAAAAAgtfZGVidWdHcm91cAsAAQAAAP////8BAAAAAAAAAAQBAAAAkwJTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5EaWN0aW9uYXJ5YDJbW1N5c3RlbS5TdHJpbmcsIG1zY29ybGliLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49Yjc3YTVjNTYxOTM0ZTA4OV0sW01pY3Jvc29mdC5NYW5hZ2VkUmVzb3VyY2VQYXJzZXIuRGlhbG9nQmluYXJ5K1Byb3BlcnR5SW5mbywgTWFuYWdlZFBhcnNlciwgVmVyc2lvbj0yLjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPTQxYWY4ZjQzNjAwMTA5ZTJdXQMAAAAHVmVyc2lvbghDb21wYXJlcghIYXNoU2l6ZQADAAiSAVN5c3RlbS5Db2xsZWN0aW9ucy5HZW5lcmljLkdlbmVyaWNFcXVhbGl0eUNvbXBhcmVyYDFbW1N5c3RlbS5TdHJpbmcsIG1zY29ybGliLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49Yjc3YTVjNTYxOTM0ZTA4OV1dCAAAAAAJAgAAAAAAAAAEAgAAAJIBU3lzdGVtLkNvbGxlY3Rpb25zLkdlbmVyaWMuR2VuZXJpY0VxdWFsaXR5Q29tcGFyZXJgMVtbU3lzdGVtLlN0cmluZywgbXNjb3JsaWIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5XV0AAAAACw==]]></Val>
         </Bin>
+        <Disp Icon="Dlg" />
+      </Item>
+      <Item ItemId=";_debugServerArguments.AccessibleDescription" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Edit Box">
+          <Val><![CDATA[Arguments. Tooltip: Any command line arguments to provide. This is ignored if the command type is "code".]]></Val>
+          <Tgt Cat="Edit Box" Stat="Loc" Orig="New">
+            <Val><![CDATA[Bağımsız Değişkenler. Araç İpucu: Sağlanacak tüm komut satırı değişkenleri. Komut türü "kod" ise bu göz ardı edilir.]]></Val>
+          </Tgt>
+        </Str>
         <Disp Icon="Dlg" />
       </Item>
       <Item ItemId=";_debugServerArguments.AccessibleName" ItemType="0" PsrId="211" Leaf="true">
@@ -1491,10 +1509,13 @@
       </Item>
       <Item ItemId=";_debugServerArgumentsLabel.AccessibleName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Static Text">
-          <Val><![CDATA[Any command line arguments to provide. This is ignored if the command type is "code".]]></Val>
+          <Val><![CDATA[Arguments]]></Val>
           <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Sağlanacak tüm komut satırı değişkenleri. Komut türü "kod" ise bu göz ardı edilir.]]></Val>
+            <Val><![CDATA[Bağımsız Değişkenler]]></Val>
           </Tgt>
+          <Prev Cat="Static Text">
+            <Val><![CDATA[Any command line arguments to provide. This is ignored if the command type is "code".]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Dlg" />
       </Item>
@@ -1510,11 +1531,11 @@
         </Bin>
         <Disp Icon="Dlg" />
       </Item>
-      <Item ItemId=";_debugServerArgumentsLabel.ToolTip" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Static Text">
-          <Val><![CDATA[Any command line arguments to provide. This is ignored if the command type is "code".]]></Val>
-          <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Sağlanacak tüm komut satırı değişkenleri. Komut türü "kod" ise bu göz ardı edilir.]]></Val>
+      <Item ItemId=";_debugServerEnvironment.AccessibleDescription" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Edit Box">
+          <Val><![CDATA[Environment. Tooltip: Environment variables to set before starting the server. Each value should appear on its own line in "KEY=VALUE" format. By default, SERVER_HOST and SERVER_PORT are set.]]></Val>
+          <Tgt Cat="Edit Box" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ortam. Araç İpucu: Sunucu başlatılmadan önce ayarlanacak ortam değişkenleri. Her değer "ANAHTAR=DEĞER" biçiminde kendi satırında görünmelidir. Varsayılan değer olarak SERVER_HOST ve SERVER_PORT ayarlanır.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Dlg" />
@@ -1539,10 +1560,13 @@
       </Item>
       <Item ItemId=";_debugServerEnvironmentLabel.AccessibleName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Static Text">
-          <Val><![CDATA[Environment variables to set before starting the server. Each value should appear on its own line in "KEY=VALUE" format. By default, SERVER_HOST and SERVER_PORT are set.]]></Val>
+          <Val><![CDATA[Environment]]></Val>
           <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Sunucu başlatılmadan önce ayarlanacak ortam değişkenleri. Her değer "ANAHTAR=DEĞER" biçiminde kendi satırında görünmelidir. Varsayılan değer olarak SERVER_HOST ve SERVER_PORT ayarlanır.]]></Val>
+            <Val><![CDATA[Ortam]]></Val>
           </Tgt>
+          <Prev Cat="Static Text">
+            <Val><![CDATA[Environment variables to set before starting the server. Each value should appear on its own line in "KEY=VALUE" format. By default, SERVER_HOST and SERVER_PORT are set.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Dlg" />
       </Item>
@@ -1558,15 +1582,6 @@
         </Bin>
         <Disp Icon="Dlg" />
       </Item>
-      <Item ItemId=";_debugServerEnvironmentLabel.ToolTip" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Static Text">
-          <Val><![CDATA[Environment variables to set before starting the server. Each value should appear on its own line in "KEY=VALUE" format. By default, SERVER_HOST and SERVER_PORT are set.]]></Val>
-          <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Sunucu başlatılmadan önce ayarlanacak ortam değişkenleri. Her değer "ANAHTAR=DEĞER" biçiminde kendi satırında görünmelidir. Varsayılan değer olarak SERVER_HOST ve SERVER_PORT ayarlanır.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Dlg" />
-      </Item>
       <Item ItemId=";_debugServerGroup.Text" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Group Box Title">
           <Val><![CDATA[Debug Server Command]]></Val>
@@ -1577,6 +1592,15 @@
         <Bin BinId="1">
           <Val><![CDATA[AAEAAAD/////AQAAAAAAAAAEAQAAAAxTeXN0ZW0uSW50MzIBAAAAB21fdmFsdWUACAEAAAALAAEAAAD/////AQAAAAAAAAAGAQAAABFfZGVidWdTZXJ2ZXJHcm91cAsAAQAAAP////8BAAAAAAAAAAQBAAAADlN5c3RlbS5Cb29sZWFuAQAAAAdtX3ZhbHVlAAEACwABAAAA/////wEAAAAAAAAABAEAAAAOU3lzdGVtLkJvb2xlYW4BAAAAB21fdmFsdWUAAQALAAEAAAD/////AQAAAAAAAAAEAQAAAJMCU3lzdGVtLkNvbGxlY3Rpb25zLkdlbmVyaWMuRGljdGlvbmFyeWAyW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldLFtNaWNyb3NvZnQuTWFuYWdlZFJlc291cmNlUGFyc2VyLkRpYWxvZ0JpbmFyeStQcm9wZXJ0eUluZm8sIE1hbmFnZWRQYXJzZXIsIFZlcnNpb249Mi4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj00MWFmOGY0MzYwMDEwOWUyXV0EAAAAB1ZlcnNpb24IQ29tcGFyZXIISGFzaFNpemUNS2V5VmFsdWVQYWlycwADAAMIkgFTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5HZW5lcmljRXF1YWxpdHlDb21wYXJlcmAxW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldXQiXAlN5c3RlbS5Db2xsZWN0aW9ucy5HZW5lcmljLktleVZhbHVlUGFpcmAyW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldLFtNaWNyb3NvZnQuTWFuYWdlZFJlc291cmNlUGFyc2VyLkRpYWxvZ0JpbmFyeStQcm9wZXJ0eUluZm8sIE1hbmFnZWRQYXJzZXIsIFZlcnNpb249Mi4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj00MWFmOGY0MzYwMDEwOWUyXV1bXQgAAAAJAgAAABEAAAAJAwAAAAQCAAAAkgFTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5HZW5lcmljRXF1YWxpdHlDb21wYXJlcmAxW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldXQAAAAAHAwAAAAABAAAACAAAAAOVAlN5c3RlbS5Db2xsZWN0aW9ucy5HZW5lcmljLktleVZhbHVlUGFpcmAyW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldLFtNaWNyb3NvZnQuTWFuYWdlZFJlc291cmNlUGFyc2VyLkRpYWxvZ0JpbmFyeStQcm9wZXJ0eUluZm8sIE1hbmFnZWRQYXJzZXIsIFZlcnNpb249Mi4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj00MWFmOGY0MzYwMDEwOWUyXV0MBQAAAFBNYW5hZ2VkUGFyc2VyLCBWZXJzaW9uPTIuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49NDFhZjhmNDM2MDAxMDllMgT8////lQJTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5LZXlWYWx1ZVBhaXJgMltbU3lzdGVtLlN0cmluZywgbXNjb3JsaWIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5XSxbTWljcm9zb2Z0Lk1hbmFnZWRSZXNvdXJjZVBhcnNlci5EaWFsb2dCaW5hcnkrUHJvcGVydHlJbmZvLCBNYW5hZ2VkUGFyc2VyLCBWZXJzaW9uPTIuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49NDFhZjhmNDM2MDAxMDllMl1dAgAAAANrZXkFdmFsdWUBBDlNaWNyb3NvZnQuTWFuYWdlZFJlc291cmNlUGFyc2VyLkRpYWxvZ0JpbmFyeStQcm9wZXJ0eUluZm8FAAAABgYAAAAYX2RlYnVnU2VydmVyR3JvdXAuTWFyZ2luCQcAAAAB+P////z///8GCQAAABpfZGVidWdTZXJ2ZXJHcm91cC5UYWJJbmRleAkKAAAAAfX////8////BgwAAAAeX2RlYnVnU2VydmVyR3JvdXAuQXV0b1NpemVNb2RlCQ0AAAAB8v////z///8GDwAAABpfZGVidWdTZXJ2ZXJHcm91cC5Mb2NhdGlvbgkQAAAAAe/////8////BhIAAAAWX2RlYnVnU2VydmVyR3JvdXAuU2l6ZQkTAAAAAez////8////BhUAAAAWX2RlYnVnU2VydmVyR3JvdXAuRG9jawkWAAAAAen////8////BhgAAAAaX2RlYnVnU2VydmVyR3JvdXAuQXV0b1NpemUJGQAAAAHm/////P///wYbAAAAGV9kZWJ1Z1NlcnZlckdyb3VwLlBhZGRpbmcJHAAAAAUHAAAAOU1pY3Jvc29mdC5NYW5hZ2VkUmVzb3VyY2VQYXJzZXIuRGlhbG9nQmluYXJ5K1Byb3BlcnR5SW5mbwIAAAAGbV90eXBlBm1fZGF0YQEHAgUAAAAGHQAAAHVTeXN0ZW0uV2luZG93cy5Gb3Jtcy5QYWRkaW5nLCBTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkJHgAAAAEKAAAABwAAAAYfAAAAFlJlc291cmNlVHlwZUNvZGUuSW50MzIJIAAAAAENAAAABwAAAAYhAAAAelN5c3RlbS5XaW5kb3dzLkZvcm1zLkF1dG9TaXplTW9kZSwgU3lzdGVtLldpbmRvd3MuRm9ybXMsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5CSIAAAABEAAAAAcAAAAGIwAAAGdTeXN0ZW0uRHJhd2luZy5Qb2ludCwgU3lzdGVtLkRyYXdpbmcsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iMDNmNWY3ZjExZDUwYTNhCSQAAAABEwAAAAcAAAAGJQAAAGZTeXN0ZW0uRHJhd2luZy5TaXplLCBTeXN0ZW0uRHJhd2luZywgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWIwM2Y1ZjdmMTFkNTBhM2EJJgAAAAEWAAAABwAAAAYnAAAAd1N5c3RlbS5XaW5kb3dzLkZvcm1zLkRvY2tTdHlsZSwgU3lzdGVtLldpbmRvd3MuRm9ybXMsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5CSgAAAABGQAAAAcAAAAGKQAAABhSZXNvdXJjZVR5cGVDb2RlLkJvb2xlYW4JKgAAAAEcAAAABwAAAAYrAAAAdVN5c3RlbS5XaW5kb3dzLkZvcm1zLlBhZGRpbmcsIFN5c3RlbS5XaW5kb3dzLkZvcm1zLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49Yjc3YTVjNTYxOTM0ZTA4OQksAAAADx4AAADTAAAAAgABAAAA/////wEAAAAAAAAADAIAAABXU3lzdGVtLldpbmRvd3MuRm9ybXMsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5BQEAAAAcU3lzdGVtLldpbmRvd3MuRm9ybXMuUGFkZGluZwUAAAAEX2FsbARfdG9wBV9sZWZ0Bl9yaWdodAdfYm90dG9tAAAAAAABCAgICAIAAAAACAAAAAYAAAAGAAAACAAAAAsPIAAAAAQAAAACAgAAAA8iAAAArAAAAAIAAQAAAP////8BAAAAAAAAAAwCAAAAV1N5c3RlbS5XaW5kb3dzLkZvcm1zLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49Yjc3YTVjNTYxOTM0ZTA4OQUBAAAAIVN5c3RlbS5XaW5kb3dzLkZvcm1zLkF1dG9TaXplTW9kZQEAAAAHdmFsdWVfXwAIAgAAAAAAAAALDyQAAACbAAAAAgABAAAA/////wEAAAAAAAAADAIAAABRU3lzdGVtLkRyYXdpbmcsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iMDNmNWY3ZjExZDUwYTNhBQEAAAAUU3lzdGVtLkRyYXdpbmcuUG9pbnQCAAAAAXgBeQAACAgCAAAABgAAAK8BAAALDyYAAACjAAAAAgABAAAA/////wEAAAAAAAAADAIAAABRU3lzdGVtLkRyYXdpbmcsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iMDNmNWY3ZjExZDUwYTNhBQEAAAATU3lzdGVtLkRyYXdpbmcuU2l6ZQIAAAAFd2lkdGgGaGVpZ2h0AAAICAIAAABPAgAAkAAAAAsPKAAAAKkAAAACAAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAAB5TeXN0ZW0uV2luZG93cy5Gb3Jtcy5Eb2NrU3R5bGUBAAAAB3ZhbHVlX18ACAIAAAAFAAAACw8qAAAAAQAAAAIBDywAAADTAAAAAgABAAAA/////wEAAAAAAAAADAIAAABXU3lzdGVtLldpbmRvd3MuRm9ybXMsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5BQEAAAAcU3lzdGVtLldpbmRvd3MuRm9ybXMuUGFkZGluZwUAAAAEX2FsbARfdG9wBV9sZWZ0Bl9yaWdodAdfYm90dG9tAAAAAAABCAgICAIAAAAACAAAAAYAAAAGAAAACAAAAAsLAAEAAAD/////AQAAAAAAAAAEAQAAAJMCU3lzdGVtLkNvbGxlY3Rpb25zLkdlbmVyaWMuRGljdGlvbmFyeWAyW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldLFtNaWNyb3NvZnQuTWFuYWdlZFJlc291cmNlUGFyc2VyLkRpYWxvZ0JpbmFyeStQcm9wZXJ0eUluZm8sIE1hbmFnZWRQYXJzZXIsIFZlcnNpb249Mi4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj00MWFmOGY0MzYwMDEwOWUyXV0EAAAAB1ZlcnNpb24IQ29tcGFyZXIISGFzaFNpemUNS2V5VmFsdWVQYWlycwADAAMIkgFTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5HZW5lcmljRXF1YWxpdHlDb21wYXJlcmAxW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldXQiXAlN5c3RlbS5Db2xsZWN0aW9ucy5HZW5lcmljLktleVZhbHVlUGFpcmAyW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldLFtNaWNyb3NvZnQuTWFuYWdlZFJlc291cmNlUGFyc2VyLkRpYWxvZ0JpbmFyeStQcm9wZXJ0eUluZm8sIE1hbmFnZWRQYXJzZXIsIFZlcnNpb249Mi4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj00MWFmOGY0MzYwMDEwOWUyXV1bXQQAAAAJAgAAAAcAAAAJAwAAAAQCAAAAkgFTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5HZW5lcmljRXF1YWxpdHlDb21wYXJlcmAxW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldXQAAAAAHAwAAAAABAAAABAAAAAOVAlN5c3RlbS5Db2xsZWN0aW9ucy5HZW5lcmljLktleVZhbHVlUGFpcmAyW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldLFtNaWNyb3NvZnQuTWFuYWdlZFJlc291cmNlUGFyc2VyLkRpYWxvZ0JpbmFyeStQcm9wZXJ0eUluZm8sIE1hbmFnZWRQYXJzZXIsIFZlcnNpb249Mi4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj00MWFmOGY0MzYwMDEwOWUyXV0MBQAAAFBNYW5hZ2VkUGFyc2VyLCBWZXJzaW9uPTIuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49NDFhZjhmNDM2MDAxMDllMgT8////lQJTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5LZXlWYWx1ZVBhaXJgMltbU3lzdGVtLlN0cmluZywgbXNjb3JsaWIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5XSxbTWljcm9zb2Z0Lk1hbmFnZWRSZXNvdXJjZVBhcnNlci5EaWFsb2dCaW5hcnkrUHJvcGVydHlJbmZvLCBNYW5hZ2VkUGFyc2VyLCBWZXJzaW9uPTIuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49NDFhZjhmNDM2MDAxMDllMl1dAgAAAANrZXkFdmFsdWUBBDlNaWNyb3NvZnQuTWFuYWdlZFJlc291cmNlUGFyc2VyLkRpYWxvZ0JpbmFyeStQcm9wZXJ0eUluZm8FAAAABgYAAAAYPj5fZGVidWdTZXJ2ZXJHcm91cC5UeXBlCQcAAAAB+P////z///8GCQAAABg+Pl9kZWJ1Z1NlcnZlckdyb3VwLk5hbWUJCgAAAAH1/////P///wYMAAAAGj4+X2RlYnVnU2VydmVyR3JvdXAuWk9yZGVyCQ0AAAAB8v////z///8GDwAAABo+Pl9kZWJ1Z1NlcnZlckdyb3VwLlBhcmVudAkQAAAABQcAAAA5TWljcm9zb2Z0Lk1hbmFnZWRSZXNvdXJjZVBhcnNlci5EaWFsb2dCaW5hcnkrUHJvcGVydHlJbmZvAgAAAAZtX3R5cGUGbV9kYXRhAQcCBQAAAAYRAAAAF1Jlc291cmNlVHlwZUNvZGUuU3RyaW5nCRIAAAABCgAAAAcAAAAGEwAAABdSZXNvdXJjZVR5cGVDb2RlLlN0cmluZwkUAAAAAQ0AAAAHAAAABhUAAAAXUmVzb3VyY2VUeXBlQ29kZS5TdHJpbmcJFgAAAAEQAAAABwAAAAYXAAAAF1Jlc291cmNlVHlwZUNvZGUuU3RyaW5nCRgAAAAPEgAAAHcAAAACdlN5c3RlbS5XaW5kb3dzLkZvcm1zLkdyb3VwQm94LCBTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkPFAAAABIAAAACEV9kZWJ1Z1NlcnZlckdyb3VwDxYAAAACAAAAAgEwDxgAAAASAAAAAhF0YWJsZUxheW91dFBhbmVsMQsAAQAAAP////8BAAAAAAAAAAQBAAAAkwJTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5EaWN0aW9uYXJ5YDJbW1N5c3RlbS5TdHJpbmcsIG1zY29ybGliLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49Yjc3YTVjNTYxOTM0ZTA4OV0sW01pY3Jvc29mdC5NYW5hZ2VkUmVzb3VyY2VQYXJzZXIuRGlhbG9nQmluYXJ5K1Byb3BlcnR5SW5mbywgTWFuYWdlZFBhcnNlciwgVmVyc2lvbj0yLjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPTQxYWY4ZjQzNjAwMTA5ZTJdXQMAAAAHVmVyc2lvbghDb21wYXJlcghIYXNoU2l6ZQADAAiSAVN5c3RlbS5Db2xsZWN0aW9ucy5HZW5lcmljLkdlbmVyaWNFcXVhbGl0eUNvbXBhcmVyYDFbW1N5c3RlbS5TdHJpbmcsIG1zY29ybGliLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49Yjc3YTVjNTYxOTM0ZTA4OV1dCAAAAAAJAgAAAAAAAAAEAgAAAJIBU3lzdGVtLkNvbGxlY3Rpb25zLkdlbmVyaWMuR2VuZXJpY0VxdWFsaXR5Q29tcGFyZXJgMVtbU3lzdGVtLlN0cmluZywgbXNjb3JsaWIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5XV0AAAAACw==]]></Val>
         </Bin>
+        <Disp Icon="Dlg" />
+      </Item>
+      <Item ItemId=";_debugServerTarget.AccessibleDescription" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Edit Box">
+          <Val><![CDATA[Command. Tooltip: The command to run when pressing F5 or the "Start debug server" command. This may be a script, module, or a single line of Python code. By default, the current startup script is used.]]></Val>
+          <Tgt Cat="Edit Box" Stat="Loc" Orig="New">
+            <Val><![CDATA[Komut. Araç İpucu: F5 tuşuna basıldığında çalıştırılacak komut veya "Hata ayıklama sunucusunu başlat" komutu. Bu bir betik, modül veya tek satırlık Python kodu olabilir. Varsayılan değer olarak geçerli başlangıç betiği kullanılır.]]></Val>
+          </Tgt>
+        </Str>
         <Disp Icon="Dlg" />
       </Item>
       <Item ItemId=";_debugServerTarget.AccessibleName" ItemType="0" PsrId="211" Leaf="true">
@@ -1599,10 +1623,13 @@
       </Item>
       <Item ItemId=";_debugServerTargetLabel.AccessibleName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Static Text">
-          <Val><![CDATA[The command to run when pressing F5 or the "Start debug server" command. This may be a script, module, or a single line of Python code. By default, the current startup script is used.]]></Val>
+          <Val><![CDATA[Command]]></Val>
           <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[F5 tuşuna basıldığında çalıştırılacak komut veya "Hata ayıklama sunucusunu başlat" komutu. Bu bir betik, modül veya tek satırlık Python kodu olabilir. Varsayılan değer olarak geçerli başlangıç betiği kullanılır.]]></Val>
+            <Val><![CDATA[Komut]]></Val>
           </Tgt>
+          <Prev Cat="Static Text">
+            <Val><![CDATA[The command to run when pressing F5 or the "Start debug server" command. This may be a script, module, or a single line of Python code. By default, the current startup script is used.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Dlg" />
       </Item>
@@ -1618,11 +1645,11 @@
         </Bin>
         <Disp Icon="Dlg" />
       </Item>
-      <Item ItemId=";_debugServerTargetLabel.ToolTip" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Static Text">
-          <Val><![CDATA[The command to run when pressing F5 or the "Start debug server" command. This may be a script, module, or a single line of Python code. By default, the current startup script is used.]]></Val>
-          <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[F5 tuşuna basıldığında çalıştırılacak komut veya "Hata ayıklama sunucusunu başlat" komutu. Bu bir betik, modül veya tek satırlık Python kodu olabilir. Varsayılan değer olarak geçerli başlangıç betiği kullanılır.]]></Val>
+      <Item ItemId=";_debugServerTargetType.AccessibleDescription" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Combo Box">
+          <Val><![CDATA[Tooltip: The type of the command. Default is "script".]]></Val>
+          <Tgt Cat="Combo Box" Stat="Loc" Orig="New">
+            <Val><![CDATA[Araç İpucu: Komutun türü. Varsayılan değer "script"tir.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Dlg" />
@@ -1678,6 +1705,15 @@
         </Str>
         <Disp Icon="Dlg" />
       </Item>
+      <Item ItemId=";_environment.AccessibleDescription" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Edit Box">
+          <Val><![CDATA[Environment. Tooltip: Specifies environment variables to be set in the spawned process in the form:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
+          <Tgt Cat="Edit Box" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ortam. Araç İpucu: Üretilen işlemde ayarlanacak ortam değişkenlerini şu biçimde belirtir:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Dlg" />
+      </Item>
       <Item ItemId=";_environment.AccessibleName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Edit Box">
           <Val><![CDATA[Environment]]></Val>
@@ -1698,10 +1734,13 @@
       </Item>
       <Item ItemId=";_environmentLabel.AccessibleName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Static Text">
-          <Val><![CDATA[Specifies environment variables to be set in the spawned process in the form:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
+          <Val><![CDATA[Environment]]></Val>
           <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Üretilen işlemde ayarlanacak ortam değişkenlerini şu biçimde belirtir:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
+            <Val><![CDATA[Ortam]]></Val>
           </Tgt>
+          <Prev Cat="Static Text">
+            <Val><![CDATA[Specifies environment variables to be set in the spawned process in the form:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Dlg" />
       </Item>
@@ -1717,11 +1756,11 @@
         </Bin>
         <Disp Icon="Dlg" />
       </Item>
-      <Item ItemId=";_environmentLabel.ToolTip" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Static Text">
-          <Val><![CDATA[Specifies environment variables to be set in the spawned process in the form:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
-          <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Üretilen işlemde ayarlanacak ortam değişkenlerini şu biçimde belirtir:]D;]A;]D;]A;NAME1=value1]D;]A;NAME2=value2]D;]A;...]]></Val>
+      <Item ItemId=";_interpArgs.AccessibleDescription" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Edit Box">
+          <Val><![CDATA[Interpreter Arguments. Tooltip: Specifies arguments for the interpreter before the script (for example, -Wall, -O or -B)]]></Val>
+          <Tgt Cat="Edit Box" Stat="Loc" Orig="New">
+            <Val><![CDATA[Yorumlayıcı Bağımsız Değişkenleri. Araç İpucu: Betikten önce yorumlayıcının bağımsız değişkenlerini belirtir (örneğin, -Wall, -O veya -B)]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Dlg" />
@@ -1746,10 +1785,13 @@
       </Item>
       <Item ItemId=";_interpArgsLabel.AccessibleName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Static Text">
-          <Val><![CDATA[Specifies arguments for the interpreter before the script (for example, -Wall, -O or -B)]]></Val>
+          <Val><![CDATA[Interpreter Arguments]]></Val>
           <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Betikten önce yorumlayıcının bağımsız değişkenlerini belirtir (örneğin, -Wall, -O veya -B)]]></Val>
+            <Val><![CDATA[Yorumlayıcı Değişkenleri]]></Val>
           </Tgt>
+          <Prev Cat="Static Text">
+            <Val><![CDATA[Specifies arguments for the interpreter before the script (for example, -Wall, -O or -B)]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Dlg" />
       </Item>
@@ -1765,11 +1807,11 @@
         </Bin>
         <Disp Icon="Dlg" />
       </Item>
-      <Item ItemId=";_interpArgsLabel.ToolTip" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Static Text">
-          <Val><![CDATA[Specifies arguments for the interpreter before the script (for example, -Wall, -O or -B)]]></Val>
-          <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Betikten önce yorumlayıcının bağımsız değişkenlerini belirtir (örneğin, -Wall, -O veya -B)]]></Val>
+      <Item ItemId=";_interpreterPath.AccessibleDescription" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Edit Box">
+          <Val><![CDATA[Interpreter Path. Tooltip: Overrides the path of the interpreter to use when launching the project.]]></Val>
+          <Tgt Cat="Edit Box" Stat="Loc" Orig="New">
+            <Val><![CDATA[Yorumlayıcı Yolu. Araç İpucu: Projeyi başlatırken kullanılacak yorumlayıcının yolunu geçersiz kılar.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Dlg" />
@@ -1794,10 +1836,13 @@
       </Item>
       <Item ItemId=";_interpreterPathLabel.AccessibleName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Static Text">
-          <Val><![CDATA[Overrides the path of the interpreter to use when launching the project.]]></Val>
+          <Val><![CDATA[Interpreter Path]]></Val>
           <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Projeyi başlatırken kullanılacak yorumlayıcının yolunu geçersiz kılar.]]></Val>
+            <Val><![CDATA[Yorumlayıcı Yolu]]></Val>
           </Tgt>
+          <Prev Cat="Static Text">
+            <Val><![CDATA[Overrides the path of the interpreter to use when launching the project.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Dlg" />
       </Item>
@@ -1813,11 +1858,11 @@
         </Bin>
         <Disp Icon="Dlg" />
       </Item>
-      <Item ItemId=";_interpreterPathLabel.ToolTip" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Static Text">
-          <Val><![CDATA[Overrides the path of the interpreter to use when launching the project.]]></Val>
-          <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Projeyi başlatırken kullanılacak yorumlayıcının yolunu geçersiz kılar.]]></Val>
+      <Item ItemId=";_launchUrl.AccessibleDescription" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Edit Box">
+          <Val><![CDATA[Launch URL. Tooltip: The URL to open in the browser when starting the development server. When not specified http://localhost will be launched.]]></Val>
+          <Tgt Cat="Edit Box" Stat="Loc" Orig="New">
+            <Val><![CDATA[Başlatma URL’si. Araç İpucu: Geliştirme sunucusu başlatılırken tarayıcıda açılacak URL. Belirtilmediğinde http://localhost başlatılır.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Dlg" />
@@ -1842,10 +1887,13 @@
       </Item>
       <Item ItemId=";_launchUrlLabel.AccessibleName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Static Text">
-          <Val><![CDATA[The URL to open in the browser when starting the development server. When not specified http://localhost will be launched.]]></Val>
+          <Val><![CDATA[Launch URL]]></Val>
           <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Geliştirme sunucusu başlatılırken tarayıcıda açılacak URL. Belirtilmediğinde http://localhost başlatılır.]]></Val>
+            <Val><![CDATA[Başlatma URL’si]]></Val>
           </Tgt>
+          <Prev Cat="Static Text">
+            <Val><![CDATA[The URL to open in the browser when starting the development server. When not specified http://localhost will be launched.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Dlg" />
       </Item>
@@ -1861,11 +1909,11 @@
         </Bin>
         <Disp Icon="Dlg" />
       </Item>
-      <Item ItemId=";_launchUrlLabel.ToolTip" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Static Text">
-          <Val><![CDATA[The URL to open in the browser when starting the development server. When not specified http://localhost will be launched.]]></Val>
-          <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Geliştirme sunucusu başlatılırken tarayıcıda açılacak URL. Belirtilmediğinde http://localhost başlatılır.]]></Val>
+      <Item ItemId=";_portNumber.AccessibleDescription" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Edit Box">
+          <Val><![CDATA[Port Number. Tooltip: The port on which the development server should listen. When not specified a random free port will be used. The SERVER_PORT environment variable is set to this value.]]></Val>
+          <Tgt Cat="Edit Box" Stat="Loc" Orig="New">
+            <Val><![CDATA[Bağlantı Noktası Numarası. Araç İpucu: Geliştirme sunucusunun üzerinde dinleme yapması gereken bağlantı noktası. Belirtilmediğinde rastgele boş bir bağlantı noktası kullanılır. SERVER_PORT ortam değişkeni bu değere ayarlanır.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Dlg" />
@@ -1890,10 +1938,13 @@
       </Item>
       <Item ItemId=";_portNumberLabel.AccessibleName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Static Text">
-          <Val><![CDATA[The port on which the development server should listen. When not specified a random free port will be used. The SERVER_PORT environment variable is set to this value.]]></Val>
+          <Val><![CDATA[Port Number]]></Val>
           <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Geliştirme sunucusunun üzerinde dinleme yapması gereken bağlantı noktası. Belirtilmediğinde rastgele boş bir bağlantı noktası kullanılır. SERVER_PORT ortam değişkeni bu değere ayarlanır.]]></Val>
+            <Val><![CDATA[Bağlantı Noktası Numarası]]></Val>
           </Tgt>
+          <Prev Cat="Static Text">
+            <Val><![CDATA[The port on which the development server should listen. When not specified a random free port will be used. The SERVER_PORT environment variable is set to this value.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Dlg" />
       </Item>
@@ -1909,11 +1960,11 @@
         </Bin>
         <Disp Icon="Dlg" />
       </Item>
-      <Item ItemId=";_portNumberLabel.ToolTip" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Static Text">
-          <Val><![CDATA[The port on which the development server should listen. When not specified a random free port will be used. The SERVER_PORT environment variable is set to this value.]]></Val>
-          <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Geliştirme sunucusunun üzerinde dinleme yapması gereken bağlantı noktası. Belirtilmediğinde rastgele boş bir bağlantı noktası kullanılır. SERVER_PORT ortam değişkeni bu değere ayarlanır.]]></Val>
+      <Item ItemId=";_runServerArguments.AccessibleDescription" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Edit Box">
+          <Val><![CDATA[Arguments. Tooltip: Any command line arguments to provide. This is ignored if the command type is "code".]]></Val>
+          <Tgt Cat="Edit Box" Stat="Loc" Orig="New">
+            <Val><![CDATA[Bağımsız Değişkenler. Araç İpucu: Sağlanacak tüm komut satırı değişkenleri. Komut türü "kod" ise bu göz ardı edilir.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Dlg" />
@@ -1938,10 +1989,13 @@
       </Item>
       <Item ItemId=";_runServerArgumentsLabel.AccessibleName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Static Text">
-          <Val><![CDATA[Any command line arguments to provide. This is ignored if the command type is "code".]]></Val>
+          <Val><![CDATA[Arguments]]></Val>
           <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Sağlanacak tüm komut satırı değişkenleri. Komut türü "kod" ise bu göz ardı edilir.]]></Val>
+            <Val><![CDATA[Bağımsız Değişkenler]]></Val>
           </Tgt>
+          <Prev Cat="Static Text">
+            <Val><![CDATA[Any command line arguments to provide. This is ignored if the command type is "code".]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Dlg" />
       </Item>
@@ -1957,11 +2011,11 @@
         </Bin>
         <Disp Icon="Dlg" />
       </Item>
-      <Item ItemId=";_runServerArgumentsLabel.ToolTip" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Static Text">
-          <Val><![CDATA[Any command line arguments to provide. This is ignored if the command type is "code".]]></Val>
-          <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Sağlanacak tüm komut satırı değişkenleri. Komut türü "kod" ise bu göz ardı edilir.]]></Val>
+      <Item ItemId=";_runServerEnvironment.AccessibleDescription" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Edit Box">
+          <Val><![CDATA[Environment. Tooltip: Environment variables to set before starting the server. Each value should appear on its own line in "KEY=VALUE" format. By default, SERVER_HOST and SERVER_PORT are set.]]></Val>
+          <Tgt Cat="Edit Box" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ortam. Araç İpucu: Sunucu başlatılmadan önce ayarlanacak ortam değişkenleri. Her değer "ANAHTAR=DEĞER" biçiminde kendi satırında görünmelidir. Varsayılan değer olarak SERVER_HOST ve SERVER_PORT ayarlanır.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Dlg" />
@@ -1986,10 +2040,13 @@
       </Item>
       <Item ItemId=";_runServerEnvironmentLabel.AccessibleName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Static Text">
-          <Val><![CDATA[Environment variables to set before starting the server. Each value should appear on its own line in "KEY=VALUE" format. By default, SERVER_HOST and SERVER_PORT are set.]]></Val>
+          <Val><![CDATA[Environment]]></Val>
           <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Sunucu başlatılmadan önce ayarlanacak ortam değişkenleri. Her değer "ANAHTAR=DEĞER" biçiminde kendi satırında görünmelidir. Varsayılan değer olarak SERVER_HOST ve SERVER_PORT ayarlanır.]]></Val>
+            <Val><![CDATA[Ortam]]></Val>
           </Tgt>
+          <Prev Cat="Static Text">
+            <Val><![CDATA[Environment variables to set before starting the server. Each value should appear on its own line in "KEY=VALUE" format. By default, SERVER_HOST and SERVER_PORT are set.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Dlg" />
       </Item>
@@ -2005,15 +2062,6 @@
         </Bin>
         <Disp Icon="Dlg" />
       </Item>
-      <Item ItemId=";_runServerEnvironmentLabel.ToolTip" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Static Text">
-          <Val><![CDATA[Environment variables to set before starting the server. Each value should appear on its own line in "KEY=VALUE" format. By default, SERVER_HOST and SERVER_PORT are set.]]></Val>
-          <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Sunucu başlatılmadan önce ayarlanacak ortam değişkenleri. Her değer kendi satırında "KEY=VALUE" biçiminde görünmelidir. Varsayılan değer olarak SERVER_HOST ve SERVER_PORT ayarlanır.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Dlg" />
-      </Item>
       <Item ItemId=";_runServerGroup.Text" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Group Box Title">
           <Val><![CDATA[Run Server Command]]></Val>
@@ -2024,6 +2072,15 @@
         <Bin BinId="1">
           <Val><![CDATA[AAEAAAD/////AQAAAAAAAAAEAQAAAAxTeXN0ZW0uSW50MzIBAAAAB21fdmFsdWUACAEAAAALAAEAAAD/////AQAAAAAAAAAGAQAAAA9fcnVuU2VydmVyR3JvdXALAAEAAAD/////AQAAAAAAAAAEAQAAAA5TeXN0ZW0uQm9vbGVhbgEAAAAHbV92YWx1ZQABAAsAAQAAAP////8BAAAAAAAAAAQBAAAADlN5c3RlbS5Cb29sZWFuAQAAAAdtX3ZhbHVlAAEACwABAAAA/////wEAAAAAAAAABAEAAACTAlN5c3RlbS5Db2xsZWN0aW9ucy5HZW5lcmljLkRpY3Rpb25hcnlgMltbU3lzdGVtLlN0cmluZywgbXNjb3JsaWIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5XSxbTWljcm9zb2Z0Lk1hbmFnZWRSZXNvdXJjZVBhcnNlci5EaWFsb2dCaW5hcnkrUHJvcGVydHlJbmZvLCBNYW5hZ2VkUGFyc2VyLCBWZXJzaW9uPTIuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49NDFhZjhmNDM2MDAxMDllMl1dBAAAAAdWZXJzaW9uCENvbXBhcmVyCEhhc2hTaXplDUtleVZhbHVlUGFpcnMAAwADCJIBU3lzdGVtLkNvbGxlY3Rpb25zLkdlbmVyaWMuR2VuZXJpY0VxdWFsaXR5Q29tcGFyZXJgMVtbU3lzdGVtLlN0cmluZywgbXNjb3JsaWIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5XV0IlwJTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5LZXlWYWx1ZVBhaXJgMltbU3lzdGVtLlN0cmluZywgbXNjb3JsaWIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5XSxbTWljcm9zb2Z0Lk1hbmFnZWRSZXNvdXJjZVBhcnNlci5EaWFsb2dCaW5hcnkrUHJvcGVydHlJbmZvLCBNYW5hZ2VkUGFyc2VyLCBWZXJzaW9uPTIuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49NDFhZjhmNDM2MDAxMDllMl1dW10IAAAACQIAAAARAAAACQMAAAAEAgAAAJIBU3lzdGVtLkNvbGxlY3Rpb25zLkdlbmVyaWMuR2VuZXJpY0VxdWFsaXR5Q29tcGFyZXJgMVtbU3lzdGVtLlN0cmluZywgbXNjb3JsaWIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5XV0AAAAABwMAAAAAAQAAAAgAAAADlQJTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5LZXlWYWx1ZVBhaXJgMltbU3lzdGVtLlN0cmluZywgbXNjb3JsaWIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5XSxbTWljcm9zb2Z0Lk1hbmFnZWRSZXNvdXJjZVBhcnNlci5EaWFsb2dCaW5hcnkrUHJvcGVydHlJbmZvLCBNYW5hZ2VkUGFyc2VyLCBWZXJzaW9uPTIuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49NDFhZjhmNDM2MDAxMDllMl1dDAUAAABQTWFuYWdlZFBhcnNlciwgVmVyc2lvbj0yLjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPTQxYWY4ZjQzNjAwMTA5ZTIE/P///5UCU3lzdGVtLkNvbGxlY3Rpb25zLkdlbmVyaWMuS2V5VmFsdWVQYWlyYDJbW1N5c3RlbS5TdHJpbmcsIG1zY29ybGliLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49Yjc3YTVjNTYxOTM0ZTA4OV0sW01pY3Jvc29mdC5NYW5hZ2VkUmVzb3VyY2VQYXJzZXIuRGlhbG9nQmluYXJ5K1Byb3BlcnR5SW5mbywgTWFuYWdlZFBhcnNlciwgVmVyc2lvbj0yLjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPTQxYWY4ZjQzNjAwMTA5ZTJdXQIAAAADa2V5BXZhbHVlAQQ5TWljcm9zb2Z0Lk1hbmFnZWRSZXNvdXJjZVBhcnNlci5EaWFsb2dCaW5hcnkrUHJvcGVydHlJbmZvBQAAAAYGAAAAFF9ydW5TZXJ2ZXJHcm91cC5Eb2NrCQcAAAAB+P////z///8GCQAAABRfcnVuU2VydmVyR3JvdXAuU2l6ZQkKAAAAAfX////8////BgwAAAAcX3J1blNlcnZlckdyb3VwLkF1dG9TaXplTW9kZQkNAAAAAfL////8////Bg8AAAAYX3J1blNlcnZlckdyb3VwLkF1dG9TaXplCRAAAAAB7/////z///8GEgAAABZfcnVuU2VydmVyR3JvdXAuTWFyZ2luCRMAAAAB7P////z///8GFQAAABdfcnVuU2VydmVyR3JvdXAuUGFkZGluZwkWAAAAAen////8////BhgAAAAYX3J1blNlcnZlckdyb3VwLkxvY2F0aW9uCRkAAAAB5v////z///8GGwAAABhfcnVuU2VydmVyR3JvdXAuVGFiSW5kZXgJHAAAAAUHAAAAOU1pY3Jvc29mdC5NYW5hZ2VkUmVzb3VyY2VQYXJzZXIuRGlhbG9nQmluYXJ5K1Byb3BlcnR5SW5mbwIAAAAGbV90eXBlBm1fZGF0YQEHAgUAAAAGHQAAAHdTeXN0ZW0uV2luZG93cy5Gb3Jtcy5Eb2NrU3R5bGUsIFN5c3RlbS5XaW5kb3dzLkZvcm1zLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49Yjc3YTVjNTYxOTM0ZTA4OQkeAAAAAQoAAAAHAAAABh8AAABmU3lzdGVtLkRyYXdpbmcuU2l6ZSwgU3lzdGVtLkRyYXdpbmcsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iMDNmNWY3ZjExZDUwYTNhCSAAAAABDQAAAAcAAAAGIQAAAHpTeXN0ZW0uV2luZG93cy5Gb3Jtcy5BdXRvU2l6ZU1vZGUsIFN5c3RlbS5XaW5kb3dzLkZvcm1zLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49Yjc3YTVjNTYxOTM0ZTA4OQkiAAAAARAAAAAHAAAABiMAAAAYUmVzb3VyY2VUeXBlQ29kZS5Cb29sZWFuCSQAAAABEwAAAAcAAAAGJQAAAHVTeXN0ZW0uV2luZG93cy5Gb3Jtcy5QYWRkaW5nLCBTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkJJgAAAAEWAAAABwAAAAYnAAAAdVN5c3RlbS5XaW5kb3dzLkZvcm1zLlBhZGRpbmcsIFN5c3RlbS5XaW5kb3dzLkZvcm1zLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49Yjc3YTVjNTYxOTM0ZTA4OQkoAAAAARkAAAAHAAAABikAAABnU3lzdGVtLkRyYXdpbmcuUG9pbnQsIFN5c3RlbS5EcmF3aW5nLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49YjAzZjVmN2YxMWQ1MGEzYQkqAAAAARwAAAAHAAAABisAAAAWUmVzb3VyY2VUeXBlQ29kZS5JbnQzMgksAAAADx4AAACpAAAAAgABAAAA/////wEAAAAAAAAADAIAAABXU3lzdGVtLldpbmRvd3MuRm9ybXMsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5BQEAAAAeU3lzdGVtLldpbmRvd3MuRm9ybXMuRG9ja1N0eWxlAQAAAAd2YWx1ZV9fAAgCAAAABQAAAAsPIAAAAKMAAAACAAEAAAD/////AQAAAAAAAAAMAgAAAFFTeXN0ZW0uRHJhd2luZywgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWIwM2Y1ZjdmMTFkNTBhM2EFAQAAABNTeXN0ZW0uRHJhd2luZy5TaXplAgAAAAV3aWR0aAZoZWlnaHQAAAgIAgAAAE8CAACQAAAACw8iAAAArAAAAAIAAQAAAP////8BAAAAAAAAAAwCAAAAV1N5c3RlbS5XaW5kb3dzLkZvcm1zLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49Yjc3YTVjNTYxOTM0ZTA4OQUBAAAAIVN5c3RlbS5XaW5kb3dzLkZvcm1zLkF1dG9TaXplTW9kZQEAAAAHdmFsdWVfXwAIAgAAAAAAAAALDyQAAAABAAAAAgEPJgAAANMAAAACAAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAABxTeXN0ZW0uV2luZG93cy5Gb3Jtcy5QYWRkaW5nBQAAAARfYWxsBF90b3AFX2xlZnQGX3JpZ2h0B19ib3R0b20AAAAAAAEICAgIAgAAAAAIAAAABgAAAAYAAAAIAAAACw8oAAAA0wAAAAIAAQAAAP////8BAAAAAAAAAAwCAAAAV1N5c3RlbS5XaW5kb3dzLkZvcm1zLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49Yjc3YTVjNTYxOTM0ZTA4OQUBAAAAHFN5c3RlbS5XaW5kb3dzLkZvcm1zLlBhZGRpbmcFAAAABF9hbGwEX3RvcAVfbGVmdAZfcmlnaHQHX2JvdHRvbQAAAAAAAQgICAgCAAAAAAgAAAAGAAAABgAAAAgAAAALDyoAAACbAAAAAgABAAAA/////wEAAAAAAAAADAIAAABRU3lzdGVtLkRyYXdpbmcsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iMDNmNWY3ZjExZDUwYTNhBQEAAAAUU3lzdGVtLkRyYXdpbmcuUG9pbnQCAAAAAXgBeQAACAgCAAAABgAAAA8BAAALDywAAAAEAAAAAgEAAAALAAEAAAD/////AQAAAAAAAAAEAQAAAJMCU3lzdGVtLkNvbGxlY3Rpb25zLkdlbmVyaWMuRGljdGlvbmFyeWAyW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldLFtNaWNyb3NvZnQuTWFuYWdlZFJlc291cmNlUGFyc2VyLkRpYWxvZ0JpbmFyeStQcm9wZXJ0eUluZm8sIE1hbmFnZWRQYXJzZXIsIFZlcnNpb249Mi4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj00MWFmOGY0MzYwMDEwOWUyXV0EAAAAB1ZlcnNpb24IQ29tcGFyZXIISGFzaFNpemUNS2V5VmFsdWVQYWlycwADAAMIkgFTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5HZW5lcmljRXF1YWxpdHlDb21wYXJlcmAxW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldXQiXAlN5c3RlbS5Db2xsZWN0aW9ucy5HZW5lcmljLktleVZhbHVlUGFpcmAyW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldLFtNaWNyb3NvZnQuTWFuYWdlZFJlc291cmNlUGFyc2VyLkRpYWxvZ0JpbmFyeStQcm9wZXJ0eUluZm8sIE1hbmFnZWRQYXJzZXIsIFZlcnNpb249Mi4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj00MWFmOGY0MzYwMDEwOWUyXV1bXQQAAAAJAgAAAAcAAAAJAwAAAAQCAAAAkgFTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5HZW5lcmljRXF1YWxpdHlDb21wYXJlcmAxW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldXQAAAAAHAwAAAAABAAAABAAAAAOVAlN5c3RlbS5Db2xsZWN0aW9ucy5HZW5lcmljLktleVZhbHVlUGFpcmAyW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldLFtNaWNyb3NvZnQuTWFuYWdlZFJlc291cmNlUGFyc2VyLkRpYWxvZ0JpbmFyeStQcm9wZXJ0eUluZm8sIE1hbmFnZWRQYXJzZXIsIFZlcnNpb249Mi4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj00MWFmOGY0MzYwMDEwOWUyXV0MBQAAAFBNYW5hZ2VkUGFyc2VyLCBWZXJzaW9uPTIuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49NDFhZjhmNDM2MDAxMDllMgT8////lQJTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5LZXlWYWx1ZVBhaXJgMltbU3lzdGVtLlN0cmluZywgbXNjb3JsaWIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5XSxbTWljcm9zb2Z0Lk1hbmFnZWRSZXNvdXJjZVBhcnNlci5EaWFsb2dCaW5hcnkrUHJvcGVydHlJbmZvLCBNYW5hZ2VkUGFyc2VyLCBWZXJzaW9uPTIuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49NDFhZjhmNDM2MDAxMDllMl1dAgAAAANrZXkFdmFsdWUBBDlNaWNyb3NvZnQuTWFuYWdlZFJlc291cmNlUGFyc2VyLkRpYWxvZ0JpbmFyeStQcm9wZXJ0eUluZm8FAAAABgYAAAAWPj5fcnVuU2VydmVyR3JvdXAuTmFtZQkHAAAAAfj////8////BgkAAAAWPj5fcnVuU2VydmVyR3JvdXAuVHlwZQkKAAAAAfX////8////BgwAAAAYPj5fcnVuU2VydmVyR3JvdXAuUGFyZW50CQ0AAAAB8v////z///8GDwAAABg+Pl9ydW5TZXJ2ZXJHcm91cC5aT3JkZXIJEAAAAAUHAAAAOU1pY3Jvc29mdC5NYW5hZ2VkUmVzb3VyY2VQYXJzZXIuRGlhbG9nQmluYXJ5K1Byb3BlcnR5SW5mbwIAAAAGbV90eXBlBm1fZGF0YQEHAgUAAAAGEQAAABdSZXNvdXJjZVR5cGVDb2RlLlN0cmluZwkSAAAAAQoAAAAHAAAABhMAAAAXUmVzb3VyY2VUeXBlQ29kZS5TdHJpbmcJFAAAAAENAAAABwAAAAYVAAAAF1Jlc291cmNlVHlwZUNvZGUuU3RyaW5nCRYAAAABEAAAAAcAAAAGFwAAABdSZXNvdXJjZVR5cGVDb2RlLlN0cmluZwkYAAAADxIAAAAQAAAAAg9fcnVuU2VydmVyR3JvdXAPFAAAAHcAAAACdlN5c3RlbS5XaW5kb3dzLkZvcm1zLkdyb3VwQm94LCBTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkPFgAAABIAAAACEXRhYmxlTGF5b3V0UGFuZWwxDxgAAAACAAAAAgExCwABAAAA/////wEAAAAAAAAABAEAAACTAlN5c3RlbS5Db2xsZWN0aW9ucy5HZW5lcmljLkRpY3Rpb25hcnlgMltbU3lzdGVtLlN0cmluZywgbXNjb3JsaWIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5XSxbTWljcm9zb2Z0Lk1hbmFnZWRSZXNvdXJjZVBhcnNlci5EaWFsb2dCaW5hcnkrUHJvcGVydHlJbmZvLCBNYW5hZ2VkUGFyc2VyLCBWZXJzaW9uPTIuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49NDFhZjhmNDM2MDAxMDllMl1dAwAAAAdWZXJzaW9uCENvbXBhcmVyCEhhc2hTaXplAAMACJIBU3lzdGVtLkNvbGxlY3Rpb25zLkdlbmVyaWMuR2VuZXJpY0VxdWFsaXR5Q29tcGFyZXJgMVtbU3lzdGVtLlN0cmluZywgbXNjb3JsaWIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5XV0IAAAAAAkCAAAAAAAAAAQCAAAAkgFTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5HZW5lcmljRXF1YWxpdHlDb21wYXJlcmAxW1tTeXN0ZW0uU3RyaW5nLCBtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODldXQAAAAAL]]></Val>
         </Bin>
+        <Disp Icon="Dlg" />
+      </Item>
+      <Item ItemId=";_runServerTarget.AccessibleDescription" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Edit Box">
+          <Val><![CDATA[Command. Tooltip: The command to run when pressing Ctrl+F5 or the "Start server" command. This may be a script, module, or a single line of Python code. By default, the current startup script is used.]]></Val>
+          <Tgt Cat="Edit Box" Stat="Loc" Orig="New">
+            <Val><![CDATA[Komut. Arraç İpucu: Ctrl+F5 tuşlarına veya "Sunucuyu başlat" komutuna basıldığında çalıştırılacak komut. Bu bir betik, modül veya tek satırlık Python kodu olabilir. Varsayılan değer olarak geçerli başlangıç betiği kullanılır.]]></Val>
+          </Tgt>
+        </Str>
         <Disp Icon="Dlg" />
       </Item>
       <Item ItemId=";_runServerTarget.AccessibleName" ItemType="0" PsrId="211" Leaf="true">
@@ -2046,10 +2103,13 @@
       </Item>
       <Item ItemId=";_runServerTargetLabel.AccessibleName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Static Text">
-          <Val><![CDATA[The command to run when pressing Ctrl+F5 or the "Start server" command. This may be a script, module, or a single line of Python code. By default, the current startup script is used.]]></Val>
+          <Val><![CDATA[Command]]></Val>
           <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Ctrl+F5 tuşlarına veya "Sunucuyu başlat" komutuna basıldığında çalıştırılacak komut. Bu bir betik, modül veya tek satırlık Python kodu olabilir. Varsayılan değer olarak geçerli başlatma betiği kullanılır.]]></Val>
+            <Val><![CDATA[Komut]]></Val>
           </Tgt>
+          <Prev Cat="Static Text">
+            <Val><![CDATA[The command to run when pressing Ctrl+F5 or the "Start server" command. This may be a script, module, or a single line of Python code. By default, the current startup script is used.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Dlg" />
       </Item>
@@ -2065,11 +2125,11 @@
         </Bin>
         <Disp Icon="Dlg" />
       </Item>
-      <Item ItemId=";_runServerTargetLabel.ToolTip" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Static Text">
-          <Val><![CDATA[The command to run when pressing Ctrl+F5 or the "Start server" command. This may be a script, module, or a single line of Python code. By default, the current startup script is used.]]></Val>
-          <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Ctrl+F5 tuşlarına veya "Sunucuyu başlat" komutuna basıldığında çalıştırılacak komut. Bu bir betik, modül veya tek satırlık Python kodu olabilir. Varsayılan değer olarak geçerli başlatma betiği kullanılır.]]></Val>
+      <Item ItemId=";_runServerTargetType.AccessibleDescription" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Combo Box">
+          <Val><![CDATA[Tooltip: The type of the command. Default is "script".]]></Val>
+          <Tgt Cat="Combo Box" Stat="Loc" Orig="New">
+            <Val><![CDATA[Araç İpucu: Komutun türü. Varsayılan değer "script"tir.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Dlg" />
@@ -2127,10 +2187,13 @@
       </Item>
       <Item ItemId=";_searchPathLabel.AccessibleName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Static Text">
-          <Val><![CDATA[Semicolon separated list of import directories to be added to sys.path.]]></Val>
+          <Val><![CDATA[Search Paths]]></Val>
           <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Sys.path dosyasına eklenecek noktalı virgülle ayrılmış içeri aktarma dizinleri listesi.]]></Val>
+            <Val><![CDATA[Arama Yolları]]></Val>
           </Tgt>
+          <Prev Cat="Static Text">
+            <Val><![CDATA[Semicolon separated list of import directories to be added to sys.path.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Dlg" />
       </Item>
@@ -2146,11 +2209,11 @@
         </Bin>
         <Disp Icon="Dlg" />
       </Item>
-      <Item ItemId=";_searchPathLabel.ToolTip" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Static Text">
-          <Val><![CDATA[Semicolon separated list of import directories to be added to sys.path.]]></Val>
-          <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Sys.path dosyasına eklenecek noktalı virgülle ayrılmış içeri aktarma dizinleri listesi.]]></Val>
+      <Item ItemId=";_searchPaths.AccessibleDescription" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Edit Box">
+          <Val><![CDATA[Search Paths. Tooltip: Semicolon separated list of import directories to be added to sys.path.]]></Val>
+          <Tgt Cat="Edit Box" Stat="Loc" Orig="New">
+            <Val><![CDATA[Arama Yolları. Araç İpucu: Sys.path dosyasına eklenecek noktalı virgülle ayrılmış içeri aktarma dizinleri listesi.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Dlg" />
@@ -4033,7 +4096,7 @@
     </Item>
     <Item ItemId=";pythontools/project/pythontestpropertypageview.baml" ItemType="0" PsrId="211" Leaf="true">
       <Bin BinId="3">
-        <Val><![CDATA[AAEAAAD/////AQAAAAAAAAAEAQAAAAxTeXN0ZW0uSW50MzIBAAAAB21fdmFsdWUACAMAAAALAAEAAAD/////AQAAAAAAAAAGAQAAADNweXRob250b29scy9wcm9qZWN0L3B5dGhvbnRlc3Rwcm9wZXJ0eXBhZ2V2aWV3LmJhbWwLAAEAAAD/////AQAAAAAAAAAEAQAAAB9TeXN0ZW0uVW5pdHlTZXJpYWxpemF0aW9uSG9sZGVyAwAAAAREYXRhCVVuaXR5VHlwZQxBc3NlbWJseU5hbWUBAAEIBgIAAAAfU3lzdGVtLklPLlVubWFuYWdlZE1lbW9yeVN0cmVhbQQAAAAGAwAAAEttc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkLAAEAAAD/////AQAAAAAAAAAPAQAAAHQMAAACDAAAAE0AUwBCAEEATQBMAAAAYAAAAGAAAABgAAEA/////wAcZAAAYE1pY3Jvc29mdC5QeXRob25Ub29scy5Db21tb24sIFZlcnNpb249MTcuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49YjAzZjVmN2YxMWQ1MGEzYRtjSWNsci1uYW1lc3BhY2U6TWljcm9zb2Z0LlB5dGhvblRvb2xzO2Fzc2VtYmx5PU1pY3Jvc29mdC5QeXRob25Ub29scy5Db21tb24VTWljcm9zb2Z0LlB5dGhvblRvb2xzAAAcGQEAFU1pY3Jvc29mdC5QeXRob25Ub29scx0+AAABADhNaWNyb3NvZnQuUHl0aG9uVG9vbHMuUHJvamVjdC5QeXRob25UZXN0UHJvcGVydHlQYWdlVmlldwMAAAAcVwIAU1ByZXNlbnRhdGlvbkNvcmUsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj0zMWJmMzg1NmFkMzY0ZTM1HFIDAE5XaW5kb3dzQmFzZSwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPTMxYmYzODU2YWQzNjRlMzUcXAQAWFByZXNlbnRhdGlvbkZyYW1ld29yaywgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPTMxYmYzODU2YWQzNjRlMzUcXgUAWldpbmRvd3NGb3Jtc0ludGVncmF0aW9uLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49MzFiZjM4NTZhZDM2NGUzNRRGADlodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dpbmZ4LzIwMDYveGFtbC9wcmVzZW50YXRpb24EAAIAAwAEAAUAHFIGAE5TeXN0ZW0uWGFtbCwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkUOgF4LGh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd2luZngvMjAwNi94YW1sBAACAAMABAAGABRKAm1jO2h0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9tYXJrdXAtY29tcGF0aWJpbGl0eS8yMDA2BAACAAMABAAGABRAAWQyaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS9leHByZXNzaW9uL2JsZW5kLzIwMDgEAAIAAwAEAAYAFFwGY29tbW9uSWNsci1uYW1lc3BhY2U6TWljcm9zb2Z0LlB5dGhvblRvb2xzO2Fzc2VtYmx5PU1pY3Jvc29mdC5QeXRob25Ub29scy5Db21tb24EAAIAAwAEAAYAICAAABxWc0ZvbnQuRW52aXJvbm1lbnRGb250RmFtaWx5I+X/vQAAACAeAQAaVnNGb250LkVudmlyb25tZW50Rm9udFNpemUj5P+9AAEAHxAAAB7/AAlSZXNvdXJjZXMNAAAfEQEAlP0AClRhcmdldFR5cGUfDwIA1P0ACFByb3BlcnR5HwwDANT9AAVWYWx1ZSARAgANRnJhbWV3b3JrTm9uZSATAwAPRnJhbWV3b3JrUHl0ZXN0IBUEABFGcmFtZXdvcmtVbml0dGVzdB8YBAAC/wARQ29sdW1uRGVmaW5pdGlvbnMfFgUAev8AD1NoYXJlZFNpemVHcm91cB8VBgAC/wAOUm93RGVmaW5pdGlvbnMdIwEAAAAdTWljcm9zb2Z0LlB5dGhvblRvb2xzLlN0cmluZ3MfNwcAAQAAMFB5dGhvblRlc3RQcm9wZXJ0eVBhZ2VVbml0dGVzdFJvb3REaXJlY3RvcnlMYWJlbB86CAABAAAzUHl0aG9uVGVzdFByb3BlcnR5UGFnZVVuaXR0ZXN0Um9vdERpcmVjdG9yeUhlbHBUZXh0HTQCAAIALlN5c3RlbS5XaW5kb3dzLkF1dG9tYXRpb24uQXV0b21hdGlvblByb3BlcnRpZXMfDwkAAgAACEhlbHBUZXh0HwsKAOz/AARQYXRoHxoLAOz/ABNVcGRhdGVTb3VyY2VUcmlnZ2VyHxAMAAIAAAlMYWJlbGVkQnkfEg0A7P8AC0VsZW1lbnROYW1lHzEOAAEAACpQeXRob25UZXN0UHJvcGVydHlQYWdlVW5pdHRlc3RQYXR0ZXJuTGFiZWwfNA8AAQAALVB5dGhvblRlc3RQcm9wZXJ0eVBhZ2VVbml0dGVzdFBhdHRlcm5IZWxwVGV4dAP0/QAlfgIAACem/gAAAAAAAAAngf0AIgAAAAAAJ6T/AF4AAAAAACYJAgCaAAAAAAAmCQMAnwAAAAAAJgkEAKQAAAAAAAOU/QAiAQCm/i4S/wPU/QAGBwIAiQDP/yQHAwABNHH9BAQDlP0AIgEAgf0uEv8D1P0ABgcCAIkAz/8kBwMAATRx/QQD1P0ABgcCAIkA2v8kDAMABkNlbnRlcj3/BAQDlP0AIgEApP8uEv8D1P0ABgcCAIkAz/8kBwMAATRx/QQD1P0ABgcCAIkA2v8kDAMABkNlbnRlcj3/BAQDiP8ABAOI/wAEA4j/AC5S/wMC/wALBAADpv8AJArz/wRBdXRvAP8kFAUADkxhYmVsU2l6ZUdyb3Vwmf0EA6b/ACQH8/8BKgD/BAwLBgAD4/0ABAPj/QAEDC4r/wOm/gAkGMr/ElJvb3REaXJlY3RvcnlMYWJlbJn9JAfB/wEwxf4kB8P/ATDF/iPy/1oCBwAEA4H9ACQHwf8BMMX+JAfD/wExxf4jCQBaAggAB47/A+z/ACQbCgAVVW5pdFRlc3RSb290RGlyZWN0b3J5FP4kFQsAD1Byb3BlcnR5Q2hhbmdlZD3/BAgHDAAD7P8AJBgNABJSb290RGlyZWN0b3J5TGFiZWyZ/QQIBAOm/gAkEsr/DFBhdHRlcm5MYWJlbJn9JAfB/wExxf4kB8P/ATDF/iPy/1oCDgAEA4H9ACQHwf8BMcX+JAfD/wExxf4jCQBaAg8AB47/A+z/ACQVCgAPVW5pdFRlc3RQYXR0ZXJuFP4kFQsAD1Byb3BlcnR5Q2hhbmdlZD3/BAgHDAAD7P8AJBINAAxQYXR0ZXJuTGFiZWyZ/QQIBAQEBA4u8v8Dp/0AHxgQAAL/ABFJc1NoYXJlZFNpemVTY29wZQYGEAAuAAEuK/8DAv8ACwQAA6b/ACQK8/8EQXV0bwD/JBQFAA5MYWJlbFNpemVHcm91cJn9BAOm/wAkB/P/ASoA/wQMCwYAA+P9AAQD4/0ABAwuK/8Dpv4ALQEAAAAkFMr/DkZyYW1ld29ya0xhYmVsmf0kB8H/ATDF/iQHw/8BMMX+HysRAAEAACRQeXRob25UZXN0UHJvcGVydHlQYWdlRnJhbWV3b3JrTGFiZWwj8v9aAhEABAOk/wAkB8H/ATDF/iQHw/8BMcX+JAnL/wMxMDCk/iQK0P8ETGVmdD3/Hy4SAAEAACdQeXRob25UZXN0UHJvcGVydHlQYWdlRnJhbWV3b3JrSGVscFRleHQjCQBaAhIAB67/A+z/ACQQCgAKRnJhbWV3b3JrcxT+BAgfExMA1/0ADFNlbGVjdGVkSXRlbQcTAAPs/wAkFwoAEVNlbGVjdGVkRnJhbWV3b3JrFP4ECAcMAAPs/wAkFA0ADkZyYW1ld29ya0xhYmVsmf0ECAQEA5z/ACQHz/8BMHH9Bgbe/y4AAAYGfP8uAAAH8v8D7P8ABAgHyf8DlP0AIgEAnP8fDxQAlP0ACFRyaWdnZXJzCxQAA4b/AB8OFQCG/wAHQmluZGluZwcVAAPs/wAqEBMRU2VsZWN0ZWRGcmFtZXdvcmsrBAgfDBYAhv8ABVZhbHVlBQgWAARub25lLmH/A9T9AAYHAgCJAPH/IwMAWwICAAQEA4b/AAcVAAPs/wAqEBMRU2VsZWN0ZWRGcmFtZXdvcmsrBAgFDBYACHVuaXR0ZXN0LmH/A9T9AAYHAgCJAPH/IwMAWwIEAAQEA4b/AAcVAAPs/wAqEBMRU2VsZWN0ZWRGcmFtZXdvcmsrBAgFChYABnB5dGVzdC5h/wPU/QAGBwIAiQDx/yMDAFsCAwAEBAwECAQEBAILAAEAAAD/////AQAAAAAAAAAEAQAAAA5TeXN0ZW0uQm9vbGVhbgEAAAAHbV92YWx1ZQABAAsAAQAAAP////8BAAAAAAAAAAQBAAAADlN5c3RlbS5Cb29sZWFuAQAAAAdtX3ZhbHVlAAEACw==]]></Val>
+        <Val><![CDATA[AAEAAAD/////AQAAAAAAAAAEAQAAAAxTeXN0ZW0uSW50MzIBAAAAB21fdmFsdWUACAMAAAALAAEAAAD/////AQAAAAAAAAAGAQAAADNweXRob250b29scy9wcm9qZWN0L3B5dGhvbnRlc3Rwcm9wZXJ0eXBhZ2V2aWV3LmJhbWwLAAEAAAD/////AQAAAAAAAAAEAQAAAB9TeXN0ZW0uVW5pdHlTZXJpYWxpemF0aW9uSG9sZGVyAwAAAAREYXRhCVVuaXR5VHlwZQxBc3NlbWJseU5hbWUBAAEIBgIAAAAfU3lzdGVtLklPLlVubWFuYWdlZE1lbW9yeVN0cmVhbQQAAAAGAwAAAEttc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkLAAEAAAD/////AQAAAAAAAAAPAQAAAJsWAAACDAAAAE0AUwBCAEEATQBMAAAAYAAAAGAAAABgAAEA/////wAcZAAAYE1pY3Jvc29mdC5QeXRob25Ub29scy5Db21tb24sIFZlcnNpb249MTcuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49YjAzZjVmN2YxMWQ1MGEzYRtjSWNsci1uYW1lc3BhY2U6TWljcm9zb2Z0LlB5dGhvblRvb2xzO2Fzc2VtYmx5PU1pY3Jvc29mdC5QeXRob25Ub29scy5Db21tb24VTWljcm9zb2Z0LlB5dGhvblRvb2xzAAAcaQEAZU1pY3Jvc29mdC5WaXN1YWxTdHVkaW8uU2hlbGwuMTUuMCwgVmVyc2lvbj0xNy4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iMDNmNWY3ZjExZDUwYTNhG4EBWmNsci1uYW1lc3BhY2U6TWljcm9zb2Z0LlZpc3VhbFN0dWRpby5QbGF0Zm9ybVVJO2Fzc2VtYmx5PU1pY3Jvc29mdC5WaXN1YWxTdHVkaW8uU2hlbGwuMTUuMCFNaWNyb3NvZnQuVmlzdWFsU3R1ZGlvLlBsYXRmb3JtVUkBABxdAgBZTWljcm9zb2Z0LlB5dGhvblRvb2xzLCBWZXJzaW9uPTE3LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWIwM2Y1ZjdmMTFkNTBhM2EbRSdjbHItbmFtZXNwYWNlOk1pY3Jvc29mdC5QeXRob25Ub29scy5XcGYZTWljcm9zb2Z0LlB5dGhvblRvb2xzLldwZgIAHT4AAAIAOE1pY3Jvc29mdC5QeXRob25Ub29scy5Qcm9qZWN0LlB5dGhvblRlc3RQcm9wZXJ0eVBhZ2VWaWV3AwAAABxXAwBTUHJlc2VudGF0aW9uQ29yZSwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPTMxYmYzODU2YWQzNjRlMzUcUgQATldpbmRvd3NCYXNlLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49MzFiZjM4NTZhZDM2NGUzNRxcBQBYUHJlc2VudGF0aW9uRnJhbWV3b3JrLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49MzFiZjM4NTZhZDM2NGUzNRxeBgBaV2luZG93c0Zvcm1zSW50ZWdyYXRpb24sIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj0zMWJmMzg1NmFkMzY0ZTM1FEYAOWh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd2luZngvMjAwNi94YW1sL3ByZXNlbnRhdGlvbgQAAwAEAAUABgAcUgcATlN5c3RlbS5YYW1sLCBWZXJzaW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49Yjc3YTVjNTYxOTM0ZTA4ORQ6AXgsaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93aW5meC8yMDA2L3hhbWwEAAMABAAFAAcAFEoCbWM7aHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL21hcmt1cC1jb21wYXRpYmlsaXR5LzIwMDYEAAMABAAFAAcAFEABZDJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL2V4cHJlc3Npb24vYmxlbmQvMjAwOAQAAwAEAAUABwAUXAZjb21tb25JY2xyLW5hbWVzcGFjZTpNaWNyb3NvZnQuUHl0aG9uVG9vbHM7YXNzZW1ibHk9TWljcm9zb2Z0LlB5dGhvblRvb2xzLkNvbW1vbgQAAwAEAAUABwAUawR2c3VpWmNsci1uYW1lc3BhY2U6TWljcm9zb2Z0LlZpc3VhbFN0dWRpby5QbGF0Zm9ybVVJO2Fzc2VtYmx5PU1pY3Jvc29mdC5WaXN1YWxTdHVkaW8uU2hlbGwuMTUuMAQAAwAEAAUABwAUNwN3cGYnY2xyLW5hbWVzcGFjZTpNaWNyb3NvZnQuUHl0aG9uVG9vbHMuV3BmBAADAAQABQAHAB0sAQACACZNaWNyb3NvZnQuUHl0aG9uVG9vbHMuV3BmLk1vZGVyblN0eWxlcx8fAAABAAAYRW52aXJvbm1lbnRGb250RmFtaWx5S2V5I+X/vSAAAB8dAQABAAAWRW52aXJvbm1lbnRGb250U2l6ZUtleSPk/70gAQAfFAIAAQAADUJhY2tncm91bmRLZXkj6P+9IAIAHxQDAAEAAA1Gb3JlZ3JvdW5kS2V5I+D/vSADAB8QBAAe/wAJUmVzb3VyY2VzDQQAHxEFAJT9AApUYXJnZXRUeXBlHw8GANT9AAhQcm9wZXJ0eR8MBwDU/QAFVmFsdWUfGwgAAQAAFENvbnRyb2xCYWNrZ3JvdW5kS2V5HxsJAAEAABRDb250cm9sRm9yZWdyb3VuZEtleR8XCgABAAAQQ29udHJvbEJvcmRlcktleR8RCwCU/wAKVGFyZ2V0VHlwZR8QDADI/wAJQ2xpY2tNb2RlHxANAGT9AAlJc0NoZWNrZWQfCw4A7P8ABFBhdGgfCw8A7P8ABE1vZGUfFRAA7P8ADlJlbGF0aXZlU291cmNlHxgRAAL/ABFDb2x1bW5EZWZpbml0aW9ucx8XEgBK/QAQSXNIaXRUZXN0VmlzaWJsZR8XEwCk/wAQU2VsZWN0aW9uQm94SXRlbR8fFACk/wAYU2VsZWN0aW9uQm94SXRlbVRlbXBsYXRlHxUVAKT/AA5Jc0Ryb3BEb3duT3Blbh8ZFgAb/gASQWxsb3dzVHJhbnNwYXJlbmN5HxoXAEr9ABNTbmFwc1RvRGV2aWNlUGl4ZWxzHxIYAB7/AAtBY3R1YWxXaWR0aB8YGQCk/wARTWF4RHJvcERvd25IZWlnaHQfCxoAzv8DBE5hbWUdLQIABQAnU3lzdGVtLldpbmRvd3MuSW5wdXQuS2V5Ym9hcmROYXZpZ2F0aW9uHxwbAAIAABVEaXJlY3Rpb25hbE5hdmlnYXRpb24fDxwAlP8ACFRyaWdnZXJzHw8dAFD9AAhQcm9wZXJ0eR8MHgBQ/QAFVmFsdWUfER8A1P0AClRhcmdldE5hbWUfICAAAQAAGUNvbnRyb2xCYWNrZ3JvdW5kSG92ZXJLZXkfIyEAAQAAHENvbnRyb2xCYWNrZ3JvdW5kU2VsZWN0ZWRLZXkfIyIAAQAAHENvbnRyb2xGb3JlZ3JvdW5kRGlzYWJsZWRLZXkfDyMAlP0ACFRyaWdnZXJzHyAkAAEAABlDb250cm9sRm9yZWdyb3VuZEhvdmVyS2V5HyMlAAEAABxDb250cm9sRm9yZWdyb3VuZFNlbGVjdGVkS2V5IBEAAA1GcmFtZXdvcmtOb25lIBMBAA9GcmFtZXdvcmtQeXRlc3QgFQIAEUZyYW1ld29ya1VuaXR0ZXN0HxYmAHr/AA9TaGFyZWRTaXplR3JvdXAfFScAAv8ADlJvd0RlZmluaXRpb25zHSMDAAAAHU1pY3Jvc29mdC5QeXRob25Ub29scy5TdHJpbmdzHzcoAAMAADBQeXRob25UZXN0UHJvcGVydHlQYWdlVW5pdHRlc3RSb290RGlyZWN0b3J5TGFiZWwfOikAAwAAM1B5dGhvblRlc3RQcm9wZXJ0eVBhZ2VVbml0dGVzdFJvb3REaXJlY3RvcnlIZWxwVGV4dB00BAADAC5TeXN0ZW0uV2luZG93cy5BdXRvbWF0aW9uLkF1dG9tYXRpb25Qcm9wZXJ0aWVzHw8qAAQAAAhIZWxwVGV4dB8aKwDs/wATVXBkYXRlU291cmNlVHJpZ2dlch8QLAAEAAAJTGFiZWxlZEJ5HxItAOz/AAtFbGVtZW50TmFtZR8xLgADAAAqUHl0aG9uVGVzdFByb3BlcnR5UGFnZVVuaXR0ZXN0UGF0dGVybkxhYmVsHzQvAAMAAC1QeXRob25UZXN0UHJvcGVydHlQYWdlVW5pdHRlc3RQYXR0ZXJuSGVscFRleHQD9P0AJRIHAAAnpv4AAAAAAAAAJ4H9ACEAAAAAACek/wBqAAAAAAAmCQAALgUAAAAAJgkBADMFAAAAACYJAgA4BQAAAAADlP0AIgUApv4uEv8D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]]></Val>
       </Bin>
       <Disp Edtr="External" LocTbl="false" />
     </Item>
