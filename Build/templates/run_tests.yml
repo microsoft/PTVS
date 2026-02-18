@@ -50,15 +50,18 @@ steps:
       failOnStderr: true
       pythonInterpreter: $(PYTHON_INTERPRETER)
 
-  # Build the product
-  - task: MSBuild@1
-    displayName: 'Build product'
-    inputs:
-      solution: $(Build.SourcesDirectory)/Python/Product/dirs.proj
-      msbuildVersion: $(MsBuildVersion)
-      platform: $(Platform)
-      configuration: $(BuildConfiguration)
-      msbuildArguments: '/p:VSTarget=$(VSTarget) /bl:$(Build.SourcesDirectory)\logs\BuildProduct.binlog'
+  # Download binaries from the build job instead of rebuilding
+  - download: current
+    artifact: Binaries
+    displayName: 'Download build binaries'
+
+  # Copy downloaded binaries to the expected location
+  - powershell: |
+      $source = '$(Pipeline.Workspace)\Binaries'
+      $dest = '$(Build.BinariesDirectory)\raw\binaries'
+      New-Item -ItemType Directory -Force -Path $dest | Out-Null
+      Copy-Item -Path "$source\*" -Destination $dest -Recurse -Force
+    displayName: 'Copy binaries to expected location'
 
   - task: CacheBeta@2
     displayName: 'Restore glass binaries from cache'
