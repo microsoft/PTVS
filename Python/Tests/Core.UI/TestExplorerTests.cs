@@ -65,7 +65,7 @@ namespace PythonToolsUITests {
             var sln = app.CopyProjectForTest(@"TestData\TestExplorerUnittest.sln");
             app.OpenProject(sln);
 
-            RunAllTests(app, AllUnittests);
+            RunAllTests(app, AllUnittests, Path.GetFileNameWithoutExtension(sln));
         }
 
         public void RunAllUnittestWorkspace(PythonVisualStudioApp app) {
