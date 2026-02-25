@@ -17,6 +17,23 @@ parameters:
 
 steps:
 
+  # Point NuGet HTTP cache to a pipeline-controlled location so we can cache it between runs.
+  # packages.config restores don't use the global-packages folder, but they do use the HTTP cache
+  # to avoid re-downloading packages from the feed.
+  - powershell: |
+      $cachePath = Join-Path "$(Pipeline.Workspace)" "nuget-http-cache"
+      Write-Host "##vso[task.setvariable variable=NUGET_HTTP_CACHE_PATH]$cachePath"
+    displayName: 'Set NuGet cache path'
+
+  # Restore NuGet HTTP cache from previous runs (key = packages.config content hash)
+  - task: Cache@2
+    displayName: 'Cache NuGet packages'
+    inputs:
+      key: 'nuget | "$(Agent.OS)" | Build/$(VSTarget)/packages.config'
+      restoreKeys: |
+        nuget | "$(Agent.OS)"
+      path: '$(Pipeline.Workspace)/nuget-http-cache'
+
   # nuget authenticate so we can restore from azure artifacts
   - task: NuGetAuthenticate@1
     displayName: 'NuGet Authenticate'
