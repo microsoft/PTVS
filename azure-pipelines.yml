@@ -44,7 +44,7 @@ parameters:
 - name: buildInstaller
   displayName: Build Installer & Bootstrapper
   type: boolean
-  default: true  # temporarily enabled for PR builds to debug installer/nuget failures
+  default: false
 
 # build number format 
 name: $(date:yy)$(DayOfYear)$(rev:.r)
@@ -179,12 +179,6 @@ extends:
             artifactName: Binaries
             sbomEnabled: false
           - output: pipelineArtifact
-            displayName: 'Publish build artifact: raw'
-            condition: failed()
-            targetPath: '$(Build.BinariesDirectory)\raw'
-            artifactName: raw
-            sbomEnabled: false
-          - output: pipelineArtifact
             displayName: 'Publish build artifact: logs'
             condition: succeededOrFailed()
             targetPath: '$(Build.SourcesDirectory)\logs'
@@ -199,11 +193,6 @@ extends:
             displayName: 'Publish build artifact: RunSettings'
             targetPath: '$(Build.SourcesDirectory)/Python/Tests/TestData/default.runsettings'
             artifactName: 'RunSettings'
-            sbomEnabled: false
-          - output: pipelineArtifact
-            displayName: 'Publish build artifact: Layout'
-            targetPath: '$(Build.BinariesDirectory)\layout'
-            artifactName: Layout
             sbomEnabled: false
 
         steps:
@@ -235,60 +224,8 @@ extends:
         # publish symbols
         - template: /Build/templates/publish_symbols.yml@self
 
-        # MicroBuild cleanup
-        - task: MicroBuildCleanup@1
-          displayName: 'Execute cleanup tasks'
-          condition: succeededOrFailed()
-
-        # Publish test data
-        - template: /Build/templates/publish_test_data.yml@self
-
-        # Installer job: builds installer, uploads vsts drop, and creates bootstrapper
-        # Runs in parallel with the test job after the build job completes
-      - ${{ if or(ne(variables['Build.Reason'], 'PullRequest'), eq(parameters.buildInstaller, true)) }}:
-        - job: installer
-          displayName: Installer & Bootstrapper
-          dependsOn: build
-          steps:
-          - checkout: self
-            clean: true
-            fetchDepth: 1
-
-          # install microbuild plugins needed for swixproj/vsmanproj
-          - template: /Build/templates/install_microbuild_plugins.yml@self
-
-          # Restore packages
-          - template: /Build/templates/restore_packages.yml@self
-            parameters:
-              pylanceVersion: ${{ parameters.pylanceVersion }}
-              pylanceReleaseType: ${{ variables.pylanceReleaseTypeVar }}
-              debugpyVersion: ${{ parameters.debugpyVersion }}
-
-          # Download binaries from the build job
-          - download: current
-            artifact: Binaries
-            displayName: 'Download build binaries'
-
-          # Download layout from the build job
-          - download: current
-            artifact: Layout
-            displayName: 'Download build layout'
-
-          # Copy binaries to expected location
-          - powershell: |
-              $source = '$(Pipeline.Workspace)\Binaries'
-              $dest = '$(Build.BinariesDirectory)\raw\binaries'
-              New-Item -ItemType Directory -Force -Path $dest | Out-Null
-              Copy-Item -Path "$source\*" -Destination $dest -Recurse -Force
-            displayName: 'Copy binaries to expected location'
-
-          # Copy layout to expected location
-          - powershell: |
-              $source = '$(Pipeline.Workspace)\Layout'
-              $dest = '$(Build.BinariesDirectory)\layout'
-              New-Item -ItemType Directory -Force -Path $dest | Out-Null
-              Copy-Item -Path "$source\*" -Destination $dest -Recurse -Force
-            displayName: 'Copy layout to expected location'
+        # Installer & Bootstrapper (non-PR builds, or when buildInstaller parameter is set)
+        - ${{ if or(ne(variables['Build.Reason'], 'PullRequest'), eq(parameters.buildInstaller, true)) }}:
 
           # Generate the bill of materials
           - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
@@ -299,7 +236,7 @@ extends:
               PackageVersion: '$(VSTarget)'
             continueOnError: true
 
-          # Build the installer (product already built, only setup projects)
+          # Build the installer
           - task: MSBuild@1
             displayName: 'Build installer'
             inputs:
@@ -327,10 +264,13 @@ extends:
           # Create VS bootstrapper for testing
           - template: Build/templates/create_vs_bootstrapper.yml@self
 
-          # MicroBuild cleanup
-          - task: MicroBuildCleanup@1
-            displayName: 'Execute cleanup tasks'
-            condition: succeededOrFailed()
+        # MicroBuild cleanup
+        - task: MicroBuildCleanup@1
+          displayName: 'Execute cleanup tasks'
+          condition: succeededOrFailed()
+
+        # Publish test data
+        - template: /Build/templates/publish_test_data.yml@self
 
         # Run tests on mixed mode debugger
       - ${{ if or(eq(variables['Build.Reason'], 'PullRequest'), eq(variables['SkipGlassCache'], true)) }}:
