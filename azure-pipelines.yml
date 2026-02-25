@@ -26,7 +26,7 @@ parameters:
 - name: PublishNugetPackageAsBuildArtifact
   displayName: Publish Nuget Package As Build Artifact
   type: boolean
-  default: false
+  default: true  # temporarily enabled for PR builds to debug nuget package failures
 
 # This is the version that the PTVS package currently being built will have.
 # If this value is set to 'currentBuildNumber' will default to $(Build.BuildNumber).
@@ -44,7 +44,7 @@ parameters:
 - name: buildInstaller
   displayName: Build Installer & Bootstrapper
   type: boolean
-  default: false
+  default: true  # temporarily enabled for PR builds to debug installer/nuget failures
 
 # build number format 
 name: $(date:yy)$(DayOfYear)$(rev:.r)
@@ -200,11 +200,11 @@ extends:
             targetPath: '$(Build.SourcesDirectory)/Python/Tests/TestData/default.runsettings'
             artifactName: 'RunSettings'
             sbomEnabled: false
-          - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
-            - output: pipelineArtifact
-              displayName: 'Publish build artifact: BoM'
-              targetPath: '$(Build.BinariesDirectory)\layout'
-              artifactName: SBOM
+          - output: pipelineArtifact
+            displayName: 'Publish build artifact: Layout'
+            targetPath: '$(Build.BinariesDirectory)\layout'
+            artifactName: Layout
+            sbomEnabled: false
 
         steps:
 
@@ -269,6 +269,11 @@ extends:
             artifact: Binaries
             displayName: 'Download build binaries'
 
+          # Download layout from the build job
+          - download: current
+            artifact: Layout
+            displayName: 'Download build layout'
+
           # Copy binaries to expected location
           - powershell: |
               $source = '$(Pipeline.Workspace)\Binaries'
@@ -276,6 +281,14 @@ extends:
               New-Item -ItemType Directory -Force -Path $dest | Out-Null
               Copy-Item -Path "$source\*" -Destination $dest -Recurse -Force
             displayName: 'Copy binaries to expected location'
+
+          # Copy layout to expected location
+          - powershell: |
+              $source = '$(Pipeline.Workspace)\Layout'
+              $dest = '$(Build.BinariesDirectory)\layout'
+              New-Item -ItemType Directory -Force -Path $dest | Out-Null
+              Copy-Item -Path "$source\*" -Destination $dest -Recurse -Force
+            displayName: 'Copy layout to expected location'
 
           # Generate the bill of materials
           - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
@@ -348,6 +361,13 @@ extends:
 
           # install microbuild plugins needed for signing
           - template: /Build/templates/install_microbuild_plugins.yml@self
+
+          # Restore packages (needed for MicroBuild.Core NuGet package used by signing)
+          - template: /Build/templates/restore_packages.yml@self
+            parameters:
+              pylanceVersion: ${{ parameters.pylanceVersion }}
+              pylanceReleaseType: ${{ variables.pylanceReleaseTypeVar }}
+              debugpyVersion: ${{ parameters.debugpyVersion }}
 
           # Download binaries from the build job
           - download: current
