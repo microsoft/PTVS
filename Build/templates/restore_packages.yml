@@ -27,7 +27,7 @@ steps:
 
   # Restore NuGet HTTP cache from previous runs (key = packages.config content hash)
   - task: Cache@2
-    displayName: 'Cache NuGet packages'
+    displayName: 'Cache NuGet HTTP cache'
     inputs:
       key: 'nuget | "$(Agent.OS)" | Build/$(VSTarget)/packages.config'
       restoreKeys: |
@@ -38,6 +38,28 @@ steps:
   - task: NuGetAuthenticate@1
     displayName: 'NuGet Authenticate'
 
+  # Warm the packages folder using the cached NuGet HTTP cache so the subsequent
+  # restore in PreBuild.ps1 is largely a no-op.
+  - task: PowerShell@2
+    displayName: 'NuGet restore (warm packages)'
+    env:
+      NUGET_HTTP_CACHE_PATH: $(NUGET_HTTP_CACHE_PATH)
+    inputs:
+      targetType: inline
+      workingDirectory: '$(Build.SourcesDirectory)/Build'
+      script: |
+        Write-Host "NuGet version:"
+        .\nuget.exe help | Select-Object -First 1
+
+        Write-Host "NuGet HTTP cache path: $env:NUGET_HTTP_CACHE_PATH"
+        try {
+          .\nuget.exe locals http-cache -list
+        } catch {
+          Write-Host "(Unable to query NuGet http-cache location: $($_.Exception.Message))"
+        }
+
+        .\nuget.exe restore "$(VSTarget)\packages.config" -OutputDirectory "$(Build.BinariesDirectory)" -Config nuget.config -NonInteractive
+
   # npm authenticate so we can restore from azure artifacts
   - task: npmAuthenticate@0
     displayName: 'npm Authenticate'
@@ -47,6 +69,10 @@ steps:
   # Restore packages and install dependencies (pylance, debugpy)
   - task: PowerShell@1
     displayName: 'Restore packages'
+    env:
+      # Ensure nuget.exe (spawned by PreBuild.ps1) inherits the pipeline-controlled HTTP cache path.
+      # This makes cache usage explicit even if task variable->env propagation changes.
+      NUGET_HTTP_CACHE_PATH: $(NUGET_HTTP_CACHE_PATH)
     inputs:
       scriptName: Build/PreBuild.ps1
       arguments: '-vstarget $(VSTarget) -pylanceVersion ${{ parameters.pylanceVersion }} -pylanceReleaseType ${{ parameters.pylanceReleaseType }} -debugpyVersion ${{ parameters.debugpyVersion }}'
