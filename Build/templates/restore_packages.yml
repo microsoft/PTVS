@@ -74,7 +74,16 @@ steps:
       restoreKeys: |
         npm | "$(Agent.OS)" | package.json
         npm | "$(Agent.OS)"
-      path: '$(Pipeline.Workspace)/npm-cache'
+      path: '$(Pipeline.Workspace)\\npm-cache'
+
+  # Cache PyPI wheel downloads used by install_pypi_package.py (debugpy/etwtrace)
+  - task: Cache@2
+    displayName: 'Cache PyPI wheels'
+    inputs:
+      key: 'pypi-wheels | "$(Agent.OS)" | ${{ parameters.debugpyVersion }}'
+      restoreKeys: |
+        pypi-wheels | "$(Agent.OS)"
+      path: '$(Pipeline.Workspace)\\pypi-wheel-cache'
 
   # Restore packages and install dependencies (pylance, debugpy)
   - task: PowerShell@1
@@ -85,11 +94,15 @@ steps:
       NUGET_HTTP_CACHE_PATH: $(NUGET_HTTP_CACHE_PATH)
 
       # Speed up npm install for Pylance by reusing cached downloads.
-      npm_config_cache: $(Pipeline.Workspace)/npm-cache
+      npm_config_cache: $(Pipeline.Workspace)\\npm-cache
+      NPM_CONFIG_CACHE: $(Pipeline.Workspace)\\npm-cache
       npm_config_prefer_offline: 'true'
       npm_config_audit: 'false'
       npm_config_fund: 'false'
       npm_config_progress: 'false'
+
+      # Speed up debugpy/etwtrace installs by caching downloaded wheels.
+      PTVS_PYPI_WHEEL_CACHE_DIR: $(Pipeline.Workspace)\\pypi-wheel-cache
     inputs:
       scriptName: Build/PreBuild.ps1
       arguments: '-vstarget $(VSTarget) -pylanceVersion ${{ parameters.pylanceVersion }} -pylanceReleaseType ${{ parameters.pylanceReleaseType }} -debugpyVersion ${{ parameters.debugpyVersion }}'

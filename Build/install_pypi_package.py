@@ -11,6 +11,8 @@ import json
 import os
 import urllib.request as url_lib
 import zipfile
+import urllib.parse
+import hashlib
 import ssl
 import certifi
 
@@ -55,17 +57,44 @@ def download_and_extract(installDir, url, version):
     if (installDir is None or installDir == "."):
         installDir = os.getcwd()
 
-    context = ssl.create_default_context(cafile=certifi.where())
-    with url_lib.urlopen(url, context=context) as response:
-        data = response.read()
-        with zipfile.ZipFile(io.BytesIO(data), "r") as wheel:
-            for zip_info in wheel.infolist():
+    cache_dir = os.environ.get("PTVS_PYPI_WHEEL_CACHE_DIR")
+    cache_path = None
+    if cache_dir:
+        try:
+            os.makedirs(cache_dir, exist_ok=True)
+            url_path = urllib.parse.urlparse(url).path
+            filename = os.path.basename(url_path) or hashlib.sha256(url.encode("utf-8")).hexdigest()
+            cache_path = os.path.join(cache_dir, filename)
+        except Exception:
+            cache_path = None
 
-                # Ignore dist info since we are merging multiple wheels
-                if ".dist-info/" in zip_info.filename:
-                    continue
+    data = None
+    if cache_path and os.path.exists(cache_path):
+        try:
+            with open(cache_path, "rb") as f:
+                data = f.read()
+        except Exception:
+            data = None
 
-                wheel.extract(zip_info.filename, installDir)
+    if data is None:
+        context = ssl.create_default_context(cafile=certifi.where())
+        with url_lib.urlopen(url, context=context) as response:
+            data = response.read()
+        if cache_path:
+            try:
+                with open(cache_path, "wb") as f:
+                    f.write(data)
+            except Exception:
+                pass
+
+    with zipfile.ZipFile(io.BytesIO(data), "r") as wheel:
+        for zip_info in wheel.infolist():
+
+            # Ignore dist info since we are merging multiple wheels
+            if ".dist-info/" in zip_info.filename:
+                continue
+
+            wheel.extract(zip_info.filename, installDir)
 
 
 # parse the command line args and return them
