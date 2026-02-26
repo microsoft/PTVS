@@ -26,7 +26,7 @@ parameters:
 - name: PublishNugetPackageAsBuildArtifact
   displayName: Publish Nuget Package As Build Artifact
   type: boolean
-  default: true  # temporarily enabled for PR builds to debug nuget package failures
+  default: false
 
 # This is the version that the PTVS package currently being built will have.
 # If this value is set to 'currentBuildNumber' will default to $(Build.BuildNumber).
