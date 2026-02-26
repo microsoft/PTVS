@@ -106,7 +106,6 @@ steps:
 
       # Speed up npm install for Pylance by reusing cached downloads.
       npm_config_cache: $(Pipeline.Workspace)\\npm-cache
-      NPM_CONFIG_CACHE: $(Pipeline.Workspace)\\npm-cache
       npm_config_prefer_offline: 'true'
       npm_config_audit: 'false'
       npm_config_fund: 'false'
