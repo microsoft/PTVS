@@ -37,7 +37,7 @@ param (
     
     # Run in interactive mode for azure feed authentication, defaults to false
     [Parameter()]
-    [switch] $interactive
+    [switch] $interactive,
 
     # Preserve the repo's node_modules folder (skip deletion before npm install).
     # Intended for CI where node_modules may be restored from a pipeline cache.
