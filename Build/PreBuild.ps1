@@ -38,6 +38,11 @@ param (
     # Run in interactive mode for azure feed authentication, defaults to false
     [Parameter()]
     [switch] $interactive
+
+    # Preserve the repo's node_modules folder (skip deletion before npm install).
+    # Intended for CI where node_modules may be restored from a pipeline cache.
+    [Parameter()]
+    [switch] $preserveNodeModules
 )
 
 $ErrorActionPreference = "Stop"
@@ -167,9 +172,13 @@ try {
 
     # delete pylance install folder to blow away local changes
     $nodeModulesPath = Join-Path $buildroot "node_modules"
-    if (Test-Path -Path $nodeModulesPath) {
-        Remove-Item -Recurse -Force $nodeModulesPath
-    }  
+    if (-not $preserveNodeModules) {
+        if (Test-Path -Path $nodeModulesPath) {
+            Remove-Item -Recurse -Force $nodeModulesPath
+        }
+    } else {
+        "Preserving node_modules"
+    }
 
     # Install pylance version specified in package.json
     npm install

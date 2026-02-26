@@ -66,6 +66,17 @@ steps:
     inputs:
       workingFile: .npmrc
 
+  # Cache node_modules to avoid re-installing Pylance dependencies every run.
+  # PreBuild.ps1 will be instructed to preserve node_modules when running in CI.
+  - task: Cache@2
+    displayName: 'Cache node_modules'
+    inputs:
+      key: 'node_modules | "$(Agent.OS)" | package.json | ${{ parameters.pylanceVersion }} | ${{ parameters.pylanceReleaseType }}'
+      restoreKeys: |
+        node_modules | "$(Agent.OS)" | package.json
+        node_modules | "$(Agent.OS)"
+      path: '$(Build.SourcesDirectory)\\node_modules'
+
   # Cache npm downloads to speed up Pylance install (PreBuild.ps1 runs `npm install`)
   - task: Cache@2
     displayName: 'Cache npm'
@@ -105,4 +116,4 @@ steps:
       PTVS_PYPI_WHEEL_CACHE_DIR: $(Pipeline.Workspace)\\pypi-wheel-cache
     inputs:
       scriptName: Build/PreBuild.ps1
-      arguments: '-vstarget $(VSTarget) -pylanceVersion ${{ parameters.pylanceVersion }} -pylanceReleaseType ${{ parameters.pylanceReleaseType }} -debugpyVersion ${{ parameters.debugpyVersion }}'
+      arguments: '-vstarget $(VSTarget) -pylanceVersion ${{ parameters.pylanceVersion }} -pylanceReleaseType ${{ parameters.pylanceReleaseType }} -debugpyVersion ${{ parameters.debugpyVersion }} -preserveNodeModules'
