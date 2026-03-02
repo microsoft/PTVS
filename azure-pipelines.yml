@@ -194,6 +194,16 @@ extends:
             targetPath: '$(Build.SourcesDirectory)/Python/Tests/TestData/default.runsettings'
             artifactName: 'RunSettings'
             sbomEnabled: false
+          - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
+            - output: pipelineArtifact
+              displayName: 'Publish build artifact: BoM'
+              targetPath: '$(Build.BinariesDirectory)\layout'
+              artifactName: SBOM
+          - ${{ if or(notin(variables['Build.Reason'], 'PullRequest'), eq(variables['PublishNugetPackageAsBuildArtifact'], true)) }}:
+            - output: pipelineArtifact
+              displayName: 'Publish build artifact: NuGet Package'
+              targetPath: '$(Build.ArtifactStagingDirectory)\pkg'
+              artifactName: pkg
 
         steps:
 
@@ -201,10 +211,8 @@ extends:
         - checkout: self
           clean: true
           fetchDepth: 1
-
-        # add VSTarget build tag
-        - powershell: 'Write-Host "##vso[build.addbuildtag]$env:VSTarget"'
-          displayName: 'Add vstarget build tag'
+        # Non-PR steps  
+        - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
 
         # install microbuild plugins used for swixproj/vsmanproj, signing, and localization
         - template: /Build/templates/install_microbuild_plugins.yml@self
