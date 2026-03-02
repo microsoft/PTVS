@@ -214,6 +214,11 @@ extends:
         # Non-PR steps  
         - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
 
+          # add VSTarget build tag
+          - powershell: 'Write-Host "##vso[build.addbuildtag]$env:VSTarget"'
+            displayName: 'Add vstarget build tag'
+
+
         # install microbuild plugins used for swixproj/vsmanproj, signing, and localization
         - template: /Build/templates/install_microbuild_plugins.yml@self
 
