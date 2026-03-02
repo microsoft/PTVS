@@ -41,11 +41,6 @@ parameters:
   type: boolean
   default: false
 
-- name: buildInstaller
-  displayName: Build Installer & Bootstrapper
-  type: boolean
-  default: false
-
 # build number format 
 name: $(date:yy)$(DayOfYear)$(rev:.r)
 
@@ -179,6 +174,11 @@ extends:
             artifactName: Binaries
             sbomEnabled: false
           - output: pipelineArtifact
+            displayName: 'Publish build artifact: raw'
+            condition: failed()
+            targetPath: '$(Build.BinariesDirectory)\raw'
+            artifactName: raw
+          - output: pipelineArtifact
             displayName: 'Publish build artifact: logs'
             condition: succeededOrFailed()
             targetPath: '$(Build.SourcesDirectory)\logs'
@@ -194,6 +194,16 @@ extends:
             targetPath: '$(Build.SourcesDirectory)/Python/Tests/TestData/default.runsettings'
             artifactName: 'RunSettings'
             sbomEnabled: false
+          - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
+            - output: pipelineArtifact
+              displayName: 'Publish build artifact: BoM'
+              targetPath: '$(Build.BinariesDirectory)\layout'
+              artifactName: SBOM
+          - ${{ if or(notin(variables['Build.Reason'], 'PullRequest'), eq(variables['PublishNugetPackageAsBuildArtifact'], true)) }}:
+            - output: pipelineArtifact
+              displayName: 'Publish build artifact: NuGet Package'
+              targetPath: '$(Build.ArtifactStagingDirectory)\pkg'
+              artifactName: pkg
 
         steps:
 
@@ -201,13 +211,15 @@ extends:
         - checkout: self
           clean: true
           fetchDepth: 1
+        # Non-PR steps  
+        - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
 
-        # add VSTarget build tag
-        - powershell: 'Write-Host "##vso[build.addbuildtag]$env:VSTarget"'
-          displayName: 'Add vstarget build tag'
+          # add VSTarget build tag
+          - powershell: 'Write-Host "##vso[build.addbuildtag]$env:VSTarget"'
+            displayName: 'Add vstarget build tag'
 
-        # install microbuild plugins used for swixproj/vsmanproj, signing, and localization
-        - template: /Build/templates/install_microbuild_plugins.yml@self
+          # install microbuild plugins used for swixproj/vsmanproj, signing, and localization
+          - template: /Build/templates/install_microbuild_plugins.yml@self
 
         # Restore packages and install dependencies (pylance, debugpy)  
         - template: /Build/templates/restore_packages.yml@self
@@ -220,38 +232,15 @@ extends:
         - template: /Build/templates/build.yml@self
           parameters:
             ptvsPackageVersion: ${{ variables.ptvsPackageVersionVar }}
+        
+        # Non-PR steps
+        - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
 
-        # publish symbols
-        - template: /Build/templates/publish_symbols.yml@self
-
-        # Installer & Bootstrapper (non-PR builds, or when buildInstaller parameter is set)
-        - ${{ if or(ne(variables['Build.Reason'], 'PullRequest'), eq(parameters.buildInstaller, true)) }}:
-
-          # Generate the bill of materials
-          - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
-            displayName: 'Generate bill of materials'
-            inputs:
-              BuildDropPath: '$(Build.BinariesDirectory)\layout'
-              PackageName: 'PTVS'
-              PackageVersion: '$(VSTarget)'
-            continueOnError: true
-
-          # Build the installer
-          - task: MSBuild@1
-            displayName: 'Build installer'
-            inputs:
-              solution: $(Build.SourcesDirectory)/Python/Setup/dirs.proj
-              msbuildVersion: $(MsBuildVersion)
-              platform: $(Platform)
-              configuration: $(BuildConfiguration)
-              msbuildArguments: ' /p:SkipProduct=true 
-                                  /p:VSTarget=$(VSTarget) 
-                                  /p:BuildNumber=${{ variables.ptvsPackageVersionVar }}
-                                  /p:BUILD_BINARIESDIRECTORY=$(Build.BinariesDirectory)
-                                  /p:BUILD_STAGINGDIRECTORY=$(Build.StagingDirectory) 
-                                  /bl:$(Build.SourcesDirectory)\logs\BuildInstaller.binlog'
+          # Create VS bootstrapper for testing
+          - template: Build/templates/create_vs_bootstrapper.yml@self
 
           # Upload vsts drop used by Visual Studio insertions
+          # For more info, see https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/1es-pipeline-templates/features/outputs/microbuild-vsts-drop
           - task: 1ES.MicroBuildVstsDrop@1
             displayName: 'Upload vsts drop'
             inputs:
@@ -261,22 +250,13 @@ extends:
               accessToken: '$(System.AccessToken)'
               dropRetentionDays: 183
 
-          # Create VS bootstrapper for testing
-          - template: Build/templates/create_vs_bootstrapper.yml@self
+          # publish symbols
+          - template: /Build/templates/publish_symbols.yml@self
 
-        # Build, sign, and pack NuGet package (non-PR builds, or when PublishNugetPackageAsBuildArtifact is set)
-        - ${{ if or(notin(variables['Build.Reason'], 'PullRequest'), eq(variables['PublishNugetPackageAsBuildArtifact'], true)) }}:
+          # Build and publish nuget package used by VS
           - template: /Build/templates/build_nuget_package.yml@self
             parameters:
               ptvsPackageVersion: ${{ variables.ptvsPackageVersionVar }}
-
-          # Publish NuGet package as build artifact
-          - task: 1ES.PublishBuildArtifacts@1
-            displayName: 'Publish Artifact: pkg'
-            inputs:
-              PathtoPublish: '$(Build.ArtifactStagingDirectory)\pkg'
-              ArtifactName: pkg
-              sbomEnabled: false
 
         # MicroBuild cleanup
         - task: MicroBuildCleanup@1
