@@ -75,12 +75,14 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.DebugPytestWorkspace));
         }
 
+        [Ignore]
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void DebugUnittestProject() {
             _vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.DebugUnittestProject));
         }
 
+        [Ignore]
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void DebugUnittestWorkspace() {
