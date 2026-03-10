@@ -2,6 +2,7 @@
 	<Import Project="TestProjectBefore.settings" />
   <PropertyGroup>
     <TargetFramework>v4.6.1</TargetFramework>
+    <TargetFrameworkVersion>.NETFramework,Version=v4.7.2</TargetFrameworkVersion>
     <RunName>ptvs</RunName>
     <OutputPath>bin\RunSettings</OutputPath>
     <ResultsDirectory>.\TestResults</ResultsDirectory>
