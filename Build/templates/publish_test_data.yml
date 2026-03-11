@@ -18,8 +18,12 @@ steps:
     inputs:
       solution: '$(Build.SourcesDirectory)/Python/Tests/PTVS.runsettingsproj'
       msbuildArguments: >
-        /p:PackagesPath=$(Build.SourcesDirectory)\packages
+        /t:Build
+        /p:PackagesPath=$(Build.SourcesDirectory)/packages
         /p:TestStoreDropName=$(TestStoreDropName)
+        /p:VSTarget=18.0 
+        /p:VisualStudioVersion=18.0
+        /p:TargetFramework=net461
 
   - task: PowerShell@2
     displayName: 'Update default.runsettings from generated ptvs.runsettings'
