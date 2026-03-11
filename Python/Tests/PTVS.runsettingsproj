@@ -1,12 +1,13 @@
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">	
 	<Import Project="TestProjectBefore.settings" />
   <PropertyGroup>
-    <TargetFramework>v4.6.1</TargetFramework>
-    <TargetFrameworkVersion>.NETFramework,Version=v4.7.2</TargetFrameworkVersion>
+
+    <TargetFramework>v4.7.2</TargetFramework>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <RunName>ptvs</RunName>
     <OutputPath>bin\RunSettings</OutputPath>
     <ResultsDirectory>.\TestResults</ResultsDirectory>
-    <TargetPlatform>x86</TargetPlatform>
+    <TargetPlatform>x64</TargetPlatform>
     <MaxCpuCount>1</MaxCpuCount>
     <TestSessionTimeout>3600000</TestSessionTimeout>
     <!--<TestCaseFilter>TestCategory=RunAllUnittest</TestCaseFilter>-->
