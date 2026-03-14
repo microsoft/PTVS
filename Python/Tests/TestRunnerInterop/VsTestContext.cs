@@ -235,14 +235,14 @@ namespace TestRunnerInterop {
         }
 
         private static string GetDirectoryAboveContaningFile(string path, string filename) {
-            while (!File.Exists(Path.Combine(path, filename))) {
+            while (!string.IsNullOrEmpty(path) && !File.Exists(Path.Combine(path, filename))) {
                 var newPath = Path.GetDirectoryName(path);
-                if (newPath == path) {
+                if (string.IsNullOrEmpty(newPath) || newPath == path) {
                     return null;
                 }
                 path = newPath;
             }
-            return path;
+            return string.IsNullOrEmpty(path) ? null : path;
         }
 
         private static string GetDefaultTestDataDirectory() {

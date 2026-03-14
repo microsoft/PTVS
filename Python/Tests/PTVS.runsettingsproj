@@ -10,7 +10,7 @@
     <TargetPlatform>x64</TargetPlatform>
     <MaxCpuCount>1</MaxCpuCount>
     <TestSessionTimeout>3600000</TestSessionTimeout>
-    <!--<TestCaseFilter>TestCategory=RunAllUnittest</TestCaseFilter>-->
+    <TestCaseFilter>TestCategory=RunAllUnittest</TestCaseFilter>
 	
   </PropertyGroup>
 <!--
@@ -34,6 +34,28 @@
 		<PackageReference Include="Microsoft.DevDiv.Validation.TestPlatform.Settings.Tasks" Version="1.0.1108" />
 	</ItemGroup>-->
 
+
+  <ItemGroup Label="Visual Studio Components">
+    <IncludeWorkload Include="Microsoft.VisualStudio.Component.VC.CLI.Support" />
+    <IncludeWorkload Include="Microsoft.VisualStudio.ComponentGroup.NativeDesktop.Win81" />
+    <IncludeWorkload Include="Microsoft.VisualStudio.ComponentGroup.UWP.VC" />
+    <IncludeWorkload Include="Microsoft.VisualStudio.Component.VC.ATLMFC" />
+    <IncludeWorkload Include="Microsoft.VisualStudio.Component.Debugger.VSOnline" />
+    <IncludeWorkload Include="Microsoft.VisualStudio.Component.Wcf.Tooling" />
+    <IncludeWorkload Include="Microsoft.NetCore.Component.Runtime.6.0" />
+    <IncludeWorkload Include="Microsoft.NetCore.Component.Runtime.7.0" />
+    <IncludeWorkload Include="Microsoft.NetCore.Component.Runtime.8.0" />
+  </ItemGroup>
+  <ItemGroup Label="Visual Studio Workloads">
+    <IncludeComponent Include="Microsoft.VisualStudio.Workload.CoreEditor" />
+    <IncludeComponent Include="Microsoft.VisualStudio.Workload.ManagedDesktop" />
+    <IncludeComponent Include="Microsoft.VisualStudio.Workload.NativeCrossPlat" />
+    <IncludeComponent Include="Microsoft.VisualStudio.Workload.NativeDesktop" />
+    <IncludeComponent Include="Microsoft.VisualStudio.Workload.NetWeb" />
+    <IncludeComponent Include="Microsoft.VisualStudio.Workload.Universal" />
+    <IncludeComponent Include="Microsoft.VisualStudio.Workload.VisualStudioExtension" />
+    <IncludeComponent Include="Microsoft.VisualStudio.Workload.Webcrossplat" />
+  </ItemGroup>
 	
 	<Import Project="$(PackagesPath)\Microsoft.DevDiv.Validation.TestPlatform.Settings.Tasks.1.0.1108\build\net472\Microsoft.DevDiv.Validation.TestPlatform.Settings.Tasks.targets"/>
 </Project>
