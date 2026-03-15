@@ -208,6 +208,72 @@ steps:
       errorActionPreference: stop
       failOnStderr: false
 
+  - task: PowerShell@2
+    displayName: Inject UI test environment into runsettings
+    condition: succeeded()
+    inputs:
+      targetType: inline
+      script: |
+        $ErrorActionPreference = 'Stop'
+
+        $runSettingsPath = '${{ parameters.BinariesDirectory }}\ptvs.runsettings'
+        if (-not (Test-Path -LiteralPath $runSettingsPath -PathType Leaf)) {
+          throw "Run settings file not found: $runSettingsPath"
+        }
+
+        [xml]$xml = Get-Content -LiteralPath $runSettingsPath -Raw
+
+        if (-not $xml.RunSettings) {
+          throw "Invalid runsettings file (missing RunSettings root): $runSettingsPath"
+        }
+
+        if (-not $xml.RunSettings.RunConfiguration) {
+          $runConfiguration = $xml.CreateElement('RunConfiguration')
+          [void]$xml.RunSettings.AppendChild($runConfiguration)
+        }
+
+        $runConfigurationNode = $xml.RunSettings.RunConfiguration
+        if (-not $runConfigurationNode.EnvironmentVariables) {
+          $environmentVariables = $xml.CreateElement('EnvironmentVariables')
+          [void]$runConfigurationNode.AppendChild($environmentVariables)
+        }
+
+        $envVarsNode = $runConfigurationNode.EnvironmentVariables
+
+        function Set-EnvVarNode {
+          param(
+            [Parameter(Mandatory = $true)][xml]$Document,
+            [Parameter(Mandatory = $true)]$ParentNode,
+            [Parameter(Mandatory = $true)][string]$Name,
+            [Parameter(Mandatory = $true)][string]$Value
+          )
+
+          $node = $ParentNode.SelectSingleNode($Name)
+          if (-not $node) {
+            $node = $Document.CreateElement($Name)
+            [void]$ParentNode.AppendChild($node)
+          }
+
+          $node.InnerText = $Value
+        }
+
+        Set-EnvVarNode -Document $xml -ParentNode $envVarsNode -Name '_TESTDATA_ROOT_PATH' -Value '$(_TESTDATA_ROOT_PATH)'
+        Set-EnvVarNode -Document $xml -ParentNode $envVarsNode -Name 'VisualStudio_IDE' -Value '$(ResolvedVSIDEPath)'
+        Set-EnvVarNode -Document $xml -ParentNode $envVarsNode -Name 'VSAPPIDDIR' -Value '$(ResolvedVSIDEPath)'
+        Set-EnvVarNode -Document $xml -ParentNode $envVarsNode -Name 'DevEnvDir' -Value '$(ResolvedVSIDEPath)'
+        Set-EnvVarNode -Document $xml -ParentNode $envVarsNode -Name 'VSINSTALLDIR' -Value '$(ResolvedVSInstallDir)'
+        Set-EnvVarNode -Document $xml -ParentNode $envVarsNode -Name 'VisualStudio_IDE_17.0' -Value '$(ResolvedVSIDEPath)'
+        Set-EnvVarNode -Document $xml -ParentNode $envVarsNode -Name 'VisualStudio_IDE_18.0' -Value '$(ResolvedVSIDEPath)'
+
+        $xml.Save($runSettingsPath)
+
+        Write-Host "Injected environment variables into runsettings: $runSettingsPath"
+        Write-Host "_TESTDATA_ROOT_PATH=$(_TESTDATA_ROOT_PATH)"
+        Write-Host "VisualStudio_IDE=$(ResolvedVSIDEPath)"
+        Write-Host "VSINSTALLDIR=$(ResolvedVSInstallDir)"
+      errorActionPreference: stop
+      failOnStderr: false
+
   - task: VSTest@2
     displayName: '[MultiConfiguration] Run UI Test ${{ parameters.UITestNames }}'
     condition: succeeded()
@@ -252,6 +318,8 @@ steps:
       VSAPPIDDIR: $(ResolvedVSIDEPath)
       DevEnvDir: $(ResolvedVSIDEPath)
       VSINSTALLDIR: $(ResolvedVSInstallDir)
+      VisualStudio_IDE_17.0: $(ResolvedVSIDEPath)
+      VisualStudio_IDE_18.0: $(ResolvedVSIDEPath)
 
   - task: PowerShell@2
     displayName: Cleanup
