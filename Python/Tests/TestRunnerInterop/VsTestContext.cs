@@ -67,27 +67,68 @@ namespace TestRunnerInterop {
         public string DevEnvExe {
             get {
                 if (_devenvExe == null) {
+                    var probes = new List<string>();
+                    string TryResolveFromBasePath(string envVar, string basePath) {
+                        if (string.IsNullOrWhiteSpace(basePath)) {
+                            return null;
+                        }
+
+                        var trimmed = basePath.Trim();
+                        string[] candidates;
+                        if (trimmed.EndsWith("devenv.exe", StringComparison.OrdinalIgnoreCase)) {
+                            candidates = new[] { trimmed };
+                        } else {
+                            candidates = new[] {
+                                Path.Combine(trimmed, "devenv.exe"),
+                                Path.Combine(trimmed, "Common7", "IDE", "devenv.exe")
+                            };
+                        }
+
+                        foreach (var candidate in candidates) {
+                            probes.Add($"{envVar}: {candidate}");
+                            if (File.Exists(candidate)) {
+                                return candidate;
+                            }
+                        }
+
+                        return null;
+                    }
+
                     foreach (var envVar in new string[] {
                         $"VisualStudio_IDE_{AssemblyVersionInfo.VSVersion}",
                         "VisualStudio_IDE",
-                        "VSAPPIDDIR"
+                        "VSAPPIDDIR",
+                        "DevEnvDir",
+                        "VSINSTALLDIR"
                     }) {
-                        _devenvExe = Environment.GetEnvironmentVariable(envVar);
-                        if (string.IsNullOrEmpty(_devenvExe)) {
+                        var envValue = Environment.GetEnvironmentVariable(envVar);
+                        if (string.IsNullOrWhiteSpace(envValue)) {
                             continue;
                         }
-                        _devenvExe = Path.Combine(_devenvExe, "devenv.exe");
-                        if (File.Exists(_devenvExe)) {
+
+                        _devenvExe = TryResolveFromBasePath(envVar, envValue);
+                        if (!string.IsNullOrEmpty(_devenvExe)) {
                             return _devenvExe;
                         }
 
-                        _devenvExe = Path.Combine(Path.GetDirectoryName(_devenvExe), "Common7", "IDE", "devenv.exe");
-                        if (File.Exists(_devenvExe)) {
+                        // Some env vars point directly at IDE folder while others point at install root.
+                        var parent = Path.GetDirectoryName(envValue);
+                        _devenvExe = TryResolveFromBasePath(envVar + ":Parent", parent);
+                        if (!string.IsNullOrEmpty(_devenvExe)) {
                             return _devenvExe;
                         }
-
-                        _devenvExe = null;
                     }
+
+                    throw new InvalidOperationException(
+                        "Cannot locate devenv.exe. "
+                        + "CurrentDirectory=" + Environment.CurrentDirectory + "; "
+                        + "VisualStudio_IDE_" + AssemblyVersionInfo.VSVersion + "=" + (Environment.GetEnvironmentVariable($"VisualStudio_IDE_{AssemblyVersionInfo.VSVersion}") ?? "<null>") + "; "
+                        + "VisualStudio_IDE=" + (Environment.GetEnvironmentVariable("VisualStudio_IDE") ?? "<null>") + "; "
+                        + "VSAPPIDDIR=" + (Environment.GetEnvironmentVariable("VSAPPIDDIR") ?? "<null>") + "; "
+                        + "DevEnvDir=" + (Environment.GetEnvironmentVariable("DevEnvDir") ?? "<null>") + "; "
+                        + "VSINSTALLDIR=" + (Environment.GetEnvironmentVariable("VSINSTALLDIR") ?? "<null>") + ". "
+                        + "Probes=" + string.Join(" | ", probes)
+                    );
                 }
                 return _devenvExe;
             }

@@ -129,6 +129,85 @@ steps:
       errorActionPreference: stop
       failOnStderr: false
 
+  - task: PowerShell@2
+    displayName: Resolve devenv.exe for UI tests
+    condition: succeeded()
+    inputs:
+      targetType: inline
+      script: |
+        $ErrorActionPreference = 'Stop'
+
+        function Try-ResolveDevenv {
+          param([string]$BasePath)
+
+          if ([string]::IsNullOrWhiteSpace($BasePath)) {
+            return $null
+          }
+
+          $trimmed = $BasePath.Trim()
+          $candidates = @()
+
+          if ($trimmed.EndsWith('devenv.exe', [System.StringComparison]::OrdinalIgnoreCase)) {
+            $candidates += $trimmed
+          } else {
+            $candidates += (Join-Path $trimmed 'devenv.exe')
+            $candidates += (Join-Path $trimmed 'Common7\IDE\devenv.exe')
+          }
+
+          foreach ($candidate in $candidates) {
+            if (Test-Path -LiteralPath $candidate -PathType Leaf) {
+              return $candidate
+            }
+          }
+
+          return $null
+        }
+
+        $devenv = $null
+
+        foreach ($envName in @('VisualStudio_IDE','VSAPPIDDIR','DevEnvDir','VSINSTALLDIR')) {
+          $devenv = Try-ResolveDevenv -BasePath $env:$envName
+          if ($devenv) {
+            Write-Host "Resolved devenv from env $envName: $devenv"
+            break
+          }
+        }
+
+        if (-not $devenv) {
+          $vswherePaths = @(
+            "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe",
+            "${env:ProgramFiles}\Microsoft Visual Studio\Installer\vswhere.exe"
+          )
+
+          $vswhere = $vswherePaths | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
+          if (-not $vswhere) {
+            throw "Could not find vswhere.exe. Checked: $($vswherePaths -join ' | ')"
+          }
+
+          $installPath = & $vswhere -version "[17.0,19.0)" -latest -products * -requires Microsoft.VisualStudio.PackageGroup.TestTools.Core -property installationPath
+          if ([string]::IsNullOrWhiteSpace($installPath)) {
+            throw "vswhere.exe did not return a Visual Studio installation path"
+          }
+
+          $devenv = Join-Path $installPath 'Common7\IDE\devenv.exe'
+          if (-not (Test-Path -LiteralPath $devenv -PathType Leaf)) {
+            throw "Resolved Visual Studio install path does not contain devenv.exe: $devenv"
+          }
+
+          Write-Host "Resolved devenv via vswhere: $devenv"
+        }
+
+        $idePath = Split-Path -Path $devenv -Parent
+        $installDir = Split-Path -Path (Split-Path -Path $idePath -Parent) -Parent
+
+        Write-Host "Resolved IDE path: $idePath"
+        Write-Host "Resolved install dir: $installDir"
+        Write-Host "##vso[task.setvariable variable=ResolvedDevEnvExe]$devenv"
+        Write-Host "##vso[task.setvariable variable=ResolvedVSIDEPath]$idePath"
+        Write-Host "##vso[task.setvariable variable=ResolvedVSInstallDir]$installDir"
+      errorActionPreference: stop
+      failOnStderr: false
+
   - task: VSTest@2
     displayName: '[MultiConfiguration] Run UI Test ${{ parameters.UITestNames }}'
     condition: succeeded()
@@ -169,6 +248,10 @@ steps:
       rerunMaxAttempts: 2
     env:
       _TESTDATA_ROOT_PATH: $(_TESTDATA_ROOT_PATH)
+      VisualStudio_IDE: $(ResolvedVSIDEPath)
+      VSAPPIDDIR: $(ResolvedVSIDEPath)
+      DevEnvDir: $(ResolvedVSIDEPath)
+      VSINSTALLDIR: $(ResolvedVSInstallDir)
 
   - task: PowerShell@2
     displayName: Cleanup

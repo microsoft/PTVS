@@ -82,6 +82,17 @@ namespace TestRunnerInterop {
                 _currentSettings = settings;
                 CloseCurrentInstance();
 
+                if (string.IsNullOrWhiteSpace(devenvExe)) {
+                    throw new InvalidOperationException(
+                        "Cannot start Visual Studio because devenv executable path is empty. "
+                        + "CurrentDirectory=" + Environment.CurrentDirectory + "; "
+                        + "VisualStudio_IDE=" + (Environment.GetEnvironmentVariable("VisualStudio_IDE") ?? "<null>") + "; "
+                        + "VSAPPIDDIR=" + (Environment.GetEnvironmentVariable("VSAPPIDDIR") ?? "<null>") + "; "
+                        + "DevEnvDir=" + (Environment.GetEnvironmentVariable("DevEnvDir") ?? "<null>") + "; "
+                        + "VSINSTALLDIR=" + (Environment.GetEnvironmentVariable("VSINSTALLDIR") ?? "<null>")
+                    );
+                }
+
                 var psi = new ProcessStartInfo {
                     FileName = devenvExe,
                     Arguments = devenvArguments,
