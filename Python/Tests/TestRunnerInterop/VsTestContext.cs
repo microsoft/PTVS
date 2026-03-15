@@ -246,16 +246,29 @@ namespace TestRunnerInterop {
         }
 
         private static string GetDefaultTestDataDirectory() {
+            var probes = new List<string>();
+            void AddProbe(string label, string path) {
+                if (!string.IsNullOrEmpty(path)) {
+                    probes.Add(label + ": " + path);
+                }
+            }
+
+            AddProbe("CurrentDirectory", Environment.CurrentDirectory);
+            AddProbe("AssemblyLocation", typeof(VsTestContext).Assembly.Location);
+
             var candidate = Environment.GetEnvironmentVariable("_TESTDATA_ROOT_PATH");
+            AddProbe("Env:_TESTDATA_ROOT_PATH", candidate);
             if (Directory.Exists(candidate)) {
                 // Support callers that pass the TestData folder itself.
                 if (string.Equals(Path.GetFileName(candidate), "TestData", StringComparison.OrdinalIgnoreCase)) {
                     var parent = Path.GetDirectoryName(candidate);
                     if (!string.IsNullOrEmpty(parent)) {
+                        AddProbe("ResolvedFromEnvParent", parent);
                         return parent;
                     }
                 }
 
+                AddProbe("ResolvedFromEnv", candidate);
                 return candidate;
             }
 
@@ -263,6 +276,7 @@ namespace TestRunnerInterop {
             // is copied adjacent to the test assemblies.
             candidate = Path.GetDirectoryName(typeof(VsTestContext).Assembly.Location);
             while (!string.IsNullOrEmpty(candidate)) {
+                AddProbe("Probe:AssemblyAncestor", Path.Combine(candidate, "TestData"));
                 if (Directory.Exists(Path.Combine(candidate, "TestData"))) {
                     return candidate;
                 }
@@ -275,17 +289,25 @@ namespace TestRunnerInterop {
             }
 
             var rootDir = GetDirectoryAboveContaningFile(Path.GetDirectoryName(typeof(VsTestContext).Assembly.Location), "build.root");
+            AddProbe("Probe:build.root", rootDir);
             if (!string.IsNullOrEmpty(rootDir)) {
+                AddProbe("Probe:rootDir/TestData", Path.Combine(rootDir, "TestData"));
                 if (Directory.Exists(Path.Combine(rootDir, "TestData"))) {
                     return rootDir;
                 }
                 candidate = Path.Combine(rootDir, "Python", "Tests");
+                AddProbe("Probe:Python/Tests/TestData", Path.Combine(candidate, "TestData"));
                 if (Directory.Exists(Path.Combine(candidate, "TestData"))) {
                     return candidate;
                 }
             }
 
-            throw new InvalidOperationException("Cannot locate TestData directory from " + typeof(VsTestContext).Assembly.Location);
+            throw new InvalidOperationException(
+                "Cannot locate TestData directory. "
+                + "CurrentDirectory=" + Environment.CurrentDirectory + "; "
+                + "AssemblyLocation=" + typeof(VsTestContext).Assembly.Location + ". "
+                + "Probes=" + string.Join(" | ", probes)
+            );
         }
 
     }
