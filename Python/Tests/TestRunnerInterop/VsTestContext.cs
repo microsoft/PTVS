@@ -248,7 +248,30 @@ namespace TestRunnerInterop {
         private static string GetDefaultTestDataDirectory() {
             var candidate = Environment.GetEnvironmentVariable("_TESTDATA_ROOT_PATH");
             if (Directory.Exists(candidate)) {
+                // Support callers that pass the TestData folder itself.
+                if (string.Equals(Path.GetFileName(candidate), "TestData", StringComparison.OrdinalIgnoreCase)) {
+                    var parent = Path.GetDirectoryName(candidate);
+                    if (!string.IsNullOrEmpty(parent)) {
+                        return parent;
+                    }
+                }
+
                 return candidate;
+            }
+
+            // Integration test gate runs tests from a binaries drop where TestData
+            // is copied adjacent to the test assemblies.
+            candidate = Path.GetDirectoryName(typeof(VsTestContext).Assembly.Location);
+            while (!string.IsNullOrEmpty(candidate)) {
+                if (Directory.Exists(Path.Combine(candidate, "TestData"))) {
+                    return candidate;
+                }
+
+                var parent = Path.GetDirectoryName(candidate);
+                if (string.IsNullOrEmpty(parent) || parent == candidate) {
+                    break;
+                }
+                candidate = parent;
             }
 
             var rootDir = GetDirectoryAboveContaningFile(Path.GetDirectoryName(typeof(VsTestContext).Assembly.Location), "build.root");
