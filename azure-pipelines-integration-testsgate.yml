@@ -174,6 +174,40 @@ stages:
           Write-Host "Selected VSTSDrop.json: $($selected.FullName)"
           Write-Host "##vso[task.setvariable variable=VSTSDropJsonURI]$($selected.FullName)"
 
+    - task: PowerShell@2
+      displayName: Validate TestDataFolder artifact layout
+      inputs:
+        targetType: inline
+        script: |
+          $ErrorActionPreference = 'Stop'
+
+          $dropRoot = Join-Path "$(Pipeline.Workspace)" "ComponentBuildUnderTest\TestDataFolder"
+          $binariesRoot = Join-Path "$(Pipeline.Workspace)" "ComponentBuildUnderTest\Binaries"
+
+          Write-Host "Pipeline.Workspace: $(Pipeline.Workspace)"
+          Write-Host "Drop root: $dropRoot"
+          Write-Host "Binaries root: $binariesRoot"
+
+          if (-not (Test-Path -LiteralPath $dropRoot)) {
+            throw "TestDataFolder artifact root not found: $dropRoot"
+          }
+
+          $zip = Get-ChildItem -LiteralPath $dropRoot -Recurse -Force -File -Filter "TestData.zip" -ErrorAction SilentlyContinue |
+            Sort-Object FullName |
+            Select-Object -First 1
+
+          if (-not $zip) {
+            $files = Get-ChildItem -LiteralPath $dropRoot -Recurse -Force -File -ErrorAction SilentlyContinue
+            if ($files) {
+              Write-Host "Files found under drop root:"
+              $files | Select-Object FullName, Length, LastWriteTime | Sort-Object FullName | Format-Table -AutoSize
+            }
+            throw "Could not find TestData.zip under $dropRoot"
+          }
+
+          Write-Host "Resolved TestData.zip: $($zip.FullName)"
+          Write-Host "##vso[task.setvariable variable=ResolvedTestDataZip]$($zip.FullName)"
+
 
     - template: Build/azuredevops/test/uitest-integration-stage.yml
       parameters:

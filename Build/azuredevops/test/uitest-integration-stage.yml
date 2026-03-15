@@ -90,6 +90,45 @@ steps:
       errorActionPreference: stop
       failOnStderr: false
 
+  - task: PowerShell@2
+    displayName: Validate TestData and set _TESTDATA_ROOT_PATH
+    condition: succeeded()
+    inputs:
+      targetType: inline
+      script: |
+        $ErrorActionPreference = 'Stop'
+
+        $binariesDirectory = '${{ parameters.BinariesDirectory }}'
+        $dropDirectory = '${{ parameters.Drop }}'
+
+        $probePaths = @(
+          (Join-Path $binariesDirectory 'TestData'),
+          (Join-Path $dropDirectory 'TestData')
+        )
+
+        Write-Host "Current directory: $(Get-Location)"
+        Write-Host "Binaries directory: $binariesDirectory"
+        Write-Host "Drop directory: $dropDirectory"
+        Write-Host "Probe paths:"
+        $probePaths | ForEach-Object { Write-Host "  $_" }
+
+        $resolvedRoot = $null
+        foreach ($probe in $probePaths) {
+          if (Test-Path -LiteralPath $probe -PathType Container) {
+            $resolvedRoot = Split-Path -Path $probe -Parent
+            break
+          }
+        }
+
+        if (-not $resolvedRoot) {
+          throw "Cannot locate TestData before running UI tests. CurrentDirectory=$(Get-Location); Probes=$($probePaths -join ' | ')"
+        }
+
+        Write-Host "Using _TESTDATA_ROOT_PATH: $resolvedRoot"
+        Write-Host "##vso[task.setvariable variable=_TESTDATA_ROOT_PATH]$resolvedRoot"
+      errorActionPreference: stop
+      failOnStderr: false
+
   - task: VSTest@2
     displayName: '[MultiConfiguration] Run UI Test ${{ parameters.UITestNames }}'
     condition: succeeded()
@@ -128,6 +167,8 @@ steps:
       rerunFailedThreshold: 50
       rerunFailedTestCasesMaxLimit: 5
       rerunMaxAttempts: 2
+    env:
+      _TESTDATA_ROOT_PATH: $(_TESTDATA_ROOT_PATH)
 
   - task: PowerShell@2
     displayName: Cleanup
