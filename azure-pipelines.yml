@@ -189,16 +189,16 @@ extends:
                   suppressionFile: $(Build.SourcesDirectory)\.gdn\.gdnsuppress
                   suppressionSet: default
               outputs:
-                - output: artifactsDrop # upload to artifact drop service for azure_pipelines_integration_tests.yml pipeline
-                  displayName: "Upload MicroBuild to Artifact Services"
-                  sourcePath: $(Build.ArtifactStagingDirectory)\MicroBuild\Output
-                  dropServiceURI: https://devdiv.artifacts.visualstudio.com/DefaultCollection/
-                  dropMetadataContainerName: MicroBuildOutputs
-                  buildNumber: "$(BootloaderDropName)"
-                # - output: pipelineArtifact
-                #   displayName: 📢 Publish MicroBuildOutputs
-                #   targetPath: $(Build.ArtifactStagingDirectory)\MicroBuild\Output
-                #   artifactName: MicroBuildOutputs
+                # - output: artifactsDrop # upload to artifact drop service for azure_pipelines_integration_tests.yml pipeline
+                #   displayName: "Upload MicroBuild to Artifact Services"
+                #   sourcePath: $(Build.ArtifactStagingDirectory)\MicroBuild\Output
+                #   dropServiceURI: https://devdiv.artifacts.visualstudio.com/DefaultCollection/
+                #   dropMetadataContainerName: MicroBuildOutputs
+                #   buildNumber: "$(BootloaderDropName)"
+                - output: pipelineArtifact
+                  displayName: 📢 Publish MicroBuildOutputs
+                  targetPath: $(Build.ArtifactStagingDirectory)\MicroBuild\Output
+                  artifactName: MicroBuildOutputs
                 - output: pipelineArtifact
                   displayName: "Publish build artifact: binaries"
                   targetPath: "$(Build.BinariesDirectory)/raw/binaries"
