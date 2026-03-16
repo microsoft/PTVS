@@ -165,6 +165,8 @@ extends:
             displayName: Build
             variables:
               BootloaderDropName: "Bootloader/$(System.TeamProject)/$(Build.BuildNumber)/$(Build.BuildId)"
+              TestDataDropName: "devdiv/ptvs/tests/$(Build.BuildNumber)/$(Build.BuildId)"
+              TestStoreDropName: "$(TestDataDropName)"
             # If the pipeline publishes artifacts, use `templateContext` to define the artifacts.
             # This will enable 1ES PT to run SDL analysis tools on the artifacts and then upload them.
             templateContext:
@@ -187,16 +189,16 @@ extends:
                   suppressionFile: $(Build.SourcesDirectory)\.gdn\.gdnsuppress
                   suppressionSet: default
               outputs:
-                # - output: artifactsDrop # upload to artifact drop service for azure_pipelines_integration_tests.yml pipeline
-                #   displayName: 'Upload MicroBuild to Artifact Services'
-                #   sourcePath: $(Build.ArtifactStagingDirectory)\MicroBuild\Output
-                #   dropServiceURI: https://devdiv.artifacts.visualstudio.com/DefaultCollection/
-                #   dropMetadataContainerName: MicroBuildOutputs
-                #   buildNumber: '$(BootloaderDropName)'
-                - output: pipelineArtifact
-                  displayName: 📢 Publish MicroBuildOutputs
-                  targetPath: $(Build.ArtifactStagingDirectory)\MicroBuild\Output
-                  artifactName: MicroBuildOutputs
+                - output: artifactsDrop # upload to artifact drop service for azure_pipelines_integration_tests.yml pipeline
+                  displayName: "Upload MicroBuild to Artifact Services"
+                  sourcePath: $(Build.ArtifactStagingDirectory)\MicroBuild\Output
+                  dropServiceURI: https://devdiv.artifacts.visualstudio.com/DefaultCollection/
+                  dropMetadataContainerName: MicroBuildOutputs
+                  buildNumber: "$(BootloaderDropName)"
+                # - output: pipelineArtifact
+                #   displayName: 📢 Publish MicroBuildOutputs
+                #   targetPath: $(Build.ArtifactStagingDirectory)\MicroBuild\Output
+                #   artifactName: MicroBuildOutputs
                 - output: pipelineArtifact
                   displayName: "Publish build artifact: binaries"
                   targetPath: "$(Build.BinariesDirectory)/raw/binaries"
@@ -221,6 +223,24 @@ extends:
                       displayName: "Publish build artifact: NuGet Package"
                       targetPath: '$(Build.ArtifactStagingDirectory)\pkg'
                       artifactName: pkg
+                - output: pipelineArtifact
+                  displayName: 📢 Publish PTVS-TestData
+                  targetPath: $(Build.ArtifactStagingDirectory)/TestDataFolder/
+                  artifactName: TestDataFolder
+                - output: artifactsDrop # upload to artifact drop service for azure_pipelines_integration_tests.yml pipeline
+                  displayName: "Upload Test Data to Artifact Services"
+                  sourcePath: $(Build.ArtifactStagingDirectory)/TestDataFolder
+                  dropServiceURI: https://devdiv.artifacts.visualstudio.com/DefaultCollection/
+                  buildNumber: "$(TestDataDropName)"
+                  dropMetadataContainerName: PTVS-TestData
+                # - output: pipelineArtifact
+                #   displayName: "Publish build artifact: TestData"
+                #   targetPath: "$(Build.ArtifactStagingDirectory)/TestDataFolder/TestData.zip"
+                #   artifactName: "TestData"
+                # - output: pipelineArtifact
+                #   displayName: "Publish build artifact: RunSettings"
+                #   targetPath: "$(Build.SourcesDirectory)/Python/Tests/TestData/default.runsettings"
+                #   artifactName: "RunSettings"
 
             steps:
               # check out code clean from source control
@@ -275,53 +295,13 @@ extends:
                 parameters:
                   ptvsPackageVersion: ${{ variables.ptvsPackageVersionVar }}
 
+              # Publish test data artifacts for integration pipelines
+              - template: /Build/templates/publish_test_data.yml@self
+
               # MicroBuild cleanup
               - task: MicroBuildCleanup@1
                 displayName: "Execute cleanup tasks"
                 condition: succeededOrFailed()
-
-          # Separate job for TestData generation - runs in parallel with build job
-          - job: testdata
-            displayName: Publish TestData
-            variables:
-              TestDataDropName: "devdiv/ptvs/tests/$(Build.BuildNumber)/$(Build.BuildId)"
-              TestStoreDropName: "$(TestDataDropName)"
-            templateContext:
-              isProduction: false
-              sdl:
-                codeSignValidation:
-                  enabled: false
-                sbom:
-                  enabled: false
-              outputs:
-                - output: pipelineArtifact
-                  displayName: 📢 Publish PTVS-TestData
-                  targetPath: $(Build.ArtifactStagingDirectory)/TestDataFolder/
-                  artifactName: TestDataFolder
-                - output: artifactsDrop # upload to artifact drop service for azure_pipelines_integration_tests.yml pipeline
-                  displayName: "Upload Test Data to Artifact Services"
-                  sourcePath: $(Build.ArtifactStagingDirectory)/TestDataFolder
-                  dropServiceURI: https://devdiv.artifacts.visualstudio.com/DefaultCollection/
-                  buildNumber: "$(TestDataDropName)"
-                  dropMetadataContainerName: PTVS-TestData
-                - output: pipelineArtifact
-                  displayName: "Publish build artifact: TestData"
-                  targetPath: "$(Build.ArtifactStagingDirectory)/TestDataFolder/TestData.zip"
-                  artifactName: "TestData"
-                # - output: pipelineArtifact
-                #   displayName: "Publish build artifact: RunSettings"
-                #   targetPath: "$(Build.SourcesDirectory)/Python/Tests/TestData/default.runsettings"
-                #   artifactName: "RunSettings"
-
-            steps:
-              # check out code clean from source control
-              - checkout: self
-                clean: true
-                fetchDepth: 1
-                persistCredentials: true
-
-              # Publish test data
-              - template: /Build/templates/publish_test_data.yml@self
 
           # Run tests on mixed mode debugger
           - ${{ if or(eq(variables['Build.Reason'], 'PullRequest'), eq(variables['SkipGlassCache'], true)) }}:
