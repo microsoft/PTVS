@@ -209,11 +209,20 @@ stages:
           Write-Host "##vso[task.setvariable variable=ResolvedTestDataZip]$($zip.FullName)"
 
 
-    - template: Build/azuredevops/test/uitest-integration-stage.yml
-      parameters:
-        BinariesDirectory: $(Pipeline.Workspace)\ComponentBuildUnderTest\Binaries
-        Drop: $(Pipeline.Workspace)\ComponentBuildUnderTest\TestDataFolder
-        UITestNames: PythonTools
+    # - template: Build/azuredevops/test/uitest-integration-stage.yml
+    #   parameters:
+    #     BinariesDirectory: $(Pipeline.Workspace)\ComponentBuildUnderTest\Binaries
+    #     Drop: $(Pipeline.Workspace)\ComponentBuildUnderTest\TestDataFolder
+    #     UITestNames: PythonTools
+
+    - task: ExtractFiles@1
+      displayName: Extract files
+      condition: succeeded()
+      inputs:
+        archiveFilePatterns: $(Pipeline.Workspace)\ComponentBuildUnderTest\TestDataFolder\TestData.zip
+        destinationFolder: $(Pipeline.Workspace)\ComponentBuildUnderTest\Binaries\TestData
+        cleanDestinationFolder: false
+        overwriteExistingFiles: false
 
     - template: \steps\powershell\execute-script.yml@DartLabTemplates
       parameters:
