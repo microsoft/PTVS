@@ -80,7 +80,9 @@ steps:
     displayName: 'Copy extra PythonToolsUITestsRunner.dll to subfolder'
     inputs:
       SourceFolder: '$(Build.BinariesDirectory)/raw/binaries'
-      Contents: 'PythonToolsUITestsRunner.dll'
+      Contents: |
+        PythonToolsUITestsRunner.dll
+        PythonToolsUITestsRunner.pdb
       TargetFolder: '$(Build.ArtifactStagingDirectory)/TestDataFolder/PythonToolsUITestsRunner'
 
   - task: CopyFiles@2
