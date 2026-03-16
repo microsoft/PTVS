@@ -24,13 +24,6 @@
 
   <ItemGroup Label="Test Containers">
     <TestContainer Include="PythonToolsUITestsRunner.dll" />
-    <TestContainer Include="DebuggerTests.dll" />
-    <TestContainer Include="DjangoTests.dll" />
-    <TestContainer Include="PythonToolsTests.dll" />
-    <TestContainer Include="IronPythonTests.dll" />
-    <TestContainer Include="TestAdapterTests.dll" />
-    <TestContainer Include="VSInterpretersTests.dll" />
-    <TestContainer Include="FastCgiTests.dll" />
   </ItemGroup>
 
 
