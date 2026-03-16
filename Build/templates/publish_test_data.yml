@@ -23,7 +23,7 @@ steps:
         /p:TestStoreDropName=$(TestStoreDropName)
         /p:VSTarget=18.0 
         /p:VisualStudioVersion=18.0
-        /p:TargetFramework=net472
+        /p:TargetFramework=net461
 
   - task: PowerShell@2
     displayName: 'Update default.runsettings from generated ptvs.runsettings'
@@ -70,7 +70,14 @@ steps:
       TargetFolder: '$(Build.ArtifactStagingDirectory)/TestDataFolder/TestData'
 
   - task: CopyFiles@2
-    displayName: 'Copy PythonToolsUITestsRunner.dll to subfolder'
+    displayName: 'Copy all binaries to TestDataFolder'
+    inputs:
+      SourceFolder: '$(Build.BinariesDirectory)/raw/binaries'
+      Contents: '**'
+      TargetFolder: '$(Build.ArtifactStagingDirectory)/TestDataFolder'
+
+  - task: CopyFiles@2
+    displayName: 'Copy extra PythonToolsUITestsRunner.dll to subfolder'
     inputs:
       SourceFolder: '$(Build.BinariesDirectory)/raw/binaries'
       Contents: 'PythonToolsUITestsRunner.dll'
