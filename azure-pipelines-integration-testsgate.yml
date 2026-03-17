@@ -50,6 +50,8 @@ stages:
     # as the machine running the actual tests
     preTestMachineConfigurationSteps:
 
+    - checkout: none
+
     - download: ComponentBuildUnderTest
       artifact: MicroBuildOutputs
       patterns: '**\BootstrapperInfo.json'
