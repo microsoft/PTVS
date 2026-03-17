@@ -67,7 +67,7 @@ steps:
     inputs:
       SourceFolder: '$(Build.SourcesDirectory)/Python/Tests/TestData'
       Contents: '**'
-      TargetFolder: '$(Build.ArtifactStagingDirectory)/TestDataFolder/TestData'
+      TargetFolder: '$(Build.ArtifactStagingDirectory)/TestDataFolder/PythonToolsUITestsRunner/TestData'
 
   - task: CopyFiles@2
     displayName: 'Copy all binaries to TestDataFolder'
