@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -94,7 +95,83 @@ namespace TestRunnerInterop {
                         return null;
                     }
 
+                    string TryResolveViaVsWhere() {
+                        var vswhereCandidates = new[] {
+                            Path.Combine(Environment.GetEnvironmentVariable("ProgramFiles(x86)") ?? string.Empty, "Microsoft Visual Studio", "Installer", "vswhere.exe"),
+                            Path.Combine(Environment.GetEnvironmentVariable("ProgramFiles") ?? string.Empty, "Microsoft Visual Studio", "Installer", "vswhere.exe")
+                        };
+
+                        foreach (var vswhere in vswhereCandidates.Where(File.Exists)) {
+                            probes.Add($"vswhere: {vswhere}");
+
+                            try {
+                                var psi = new ProcessStartInfo {
+                                    FileName = vswhere,
+                                    Arguments = "-version [17.0,19.0) -latest -products * -requires Microsoft.VisualStudio.PackageGroup.TestTools.Core -property installationPath",
+                                    UseShellExecute = false,
+                                    RedirectStandardOutput = true,
+                                    RedirectStandardError = true,
+                                    CreateNoWindow = true
+                                };
+
+                                using (var process = Process.Start(psi)) {
+                                    if (process == null) {
+                                        continue;
+                                    }
+
+                                    var output = process.StandardOutput.ReadToEnd();
+                                    process.WaitForExit(5000);
+
+                                    var installPath = output?.Trim();
+                                    if (string.IsNullOrWhiteSpace(installPath)) {
+                                        continue;
+                                    }
+
+                                    var resolved = TryResolveFromBasePath("vswhere", installPath);
+                                    if (!string.IsNullOrEmpty(resolved)) {
+                                        return resolved;
+                                    }
+                                }
+                            } catch (Exception ex) {
+                                probes.Add($"vswhere-error: {ex.GetType().Name}: {ex.Message}");
+                            }
+                        }
+
+                        return null;
+                    }
+
+                    string TryResolveFromKnownInstallRoots() {
+                        foreach (var programFiles in new[] {
+                            Environment.GetEnvironmentVariable("ProgramFiles(x86)"),
+                            Environment.GetEnvironmentVariable("ProgramFiles"),
+                            @"C:\Program Files (x86)",
+                            @"C:\Program Files"
+                        }.Where(p => !string.IsNullOrWhiteSpace(p)).Distinct(StringComparer.OrdinalIgnoreCase)) {
+                            if (string.IsNullOrWhiteSpace(programFiles)) {
+                                continue;
+                            }
+
+                            var vsRoot = Path.Combine(programFiles, "Microsoft Visual Studio");
+                            probes.Add($"known-root: {vsRoot}");
+                            if (!Directory.Exists(vsRoot)) {
+                                continue;
+                            }
+
+                            foreach (var yearDir in FileUtils.EnumerateDirectories(vsRoot)) {
+                                foreach (var skuDir in FileUtils.EnumerateDirectories(yearDir)) {
+                                    var resolved = TryResolveFromBasePath("known-install", skuDir);
+                                    if (!string.IsNullOrEmpty(resolved)) {
+                                        return resolved;
+                                    }
+                                }
+                            }
+                        }
+
+                        return null;
+                    }
+
                     foreach (var envVar in new string[] {
+                        "VisualStudio.InstallationUnderTest.Path",
                         $"VisualStudio_IDE_{AssemblyVersionInfo.VSVersion}",
                         "VisualStudio_IDE",
                         "VSAPPIDDIR",
@@ -119,9 +196,20 @@ namespace TestRunnerInterop {
                         }
                     }
 
+                    _devenvExe = TryResolveViaVsWhere();
+                    if (!string.IsNullOrEmpty(_devenvExe)) {
+                        return _devenvExe;
+                    }
+
+                    _devenvExe = TryResolveFromKnownInstallRoots();
+                    if (!string.IsNullOrEmpty(_devenvExe)) {
+                        return _devenvExe;
+                    }
+
                     throw new InvalidOperationException(
                         "Cannot locate devenv.exe. "
                         + "CurrentDirectory=" + Environment.CurrentDirectory + "; "
+                        + "VisualStudio.InstallationUnderTest.Path=" + (Environment.GetEnvironmentVariable("VisualStudio.InstallationUnderTest.Path") ?? "<null>") + "; "
                         + "VisualStudio_IDE_" + AssemblyVersionInfo.VSVersion + "=" + (Environment.GetEnvironmentVariable($"VisualStudio_IDE_{AssemblyVersionInfo.VSVersion}") ?? "<null>") + "; "
                         + "VisualStudio_IDE=" + (Environment.GetEnvironmentVariable("VisualStudio_IDE") ?? "<null>") + "; "
                         + "VSAPPIDDIR=" + (Environment.GetEnvironmentVariable("VSAPPIDDIR") ?? "<null>") + "; "
