@@ -118,6 +118,8 @@ namespace TestRunnerInterop {
                     }
                 }
 
+                string lastDteLookupFailure = null;
+
                 string BuildLaunchFailureDetails(string reason) {
                     var details = new StringBuilder();
                     details.Append(reason)
@@ -135,6 +137,11 @@ namespace TestRunnerInterop {
                         .Append(Environment.GetEnvironmentVariable("DevEnvDir") ?? "<null>")
                         .Append("; VSINSTALLDIR=")
                         .Append(Environment.GetEnvironmentVariable("VSINSTALLDIR") ?? "<null>");
+
+                    if (!string.IsNullOrEmpty(lastDteLookupFailure)) {
+                        details.Append("; lastDteLookupFailure=")
+                            .Append(lastDteLookupFailure);
+                    }
 
                     if (_vs != null) {
                         try {
@@ -229,9 +236,12 @@ namespace TestRunnerInterop {
 
                     try {
                         dte = _app.GetDTE();
-                    } catch (InvalidOperationException) {
+                        lastDteLookupFailure = null;
+                    } catch (InvalidOperationException ex) {
+                        lastDteLookupFailure = ex.Message;
                         Thread.Sleep(1000);
-                    } catch (COMException) {
+                    } catch (COMException ex) {
+                        lastDteLookupFailure = ex.Message;
                         Thread.Sleep(1000);
                     }
                 }
