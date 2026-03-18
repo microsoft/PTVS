@@ -15,9 +15,11 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -93,6 +95,69 @@ namespace TestRunnerInterop {
                     );
                 }
 
+                if (!System.IO.File.Exists(devenvExe)) {
+                    throw new InvalidOperationException(
+                        "Cannot start Visual Studio because devenv executable path does not exist. "
+                        + "devenvExe=" + devenvExe + "; "
+                        + "devenvArguments=" + (devenvArguments ?? "<null>") + "; "
+                        + "testDataRoot=" + (testDataRoot ?? "<null>") + "; "
+                        + "tempRoot=" + (tempRoot ?? "<null>")
+                    );
+                }
+
+                var outputTail = new Queue<string>();
+                void AddOutputLine(string line) {
+                    const int maxLines = 200;
+                    if (string.IsNullOrWhiteSpace(line)) {
+                        return;
+                    }
+
+                    outputTail.Enqueue(line);
+                    while (outputTail.Count > maxLines) {
+                        outputTail.Dequeue();
+                    }
+                }
+
+                string BuildLaunchFailureDetails(string reason) {
+                    var details = new StringBuilder();
+                    details.Append(reason)
+                        .Append("; devenvExe=").Append(devenvExe)
+                        .Append("; devenvArguments=").Append(devenvArguments ?? "<null>")
+                        .Append("; testDataRoot=").Append(testDataRoot ?? "<null>")
+                        .Append("; tempRoot=").Append(tempRoot ?? "<null>")
+                        .Append("; VisualStudio.InstallationUnderTest.Path=")
+                        .Append(Environment.GetEnvironmentVariable("VisualStudio.InstallationUnderTest.Path") ?? "<null>")
+                        .Append("; VisualStudio_IDE=")
+                        .Append(Environment.GetEnvironmentVariable("VisualStudio_IDE") ?? "<null>")
+                        .Append("; VSAPPIDDIR=")
+                        .Append(Environment.GetEnvironmentVariable("VSAPPIDDIR") ?? "<null>")
+                        .Append("; DevEnvDir=")
+                        .Append(Environment.GetEnvironmentVariable("DevEnvDir") ?? "<null>")
+                        .Append("; VSINSTALLDIR=")
+                        .Append(Environment.GetEnvironmentVariable("VSINSTALLDIR") ?? "<null>");
+
+                    if (_vs != null) {
+                        try {
+                            details.Append("; pid=").Append(_vs.Id);
+                        } catch (InvalidOperationException) {
+                        }
+
+                        try {
+                            if (_vs.HasExited) {
+                                details.Append("; exitCode=").Append(_vs.ExitCode);
+                            }
+                        } catch (InvalidOperationException) {
+                        }
+                    }
+
+                    if (outputTail.Count > 0) {
+                        details.Append("; outputTail=")
+                            .Append(string.Join("\\n", outputTail));
+                    }
+
+                    return details.ToString();
+                }
+
                 var psi = new ProcessStartInfo {
                     FileName = devenvExe,
                     Arguments = devenvArguments,
@@ -109,7 +174,19 @@ namespace TestRunnerInterop {
                     psi.Environment["_TESTDATA_TEMP_PATH"] = tempRoot;
                 }
 
-                _vs = Process.Start(psi);
+                try {
+                    _vs = Process.Start(psi);
+                } catch (Exception ex) {
+                    throw new InvalidOperationException(
+                        BuildLaunchFailureDetails("Failed to create VS process: " + ex.GetType().Name + ": " + ex.Message),
+                        ex
+                    );
+                }
+
+                if (_vs == null) {
+                    throw new InvalidOperationException(BuildLaunchFailureDetails("Failed to create VS process"));
+                }
+
                 if (!NativeMethods.AssignProcessToJobObject(_jobObject, _vs.Handle)) {
                     try {
                         _vs.Kill();
@@ -121,29 +198,45 @@ namespace TestRunnerInterop {
 
                 // Forward console output to our own output, which will
                 // be captured by the test runner.
-                _vs.OutputDataReceived += (s, e) => { if (e.Data != null) Console.WriteLine(e.Data); };
-                _vs.ErrorDataReceived += (s, e) => { if (e.Data != null) Console.Error.WriteLine(e.Data); };
+                _vs.OutputDataReceived += (s, e) => {
+                    if (e.Data != null) {
+                        AddOutputLine("OUT: " + e.Data);
+                        Console.WriteLine(e.Data);
+                    }
+                };
+                _vs.ErrorDataReceived += (s, e) => {
+                    if (e.Data != null) {
+                        AddOutputLine("ERR: " + e.Data);
+                        Console.Error.WriteLine(e.Data);
+                    }
+                };
                 _vs.BeginOutputReadLine();
                 _vs.BeginErrorReadLine();
 
                 // Always allow at least five seconds to start
                 Thread.Sleep(5000);
                 if (_vs.HasExited) {
-                    throw new InvalidOperationException("Failed to start VS");
+                    throw new InvalidOperationException(BuildLaunchFailureDetails("Failed to start VS: process exited during initial startup window"));
                 }
                 _app = VisualStudioApp.FromProcessId(_vs.Id);
 
-                var stopAt = DateTime.Now.AddSeconds(60);
+                var stopAt = DateTime.Now.AddSeconds(120);
                 EnvDTE.DTE dte = null;
                 while (DateTime.Now < stopAt && dte == null) {
+                    if (_vs.HasExited) {
+                        throw new InvalidOperationException(BuildLaunchFailureDetails("Failed to start VS: process exited before DTE was available"));
+                    }
+
                     try {
                         dte = _app.GetDTE();
                     } catch (InvalidOperationException) {
                         Thread.Sleep(1000);
+                    } catch (COMException) {
+                        Thread.Sleep(1000);
                     }
                 }
                 if (dte == null) {
-                    throw new InvalidOperationException("Failed to start VS");
+                    throw new InvalidOperationException(BuildLaunchFailureDetails("Failed to start VS: DTE did not become available in time"));
                 }
 
                 AttachIfDebugging(_vs);
