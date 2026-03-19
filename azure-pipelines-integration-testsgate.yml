@@ -46,6 +46,9 @@ stages:
     testMachineConfigurationJobVariables:
     - name: VisualStudio.InstallationUnderTest.BootstrapperBranch
       value: main
+    testRunEnvironmentVariables:
+    - name: VSINSTALLDIR
+      value: 'C:\Test\VisualStudio'
     # These steps run on the machine that is creating the test machine configuration, which isn't the same
     # as the machine running the actual tests
     preTestMachineConfigurationSteps:

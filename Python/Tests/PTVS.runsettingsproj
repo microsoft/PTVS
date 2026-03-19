@@ -10,7 +10,7 @@
     <TargetPlatform>x64</TargetPlatform>
     <MaxCpuCount>1</MaxCpuCount>
     <TestSessionTimeout>3600000</TestSessionTimeout>
-    <TestCaseFilter>Name=RelativePaths</TestCaseFilter>
+    <TestCaseFilter>Name=AddExistingFolder</TestCaseFilter>
     
     
 	
