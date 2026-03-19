@@ -27,6 +27,9 @@ using Microsoft.Win32.SafeHandles;
 
 namespace TestRunnerInterop {
     public sealed class VsInstance : IDisposable {
+        private const int DteAvailabilityTimeoutSeconds = 30;
+        private const int DteProbeDelayMilliseconds = 250;
+
         private readonly object _lock = new object();
         private readonly SafeFileHandle _jobObject;
         private Process _vs;
@@ -220,18 +223,20 @@ namespace TestRunnerInterop {
                 _vs.BeginOutputReadLine();
                 _vs.BeginErrorReadLine();
 
-                // Always allow at least five seconds to start
-                Thread.Sleep(5000);
-                if (_vs.HasExited) {
-                    throw new InvalidOperationException(BuildLaunchFailureDetails("Failed to start VS: process exited during initial startup window"));
-                }
                 _app = VisualStudioApp.FromProcessId(_vs.Id);
 
-                var stopAt = DateTime.Now.AddSeconds(5);
+                var stopAt = DateTime.Now.AddSeconds(DteAvailabilityTimeoutSeconds);
                 EnvDTE.DTE dte = null;
                 while (DateTime.Now < stopAt && dte == null) {
+                    _vs.Refresh();
                     if (_vs.HasExited) {
                         throw new InvalidOperationException(BuildLaunchFailureDetails("Failed to start VS: process exited before DTE was available"));
+                    }
+
+                    try {
+                        _vs.WaitForInputIdle(DteProbeDelayMilliseconds);
+                    } catch (InvalidOperationException) {
+                        // Process may not have created its UI thread yet; keep probing.
                     }
 
                     try {
@@ -239,10 +244,10 @@ namespace TestRunnerInterop {
                         lastDteLookupFailure = null;
                     } catch (InvalidOperationException ex) {
                         lastDteLookupFailure = ex.Message;
-                        Thread.Sleep(1000);
+                        Thread.Sleep(DteProbeDelayMilliseconds);
                     } catch (COMException ex) {
                         lastDteLookupFailure = ex.Message;
-                        Thread.Sleep(1000);
+                        Thread.Sleep(DteProbeDelayMilliseconds);
                     }
                 }
                 if (dte == null) {
