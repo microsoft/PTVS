@@ -227,7 +227,7 @@ namespace TestRunnerInterop {
                 }
                 _app = VisualStudioApp.FromProcessId(_vs.Id);
 
-                var stopAt = DateTime.Now.AddSeconds(120);
+                var stopAt = DateTime.Now.AddSeconds(5);
                 EnvDTE.DTE dte = null;
                 while (DateTime.Now < stopAt && dte == null) {
                     if (_vs.HasExited) {
