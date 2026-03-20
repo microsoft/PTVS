@@ -27,7 +27,7 @@ using Microsoft.Win32.SafeHandles;
 
 namespace TestRunnerInterop {
     public sealed class VsInstance : IDisposable {
-        private const int DteAvailabilityTimeoutSeconds = 30;
+        private const int DteAvailabilityTimeoutSeconds = 120;
         private const int DteProbeDelayMilliseconds = 250;
 
         private readonly object _lock = new object();
@@ -123,11 +123,72 @@ namespace TestRunnerInterop {
 
                 string lastDteLookupFailure = null;
 
+                string BuildDevenvProcessSnapshot() {
+                    Process[] processes;
+                    try {
+                        processes = Process.GetProcessesByName("devenv");
+                    } catch (Exception ex) {
+                        return "<failed to enumerate devenv processes: " + ex.GetType().Name + ": " + ex.Message + ">";
+                    }
+
+                    if (processes.Length == 0) {
+                        return "<none>";
+                    }
+
+                    var snapshot = new StringBuilder();
+                    foreach (var process in processes) {
+                        using (process) {
+                            if (snapshot.Length > 0) {
+                                snapshot.Append(" | ");
+                            }
+
+                            snapshot.Append("pid=").Append(process.Id);
+
+                            try {
+                                snapshot.Append(", sessionId=").Append(process.SessionId);
+                            } catch (Exception ex) {
+                                snapshot.Append(", sessionIdError=").Append(ex.GetType().Name);
+                            }
+
+                            try {
+                                snapshot.Append(", started=").Append(process.StartTime.ToString("o"));
+                            } catch (Exception ex) {
+                                snapshot.Append(", startedError=").Append(ex.GetType().Name);
+                            }
+
+                            try {
+                                snapshot.Append(", responding=").Append(process.Responding);
+                            } catch (Exception ex) {
+                                snapshot.Append(", respondingError=").Append(ex.GetType().Name);
+                            }
+
+                            try {
+                                snapshot.Append(", mainWindowHandle=0x").Append(process.MainWindowHandle.ToInt64().ToString("X"));
+                            } catch (Exception ex) {
+                                snapshot.Append(", mainWindowHandleError=").Append(ex.GetType().Name);
+                            }
+
+                            try {
+                                snapshot.Append(", title=").Append(process.MainWindowTitle ?? string.Empty);
+                            } catch (Exception ex) {
+                                snapshot.Append(", titleError=").Append(ex.GetType().Name);
+                            }
+
+                            if (_vs != null && process.Id == _vs.Id) {
+                                snapshot.Append(", launchedByTest=true");
+                            }
+                        }
+                    }
+
+                    return snapshot.ToString();
+                }
+
                 string BuildLaunchFailureDetails(string reason) {
                     var details = new StringBuilder();
                     details.Append(reason)
                         .Append("; devenvExe=").Append(devenvExe)
                         .Append("; devenvArguments=").Append(devenvArguments ?? "<null>")
+                        .Append("; dteTimeoutSeconds=").Append(DteAvailabilityTimeoutSeconds)
                         .Append("; testDataRoot=").Append(testDataRoot ?? "<null>")
                         .Append("; tempRoot=").Append(tempRoot ?? "<null>")
                         .Append("; VisualStudio.InstallationUnderTest.Path=")
@@ -159,6 +220,9 @@ namespace TestRunnerInterop {
                         } catch (InvalidOperationException) {
                         }
                     }
+
+                    details.Append("; devenvProcesses=")
+                        .Append(BuildDevenvProcessSnapshot());
 
                     if (outputTail.Count > 0) {
                         details.Append("; outputTail=")
