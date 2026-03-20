@@ -71,13 +71,7 @@ namespace TestRunnerInterop {
         public DTE GetDTE() {
             var dte = GetDTE(_processId);
             if (dte == null) {
-                throw new InvalidOperationException(
-                    "Could not find VS DTE object for process " + _processId
-                    + ". Expected one of: "
-                    + string.Join(", ", GetPossibleDteMonikers(_processId))
-                    + ". ROT matches: "
-                    + DescribeRelevantRunningObjectTableEntries(_processId)
-                );
+                throw new InvalidOperationException("Could not find VS DTE object for process " + _processId);
             }
             return dte;
         }
@@ -90,7 +84,7 @@ namespace TestRunnerInterop {
                 prefix = "VisualStudio";
             }
 
-            var progIds = new HashSet<string>(GetPossibleDteMonikers(processId, prefix), StringComparer.Ordinal);
+            string progId = string.Format("!{0}.DTE.{1}:{2}", prefix, AssemblyVersionInfo.VSVersion, processId);
             object runningObject = null;
 
             IBindCtx bindCtx = null;
@@ -117,7 +111,7 @@ namespace TestRunnerInterop {
                         // Do nothing, there is something in the ROT that we do not have access to.
                     }
 
-                    if (!string.IsNullOrEmpty(name) && progIds.Contains(name)) {
+                    if (!string.IsNullOrEmpty(name) && string.Equals(name, progId, StringComparison.Ordinal)) {
                         rot.GetObject(runningObjectMoniker, out runningObject);
                         break;
                     }
@@ -137,82 +131,6 @@ namespace TestRunnerInterop {
             }
 
             return (DTE)runningObject;
-        }
-
-        private static string DescribeRelevantRunningObjectTableEntries(int processId) {
-            var expectedPidSuffix = ":" + processId;
-            var entries = new List<string>();
-
-            IBindCtx bindCtx = null;
-            IRunningObjectTable rot = null;
-            IEnumMoniker enumMonikers = null;
-
-            try {
-                Marshal.ThrowExceptionForHR(CreateBindCtx(reserved: 0, ppbc: out bindCtx));
-                bindCtx.GetRunningObjectTable(out rot);
-                rot.EnumRunning(out enumMonikers);
-
-                IMoniker[] moniker = new IMoniker[1];
-                uint numberFetched = 0;
-                while (enumMonikers.Next(1, moniker, out numberFetched) == 0) {
-                    var runningObjectMoniker = moniker[0];
-                    string name = null;
-
-                    try {
-                        if (runningObjectMoniker != null) {
-                            runningObjectMoniker.GetDisplayName(bindCtx, null, out name);
-                        }
-                    } catch (UnauthorizedAccessException) {
-                    }
-
-                    if (string.IsNullOrEmpty(name)) {
-                        continue;
-                    }
-
-                    if (name.IndexOf("VisualStudio.DTE", StringComparison.OrdinalIgnoreCase) >= 0
-                        || name.IndexOf("devenv", StringComparison.OrdinalIgnoreCase) >= 0
-                        || name.EndsWith(expectedPidSuffix, StringComparison.Ordinal)) {
-                        entries.Add(name);
-                    }
-                }
-            } catch (Exception ex) {
-                return "<failed to enumerate ROT: " + ex.GetType().Name + ": " + ex.Message + ">";
-            } finally {
-                if (enumMonikers != null) {
-                    Marshal.ReleaseComObject(enumMonikers);
-                }
-
-                if (rot != null) {
-                    Marshal.ReleaseComObject(rot);
-                }
-
-                if (bindCtx != null) {
-                    Marshal.ReleaseComObject(bindCtx);
-                }
-            }
-
-            if (entries.Count == 0) {
-                return "<none>";
-            }
-
-            return string.Join(" | ", entries);
-        }
-
-        private static IEnumerable<string> GetPossibleDteMonikers(int processId, string prefix = null) {
-            prefix = prefix ?? Process.GetProcessById(processId).ProcessName;
-            if ("devenv".Equals(prefix, StringComparison.OrdinalIgnoreCase)) {
-                prefix = "VisualStudio";
-            }
-
-            yield return string.Format("!{0}.DTE.{1}:{2}", prefix, AssemblyVersionInfo.VSVersion, processId);
-
-            if (!string.Equals(AssemblyVersionInfo.VSVersion, "17.0", StringComparison.Ordinal)) {
-                yield return string.Format("!{0}.DTE.{1}:{2}", prefix, "17.0", processId);
-            }
-
-            if (!string.Equals(AssemblyVersionInfo.VSVersion, "18.0", StringComparison.Ordinal)) {
-                yield return string.Format("!{0}.DTE.{1}:{2}", prefix, "18.0", processId);
-            }
         }
 
         public bool AttachToProcess(Process process, Guid[] engines) {

@@ -15,11 +15,9 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -27,9 +25,6 @@ using Microsoft.Win32.SafeHandles;
 
 namespace TestRunnerInterop {
     public sealed class VsInstance : IDisposable {
-        private const int DteAvailabilityTimeoutSeconds = 60;
-        private const int DteProbeDelayMilliseconds = 250;
-
         private readonly object _lock = new object();
         private readonly SafeFileHandle _jobObject;
         private Process _vs;
@@ -76,16 +71,6 @@ namespace TestRunnerInterop {
             string testDataRoot,
             string tempRoot
         ) {
-            StartOrRestart(devenvExe, devenvArguments, testDataRoot, tempRoot, allowConfigurationRecovery: true);
-        }
-
-        private void StartOrRestart(
-            string devenvExe,
-            string devenvArguments,
-            string testDataRoot,
-            string tempRoot,
-            bool allowConfigurationRecovery
-        ) {
             lock (_lock) {
                 var settings = $"{devenvExe ?? ""};{devenvArguments ?? ""};{testDataRoot ?? ""};{tempRoot ?? ""}";
                 if (_vs != null && _app != null) {
@@ -96,250 +81,6 @@ namespace TestRunnerInterop {
                 }
                 _currentSettings = settings;
                 CloseCurrentInstance();
-
-                if (string.IsNullOrWhiteSpace(devenvExe)) {
-                    throw new InvalidOperationException(
-                        "Cannot start Visual Studio because devenv executable path is empty. "
-                        + "CurrentDirectory=" + Environment.CurrentDirectory + "; "
-                        + "VisualStudio_IDE=" + (Environment.GetEnvironmentVariable("VisualStudio_IDE") ?? "<null>") + "; "
-                        + "VSAPPIDDIR=" + (Environment.GetEnvironmentVariable("VSAPPIDDIR") ?? "<null>") + "; "
-                        + "DevEnvDir=" + (Environment.GetEnvironmentVariable("DevEnvDir") ?? "<null>") + "; "
-                        + "VSINSTALLDIR=" + (Environment.GetEnvironmentVariable("VSINSTALLDIR") ?? "<null>")
-                    );
-                }
-
-                if (!System.IO.File.Exists(devenvExe)) {
-                    throw new InvalidOperationException(
-                        "Cannot start Visual Studio because devenv executable path does not exist. "
-                        + "devenvExe=" + devenvExe + "; "
-                        + "devenvArguments=" + (devenvArguments ?? "<null>") + "; "
-                        + "testDataRoot=" + (testDataRoot ?? "<null>") + "; "
-                        + "tempRoot=" + (tempRoot ?? "<null>")
-                    );
-                }
-
-                string BuildDevenvExecutableDetails() {
-                    var details = new StringBuilder();
-                    try {
-                        details.Append("fullPath=")
-                            .Append(System.IO.Path.GetFullPath(devenvExe));
-                    } catch (Exception ex) {
-                        details.Append("fullPathError=")
-                            .Append(ex.GetType().Name)
-                            .Append(": ")
-                            .Append(ex.Message);
-                    }
-
-                    try {
-                        var versionInfo = FileVersionInfo.GetVersionInfo(devenvExe);
-                        details.Append(", fileVersion=")
-                            .Append(versionInfo.FileVersion ?? "<null>")
-                            .Append(", productVersion=")
-                            .Append(versionInfo.ProductVersion ?? "<null>");
-                    } catch (Exception ex) {
-                        details.Append(", versionError=")
-                            .Append(ex.GetType().Name)
-                            .Append(": ")
-                            .Append(ex.Message);
-                    }
-
-                    return details.ToString();
-                }
-
-                var outputTail = new Queue<string>();
-                void AddOutputLine(string line) {
-                    const int maxLines = 200;
-                    if (string.IsNullOrWhiteSpace(line)) {
-                        return;
-                    }
-
-                    outputTail.Enqueue(line);
-                    while (outputTail.Count > maxLines) {
-                        outputTail.Dequeue();
-                    }
-                }
-
-                string lastDteLookupFailure = null;
-
-                bool IsRootSuffixLaunch() {
-                    return !string.IsNullOrWhiteSpace(devenvArguments)
-                        && devenvArguments.IndexOf("/rootSuffix", StringComparison.OrdinalIgnoreCase) >= 0;
-                }
-
-                bool TryRefreshConfiguration() {
-                    if (!allowConfigurationRecovery || !IsRootSuffixLaunch()) {
-                        return false;
-                    }
-
-                    var refreshArguments = (devenvArguments ?? string.Empty) + " /updateconfiguration /nosplash";
-                    const int refreshTimeoutMilliseconds = 120000;
-                    AddOutputLine("Running configuration refresh: " + refreshArguments);
-
-                    try {
-                        var refreshPsi = new ProcessStartInfo {
-                            FileName = devenvExe,
-                            Arguments = refreshArguments,
-                            ErrorDialog = false,
-                            UseShellExecute = false,
-                            RedirectStandardOutput = true,
-                            RedirectStandardError = true,
-                            CreateNoWindow = true
-                        };
-
-                        refreshPsi.Environment["_PTVS_UI_TEST"] = "1";
-                        if (!string.IsNullOrEmpty(testDataRoot)) {
-                            refreshPsi.Environment["_TESTDATA_ROOT_PATH"] = testDataRoot;
-                        }
-                        if (!string.IsNullOrEmpty(tempRoot)) {
-                            refreshPsi.Environment["_TESTDATA_TEMP_PATH"] = tempRoot;
-                        }
-
-                        using (var refreshProcess = Process.Start(refreshPsi)) {
-                            if (refreshProcess == null) {
-                                AddOutputLine("Configuration refresh did not create a process.");
-                                return false;
-                            }
-
-                            refreshProcess.OutputDataReceived += (s, e) => {
-                                if (e.Data != null) {
-                                    AddOutputLine("CFG OUT: " + e.Data);
-                                }
-                            };
-                            refreshProcess.ErrorDataReceived += (s, e) => {
-                                if (e.Data != null) {
-                                    AddOutputLine("CFG ERR: " + e.Data);
-                                }
-                            };
-                            refreshProcess.BeginOutputReadLine();
-                            refreshProcess.BeginErrorReadLine();
-
-                            if (!refreshProcess.WaitForExit(refreshTimeoutMilliseconds)) {
-                                try {
-                                    refreshProcess.Kill();
-                                } catch (Exception) {
-                                }
-                                AddOutputLine("Configuration refresh timed out after 120 seconds.");
-                                return false;
-                            }
-
-                            AddOutputLine("Configuration refresh exit code: " + refreshProcess.ExitCode);
-                            return refreshProcess.ExitCode == 0;
-                        }
-                    } catch (Exception ex) {
-                        AddOutputLine("Configuration refresh failed: " + ex.GetType().Name + ": " + ex.Message);
-                        return false;
-                    }
-                }
-
-                string BuildDevenvProcessSnapshot() {
-                    Process[] processes;
-                    try {
-                        processes = Process.GetProcessesByName("devenv");
-                    } catch (Exception ex) {
-                        return "<failed to enumerate devenv processes: " + ex.GetType().Name + ": " + ex.Message + ">";
-                    }
-
-                    if (processes.Length == 0) {
-                        return "<none>";
-                    }
-
-                    var snapshot = new StringBuilder();
-                    foreach (var process in processes) {
-                        using (process) {
-                            if (snapshot.Length > 0) {
-                                snapshot.Append(" | ");
-                            }
-
-                            snapshot.Append("pid=").Append(process.Id);
-
-                            try {
-                                snapshot.Append(", sessionId=").Append(process.SessionId);
-                            } catch (Exception ex) {
-                                snapshot.Append(", sessionIdError=").Append(ex.GetType().Name);
-                            }
-
-                            try {
-                                snapshot.Append(", started=").Append(process.StartTime.ToString("o"));
-                            } catch (Exception ex) {
-                                snapshot.Append(", startedError=").Append(ex.GetType().Name);
-                            }
-
-                            try {
-                                snapshot.Append(", responding=").Append(process.Responding);
-                            } catch (Exception ex) {
-                                snapshot.Append(", respondingError=").Append(ex.GetType().Name);
-                            }
-
-                            try {
-                                snapshot.Append(", mainWindowHandle=0x").Append(process.MainWindowHandle.ToInt64().ToString("X"));
-                            } catch (Exception ex) {
-                                snapshot.Append(", mainWindowHandleError=").Append(ex.GetType().Name);
-                            }
-
-                            try {
-                                snapshot.Append(", title=").Append(process.MainWindowTitle ?? string.Empty);
-                            } catch (Exception ex) {
-                                snapshot.Append(", titleError=").Append(ex.GetType().Name);
-                            }
-
-                            if (_vs != null && process.Id == _vs.Id) {
-                                snapshot.Append(", launchedByTest=true");
-                            }
-                        }
-                    }
-
-                    return snapshot.ToString();
-                }
-
-                string BuildLaunchFailureDetails(string reason) {
-                    var details = new StringBuilder();
-                    details.Append(reason)
-                        .Append("; devenvExe=").Append(devenvExe)
-                        .Append("; devenvExeDetails=").Append(BuildDevenvExecutableDetails())
-                        .Append("; devenvArguments=").Append(devenvArguments ?? "<null>")
-                        .Append("; dteTimeoutSeconds=").Append(DteAvailabilityTimeoutSeconds)
-                        .Append("; testDataRoot=").Append(testDataRoot ?? "<null>")
-                        .Append("; tempRoot=").Append(tempRoot ?? "<null>")
-                        .Append("; VisualStudio.InstallationUnderTest.Path=")
-                        .Append(Environment.GetEnvironmentVariable("VisualStudio.InstallationUnderTest.Path") ?? "<null>")
-                        .Append("; VisualStudio_IDE=")
-                        .Append(Environment.GetEnvironmentVariable("VisualStudio_IDE") ?? "<null>")
-                        .Append("; VSAPPIDDIR=")
-                        .Append(Environment.GetEnvironmentVariable("VSAPPIDDIR") ?? "<null>")
-                        .Append("; DevEnvDir=")
-                        .Append(Environment.GetEnvironmentVariable("DevEnvDir") ?? "<null>")
-                        .Append("; VSINSTALLDIR=")
-                        .Append(Environment.GetEnvironmentVariable("VSINSTALLDIR") ?? "<null>");
-
-                    if (!string.IsNullOrEmpty(lastDteLookupFailure)) {
-                        details.Append("; lastDteLookupFailure=")
-                            .Append(lastDteLookupFailure);
-                    }
-
-                    if (_vs != null) {
-                        try {
-                            details.Append("; pid=").Append(_vs.Id);
-                        } catch (InvalidOperationException) {
-                        }
-
-                        try {
-                            if (_vs.HasExited) {
-                                details.Append("; exitCode=").Append(_vs.ExitCode);
-                            }
-                        } catch (InvalidOperationException) {
-                        }
-                    }
-
-                    details.Append("; devenvProcesses=")
-                        .Append(BuildDevenvProcessSnapshot());
-
-                    if (outputTail.Count > 0) {
-                        details.Append("; outputTail=")
-                            .Append(string.Join("\\n", outputTail));
-                    }
-
-                    return details.ToString();
-                }
 
                 var psi = new ProcessStartInfo {
                     FileName = devenvExe,
@@ -357,24 +98,7 @@ namespace TestRunnerInterop {
                     psi.Environment["_TESTDATA_TEMP_PATH"] = tempRoot;
                 }
 
-                var devenvExists = System.IO.File.Exists(devenvExe);
-                var pathCheck = "Resolved devenv.exe path check. exists=" + devenvExists + "; path=" + devenvExe + "; details=" + BuildDevenvExecutableDetails();
-                AddOutputLine(pathCheck);
-                Console.WriteLine(pathCheck);
-
-                try {
-                    _vs = Process.Start(psi);
-                } catch (Exception ex) {
-                    throw new InvalidOperationException(
-                        BuildLaunchFailureDetails("Failed to create VS process: " + ex.GetType().Name + ": " + ex.Message),
-                        ex
-                    );
-                }
-
-                if (_vs == null) {
-                    throw new InvalidOperationException(BuildLaunchFailureDetails("Failed to create VS process"));
-                }
-
+                _vs = Process.Start(psi);
                 if (!NativeMethods.AssignProcessToJobObject(_jobObject, _vs.Handle)) {
                     try {
                         _vs.Kill();
@@ -386,61 +110,29 @@ namespace TestRunnerInterop {
 
                 // Forward console output to our own output, which will
                 // be captured by the test runner.
-                _vs.OutputDataReceived += (s, e) => {
-                    if (e.Data != null) {
-                        AddOutputLine("OUT: " + e.Data);
-                        Console.WriteLine(e.Data);
-                    }
-                };
-                _vs.ErrorDataReceived += (s, e) => {
-                    if (e.Data != null) {
-                        AddOutputLine("ERR: " + e.Data);
-                        Console.Error.WriteLine(e.Data);
-                    }
-                };
+                _vs.OutputDataReceived += (s, e) => { if (e.Data != null) Console.WriteLine(e.Data); };
+                _vs.ErrorDataReceived += (s, e) => { if (e.Data != null) Console.Error.WriteLine(e.Data); };
                 _vs.BeginOutputReadLine();
                 _vs.BeginErrorReadLine();
 
-                _vs.Refresh();
-                var launchSnapshot = "Started VS process. pid=" + _vs.Id + "; devenvProcesses=" + BuildDevenvProcessSnapshot();
-                AddOutputLine(launchSnapshot);
-                Console.WriteLine(launchSnapshot);
-
+                // Always allow at least five seconds to start
+                Thread.Sleep(5000);
+                if (_vs.HasExited) {
+                    throw new InvalidOperationException("Failed to start VS");
+                }
                 _app = VisualStudioApp.FromProcessId(_vs.Id);
 
-                var stopAt = DateTime.Now.AddSeconds(DteAvailabilityTimeoutSeconds);
+                var stopAt = DateTime.Now.AddSeconds(60);
                 EnvDTE.DTE dte = null;
                 while (DateTime.Now < stopAt && dte == null) {
-                    _vs.Refresh();
-                    if (_vs.HasExited) {
-                        throw new InvalidOperationException(BuildLaunchFailureDetails("Failed to start VS: process exited before DTE was available"));
-                    }
-
-                    try {
-                        _vs.WaitForInputIdle(DteProbeDelayMilliseconds);
-                    } catch (InvalidOperationException) {
-                        // Process may not have created its UI thread yet; keep probing.
-                    }
-
                     try {
                         dte = _app.GetDTE();
-                        lastDteLookupFailure = null;
-                    } catch (InvalidOperationException ex) {
-                        lastDteLookupFailure = ex.Message;
-                        Thread.Sleep(DteProbeDelayMilliseconds);
-                    } catch (COMException ex) {
-                        lastDteLookupFailure = ex.Message;
-                        Thread.Sleep(DteProbeDelayMilliseconds);
+                    } catch (InvalidOperationException) {
+                        Thread.Sleep(1000);
                     }
                 }
                 if (dte == null) {
-                    if (TryRefreshConfiguration()) {
-                        CloseCurrentInstance(hard: true);
-                        StartOrRestart(devenvExe, devenvArguments, testDataRoot, tempRoot, allowConfigurationRecovery: false);
-                        return;
-                    }
-
-                    throw new InvalidOperationException(BuildLaunchFailureDetails("Failed to start VS: DTE did not become available in time"));
+                    throw new InvalidOperationException("Failed to start VS");
                 }
 
                 AttachIfDebugging(_vs);
