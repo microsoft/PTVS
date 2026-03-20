@@ -357,6 +357,11 @@ namespace TestRunnerInterop {
                     psi.Environment["_TESTDATA_TEMP_PATH"] = tempRoot;
                 }
 
+                var devenvExists = System.IO.File.Exists(devenvExe);
+                var pathCheck = "Resolved devenv.exe path check. exists=" + devenvExists + "; path=" + devenvExe + "; details=" + BuildDevenvExecutableDetails();
+                AddOutputLine(pathCheck);
+                Console.WriteLine(pathCheck);
+
                 try {
                     _vs = Process.Start(psi);
                 } catch (Exception ex) {
@@ -395,6 +400,11 @@ namespace TestRunnerInterop {
                 };
                 _vs.BeginOutputReadLine();
                 _vs.BeginErrorReadLine();
+
+                _vs.Refresh();
+                var launchSnapshot = "Started VS process. pid=" + _vs.Id + "; devenvProcesses=" + BuildDevenvProcessSnapshot();
+                AddOutputLine(launchSnapshot);
+                Console.WriteLine(launchSnapshot);
 
                 _app = VisualStudioApp.FromProcessId(_vs.Id);
 
