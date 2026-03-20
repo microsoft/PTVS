@@ -47,8 +47,7 @@ stages:
     - name: VisualStudio.InstallationUnderTest.BootstrapperBranch
       value: main
     testRunEnvironmentVariables:
-    - name: VSINSTALLDIR
-      value: 'C:\Test\VisualStudio'
+      VSINSTALLDIR: 'C:\Test\VisualStudio'
     # These steps run on the machine that is creating the test machine configuration, which isn't the same
     # as the machine running the actual tests
     preTestMachineConfigurationSteps:
@@ -240,15 +239,11 @@ stages:
       inputs:
         targetType: inline
         script: |
-          Write-Host "Resolved arguments for Get-DropName.ps1:"
-          Write-Host "  -VSTSDropJsonURI '$($("VSTSDropJsonURI"))'"
-          Write-Host "  -OutVariableName 'RunSettings.DropName'"
-          Write-Host ""
-          Write-Host "Raw argument string (as authored in YAML):"
-          Write-Host "  -VSTSDropJsonURI '$(VSTSDropJsonURI)' -OutVariableName 'RunSettings.DropName'"
-          Write-Host ""
           $path = "$(VSTSDropJsonURI)"
-          Write-Host "VSTSDropJsonURI points to: $path"
+          Write-Host "Resolved Get-DropName.ps1 inputs:"
+          Write-Host "  VSTSDropJsonURI: '$path'"
+          Write-Host "  OutVariableName: 'RunSettings.DropName'"
+          Write-Host ""
           if ([string]::IsNullOrWhiteSpace($path)) {
             Write-Warning "VSTSDropJsonURI is empty."
           } elseif (Test-Path -LiteralPath $path) {
