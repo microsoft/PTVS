@@ -76,6 +76,16 @@ namespace TestRunnerInterop {
             string testDataRoot,
             string tempRoot
         ) {
+            StartOrRestart(devenvExe, devenvArguments, testDataRoot, tempRoot, allowConfigurationRecovery: true);
+        }
+
+        private void StartOrRestart(
+            string devenvExe,
+            string devenvArguments,
+            string testDataRoot,
+            string tempRoot,
+            bool allowConfigurationRecovery
+        ) {
             lock (_lock) {
                 var settings = $"{devenvExe ?? ""};{devenvArguments ?? ""};{testDataRoot ?? ""};{tempRoot ?? ""}";
                 if (_vs != null && _app != null) {
@@ -150,6 +160,76 @@ namespace TestRunnerInterop {
                 }
 
                 string lastDteLookupFailure = null;
+
+                bool IsRootSuffixLaunch() {
+                    return !string.IsNullOrWhiteSpace(devenvArguments)
+                        && devenvArguments.IndexOf("/rootSuffix", StringComparison.OrdinalIgnoreCase) >= 0;
+                }
+
+                bool TryRefreshConfiguration() {
+                    if (!allowConfigurationRecovery || !IsRootSuffixLaunch()) {
+                        return false;
+                    }
+
+                    var refreshArguments = (devenvArguments ?? string.Empty) + " /updateconfiguration /nosplash";
+                    const int refreshTimeoutMilliseconds = 120000;
+                    AddOutputLine("Running configuration refresh: " + refreshArguments);
+
+                    try {
+                        var refreshPsi = new ProcessStartInfo {
+                            FileName = devenvExe,
+                            Arguments = refreshArguments,
+                            ErrorDialog = false,
+                            UseShellExecute = false,
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true,
+                            CreateNoWindow = true
+                        };
+
+                        refreshPsi.Environment["_PTVS_UI_TEST"] = "1";
+                        if (!string.IsNullOrEmpty(testDataRoot)) {
+                            refreshPsi.Environment["_TESTDATA_ROOT_PATH"] = testDataRoot;
+                        }
+                        if (!string.IsNullOrEmpty(tempRoot)) {
+                            refreshPsi.Environment["_TESTDATA_TEMP_PATH"] = tempRoot;
+                        }
+
+                        using (var refreshProcess = Process.Start(refreshPsi)) {
+                            if (refreshProcess == null) {
+                                AddOutputLine("Configuration refresh did not create a process.");
+                                return false;
+                            }
+
+                            refreshProcess.OutputDataReceived += (s, e) => {
+                                if (e.Data != null) {
+                                    AddOutputLine("CFG OUT: " + e.Data);
+                                }
+                            };
+                            refreshProcess.ErrorDataReceived += (s, e) => {
+                                if (e.Data != null) {
+                                    AddOutputLine("CFG ERR: " + e.Data);
+                                }
+                            };
+                            refreshProcess.BeginOutputReadLine();
+                            refreshProcess.BeginErrorReadLine();
+
+                            if (!refreshProcess.WaitForExit(refreshTimeoutMilliseconds)) {
+                                try {
+                                    refreshProcess.Kill();
+                                } catch (Exception) {
+                                }
+                                AddOutputLine("Configuration refresh timed out after 120 seconds.");
+                                return false;
+                            }
+
+                            AddOutputLine("Configuration refresh exit code: " + refreshProcess.ExitCode);
+                            return refreshProcess.ExitCode == 0;
+                        }
+                    } catch (Exception ex) {
+                        AddOutputLine("Configuration refresh failed: " + ex.GetType().Name + ": " + ex.Message);
+                        return false;
+                    }
+                }
 
                 string BuildDevenvProcessSnapshot() {
                     Process[] processes;
@@ -344,6 +424,12 @@ namespace TestRunnerInterop {
                     }
                 }
                 if (dte == null) {
+                    if (TryRefreshConfiguration()) {
+                        CloseCurrentInstance(hard: true);
+                        StartOrRestart(devenvExe, devenvArguments, testDataRoot, tempRoot, allowConfigurationRecovery: false);
+                        return;
+                    }
+
                     throw new InvalidOperationException(BuildLaunchFailureDetails("Failed to start VS: DTE did not become available in time"));
                 }
 
