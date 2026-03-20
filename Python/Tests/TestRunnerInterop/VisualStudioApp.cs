@@ -75,6 +75,8 @@ namespace TestRunnerInterop {
                     "Could not find VS DTE object for process " + _processId
                     + ". Expected one of: "
                     + string.Join(", ", GetPossibleDteMonikers(_processId))
+                    + ". ROT matches: "
+                    + DescribeRelevantRunningObjectTableEntries(_processId)
                 );
             }
             return dte;
@@ -135,6 +137,65 @@ namespace TestRunnerInterop {
             }
 
             return (DTE)runningObject;
+        }
+
+        private static string DescribeRelevantRunningObjectTableEntries(int processId) {
+            var expectedPidSuffix = ":" + processId;
+            var entries = new List<string>();
+
+            IBindCtx bindCtx = null;
+            IRunningObjectTable rot = null;
+            IEnumMoniker enumMonikers = null;
+
+            try {
+                Marshal.ThrowExceptionForHR(CreateBindCtx(reserved: 0, ppbc: out bindCtx));
+                bindCtx.GetRunningObjectTable(out rot);
+                rot.EnumRunning(out enumMonikers);
+
+                IMoniker[] moniker = new IMoniker[1];
+                uint numberFetched = 0;
+                while (enumMonikers.Next(1, moniker, out numberFetched) == 0) {
+                    var runningObjectMoniker = moniker[0];
+                    string name = null;
+
+                    try {
+                        if (runningObjectMoniker != null) {
+                            runningObjectMoniker.GetDisplayName(bindCtx, null, out name);
+                        }
+                    } catch (UnauthorizedAccessException) {
+                    }
+
+                    if (string.IsNullOrEmpty(name)) {
+                        continue;
+                    }
+
+                    if (name.IndexOf("VisualStudio.DTE", StringComparison.OrdinalIgnoreCase) >= 0
+                        || name.IndexOf("devenv", StringComparison.OrdinalIgnoreCase) >= 0
+                        || name.EndsWith(expectedPidSuffix, StringComparison.Ordinal)) {
+                        entries.Add(name);
+                    }
+                }
+            } catch (Exception ex) {
+                return "<failed to enumerate ROT: " + ex.GetType().Name + ": " + ex.Message + ">";
+            } finally {
+                if (enumMonikers != null) {
+                    Marshal.ReleaseComObject(enumMonikers);
+                }
+
+                if (rot != null) {
+                    Marshal.ReleaseComObject(rot);
+                }
+
+                if (bindCtx != null) {
+                    Marshal.ReleaseComObject(bindCtx);
+                }
+            }
+
+            if (entries.Count == 0) {
+                return "<none>";
+            }
+
+            return string.Join(" | ", entries);
         }
 
         private static IEnumerable<string> GetPossibleDteMonikers(int processId, string prefix = null) {

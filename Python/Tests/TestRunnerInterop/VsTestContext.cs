@@ -27,6 +27,7 @@ namespace TestRunnerInterop {
         private readonly string _testDataRoot;
         private VsInstance _vs;
         private string _devenvExe;
+        private string _devenvExeSource;
 
         private Dictionary<string, DateTime> _testDataFiles;
 
@@ -69,6 +70,51 @@ namespace TestRunnerInterop {
             get {
                 if (_devenvExe == null) {
                     var probes = new List<string>();
+
+                    bool IsPathUnderRoot(string candidatePath, string rootPath) {
+                        if (string.IsNullOrWhiteSpace(candidatePath) || string.IsNullOrWhiteSpace(rootPath)) {
+                            return false;
+                        }
+
+                        try {
+                            var fullCandidate = Path.GetFullPath(candidatePath)
+                                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                            var fullRoot = Path.GetFullPath(rootPath)
+                                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+                            return fullCandidate.StartsWith(fullRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)
+                                || string.Equals(fullCandidate, fullRoot, StringComparison.OrdinalIgnoreCase);
+                        } catch (Exception ex) {
+                            probes.Add($"path-compare-error: {ex.GetType().Name}: {ex.Message}");
+                            return false;
+                        }
+                    }
+
+                    string ValidateResolvedDevenv(string source, string candidate) {
+                        if (string.IsNullOrWhiteSpace(candidate)) {
+                            return null;
+                        }
+
+                        string fullCandidate;
+                        try {
+                            fullCandidate = Path.GetFullPath(candidate);
+                        } catch (Exception ex) {
+                            probes.Add($"{source}: full-path-error: {ex.GetType().Name}: {ex.Message}");
+                            return null;
+                        }
+
+                        probes.Add($"resolved: {source} => {fullCandidate}");
+
+                        var installUnderTest = Environment.GetEnvironmentVariable("VisualStudio.InstallationUnderTest.Path");
+                        if (!string.IsNullOrWhiteSpace(installUnderTest) && !IsPathUnderRoot(fullCandidate, installUnderTest)) {
+                            probes.Add($"rejected-outside-install-under-test: {fullCandidate} (root={installUnderTest})");
+                            return null;
+                        }
+
+                        _devenvExeSource = source;
+                        return fullCandidate;
+                    }
+
                     string TryResolveFromBasePath(string envVar, string basePath) {
                         if (string.IsNullOrWhiteSpace(basePath)) {
                             return null;
@@ -88,7 +134,7 @@ namespace TestRunnerInterop {
                         foreach (var candidate in candidates) {
                             probes.Add($"{envVar}: {candidate}");
                             if (File.Exists(candidate)) {
-                                return candidate;
+                                return ValidateResolvedDevenv(envVar, candidate);
                             }
                         }
 
@@ -218,10 +264,15 @@ namespace TestRunnerInterop {
                         + "Probes=" + string.Join(" | ", probes)
                     );
                 }
+
+                if (!string.IsNullOrEmpty(_devenvExe)) {
+                    Console.WriteLine("Resolved devenv.exe: " + _devenvExe + (string.IsNullOrEmpty(_devenvExeSource) ? string.Empty : " (source=" + _devenvExeSource + ")"));
+                }
                 return _devenvExe;
             }
             set {
                 _devenvExe = value;
+                _devenvExeSource = null;
             }
         }
 

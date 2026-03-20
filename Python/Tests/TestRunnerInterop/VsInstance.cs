@@ -27,7 +27,7 @@ using Microsoft.Win32.SafeHandles;
 
 namespace TestRunnerInterop {
     public sealed class VsInstance : IDisposable {
-        private const int DteAvailabilityTimeoutSeconds = 120;
+        private const int DteAvailabilityTimeoutSeconds = 60;
         private const int DteProbeDelayMilliseconds = 250;
 
         private readonly object _lock = new object();
@@ -106,6 +106,34 @@ namespace TestRunnerInterop {
                         + "testDataRoot=" + (testDataRoot ?? "<null>") + "; "
                         + "tempRoot=" + (tempRoot ?? "<null>")
                     );
+                }
+
+                string BuildDevenvExecutableDetails() {
+                    var details = new StringBuilder();
+                    try {
+                        details.Append("fullPath=")
+                            .Append(System.IO.Path.GetFullPath(devenvExe));
+                    } catch (Exception ex) {
+                        details.Append("fullPathError=")
+                            .Append(ex.GetType().Name)
+                            .Append(": ")
+                            .Append(ex.Message);
+                    }
+
+                    try {
+                        var versionInfo = FileVersionInfo.GetVersionInfo(devenvExe);
+                        details.Append(", fileVersion=")
+                            .Append(versionInfo.FileVersion ?? "<null>")
+                            .Append(", productVersion=")
+                            .Append(versionInfo.ProductVersion ?? "<null>");
+                    } catch (Exception ex) {
+                        details.Append(", versionError=")
+                            .Append(ex.GetType().Name)
+                            .Append(": ")
+                            .Append(ex.Message);
+                    }
+
+                    return details.ToString();
                 }
 
                 var outputTail = new Queue<string>();
@@ -187,6 +215,7 @@ namespace TestRunnerInterop {
                     var details = new StringBuilder();
                     details.Append(reason)
                         .Append("; devenvExe=").Append(devenvExe)
+                        .Append("; devenvExeDetails=").Append(BuildDevenvExecutableDetails())
                         .Append("; devenvArguments=").Append(devenvArguments ?? "<null>")
                         .Append("; dteTimeoutSeconds=").Append(DteAvailabilityTimeoutSeconds)
                         .Append("; testDataRoot=").Append(testDataRoot ?? "<null>")
