@@ -48,12 +48,12 @@ stages:
       value: main
     testRunEnvironmentVariables:
       VSINSTALLDIR: 'C:\Test\VisualStudio'
-    preDeployAndRunTestsOperations:
-    - operation: executePowerShellScript
-      displayName: Import EnableSkipVerification.reg
-      scriptPath: 'C:\Test\Containers\PythonToolsUITestsRunner\TestData\ImportEnableSkipVerification.ps1'
-      scriptParameters: '-RegFilePath ''C:\Test\Containers\PythonToolsUITestsRunner\TestData\EnableSkipVerification.reg'''
-      timeout: '0:0:5:0'
+    # preDeployAndRunTestsOperations:
+    # - operation: executePowerShellScript
+    #   displayName: Import EnableSkipVerification.reg
+    #   scriptPath: 'C:\Test\Containers\PythonToolsUITestsRunner\TestData\ImportEnableSkipVerification.ps1'
+    #   scriptParameters: '-RegFilePath ''C:\Test\Containers\PythonToolsUITestsRunner\TestData\EnableSkipVerification.reg'''
+    #   timeout: '0:0:5:0'
     # These steps run on the machine that is creating the test machine configuration, which isn't the same
     # as the machine running the actual tests
     preTestMachineConfigurationSteps:
