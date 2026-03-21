@@ -2,8 +2,8 @@
 	<Import Project="TestProjectBefore.settings" />
   <PropertyGroup>
 
-    <TargetFramework>v4.6.1</TargetFramework>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion> 
+    <TargetFramework>v4.7.2</TargetFramework>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion> 
     <RunName>ptvs</RunName>
     <OutputPath>bin\RunSettings</OutputPath>
     <ResultsDirectory>.\TestResults</ResultsDirectory>

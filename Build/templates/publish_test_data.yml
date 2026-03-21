@@ -23,8 +23,8 @@ steps:
         /p:TestStoreDropName=$(TestStoreDropName)
         /p:VSTarget=18.0 
         /p:VisualStudioVersion=18.0
-        /p:TargetFramework=net461
-
+        /p:TargetFramework=net472
+        
   - task: PowerShell@2
     displayName: 'Update default.runsettings from generated ptvs.runsettings'
     inputs:
