@@ -48,6 +48,7 @@ stages:
       value: main
     testRunEnvironmentVariables:
       VSINSTALLDIR: 'C:\Test\VisualStudio'
+      _TESTDATA_ROOT_PATH: 'C:\Test\Containers\PythonToolsUITestsRunner'
     # preDeployAndRunTestsOperations:
     # - operation: executePowerShellScript
     #   displayName: Import EnableSkipVerification.reg
