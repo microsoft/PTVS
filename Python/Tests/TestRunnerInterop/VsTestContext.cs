@@ -252,7 +252,7 @@ namespace TestRunnerInterop {
             }
 
 
-            var rootDir = GetDirectoryAboveContaningFile(AppDomain.CurrentDomain.BaseDirectory, "build.root");
+            var rootDir = AppDomain.CurrentDomain.BaseDirectory;//GetDirectoryAboveContaningFile(AppDomain.CurrentDomain.BaseDirectory, "build.root");
             if (!string.IsNullOrEmpty(rootDir)) {
                 if (Directory.Exists(Path.Combine(rootDir, "TestData"))) {
                     return rootDir;
