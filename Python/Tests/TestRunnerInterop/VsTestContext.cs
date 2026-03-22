@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -64,30 +65,133 @@ namespace TestRunnerInterop {
             }
         }
 
+        private static string TryResolveDevenvFromBasePath(string basePath) {
+            if (string.IsNullOrWhiteSpace(basePath)) {
+                return null;
+            }
+
+            var trimmedPath = basePath.Trim();
+            var candidatePaths = new[] {
+                trimmedPath,
+                Path.Combine(trimmedPath, "devenv.exe"),
+                Path.Combine(trimmedPath, "Common7", "IDE", "devenv.exe")
+            }
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var candidatePath in candidatePaths) {
+                if (File.Exists(candidatePath) && string.Equals(Path.GetFileName(candidatePath), "devenv.exe", StringComparison.OrdinalIgnoreCase)) {
+                    return candidatePath;
+                }
+            }
+
+            return null;
+        }
+
+        private static string TryResolveDevenvViaVswhere() {
+            var vswherePaths = new[] {
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Microsoft Visual Studio", "Installer", "vswhere.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft Visual Studio", "Installer", "vswhere.exe")
+            }
+            .Where(path => !string.IsNullOrWhiteSpace(path))
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var vswherePath in vswherePaths) {
+                if (!File.Exists(vswherePath)) {
+                    continue;
+                }
+
+                try {
+                    var startInfo = new ProcessStartInfo {
+                        FileName = vswherePath,
+                        Arguments = "-version [17.0,19.0) -latest -products * -requires Microsoft.VisualStudio.PackageGroup.TestTools.Core -property installationPath",
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        CreateNoWindow = true
+                    };
+
+                    using (var process = Process.Start(startInfo)) {
+                        var output = process.StandardOutput.ReadToEnd().Trim();
+                        process.WaitForExit();
+
+                        if (process.ExitCode != 0 || string.IsNullOrWhiteSpace(output)) {
+                            continue;
+                        }
+
+                        var devenvPath = Path.Combine(output, "Common7", "IDE", "devenv.exe");
+                        if (File.Exists(devenvPath)) {
+                            return devenvPath;
+                        }
+                    }
+                } catch (Exception ex) {
+                    Console.WriteLine($"Failed to resolve devenv via vswhere '{vswherePath}': {ex.Message}");
+                }
+            }
+
+            return null;
+        }
+
+        private static string TryResolveDevenvFromProgramFiles() {
+            var roots = new[] {
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Microsoft Visual Studio"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft Visual Studio")
+            }
+            .Where(Directory.Exists)
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var root in roots) {
+                try {
+                    var devenvPath = Directory.EnumerateFiles(root, "devenv.exe", SearchOption.AllDirectories)
+                        .Where(path => path.IndexOf(Path.Combine("Common7", "IDE", "devenv.exe"), StringComparison.OrdinalIgnoreCase) >= 0)
+                        .OrderByDescending(path => path, StringComparer.OrdinalIgnoreCase)
+                        .FirstOrDefault();
+
+                    if (!string.IsNullOrEmpty(devenvPath)) {
+                        return devenvPath;
+                    }
+                } catch (Exception ex) {
+                    Console.WriteLine($"Failed to enumerate Visual Studio installs under '{root}': {ex.Message}");
+                }
+            }
+
+            return null;
+        }
+
         public string DevEnvExe {
             get {
                 if (_devenvExe == null) {
                     foreach (var envVar in new string[] {
                         $"VisualStudio_IDE_{AssemblyVersionInfo.VSVersion}",
                         "VisualStudio_IDE",
-                        "VSAPPIDDIR"
+                        "VSAPPIDDIR",
+                        "DevEnvDir",
+                        "VSINSTALLDIR"
                     }) {
-                        _devenvExe = Environment.GetEnvironmentVariable(envVar);
-                        if (string.IsNullOrEmpty(_devenvExe)) {
+                        var envValue = Environment.GetEnvironmentVariable(envVar);
+                        if (string.IsNullOrEmpty(envValue)) {
                             continue;
                         }
-                        _devenvExe = Path.Combine(_devenvExe, "devenv.exe");
-                        if (File.Exists(_devenvExe)) {
+
+                        Console.WriteLine($"Checking devenv environment variable {envVar}: '{envValue}'");
+                        _devenvExe = TryResolveDevenvFromBasePath(envValue);
+                        if (!string.IsNullOrEmpty(_devenvExe)) {
                             return _devenvExe;
                         }
-
-                        _devenvExe = Path.Combine(Path.GetDirectoryName(_devenvExe), "Common7", "IDE", "devenv.exe");
-                        if (File.Exists(_devenvExe)) {
-                            return _devenvExe;
-                        }
-
-                        _devenvExe = null;
                     }
+
+                    _devenvExe = TryResolveDevenvViaVswhere();
+                    if (!string.IsNullOrEmpty(_devenvExe)) {
+                        Console.WriteLine($"Resolved devenv via vswhere: '{_devenvExe}'");
+                        return _devenvExe;
+                    }
+
+                    _devenvExe = TryResolveDevenvFromProgramFiles();
+                    if (!string.IsNullOrEmpty(_devenvExe)) {
+                        Console.WriteLine($"Resolved devenv via Program Files search: '{_devenvExe}'");
+                        return _devenvExe;
+                    }
+
+                    throw new InvalidOperationException("Could not locate devenv.exe from VisualStudio_IDE_*, VisualStudio_IDE, VSAPPIDDIR, DevEnvDir, VSINSTALLDIR, vswhere, or Program Files search.");
                 }
                 return _devenvExe;
             }
