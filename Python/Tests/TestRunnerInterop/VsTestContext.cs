@@ -234,10 +234,87 @@ namespace TestRunnerInterop {
             return result;
         }
 
+        private static string GetParentDirectory(string path) {
+            if (string.IsNullOrWhiteSpace(path)) {
+                return null;
+            }
+
+            var trimmedPath = path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            return Path.GetDirectoryName(trimmedPath);
+        }
+
+        private static bool HasTestDataDirectory(string rootPath) {
+            return !string.IsNullOrWhiteSpace(rootPath) &&
+                Directory.Exists(rootPath) &&
+                Directory.Exists(Path.Combine(rootPath, "TestData"));
+        }
+
+        private static string ResolveTestDataRoot(string candidatePath) {
+            if (string.IsNullOrWhiteSpace(candidatePath) || !Directory.Exists(candidatePath)) {
+                return null;
+            }
+
+            if (string.Equals(Path.GetFileName(candidatePath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)), "TestData", StringComparison.OrdinalIgnoreCase)) {
+                return GetParentDirectory(candidatePath);
+            }
+
+            if (HasTestDataDirectory(candidatePath)) {
+                return candidatePath;
+            }
+
+            return null;
+        }
+
+        private static void LogExistingDirectories(string label, IEnumerable<string> candidatePaths) {
+            var existingDirectories = candidatePaths
+                .Where(path => !string.IsNullOrWhiteSpace(path))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Where(Directory.Exists)
+                .ToArray();
+
+            Console.WriteLine(label);
+            if (existingDirectories.Length == 0) {
+                Console.WriteLine("  <none>");
+                return;
+            }
+
+            foreach (var existingDirectory in existingDirectories) {
+                Console.WriteLine($"  {existingDirectory}");
+            }
+        }
+
+        private static void LogChildDirectories(string label, IEnumerable<string> candidatePaths) {
+            Console.WriteLine(label);
+
+            foreach (var candidatePath in candidatePaths
+                .Where(path => !string.IsNullOrWhiteSpace(path))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Where(Directory.Exists)) {
+                Console.WriteLine($"  {candidatePath}");
+
+                try {
+                    var childDirectories = Directory.EnumerateDirectories(candidatePath)
+                        .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
+                        .ToArray();
+
+                    if (childDirectories.Length == 0) {
+                        Console.WriteLine("    <no child directories>");
+                        continue;
+                    }
+
+                    foreach (var childDirectory in childDirectories) {
+                        Console.WriteLine($"    {childDirectory}");
+                    }
+                } catch (Exception ex) {
+                    Console.WriteLine($"    <failed to enumerate child directories: {ex.Message}>");
+                }
+            }
+        }
+
         private static string GetDirectoryAboveContaningFile(string path, string filename) {
-            while (!File.Exists(Path.Combine(path, filename))) {
+            while (!string.IsNullOrEmpty(path) && !File.Exists(Path.Combine(path, filename))) {
                 var newPath = Path.GetDirectoryName(path);
-                if (newPath == path) {
+                if (string.IsNullOrEmpty(newPath) || string.Equals(newPath, path, StringComparison.OrdinalIgnoreCase)) {
                     return null;
                 }
                 path = newPath;
@@ -246,20 +323,63 @@ namespace TestRunnerInterop {
         }
 
         private static string GetDefaultTestDataDirectory() {
-            var candidate = Environment.GetEnvironmentVariable("_TESTDATA_ROOT_PATH");
-            if (Directory.Exists(candidate)) {
-                return candidate;
+            var envRoot = Environment.GetEnvironmentVariable("_TESTDATA_ROOT_PATH");
+            var appBaseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            var assemblyDirectory = Path.GetDirectoryName(typeof(VsTestContext).Assembly.Location);
+            var rootDir = GetDirectoryAboveContaningFile(assemblyDirectory, "build.root");
+            var pythonTestsRoot = !string.IsNullOrEmpty(rootDir)
+                ? Path.Combine(rootDir, "Python", "Tests")
+                : null;
+
+            var candidateRoots = new[] {
+                envRoot,
+                rootDir,
+                pythonTestsRoot,
+                appBaseDirectory,
+                GetParentDirectory(appBaseDirectory),
+                assemblyDirectory,
+                GetParentDirectory(assemblyDirectory),
+                @"C:\Test\Containers\PythonToolsUITestsRunner\TestData",
+                @"C:\Test\Containers\PythonToolsUITestsRunner",
+                @"C:\Test\Containers",
+                @"C:\Test"
+            }
+            .Where(path => !string.IsNullOrWhiteSpace(path))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+            LogExistingDirectories("Existing TestData directory candidates:", candidateRoots);
+            LogChildDirectories("Child directories under existing candidates:", candidateRoots);
+
+            if (!string.IsNullOrWhiteSpace(envRoot)) {
+                var envTestDataPath = Path.Combine(envRoot, "TestData");
+                Console.WriteLine($"Checking _TESTDATA_ROOT_PATH candidate: '{envRoot}' (TestData exists: {Directory.Exists(envTestDataPath)})");
+                var resolvedEnvRoot = ResolveTestDataRoot(envRoot);
+                if (!string.IsNullOrEmpty(resolvedEnvRoot)) {
+                    return resolvedEnvRoot;
+                }
             }
 
-
-            var rootDir = AppDomain.CurrentDomain.BaseDirectory;//GetDirectoryAboveContaningFile(AppDomain.CurrentDomain.BaseDirectory, "build.root");
             if (!string.IsNullOrEmpty(rootDir)) {
-                if (Directory.Exists(Path.Combine(rootDir, "TestData"))) {
-                    return rootDir;
+                Console.WriteLine($"Checking repo-root TestData candidate: '{rootDir}'");
+                var resolvedRootDir = ResolveTestDataRoot(rootDir);
+                if (!string.IsNullOrEmpty(resolvedRootDir)) {
+                    return resolvedRootDir;
                 }
-                candidate = Path.Combine(rootDir, "Python", "Tests");
-                if (Directory.Exists(Path.Combine(candidate, "TestData"))) {
-                    return candidate;
+
+                Console.WriteLine($"Checking Python\\Tests TestData candidate: '{pythonTestsRoot}'");
+                var resolvedPythonTestsRoot = ResolveTestDataRoot(pythonTestsRoot);
+                if (!string.IsNullOrEmpty(resolvedPythonTestsRoot)) {
+                    return resolvedPythonTestsRoot;
+                }
+            }
+
+            foreach (var candidateRoot in candidateRoots) {
+                var testDataPath = Path.Combine(candidateRoot, "TestData");
+                Console.WriteLine($"Checking TestData root candidate: '{candidateRoot}' (TestData exists: {Directory.Exists(testDataPath)})");
+                var resolvedCandidateRoot = ResolveTestDataRoot(candidateRoot);
+                if (!string.IsNullOrEmpty(resolvedCandidateRoot)) {
+                    return resolvedCandidateRoot;
                 }
             }
 
