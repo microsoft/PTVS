@@ -98,7 +98,13 @@ namespace TestRunnerInterop {
                     psi.Environment["_TESTDATA_TEMP_PATH"] = tempRoot;
                 }
 
+                Console.WriteLine($"Starting VS: '{devenvExe}' {devenvArguments}");
+                Console.WriteLine($"  testDataRoot: '{testDataRoot}'");
+                Console.WriteLine($"  tempRoot: '{tempRoot}'");
+
                 _vs = Process.Start(psi);
+                Console.WriteLine($"  VS process started: PID={_vs.Id}");
+
                 if (!NativeMethods.AssignProcessToJobObject(_jobObject, _vs.Handle)) {
                     try {
                         _vs.Kill();
@@ -118,13 +124,20 @@ namespace TestRunnerInterop {
                 // Always allow at least five seconds to start
                 Thread.Sleep(5000);
                 if (_vs.HasExited) {
-                    throw new InvalidOperationException("Failed to start VS");
+                    throw new InvalidOperationException(
+                        $"Failed to start VS. Process exited with code {_vs.ExitCode}. " +
+                        $"FileName='{devenvExe}', Arguments='{devenvArguments}'");
                 }
                 _app = VisualStudioApp.FromProcessId(_vs.Id);
 
-                var stopAt = DateTime.Now.AddSeconds(60);
+                var stopAt = DateTime.Now.AddSeconds(120);
                 EnvDTE.DTE dte = null;
                 while (DateTime.Now < stopAt && dte == null) {
+                    if (_vs.HasExited) {
+                        throw new InvalidOperationException(
+                            $"VS exited during DTE wait with code {_vs.ExitCode}. " +
+                            $"FileName='{devenvExe}', Arguments='{devenvArguments}'");
+                    }
                     try {
                         dte = _app.GetDTE();
                     } catch (InvalidOperationException) {
@@ -132,7 +145,9 @@ namespace TestRunnerInterop {
                     }
                 }
                 if (dte == null) {
-                    throw new InvalidOperationException("Failed to start VS");
+                    throw new InvalidOperationException(
+                        $"Failed to obtain DTE after 120s. VS running={!_vs.HasExited}. " +
+                        $"FileName='{devenvExe}', Arguments='{devenvArguments}'");
                 }
 
                 AttachIfDebugging(_vs);
