@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
@@ -26,13 +27,55 @@ using Microsoft.Win32.SafeHandles;
 namespace TestRunnerInterop {
     public sealed class VsInstance : IDisposable {
         private readonly object _lock = new object();
+        private readonly object _processOutputLock = new object();
         private readonly SafeFileHandle _jobObject;
         private Process _vs;
         private VisualStudioApp _app;
+        private Queue<string> _recentProcessOutput;
 
         private bool _isDisposed = false;
 
         private string _currentSettings;
+
+        private void WriteProcessOutput(string data, bool isError) {
+            if (data == null) {
+                return;
+            }
+
+            lock (_processOutputLock) {
+                if (_recentProcessOutput == null) {
+                    _recentProcessOutput = new Queue<string>();
+                }
+
+                _recentProcessOutput.Enqueue((isError ? "[stderr] " : "[stdout] ") + data);
+                while (_recentProcessOutput.Count > 50) {
+                    _recentProcessOutput.Dequeue();
+                }
+            }
+
+            if (isError) {
+                Console.Error.WriteLine(data);
+                Console.Error.Flush();
+            } else {
+                Console.WriteLine(data);
+                Console.Out.Flush();
+            }
+        }
+
+        private static void FlushConsoleStreams() {
+            Console.Out.Flush();
+            Console.Error.Flush();
+        }
+
+        private string GetRecentProcessOutputTail() {
+            lock (_processOutputLock) {
+                if (_recentProcessOutput == null || _recentProcessOutput.Count == 0) {
+                    return "<no devenv output captured>";
+                }
+
+                return string.Join(Environment.NewLine, _recentProcessOutput.ToArray());
+            }
+        }
 
         public VsInstance() {
             _jobObject = NativeMethods.CreateJobObject(IntPtr.Zero, null);
@@ -81,6 +124,9 @@ namespace TestRunnerInterop {
                 }
                 _currentSettings = settings;
                 CloseCurrentInstance();
+                lock (_processOutputLock) {
+                    _recentProcessOutput = new Queue<string>();
+                }
 
                 var psi = new ProcessStartInfo {
                     FileName = devenvExe,
@@ -116,17 +162,19 @@ namespace TestRunnerInterop {
 
                 // Forward console output to our own output, which will
                 // be captured by the test runner.
-                _vs.OutputDataReceived += (s, e) => { if (e.Data != null) Console.WriteLine(e.Data); };
-                _vs.ErrorDataReceived += (s, e) => { if (e.Data != null) Console.Error.WriteLine(e.Data); };
+                _vs.OutputDataReceived += (s, e) => WriteProcessOutput(e.Data, isError: false);
+                _vs.ErrorDataReceived += (s, e) => WriteProcessOutput(e.Data, isError: true);
                 _vs.BeginOutputReadLine();
                 _vs.BeginErrorReadLine();
 
                 // Always allow at least five seconds to start
                 Thread.Sleep(5000);
                 if (_vs.HasExited) {
+                    FlushConsoleStreams();
                     throw new InvalidOperationException(
                         $"Failed to start VS. Process exited with code {_vs.ExitCode}. " +
-                        $"FileName='{devenvExe}', Arguments='{devenvArguments}'");
+                        $"FileName='{devenvExe}', Arguments='{devenvArguments}'. " +
+                        $"devenv output:{Environment.NewLine}{GetRecentProcessOutputTail()}");
                 }
                 _app = VisualStudioApp.FromProcessId(_vs.Id);
 
@@ -134,9 +182,11 @@ namespace TestRunnerInterop {
                 EnvDTE.DTE dte = null;
                 while (DateTime.Now < stopAt && dte == null) {
                     if (_vs.HasExited) {
+                        FlushConsoleStreams();
                         throw new InvalidOperationException(
                             $"VS exited during DTE wait with code {_vs.ExitCode}. " +
-                            $"FileName='{devenvExe}', Arguments='{devenvArguments}'");
+                            $"FileName='{devenvExe}', Arguments='{devenvArguments}'. " +
+                            $"devenv output:{Environment.NewLine}{GetRecentProcessOutputTail()}");
                     }
                     try {
                         dte = _app.GetDTE();
@@ -145,9 +195,11 @@ namespace TestRunnerInterop {
                     }
                 }
                 if (dte == null) {
+                    FlushConsoleStreams();
                     throw new InvalidOperationException(
                         $"Failed to obtain DTE after 120s. VS running={!_vs.HasExited}. " +
-                        $"FileName='{devenvExe}', Arguments='{devenvArguments}'");
+                        $"FileName='{devenvExe}', Arguments='{devenvArguments}'. " +
+                        $"devenv output:{Environment.NewLine}{GetRecentProcessOutputTail()}");
                 }
 
                 AttachIfDebugging(_vs);
