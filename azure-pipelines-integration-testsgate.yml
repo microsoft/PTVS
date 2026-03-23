@@ -50,6 +50,11 @@ stages:
       VSINSTALLDIR: 'C:\Test\VisualStudio'
       _TESTDATA_ROOT_PATH: 'C:\Test\Containers\PythonToolsUITestsRunner'
     preDeployAndRunTestsOperations:
+      - operation: downloadAzureArtifactsDrop
+        displayName: Download PTVS test data drop
+        dropName: $(RunSettings.DropName)
+        destinationDirectory: 'C:\Test\Containers\'
+        timeout: '0:0:5:0'
       - operation: executePowerShellInline
         displayName: Import EnableSkipVerification.reg
         scriptBlock: |
