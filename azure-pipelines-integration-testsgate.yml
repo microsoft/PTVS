@@ -49,27 +49,27 @@ stages:
     testRunEnvironmentVariables:
       VSINSTALLDIR: 'C:\Test\VisualStudio'
       _TESTDATA_ROOT_PATH: 'C:\Test\Containers\PythonToolsUITestsRunner'
-    preDeployAndRunTestsOperations:
-      - operation: downloadAzureArtifactsDrop
-        displayName: Download PTVS test data drop
-        dropName: $(RunSettings.DropName)
-        destinationDirectory: 'C:\Test\Containers\'
-        timeout: '0:0:5:0'
-      - operation: executePowerShellInline
-        displayName: Import EnableSkipVerification.reg
-        scriptBlock: |
-          $ErrorActionPreference = 'Stop'
-          $regFilePath = 'C:\Test\Containers\PythonToolsUITestsRunner\TestData\EnableSkipVerification.reg'
-          Write-Host "Importing skip verification settings from: $regFilePath"
-          if (-not (Test-Path -LiteralPath $regFilePath -PathType Leaf)) {
-            throw "Registry file not found: $regFilePath"
-          }
-          reg import "$regFilePath"
-          if ($LASTEXITCODE -ne 0) {
-            throw "reg import failed with exit code $LASTEXITCODE for: $regFilePath"
-          }
-          Write-Host "Successfully imported skip verification settings."
-        timeout: '0:0:5:0'
+    # preDeployAndRunTestsOperations:
+    #   - operation: downloadAzureArtifactsDrop
+    #     displayName: Download PTVS test data drop
+    #     dropName: $(RunSettings.DropName)
+    #     destinationDirectory: 'C:\Test\Containers\'
+    #     timeout: '0:0:5:0'
+    #   - operation: executePowerShellInline
+    #     displayName: Import EnableSkipVerification.reg
+    #     scriptBlock: |
+    #       $ErrorActionPreference = 'Stop'
+    #       $regFilePath = 'C:\Test\Containers\PythonToolsUITestsRunner\TestData\EnableSkipVerification.reg'
+    #       Write-Host "Importing skip verification settings from: $regFilePath"
+    #       if (-not (Test-Path -LiteralPath $regFilePath -PathType Leaf)) {
+    #         throw "Registry file not found: $regFilePath"
+    #       }
+    #       reg import "$regFilePath"
+    #       if ($LASTEXITCODE -ne 0) {
+    #         throw "reg import failed with exit code $LASTEXITCODE for: $regFilePath"
+    #       }
+    #       Write-Host "Successfully imported skip verification settings."
+    #     timeout: '0:0:5:0'
     # These steps run on the machine that is creating the test machine configuration, which isn't the same
     # as the machine running the actual tests
     preTestMachineConfigurationSteps:
