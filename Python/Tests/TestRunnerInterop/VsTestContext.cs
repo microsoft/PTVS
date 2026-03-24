@@ -160,38 +160,11 @@ namespace TestRunnerInterop {
         public string DevEnvExe {
             get {
                 if (_devenvExe == null) {
-                    foreach (var envVar in new string[] {
-                        $"VisualStudio_IDE_{AssemblyVersionInfo.VSVersion}",
-                        "VisualStudio_IDE",
-                        "VSAPPIDDIR",
-                        "DevEnvDir",
-                        "VSINSTALLDIR"
-                    }) {
-                        var envValue = Environment.GetEnvironmentVariable(envVar);
-                        if (string.IsNullOrEmpty(envValue)) {
-                            continue;
-                        }
-
-                        Console.WriteLine($"Checking devenv environment variable {envVar}: '{envValue}'");
-                        _devenvExe = TryResolveDevenvFromBasePath(envValue);
-                        if (!string.IsNullOrEmpty(_devenvExe)) {
-                            return _devenvExe;
-                        }
-                    }
-
-                    _devenvExe = TryResolveDevenvViaVswhere();
-                    if (!string.IsNullOrEmpty(_devenvExe)) {
-                        Console.WriteLine($"Resolved devenv via vswhere: '{_devenvExe}'");
-                        return _devenvExe;
-                    }
-
-                    _devenvExe = TryResolveDevenvFromProgramFiles();
-                    if (!string.IsNullOrEmpty(_devenvExe)) {
-                        Console.WriteLine($"Resolved devenv via Program Files search: '{_devenvExe}'");
-                        return _devenvExe;
-                    }
-
-                    throw new InvalidOperationException("Could not locate devenv.exe from VisualStudio_IDE_*, VisualStudio_IDE, VSAPPIDDIR, DevEnvDir, VSINSTALLDIR, vswhere, or Program Files search.");
+                    var envVar = "VisualStudio.InstallationUnderTest.Path";
+                    var envValue = Environment.GetEnvironmentVariable(envVar);
+                    _devenvExe = string.IsNullOrEmpty(envValue)
+                        ? null
+                        : GetDevEnvExePath(envValue, envVar);
                 }
                 return _devenvExe;
             }
@@ -200,10 +173,52 @@ namespace TestRunnerInterop {
             }
         }
 
+        private static string GetDevEnvExePath(string path) {
+            return GetDevEnvExePath(path, null);
+        }
+
+        private static string GetDevEnvExePath(string path, string source) {
+            if (string.IsNullOrWhiteSpace(path)) {
+                return null;
+            }
+
+            path = path.Trim().Trim('"');
+
+            var candidates = new List<string> {
+                path,
+            };
+
+            if (!path.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) {
+                candidates.Add(Path.Combine(path, "devenv.exe"));
+                candidates.Add(Path.Combine(path, "Common7", "IDE", "devenv.exe"));
+            }
+
+            foreach (var candidate in candidates.Distinct(StringComparer.OrdinalIgnoreCase)) {
+                LogDevEnvCandidate(source, candidate);
+                if (File.Exists(candidate)) {
+                    return candidate;
+                }
+            }
+
+            var parentDirectory = Path.GetDirectoryName(path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+            if (string.IsNullOrEmpty(parentDirectory)) {
+                return null;
+            }
+
+            var parentCandidate = Path.Combine(parentDirectory, "Common7", "IDE", "devenv.exe");
+            LogDevEnvCandidate(source, parentCandidate);
+            return File.Exists(parentCandidate) ? parentCandidate : null;
+        }
+
+        private static void LogDevEnvCandidate(string source, string candidate) {
+            Console.WriteLine($"Checking devenv candidate [{source ?? "direct"}]: {candidate}");
+        }
+
         public string RootSuffix { get; set; }
 
         public void TestInitialize(string deploymentDirectory) {
             _testDataFiles = GetAllFileInfo(_testDataRoot);
+            LogDevEnvDiscovery();
 
             if (_vs == null || !_vs.IsRunning) {
                 _vs?.Dispose();
@@ -215,6 +230,16 @@ namespace TestRunnerInterop {
                     Path.Combine(deploymentDirectory, "Temp")
                 );
             }
+        }
+
+        private void LogDevEnvDiscovery() {
+            var installationUnderTestValue = Environment.GetEnvironmentVariable("VisualStudio.InstallationUnderTest.Path");
+            var installationUnderTestDevEnv = GetDevEnvExePath(installationUnderTestValue);
+
+            Console.WriteLine($"VisualStudio.InstallationUnderTest.Path={installationUnderTestValue ?? "<unset>"}");
+            Console.WriteLine($"VisualStudio.InstallationUnderTest.Path exists={(!string.IsNullOrWhiteSpace(installationUnderTestValue) && (File.Exists(installationUnderTestValue.Trim().Trim('"')) || Directory.Exists(installationUnderTestValue.Trim().Trim('"')))).ToString()} ");
+            Console.WriteLine($"VisualStudio.InstallationUnderTest.Path devenv.exe={installationUnderTestDevEnv ?? "<not found>"}");
+            Console.WriteLine($"Selected devenv.exe={DevEnvExe ?? "<not found>"}");
         }
 
         public void TestCleanup() {

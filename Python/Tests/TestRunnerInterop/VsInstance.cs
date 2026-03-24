@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -26,9 +27,15 @@ using Microsoft.Win32.SafeHandles;
 
 namespace TestRunnerInterop {
     public sealed class VsInstance : IDisposable {
+        private const int VsOutputTailLimit = 200;
+        private static readonly TimeSpan DteStartupTimeout = TimeSpan.FromSeconds(120);
+        private static readonly TimeSpan DteResponsivenessTimeout = TimeSpan.FromSeconds(30);
+
         private readonly object _lock = new object();
         private readonly object _processOutputLock = new object();
         private readonly SafeFileHandle _jobObject;
+        private readonly Queue<string> _vsOutputTail = new Queue<string>();
+        private string _activityLogPath;
         private Process _vs;
         private VisualStudioApp _app;
         private Queue<string> _recentProcessOutput;
@@ -115,6 +122,12 @@ namespace TestRunnerInterop {
             string tempRoot
         ) {
             lock (_lock) {
+                if (string.IsNullOrWhiteSpace(devenvExe)) {
+                    throw new InvalidOperationException(
+                        $"Unable to resolve devenv.exe from VisualStudio.InstallationUnderTest.Path='{Environment.GetEnvironmentVariable("VisualStudio.InstallationUnderTest.Path") ?? "<unset>"}'."
+                    );
+                }
+
                 var settings = $"{devenvExe ?? ""};{devenvArguments ?? ""};{testDataRoot ?? ""};{tempRoot ?? ""}";
                 if (_vs != null && _app != null) {
                     if (_currentSettings == settings) {
@@ -130,7 +143,7 @@ namespace TestRunnerInterop {
 
                 var psi = new ProcessStartInfo {
                     FileName = devenvExe,
-                    Arguments = devenvArguments,
+                    Arguments = AppendDevenvLogArgument(devenvArguments, tempRoot),
                     ErrorDialog = false,
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
@@ -149,8 +162,7 @@ namespace TestRunnerInterop {
                 Console.WriteLine($"  tempRoot: '{tempRoot}'");
 
                 _vs = Process.Start(psi);
-                Console.WriteLine($"  VS process started: PID={_vs.Id}");
-
+                ClearVsOutputTail();
                 if (!NativeMethods.AssignProcessToJobObject(_jobObject, _vs.Handle)) {
                     try {
                         _vs.Kill();
@@ -162,48 +174,53 @@ namespace TestRunnerInterop {
 
                 // Forward console output to our own output, which will
                 // be captured by the test runner.
-                _vs.OutputDataReceived += (s, e) => WriteProcessOutput(e.Data, isError: false);
-                _vs.ErrorDataReceived += (s, e) => WriteProcessOutput(e.Data, isError: true);
+                _vs.OutputDataReceived += (s, e) => LogVsOutput(e.Data, isError: false);
+                _vs.ErrorDataReceived += (s, e) => LogVsOutput(e.Data, isError: true);
                 _vs.BeginOutputReadLine();
                 _vs.BeginErrorReadLine();
 
                 // Always allow at least five seconds to start
                 Thread.Sleep(5000);
                 if (_vs.HasExited) {
-                    FlushConsoleStreams();
-                    throw new InvalidOperationException(
-                        $"Failed to start VS. Process exited with code {_vs.ExitCode}. " +
-                        $"FileName='{devenvExe}', Arguments='{devenvArguments}'. " +
-                        $"devenv output:{Environment.NewLine}{GetRecentProcessOutputTail()}");
+                    throw CreateVsStartupException("VS exited during startup");
                 }
                 _app = VisualStudioApp.FromProcessId(_vs.Id);
 
-                var stopAt = DateTime.Now.AddSeconds(120);
-                EnvDTE.DTE dte = null;
-                while (DateTime.Now < stopAt && dte == null) {
-                    if (_vs.HasExited) {
-                        FlushConsoleStreams();
-                        throw new InvalidOperationException(
-                            $"VS exited during DTE wait with code {_vs.ExitCode}. " +
-                            $"FileName='{devenvExe}', Arguments='{devenvArguments}'. " +
-                            $"devenv output:{Environment.NewLine}{GetRecentProcessOutputTail()}");
-                    }
-                    try {
-                        dte = _app.GetDTE();
-                    } catch (InvalidOperationException) {
-                        Thread.Sleep(1000);
-                    }
-                }
+                var dte = WaitForResponsiveDte(DteStartupTimeout);
                 if (dte == null) {
-                    FlushConsoleStreams();
-                    throw new InvalidOperationException(
-                        $"Failed to obtain DTE after 120s. VS running={!_vs.HasExited}. " +
-                        $"FileName='{devenvExe}', Arguments='{devenvArguments}'. " +
-                        $"devenv output:{Environment.NewLine}{GetRecentProcessOutputTail()}");
+                    throw CreateVsStartupException($"Failed to obtain a responsive DTE within {DteStartupTimeout}");
                 }
 
                 AttachIfDebugging(_vs);
             }
+        }
+
+        private string AppendDevenvLogArgument(string devenvArguments, string tempRoot) {
+            if (string.IsNullOrWhiteSpace(tempRoot)) {
+                _activityLogPath = null;
+                return devenvArguments;
+            }
+
+            Directory.CreateDirectory(tempRoot);
+            _activityLogPath = Path.Combine(tempRoot, "ActivityLog.xml");
+            try {
+                if (File.Exists(_activityLogPath)) {
+                    File.Delete(_activityLogPath);
+                }
+            } catch (Exception ex) {
+                Console.WriteLine($"Failed to reset ActivityLog '{_activityLogPath}': {ex.Message}");
+            }
+
+            var logArgument = $"/log \"{_activityLogPath}\"";
+            if (string.IsNullOrWhiteSpace(devenvArguments)) {
+                return logArgument;
+            }
+
+            if (devenvArguments.IndexOf("/log", StringComparison.OrdinalIgnoreCase) >= 0) {
+                return devenvArguments;
+            }
+
+            return $"{devenvArguments} {logArgument}";
         }
 
         private void CloseCurrentInstance(bool hard = false) {
@@ -245,6 +262,10 @@ namespace TestRunnerInterop {
                 try {
                     _app.GetDTE();
                 } catch (InvalidOperationException) {
+                    return false;
+                } catch (InvalidComObjectException) {
+                    return false;
+                } catch (COMException) {
                     return false;
                 }
 
@@ -297,7 +318,6 @@ namespace TestRunnerInterop {
                 throw new ObjectDisposedException(GetType().Name);
             }
 
-            var dte = _app.GetDTE();
             bool timedOut = false;
             CancellationTokenSource cts = null;
             var startTime = DateTime.UtcNow;
@@ -313,8 +333,27 @@ namespace TestRunnerInterop {
             }
 
             try {
-                var containerObj = dte.GetObject(container) as dynamic;
-                var r = containerObj.Execute(name, arguments);
+                dynamic r = null;
+                for (int attempt = 0; attempt < 2; attempt++) {
+                    var dte = WaitForResponsiveDte(DteResponsivenessTimeout);
+                    if (dte == null) {
+                        throw CreateVsStartupException($"VS did not expose a responsive DTE before running {container}.{name}()");
+                    }
+
+                    try {
+                        var containerObj = dte.GetObject(container) as dynamic;
+                        if (containerObj == null) {
+                            throw new InvalidOperationException($"DTE.GetObject('{container}') returned null.");
+                        }
+
+                        r = containerObj.Execute(name, arguments);
+                        break;
+                    } catch (COMException ex) when (attempt == 0 && IsProcessAlive() && IsTransientRpcFailure(ex)) {
+                        Console.WriteLine($"Transient COM failure executing {container}.{name}() (0x{ex.ErrorCode:X8}). Retrying once.");
+                        Thread.Sleep(1000);
+                    }
+                }
+
                 if (!r.IsSuccess) {
                     if (r.ExceptionType == "Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException") {
                         throw new AssertInconclusiveException(r.ExceptionMessage);
@@ -328,12 +367,14 @@ namespace TestRunnerInterop {
                 return true;
             } catch (InvalidComObjectException ex) {
                 Console.WriteLine(ex);
+                LogVsFailureState(container, name);
                 CloseCurrentInstance();
                 if (!allowRetry) {
                     ExceptionDispatchInfo.Capture(ex).Throw();
                 }
             } catch (COMException ex) {
                 Console.WriteLine(ex);
+                LogVsFailureState(container, name);
                 CloseCurrentInstance();
                 if (timedOut) {
                     throw new TimeoutException($"Terminating {container}.{name}() after {DateTime.UtcNow - startTime}", ex);
@@ -343,9 +384,12 @@ namespace TestRunnerInterop {
                 }
             } catch (ThreadAbortException ex) {
                 Console.WriteLine(ex);
+                LogVsFailureState(container, name);
                 CloseCurrentInstance(hard: true);
                 ExceptionDispatchInfo.Capture(ex).Throw();
             } catch (Exception ex) {
+                Console.WriteLine(ex);
+                LogVsFailureState(container, name);
                 CloseCurrentInstance();
                 ExceptionDispatchInfo.Capture(ex).Throw();
             } finally {
@@ -355,6 +399,128 @@ namespace TestRunnerInterop {
                 }
             }
             return false;
+
+        }
+
+        private void ClearVsOutputTail() {
+            lock (_vsOutputTail) {
+                _vsOutputTail.Clear();
+            }
+        }
+
+        private void LogVsOutput(string data, bool isError) {
+            if (data == null) {
+                return;
+            }
+
+            lock (_vsOutputTail) {
+                _vsOutputTail.Enqueue($"[{(isError ? "stderr" : "stdout")}] {data}");
+                while (_vsOutputTail.Count > VsOutputTailLimit) {
+                    _vsOutputTail.Dequeue();
+                }
+            }
+
+            if (isError) {
+                Console.Error.WriteLine(data);
+            } else {
+                Console.WriteLine(data);
+            }
+        }
+
+        private string GetVsOutputTail() {
+            lock (_vsOutputTail) {
+                return _vsOutputTail.Count == 0 ? "<no output captured>" : string.Join(Environment.NewLine, _vsOutputTail.ToArray());
+            }
+        }
+
+        private bool IsProcessAlive() {
+            try {
+                return _vs != null && !_vs.HasExited;
+            } catch (InvalidOperationException) {
+                return false;
+            }
+        }
+
+        private EnvDTE.DTE WaitForResponsiveDte(TimeSpan timeout) {
+            var stopAt = DateTime.UtcNow + timeout;
+            while (DateTime.UtcNow < stopAt) {
+                if (!IsProcessAlive() || _app == null) {
+                    return null;
+                }
+
+                try {
+                    var dte = _app.GetDTE();
+                    var mainWindow = dte.MainWindow;
+                    var hwnd = mainWindow.HWnd;
+                    var name = dte.Name;
+                    return dte;
+                } catch (InvalidOperationException) {
+                } catch (InvalidComObjectException) {
+                } catch (COMException) {
+                }
+
+                Thread.Sleep(1000);
+            }
+
+            return null;
+        }
+
+        private InvalidOperationException CreateVsStartupException(string message) {
+            string processState;
+            try {
+                processState = _vs == null
+                    ? "<no process>"
+                    : _vs.HasExited
+                        ? $"exited with code {_vs.ExitCode}"
+                        : $"running (pid {_vs.Id})";
+            } catch (InvalidOperationException) {
+                processState = "<process state unavailable>";
+            }
+
+            return new InvalidOperationException(
+                $"{message}. Process state: {processState}.{Environment.NewLine}Recent devenv output:{Environment.NewLine}{GetVsOutputTail()}{Environment.NewLine}Activity log:{Environment.NewLine}{GetActivityLogTail()}"
+            );
+        }
+
+        private void LogVsFailureState(string container, string name) {
+            string processState;
+            try {
+                processState = _vs == null
+                    ? "<no process>"
+                    : _vs.HasExited
+                        ? $"exited with code {_vs.ExitCode}"
+                        : $"running (pid {_vs.Id})";
+            } catch (InvalidOperationException) {
+                processState = "<process state unavailable>";
+            }
+
+            Console.WriteLine($"VS failure while running {container}.{name}(). Process state: {processState}");
+            Console.WriteLine($"Recent devenv output:{Environment.NewLine}{GetVsOutputTail()}");
+            Console.WriteLine($"Activity log:{Environment.NewLine}{GetActivityLogTail()}");
+        }
+
+        private static bool IsTransientRpcFailure(COMException ex) {
+            return ex.ErrorCode == unchecked((int)0x800706BE)
+                || ex.ErrorCode == unchecked((int)0x80010001)
+                || ex.ErrorCode == unchecked((int)0x8001010A);
+        }
+
+        private string GetActivityLogTail() {
+            if (string.IsNullOrWhiteSpace(_activityLogPath)) {
+                return "<activity log not configured>";
+            }
+
+            try {
+                if (!File.Exists(_activityLogPath)) {
+                    return $"<activity log not found at '{_activityLogPath}'>";
+                }
+
+                var lines = File.ReadAllLines(_activityLogPath);
+                var start = Math.Max(0, lines.Length - 80);
+                return string.Join(Environment.NewLine, lines, start, lines.Length - start);
+            } catch (Exception ex) {
+                return $"<failed to read activity log '{_activityLogPath}': {ex.Message}>";
+            }
         }
 
         void Dispose(bool disposing) {
