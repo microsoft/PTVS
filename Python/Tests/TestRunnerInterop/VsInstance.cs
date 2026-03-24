@@ -186,9 +186,9 @@ namespace TestRunnerInterop {
                 }
                 _app = VisualStudioApp.FromProcessId(_vs.Id);
 
-                var dte = WaitForResponsiveDte(DteStartupTimeout);
+                var dte = WaitForDte(DteStartupTimeout);
                 if (dte == null) {
-                    throw CreateVsStartupException($"Failed to obtain a responsive DTE within {DteStartupTimeout}");
+                    throw CreateVsStartupException($"Failed to obtain DTE within {DteStartupTimeout}");
                 }
 
                 AttachIfDebugging(_vs);
@@ -441,6 +441,26 @@ namespace TestRunnerInterop {
             }
         }
 
+        private EnvDTE.DTE WaitForDte(TimeSpan timeout) {
+            var stopAt = DateTime.UtcNow + timeout;
+            while (DateTime.UtcNow < stopAt) {
+                if (!IsProcessAlive() || _app == null) {
+                    return null;
+                }
+
+                try {
+                    return _app.GetDTE();
+                } catch (InvalidOperationException) {
+                } catch (InvalidComObjectException) {
+                } catch (COMException) {
+                }
+
+                Thread.Sleep(1000);
+            }
+
+            return null;
+        }
+
         private EnvDTE.DTE WaitForResponsiveDte(TimeSpan timeout) {
             var stopAt = DateTime.UtcNow + timeout;
             while (DateTime.UtcNow < stopAt) {
@@ -478,7 +498,7 @@ namespace TestRunnerInterop {
             }
 
             return new InvalidOperationException(
-                $"{message}. Process state: {processState}.{Environment.NewLine}Recent devenv output:{Environment.NewLine}{GetVsOutputTail()}{Environment.NewLine}Activity log:{Environment.NewLine}{GetActivityLogTail()}"
+                $"{message}. Process state: {processState}.{Environment.NewLine}Recent devenv output:{Environment.NewLine}{GetVsOutputTail()}{Environment.NewLine}Activity log path: {GetActivityLogPath()}"
             );
         }
 
@@ -496,7 +516,6 @@ namespace TestRunnerInterop {
 
             Console.WriteLine($"VS failure while running {container}.{name}(). Process state: {processState}");
             Console.WriteLine($"Recent devenv output:{Environment.NewLine}{GetVsOutputTail()}");
-            Console.WriteLine($"Activity log:{Environment.NewLine}{GetActivityLogTail()}");
         }
 
         private static bool IsTransientRpcFailure(COMException ex) {
@@ -505,22 +524,10 @@ namespace TestRunnerInterop {
                 || ex.ErrorCode == unchecked((int)0x8001010A);
         }
 
-        private string GetActivityLogTail() {
-            if (string.IsNullOrWhiteSpace(_activityLogPath)) {
-                return "<activity log not configured>";
-            }
-
-            try {
-                if (!File.Exists(_activityLogPath)) {
-                    return $"<activity log not found at '{_activityLogPath}'>";
-                }
-
-                var lines = File.ReadAllLines(_activityLogPath);
-                var start = Math.Max(0, lines.Length - 80);
-                return string.Join(Environment.NewLine, lines, start, lines.Length - start);
-            } catch (Exception ex) {
-                return $"<failed to read activity log '{_activityLogPath}': {ex.Message}>";
-            }
+        private string GetActivityLogPath() {
+            return string.IsNullOrWhiteSpace(_activityLogPath)
+                ? "<activity log not configured>"
+                : _activityLogPath;
         }
 
         void Dispose(bool disposing) {
