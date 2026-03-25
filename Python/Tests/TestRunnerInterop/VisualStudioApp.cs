@@ -68,6 +68,49 @@ namespace TestRunnerInterop {
         [DllImport("ole32.dll")]
         private static extern int CreateBindCtx(uint reserved, out IBindCtx ppbc);
 
+        public string ExpectedDteMoniker => GetExpectedDteMoniker(_processId);
+
+        private static string GetExpectedDteMoniker(int processId) {
+            var prefix = Process.GetProcessById(processId).ProcessName;
+            if ("devenv".Equals(prefix, StringComparison.OrdinalIgnoreCase)) {
+                prefix = "VisualStudio";
+            }
+            return string.Format("!{0}.DTE.{1}:{2}", prefix, AssemblyVersionInfo.VSVersion, processId);
+        }
+
+        public static List<string> EnumerateRunningObjectTable() {
+            var entries = new List<string>();
+            IBindCtx bindCtx = null;
+            IRunningObjectTable rot = null;
+            IEnumMoniker enumMonikers = null;
+            try {
+                Marshal.ThrowExceptionForHR(CreateBindCtx(reserved: 0, ppbc: out bindCtx));
+                bindCtx.GetRunningObjectTable(out rot);
+                rot.EnumRunning(out enumMonikers);
+                IMoniker[] moniker = new IMoniker[1];
+                uint numberFetched = 0;
+                while (enumMonikers.Next(1, moniker, out numberFetched) == 0) {
+                    try {
+                        if (moniker[0] != null) {
+                            string name;
+                            moniker[0].GetDisplayName(bindCtx, null, out name);
+                            if (!string.IsNullOrEmpty(name)) {
+                                entries.Add(name);
+                            }
+                        }
+                    } catch (UnauthorizedAccessException) {
+                    }
+                }
+            } catch (Exception ex) {
+                entries.Add($"<ROT enumeration failed: {ex.Message}>");
+            } finally {
+                if (enumMonikers != null) Marshal.ReleaseComObject(enumMonikers);
+                if (rot != null) Marshal.ReleaseComObject(rot);
+                if (bindCtx != null) Marshal.ReleaseComObject(bindCtx);
+            }
+            return entries;
+        }
+
         public DTE GetDTE() {
             var dte = GetDTE(_processId);
             if (dte == null) {
@@ -79,12 +122,7 @@ namespace TestRunnerInterop {
         private static DTE GetDTE(int processId) {
             MessageFilter.Register();
 
-            var prefix = Process.GetProcessById(processId).ProcessName;
-            if ("devenv".Equals(prefix, StringComparison.OrdinalIgnoreCase)) {
-                prefix = "VisualStudio";
-            }
-
-            string progId = string.Format("!{0}.DTE.{1}:{2}", prefix, AssemblyVersionInfo.VSVersion, processId);
+            string progId = GetExpectedDteMoniker(processId);
             object runningObject = null;
 
             IBindCtx bindCtx = null;

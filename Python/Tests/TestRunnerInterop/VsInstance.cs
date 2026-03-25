@@ -459,17 +459,41 @@ namespace TestRunnerInterop {
         }
 
         private EnvDTE.DTE WaitForDte(TimeSpan timeout) {
+            Console.WriteLine($"Waiting for DTE (timeout={timeout}). Expected ROT moniker: {_app?.ExpectedDteMoniker ?? "<no app>"}");
             var stopAt = DateTime.UtcNow + timeout;
+            var lastRotDump = DateTime.MinValue;
             while (DateTime.UtcNow < stopAt) {
                 if (!IsProcessAlive() || _app == null) {
+                    Console.WriteLine("WaitForDte: process died or app is null.");
                     return null;
                 }
 
                 try {
-                    return _app.GetDTE();
+                    var dte = _app.GetDTE();
+                    Console.WriteLine("WaitForDte: DTE obtained successfully.");
+                    return dte;
                 } catch (InvalidOperationException) {
                 } catch (InvalidComObjectException) {
                 } catch (COMException) {
+                }
+
+                // Periodically dump ROT entries to diagnose version mismatches
+                if (DateTime.UtcNow - lastRotDump > TimeSpan.FromSeconds(30)) {
+                    lastRotDump = DateTime.UtcNow;
+                    try {
+                        var rotEntries = VisualStudioApp.EnumerateRunningObjectTable();
+                        var dteEntries = rotEntries.FindAll(e => e.IndexOf("DTE", StringComparison.OrdinalIgnoreCase) >= 0
+                            || e.IndexOf("VisualStudio", StringComparison.OrdinalIgnoreCase) >= 0);
+                        Console.WriteLine($"ROT entries containing DTE/VisualStudio ({dteEntries.Count} of {rotEntries.Count} total):");
+                        foreach (var entry in dteEntries) {
+                            Console.WriteLine($"  {entry}");
+                        }
+                        if (dteEntries.Count == 0) {
+                            Console.WriteLine("  <none>");
+                        }
+                    } catch (Exception ex) {
+                        Console.WriteLine($"ROT enumeration failed: {ex.Message}");
+                    }
                 }
 
                 Thread.Sleep(1000);
