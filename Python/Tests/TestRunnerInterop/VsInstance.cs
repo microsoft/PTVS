@@ -164,6 +164,7 @@ namespace TestRunnerInterop {
                 Console.WriteLine($"  env:VisualStudio.InstallationUnderTest.Path='{Environment.GetEnvironmentVariable("VisualStudio.InstallationUnderTest.Path") ?? "<unset>"}'");
 
                 ApplySkipVerification(testDataRoot);
+                ResetVisualStudioSettings(devenvExe);
 
                 _vs = Process.Start(psi);
                 ClearVsOutputTail();
@@ -200,6 +201,7 @@ namespace TestRunnerInterop {
         }
 
         private static bool _skipVerificationApplied;
+        private static bool _visualStudioSettingsReset;
 
         private static void ApplySkipVerification(string testDataRoot) {
             if (_skipVerificationApplied || string.IsNullOrWhiteSpace(testDataRoot)) {
@@ -243,6 +245,43 @@ namespace TestRunnerInterop {
                 if (!string.IsNullOrWhiteSpace(stderr)) Console.WriteLine($"  stderr: {stderr.Trim()}");
             } catch (Exception ex) {
                 Console.WriteLine($"Failed to apply EnableSkipVerification.reg: {ex.Message}");
+            }
+        }
+
+        private static void ResetVisualStudioSettings(string devenvExe) {
+            if (_visualStudioSettingsReset || string.IsNullOrWhiteSpace(devenvExe)) {
+                Console.WriteLine($"ResetVisualStudioSettings skipped. alreadyReset={_visualStudioSettingsReset}, devenvExe='{devenvExe ?? "<null>"}'");
+                return;
+            }
+
+            _visualStudioSettingsReset = true;
+            Console.WriteLine($"Resetting Visual Studio settings using '{devenvExe}'.");
+
+            Process process = null;
+            try {
+                process = new Process();
+                process.StartInfo.FileName = devenvExe;
+                process.StartInfo.Arguments = "/ResetSettingsFull \"vc.vssettings\"";
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.CreateNoWindow = true;
+                process.Start();
+                process.WaitForInputIdle((int)TimeSpan.FromMinutes(5).TotalMilliseconds);
+                Thread.Sleep(TimeSpan.FromSeconds(15));
+            } catch (Exception ex) {
+                Console.WriteLine($"Failed to reset Visual Studio settings: {ex.Message}");
+            } finally {
+                if (process != null) {
+                    try {
+                        if (!process.HasExited) {
+                            process.Kill();
+                            process.WaitForExit(10000);
+                        }
+                    } catch (Exception ex) {
+                        Console.WriteLine($"Failed to terminate resetsettings devenv instance: {ex.Message}");
+                    }
+
+                    process.Dispose();
+                }
             }
         }
 
