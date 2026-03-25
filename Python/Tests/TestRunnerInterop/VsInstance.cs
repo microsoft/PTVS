@@ -28,7 +28,7 @@ using Microsoft.Win32.SafeHandles;
 namespace TestRunnerInterop {
     public sealed class VsInstance : IDisposable {
         private const int VsOutputTailLimit = 200;
-        private static readonly TimeSpan DteStartupTimeout = TimeSpan.FromSeconds(120);
+        private static readonly TimeSpan DteStartupTimeout = GetDteStartupTimeout();
         private static readonly TimeSpan DteResponsivenessTimeout = TimeSpan.FromSeconds(30);
 
         private readonly object _lock = new object();
@@ -439,6 +439,23 @@ namespace TestRunnerInterop {
             } catch (InvalidOperationException) {
                 return false;
             }
+        }
+
+        private static TimeSpan GetDteStartupTimeout() {
+            const int defaultSeconds = 240;
+            const string envVar = "PTVS_DTE_STARTUP_TIMEOUT_SECONDS";
+
+            var rawValue = Environment.GetEnvironmentVariable(envVar);
+            if (string.IsNullOrWhiteSpace(rawValue)) {
+                return TimeSpan.FromSeconds(defaultSeconds);
+            }
+
+            if (int.TryParse(rawValue, out var seconds) && seconds > 0) {
+                return TimeSpan.FromSeconds(seconds);
+            }
+
+            Console.WriteLine($"Ignoring invalid {envVar} value '{rawValue}'. Using default timeout of {defaultSeconds} seconds.");
+            return TimeSpan.FromSeconds(defaultSeconds);
         }
 
         private EnvDTE.DTE WaitForDte(TimeSpan timeout) {
