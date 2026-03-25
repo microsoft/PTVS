@@ -160,6 +160,10 @@ namespace TestRunnerInterop {
                 Console.WriteLine($"Starting VS: '{devenvExe}' {devenvArguments}");
                 Console.WriteLine($"  testDataRoot: '{testDataRoot}'");
                 Console.WriteLine($"  tempRoot: '{tempRoot}'");
+                Console.WriteLine($"  env:_TESTDATA_ROOT_PATH='{Environment.GetEnvironmentVariable("_TESTDATA_ROOT_PATH") ?? "<unset>"}'");
+                Console.WriteLine($"  env:VisualStudio.InstallationUnderTest.Path='{Environment.GetEnvironmentVariable("VisualStudio.InstallationUnderTest.Path") ?? "<unset>"}'");
+
+                ApplySkipVerification(testDataRoot);
 
                 _vs = Process.Start(psi);
                 ClearVsOutputTail();
@@ -192,6 +196,53 @@ namespace TestRunnerInterop {
                 }
 
                 AttachIfDebugging(_vs);
+            }
+        }
+
+        private static bool _skipVerificationApplied;
+
+        private static void ApplySkipVerification(string testDataRoot) {
+            if (_skipVerificationApplied || string.IsNullOrWhiteSpace(testDataRoot)) {
+                Console.WriteLine($"ApplySkipVerification skipped. alreadyApplied={_skipVerificationApplied}, testDataRoot='{testDataRoot ?? "<null>"}'");
+                return;
+            }
+            _skipVerificationApplied = true;
+
+            Console.WriteLine($"ApplySkipVerification using testDataRoot='{testDataRoot}'");
+            var nestedRegFile = Path.Combine(testDataRoot, "TestData", "EnableSkipVerification.reg");
+            var flatRegFile = Path.Combine(testDataRoot, "EnableSkipVerification.reg");
+            Console.WriteLine($"  nested candidate: '{nestedRegFile}' (exists={File.Exists(nestedRegFile)})");
+            Console.WriteLine($"  flat candidate: '{flatRegFile}' (exists={File.Exists(flatRegFile)})");
+
+            var regFile = nestedRegFile;
+            if (!File.Exists(regFile)) {
+                // Also check directly under testDataRoot (flat layout)
+                regFile = flatRegFile;
+            }
+
+            if (!File.Exists(regFile)) {
+                Console.WriteLine($"EnableSkipVerification.reg not found under '{testDataRoot}', skipping.");
+                return;
+            }
+
+            Console.WriteLine($"Applying strong-name skip verification: {regFile}");
+            try {
+                var proc = Process.Start(new ProcessStartInfo {
+                    FileName = "reg.exe",
+                    Arguments = $"import \"{regFile}\"",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                });
+                proc.WaitForExit(15000);
+                var stdout = proc.StandardOutput.ReadToEnd();
+                var stderr = proc.StandardError.ReadToEnd();
+                Console.WriteLine($"reg.exe exit code: {proc.ExitCode}");
+                if (!string.IsNullOrWhiteSpace(stdout)) Console.WriteLine($"  stdout: {stdout.Trim()}");
+                if (!string.IsNullOrWhiteSpace(stderr)) Console.WriteLine($"  stderr: {stderr.Trim()}");
+            } catch (Exception ex) {
+                Console.WriteLine($"Failed to apply EnableSkipVerification.reg: {ex.Message}");
             }
         }
 
