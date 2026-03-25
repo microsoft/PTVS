@@ -225,11 +225,20 @@ namespace TestRunnerInterop {
                 _vs = new VsInstance();
                 _vs.StartOrRestart(
                     DevEnvExe,
-                    string.IsNullOrEmpty(RootSuffix) ? null : $"/rootSuffix {RootSuffix}",
+                    GetDevenvArguments(),
                     _testDataRoot,
                     Path.Combine(deploymentDirectory, "Temp")
                 );
             }
+        }
+
+        private string GetDevenvArguments() {
+            var resetSettingsArgument = "/ResetSettingsFull";
+            if (string.IsNullOrEmpty(RootSuffix)) {
+                return resetSettingsArgument;
+            }
+
+            return $"{resetSettingsArgument} /rootSuffix {RootSuffix}";
         }
 
         private void LogDevEnvDiscovery() {
