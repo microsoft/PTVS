@@ -49,6 +49,8 @@ stages:
     testRunEnvironmentVariables:
       VSINSTALLDIR: 'C:\Test\VisualStudio'
       _TESTDATA_ROOT_PATH: 'C:\Test\Containers\PythonToolsUITestsRunner'
+    visualStudioValidationTestRunParameters:
+      VisualStudioRootSuffix: Exp
     # preDeployAndRunTestsOperations:
     #   - operation: downloadAzureArtifactsDrop
     #     displayName: Download PTVS test data drop

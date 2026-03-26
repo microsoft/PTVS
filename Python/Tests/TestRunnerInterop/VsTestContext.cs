@@ -233,12 +233,13 @@ namespace TestRunnerInterop {
         }
 
         private string GetDevenvArguments() {
-            var resetSettingsArgument = "/ResetSettingsFull";
-            if (string.IsNullOrEmpty(RootSuffix)) {
-                return resetSettingsArgument;
-            }
+            // var resetSettingsArgument = "/ResetSettingsFull";
+            // if (string.IsNullOrEmpty(RootSuffix)) {
+            //     return resetSettingsArgument;
+            // }
 
-            return $"{resetSettingsArgument} /rootSuffix {RootSuffix}";
+            //return $"{resetSettingsArgument} /rootSuffix {RootSuffix}";
+            return string.IsNullOrEmpty(RootSuffix) ? string.Empty : $"/rootSuffix {RootSuffix}";
         }
 
         private void LogDevEnvDiscovery() {
