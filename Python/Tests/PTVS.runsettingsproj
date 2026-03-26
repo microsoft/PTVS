@@ -52,6 +52,7 @@
     <IncludeComponent Include="Microsoft.VisualStudio.Component.Wcf.Tooling" />
     <IncludeComponent Include="Microsoft.NetCore.Component.Runtime.3.1" />
     <IncludeComponent Include="Microsoft.NetCore.Component.Runtime.5.0" />
+    <IncludeComponent Include="Microsoft.Component.PythonTools"/>
   </ItemGroup>
   <ItemGroup Label="Visual Studio Workloads">
     <IncludeWorkload Include="Microsoft.VisualStudio.Workload.CoreEditor" />
