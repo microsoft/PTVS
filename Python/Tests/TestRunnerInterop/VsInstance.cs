@@ -28,6 +28,7 @@ using Microsoft.Win32.SafeHandles;
 namespace TestRunnerInterop {
     public sealed class VsInstance : IDisposable {
         private const int VsOutputTailLimit = 200;
+        private const int DispEMemberNotFound = unchecked((int)0x80020003);
         private static readonly TimeSpan DteStartupTimeout = GetDteStartupTimeout();
         private static readonly TimeSpan DteResponsivenessTimeout = TimeSpan.FromSeconds(30);
 
@@ -392,9 +393,9 @@ namespace TestRunnerInterop {
                     }
 
                     try {
-                        var containerObj = dte.GetObject(container) as dynamic;
+                        var containerObj = WaitForAutomationObject(dte, container, DteResponsivenessTimeout);
                         if (containerObj == null) {
-                            throw new InvalidOperationException($"DTE.GetObject('{container}') returned null.");
+                            throw CreateVsStartupException($"VS did not expose automation object '{container}' before running {container}.{name}()");
                         }
 
                         r = containerObj.Execute(name, arguments);
@@ -577,6 +578,39 @@ namespace TestRunnerInterop {
             return null;
         }
 
+        private dynamic WaitForAutomationObject(EnvDTE.DTE dte, string container, TimeSpan timeout) {
+            var stopAt = DateTime.UtcNow + timeout;
+            var lastLog = DateTime.MinValue;
+
+            while (DateTime.UtcNow < stopAt) {
+                if (!IsProcessAlive() || _app == null) {
+                    return null;
+                }
+
+                try {
+                    var containerObj = dte.GetObject(container) as dynamic;
+                    if (containerObj != null) {
+                        return containerObj;
+                    }
+
+                    if (DateTime.UtcNow - lastLog >= TimeSpan.FromSeconds(5)) {
+                        Console.WriteLine($"DTE.GetObject('{container}') returned null. Waiting for automation object registration.");
+                        lastLog = DateTime.UtcNow;
+                    }
+                } catch (InvalidComObjectException) {
+                } catch (COMException ex) when (IsAutomationObjectUnavailable(ex)) {
+                    if (DateTime.UtcNow - lastLog >= TimeSpan.FromSeconds(5)) {
+                        Console.WriteLine($"DTE.GetObject('{container}') is not ready yet (0x{ex.ErrorCode:X8}). Waiting for automation object registration.");
+                        lastLog = DateTime.UtcNow;
+                    }
+                }
+
+                Thread.Sleep(1000);
+            }
+
+            return null;
+        }
+
         private InvalidOperationException CreateVsStartupException(string message) {
             string processState;
             try {
@@ -614,6 +648,10 @@ namespace TestRunnerInterop {
             return ex.ErrorCode == unchecked((int)0x800706BE)
                 || ex.ErrorCode == unchecked((int)0x80010001)
                 || ex.ErrorCode == unchecked((int)0x8001010A);
+        }
+
+        private static bool IsAutomationObjectUnavailable(COMException ex) {
+            return ex.ErrorCode == DispEMemberNotFound;
         }
 
         private string GetActivityLogPath() {
