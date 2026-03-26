@@ -77,6 +77,13 @@ steps:
       TargetFolder: '$(Build.ArtifactStagingDirectory)/TestDataFolder/PythonToolsUITestsRunner'
 
   - task: CopyFiles@2
+    displayName: 'Copy setup payloads to TestDataFolder'
+    inputs:
+      SourceFolder: '$(Build.BinariesDirectory)/raw/setup'
+      Contents: '**'
+      TargetFolder: '$(Build.ArtifactStagingDirectory)/TestDataFolder/PythonToolsUITestsRunner'
+
+  - task: CopyFiles@2
     displayName: 'Copy extra PythonToolsUITestsRunner.dll to subfolder'
     inputs:
       SourceFolder: '$(Build.BinariesDirectory)/raw/binaries'
