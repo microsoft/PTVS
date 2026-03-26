@@ -42,24 +42,27 @@
     <DefaultComponentTypes>Recommended</DefaultComponentTypes>
   </PropertyGroup>
   <ItemGroup Label="Visual Studio Components">
-    <IncludeWorkload Include="Microsoft.VisualStudio.Component.VC.CLI.Support" />
-    <IncludeWorkload Include="Microsoft.VisualStudio.ComponentGroup.NativeDesktop.Win81" />
-    <IncludeWorkload Include="Microsoft.VisualStudio.ComponentGroup.UWP.VC" />
-    <IncludeWorkload Include="Microsoft.VisualStudio.Component.VC.ATLMFC" />
-    <IncludeWorkload Include="Microsoft.VisualStudio.Component.Debugger.VSOnline" />
-    <IncludeWorkload Include="Microsoft.VisualStudio.Component.Wcf.Tooling" />
-    <IncludeWorkload Include="Microsoft.NetCore.Component.Runtime.3.1" />
-    <IncludeWorkload Include="Microsoft.NetCore.Component.Runtime.5.0" />
+    <IncludeComponent Include="Microsoft.VisualStudio.Component.VC.CLI.Support" />
+    <IncludeComponent Include="Microsoft.VisualStudio.ComponentGroup.NativeDesktop.Win81" />
+    <IncludeComponent Include="Microsoft.VisualStudio.ComponentGroup.UWP.VC" />
+    <IncludeComponent Include="Microsoft.VisualStudio.Component.VC.Tools.x86.x64" />
+    <IncludeComponent Include="Microsoft.VisualStudio.Component.VC.ATL.Spectre" />
+    <IncludeComponent Include="Microsoft.VisualStudio.Component.VC.ATLMFC.Spectre" />
+    <IncludeComponent Include="Microsoft.VisualStudio.Component.Debugger.VSOnline" />
+    <IncludeComponent Include="Microsoft.VisualStudio.Component.Wcf.Tooling" />
+    <IncludeComponent Include="Microsoft.NetCore.Component.Runtime.3.1" />
+    <IncludeComponent Include="Microsoft.NetCore.Component.Runtime.5.0" />
   </ItemGroup>
   <ItemGroup Label="Visual Studio Workloads">
-    <IncludeComponent Include="Microsoft.VisualStudio.Workload.CoreEditor" />
-    <IncludeComponent Include="Microsoft.VisualStudio.Workload.ManagedDesktop" />
-    <IncludeComponent Include="Microsoft.VisualStudio.Workload.NativeCrossPlat" />
-    <IncludeComponent Include="Microsoft.VisualStudio.Workload.NativeDesktop" />
-    <IncludeComponent Include="Microsoft.VisualStudio.Workload.NetWeb" />
-    <IncludeComponent Include="Microsoft.VisualStudio.Workload.Universal" />
-    <IncludeComponent Include="Microsoft.VisualStudio.Workload.VisualStudioExtension" />
-    <IncludeComponent Include="Microsoft.VisualStudio.Workload.Webcrossplat" />
+    <IncludeWorkload Include="Microsoft.VisualStudio.Workload.CoreEditor" />
+    <IncludeWorkload Include="Microsoft.VisualStudio.Workload.ManagedDesktop" />
+    <IncludeWorkload Include="Microsoft.VisualStudio.Workload.NativeCrossPlat" />
+    <IncludeWorkload Include="Microsoft.VisualStudio.Workload.NativeDesktop" />
+    <IncludeWorkload Include="Microsoft.VisualStudio.Workload.NetWeb" />
+    <IncludeWorkload Include="Microsoft.VisualStudio.Workload.Universal" />
+    <IncludeWorkload Include="Microsoft.VisualStudio.Workload.VisualStudioExtension" />
+    <IncludeWorkload Include="Microsoft.VisualStudio.Workload.Webcrossplat" />
+    <IncludeWorkload Include="Microsoft.VisualStudio.Workload.Python" />
   </ItemGroup>
 	
 	<Import Project="$(PackagesPath)\Microsoft.DevDiv.Validation.TestPlatform.Settings.Tasks.1.0.1108\build\net472\Microsoft.DevDiv.Validation.TestPlatform.Settings.Tasks.targets"/>
