@@ -393,10 +393,12 @@ namespace TestRunnerInterop {
                     }
 
                     try {
-                        var containerObj = WaitForAutomationObject(dte, container, DteResponsivenessTimeout);
-                        if (containerObj == null) {
-                            throw CreateVsStartupException($"VS did not expose automation object '{container}' before running {container}.{name}()");
-                        }
+                            // Temporarily bypass the extra automation-object wait and rely on
+                            // the existing COM retry path around Execute().
+                            var containerObj = dte.GetObject(container) as dynamic;
+                            if (containerObj == null) {
+                                throw CreateVsStartupException($"VS did not expose automation object '{container}' before running {container}.{name}()");
+                            }
 
                         r = containerObj.Execute(name, arguments);
                         break;
