@@ -386,25 +386,26 @@ namespace TestRunnerInterop {
 
             try {
                 dynamic r = null;
-                for (int attempt = 0; attempt < 2; attempt++) {
+                const int maxAttempts = 30;
+                for (int attempt = 0; attempt < maxAttempts; attempt++) {
                     var dte = WaitForResponsiveDte(DteResponsivenessTimeout);
                     if (dte == null) {
                         throw CreateVsStartupException($"VS did not expose a responsive DTE before running {container}.{name}()");
                     }
 
                     try {
-                            // Temporarily bypass the extra automation-object wait and rely on
-                            // the existing COM retry path around Execute().
-                            var containerObj = dte.GetObject(container) as dynamic;
-                            if (containerObj == null) {
-                                throw CreateVsStartupException($"VS did not expose automation object '{container}' before running {container}.{name}()");
-                            }
+                        var containerObj = dte.GetObject(container) as dynamic;
+                        if (containerObj == null) {
+                            throw new COMException($"DTE.GetObject('{container}') returned null", DispEMemberNotFound);
+                        }
 
                         r = containerObj.Execute(name, arguments);
                         break;
-                    } catch (COMException ex) when (attempt == 0 && IsProcessAlive() && IsTransientRpcFailure(ex)) {
-                        Console.WriteLine($"Transient COM failure executing {container}.{name}() (0x{ex.ErrorCode:X8}). Retrying once.");
-                        Thread.Sleep(1000);
+                    } catch (COMException ex) when (attempt < maxAttempts - 1 && IsProcessAlive() && (IsTransientRpcFailure(ex) || IsAutomationObjectUnavailable(ex))) {
+                        if (attempt == 0 || attempt % 5 == 0) {
+                            Console.WriteLine($"COM failure getting/executing {container}.{name}() (0x{ex.ErrorCode:X8}), attempt {attempt + 1}/{maxAttempts}. Retrying.");
+                        }
+                        Thread.Sleep(2000);
                     }
                 }
 
