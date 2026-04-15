@@ -25,6 +25,8 @@ using Microsoft.Win32.SafeHandles;
 
 namespace TestRunnerInterop {
     public sealed class VsInstance : IDisposable {
+        private const int DISP_E_MEMBERNOTFOUND = unchecked((int)0x80020003);
+
         private readonly object _lock = new object();
         private readonly SafeFileHandle _jobObject;
         private Process _vs;
@@ -246,7 +248,7 @@ namespace TestRunnerInterop {
             }
 
             try {
-                var containerObj = dte.GetObject(container) as dynamic;
+                var containerObj = GetTestContainerObject(dte, container, startTime, timeout) as dynamic;
                 var r = containerObj.Execute(name, arguments);
                 if (!r.IsSuccess) {
                     if (r.ExceptionType == "Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException") {
@@ -288,6 +290,37 @@ namespace TestRunnerInterop {
                 }
             }
             return false;
+        }
+
+        private static object GetTestContainerObject(EnvDTE.DTE dte, string container, DateTime startTime, TimeSpan timeout) {
+            var waitTimeout = timeout < TimeSpan.MaxValue ? timeout : TimeSpan.FromSeconds(30);
+            var stopAt = DateTime.UtcNow.Add(waitTimeout);
+            COMException lastMemberNotFound = null;
+            var loggedMissingContainer = false;
+
+            while (DateTime.UtcNow <= stopAt) {
+                try {
+                    var containerObj = dte.GetObject(container);
+                    if (containerObj != null) {
+                        return containerObj;
+                    }
+                } catch (COMException ex) when (ex.ErrorCode == DISP_E_MEMBERNOTFOUND) {
+                    lastMemberNotFound = ex;
+                    if (!loggedMissingContainer) {
+                        Console.WriteLine($"VS automation object '{container}' is not registered yet; waiting for it to become available.");
+                        loggedMissingContainer = true;
+                    }
+                }
+
+                Thread.Sleep(1000);
+            }
+
+            Console.WriteLine($"Timed out waiting for VS automation object '{container}' after {DateTime.UtcNow - startTime}.");
+
+            throw new TimeoutException(
+                $"Timed out waiting for VS automation object '{container}' after {DateTime.UtcNow - startTime}",
+                lastMemberNotFound
+            );
         }
 
         void Dispose(bool disposing) {
