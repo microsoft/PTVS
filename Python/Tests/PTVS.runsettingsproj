@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup Label="Test Containers">
-    <TestContainer Include="PythonToolsUITestsRunner.dll" />
+    <TestContainer Include="PythonToolsTests.dll" />
   </ItemGroup>
 
 
