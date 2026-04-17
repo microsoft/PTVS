@@ -14,13 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.PythonTools.Editor.Formatting;
-using TestUtilities;
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.PythonTools.Common.Parsing;
+using Microsoft.PythonTools.Editor.Formatting;
+using Microsoft.VisualStudio.LanguageServer.Protocol;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using TestUtilities;
 
 namespace PythonToolsTests {
     [TestClass]
@@ -83,16 +83,10 @@ y = 2
         }
 
         [TestMethod, Priority(0)]
-        [ExpectedException(typeof(PythonFormatterRangeNotSupportedException))]
         public async Task FormatSelectionBlack() {
             var formatter = new PythonFormatterBlack();
 
-            var range = new Range() {
-                Start = new Position(0, 0),
-                End = new Position(1, 0),
-            };
-
-            await FormatDocument(formatter, FileContentsWithNewline, range);
+            await FormatDocument(formatter, FileContentsWithNewline);
         }
 
         private static string CreateDocument(string contents) {
@@ -119,7 +113,7 @@ y = 2
             var filePath = CreateDocument(contents);
 
             var actual = await formatter.FormatDocumentAsync(interpreterExePath, filePath, contents, range, new string[0]);
-            
+
             // The actual formatting can change between formatter versions, so just
             // check that the formatter made some changes.
             Assert.IsTrue(actual.Length > 0, $"No actual edits performed by {formatter.DisplayName}");
