@@ -67,30 +67,30 @@ steps:
     inputs:
       SourceFolder: '$(Build.SourcesDirectory)/Python/Tests/TestData'
       Contents: '**'
-      TargetFolder: '$(Build.ArtifactStagingDirectory)/TestDataFolder/PythonToolsUITestsRunner/TestData'
+      TargetFolder: '$(Build.ArtifactStagingDirectory)/TestDataFolder/PythonToolsTests/TestData'
 
   - task: CopyFiles@2
     displayName: 'Copy all binaries to TestDataFolder'
     inputs:
       SourceFolder: '$(Build.BinariesDirectory)/raw/binaries'
       Contents: '**'
-      TargetFolder: '$(Build.ArtifactStagingDirectory)/TestDataFolder/PythonToolsUITestsRunner'
+      TargetFolder: '$(Build.ArtifactStagingDirectory)/TestDataFolder/PythonToolsTests'
 
   - task: CopyFiles@2
     displayName: 'Copy setup payloads to TestDataFolder'
     inputs:
       SourceFolder: '$(Build.BinariesDirectory)/raw/setup'
       Contents: '**'
-      TargetFolder: '$(Build.ArtifactStagingDirectory)/TestDataFolder/PythonToolsUITestsRunner'
+      TargetFolder: '$(Build.ArtifactStagingDirectory)/TestDataFolder/PythonToolsTests'
 
   - task: CopyFiles@2
-    displayName: 'Copy extra PythonToolsUITestsRunner.dll to subfolder'
+    displayName: 'Copy extra PythonToolsTests.dll to subfolder'
     inputs:
       SourceFolder: '$(Build.BinariesDirectory)/raw/binaries'
       Contents: |
-        PythonToolsUITestsRunner.dll
-        PythonToolsUITestsRunner.pdb
-      TargetFolder: '$(Build.ArtifactStagingDirectory)/TestDataFolder/PythonToolsUITestsRunner'
+        PythonToolsTests.dll
+        PythonToolsTests.pdb
+      TargetFolder: '$(Build.ArtifactStagingDirectory)/TestDataFolder/PythonToolsTests'
 
   - task: CopyFiles@2
     displayName: 'Copy ptvs.runsettings to subfolder'

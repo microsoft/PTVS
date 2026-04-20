@@ -48,7 +48,7 @@ stages:
       value: main
     testRunEnvironmentVariables:
       VSINSTALLDIR: 'C:\Test\VisualStudio'
-      _TESTDATA_ROOT_PATH: 'C:\Test\Containers\PythonToolsUITestsRunner'
+      _TESTDATA_ROOT_PATH: 'C:\Test\Containers\PythonToolsTests'
       _TESTDATA_NO_ROOTSUFFIX: 1
     # preDeployAndRunTestsOperations:
     #   - operation: downloadAzureArtifactsDrop
