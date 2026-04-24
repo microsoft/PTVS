@@ -306,7 +306,23 @@ def generate_python_version_props(build_output_dir: str | None):
 def main(build_output_dir: str | None = None):
     get_drop_exe()
     get_glass()
+
+    # Preserve the Glass-compatible Newtonsoft.Json.dll before vstest VSIX extraction
+    # potentially overwrites it with an incompatible version. Glass.TestAdapter.dll
+    # is compiled against a specific version (13.0.0.0) and will fail to load if the
+    # file in the glass root directory does not match that exact assembly identity.
+    newtonsoft_json_path = os.path.join(glass_dir, "Newtonsoft.Json.dll")
+    newtonsoft_json_backup = newtonsoft_json_path + ".glass"
+    if os.path.exists(newtonsoft_json_path):
+        shutil.copy(newtonsoft_json_path, newtonsoft_json_backup)
+
     get_test_console_app()
+
+    # Restore the Glass-compatible Newtonsoft.Json.dll after VSIX extraction.
+    if os.path.exists(newtonsoft_json_backup):
+        shutil.copy(newtonsoft_json_backup, newtonsoft_json_path)
+        os.remove(newtonsoft_json_backup)
+
     copy_ptvs_output(build_output_dir)
     generate_python_version_props(build_output_dir)
     verify_listing()
