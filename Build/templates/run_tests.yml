@@ -67,7 +67,7 @@ steps:
     displayName: 'Restore glass binaries from cache'
     condition: eq('${{ parameters.skipGlassCache }}', 'false')
     inputs:
-      key: 'glass-v2'
+      key: 'glass | hashFiles("Build/setup_glass.py")'
       path: '$(Build.SourcesDirectory)\GlassTests'
       cacheHitVar: 'CACHE_RESTORED'
 
@@ -125,5 +125,5 @@ steps:
     displayName: 'Cache glass binaries'
     condition: and(succeeded(), or(eq(variables['CACHE_RESTORED'], 'false'), eq('${{ parameters.skipGlassCache }}', 'true')))
     inputs:
-      key: 'glass-v2'
+      key: 'glass | hashFiles("Build/setup_glass.py")'
       path: '$(Build.SourcesDirectory)\GlassTests'
