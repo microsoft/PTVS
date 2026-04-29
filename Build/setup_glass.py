@@ -146,6 +146,16 @@ def get_test_console_app():
         print(f"Error: Test console app not found at {test_console_app}")
         exit(1)
 
+def restore_glass_newtonsoft_json():
+    source = os.path.join(glass_debugger_dir, "Newtonsoft.Json.dll")
+    target = os.path.join(glass_dir, "Newtonsoft.Json.dll")
+
+    if not os.path.exists(source):
+        print(f"Error: Glass-compatible Newtonsoft.Json.dll not found at {source}")
+        exit(1)
+
+    shutil.copy(source, target)
+
 def copy_ptvs_output(build_output_dir: str | None = None):
     # Copy the PythonTests folder into the glass directory
     print(f"Copying PythonTests from {python_tests_source_dir} to {python_tests_target_dir}")
@@ -173,6 +183,10 @@ def copy_ptvs_output(build_output_dir: str | None = None):
         for f in os.listdir(build_output):
             print(f)
         exit(1)
+
+    # VSIX extraction can overwrite the runner root with an older Newtonsoft.Json.
+    # Glass.TestAdapter.dll is compiled against the copy from the Glass drop.
+    restore_glass_newtonsoft_json()
 
     # Whenever we copy new bits, we have to regenerate the Python.GlassTestGroup file
     generate_python_version_props(build_output_dir)
@@ -307,21 +321,7 @@ def main(build_output_dir: str | None = None):
     get_drop_exe()
     get_glass()
 
-    # Preserve the Glass-compatible Newtonsoft.Json.dll before vstest VSIX extraction
-    # potentially overwrites it with an incompatible version. Glass.TestAdapter.dll
-    # is compiled against a specific version (13.0.0.0) and will fail to load if the
-    # file in the glass root directory does not match that exact assembly identity.
-    newtonsoft_json_path = os.path.join(glass_dir, "Newtonsoft.Json.dll")
-    newtonsoft_json_backup = newtonsoft_json_path + ".glass"
-    if os.path.exists(newtonsoft_json_path):
-        shutil.copy(newtonsoft_json_path, newtonsoft_json_backup)
-
     get_test_console_app()
-
-    # Restore the Glass-compatible Newtonsoft.Json.dll after VSIX extraction.
-    if os.path.exists(newtonsoft_json_backup):
-        shutil.copy(newtonsoft_json_backup, newtonsoft_json_path)
-        os.remove(newtonsoft_json_backup)
 
     copy_ptvs_output(build_output_dir)
     generate_python_version_props(build_output_dir)
