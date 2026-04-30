@@ -1,5 +1,5 @@
 parameters:
-- name: skipGlassCache
+- name: refreshGlassCache
   type: boolean
   default: false
 
@@ -65,15 +65,30 @@ steps:
 
   - task: CacheBeta@2
     displayName: 'Restore glass binaries from cache'
-    condition: eq('${{ parameters.skipGlassCache }}', 'false')
+    condition: eq('${{ parameters.refreshGlassCache }}', 'false')
     inputs:
       key: 'glass'
       path: '$(Build.SourcesDirectory)\GlassTests'
       cacheHitVar: 'CACHE_RESTORED'
 
+  - powershell: |
+      $isForkPr = '$(System.PullRequest.IsFork)' -eq 'True'
+      $refreshGlassCache = '${{ parameters.refreshGlassCache }}' -eq 'true'
+      $cacheState = '$(CACHE_RESTORED)'
+      $cacheRestored = $cacheState -eq 'true' -or $cacheState -eq 'inexact'
+      $setupGlass = -not $isForkPr -and ($cacheState -eq 'false' -or $refreshGlassCache)
+      $runGlass = $cacheRestored -or $setupGlass
+      $forkCacheMiss = $isForkPr -and -not $cacheRestored -and -not $refreshGlassCache
+
+      Write-Host "CACHE_RESTORED=$cacheState"
+      Write-Host "##vso[task.setvariable variable=SETUP_GLASS]$($setupGlass.ToString().ToLowerInvariant())"
+      Write-Host "##vso[task.setvariable variable=RUN_GLASS]$($runGlass.ToString().ToLowerInvariant())"
+      Write-Host "##vso[task.setvariable variable=FORK_GLASS_CACHE_MISS]$($forkCacheMiss.ToString().ToLowerInvariant())"
+    displayName: 'Set Glass test conditions'
+
   - task: AzureCLI@2
     displayName: 'Acquire an AAD token from a User-Assigned Managed Identity and save it as secret variable DropToken'
-    condition: and(succeeded(), or(eq(variables['CACHE_RESTORED'], 'false'), eq('${{ parameters.skipGlassCache }}', 'true')))
+    condition: and(succeeded(), eq(variables['SETUP_GLASS'], 'true'))
     inputs:
       azureSubscription: 'PylanceSecureVsIdePublishWithManagedIdentity'
       scriptType: 'pscore'
@@ -89,7 +104,7 @@ steps:
   # Setup the glass test folder
   - task: PythonScript@0
     displayName: 'Setup glass test folder'
-    condition: and(succeeded(), or(eq(variables['CACHE_RESTORED'], 'false'), eq('${{ parameters.skipGlassCache }}', 'true')))
+    condition: and(succeeded(), eq(variables['SETUP_GLASS'], 'true'))
     env:
       SYSTEM_ACCESSTOKEN: $(DropToken)
     inputs:
@@ -100,9 +115,22 @@ steps:
       failOnStderr: true
       pythonInterpreter: $(PYTHON_INTERPRETER)
 
+  - task: CacheBeta@2
+    displayName: 'Cache glass binaries'
+    condition: and(succeeded(), eq(variables['SETUP_GLASS'], 'true'))
+    inputs:
+      key: 'glass'
+      path: '$(Build.SourcesDirectory)\GlassTests'
+
+  - powershell: |
+      Write-Error "GlassTests cache was not restored for this fork PR, and fork PRs cannot run setup_glass.py because the internal DevDiv drop token is unavailable. For changes that need Glass setup or cache refresh, create the PR from a branch in the upstream microsoft/PTVS repository instead of a fork, or ask a maintainer to run a trusted main/release build to populate the 'glass' cache before rerunning this PR validation."
+    displayName: 'Fail Glass tests on fork cache miss'
+    condition: and(succeeded(), eq(variables['FORK_GLASS_CACHE_MISS'], 'true'))
+
   # Run the glass tests
   - task: PythonScript@0
     displayName: 'Run Glass tests'
+    condition: and(succeeded(), eq(variables['RUN_GLASS'], 'true'))
     inputs:
       scriptSource: 'filePath' # 'filePath' | 'inline'. Required. Script source. Default: filePath.
       scriptPath: $(Build.SourcesDirectory)/Build/run_glass.py
@@ -113,17 +141,10 @@ steps:
 
   # Upload the trx file as a test result
   - task: PublishTestResults@2
-    condition: always() # Always run this step, even if the previous step fails
+    condition: and(always(), eq(variables['RUN_GLASS'], 'true'))
     displayName: 'Publish Glass test results'
     inputs:
       testResultsFiles: '$(Build.SourcesDirectory)/TestResults/*.trx'
       testRunTitle: 'Glass Tests'
       testResultsFormat: 'VSTest'
       failTaskOnFailedTests: true
-
-  - task: CacheBeta@2
-    displayName: 'Cache glass binaries'
-    condition: and(succeeded(), or(eq(variables['CACHE_RESTORED'], 'false'), eq('${{ parameters.skipGlassCache }}', 'true')))
-    inputs:
-      key: 'glass'
-      path: '$(Build.SourcesDirectory)\GlassTests'

@@ -1,0 +1,183 @@
+2026-04-29T21:51:13.0221871Z ##[section]Starting: Setup glass test folder
+2026-04-29T21:51:13.0228813Z ==============================================================================
+2026-04-29T21:51:13.0229084Z Task         : Python script
+2026-04-29T21:51:13.0229270Z Description  : Run a Python file or inline script
+2026-04-29T21:51:13.0229516Z Version      : 0.268.0
+2026-04-29T21:51:13.0229744Z Author       : Microsoft Corporation
+2026-04-29T21:51:13.0229948Z Help         : https://docs.microsoft.com/azure/devops/pipelines/tasks/utility/python-script
+2026-04-29T21:51:13.0230083Z ==============================================================================
+2026-04-29T21:51:13.1842388Z [command]"C:\Program Files\Python312\python.exe" D:\a\_work\1\s\Build\setup_glass.py --authTokenVariable SYSTEM_ACCESSTOKEN --buildOutput D:\a\_work\1\b\raw\binaries
+2026-04-29T21:51:13.5266787Z 'D:\a\_work\1\s\DropTools\lib\net45\drop.exe' not found, downloading from 'https://devdiv.artifacts.visualstudio.com'.
+2026-04-29T21:51:14.9278959Z Extracting C:\Users\cloudtest\AppData\Local\Temp\tmpE7A0.zip to 'D:\a\_work\1\s\DropTools'...
+2026-04-29T21:51:16.3326101Z Drop.exe downloaded at 'D:\a\_work\1\s\DropTools\lib\net45\drop.exe'.
+2026-04-29T21:51:21.0406139Z Computing drop path for Temp/DevDiv/Concord...
+2026-04-29T21:51:21.0406909Z Error listing glass drops: ApplicationInsightsTelemetrySender will correlate events with X-TFS-Session 0f3ebcd9-8c0d-430f-80f6-7dd909b4a14d
+2026-04-29T21:51:21.0407215Z 
+2026-04-29T21:51:21.0407621Z DropServiceClient will correlate http requests with X-TFS-Session 0f3ebcd9-8c0d-430f-80f6-7dd909b4a14d
+2026-04-29T21:51:21.0407891Z 
+2026-04-29T21:51:21.0408305Z ArtifactHttpRetryMessageHandler.SendAsync: https://devdiv.artifacts.visualstudio.com/DefaultCollection/_apis/ attempt 1/6 failed with VssUnauthorizedException: 'VS30063: You are not authorized to access https://devdiv.artifacts.visualstudio.com.'
+2026-04-29T21:51:21.0408712Z 
+2026-04-29T21:51:21.0409203Z ArtifactHttpRetryMessageHandler.SendAsync: https://devdiv.artifacts.visualstudio.com/DefaultCollection/_apis/ attempt 1/6 throwing VssUnauthorizedException with AttemptCount 1, LastBackoff 10000ms
+2026-04-29T21:51:21.0409586Z 
+2026-04-29T21:51:21.0410010Z Operation failed: VssUnauthorizedException VS30063: You are not authorized to access https://app.vssps.visualstudio.com.
+2026-04-29T21:51:21.0410352Z 
+2026-04-29T21:51:21.0410678Z Retrying operation (1 of 1)...
+2026-04-29T21:51:21.0410885Z 
+2026-04-29T21:51:21.0411312Z DropServiceClient will correlate http requests with X-TFS-Session 0f3ebcd9-8c0d-430f-80f6-7dd909b4a14d
+2026-04-29T21:51:21.0411572Z 
+2026-04-29T21:51:21.0411973Z ArtifactHttpRetryMessageHandler.SendAsync: https://devdiv.artifacts.visualstudio.com/DefaultCollection/_apis/ attempt 1/6 failed with VssUnauthorizedException: 'VS30063: You are not authorized to access https://devdiv.artifacts.visualstudio.com.'
+2026-04-29T21:51:21.0412218Z 
+2026-04-29T21:51:21.0412468Z ArtifactHttpRetryMessageHandler.SendAsync: https://devdiv.artifacts.visualstudio.com/DefaultCollection/_apis/ attempt 1/6 throwing VssUnauthorizedException with AttemptCount 1, LastBackoff 10000ms
+2026-04-29T21:51:21.0412677Z 
+2026-04-29T21:51:21.0412894Z Microsoft.VisualStudio.Services.Common.VssUnauthorizedException: VS30063: You are not authorized to access https://app.vssps.visualstudio.com.
+2026-04-29T21:51:21.0413067Z 
+2026-04-29T21:51:21.0413283Z    at Microsoft.VisualStudio.Services.Common.VssHttpMessageHandler.<SendAsync>d__17.MoveNext()
+2026-04-29T21:51:21.0413511Z 
+2026-04-29T21:51:21.0413712Z --- End of stack trace from previous location where exception was thrown ---
+2026-04-29T21:51:21.0413856Z 
+2026-04-29T21:51:21.0414051Z    at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+2026-04-29T21:51:21.0414421Z 
+2026-04-29T21:51:21.0414619Z    at Microsoft.VisualStudio.Services.Common.VssHttpRetryMessageHandler.<SendAsync>d__9.MoveNext()
+2026-04-29T21:51:21.0414773Z 
+2026-04-29T21:51:21.0414952Z --- End of stack trace from previous location where exception was thrown ---
+2026-04-29T21:51:21.0416073Z 
+2026-04-29T21:51:21.0416285Z    at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+2026-04-29T21:51:21.0416421Z 
+2026-04-29T21:51:21.0416638Z    at Microsoft.VisualStudio.Services.Common.VssHttpRetryMessageHandler.<SendAsync>d__9.MoveNext()
+2026-04-29T21:51:21.0416787Z 
+2026-04-29T21:51:21.0416996Z --- End of stack trace from previous location where exception was thrown ---
+2026-04-29T21:51:21.0417126Z 
+2026-04-29T21:51:21.0417331Z    at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+2026-04-29T21:51:21.0417469Z 
+2026-04-29T21:51:21.0417685Z    at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)
+2026-04-29T21:51:21.0417836Z 
+2026-04-29T21:51:21.0418044Z    at Microsoft.VisualStudio.Services.WebApi.VssHttpClientBase.<SendAsync>d__54.MoveNext()
+2026-04-29T21:51:21.0418194Z 
+2026-04-29T21:51:21.0418374Z --- End of stack trace from previous location where exception was thrown ---
+2026-04-29T21:51:21.0418516Z 
+2026-04-29T21:51:21.0418692Z    at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+2026-04-29T21:51:21.0418825Z 
+2026-04-29T21:51:21.0419036Z    at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)
+2026-04-29T21:51:21.0419189Z 
+2026-04-29T21:51:21.0419373Z    at Microsoft.VisualStudio.Services.WebApi.VssHttpClientBase.<SendAsync>d__50`1.MoveNext()
+2026-04-29T21:51:21.0419526Z 
+2026-04-29T21:51:21.0419724Z --- End of stack trace from previous location where exception was thrown ---
+2026-04-29T21:51:21.0419835Z 
+2026-04-29T21:51:21.0420013Z    at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+2026-04-29T21:51:21.0420154Z 
+2026-04-29T21:51:21.0420343Z    at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)
+2026-04-29T21:51:21.0420497Z 
+2026-04-29T21:51:21.0420694Z    at Microsoft.VisualStudio.Services.Location.Client.LocationHttpClient.<GetConnectionDataAsync>d__6.MoveNext()
+2026-04-29T21:51:21.0420861Z 
+2026-04-29T21:51:21.0421062Z --- End of stack trace from previous location where exception was thrown ---
+2026-04-29T21:51:21.0421198Z 
+2026-04-29T21:51:21.0421376Z    at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+2026-04-29T21:51:21.0421513Z 
+2026-04-29T21:51:21.0421741Z    at Microsoft.VisualStudio.Services.WebApi.Location.VssServerDataProvider.<GetConnectionDataAsync>d__56.MoveNext()
+2026-04-29T21:51:21.0421896Z 
+2026-04-29T21:51:21.0422091Z --- End of stack trace from previous location where exception was thrown ---
+2026-04-29T21:51:21.0422228Z 
+2026-04-29T21:51:21.0422402Z    at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+2026-04-29T21:51:21.0422531Z 
+2026-04-29T21:51:21.0422850Z    at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)
+2026-04-29T21:51:21.0422992Z 
+2026-04-29T21:51:21.0423206Z    at Microsoft.VisualStudio.Services.WebApi.Location.VssServerDataProvider.<ConnectAsync>d__41.MoveNext()
+2026-04-29T21:51:21.0423364Z 
+2026-04-29T21:51:21.0423538Z --- End of stack trace from previous location where exception was thrown ---
+2026-04-29T21:51:21.0423666Z 
+2026-04-29T21:51:21.0423859Z    at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+2026-04-29T21:51:21.0423993Z 
+2026-04-29T21:51:21.0424181Z    at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)
+2026-04-29T21:51:21.0424334Z 
+2026-04-29T21:51:21.0424537Z    at Microsoft.VisualStudio.Services.Content.Common.ArtifactHttpClientFactory.<VerifyConnectionInternalAsync>d__29.MoveNext()
+2026-04-29T21:51:21.0424802Z 
+2026-04-29T21:51:21.0424997Z --- End of stack trace from previous location where exception was thrown ---
+2026-04-29T21:51:21.0425132Z 
+2026-04-29T21:51:21.0425330Z    at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+2026-04-29T21:51:21.0425461Z 
+2026-04-29T21:51:21.0425647Z    at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)
+2026-04-29T21:51:21.0426142Z 
+2026-04-29T21:51:21.0426383Z    at Microsoft.VisualStudio.Services.Content.Common.ArtifactHttpClientFactory.<>c__DisplayClass28_0.<<VerifyConnectionAsync>b__0>d.MoveNext()
+2026-04-29T21:51:21.0426568Z 
+2026-04-29T21:51:21.0426746Z --- End of stack trace from previous location where exception was thrown ---
+2026-04-29T21:51:21.0426881Z 
+2026-04-29T21:51:21.0427075Z    at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+2026-04-29T21:51:21.0427201Z 
+2026-04-29T21:51:21.0427416Z    at Microsoft.VisualStudio.Services.Content.Common.AsyncHttpRetryHelper`1.<InvokeAsync>d__20.MoveNext()
+2026-04-29T21:51:21.0427572Z 
+2026-04-29T21:51:21.0427744Z --- End of stack trace from previous location where exception was thrown ---
+2026-04-29T21:51:21.0427877Z 
+2026-04-29T21:51:21.0428049Z    at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+2026-04-29T21:51:21.0428177Z 
+2026-04-29T21:51:21.0428389Z    at Microsoft.VisualStudio.Services.Content.Common.AsyncHttpRetryHelper`1.<InvokeAsync>d__20.MoveNext()
+2026-04-29T21:51:21.0428539Z 
+2026-04-29T21:51:21.0428768Z --- End of stack trace from previous location where exception was thrown ---
+2026-04-29T21:51:21.0428901Z 
+2026-04-29T21:51:21.0429090Z    at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+2026-04-29T21:51:21.0429216Z 
+2026-04-29T21:51:21.0429424Z    at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)
+2026-04-29T21:51:21.0429570Z 
+2026-04-29T21:51:21.0429770Z    at Microsoft.VisualStudio.Services.Content.Common.ArtifactHttpClientFactory.<VerifyConnectionAsync>d__28.MoveNext()
+2026-04-29T21:51:21.0429943Z 
+2026-04-29T21:51:21.0430134Z --- End of stack trace from previous location where exception was thrown ---
+2026-04-29T21:51:21.0430260Z 
+2026-04-29T21:51:21.0430456Z    at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+2026-04-29T21:51:21.0430591Z 
+2026-04-29T21:51:21.0430780Z    at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)
+2026-04-29T21:51:21.0430931Z 
+2026-04-29T21:51:21.0431168Z    at Microsoft.VisualStudio.Services.Content.Common.TaskSafety.SyncResultOnThreadPool[T](Func`1 taskFunc, CancellationToken cancellationToken)
+2026-04-29T21:51:21.0431338Z 
+2026-04-29T21:51:21.0431562Z    at Microsoft.VisualStudio.Services.Content.Common.ArtifactHttpClientFactory.VerifyConnection(IArtifactHttpClient httpClient)
+2026-04-29T21:51:21.0431731Z 
+2026-04-29T21:51:21.0431995Z    at Microsoft.VisualStudio.Services.Drop.App.Core.DropDownloader..ctor(Uri dropServiceLocation, EnvironmentalSettings settings, ArtifactHttpClientFactory clientFactory, DropDownloadClientTelemetry dropClientTelemetry, IAppTraceSource tracer)
+2026-04-29T21:51:21.0432238Z 
+2026-04-29T21:51:21.0432494Z    at Microsoft.VisualStudio.Services.Drop.App.Core.DropServiceClient..ctor(Uri dropServiceLocation, EnvironmentalSettings settings, ArtifactHttpClientFactory clientFactory, DropClientTelemetry dropClientTelemetry, IAppTraceSource tracer)
+2026-04-29T21:51:21.0432727Z 
+2026-04-29T21:51:21.0432960Z    at Microsoft.VisualStudio.Services.Drop.App.Operations.DropServiceOperation.CreateDropServiceClient(ArtifactHttpClientFactory factory)
+2026-04-29T21:51:21.0433126Z 
+2026-04-29T21:51:21.0433351Z    at Microsoft.VisualStudio.Services.Drop.App.Operations.DropServiceOperation.<PerformAuthenticatedOperationAsync>d__42.MoveNext()
+2026-04-29T21:51:21.0433523Z 
+2026-04-29T21:51:21.0433701Z --- End of stack trace from previous location where exception was thrown ---
+2026-04-29T21:51:21.0433840Z 
+2026-04-29T21:51:21.0434105Z    at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+2026-04-29T21:51:21.0434234Z 
+2026-04-29T21:51:21.0434448Z    at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)
+2026-04-29T21:51:21.0434588Z 
+2026-04-29T21:51:21.0434804Z    at Microsoft.VisualStudio.Services.ArtifactServices.App.Shared.Operations.VstsAuthenticatedOperation.<PerformOperationAsync>d__34.MoveNext()
+2026-04-29T21:51:21.0435048Z 
+2026-04-29T21:51:21.0435242Z --- End of stack trace from previous location where exception was thrown ---
+2026-04-29T21:51:21.0435369Z 
+2026-04-29T21:51:21.0435561Z    at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+2026-04-29T21:51:21.0435695Z 
+2026-04-29T21:51:21.0435884Z    at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)
+2026-04-29T21:51:21.0436029Z 
+2026-04-29T21:51:21.0436269Z    at Microsoft.VisualStudio.Services.ArtifactServices.App.Shared.Operations.VstsAuthenticatedOperation.<PerformOperationAsync>d__37.MoveNext()
+2026-04-29T21:51:21.0436439Z 
+2026-04-29T21:51:21.0436631Z --- End of stack trace from previous location where exception was thrown ---
+2026-04-29T21:51:21.0436764Z 
+2026-04-29T21:51:21.0436936Z    at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+2026-04-29T21:51:21.0437071Z 
+2026-04-29T21:51:21.0437289Z    at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)
+2026-04-29T21:51:21.0437432Z 
+2026-04-29T21:51:21.0437640Z    at Microsoft.VisualStudio.Services.Content.Common.TaskSafety.SyncResultOnThreadPool[T](Func`1 taskFunc, CancellationToken cancellationToken)
+2026-04-29T21:51:21.0437884Z 
+2026-04-29T21:51:21.0438102Z    at Microsoft.VisualStudio.Services.ArtifactServices.App.Shared.Operations.ArtifactServicesOperation.PerformOperation(CancellationToken cancellationToken)
+2026-04-29T21:51:21.0438335Z 
+2026-04-29T21:51:21.0438713Z    at Microsoft.VisualStudio.Services.ArtifactServices.App.Shared.Operations.ArtifactServicesOperation.PerformOperationWithTimeoutAndGlobalRetry()
+2026-04-29T21:51:21.0438888Z 
+2026-04-29T21:51:21.0439109Z    at Microsoft.VisualStudio.Services.ArtifactServices.App.Shared.Operations.ArtifactServicesOperation.PerformOperation(ExitResultTelemetryRecord record)
+2026-04-29T21:51:21.0439298Z 
+2026-04-29T21:51:21.0439460Z 	CredentialsType Basic
+2026-04-29T21:51:21.0439583Z 
+2026-04-29T21:51:21.0439737Z 	AttemptCount 1
+2026-04-29T21:51:21.0439877Z 
+2026-04-29T21:51:21.0440137Z 	LastBackoff 
+2026-04-29T21:51:21.0440248Z 
+2026-04-29T21:51:21.0440407Z Operation ended with exit code: 1244
+2026-04-29T21:51:21.0440523Z 
+2026-04-29T21:51:21.0440739Z ApplicationInsightsTelemetrySender correlated 1 events with X-TFS-Session 0f3ebcd9-8c0d-430f-80f6-7dd909b4a14d
+2026-04-29T21:51:21.0440902Z 
+2026-04-29T21:51:21.0440975Z 
+2026-04-29T21:51:21.0490632Z 
+2026-04-29T21:51:21.0531815Z ##[error]The process 'C:\Program Files\Python312\python.exe' failed with exit code 1
+2026-04-29T21:51:21.0610007Z ##[section]Finishing: Setup glass test folder
