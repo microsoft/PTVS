@@ -63,11 +63,11 @@ steps:
       Copy-Item -Path "$source\*" -Destination $dest -Recurse -Force
     displayName: 'Copy binaries to expected location'
 
-  - task: CacheBeta@2
+  - task: Cache@2
     displayName: 'Restore glass binaries from cache'
     condition: eq('${{ parameters.refreshGlassCache }}', 'false')
     inputs:
-      key: 'glass'
+      key: 'glass | Build/setup_glass.py'
       path: '$(Build.SourcesDirectory)\GlassTests'
       cacheHitVar: 'CACHE_RESTORED'
 
@@ -115,11 +115,11 @@ steps:
       failOnStderr: true
       pythonInterpreter: $(PYTHON_INTERPRETER)
 
-  - task: CacheBeta@2
+  - task: Cache@2
     displayName: 'Cache glass binaries'
     condition: and(succeeded(), eq(variables['SETUP_GLASS'], 'true'))
     inputs:
-      key: 'glass'
+      key: 'glass | Build/setup_glass.py'
       path: '$(Build.SourcesDirectory)\GlassTests'
 
   - powershell: |

@@ -146,6 +146,16 @@ def get_test_console_app():
         print(f"Error: Test console app not found at {test_console_app}")
         exit(1)
 
+def restore_glass_newtonsoft_json():
+    source = os.path.join(glass_debugger_dir, "Newtonsoft.Json.dll")
+    target = os.path.join(glass_dir, "Newtonsoft.Json.dll")
+
+    if not os.path.exists(source):
+        print(f"Error: Glass-compatible Newtonsoft.Json.dll not found at {source}")
+        exit(1)
+
+    shutil.copy(source, target)
+
 def copy_ptvs_output(build_output_dir: str | None = None):
     # Copy the PythonTests folder into the glass directory
     print(f"Copying PythonTests from {python_tests_source_dir} to {python_tests_target_dir}")
@@ -173,6 +183,10 @@ def copy_ptvs_output(build_output_dir: str | None = None):
         for f in os.listdir(build_output):
             print(f)
         exit(1)
+
+    # VSIX extraction can overwrite the runner root with an older Newtonsoft.Json.
+    # Glass.TestAdapter.dll is compiled against the copy from the Glass drop.
+    restore_glass_newtonsoft_json()
 
     # Whenever we copy new bits, we have to regenerate the Python.GlassTestGroup file
     generate_python_version_props(build_output_dir)
@@ -306,7 +320,9 @@ def generate_python_version_props(build_output_dir: str | None):
 def main(build_output_dir: str | None = None):
     get_drop_exe()
     get_glass()
+
     get_test_console_app()
+
     copy_ptvs_output(build_output_dir)
     generate_python_version_props(build_output_dir)
     verify_listing()
