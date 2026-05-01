@@ -65,7 +65,7 @@ steps:
 
   - task: Cache@2
     displayName: 'Restore glass binaries from cache'
-    condition: eq('${{ parameters.refreshGlassCache }}', 'false')
+    condition: and(eq('${{ parameters.refreshGlassCache }}', 'false'), ne(variables['System.PullRequest.IsFork'], 'True'))
     inputs:
       key: '"glass" | Build/setup_glass.py'
       path: '$(Build.SourcesDirectory)\GlassTests'
@@ -141,7 +141,7 @@ steps:
       path: '$(Build.SourcesDirectory)\GlassTests'
 
   - powershell: |
-      Write-Warning "GlassTests cache was not restored for this fork PR, and fork PRs cannot run setup_glass.py because the internal DevDiv drop token is unavailable. Skipping Glass tests for this validation. A trusted main/release build can refresh the 'glass' cache for future fork PR validations."
+      Write-Warning "GlassTests cache restore is disabled for fork PRs to prevent Cache@2 post-job cache writes, and fork PRs cannot run setup_glass.py because the internal DevDiv drop token is unavailable. Skipping Glass tests for this validation. A trusted main/release build can refresh the 'glass' cache."
     displayName: 'Skip Glass tests on fork cache miss'
     condition: and(succeeded(), eq(variables['SKIP_GLASS_ON_FORK_CACHE_MISS'], 'true'))
 
