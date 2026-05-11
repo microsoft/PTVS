@@ -107,6 +107,11 @@
   <Target Name="_AddTemplateFiles" BeforeTargets="_PreserveUnsigned;ListFiles">
     <ItemGroup>
       <TemplateFilesToSign Include="$(BinariesOutputPath)templates\**\*.js;$(BinariesOutputPath)templates\**\*.ttf" />
+      <!-- Drop zero-byte files (e.g. the empty 'Add New Item -> JavaScript' template placeholder).
+           signtool cannot map a 0-byte file (CreateFileMapping fails with ERROR_FILE_INVALID 0x3EE),
+           which would otherwise break the signing step. -->
+      <TemplateFilesToSign Remove="@(TemplateFilesToSign)"
+                           Condition="'$([System.IO.File]::ReadAllText(%(TemplateFilesToSign.FullPath)))' == ''" />
       <FilesToSign Include="@(TemplateFilesToSign)">
         <Authenticode>3PartyScriptsSHA2</Authenticode>
         <StrongName></StrongName>
