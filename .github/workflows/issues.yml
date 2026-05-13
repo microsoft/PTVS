@@ -10,7 +10,10 @@ jobs:
   assignIssue:
     name: Assign Issue to Someone
     runs-on: ubuntu-latest
-    if: github.repository == 'microsoft/PTVS' && github.event.action == 'opened'
+    if: github.repository == 'microsoft/PTVS'
+        && github.event.action == 'opened'
+        && !contains(github.event.issue.labels.*.name, 'from-azdo')
+        && !contains(github.event.issue.labels.*.name, 'azdo-triage-report')
     steps:
       - name: Find last assigned
         id: assigned

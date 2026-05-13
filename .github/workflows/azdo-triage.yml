@@ -1,0 +1,360 @@
+name: AzDO weekly triage
+
+# Implements the weekly Azure DevOps -> GitHub issue triage automation for
+# customer-reported work items under DevDiv\Python and AI Tools\**. The
+# overall design lives in plan.md and Build/triage/README.md. The workflow
+# has two logical jobs:
+#
+#   Job 1 (report)  — ALWAYS runs. Posts a single weekly summary issue in
+#                     this repo listing the open AzDO work items in the
+#                     lookback window. The only write is a read-only-style
+#                     summary; no destructive action.
+#   Job 2 (triage)  — Conditional on `run_triage`. Runs as three jobs
+#                     (prepare → triage → apply). The `apply` job is gated
+#                     by the `azdo-triage-approval` environment so a human
+#                     reviews every batch before any AzDO/GitHub writes
+#                     happen.
+
+on:
+  schedule:
+    - cron: "0 8 * * 1"   # every Monday 08:00 UTC
+  workflow_dispatch:
+    inputs:
+      lookback_days:
+        description: "How many days back to scan (default 7)"
+        required: false
+        default: "7"
+      workitem_id:
+        description: "If set, triage only this single AzDO work item ID (for ad-hoc replay)"
+        required: false
+      dry_run:
+        description: "If true, do not write to AzDO or create GitHub mirrored issues"
+        required: false
+        default: "true"
+        type: boolean
+      max_candidates:
+        description: "Hard cap on candidates processed per run (cost-safety)"
+        required: false
+        default: "25"
+      run_triage:
+        description: "Run Job 2 (triage pipeline). Uncheck to run only Job 1 (the weekly summary report)."
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+  issues: write          # to create issues in this repo
+  models: read           # for actions/ai-inference
+  id-token: write        # for OIDC -> Entra federated credential
+
+concurrency:
+  group: azdo-triage
+  cancel-in-progress: false
+
+jobs:
+  # ════════════════════════════════════════════════════════════════
+  # JOB 1 — Weekly report (ALWAYS runs).
+  # Posts a single summary issue in microsoft/PTVS listing every open
+  # AzDO work item created in the lookback window. Also uploads
+  # candidates.json for Job 2 to reuse.
+  # ════════════════════════════════════════════════════════════════
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Acquire Entra token via GitHub OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZDO_TRIAGE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZDO_TRIAGE_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      - name: Exchange for AzDO access token
+        shell: bash
+        run: |
+          # 499b84ac-... is the well-known AzDO resource AppId.
+          # azure/login does NOT itself emit an AzDO-scoped bearer
+          # token — we mint one via the now-authenticated `az` CLI.
+          AZDO_ACCESS_TOKEN=$(az account get-access-token \
+            --resource 499b84ac-1321-427f-aa17-267ca6975798 \
+            --query accessToken -o tsv)
+          echo "::add-mask::$AZDO_ACCESS_TOKEN"
+          echo "AZDO_ACCESS_TOKEN=$AZDO_ACCESS_TOKEN" >> "$GITHUB_ENV"
+
+      - name: Query AzDO work items (WIQL)
+        shell: pwsh
+        env:
+          LOOKBACK_DAYS:  ${{ inputs.lookback_days || '7' }}
+          MAX_CANDIDATES: ${{ inputs.max_candidates || '25' }}
+          WORKITEM_ID:    ${{ inputs.workitem_id }}
+        run: |
+          $extra = @{}
+          if ($env:WORKITEM_ID) { $extra['WorkItemId'] = $env:WORKITEM_ID }
+          ./Build/triage/query-azdo.ps1 `
+            -OutFile $env:RUNNER_TEMP/candidates.json `
+            -LookbackDays ([int] $env:LOOKBACK_DAYS) `
+            -MaxCandidates ([int] $env:MAX_CANDIDATES) `
+            @extra
+
+      - name: Sanitize titles only (for the public summary issue)
+        shell: pwsh
+        run: |
+          ./Build/triage/sanitize.ps1 `
+            -TitlesOnly `
+            -InFile  $env:RUNNER_TEMP/candidates.json `
+            -OutFile $env:RUNNER_TEMP/candidates-titles-only.json
+
+      - name: Post weekly report issue
+        shell: pwsh
+        env:
+          PTVS_BRIDGE_PAT: ${{ secrets.PTVS_BRIDGE_PAT }}
+          LOOKBACK_DAYS:   ${{ inputs.lookback_days || '7' }}
+          TRIAGE_WILL_RUN: ${{ inputs.run_triage != false }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          ./Build/triage/post-report-issue.ps1 `
+            -CandidatesFile $env:RUNNER_TEMP/candidates-titles-only.json `
+            -LookbackDays   ([int] $env:LOOKBACK_DAYS) `
+            -TriageWillRun  ([bool]::Parse($env:TRIAGE_WILL_RUN)) `
+            -RunUrl         $env:RUN_URL
+
+      - name: Upload candidates artifact for Job 2
+        uses: actions/upload-artifact@v4
+        with:
+          name: candidates
+          path: ${{ runner.temp }}/candidates.json
+          retention-days: 7   # short retention; contains raw WI fields
+
+  # ════════════════════════════════════════════════════════════════
+  # JOB 2 — Triage pipeline (CONDITIONAL on run_triage).
+  # Implemented as 3 GH-Actions jobs (prepare → triage → apply).
+  # All three share the same run_triage gate so they're toggled
+  # atomically.
+  # ════════════════════════════════════════════════════════════════
+  prepare:
+    needs: report
+    if: ${{ inputs.run_triage != false }}
+    runs-on: ubuntu-latest
+    outputs:
+      # IMPORTANT: matrix output is a JSON array of {id} objects ONLY,
+      # and only for cluster primaries. Full sanitized work-item
+      # content and the cluster map live in artifacts. GH Actions
+      # outputs are capped at 1 MB and matrix at 256 jobs.
+      primaries: ${{ steps.cluster.outputs.primaries }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # fetch-context.ps1 needs ~90d of git log
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: candidates
+          path: ${{ runner.temp }}
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZDO_TRIAGE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZDO_TRIAGE_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      - name: Exchange for AzDO access token
+        shell: bash
+        run: |
+          AZDO_ACCESS_TOKEN=$(az account get-access-token \
+            --resource 499b84ac-1321-427f-aa17-267ca6975798 \
+            --query accessToken -o tsv)
+          echo "::add-mask::$AZDO_ACCESS_TOKEN"
+          echo "AZDO_ACCESS_TOKEN=$AZDO_ACCESS_TOKEN" >> "$GITHUB_ENV"
+
+      - name: Fetch shared per-run research context
+        shell: pwsh
+        env:
+          PTVS_TRIAGE_MCP_READONLY_PAT: ${{ secrets.PTVS_TRIAGE_MCP_READONLY_PAT }}
+        run: |
+          ./Build/triage/fetch-context.ps1 `
+            -OutFile $env:RUNNER_TEMP/run-context.json
+
+      - name: Download and parse diagnostics attachments
+        shell: pwsh
+        run: |
+          ./Build/triage/parse-diagnostics.ps1 `
+            -CandidatesFile $env:RUNNER_TEMP/candidates.json `
+            -OutDir         $env:RUNNER_TEMP
+
+      - name: Sanitize all candidates (incl. parsed diagnostics)
+        shell: pwsh
+        run: |
+          ./Build/triage/sanitize.ps1 `
+            -InFile  $env:RUNNER_TEMP/candidates.json `
+            -DiagDir $env:RUNNER_TEMP `
+            -OutDir  $env:RUNNER_TEMP/sanitized
+
+      - name: Cluster within-batch duplicates
+        id: cluster
+        shell: pwsh
+        run: |
+          ./Build/triage/cluster.ps1 `
+            -SanitizedDir $env:RUNNER_TEMP/sanitized `
+            -ClustersOut  $env:RUNNER_TEMP/clusters.json `
+            -PrimariesOut $env:RUNNER_TEMP/primaries.json
+          $primaries = Get-Content $env:RUNNER_TEMP/primaries.json -Raw
+          if (-not $primaries.Trim()) { $primaries = '[]' }
+          "primaries=$primaries" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      - name: Upload run artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: run-artifacts
+          path: |
+            ${{ runner.temp }}/run-context.json
+            ${{ runner.temp }}/clusters.json
+            ${{ runner.temp }}/sanitized/
+          retention-days: 7
+
+  triage:
+    needs: prepare
+    if: ${{ inputs.run_triage != false && needs.prepare.outputs.primaries != '[]' && needs.prepare.outputs.primaries != '' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        # only cluster PRIMARIES flow through the matrix; followers are
+        # handled by apply-outcomes.ps1 in the apply job.
+        candidate: ${{ fromJson(needs.prepare.outputs.primaries) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: run-artifacts
+          path: ${{ runner.temp }}
+
+      - name: Triage with AI
+        id: triage
+        uses: actions/ai-inference@v1
+        with:
+          prompt-file: ./Build/triage/prompts/triage.prompt.yml
+          input: |
+            workitem_id: ${{ matrix.candidate.id }}
+          file_input: |
+            workitem_json: ${{ runner.temp }}/sanitized/wi-${{ matrix.candidate.id }}.json
+            diagnostics_json: ${{ runner.temp }}/sanitized/diag-${{ matrix.candidate.id }}.json
+            run_context_json: ${{ runner.temp }}/run-context.json
+          enable-github-mcp: true
+          # READ-ONLY token, separate from PTVS_BRIDGE_PAT. Limits blast
+          # radius if the model is induced to misuse MCP.
+          github-mcp-token: ${{ secrets.PTVS_TRIAGE_MCP_READONLY_PAT }}
+          # `issues` toolset lets the model read comments on a candidate
+          # duplicate — what makes "apply the resolution, don't just
+          # link" possible.
+          github-mcp-toolsets: 'repos,issues'
+          model: openai/gpt-4.1
+          max-completion-tokens: 4000
+
+      - name: Persist verdict
+        # outputs.response may contain newlines and quotes; outputs.response-file
+        # is the safe way to capture it.
+        shell: bash
+        run: |
+          cp "${{ steps.triage.outputs.response-file }}" \
+             "$RUNNER_TEMP/verdict-${{ matrix.candidate.id }}.json"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: verdicts
+          path: ${{ runner.temp }}/verdict-*.json
+          retention-days: 30
+
+  apply:
+    needs: triage
+    if: ${{ inputs.run_triage != false && needs.prepare.outputs.primaries != '[]' && needs.prepare.outputs.primaries != '' }}
+    runs-on: ubuntu-latest
+    environment: azdo-triage-approval   # ← human approval gate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: verdicts
+          path: ${{ runner.temp }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: run-artifacts
+          path: ${{ runner.temp }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: candidates
+          path: ${{ runner.temp }}
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZDO_TRIAGE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZDO_TRIAGE_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      - name: Exchange for AzDO access token
+        shell: bash
+        run: |
+          AZDO_ACCESS_TOKEN=$(az account get-access-token \
+            --resource 499b84ac-1321-427f-aa17-267ca6975798 \
+            --query accessToken -o tsv)
+          echo "::add-mask::$AZDO_ACCESS_TOKEN"
+          echo "AZDO_ACCESS_TOKEN=$AZDO_ACCESS_TOKEN" >> "$GITHUB_ENV"
+
+      - name: Apply outcomes
+        shell: pwsh
+        env:
+          DRY_RUN: ${{ inputs.dry_run }}
+          PTVS_BRIDGE_PAT: ${{ secrets.PTVS_BRIDGE_PAT }}
+        run: |
+          ./Build/triage/apply-outcomes.ps1 `
+            -VerdictsDir   $env:RUNNER_TEMP `
+            -RunArtifacts  $env:RUNNER_TEMP
+
+      - name: Upload run summary (no PII — markdown of verdicts only)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: run-summary
+          path: ${{ runner.temp }}/run-summary.md
+          retention-days: 90
+
+  # ────────────────────────────────────────────────────────────────
+  # On any failure in the above jobs, open an infrastructure issue
+  # so maintainers see the breakage at-a-glance instead of having to
+  # scan the Actions tab.
+  # ────────────────────────────────────────────────────────────────
+  notify-on-failure:
+    needs: [report, prepare, triage, apply]
+    if: ${{ always() && (needs.report.result == 'failure' || needs.prepare.result == 'failure' || needs.triage.result == 'failure' || needs.apply.result == 'failure') }}
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `azdo-triage workflow failed (run ${context.runId})`,
+              body: `One of the azdo-triage jobs failed. See ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}.`,
+              labels: ['infrastructure'],
+              assignees: ['StellaHuang95']
+            });
+
+  # ────────────────────────────────────────────────────────────────
+  # Self-tests for the Build/triage/** scripts. Runs on every change to
+  # those files (and on workflow_dispatch / scheduled runs as a safety
+  # net). Kept here rather than in a separate workflow so the trigger
+  # is wired to the same file set the workflow itself touches.
+  # ────────────────────────────────────────────────────────────────
+  triage-tests:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'schedule' }}   # avoid duplicate runs on the weekly cron
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Build/triage self-tests
+        shell: pwsh
+        run: ./Build/triage/run-tests.ps1

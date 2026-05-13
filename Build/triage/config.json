@@ -1,0 +1,75 @@
+{
+    "$comment": "Configuration for the weekly AzDO triage automation (see plan.md). Some values are placeholders that must be confirmed during phase 0 by fetching an example work item under DevDiv\\Python and AI Tools\\** with ?$expand=all and inspecting the response.",
+
+    "azdo": {
+        "organization": "devdiv",
+        "project": "DevDiv",
+        "baseUrl": "https://dev.azure.com/devdiv",
+        "resourceAppId": "499b84ac-1321-427f-aa17-267ca6975798",
+        "areaPath": "DevDiv\\Python and AI Tools",
+        "workItemTypes": [ "Bug", "Task", "User Story" ],
+        "excludedStates": [ "Closed", "Removed" ],
+        "excludedTags": [ "triaged-by-ai", "do-not-triage" ],
+
+        "$comment_state_machine": "Phase 0 must confirm the exact DC state strings. Values below are the best public guesses.",
+        "states": {
+            "duplicate": "DC - Closed - Duplicated",
+            "answered": "DC - Closed - Other",
+            "fixed": "DC - Closed - Fixed",
+            "fallbackClosed": "Closed"
+        },
+
+        "$comment_duplicateField": "The REST field name behind the 'Duplicate Feedback Ticket ID' field on the Overview tab. Likely Microsoft.VSTS.Common.DuplicateFeedbackTicketId; verify in phase 0 by fetching one item with ?$expand=all. Leave the placeholder as-is until verified — apply-outcomes.ps1 will refuse to patch DC duplicate writes when this value is still the placeholder.",
+        "duplicateFieldName": "<DuplicateFeedbackTicketIdField>",
+
+        "ai_tag": "triaged-by-ai",
+        "movedToGithubTag": "moved-to-github"
+    },
+
+    "github": {
+        "owner": "microsoft",
+        "repo": "PTVS",
+        "defaultAssignee": "StellaHuang95",
+        "reportLabel": "azdo-triage-report",
+        "mirrorLabel": "from-azdo",
+        "$comment_labels": "AI-emitted label set is restricted to the union of allowedLabels.",
+        "allowedLabels": [
+            "bug",
+            "needs repro",
+            "enhancement",
+            "waiting for response",
+            "from-azdo"
+        ],
+        "labelsByVerdict": {
+            "needs_info":            [ "bug", "needs repro", "from-azdo", "waiting for response" ],
+            "real_bug":              [ "bug", "needs repro", "from-azdo" ],
+            "real_feature_request":  [ "enhancement", "from-azdo" ]
+        }
+    },
+
+    "thresholds": {
+        "answered": 0.7,
+        "needs_info": 0.6,
+        "real_bug": 0.6,
+        "real_feature_request": 0.6
+    },
+
+    "limits": {
+        "maxCandidatesPerRun": 25,
+        "lookbackDaysDefault": 7,
+        "areaPathHistoryDays": 90,
+        "areaPathHistoryCap": 200,
+        "recentCommitsCap": 150,
+        "releaseTagsCap": 3
+    },
+
+    "upstream_tracker_urls": [
+        "https://github.com/microsoft/pylance-release/issues",
+        "https://github.com/microsoft/debugpy/issues",
+        "https://github.com/python/cpython/issues"
+    ],
+
+    "dc_duplicate_template": "Thanks for taking the time to report this issue! It seems to us that it's describing the same thing as [another one]({GH_URL}). We've closed this one as a duplicate and transferred all votes from this ticket to the other one. Please follow along on the linked ticket to communicate with the team, see updates on status, and help provide any needed diagnostic info. For more information, see our [issue reporting guidelines](https://aka.ms/vsfeedbackguidelines).\n\nHappy coding!",
+
+    "opt_out_clause": "\n\n_If you'd prefer we keep this report internal, reply within 7 days with the text \"do not publish\" and a maintainer will close the linked GitHub issue and reopen this work item._"
+}
