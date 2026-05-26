@@ -203,9 +203,13 @@ permissions and limitations under the License.
   <Target Name="PythonRunMypyCommand"
           Label="resource:Microsoft.PythonTools.Common;Microsoft.PythonTools.Common.Strings;RunMypyLabel"
           Returns="@(Commands)">
+    <!-- Disable mypy's incremental cache so that "Run Mypy"
+         always reflects the current source files and configuration; otherwise mypy
+         may reuse cached per-module results after mypy.ini is added or removed,
+         causing the Error List to show stale results. -->
     <CreatePythonCommandItem Target="mypy"
                              TargetType="module"
-                             Arguments="--show-column-numbers @(Compile, ' ')"
+                             Arguments="--no-incremental --show-column-numbers @(Compile, ' ')"
                              WorkingDirectory="$(QualifiedProjectHome)"
                              ExecuteIn="output"
                              RequiredPackages="mypy"
