@@ -358,13 +358,38 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private async Task<R> InvokeWithParametersAsync<R>(string request, object parameters, CancellationToken t) where R : class {
             await _readyTcs.Task.ConfigureAwait(false);
 
-            return await _rpc.InvokeWithParameterObjectAsync<R>(request, parameters, t).ConfigureAwait(false);
+            var rpc = _rpc;
+            if (rpc == null) {
+                return null;
+            }
+
+            try {
+                return await rpc.InvokeWithParameterObjectAsync<R>(request, parameters, t).ConfigureAwait(false);
+            } catch (ConnectionLostException) {
+                // Pylance crashed mid-request. Returning null - editor LSP integration
+                // tolerates null (no completions / no references shown) rather than
+                // tearing down VS via the dispatcher.
+                return null;
+            } catch (ObjectDisposedException) {
+                // JsonRpc was disposed mid-request - same shutdown semantic.
+                return null;
+            }
         }
 
         private async Task NotifyWithParametersAsync(string request, object parameters) {
             await _readyTcs.Task.ConfigureAwait(false);
 
-            await _rpc.NotifyWithParameterObjectAsync(request, parameters).ConfigureAwait(false);
+            var rpc = _rpc;
+            if (rpc == null) {
+                return;
+            }
+
+            try {
+                await rpc.NotifyWithParameterObjectAsync(request, parameters).ConfigureAwait(false);
+            } catch (ConnectionLostException) {
+                // Pylance crashed mid-notify - silently drop; the notification is fire-and-forget.
+            } catch (ObjectDisposedException) {
+            }
         }
 
         private LanguageServerSettings.PythonSettings GetSettings(Uri scopeUri = null) {
