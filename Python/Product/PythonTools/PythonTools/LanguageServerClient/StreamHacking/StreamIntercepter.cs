@@ -42,9 +42,26 @@ namespace Microsoft.PythonTools.LanguageServerClient.StreamHacking {
 
         public override long Position { get => baseStream.Position; set => baseStream.Position = value; }
 
-        public override void Flush() => baseStream.Flush();
+        public override void Flush() {
+            try {
+                baseStream.Flush();
+            } catch (IOException) {
+                // Pipe to Pylance is broken (e.g. Pylance crashed).
+                // Swallow so StreamJsonRpc can detect the disconnect via its own machinery.
+            } catch (ObjectDisposedException) {
+            }
+        }
         public override int Read(byte[] buffer, int offset, int count) {
-            var result = baseStream.Read(buffer, offset, count);
+            int result;
+            try {
+                result = baseStream.Read(buffer, offset, count);
+            } catch (IOException) {
+                // Pipe to Pylance is broken. Returning 0 signals EOF to StreamJsonRpc
+                // which will cleanly raise Disconnected.
+                return 0;
+            } catch (ObjectDisposedException) {
+                return 0;
+            }
             var args = new StreamData { bytes = buffer, offset = offset, count = result };
             readHandler.Invoke(args);
             return result;
@@ -52,16 +69,22 @@ namespace Microsoft.PythonTools.LanguageServerClient.StreamHacking {
         public override long Seek(long offset, SeekOrigin origin) => baseStream.Seek(offset, origin);
         public override void SetLength(long value) => baseStream.SetLength(value);
         public override void Write(byte[] buffer, int offset, int count) {
-            if (writeHandler != null) {
-                var writeHandlerResult = writeHandler.Invoke(new StreamData { bytes = buffer, offset = offset, count = count });
-                baseStream.Write(writeHandlerResult.Item1.bytes, writeHandlerResult.Item1.offset, writeHandlerResult.Item1.count);
-                if (!writeHandlerResult.Item2) {
-                    writeHandler = null;
+            try {
+                if (writeHandler != null) {
+                    var writeHandlerResult = writeHandler.Invoke(new StreamData { bytes = buffer, offset = offset, count = count });
+                    baseStream.Write(writeHandlerResult.Item1.bytes, writeHandlerResult.Item1.offset, writeHandlerResult.Item1.count);
+                    if (!writeHandlerResult.Item2) {
+                        writeHandler = null;
+                    }
+                } else {
+                    baseStream.Write(buffer, offset, count);
                 }
-            } else {
-                baseStream.Write(buffer, offset, count);
+            } catch (IOException) {
+                // Pipe to Pylance is broken (e.g. Pylance crashed - ERROR_BROKEN_PIPE 0x8007006d).
+                // Swallow so StreamJsonRpc can detect the disconnect via its own machinery
+                // rather than throwing on a long async chain that escapes to the dispatcher.
+            } catch (ObjectDisposedException) {
             }
-
         }
     }
 }
