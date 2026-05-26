@@ -100,6 +100,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private static TaskCompletionSource<int> _readyTcs = new TaskCompletionSource<int>();
         private bool _loaded = false;
         private Timer _deferredSettingsChangedTimer;
+        // Set by the dispose action before any other cleanup; consulted by the
+        // deferred timer callback, TriggerWorkspaceUpdateConfig and GetSettings so
+        // a timer tick scheduled before disposal cannot dereference cleared state.
+        private volatile bool _disposed;
         private const int _defaultSettingsDelayMS = 5000;
 
         public PythonLanguageClient() {
@@ -136,7 +140,19 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             await JoinableTaskContext.Factory.SwitchToMainThreadAsync();
             CreateClientContexts();
 
-            _deferredSettingsChangedTimer = new Timer(state => TriggerWorkspaceUpdateConfig(), state: null, Timeout.Infinite, Timeout.Infinite);
+            _deferredSettingsChangedTimer = new Timer(state => {
+                // Guard the callback body: a tick scheduled before disposal can fire
+                // after the language client has been torn down.
+                if (_disposed) {
+                    return;
+                }
+                try {
+                    TriggerWorkspaceUpdateConfig();
+                } catch (NullReferenceException) {
+                    // Field was nulled or service disappeared during teardown.
+                } catch (ObjectDisposedException) {
+                }
+            }, state: null, Timeout.Infinite, Timeout.Infinite);
             _analysisOptions = Site.GetPythonToolsService().AnalysisOptions;
             _advancedEditorOptions = Site.GetPythonToolsService().AdvancedEditorOptions;
             _analysisOptions.Changed += OnSettingsChanged;
@@ -152,6 +168,14 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             WorkspaceService.OnActiveWorkspaceChanged += OnWorkspaceOpening;
 
             _disposables.Add(() => {
+                // Mark disposed and stop the timer FIRST so any in-flight tick bails
+                // out and no new ticks are scheduled while we tear down fields.
+                _disposed = true;
+                try {
+                    _deferredSettingsChangedTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                } catch (ObjectDisposedException) {
+                }
+
                 _clientContexts.ForEach(c => {
                     c.InterpreterChanged -= OnInterpreterChanged;
                     c.SearchPathsChanged -= OnSettingsChanged;
@@ -243,6 +267,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private Task TriggerWorkspaceUpdateConfig() {
+            // Bail if the client is being torn down.
+            if (_disposed || _rpc == null) {
+                return Task.CompletedTask;
+            }
             Debug.WriteLine("Settings Changed");
             return InvokeDidChangeConfigurationAsync(new LSP.DidChangeConfigurationParams() {
                 // Pylance will ask us for per workspace configuration settings. We can send
@@ -368,8 +396,9 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private LanguageServerSettings.PythonSettings GetSettings(Uri scopeUri = null) {
-            // guard on shutdown
-            if (_clientContexts.Count() == 0) {
+            // guard on shutdown - either we're being disposed or essential state
+            // hasn't been wired up yet.
+            if (_disposed || _analysisOptions == null || _advancedEditorOptions == null || _clientContexts.Count() == 0) {
                 return null;
             }
             IPythonLanguageClientContext context = null;
