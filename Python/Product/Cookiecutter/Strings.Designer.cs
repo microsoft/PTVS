@@ -416,6 +416,15 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to ----- Failed to install cookiecutter (exit code {0}). See output above for details. -----.
+        /// </summary>
+        public static string CookiecutterInstallFailed {
+            get {
+                return ResourceManager.GetString("CookiecutterInstallFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ----- Installing cookiecutter -----.
         /// </summary>
         public static string InstallingCookiecutterStarted {
