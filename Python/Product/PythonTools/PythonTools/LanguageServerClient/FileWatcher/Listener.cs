@@ -117,8 +117,12 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
         }
         private async Task OnFileChanged(object sender, System.IO.FileSystemEventArgs e) {
 
+            // Snapshot _rpc into a local. The field is nulled by _rpc_Disconnected
+            // (or by Dispose) and can race with this thread-pool handler.
+            var rpc = _rpc;
+
             // Skip directory change events
-            if (e.IsDirectoryChanged() || _rpc == null) {
+            if (e.IsDirectoryChanged() || rpc == null) {
                 return;
             }
 
@@ -169,8 +173,13 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
                 }
 
                 if (didChangeParams.Changes.Any()) {
-             
-                    await _rpc.NotifyWithParameterObjectAsync(Methods.WorkspaceDidChangeWatchedFiles.Name, didChangeParams);
+                    try {
+                        await rpc.NotifyWithParameterObjectAsync(Methods.WorkspaceDidChangeWatchedFiles.Name, didChangeParams);
+                    } catch (ObjectDisposedException) {
+                        // The JsonRpc was disposed by its owner before Disconnected reached us.
+                    } catch (ConnectionLostException) {
+                        // Pylance crashed or its pipe closed mid-notify.
+                    }
                 }
             }
         }
