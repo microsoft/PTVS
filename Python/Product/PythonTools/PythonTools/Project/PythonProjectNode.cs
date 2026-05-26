@@ -1249,7 +1249,20 @@ namespace Microsoft.PythonTools.Project {
             if (IsClosed) {
                 return;
             }
-            ReanalyzeProject_Notify?.Invoke(this, EventArgs.Empty);
+            // Subscribers mutate the project hierarchy, which VS's
+            // SolutionItemCacheInvalidator now asserts must run on the UI
+            // thread (VS 17.14+ tightened threading). Marshal the event raise
+            // back to the UI thread to avoid RPC_E_WRONG_THREAD.
+            try {
+                Site.GetUIThread().InvokeAsync(() => {
+                    if (IsClosed) {
+                        return;
+                    }
+                    ReanalyzeProject_Notify?.Invoke(this, EventArgs.Empty);
+                }).DoNotWait();
+            } catch (ObjectDisposedException) {
+                // Site disposed during shutdown - safe to drop the notification.
+            }
         }
 
         protected override string AssemblyReferenceTargetMoniker {
