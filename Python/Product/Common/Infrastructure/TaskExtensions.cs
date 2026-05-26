@@ -26,6 +26,36 @@ using System.Threading.Tasks;
 namespace Microsoft.PythonTools.Infrastructure {
     static class TaskExtensions {
         /// <summary>
+        /// Exception types that are silenced by <see cref="DoNotWait"/> when they
+        /// surface from a fire-and-forget task. These are expected during teardown
+        /// of the LSP / Pylance pipeline (process exit, JsonRpc disposal, pipe death)
+        /// and must not crash VS by being rethrown on the original synchronization
+        /// context.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="OperationCanceledException"/> is silenced implicitly because a
+        /// canceled async task transitions to <see cref="TaskStatus.Canceled"/> with
+        /// a null <see cref="Task.Exception"/>, which the IsFaulted check below skips.
+        /// </remarks>
+        private static readonly Type[] _silencedExceptionTypes = new[] {
+            typeof(ObjectDisposedException),
+            typeof(StreamJsonRpc.ConnectionLostException),
+        };
+
+        private static bool IsSilencedException(Exception ex) {
+            if (ex == null) {
+                return false;
+            }
+            var type = ex.GetType();
+            for (int i = 0; i < _silencedExceptionTypes.Length; i++) {
+                if (_silencedExceptionTypes[i].IsAssignableFrom(type)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Suppresses warnings about unawaited tasks and rethrows task exceptions back to the callers synchronization context if it is possible
         /// </summary>
         /// <remarks>
@@ -53,6 +83,9 @@ namespace Microsoft.PythonTools.Infrastructure {
             var task = (Task)state;
             if (task.IsFaulted && task.Exception != null) {
                 var exception = task.Exception.InnerException;
+                if (IsSilencedException(exception)) {
+                    return;
+                }
                 ExceptionDispatchInfo.Capture(exception).Throw();
             }
         }
@@ -60,6 +93,9 @@ namespace Microsoft.PythonTools.Infrastructure {
         private static void DoNotWaitThreadContinuation(Task task) {
             if (task.IsFaulted && task.Exception != null) {
                 var exception = task.Exception.InnerException;
+                if (IsSilencedException(exception)) {
+                    return;
+                }
                 ThreadPool.QueueUserWorkItem(s => ((ExceptionDispatchInfo)s).Throw(), ExceptionDispatchInfo.Capture(exception));
             }
         }
