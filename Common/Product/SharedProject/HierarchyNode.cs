@@ -1087,7 +1087,15 @@ namespace Microsoft.VisualStudioTools.Project {
                     // Is this one of our documents?
                     if (Utilities.IsSameComObject(srpOurHier, srpHier) && itemid == node.ID) {
                         IVsSolution soln = GetService(typeof(SVsSolution)) as IVsSolution;
-                        ErrorHandler.ThrowOnFailure(soln.CloseSolutionElement(saveOptions, srpOurHier, cookie[0]));
+                        // CloseSolutionElement may legitimately fail when VS is
+                        // already tearing down (e.g. solution close in progress),
+                        // so don't throw - we still need to release ppunkDocData
+                        // and continue enumerating.
+                        if (soln != null) {
+                            var hr = soln.CloseSolutionElement(saveOptions, srpOurHier, cookie[0]);
+                            Debug.Assert(ErrorHandler.Succeeded(hr) || hr == VSConstants.E_FAIL || hr == VSConstants.E_UNEXPECTED,
+                                "CloseSolutionElement returned unexpected hr 0x" + hr.ToString("X8"));
+                        }
                     }
                     if (ppunkDocData != IntPtr.Zero)
                         Marshal.Release(ppunkDocData);
