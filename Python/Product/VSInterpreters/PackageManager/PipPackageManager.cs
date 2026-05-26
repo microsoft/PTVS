@@ -753,9 +753,22 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private void OnRenamed(object sender, RenamedEventArgs e) {
-            if (Directory.Exists(e.FullPath) ||
-                ModulePath.IsPythonFile(e.FullPath, false, true, false) ||
-                ModulePath.IsPythonFile(e.OldFullPath, false, true, false)) {
+            // RenamedEventArgs lazily builds and normalizes the full paths on demand,
+            // and on .NET Framework that normalization enforces MAX_PATH (260) and
+            // can throw PathTooLongException - even just reading the properties.
+            // Watch sites use IncludeSubdirectories under site-packages so deeply
+            // vendored packages routinely exceed 260 chars.
+            string fullPath, oldFullPath;
+            try {
+                fullPath = e.FullPath;
+                oldFullPath = e.OldFullPath;
+            } catch (PathTooLongException) {
+                return;
+            }
+
+            if (Directory.Exists(fullPath) ||
+                ModulePath.IsPythonFile(fullPath, false, true, false) ||
+                ModulePath.IsPythonFile(oldFullPath, false, true, false)) {
                 try {
                     _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
                 } catch (ObjectDisposedException) {
@@ -764,9 +777,18 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private void OnChanged(object sender, FileSystemEventArgs e) {
-            if ((Directory.Exists(e.FullPath) && 
-                !PathUtils.GetFileOrDirectoryName(e.FullPath).Equals("__pycache__", StringComparison.OrdinalIgnoreCase)) ||
-                ModulePath.IsPythonFile(e.FullPath, false, true, false)
+            // FileSystemEventArgs lazily normalizes FullPath and can throw
+            // PathTooLongException on .NET Framework MAX_PATH overflow.
+            string fullPath;
+            try {
+                fullPath = e.FullPath;
+            } catch (PathTooLongException) {
+                return;
+            }
+
+            if ((Directory.Exists(fullPath) && 
+                !PathUtils.GetFileOrDirectoryName(fullPath).Equals("__pycache__", StringComparison.OrdinalIgnoreCase)) ||
+                ModulePath.IsPythonFile(fullPath, false, true, false)
             ) {
                 try {
                     _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
