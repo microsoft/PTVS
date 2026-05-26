@@ -260,8 +260,11 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
             psi.StandardOutputEncoding = outputEncoding ?? psi.StandardOutputEncoding;
             psi.StandardErrorEncoding = errorEncoding ?? outputEncoding ?? psi.StandardErrorEncoding;
             if (env != null) {
+                // Use psi.Environment instead of psi.EnvironmentVariables to
+                // tolerate case-insensitive duplicate keys in the inherited
+                // parent environment block.
                 foreach (var kv in env) {
-                    psi.EnvironmentVariables[kv.Key] = kv.Value;
+                    psi.Environment[kv.Key] = kv.Value;
                 }
             }
 
