@@ -28,7 +28,7 @@ vs.progIds
         DefaultIconPath="[InstallDir]\Common7\Extensions\Microsoft\Python\Core\PythonFile.ico"
         DefaultIconPosition=0
         Dde=true
-        DdeApplication=$(VsDdeApplication17)
+        DdeApplication=$(VsDdeApplication18)
         DdeTopic=system
     
     vs.progId
