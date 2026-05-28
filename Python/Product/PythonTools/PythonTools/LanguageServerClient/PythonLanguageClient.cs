@@ -322,12 +322,12 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         public Task InvokeDidChangeConfigurationAsync(LSP.DidChangeConfigurationParams request) {
 
-            return _rpc.NotifyWithParameterObjectAsync("workspace/didChangeConfiguration", request);
+            return NotifyWithParametersAsync("workspace/didChangeConfiguration", request);
         }
 
-        public async Task InvokeDidChangeWorkspaceFoldersAsync(WorkspaceFolder[] added, WorkspaceFolder[] removed) {
+        public Task InvokeDidChangeWorkspaceFoldersAsync(WorkspaceFolder[] added, WorkspaceFolder[] removed) {
 
-            await _rpc.NotifyWithParameterObjectAsync("workspace/didChangeWorkspaceFolders",
+            return NotifyWithParametersAsync("workspace/didChangeWorkspaceFolders",
                 new DidChangeWorkspaceFoldersParams {
                     changeEvent = new WorkspaceFoldersChangeEvent {
                         added = added,
@@ -508,7 +508,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     createEvent.Uri = new Uri(CommonUtils.GetParent(context.InterpreterConfiguration.InterpreterPath));
                     var didChangeParams = new DidChangeWatchedFilesParams();
                     didChangeParams.Changes = new FileEvent[] { createEvent };
-                    _rpc.NotifyWithParameterObjectAsync(Methods.WorkspaceDidChangeWatchedFiles.Name, didChangeParams);
+                    NotifyWithParametersAsync(Methods.WorkspaceDidChangeWatchedFiles.Name, didChangeParams).DoNotWait();
                 });
                
                 
