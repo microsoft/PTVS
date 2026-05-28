@@ -1091,6 +1091,7 @@ namespace Microsoft.VisualStudioTools.Project {
                         // already tearing down (e.g. solution close in progress),
                         // so don't throw - we still need to release ppunkDocData
                         // and continue enumerating.
+                        Debug.Assert(soln != null, "SVsSolution unavailable during CloseDocumentWindow");
                         if (soln != null) {
                             var hr = soln.CloseSolutionElement(saveOptions, srpOurHier, cookie[0]);
                             Debug.Assert(ErrorHandler.Succeeded(hr) || hr == VSConstants.E_FAIL || hr == VSConstants.E_UNEXPECTED,
