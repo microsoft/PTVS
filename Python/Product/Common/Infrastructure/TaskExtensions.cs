@@ -55,6 +55,25 @@ namespace Microsoft.PythonTools.Infrastructure {
             return false;
         }
 
+        // Only silence when every inner exception is a silenced type, so a real
+        // bug riding alongside a teardown exception (e.g. from Task.WhenAll) still
+        // surfaces.
+        private static bool ShouldSilence(AggregateException ae) {
+            if (ae == null) {
+                return false;
+            }
+            var flat = ae.Flatten().InnerExceptions;
+            if (flat.Count == 0) {
+                return false;
+            }
+            for (int i = 0; i < flat.Count; i++) {
+                if (!IsSilencedException(flat[i])) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
         /// <summary>
         /// Suppresses warnings about unawaited tasks and rethrows task exceptions back to the callers synchronization context if it is possible
         /// </summary>
@@ -82,20 +101,22 @@ namespace Microsoft.PythonTools.Infrastructure {
         private static void ReThrowTaskException(object state) {
             var task = (Task)state;
             if (task.IsFaulted && task.Exception != null) {
-                var exception = task.Exception.InnerException;
-                if (IsSilencedException(exception)) {
+                if (ShouldSilence(task.Exception)) {
+                    Debug.WriteLine("DoNotWait: silencing teardown exception: " + task.Exception.GetType().Name + " / " + task.Exception.InnerException?.GetType().Name);
                     return;
                 }
+                var exception = task.Exception.InnerException;
                 ExceptionDispatchInfo.Capture(exception).Throw();
             }
         }
 
         private static void DoNotWaitThreadContinuation(Task task) {
             if (task.IsFaulted && task.Exception != null) {
-                var exception = task.Exception.InnerException;
-                if (IsSilencedException(exception)) {
+                if (ShouldSilence(task.Exception)) {
+                    Debug.WriteLine("DoNotWait: silencing teardown exception: " + task.Exception.GetType().Name + " / " + task.Exception.InnerException?.GetType().Name);
                     return;
                 }
+                var exception = task.Exception.InnerException;
                 ThreadPool.QueueUserWorkItem(s => ((ExceptionDispatchInfo)s).Throw(), ExceptionDispatchInfo.Capture(exception));
             }
         }
