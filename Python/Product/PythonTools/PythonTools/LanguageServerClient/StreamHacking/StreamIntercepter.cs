@@ -69,21 +69,29 @@ namespace Microsoft.PythonTools.LanguageServerClient.StreamHacking {
         public override long Seek(long offset, SeekOrigin origin) => baseStream.Seek(offset, origin);
         public override void SetLength(long value) => baseStream.SetLength(value);
         public override void Write(byte[] buffer, int offset, int count) {
+            // Compute the handler result outside the try so that exceptions from
+            // writeHandler (which is application logic, not pipe I/O) propagate
+            // normally and never silently null out the handler.
+            StreamData payload;
+            bool keepHandler;
+            if (writeHandler != null) {
+                var writeHandlerResult = writeHandler.Invoke(new StreamData { bytes = buffer, offset = offset, count = count });
+                payload = writeHandlerResult.Item1;
+                keepHandler = writeHandlerResult.Item2;
+            } else {
+                payload = new StreamData { bytes = buffer, offset = offset, count = count };
+                keepHandler = true;
+            }
             try {
-                if (writeHandler != null) {
-                    var writeHandlerResult = writeHandler.Invoke(new StreamData { bytes = buffer, offset = offset, count = count });
-                    baseStream.Write(writeHandlerResult.Item1.bytes, writeHandlerResult.Item1.offset, writeHandlerResult.Item1.count);
-                    if (!writeHandlerResult.Item2) {
-                        writeHandler = null;
-                    }
-                } else {
-                    baseStream.Write(buffer, offset, count);
-                }
+                baseStream.Write(payload.bytes, payload.offset, payload.count);
             } catch (IOException) {
                 // Pipe to Pylance is broken (e.g. Pylance crashed - ERROR_BROKEN_PIPE 0x8007006d).
                 // Swallow so StreamJsonRpc can detect the disconnect via its own machinery
                 // rather than throwing on a long async chain that escapes to the dispatcher.
             } catch (ObjectDisposedException) {
+            }
+            if (writeHandler != null && !keepHandler) {
+                writeHandler = null;
             }
         }
     }
