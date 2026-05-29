@@ -26,6 +26,55 @@ using System.Threading.Tasks;
 namespace Microsoft.PythonTools.Infrastructure {
     static class TaskExtensions {
         /// <summary>
+        /// Exception types that are silenced by <see cref="DoNotWait"/> when they
+        /// surface from a fire-and-forget task. These are expected during teardown
+        /// of the LSP / Pylance pipeline (process exit, JsonRpc disposal, pipe death)
+        /// and must not crash VS by being rethrown on the original synchronization
+        /// context.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="OperationCanceledException"/> is silenced implicitly because a
+        /// canceled async task transitions to <see cref="TaskStatus.Canceled"/> with
+        /// a null <see cref="Task.Exception"/>, which the IsFaulted check below skips.
+        /// </remarks>
+        private static readonly Type[] _silencedExceptionTypes = new[] {
+            typeof(ObjectDisposedException),
+            typeof(StreamJsonRpc.ConnectionLostException),
+        };
+
+        private static bool IsSilencedException(Exception ex) {
+            if (ex == null) {
+                return false;
+            }
+            var type = ex.GetType();
+            for (int i = 0; i < _silencedExceptionTypes.Length; i++) {
+                if (_silencedExceptionTypes[i].IsAssignableFrom(type)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Only silence when every inner exception is a silenced type, so a real
+        // bug riding alongside a teardown exception (e.g. from Task.WhenAll) still
+        // surfaces.
+        private static bool ShouldSilence(AggregateException ae) {
+            if (ae == null) {
+                return false;
+            }
+            var flat = ae.Flatten().InnerExceptions;
+            if (flat.Count == 0) {
+                return false;
+            }
+            for (int i = 0; i < flat.Count; i++) {
+                if (!IsSilencedException(flat[i])) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
         /// Suppresses warnings about unawaited tasks and rethrows task exceptions back to the callers synchronization context if it is possible
         /// </summary>
         /// <remarks>
@@ -52,6 +101,10 @@ namespace Microsoft.PythonTools.Infrastructure {
         private static void ReThrowTaskException(object state) {
             var task = (Task)state;
             if (task.IsFaulted && task.Exception != null) {
+                if (ShouldSilence(task.Exception)) {
+                    Debug.WriteLine("DoNotWait: silencing teardown exception: " + task.Exception.GetType().Name + " / " + task.Exception.InnerException?.GetType().Name);
+                    return;
+                }
                 var exception = task.Exception.InnerException;
                 ExceptionDispatchInfo.Capture(exception).Throw();
             }
@@ -59,6 +112,10 @@ namespace Microsoft.PythonTools.Infrastructure {
 
         private static void DoNotWaitThreadContinuation(Task task) {
             if (task.IsFaulted && task.Exception != null) {
+                if (ShouldSilence(task.Exception)) {
+                    Debug.WriteLine("DoNotWait: silencing teardown exception: " + task.Exception.GetType().Name + " / " + task.Exception.InnerException?.GetType().Name);
+                    return;
+                }
                 var exception = task.Exception.InnerException;
                 ThreadPool.QueueUserWorkItem(s => ((ExceptionDispatchInfo)s).Throw(), ExceptionDispatchInfo.Capture(exception));
             }
