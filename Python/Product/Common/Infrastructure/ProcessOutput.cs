@@ -264,8 +264,13 @@ namespace Microsoft.PythonTools.Infrastructure {
             psi.StandardOutputEncoding = outputEncoding ?? psi.StandardOutputEncoding;
             psi.StandardErrorEncoding = errorEncoding ?? outputEncoding ?? psi.StandardErrorEncoding;
             if (env != null) {
+                // Use psi.Environment (Dictionary<string,string> with OrdinalIgnoreCase)
+                // instead of psi.EnvironmentVariables (StringDictionary backed by
+                // a Hashtable that throws ArgumentException when the inherited
+                // parent environment contains case-insensitive duplicate keys
+                // such as PATH/Path or TMP/Tmp).
                 foreach (var kv in env) {
-                    psi.EnvironmentVariables[kv.Key] = kv.Value;
+                    psi.Environment[kv.Key] = kv.Value;
                 }
             }
 
