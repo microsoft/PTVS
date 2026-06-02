@@ -272,7 +272,11 @@ jobs:
           retention-days: 30
 
   apply:
-    needs: triage
+    # Must include `prepare` in needs: GH Actions only exposes
+    # needs.<job>.outputs from jobs listed directly (not transitively),
+    # so the `needs.prepare.outputs.primaries` checks below would
+    # silently evaluate to empty without this.
+    needs: [prepare, triage]
     if: ${{ inputs.run_triage != false && needs.prepare.outputs.primaries != '[]' && needs.prepare.outputs.primaries != '' }}
     runs-on: ubuntu-latest
     environment: azdo-triage-approval   # ← human approval gate

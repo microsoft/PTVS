@@ -79,6 +79,14 @@ function Test-DryRun {
     return ($v -match '^(?i:true|1|yes|y)$')
 }
 
+function Get-WorkItemTags {
+    # AzDO omits unset fields from `fields` entirely; under StrictMode
+    # the bare `?? ''` pattern would throw before the coalesce ran.
+    param([Parameter(Mandatory)] [object] $Fields)
+    if ($Fields.PSObject.Properties['System.Tags']) { return [string] $Fields.'System.Tags' }
+    return ''
+}
+
 function Read-Verdicts {
     param([string] $Dir)
     $files = Get-ChildItem -LiteralPath $Dir -Filter 'verdict-*.json' -File -ErrorAction SilentlyContinue
@@ -254,7 +262,7 @@ function Invoke-Apply {
             } else {
                 $live = Get-AzdoWorkItem -Config $Config -Id $primary
                 $rev  = [int] $live.fields.'System.Rev'
-                $tags = ($live.fields.'System.Tags' ?? '')
+                $tags = Get-WorkItemTags -Fields $live.fields
                 [void] (Add-AzdoComment -Config $Config -Id $primary -Text $msg)
                 [void] (Close-AzdoAsAnswered -Config $Config -Id $primary -Rev $rev -ExistingTags $tags)
                 $actionTaken = 'commented + closed AzDO as answered'
@@ -267,7 +275,7 @@ function Invoke-Apply {
                     try {
                         $liveF = Get-AzdoWorkItem -Config $Config -Id $f
                         $revF  = [int] $liveF.fields.'System.Rev'
-                        $tagsF = ($liveF.fields.'System.Tags' ?? '')
+                        $tagsF = Get-WorkItemTags -Fields $liveF.fields
                         [void] (Add-AzdoComment -Config $Config -Id $f -Text $msg)
                         [void] (Close-AzdoAsAnswered -Config $Config -Id $f -Rev $revF -ExistingTags $tagsF)
                     } catch {
@@ -314,14 +322,14 @@ function Invoke-Apply {
                 $comment = Format-DcDuplicateComment -Config $Config -GithubIssueUrl $ghUrl
                 $live    = Get-AzdoWorkItem -Config $Config -Id $primary
                 $rev     = [int] $live.fields.'System.Rev'
-                $tags    = ($live.fields.'System.Tags' ?? '')
+                $tags    = Get-WorkItemTags -Fields $live.fields
                 [void] (Add-AzdoComment -Config $Config -Id $primary -Text $comment)
 
                 # Step 3 — PATCH state + duplicate field + tags. Re-read rev
                 # because step 2 just incremented it.
                 $live2 = Get-AzdoWorkItem -Config $Config -Id $primary
                 $rev2  = [int] $live2.fields.'System.Rev'
-                $tags2 = ($live2.fields.'System.Tags' ?? '')
+                $tags2 = Get-WorkItemTags -Fields $live2.fields
                 [void] (Close-AzdoAsDuplicate `
                     -Config $Config `
                     -Id $primary `
@@ -340,11 +348,11 @@ function Invoke-Apply {
                         $comment = Format-DcDuplicateComment -Config $Config -GithubIssueUrl $ghUrl
                         $liveF = Get-AzdoWorkItem -Config $Config -Id $f
                         $revF  = [int] $liveF.fields.'System.Rev'
-                        $tagsF = ($liveF.fields.'System.Tags' ?? '')
+                        $tagsF = Get-WorkItemTags -Fields $liveF.fields
                         [void] (Add-AzdoComment -Config $Config -Id $f -Text $comment)
                         $liveF2 = Get-AzdoWorkItem -Config $Config -Id $f
                         $revF2  = [int] $liveF2.fields.'System.Rev'
-                        $tagsF2 = ($liveF2.fields.'System.Tags' ?? '')
+                        $tagsF2 = Get-WorkItemTags -Fields $liveF2.fields
                         [void] (Close-AzdoAsDuplicate `
                             -Config $Config `
                             -Id $f `
