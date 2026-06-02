@@ -16,8 +16,12 @@ name: AzDO weekly triage
 #                     happen.
 
 on:
-  schedule:
-    - cron: "0 8 * * 1"   # every Monday 08:00 UTC
+  # Cron disabled while the pipeline is being validated end-to-end on
+  # microsoft/PTVS. Re-enable by uncommenting the `schedule:` block once
+  # Phase 0 (see Build/triage/README.md) is complete and dry_run has been
+  # flipped to false at least once successfully.
+  # schedule:
+  #   - cron: "0 8 * * 1"   # every Monday 08:00 UTC
   workflow_dispatch:
     inputs:
       lookback_days:
