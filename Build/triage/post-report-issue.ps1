@@ -112,9 +112,9 @@ function Build-IssueBody {
     $sb = New-Object System.Text.StringBuilder
     $count = $Candidates.Count
     if ($count -eq 0) {
-        $null = $sb.AppendLine("No open AzDO work items were created in the last $LookbackDays day(s) under ``DevDiv\Python and AI Tools\**``.")
+        $null = $sb.AppendLine("No open AzDO work items had activity in the last $LookbackDays day(s) under ``DevDiv\Python and AI Tools\**``.")
     } else {
-        $null = $sb.AppendLine("$count open work item(s) created in the past $LookbackDays day(s) under ``DevDiv\Python and AI Tools\**``.")
+        $null = $sb.AppendLine("$count open work item(s) with activity in the past $LookbackDays day(s) under ``DevDiv\Python and AI Tools\**``.")
         $null = $sb.AppendLine()
         foreach ($c in $Candidates) {
             $subpath = Format-AreaSubpath -Full $c.area_path

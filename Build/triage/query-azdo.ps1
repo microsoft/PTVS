@@ -70,20 +70,36 @@ function Build-WiqlQuery {
     # Quote-escape the area path. WIQL uses single quotes for string literals
     # and supports backslashes in area paths verbatim.
     $area = $Config.azdo.areaPath
-    $types = ($Config.azdo.workItemTypes | ForEach-Object { "'$_'" }) -join ', '
-    $excludedStates = ($Config.azdo.excludedStates | ForEach-Object { "[System.State] <> '$_'" }) -join ' AND '
+
+    # Empty workItemTypes => emit no [System.WorkItemType] clause, matching
+    # the manual top-level-items filter where Work Item Type = [Any].
+    $typeClause = ''
+    if ($Config.azdo.workItemTypes -and @($Config.azdo.workItemTypes).Count -gt 0) {
+        $types = ($Config.azdo.workItemTypes | ForEach-Object { "'$_'" }) -join ', '
+        $typeClause = "  AND  [System.WorkItemType] IN ($types)`n"
+    }
+
+    # Use substring NOT CONTAINS so 'Closed' also excludes DC states like
+    # 'DC - Closed - Duplicated' (set by this pipeline when closing).
+    $excludedStates = ($Config.azdo.excludedStates | ForEach-Object { "NOT [System.State] CONTAINS '$_'" }) -join ' AND '
     $excludedTagsClause = ($Config.azdo.excludedTags | ForEach-Object { "NOT [System.Tags] CONTAINS '$_'" }) -join ' AND '
+
+    # Date field is configurable; falls back to CreatedDate for back-compat.
+    $dateField = 'System.ChangedDate'
+    if ($Config.azdo.PSObject.Properties['dateField'] -and $Config.azdo.dateField) {
+        $df = [string] $Config.azdo.dateField
+        $dateField = if ($df.StartsWith('System.')) { $df } else { "System.$df" }
+    }
 
     $wiql = @"
 SELECT [System.Id]
 FROM   workitems
 WHERE  [System.TeamProject] = '$($Config.azdo.project)'
   AND  [System.AreaPath] UNDER '$area'
-  AND  [System.WorkItemType] IN ($types)
-  AND  [System.CreatedDate] >= @Today - $LookbackDays
+$typeClause  AND  [$dateField] > @Today - $LookbackDays
   AND  $excludedStates
   AND  $excludedTagsClause
-ORDER BY [System.CreatedDate] ASC
+ORDER BY [$dateField] DESC
 "@
     return $wiql
 }
@@ -251,6 +267,7 @@ function Convert-WorkItemToCandidate {
         work_item_type    = if ($f.ContainsKey('System.WorkItemType')) { $f['System.WorkItemType'] } else { '' }
         state             = if ($f.ContainsKey('System.State')) { $f['System.State'] } else { '' }
         created_date      = $created
+        changed_date      = if ($f.ContainsKey('System.ChangedDate')) { $f['System.ChangedDate'] } else { $null }
         created_by_display = $createdByDisplay
         created_by_email   = $createdByEmail
         url               = "$($Config.azdo.baseUrl)/$($Config.azdo.project)/_workitems/edit/$($WorkItem.id)"
@@ -270,7 +287,9 @@ function Invoke-Query {
     )
 
     $headers = Get-AzdoAuthHeader
-    $ids = Get-CandidateIds -Config $Config -LookbackDays $LookbackDays -Headers $headers -ExplicitWorkItemId $WorkItemId
+    # @(...) keeps single-element returns from collapsing — without it the
+    # ad-hoc replay path (WorkItemId set) hits a StrictMode .Count failure.
+    $ids = @(Get-CandidateIds -Config $Config -LookbackDays $LookbackDays -Headers $headers -ExplicitWorkItemId $WorkItemId)
     Write-Host "WIQL returned $($ids.Count) candidate ID(s)."
 
     if ($ids.Count -gt $MaxCandidates) {
@@ -281,7 +300,9 @@ function Invoke-Query {
     $items = Get-WorkItemBatch -Config $Config -Ids $ids -Headers $headers
     $candidates = New-Object System.Collections.Generic.List[object]
     foreach ($wi in $items) {
-        $comments = Get-WorkItemComments -Config $Config -Id $wi.id -Headers $headers
+        # @() prevents PS from collapsing an empty-comments return to $null,
+        # which would trip StrictMode on $Comments.Count inside the converter.
+        $comments = @(Get-WorkItemComments -Config $Config -Id $wi.id -Headers $headers)
         $candidate = Convert-WorkItemToCandidate -Config $Config -WorkItem $wi -Comments $comments
         $candidates.Add($candidate) | Out-Null
     }
@@ -311,6 +332,25 @@ function Invoke-SelfTest {
     }
     if ($wiql -notmatch "NOT \[System.Tags\] CONTAINS 'do-not-triage'") {
         Write-Error "WIQL missing do-not-triage exclusion."; $errors++
+    }
+    if ($wiql -notmatch "NOT \[System.State\] CONTAINS 'Closed'") {
+        Write-Error "WIQL missing 'Closed' substring exclusion."; $errors++
+    }
+    # workItemTypes is empty in config => no IN (...) clause should be emitted.
+    if ($wiql -match '\[System\.WorkItemType\] IN') {
+        Write-Error "WIQL should not emit WorkItemType IN clause when types list is empty."; $errors++
+    }
+    # Date field should be ChangedDate per config.
+    if ($wiql -notmatch '\[System\.ChangedDate\] > @Today') {
+        Write-Error "WIQL should use ChangedDate when configured."; $errors++
+    }
+
+    # 1b. Non-empty workItemTypes path still emits IN (...) clause.
+    $cfg2 = ($config | ConvertTo-Json -Depth 20 | ConvertFrom-Json)
+    $cfg2.azdo.workItemTypes = @('Bug', 'Task')
+    $wiql2 = Build-WiqlQuery -Config $cfg2 -LookbackDays 7
+    if ($wiql2 -notmatch "\[System\.WorkItemType\] IN \('Bug', 'Task'\)") {
+        Write-Error "WIQL with non-empty types should emit IN clause."; $errors++
     }
 
     # 2. Convert-WorkItemToCandidate handles a minimal fixture.
