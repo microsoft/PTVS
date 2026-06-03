@@ -4,7 +4,8 @@
         item being closed via the Developer Community duplicate flow.
 
     .DESCRIPTION
-        Implements the GitHub-side half of plan.md §6.3 Step 6.
+        GitHub-side half of the apply step: mirror an AzDO work item into a
+        GitHub issue on `microsoft/PTVS`.
 
         Idempotency: before POSTing, the script searches the repo for an issue
         — open OR closed — whose title contains the marker `[AzDO #<id>]`. If

@@ -3,7 +3,8 @@
         Builds the per-run research context the AI sees on every candidate.
 
     .DESCRIPTION
-        Implements Step 2 of the workflow (see plan.md §6.3 Step 2). Output is a
+        Step 2 of the pipeline: builds the per-run research context (commit log,
+        release tags, fixed-in-next-version map, and area-path history). Output is a
         single JSON file with:
           - recent_commits:  last ~90 days of PTVS commit messages
                              (filtered to product paths).

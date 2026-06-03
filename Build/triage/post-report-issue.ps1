@@ -5,12 +5,12 @@
         lookback window.
 
     .DESCRIPTION
-        Implements Job 1 of the weekly triage workflow (see plan.md §1, §4,
-        §6.1, §11 Q10). Always runs — independent of the triage pipeline gate.
+        Job 1 of the weekly triage workflow. Always runs — independent of the
+        triage pipeline gate.
 
         Idempotency: the script searches for an existing issue whose title
         exactly matches the computed weekly title. If found, the body is
-        updated in place rather than a duplicate filed (plan.md §11 Q10).
+        updated in place rather than a duplicate filed.
 
         Empty candidate list: nothing is filed; the script exits 0 with a
         log line.
@@ -72,10 +72,16 @@ function Get-GitHubHeaders {
 }
 
 function Format-AreaSubpath {
-    param([string] $Full)
+    param(
+        [string] $Full,
+        [Parameter(Mandatory)] [string] $Root
+    )
     # Strip the configured root area path prefix for compactness in the report.
-    $root = 'DevDiv\Python and AI Tools\'
-    if ($Full -and $Full.StartsWith($root)) { return $Full.Substring($root.Length) }
+    # Ensure the root has the trailing separator so we don't accidentally strip
+    # only a partial segment (e.g. "DevDiv\Python and AI Toolset" would not
+    # match the root "DevDiv\Python and AI Tools\").
+    if (-not $Root.EndsWith('\')) { $Root = "$Root\" }
+    if ($Full -and $Full.StartsWith($Root)) { return $Full.Substring($Root.Length) }
     return ($Full ?? '')
 }
 
@@ -106,18 +112,23 @@ function Build-IssueBody {
         [Parameter()] [AllowEmptyCollection()] [object[]] $Candidates,
         [Parameter(Mandatory)] [bool]     $TriageWillRun,
         [Parameter()]          [string]   $RunUrl,
-        [Parameter(Mandatory)] [int]      $LookbackDays
+        [Parameter(Mandatory)] [int]      $LookbackDays,
+        [Parameter(Mandatory)] [string]   $AreaRoot
     )
     if ($null -eq $Candidates) { $Candidates = @() }
     $sb = New-Object System.Text.StringBuilder
     $count = $Candidates.Count
+    # Display form of the area root: ensure trailing \\** so the reader can see
+    # we're recursing under it, regardless of whether config stored the trailing
+    # backslash.
+    $displayRoot = $AreaRoot.TrimEnd('\')
     if ($count -eq 0) {
-        $null = $sb.AppendLine("No open AzDO work items had activity in the last $LookbackDays day(s) under ``DevDiv\Python and AI Tools\**``.")
+        $null = $sb.AppendLine("No open AzDO work items had activity in the last $LookbackDays day(s) under ``$displayRoot\**``.")
     } else {
-        $null = $sb.AppendLine("$count open work item(s) with activity in the past $LookbackDays day(s) under ``DevDiv\Python and AI Tools\**``.")
+        $null = $sb.AppendLine("$count open work item(s) with activity in the past $LookbackDays day(s) under ``$displayRoot\**``.")
         $null = $sb.AppendLine()
         foreach ($c in $Candidates) {
-            $subpath = Format-AreaSubpath -Full $c.area_path
+            $subpath = Format-AreaSubpath -Full $c.area_path -Root $AreaRoot
             $date    = Format-CreatedDate -Iso $c.created_date
             $title   = $c.title
             # Escape pipe so it doesn't break our bullet visually in some GH renderers.
@@ -202,10 +213,10 @@ function Invoke-Post {
 
     $windowEnd = [DateTime]::UtcNow.Date
     $title = Build-IssueTitle -WindowEnd $windowEnd -LookbackDays $LookbackDays -Count $candidates.Count
-    $body  = Build-IssueBody  -Candidates $candidates -TriageWillRun $TriageWillRun -RunUrl $RunUrl -LookbackDays $LookbackDays
+    $body  = Build-IssueBody  -Candidates $candidates -TriageWillRun $TriageWillRun -RunUrl $RunUrl -LookbackDays $LookbackDays -AreaRoot $Config.azdo.areaPath
 
     if ($candidates.Count -eq 0) {
-        Write-Host "No candidates in the lookback window. Skipping issue creation (per plan §6.1)."
+        Write-Host 'No candidates in the lookback window. Skipping issue creation.'
         return
     }
 
@@ -258,9 +269,10 @@ function Invoke-SelfTest {
     }
 
     # Empty body.
-    $b = Build-IssueBody -Candidates @() -TriageWillRun $true -RunUrl 'https://example/run/1' -LookbackDays 7
+    $b = Build-IssueBody -Candidates @() -TriageWillRun $true -RunUrl 'https://example/run/1' -LookbackDays 7 -AreaRoot 'DevDiv\Python and AI Tools'
     if ($b -notmatch 'No open AzDO work items') { Write-Error "Empty-body branch missing: $b"; $errors++ }
     if ($b -notmatch 'Triage pipeline: enabled') { Write-Error "Empty-body footer missing: $b"; $errors++ }
+    if ($b -notmatch [regex]::Escape('DevDiv\Python and AI Tools\**')) { Write-Error "Empty-body area string missing: $b"; $errors++ }
 
     # Non-empty body with one candidate.
     $cands = @(
@@ -274,7 +286,7 @@ function Invoke-SelfTest {
             work_item_type = 'Bug'
         }
     )
-    $b = Build-IssueBody -Candidates $cands -TriageWillRun $false -RunUrl 'https://example/run/2' -LookbackDays 7
+    $b = Build-IssueBody -Candidates $cands -TriageWillRun $false -RunUrl 'https://example/run/2' -LookbackDays 7 -AreaRoot 'DevDiv\Python and AI Tools\'
     if ($b -notmatch '\[AzDO #2711586\]') { Write-Error "Bullet link missing in body."; $errors++ }
     if ($b -notmatch 'area: Python\\VS IDE') { Write-Error "Subpath not formatted: $b"; $errors++ }
     if ($b -notmatch 'created 2026-05-08') { Write-Error "Date not formatted: $b"; $errors++ }

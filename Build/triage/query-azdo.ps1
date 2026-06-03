@@ -4,7 +4,8 @@
         that were created within the lookback window, and writes them to a JSON file.
 
     .DESCRIPTION
-        Implements Step 1 of the weekly triage workflow (see plan.md §6.3 Step 1).
+        Step 1 of the weekly triage workflow: AzDO WIQL query + workitemsbatch
+        hydrate. Produces a normalized array of candidates.
         Used by both Job 1 (weekly report) and Job 2 (triage prepare).
 
         Authentication: expects an AzDO-resource bearer token in $env:AZDO_ACCESS_TOKEN

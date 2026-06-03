@@ -4,7 +4,8 @@
         each candidate work item.
 
     .DESCRIPTION
-        Implements Step 3 of the workflow (see plan.md §6.3 Step 3). For each
+        Step 3 of the pipeline: downloads each candidate's diagnostics-log
+        attachment from AzDO and extracts a structured header block. For each
         candidate that has a matching attachment, this script downloads it via
         the AzDO attachment API and writes a small structured JSON
         (diag-<id>.json) under -OutDir containing:
@@ -146,6 +147,8 @@ function Invoke-Parse {
 
     $hits = 0
     foreach ($c in $candidates) {
+        $outPath = Join-Path $OutDir ("diag-{0}.json" -f $c.id)
+
         $diagAttach = $null
         foreach ($a in @($c.attachments)) {
             if ($a.name -and ($a.name -match '(?i)PythonToolsDiagnostics.*\.log$')) {
@@ -153,20 +156,44 @@ function Invoke-Parse {
                 break
             }
         }
-        if (-not $diagAttach) { continue }
+
+        if (-not $diagAttach) {
+            # Emit a tiny stub so the downstream `actions/ai-inference` file_input
+            # path always exists. Without this, candidates with no diagnostics
+            # attachment (the common case) would fail when the action tries to
+            # resolve the `diagnostics_json` path and the whole triage leg
+            # would crash, falling silently into manual-triage.
+            $stub = [pscustomobject] @{
+                present = $false
+                reason  = 'no PythonToolsDiagnostics_*.log attachment on this work item'
+            }
+            ($stub | ConvertTo-Json -Depth 5) | Set-Content -LiteralPath $outPath -Encoding UTF8
+            continue
+        }
 
         $text = Get-DiagnosticsAttachment -Attachment $diagAttach -Headers $headers -MaxBytes $MaxLogBytes
-        if (-not $text) { continue }
+        if (-not $text) {
+            # Download failed (size cap, network, etc.). Emit a stub so the
+            # file_input path still exists; surface the reason for the AI.
+            $stub = [pscustomobject] @{
+                present                 = $false
+                reason                  = 'attachment present but download failed or skipped'
+                source_attachment_name  = $diagAttach.name
+                source_attachment_url   = $diagAttach.url
+            }
+            ($stub | ConvertTo-Json -Depth 5) | Set-Content -LiteralPath $outPath -Encoding UTF8
+            continue
+        }
 
         $fields = Extract-DiagnosticsFields -LogText $text
+        $fields | Add-Member -NotePropertyName 'present'                -NotePropertyValue $true            -Force
         $fields | Add-Member -NotePropertyName 'source_attachment_name' -NotePropertyValue $diagAttach.name -Force
         $fields | Add-Member -NotePropertyName 'source_attachment_url'  -NotePropertyValue $diagAttach.url  -Force
 
-        $outPath = Join-Path $OutDir ("diag-{0}.json" -f $c.id)
         ($fields | ConvertTo-Json -Depth 20) | Set-Content -LiteralPath $outPath -Encoding UTF8
         $hits++
     }
-    Write-Host "Parsed diagnostics for $hits candidate(s) → $OutDir"
+    Write-Host "Parsed diagnostics for $hits candidate(s); emitted stubs for the rest -> $OutDir"
 }
 
 function Invoke-SelfTest {

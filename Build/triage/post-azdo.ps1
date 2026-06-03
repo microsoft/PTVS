@@ -86,10 +86,9 @@ function Invoke-AzdoPatch {
 
 function Close-AzdoAsDuplicate {
     <#
-        Implements the DC duplicate close flow (plan.md §6.3 Step 6).
-        Sets state to DC - Closed - Duplicated, populates the
-        Duplicate Feedback Ticket ID field with $GithubIssueUrl, and tags
-        the work item triaged-by-ai + moved-to-github.
+        DC duplicate close flow. Sets state to DC - Closed - Duplicated,
+        populates the Duplicate Feedback Ticket ID field with $GithubIssueUrl,
+        and tags the work item triaged-by-ai + moved-to-github.
     #>
     param(
         [Parameter(Mandatory)] [object] $Config,
@@ -115,11 +114,10 @@ function Close-AzdoAsDuplicate {
 
 function Close-AzdoAsAnswered {
     <#
-        For the `answered` verdict path (plan.md §6.3 Step 6). Sets state to
-        the DC `answered`/`fixed` close state and tags triaged-by-ai. Caller
-        is responsible for posting the customer-facing $response_md as a
-        comment BEFORE calling this (so the close timestamp is after the
-        explanation).
+        For the `answered` verdict path. Sets state to the DC `answered` close
+        state and tags triaged-by-ai. Caller is responsible for posting the
+        customer-facing $response_md as a comment BEFORE calling this (so the
+        close timestamp is after the explanation).
     #>
     param(
         [Parameter(Mandatory)] [object] $Config,
@@ -167,6 +165,33 @@ function Format-DcDuplicateComment {
     return ($base + $optOut)
 }
 
+function Test-AlreadyTriagedByAi {
+    <#
+        Returns $true when the AI-triage tag (config.azdo.ai_tag) is already
+        present on the given work-item tags string. Used by apply-outcomes.ps1
+        as the per-write idempotence guard so that re-running the apply step
+        after a mid-batch failure (or an ad-hoc -WorkItemId retry) does not
+        post a duplicate comment or close the work item twice.
+
+        The WIQL `excludedTags` filter in the prepare step handles the common
+        case of fresh weekly runs, but ad-hoc retries / matrix re-runs
+        bypass that path entirely.
+    #>
+    param(
+        [Parameter(Mandatory)] [object] $Config,
+        [string] $Tags
+    )
+    if (-not $Tags) { return $false }
+    if (-not $Config.azdo.PSObject.Properties['ai_tag']) { return $false }
+    $aiTag = [string] $Config.azdo.ai_tag
+    if (-not $aiTag) { return $false }
+    $parts = $Tags -split '\s*;\s*' | Where-Object { $_ }
+    foreach ($p in $parts) {
+        if ($p -ieq $aiTag) { return $true }
+    }
+    return $false
+}
+
 function Invoke-SelfTest {
     $errors = 0
 
@@ -195,6 +220,22 @@ function Invoke-SelfTest {
         $threw = ($_.Exception.Message -match 'placeholder')
     }
     if (-not $threw) { Write-Error 'Expected refusal when duplicateFieldName is the placeholder.'; $errors++ }
+
+    # Test-AlreadyTriagedByAi: must spot the tag by exact (case-insensitive) match.
+    $cfgTag = [pscustomobject] @{ azdo = [pscustomobject] @{ ai_tag = 'triaged-by-ai' } }
+    if (-not (Test-AlreadyTriagedByAi -Config $cfgTag -Tags 'foo; Triaged-By-AI; bar')) {
+        Write-Error 'Test-AlreadyTriagedByAi should be true (case-insensitive).'; $errors++
+    }
+    if (Test-AlreadyTriagedByAi -Config $cfgTag -Tags 'foo; bar') {
+        Write-Error 'Test-AlreadyTriagedByAi should be false when ai_tag absent.'; $errors++
+    }
+    if (Test-AlreadyTriagedByAi -Config $cfgTag -Tags '') {
+        Write-Error 'Test-AlreadyTriagedByAi should be false on empty tags.'; $errors++
+    }
+    # Substring should not falsely match.
+    if (Test-AlreadyTriagedByAi -Config $cfgTag -Tags 'triaged-by-ai-bot') {
+        Write-Error 'Test-AlreadyTriagedByAi must require exact tag, not substring.'; $errors++
+    }
 
     if ($errors -gt 0) {
         throw "post-azdo.ps1 self-test failed with $errors error(s)."

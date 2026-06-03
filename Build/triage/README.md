@@ -2,9 +2,8 @@
 
 Operator documentation for the workflow defined in
 [`.github/workflows/azdo-triage.yml`](../../.github/workflows/azdo-triage.yml).
-Full design is in [`plan.md`](../../plan.md) at the repo root — that file is
-the source of truth for behavioral decisions; this README is the day-to-day
-operator's reference.
+This README is the source of truth for day-to-day operation and the
+phase 0 configuration that must be completed before flipping `dry_run` off.
 
 ## What it does
 
@@ -48,13 +47,13 @@ Every Monday at 08:00 UTC the workflow:
 | `AZDO_PAT` *(fallback)* | PAT with `vso.work_write` if the SP/OIDC path isn't available. |
 
 The workflow also expects an Environment named `azdo-triage-approval` with
-required reviewers configured (plan §9.2).
+required reviewers configured.
 
 ## Phase 0 checklist (must complete before flipping `dry_run` to `false`)
 
-Per plan §6.3 / §11 Q11, the following placeholders in `config.json` MUST be
-replaced with the values observed on a real DevDiv work item under our area
-path:
+Before the first run with `dry_run: false`, the following placeholders in
+`config.json` MUST be replaced with the values observed on a real DevDiv
+work item under our area path:
 
 1. `azdo.duplicateFieldName` — the REST field name behind the
    "Duplicate Feedback Ticket ID" field on the Overview tab. Likely
@@ -87,7 +86,42 @@ $env:DRY_RUN           = 'true'
 ./Build/triage/post-report-issue.ps1     -CandidatesFile $env:TEMP/cands-titles.json -LookbackDays 14 -TriageWillRun $true -DryRun
 ```
 
-See `plan.md` §13 for the curl-level "happy path" sequence.
+See the [REST happy-path walkthrough](#rest-happy-path-walkthrough) below
+for the curl-level sequence.
+
+## REST happy-path walkthrough
+
+For one-off manual reproduction of what the pipeline does, the curl-level
+sequence per primary candidate is:
+
+```bash
+# 1. WIQL: enumerate the past 7 days under the area path
+curl -s -H "Authorization: Bearer $AZDO_ACCESS_TOKEN" \
+     -H 'Content-Type: application/json' \
+     "$AZDO_BASE/$PROJECT/_apis/wit/wiql?api-version=7.0" \
+     -d '{"query":"SELECT [System.Id] FROM WorkItems WHERE [System.AreaPath] UNDER \"DevDiv\\Python and AI Tools\" AND [System.CreatedDate] >= @Today - 7"}'
+
+# 2. workitemsbatch: hydrate fields + tags
+curl -s -H "Authorization: Bearer $AZDO_ACCESS_TOKEN" \
+     -H 'Content-Type: application/json' \
+     "$AZDO_BASE/$PROJECT/_apis/wit/workitemsbatch?api-version=7.0" \
+     -d '{"ids":[12345,67890],"fields":["System.Title","System.State","System.Tags"]}'
+
+# 3. comments: post the AI response or the DC duplicate template
+curl -s -H "Authorization: Bearer $AZDO_ACCESS_TOKEN" \
+     -H 'Content-Type: application/json' \
+     "$AZDO_BASE/$PROJECT/_apis/wit/workItems/12345/comments?api-version=7.0-preview.3" \
+     -d '{"text":"..."}'
+
+# 4. PATCH: close as DC duplicate (test /rev guards concurrent edits)
+curl -s -X PATCH -H "Authorization: Bearer $AZDO_ACCESS_TOKEN" \
+     -H 'Content-Type: application/json-patch+json' \
+     "$AZDO_BASE/$PROJECT/_apis/wit/workitems/12345?api-version=7.0" \
+     -d '[{"op":"test","path":"/rev","value":430},
+         {"op":"add","path":"/fields/System.State","value":"DC - Closed - Duplicated"},
+         {"op":"add","path":"/fields/Microsoft.VSTS.Common.DuplicateFeedbackTicketId","value":"https://github.com/microsoft/PTVS/issues/8123"},
+         {"op":"add","path":"/fields/System.Tags","value":"triaged-by-ai; from-azdo"}]'
+```
 
 ## Reverting
 

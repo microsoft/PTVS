@@ -1,11 +1,10 @@
 {
-    "$comment": "Configuration for the weekly AzDO triage automation (see plan.md). Some values are placeholders that must be confirmed during phase 0 by fetching an example work item under DevDiv\\Python and AI Tools\\** with ?$expand=all and inspecting the response.",
+    "$comment": "Configuration for the weekly AzDO triage automation (see Build/triage/README.md). Some values are placeholders that must be confirmed during phase 0 by fetching an example work item under DevDiv\\Python and AI Tools\\** with ?$expand=all and inspecting the response.",
 
     "azdo": {
         "organization": "devdiv",
         "project": "DevDiv",
         "baseUrl": "https://dev.azure.com/devdiv",
-        "resourceAppId": "499b84ac-1321-427f-aa17-267ca6975798",
         "areaPath": "DevDiv\\Python and AI Tools",
         "$comment_workItemTypes": "Empty array means 'any work item type'. Mirrors the manual top-level-items query: Work Item Type = [Any].",
         "workItemTypes": [],

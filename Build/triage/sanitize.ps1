@@ -4,7 +4,8 @@
         AI inference and before any public mirror to microsoft/PTVS.
 
     .DESCRIPTION
-        Implements Step 4 of the weekly triage workflow (see plan.md §6.3 Step 4).
+        Step 4 of the weekly triage workflow: PII / secret sanitization pass
+        on the hydrated candidate JSON.
 
         Two modes:
           (default) full sanitization: emits one wi-<id>.json per candidate under

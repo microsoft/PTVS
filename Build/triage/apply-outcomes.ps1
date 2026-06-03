@@ -5,7 +5,7 @@
         close as DC duplicate, or leave alone).
 
     .DESCRIPTION
-        Implements plan.md §6.3 Step 6.
+        Step 6 of the weekly triage pipeline (see Build/triage/README.md).
 
         Inputs:
           - verdict-<id>.json files under -VerdictsDir (one per cluster
@@ -15,6 +15,11 @@
                 missing_info[], related_urls[], source_issue_for_resolution }
           - clusters.json under -RunArtifacts (or sanitized/ within it):
             [[primary, follower, follower], [primary], ...].
+          - cluster-meta.json under -RunArtifacts (optional, since the
+            workflow only uploads it from prepare): the human-friendly view
+            of follower titles + per-follower Jaccard similarity. Used to
+            populate the "Expanded follower details" section of run-summary.md
+            so the approver can see what each follower close was based on.
           - sanitized/wi-<id>.json under -RunArtifacts: gives us the rev,
             existing tags, area_path, etc. for each candidate.
 
@@ -25,13 +30,35 @@
           3. PATCH the AzDO work item state + duplicate field + tags
              (concurrency-safe with `test /rev`).
 
+        Idempotence: before any per-work-item write, we GET the live work
+        item and skip the write entirely if the configured `triaged-by-ai`
+        tag is already present. The WIQL `excludedTags` filter in the
+        prepare step handles the common case of fresh weekly runs, but
+        ad-hoc -WorkItemId retries and matrix re-runs after a mid-batch
+        failure bypass that path entirely. For mirror primaries, when the
+        tag is already present we additionally recover the existing GitHub
+        mirror URL by re-running the title-marker search so the follower
+        loop can still close followers as duplicates of that mirror —
+        otherwise an interrupted-then-resumed run could leave followers
+        orphaned.
+
+        Pre-flight: if any verdict would mirror to GitHub (needs_info,
+        real_bug, real_feature_request), we validate that
+        `config.azdo.duplicateFieldName` AND `config.azdo.states.duplicate`
+        are no longer the config placeholders BEFORE creating any public
+        artifact. Likewise, if any verdict is `answered` we validate
+        `config.azdo.states.answered`. A misconfigured run cannot leak a
+        public GitHub issue while still failing on the subsequent AzDO
+        PATCH.
+
         Behavior gates:
           - $env:DRY_RUN = 'true'  → no writes; emits run-summary.md only.
           - sanitization_aborted   → skip mirror, flag for manual review.
           - confidence < threshold → skip writes, flag for manual review.
           - verdict == security    → never mirror; log only.
 
-        Output: $env:RUNNER_TEMP/run-summary.md (Markdown table).
+        Output: $env:RUNNER_TEMP/run-summary.md (Markdown table + expanded
+        follower details).
 
     .PARAMETER VerdictsDir
         Directory containing verdict-<id>.json files (and where downloaded
@@ -39,7 +66,8 @@
 
     .PARAMETER RunArtifacts
         Directory containing the prepare step's outputs: clusters.json,
-        sanitized/, candidates.json, run-context.json.
+        cluster-meta.json (optional), sanitized/, candidates.json,
+        run-context.json.
 
     .PARAMETER ConfigPath
         Path to Build/triage/config.json.
@@ -75,7 +103,7 @@ function Get-TriageConfig { param([string] $Path)
 
 function Test-DryRun {
     $v = $env:DRY_RUN
-    if (-not $v) { return $true }   # default: dry-run if unset, per plan §10 phase 1.
+    if (-not $v) { return $true }   # default: dry-run if DRY_RUN is unset.
     return ($v -match '^(?i:true|1|yes|y)$')
 }
 
@@ -111,7 +139,27 @@ function Read-Clusters {
         Write-Warning "clusters.json not found at $path; assuming each candidate is its own cluster."
         return @()
     }
-    return @((Get-Content -LiteralPath $path -Raw | ConvertFrom-Json))
+    $parsed = Get-Content -LiteralPath $path -Raw | ConvertFrom-Json
+    if ($null -eq $parsed) { return @() }
+
+    # PowerShell's ConvertFrom-Json unwraps single-element outer arrays:
+    # `[[1,2]]` is returned as `@(1,2)` (a flat 2-int array) instead of
+    # `@(@(1,2))`. Detect by inspecting the first element: if it's a scalar
+    # (not an array/list), the outer wrapper was eaten and we put it back.
+    $arr = @($parsed)
+    if ($arr.Count -eq 0) { return @() }
+    $first = $arr[0]
+    $firstIsArray = ($first -is [System.Array]) -or ($first -is [System.Collections.IList])
+    if (-not $firstIsArray) {
+        # Flat numeric array means a single cluster with N members.
+        # Wrap in a List[object[]] (not a plain comma-wrapped array) because
+        # PowerShell unwraps single-element arrays at the function-return
+        # boundary, which would re-collapse the cluster shape.
+        $wrapper = New-Object 'System.Collections.Generic.List[object]'
+        $wrapper.Add(@($arr | ForEach-Object { [int] $_ })) | Out-Null
+        return ,$wrapper.ToArray()
+    }
+    return $arr
 }
 
 function Read-SanitizedWorkItem {
@@ -127,16 +175,32 @@ function Read-SanitizedWorkItem {
     return $null
 }
 
-function Read-OriginalCandidate {
-    # Used to get tags/rev directly from the AzDO snapshot if needed (the
-    # sanitized JSON already includes them, but for apply we re-read live
-    # from AzDO so we have a fresh rev for the optimistic-concurrency test).
-    param([string] $RunArtifacts, [int] $Id)
-    $path = Join-Path $RunArtifacts 'candidates.json'
-    if (-not (Test-Path -LiteralPath $path)) { return $null }
-    $all = Get-Content -LiteralPath $path -Raw | ConvertFrom-Json
-    if ($all -isnot [System.Array]) { $all = @($all) }
-    return ($all | Where-Object { [int] $_.id -eq $Id } | Select-Object -First 1)
+function Read-ClusterMeta {
+    # cluster-meta.json is produced by cluster.ps1 alongside clusters.json
+    # and primaries.json. It carries the per-follower titles + similarity
+    # scores so the run summary can surface what each follower close was
+    # based on. Returns a hashtable keyed by primary id; missing/empty
+    # file → empty hashtable (downstream falls back to bare follower ids).
+    param([string] $RunArtifacts)
+    $path = Join-Path $RunArtifacts 'cluster-meta.json'
+    if (-not (Test-Path -LiteralPath $path)) { return @{} }
+    $raw = Get-Content -LiteralPath $path -Raw
+    if ([string]::IsNullOrWhiteSpace($raw)) { return @{} }
+    try {
+        $arr = $raw | ConvertFrom-Json
+    } catch {
+        Write-Warning "cluster-meta.json present but unreadable: $($_.Exception.Message)"
+        return @{}
+    }
+    if ($null -eq $arr) { return @{} }
+    if ($arr -isnot [System.Array]) { $arr = @($arr) }
+    $map = @{}
+    foreach ($entry in $arr) {
+        if (-not $entry -or -not $entry.PSObject.Properties['primary']) { continue }
+        $primaryKey = [int] $entry.primary.id
+        $map[$primaryKey] = $entry
+    }
+    return $map
 }
 
 function Get-ThresholdForVerdict {
@@ -176,8 +240,45 @@ function Invoke-Apply {
     $isDryRun  = Test-DryRun
     Write-Host "DRY_RUN = $isDryRun"
 
-    $verdicts  = Read-Verdicts -Dir $VerdictsDir
-    $clusters  = Read-Clusters -RunArtifacts $RunArtifacts
+    $verdicts   = Read-Verdicts -Dir $VerdictsDir
+    $clusters   = Read-Clusters -RunArtifacts $RunArtifacts
+    $clusterMeta = Read-ClusterMeta -RunArtifacts $RunArtifacts
+
+    # Pre-flight: if any verdict would mirror to GitHub and the duplicate
+    # field name is still the config placeholder, fail BEFORE creating any
+    # public GitHub artifact. Without this check the first mirror leg would
+    # succeed in creating a public issue and only the subsequent AzDO PATCH
+    # would throw — leaving an orphaned public GitHub issue behind.
+    #
+    # Also validate the AzDO state strings up front. If any of the configured
+    # close-states looks like a placeholder (literal '<…>' from config.json),
+    # we'd hit the same orphan-mirror failure mode on the AzDO PATCH leg
+    # even though the duplicate field itself is set correctly.
+    if (-not $isDryRun) {
+        $needsDupField = $false
+        $needsAnswered = $false
+        foreach ($vid in $verdicts.Keys) {
+            $vv = ($verdicts[$vid].verdict | Out-String).Trim()
+            if ($vv -in @('needs_info','real_bug','real_feature_request')) { $needsDupField = $true }
+            if ($vv -eq 'answered') { $needsAnswered = $true }
+        }
+        if ($needsDupField) {
+            $field = $Config.azdo.duplicateFieldName
+            if (-not $field -or $field -eq '<DuplicateFeedbackTicketIdField>') {
+                throw "Refusing to start apply: at least one verdict requires a mirror-then-DC-duplicate close, but config.azdo.duplicateFieldName is still the placeholder. Confirm the exact REST field name in phase 0 and set it in Build/triage/config.json before enabling live mode."
+            }
+            $stateDup = $Config.azdo.states.duplicate
+            if (-not $stateDup -or $stateDup -match '^<.*>$') {
+                throw "Refusing to start apply: at least one verdict requires a DC-duplicate close, but config.azdo.states.duplicate is missing or still a placeholder ('$stateDup'). Confirm the exact AzDO state string in phase 0 and set it in Build/triage/config.json."
+            }
+        }
+        if ($needsAnswered) {
+            $stateAns = $Config.azdo.states.answered
+            if (-not $stateAns -or $stateAns -match '^<.*>$') {
+                throw "Refusing to start apply: at least one verdict requires an 'answered' close, but config.azdo.states.answered is missing or still a placeholder ('$stateAns'). Confirm the exact AzDO state string in phase 0 and set it in Build/triage/config.json."
+            }
+        }
+    }
 
     # Build primary→followers map. Primaries can also appear without a verdict
     # if AI inference failed for them; we record those for manual triage.
@@ -260,14 +361,30 @@ function Invoke-Apply {
             if ($isDryRun) {
                 $actionTaken = 'DRY: would comment + close AzDO as answered'
             } else {
-                $live = Get-AzdoWorkItem -Config $Config -Id $primary
-                $rev  = [int] $live.fields.'System.Rev'
-                $tags = Get-WorkItemTags -Fields $live.fields
-                [void] (Add-AzdoComment -Config $Config -Id $primary -Text $msg)
-                [void] (Close-AzdoAsAnswered -Config $Config -Id $primary -Rev $rev -ExistingTags $tags)
-                $actionTaken = 'commented + closed AzDO as answered'
+                try {
+                    # Idempotence guard: GET once before any write; if the
+                    # ai_tag is already present, treat as already triaged.
+                    $live = Get-AzdoWorkItem -Config $Config -Id $primary
+                    $rev  = [int] $live.fields.'System.Rev'
+                    $tags = Get-WorkItemTags -Fields $live.fields
+                    if (Test-AlreadyTriagedByAi -Config $Config -Tags $tags) {
+                        $actionTaken = 'skipped (already triaged-by-ai)'
+                    } else {
+                        [void] (Add-AzdoComment -Config $Config -Id $primary -Text $msg)
+                        # Close uses the original rev so the `test /rev` op
+                        # rejects any concurrent human edit that happened
+                        # between our GET and this PATCH. The AzDO /comments
+                        # endpoint does not bump rev, so reusing it is safe.
+                        [void] (Close-AzdoAsAnswered -Config $Config -Id $primary -Rev $rev -ExistingTags $tags)
+                        $actionTaken = 'commented + closed AzDO as answered'
+                    }
+                } catch {
+                    Write-Warning "Answered primary failed for #${primary}: $($_.Exception.Message)"
+                    $actionTaken = "manual review (answered primary failed: $($_.Exception.Message))"
+                }
             }
             # Followers of an `answered` primary: same comment, then close.
+            $followerFailures = New-Object System.Collections.Generic.List[string]
             foreach ($f in $followers) {
                 if ($isDryRun) {
                     $actionTaken += ", DRY follower #$f would receive same response_md + close"
@@ -276,12 +393,20 @@ function Invoke-Apply {
                         $liveF = Get-AzdoWorkItem -Config $Config -Id $f
                         $revF  = [int] $liveF.fields.'System.Rev'
                         $tagsF = Get-WorkItemTags -Fields $liveF.fields
+                        if (Test-AlreadyTriagedByAi -Config $Config -Tags $tagsF) {
+                            $actionTaken += ", follower #${f} skipped (already triaged-by-ai)"
+                            continue
+                        }
                         [void] (Add-AzdoComment -Config $Config -Id $f -Text $msg)
                         [void] (Close-AzdoAsAnswered -Config $Config -Id $f -Rev $revF -ExistingTags $tagsF)
                     } catch {
                         Write-Warning "Follower close failed for #${f}: $($_.Exception.Message)"
+                        $followerFailures.Add("#${f}: $($_.Exception.Message)") | Out-Null
                     }
                 }
+            }
+            if ($followerFailures.Count -gt 0) {
+                $actionTaken += " ⚠ follower failures: $($followerFailures -join '; ')"
             }
 
         } elseif ($v -in @('needs_info','real_bug','real_feature_request')) {
@@ -307,62 +432,99 @@ function Invoke-Apply {
             if ($isDryRun) {
                 $actionTaken = "DRY: would mirror to GitHub with labels [$($labels -join ', ')] + DC duplicate close on AzDO"
             } else {
-                # Step 1 — create (or find) the mirror.
-                $ghIssue = New-MirrorIssue `
-                    -Config $Config `
-                    -AzdoId $primary `
-                    -AzdoUrl $azdoUrl `
-                    -RawTitle $title `
-                    -BodyMarkdown $body `
-                    -Labels $labels `
-                    -Assignees @($Config.github.defaultAssignee)
-                $ghUrl = $ghIssue.html_url
+                try {
+                    # Idempotence guard: check BEFORE creating the mirror.
+                    # If this primary is already tagged, the GH issue + AzDO
+                    # close should not be re-run — but we still need $ghUrl
+                    # so the follower loop can close them as duplicates of
+                    # the existing mirror. Recover it via the same title-
+                    # marker search that New-MirrorIssue uses internally.
+                    $live = Get-AzdoWorkItem -Config $Config -Id $primary
+                    $rev  = [int] $live.fields.'System.Rev'
+                    $tags = Get-WorkItemTags -Fields $live.fields
+                    if (Test-AlreadyTriagedByAi -Config $Config -Tags $tags) {
+                        $existing = Find-ExistingMirrorIssue `
+                            -Owner   $Config.github.owner `
+                            -Repo    $Config.github.repo `
+                            -AzdoId  $primary `
+                            -Headers (Get-GitHubHeaders)
+                        if ($existing) {
+                            $ghUrl = $existing.html_url
+                            $actionTaken = "skipped primary (already triaged-by-ai); recovered existing mirror $ghUrl for follower processing"
+                        } else {
+                            $actionTaken = 'skipped (already triaged-by-ai; no existing mirror found — followers will be skipped)'
+                        }
+                    } else {
+                        # Step 1 — create (or find) the mirror.
+                        $ghIssue = New-MirrorIssue `
+                            -Config $Config `
+                            -AzdoId $primary `
+                            -AzdoUrl $azdoUrl `
+                            -RawTitle $title `
+                            -BodyMarkdown $body `
+                            -Labels $labels `
+                            -Assignees @($Config.github.defaultAssignee)
+                        $ghUrl = $ghIssue.html_url
 
-                # Step 2 — comment on AzDO with the DC duplicate template.
-                $comment = Format-DcDuplicateComment -Config $Config -GithubIssueUrl $ghUrl
-                $live    = Get-AzdoWorkItem -Config $Config -Id $primary
-                $rev     = [int] $live.fields.'System.Rev'
-                $tags    = Get-WorkItemTags -Fields $live.fields
-                [void] (Add-AzdoComment -Config $Config -Id $primary -Text $comment)
+                        # Step 2 — comment on AzDO with the DC duplicate template.
+                        $comment = Format-DcDuplicateComment -Config $Config -GithubIssueUrl $ghUrl
+                        [void] (Add-AzdoComment -Config $Config -Id $primary -Text $comment)
 
-                # Step 3 — PATCH state + duplicate field + tags. Re-read rev
-                # because step 2 just incremented it.
-                $live2 = Get-AzdoWorkItem -Config $Config -Id $primary
-                $rev2  = [int] $live2.fields.'System.Rev'
-                $tags2 = Get-WorkItemTags -Fields $live2.fields
-                [void] (Close-AzdoAsDuplicate `
-                    -Config $Config `
-                    -Id $primary `
-                    -Rev $rev2 `
-                    -GithubIssueUrl $ghUrl `
-                    -ExistingTags $tags2)
-                $actionTaken = "mirrored → $ghUrl; AzDO closed as DC duplicate"
+                        # Step 3 — PATCH state + duplicate field + tags using
+                        # the original rev. The `test /rev` op rejects any
+                        # concurrent human edit that happened between our GET
+                        # at the top of this block and now (the AzDO /comments
+                        # endpoint does not bump rev, so reusing the original
+                        # rev is safe and strictly stronger than re-reading).
+                        [void] (Close-AzdoAsDuplicate `
+                            -Config $Config `
+                            -Id $primary `
+                            -Rev $rev `
+                            -GithubIssueUrl $ghUrl `
+                            -ExistingTags $tags)
+                        $actionTaken = "mirrored -> $ghUrl; AzDO closed as DC duplicate"
+                    }
+                } catch {
+                    Write-Warning "Mirror primary failed for #${primary}: $($_.Exception.Message)"
+                    $actionTaken = "manual review (mirror primary failed: $($_.Exception.Message))"
+                }
             }
 
             # Followers point at the same mirror.
+            $followerFailures = New-Object System.Collections.Generic.List[string]
             foreach ($f in $followers) {
                 if ($isDryRun) {
                     $actionTaken += ", DRY follower #$f would close as duplicate of $ghUrl"
                 } else {
+                    if (-not $ghUrl) {
+                        # Primary failed before producing a mirror URL — skip.
+                        $actionTaken += ", follower #${f} skipped (primary did not produce a mirror)"
+                        continue
+                    }
                     try {
-                        $comment = Format-DcDuplicateComment -Config $Config -GithubIssueUrl $ghUrl
                         $liveF = Get-AzdoWorkItem -Config $Config -Id $f
                         $revF  = [int] $liveF.fields.'System.Rev'
                         $tagsF = Get-WorkItemTags -Fields $liveF.fields
+                        if (Test-AlreadyTriagedByAi -Config $Config -Tags $tagsF) {
+                            $actionTaken += ", follower #${f} skipped (already triaged-by-ai)"
+                            continue
+                        }
+                        $comment = Format-DcDuplicateComment -Config $Config -GithubIssueUrl $ghUrl
                         [void] (Add-AzdoComment -Config $Config -Id $f -Text $comment)
-                        $liveF2 = Get-AzdoWorkItem -Config $Config -Id $f
-                        $revF2  = [int] $liveF2.fields.'System.Rev'
-                        $tagsF2 = Get-WorkItemTags -Fields $liveF2.fields
                         [void] (Close-AzdoAsDuplicate `
                             -Config $Config `
                             -Id $f `
-                            -Rev $revF2 `
+                            -Rev $revF `
                             -GithubIssueUrl $ghUrl `
-                            -ExistingTags $tagsF2)
+                            -ExistingTags $tagsF)
                     } catch {
                         Write-Warning "Follower mirror-close failed for #${f}: $($_.Exception.Message)"
+                        $followerFailures.Add("#${f}: $($_.Exception.Message)") | Out-Null
                     }
                 }
+            }
+            if ($followerFailures.Count -gt 0) {
+                $actionTaken += " ⚠ follower failures: $($followerFailures -join '; ')"
             }
         } else {
             $actionTaken = "no handler for verdict '$v'"
@@ -389,9 +551,49 @@ function Invoke-Apply {
         $null = $sb.AppendLine("| $($r.id) | $($r.verdict) | $conf | $($r.action) | $gh | $folStr |")
     }
 
+    # Expanded follower details: surfaces what each follower close was based
+    # on (title + Jaccard similarity score) so the human approver of the
+    # `azdo-triage-apply` environment gate can see WHY each follower was
+    # closed as a duplicate of its primary — not just bare ids.
+    $clustersWithFollowers = @($summary | Where-Object { $_.followers -and @($_.followers).Count -gt 0 })
+    if ($clustersWithFollowers.Count -gt 0) {
+        $null = $sb.AppendLine()
+        $null = $sb.AppendLine('## Expanded follower details')
+        foreach ($r in $clustersWithFollowers) {
+            $null = $sb.AppendLine()
+            $primaryId = [int] $r.id
+            $primaryTitle = $null
+            if ($clusterMeta.ContainsKey($primaryId) -and $clusterMeta[$primaryId].primary.PSObject.Properties['title']) {
+                $primaryTitle = [string] $clusterMeta[$primaryId].primary.title
+            }
+            $heading = if ($primaryTitle) { "### Primary #$primaryId — $primaryTitle" } else { "### Primary #$primaryId" }
+            $null = $sb.AppendLine($heading)
+            $null = $sb.AppendLine()
+            $null = $sb.AppendLine('| Follower | Title | Similarity to primary |')
+            $null = $sb.AppendLine('|---|---|---|')
+            foreach ($fid in @($r.followers)) {
+                $fidInt = [int] $fid
+                $ftitle = '(title not in cluster-meta.json)'
+                $fsim   = '—'
+                if ($clusterMeta.ContainsKey($primaryId)) {
+                    $followerEntries = @($clusterMeta[$primaryId].followers | Where-Object { [int] $_.id -eq $fidInt })
+                    if ($followerEntries.Count -gt 0) {
+                        if ($followerEntries[0].PSObject.Properties['title'] -and $followerEntries[0].title) {
+                            $ftitle = [string] $followerEntries[0].title
+                        }
+                        if ($followerEntries[0].PSObject.Properties['similarity']) {
+                            $fsim = [string] [Math]::Round([double] $followerEntries[0].similarity, 3)
+                        }
+                    }
+                }
+                $null = $sb.AppendLine("| #$fidInt | $ftitle | $fsim |")
+            }
+        }
+    }
+
     $outPath = if ($env:RUNNER_TEMP) { Join-Path $env:RUNNER_TEMP 'run-summary.md' } else { Join-Path $RunArtifacts 'run-summary.md' }
     $sb.ToString() | Set-Content -LiteralPath $outPath -Encoding UTF8
-    Write-Host "Wrote run summary → $outPath"
+    Write-Host "Wrote run summary -> $outPath"
 }
 
 function Invoke-SelfTest {
@@ -427,7 +629,20 @@ function Invoke-SelfTest {
     New-Item -ItemType Directory -Force -Path $vDir,$aDir,(Join-Path $aDir 'sanitized') | Out-Null
     Copy-Item -LiteralPath (Join-Path $fxRoot 'verdict-2711586.json') -Destination $vDir
     Copy-Item -LiteralPath (Join-Path $fxRoot 'wi-2711586.json') -Destination (Join-Path $aDir 'sanitized')
-    @(@(2711586)) | ConvertTo-Json -Depth 5 -Compress | Set-Content -LiteralPath (Join-Path $aDir 'clusters.json') -Encoding UTF8
+    # Synthesize a 2-id cluster (primary 2711586 + follower 9999001) so the
+    # expanded-follower-details section gets exercised. NOTE: must use
+    # `-InputObject` with an explicitly wrapped outer array — PowerShell's
+    # pipeline unwraps `@(@(2711586, 9999001))` into a flat `[2711586, 9999001]`
+    # which would be parsed as two separate primaries instead of one cluster.
+    ConvertTo-Json -Depth 5 -Compress -InputObject @(,@(2711586, 9999001)) | Set-Content -LiteralPath (Join-Path $aDir 'clusters.json') -Encoding UTF8
+    @(
+        [pscustomobject] @{
+            primary   = [pscustomobject] @{ id = 2711586; title = 'VS crashes when opening pyproj' }
+            followers = @(
+                [pscustomobject] @{ id = 9999001; title = 'Visual Studio crashes opening Python project'; similarity = 0.42 }
+            )
+        }
+    ) | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $aDir 'cluster-meta.json') -Encoding UTF8
 
     $env:DRY_RUN = 'true'
     $env:RUNNER_TEMP = $aDir
@@ -440,7 +655,70 @@ function Invoke-SelfTest {
         if ($content -notmatch 'AzDO triage run summary') { Write-Error 'summary missing heading'; $errors++ }
         if ($content -notmatch '2711586') { Write-Error 'summary missing primary id'; $errors++ }
         if ($content -notmatch 'DRY') { Write-Error 'summary did not record DRY action'; $errors++ }
+        if ($content -notmatch '## Expanded follower details') { Write-Error 'summary missing expanded follower section'; $errors++ }
+        if ($content -notmatch '9999001') { Write-Error 'expanded section missing follower id'; $errors++ }
+        if ($content -notmatch 'Visual Studio crashes opening Python project') { Write-Error 'expanded section missing follower title'; $errors++ }
+        if ($content -notmatch '0\.42') { Write-Error 'expanded section missing similarity score'; $errors++ }
     }
+
+    # Pre-flight placeholder guard: if duplicateFieldName is still the
+    # placeholder and a verdict requires the mirror leg, Invoke-Apply MUST
+    # throw before any side effect (including the first GET).
+    $env:DRY_RUN = 'false'
+    $threw = $false
+    try {
+        Invoke-Apply -VerdictsDir $vDir -RunArtifacts $aDir -Config $cfg
+    } catch {
+        if ($_.Exception.Message -match 'duplicateFieldName') { $threw = $true }
+    }
+    if (-not $threw) {
+        Write-Error 'Expected Invoke-Apply to throw on placeholder duplicateFieldName in non-dry-run.'
+        $errors++
+    }
+
+    # Pre-flight: also reject a still-placeholder states.duplicate value.
+    # Clone the config, fix the duplicate field name (so we get past the
+    # first guard), but leave states.duplicate looking like '<...>' to
+    # confirm the second guard fires.
+    $cfgDupState = $cfg | ConvertTo-Json -Depth 10 | ConvertFrom-Json
+    $cfgDupState.azdo.duplicateFieldName = 'Microsoft.VSTS.Common.DuplicateFeedbackTicketId'
+    $cfgDupState.azdo.states.duplicate = '<DC-Closed-Duplicated-placeholder>'
+    $threw = $false
+    try {
+        Invoke-Apply -VerdictsDir $vDir -RunArtifacts $aDir -Config $cfgDupState
+    } catch {
+        if ($_.Exception.Message -match 'states\.duplicate') { $threw = $true }
+    }
+    if (-not $threw) {
+        Write-Error 'Expected Invoke-Apply to throw on placeholder states.duplicate in non-dry-run.'
+        $errors++
+    }
+
+    # Pre-flight: reject a still-placeholder states.answered when an
+    # answered verdict is queued.
+    $vDirAns = Join-Path $PSScriptRoot 'tests\.tmp-verdicts-answered'
+    Remove-Item -LiteralPath $vDirAns -Recurse -Force -ErrorAction SilentlyContinue
+    New-Item -ItemType Directory -Force -Path $vDirAns | Out-Null
+    @{
+        verdict = 'answered'; confidence = 0.9
+        response_md = 'see the docs'
+        github_issue_body_md = ''
+        missing_info = @(); related_urls = @(); source_issue_for_resolution = ''
+    } | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $vDirAns 'verdict-2711586.json') -Encoding UTF8
+    $cfgAnsState = $cfg | ConvertTo-Json -Depth 10 | ConvertFrom-Json
+    $cfgAnsState.azdo.states.answered = '<AnsweredStatePlaceholder>'
+    $threw = $false
+    try {
+        Invoke-Apply -VerdictsDir $vDirAns -RunArtifacts $aDir -Config $cfgAnsState
+    } catch {
+        if ($_.Exception.Message -match 'states\.answered') { $threw = $true }
+    }
+    if (-not $threw) {
+        Write-Error 'Expected Invoke-Apply to throw on placeholder states.answered in non-dry-run.'
+        $errors++
+    }
+    Remove-Item -LiteralPath $vDirAns -Recurse -Force -ErrorAction SilentlyContinue
+
     Remove-Item -LiteralPath $vDir,$aDir -Recurse -Force -ErrorAction SilentlyContinue
     $env:DRY_RUN = $old
 

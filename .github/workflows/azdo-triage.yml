@@ -1,9 +1,9 @@
 name: AzDO weekly triage
 
 # Implements the weekly Azure DevOps -> GitHub issue triage automation for
-# customer-reported work items under DevDiv\Python and AI Tools\**. The
-# overall design lives in plan.md and Build/triage/README.md. The workflow
-# has two logical jobs:
+# customer-reported work items under DevDiv\Python and AI Tools\**. Operator
+# documentation lives in Build/triage/README.md. The workflow has two logical
+# jobs:
 #
 #   Job 1 (report)  — ALWAYS runs. Posts a single weekly summary issue in
 #                     this repo listing the open AzDO work items in the
@@ -68,24 +68,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Acquire Entra token via GitHub OIDC
-        uses: azure/login@v2
+      - name: Acquire AzDO access token
+        uses: ./.github/actions/azdo-token
         with:
           client-id: ${{ secrets.AZDO_TRIAGE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZDO_TRIAGE_TENANT_ID }}
-          allow-no-subscriptions: true
-
-      - name: Exchange for AzDO access token
-        shell: bash
-        run: |
-          # 499b84ac-... is the well-known AzDO resource AppId.
-          # azure/login does NOT itself emit an AzDO-scoped bearer
-          # token — we mint one via the now-authenticated `az` CLI.
-          AZDO_ACCESS_TOKEN=$(az account get-access-token \
-            --resource 499b84ac-1321-427f-aa17-267ca6975798 \
-            --query accessToken -o tsv)
-          echo "::add-mask::$AZDO_ACCESS_TOKEN"
-          echo "AZDO_ACCESS_TOKEN=$AZDO_ACCESS_TOKEN" >> "$GITHUB_ENV"
 
       - name: Query AzDO work items (WIQL)
         shell: pwsh
@@ -157,20 +144,11 @@ jobs:
           name: candidates
           path: ${{ runner.temp }}
 
-      - uses: azure/login@v2
+      - name: Acquire AzDO access token
+        uses: ./.github/actions/azdo-token
         with:
           client-id: ${{ secrets.AZDO_TRIAGE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZDO_TRIAGE_TENANT_ID }}
-          allow-no-subscriptions: true
-
-      - name: Exchange for AzDO access token
-        shell: bash
-        run: |
-          AZDO_ACCESS_TOKEN=$(az account get-access-token \
-            --resource 499b84ac-1321-427f-aa17-267ca6975798 \
-            --query accessToken -o tsv)
-          echo "::add-mask::$AZDO_ACCESS_TOKEN"
-          echo "AZDO_ACCESS_TOKEN=$AZDO_ACCESS_TOKEN" >> "$GITHUB_ENV"
 
       - name: Fetch shared per-run research context
         shell: pwsh
@@ -202,10 +180,18 @@ jobs:
           ./Build/triage/cluster.ps1 `
             -SanitizedDir $env:RUNNER_TEMP/sanitized `
             -ClustersOut  $env:RUNNER_TEMP/clusters.json `
-            -PrimariesOut $env:RUNNER_TEMP/primaries.json
-          $primaries = Get-Content $env:RUNNER_TEMP/primaries.json -Raw
-          if (-not $primaries.Trim()) { $primaries = '[]' }
-          "primaries=$primaries" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+            -PrimariesOut $env:RUNNER_TEMP/primaries.json `
+            -MetaOut      $env:RUNNER_TEMP/cluster-meta.json
+          # Use a heredoc-style delimiter so the multi-line case (if it ever
+          # arises) still parses; the single-line invariant is also asserted
+          # defensively inside cluster.ps1.
+          $primaries = (Get-Content $env:RUNNER_TEMP/primaries.json -Raw).Trim()
+          if (-not $primaries) { $primaries = '[]' }
+          @(
+            "primaries<<__EOF__"
+            $primaries
+            "__EOF__"
+          ) | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
 
       - name: Upload run artifacts
         uses: actions/upload-artifact@v4
@@ -214,6 +200,7 @@ jobs:
           path: |
             ${{ runner.temp }}/run-context.json
             ${{ runner.temp }}/clusters.json
+            ${{ runner.temp }}/cluster-meta.json
             ${{ runner.temp }}/sanitized/
           retention-days: 7
 
@@ -267,8 +254,13 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: verdicts
-          path: ${{ runner.temp }}/verdict-*.json
+          # Per-candidate artifact name: matrix shards write in parallel and
+          # share `${{ runner.temp }}` only on the same runner, so multiple
+          # shards uploading to a single `verdicts` artifact would race
+          # (actions/upload-artifact@v4 rejects duplicate uploads of the same
+          # name). The apply job re-aggregates via `pattern: verdict-*`.
+          name: verdict-${{ matrix.candidate.id }}
+          path: ${{ runner.temp }}/verdict-${{ matrix.candidate.id }}.json
           retention-days: 30
 
   apply:
@@ -280,11 +272,29 @@ jobs:
     if: ${{ inputs.run_triage != false && needs.prepare.outputs.primaries != '[]' && needs.prepare.outputs.primaries != '' }}
     runs-on: ubuntu-latest
     environment: azdo-triage-approval   # ← human approval gate
+    outputs:
+      # Sentinel that lets notify-on-failure distinguish "the human
+      # approver rejected the environment gate" (NOT a failure we want
+      # to be paged for) from "apply was approved and then crashed"
+      # (a real infra failure that warrants an issue). The sentinel
+      # step is the FIRST thing in the job, so it only ever produces
+      # output when the gate was approved.
+      approved: ${{ steps.approval-check.outputs.approved }}
     steps:
+      - id: approval-check
+        name: Record environment approval (sentinel)
+        shell: bash
+        run: echo "approved=true" >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          name: verdicts
+          # Re-aggregate the per-candidate verdict artifacts written by the
+          # triage matrix. `merge-multiple: true` flattens them all into
+          # ${{ runner.temp }} so apply-outcomes.ps1's existing
+          # `verdict-*.json` glob finds them unchanged.
+          pattern: verdict-*
+          merge-multiple: true
           path: ${{ runner.temp }}
       - uses: actions/download-artifact@v4
         with:
@@ -295,20 +305,11 @@ jobs:
           name: candidates
           path: ${{ runner.temp }}
 
-      - uses: azure/login@v2
+      - name: Acquire AzDO access token
+        uses: ./.github/actions/azdo-token
         with:
           client-id: ${{ secrets.AZDO_TRIAGE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZDO_TRIAGE_TENANT_ID }}
-          allow-no-subscriptions: true
-
-      - name: Exchange for AzDO access token
-        shell: bash
-        run: |
-          AZDO_ACCESS_TOKEN=$(az account get-access-token \
-            --resource 499b84ac-1321-427f-aa17-267ca6975798 \
-            --query accessToken -o tsv)
-          echo "::add-mask::$AZDO_ACCESS_TOKEN"
-          echo "AZDO_ACCESS_TOKEN=$AZDO_ACCESS_TOKEN" >> "$GITHUB_ENV"
 
       - name: Apply outcomes
         shell: pwsh
@@ -332,24 +333,45 @@ jobs:
   # On any failure in the above jobs, open an infrastructure issue
   # so maintainers see the breakage at-a-glance instead of having to
   # scan the Actions tab.
+  #
+  # Important: when the apply job is rejected at the environment
+  # approval gate, GH Actions reports apply.result == 'failure'
+  # (because the job did not complete successfully) — but that's a
+  # human decision, NOT an infra failure to be paged for. The
+  # `needs.apply.outputs.approved` sentinel is only set when the
+  # gate was approved, so we only treat an apply failure as a real
+  # failure when approval did happen.
   # ────────────────────────────────────────────────────────────────
   notify-on-failure:
     needs: [report, prepare, triage, apply]
-    if: ${{ always() && (needs.report.result == 'failure' || needs.prepare.result == 'failure' || needs.triage.result == 'failure' || needs.apply.result == 'failure') }}
+    if: >-
+      ${{ always() && (
+        needs.report.result == 'failure'
+        || needs.prepare.result == 'failure'
+        || needs.triage.result == 'failure'
+        || (needs.apply.result == 'failure'   && needs.apply.outputs.approved == 'true')
+        || (needs.apply.result == 'cancelled' && needs.apply.outputs.approved == 'true')
+      ) }}
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       issues: write
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/github-script@v7
         with:
           script: |
+            // Read the assignee from config.json so the on-call owner can
+            // be rotated without touching workflow YAML.
+            const config = require('./Build/triage/config.json');
+            const assignees = [config.github.defaultAssignee].filter(Boolean);
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: `azdo-triage workflow failed (run ${context.runId})`,
               body: `One of the azdo-triage jobs failed. See ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}.`,
               labels: ['infrastructure'],
-              assignees: ['StellaHuang95']
+              assignees
             });
 
   # ────────────────────────────────────────────────────────────────

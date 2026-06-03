@@ -5,17 +5,23 @@
     .DESCRIPTION
         Reads the per-candidate sanitized JSONs from -SanitizedDir, builds a
         compact title+first-paragraph summary per candidate, and produces a
-        clusters.json + primaries.json.
+        clusters.json + primaries.json + cluster-meta.json.
 
         Strategy: a fast offline heuristic — token overlap + title shingle
-        similarity (Jaccard). The plan also describes an optional AI-based
-        clusterer; for v1 we keep this step offline and deterministic to
-        avoid an extra round-trip to the model server before Job 2's main
-        triage.
+        similarity (Jaccard). The first cluster whose token set meets the
+        Jaccard threshold wins (greedy, first-match) — kept deterministic so
+        the same batch produces the same clustering across re-runs.
 
         Output:
-          clusters.json  -> [ [id1, id2, ...], [id3], ... ]    primary first
-          primaries.json -> [ {"id": <int>}, ... ]             matrix-ready
+          clusters.json     -> [ [id1, id2, ...], [id3], ... ]    primary first
+          primaries.json    -> [ {"id": <int>}, ... ]             matrix-ready
+          cluster-meta.json -> [ { primary: {id, title},
+                                   followers: [{id, title, similarity}, ...] },
+                                 ... ]
+                               Consumed by apply-outcomes.ps1 to surface
+                               follower titles + similarity scores in
+                               run-summary.md so the human approver can see
+                               WHY each follower was merged with its primary.
 
     .PARAMETER SanitizedDir
         Directory containing wi-<id>.json files.
@@ -25,6 +31,10 @@
 
     .PARAMETER PrimariesOut
         Path for primaries.json.
+
+    .PARAMETER MetaOut
+        Path for cluster-meta.json. Optional; if omitted, written as
+        cluster-meta.json next to clusters.json.
 
     .PARAMETER Threshold
         Jaccard similarity threshold for merging (0..1). Default 0.55.
@@ -37,6 +47,7 @@ param(
     [string] $SanitizedDir,
     [string] $ClustersOut,
     [string] $PrimariesOut,
+    [string] $MetaOut,
     [double] $Threshold = 0.55,
     [switch] $SelfTest
 )
@@ -68,73 +79,90 @@ function Get-Jaccard {
 }
 
 function Cluster-Candidates {
+    <#
+        Returns: array of [pscustomobject] @{
+            primary   = <int>
+            followers = @( [pscustomobject] @{ id = <int>; similarity = <double> }, ... )
+        }
+        Primaries are the first id (lowest id) to land in the cluster; followers
+        carry the Jaccard score at the moment they merged.
+    #>
     param([Parameter(Mandatory)] [object[]] $Items, [double] $Threshold)
 
     # Items: [{ id, tokens }]; deterministic order: by id ascending.
     $sorted = @($Items | Sort-Object -Property id)
-    $clusters = New-Object System.Collections.Generic.List[System.Collections.Generic.List[int]]
-    # Use List<object> to hold string[] entries — List<string[]> trips up
-    # PowerShell's dynamic method dispatch on indexer-set in some pwsh builds.
-    $clusterTokens = New-Object System.Collections.Generic.List[object]
+    $clusters = New-Object System.Collections.Generic.List[object]
 
     foreach ($it in $sorted) {
         $assigned = $false
         $itTokens = @([string[]] $it.tokens)
-        for ($i = 0; $i -lt $clusters.Count; $i++) {
-            $existing = [string[]] $clusterTokens[$i]
+        foreach ($cl in $clusters) {
+            $existing = [string[]] $cl.tokens
             $j = Get-Jaccard -A $existing -B $itTokens
             if ($j -ge $Threshold) {
-                $clusters[$i].Add([int] $it.id)
-                # Merge into a new string[] (HashSet.ToArray isn't reliably
-                # callable via PS dynamic dispatch).
+                $cl.followers.Add([pscustomobject] @{
+                    id         = [int] $it.id
+                    similarity = [Math]::Round([double] $j, 3)
+                }) | Out-Null
+                # Merge token sets (preserve cluster's growing vocabulary so
+                # later items can match against the combined fingerprint).
                 $merged = New-Object System.Collections.Generic.HashSet[string]
                 foreach ($t in $existing) { [void] $merged.Add($t) }
                 foreach ($t in $itTokens) { [void] $merged.Add($t) }
                 $arr = [string[]]::new($merged.Count)
                 $merged.CopyTo($arr)
-                $clusterTokens[$i] = $arr
+                $cl.tokens = $arr
                 $assigned = $true
                 break
             }
         }
         if (-not $assigned) {
-            $newC = New-Object System.Collections.Generic.List[int]
-            $newC.Add([int] $it.id)
+            $newC = [pscustomobject] @{
+                primary   = [int] $it.id
+                followers = New-Object 'System.Collections.Generic.List[object]'
+                tokens    = [string[]] $itTokens
+            }
             $clusters.Add($newC) | Out-Null
-            $clusterTokens.Add([string[]] $itTokens) | Out-Null
         }
     }
-    # Materialize as array of int[] without piping (ForEach-Object would
-    # unroll the inner lists and we'd lose the cluster grouping).
+
+    # Strip the internal `tokens` field and materialize as array of objects.
+    # NOTE: `@($list)` where $list is a Generic.List[object] of pscustomobject
+    # trips a PS 7.x "Argument types do not match" inside the array sub-
+    # expression operator. Use `.ToArray()` everywhere we surface followers.
     $result = New-Object System.Collections.Generic.List[object]
     foreach ($cl in $clusters) {
-        # Wrap each cluster's int[] in a 1-element object[] so List<object>'s
-        # Add doesn't unroll it. The trailing `[0]` strip is in the caller's
-        # iteration.
-        $inner = New-Object 'System.Collections.Generic.List[int]'
-        foreach ($x in $cl) { $inner.Add([int] $x) | Out-Null }
-        $result.Add($inner) | Out-Null
+        $entry = [pscustomobject] @{
+            primary   = $cl.primary
+            followers = $cl.followers.ToArray()
+        }
+        [void] $result.Add($entry)
     }
-    # Return a regular array of int[]. We materialize to int[] here to give
-    # callers a stable shape (each element is an int[]).
-    $final = New-Object System.Collections.Generic.List[object]
-    foreach ($lst in $result) {
-        $final.Add([int[]] $lst.ToArray()) | Out-Null
-    }
-    return ,$final.ToArray()
+    return ,$result.ToArray()
 }
 
 function Invoke-Cluster {
-    param([string] $SanitizedDir, [string] $ClustersOut, [string] $PrimariesOut, [double] $Threshold)
+    param(
+        [string] $SanitizedDir,
+        [string] $ClustersOut,
+        [string] $PrimariesOut,
+        [string] $MetaOut,
+        [double] $Threshold
+    )
     if (-not (Test-Path -LiteralPath $SanitizedDir)) { throw "Sanitized dir not found: $SanitizedDir" }
+    if (-not $MetaOut) { $MetaOut = Join-Path (Split-Path -Parent $ClustersOut) 'cluster-meta.json' }
 
     $files = Get-ChildItem -LiteralPath $SanitizedDir -Filter 'wi-*.json' -File
+    # idToTitle is used to enrich cluster-meta.json so the run summary can
+    # show the human approver WHY each follower was merged (its title + score).
+    $idToTitle = @{}
     $items = foreach ($f in $files) {
         $j = Get-Content -LiteralPath $f.FullName -Raw | ConvertFrom-Json
         $tokens = @()
         $tokens += Get-Tokens -Text $j.title
         $tokens += Get-Tokens -Text $j.description_html
         $tokens += Get-Tokens -Text $j.repro_steps_html
+        $idToTitle[[int] $j.id] = [string] $j.title
         [pscustomobject] @{
             id     = [int] $j.id
             tokens = @($tokens | Select-Object -Unique)
@@ -144,23 +172,66 @@ function Invoke-Cluster {
     if (-not $items -or @($items).Count -eq 0) {
         Set-Content -LiteralPath $ClustersOut  -Value '[]' -Encoding UTF8
         Set-Content -LiteralPath $PrimariesOut -Value '[]' -Encoding UTF8
+        Set-Content -LiteralPath $MetaOut      -Value '[]' -Encoding UTF8
         Write-Host 'No sanitized work items found; wrote empty cluster outputs.'
         return
     }
 
-    $clusters = Cluster-Candidates -Items @($items) -Threshold $Threshold
+    $clustersRich = Cluster-Candidates -Items @($items) -Threshold $Threshold
+
+    # Legacy clusters.json shape ([[primaryId, followerId, ...], ...]) so
+    # apply-outcomes.ps1 doesn't need to change to read it.
+    $clustersLegacy = @()
+    foreach ($cl in $clustersRich) {
+        $row = @([int] $cl.primary)
+        foreach ($f in @($cl.followers)) { $row += [int] $f.id }
+        $clustersLegacy += ,$row
+    }
+
     $primaries = @()
-    foreach ($c in $clusters) {
-        $primaries += [pscustomobject] @{ id = [int] $c[0] }
+    foreach ($cl in $clustersRich) {
+        $primaries += [pscustomobject] @{ id = [int] $cl.primary }
+    }
+
+    # cluster-meta.json — the human-approval-friendly view: each cluster
+    # carries its primary's title and a per-follower {id, title, similarity}
+    # so the apply-outcomes run summary can surface what each follower's
+    # close action was based on.
+    $meta = @()
+    foreach ($cl in $clustersRich) {
+        $followerMeta = @()
+        foreach ($f in @($cl.followers)) {
+            $followerMeta += [pscustomobject] @{
+                id         = [int] $f.id
+                title      = ($idToTitle[[int] $f.id])
+                similarity = [double] $f.similarity
+            }
+        }
+        $meta += [pscustomobject] @{
+            primary   = [pscustomobject] @{ id = [int] $cl.primary; title = $idToTitle[[int] $cl.primary] }
+            followers = $followerMeta
+        }
     }
 
     # Write outputs as JSON.
-    # ConvertTo-Json with -InputObject keeps a single outer wrapper array
-    # even when the array has one element; piping would unroll for length 1.
-    (ConvertTo-Json -InputObject $clusters -Depth 5 -Compress) | Set-Content -LiteralPath $ClustersOut -Encoding UTF8
-    # primaries.json is consumed directly as a GH Actions matrix list; compact JSON only.
-    (ConvertTo-Json -InputObject $primaries -Depth 3 -Compress) | Set-Content -LiteralPath $PrimariesOut -Encoding UTF8
-    Write-Host "Clusters: $(@($clusters).Count), primaries: $(@($primaries).Count) → $ClustersOut, $PrimariesOut"
+    # -Compress for primaries.json keeps the file single-line; the workflow's
+    # `prepare` job uses a heredoc-delimited GITHUB_OUTPUT block so multi-line
+    # JSON would technically also work, but the single-line invariant is kept
+    # as defense-in-depth (asserted below). clusters.json + cluster-meta.json
+    # are downloaded as artifacts and -Compress is purely a size optimization.
+    (ConvertTo-Json -InputObject $clustersLegacy -Depth 5 -Compress) | Set-Content -LiteralPath $ClustersOut -Encoding UTF8
+    (ConvertTo-Json -InputObject $primaries      -Depth 3 -Compress) | Set-Content -LiteralPath $PrimariesOut -Encoding UTF8
+    (ConvertTo-Json -InputObject $meta           -Depth 6 -Compress) | Set-Content -LiteralPath $MetaOut     -Encoding UTF8
+
+    # Defensive assertion: if primaries.json ever drifts off a single line,
+    # the workflow's `primaries=$(cat primaries.json)` step would corrupt
+    # GITHUB_OUTPUT and the matrix would silently get garbage.
+    $primariesText = Get-Content -LiteralPath $PrimariesOut -Raw
+    if ($primariesText -match "`r?`n.+") {
+        throw "primaries.json must be single-line for GITHUB_OUTPUT consumption (saw multi-line content)."
+    }
+
+    Write-Host "Clusters: $(@($clustersRich).Count), primaries: $(@($primaries).Count) -> $ClustersOut, $PrimariesOut, $MetaOut"
 }
 
 function Invoke-SelfTest {
@@ -183,8 +254,21 @@ function Invoke-SelfTest {
     $clusters = Cluster-Candidates -Items $items -Threshold 0.3
     if ($clusters.Count -ne 2) { Write-Error "Expected 2 clusters, got $($clusters.Count)."; $errors++ }
     $hasMerged = $false
-    foreach ($cl in $clusters) { if ($cl.Count -ge 2 -and ($cl -contains 1) -and ($cl -contains 2)) { $hasMerged = $true; break } }
+    foreach ($cl in $clusters) {
+        $followerIds = @($cl.followers | ForEach-Object { [int] $_.id })
+        if ([int] $cl.primary -eq 1 -and ($followerIds -contains 2)) { $hasMerged = $true; break }
+        if ([int] $cl.primary -eq 2 -and ($followerIds -contains 1)) { $hasMerged = $true; break }
+    }
     if (-not $hasMerged) { Write-Error 'Expected ids 1 and 2 to share a cluster.'; $errors++ }
+
+    # Followers carry a similarity score in [0,1] at the moment of merge.
+    foreach ($cl in $clusters) {
+        foreach ($f in @($cl.followers)) {
+            if ($null -eq $f.similarity -or [double] $f.similarity -lt 0 -or [double] $f.similarity -gt 1) {
+                Write-Error "Follower similarity out of [0,1]: id=$($f.id) score=$($f.similarity)"; $errors++
+            }
+        }
+    }
 
     if ($errors -gt 0) {
         throw "cluster.ps1 self-test failed with $errors error(s)."
@@ -197,4 +281,4 @@ if (-not $SanitizedDir) { throw '-SanitizedDir is required.' }
 if (-not $ClustersOut)  { throw '-ClustersOut is required.' }
 if (-not $PrimariesOut) { throw '-PrimariesOut is required.' }
 
-Invoke-Cluster -SanitizedDir $SanitizedDir -ClustersOut $ClustersOut -PrimariesOut $PrimariesOut -Threshold $Threshold
+Invoke-Cluster -SanitizedDir $SanitizedDir -ClustersOut $ClustersOut -PrimariesOut $PrimariesOut -MetaOut $MetaOut -Threshold $Threshold

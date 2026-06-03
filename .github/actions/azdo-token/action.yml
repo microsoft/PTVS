@@ -1,0 +1,41 @@
+name: Acquire AzDO access token via GitHub OIDC
+description: |
+  Federates a GitHub Actions OIDC token to a DevDiv Entra service principal
+  via `azure/login@v2`, then mints an Azure DevOps-scoped bearer token via
+  the now-authenticated `az` CLI and exports it as `AZDO_ACCESS_TOKEN` in
+  `$GITHUB_ENV`. The token is auto-masked. Token TTL is ~1 hour.
+
+  Extracted from three near-identical inline blocks in `azdo-triage.yml`
+  so the well-known AzDO resource AppId and the auth-flow comments are
+  defined in one place — any change (e.g., switching from OIDC to a PAT
+  fallback) only needs to be made here.
+
+inputs:
+  client-id:
+    description: Entra application (service principal) client ID.
+    required: true
+  tenant-id:
+    description: Entra tenant ID.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Federate GitHub OIDC -> Entra
+      uses: azure/login@v2
+      with:
+        client-id: ${{ inputs.client-id }}
+        tenant-id: ${{ inputs.tenant-id }}
+        allow-no-subscriptions: true
+
+    - name: Mint AzDO-scoped bearer token
+      shell: bash
+      run: |
+        # 499b84ac-1321-427f-aa17-267ca6975798 is the well-known Azure DevOps
+        # resource AppId. azure/login itself does NOT emit an AzDO-scoped
+        # bearer token — we mint one via the now-authenticated `az` CLI.
+        AZDO_ACCESS_TOKEN=$(az account get-access-token \
+          --resource 499b84ac-1321-427f-aa17-267ca6975798 \
+          --query accessToken -o tsv)
+        echo "::add-mask::$AZDO_ACCESS_TOKEN"
+        echo "AZDO_ACCESS_TOKEN=$AZDO_ACCESS_TOKEN" >> "$GITHUB_ENV"
