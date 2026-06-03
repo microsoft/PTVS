@@ -153,6 +153,27 @@ function Get-AzdoAuthHeader {
     return $null
 }
 
+function Build-AreaPathHistoryWiql {
+    param([Parameter(Mandatory)] [object] $Config, [Parameter(Mandatory)] [int] $Days)
+    # Empty workItemTypes => emit no [System.WorkItemType] clause, matching the
+    # manual top-level-items filter (Work Item Type = [Any]) and the WIQL in
+    # query-azdo.ps1. AzDO rejects `IN ()` with HTTP 400
+    # "Expecting constant value. The error is caused by »)«".
+    $typeClause = ''
+    if ($Config.azdo.workItemTypes -and @($Config.azdo.workItemTypes).Count -gt 0) {
+        $types = ($Config.azdo.workItemTypes | ForEach-Object { "'$_'" }) -join ', '
+        $typeClause = "  AND  [System.WorkItemType] IN ($types)`n"
+    }
+    return @"
+SELECT [System.Id]
+FROM   workitems
+WHERE  [System.TeamProject] = '$($Config.azdo.project)'
+  AND  [System.AreaPath] UNDER '$($Config.azdo.areaPath)'
+$typeClause  AND  [System.CreatedDate] >= @Today - $Days
+ORDER BY [System.CreatedDate] DESC
+"@
+}
+
 function Get-AreaPathHistory {
     param([object] $Config)
     $headers = Get-AzdoAuthHeader
@@ -163,16 +184,7 @@ function Get-AreaPathHistory {
 
     $days = [int] $Config.limits.areaPathHistoryDays
     $cap  = [int] $Config.limits.areaPathHistoryCap
-    $types = ($Config.azdo.workItemTypes | ForEach-Object { "'$_'" }) -join ', '
-    $wiql = @"
-SELECT [System.Id]
-FROM   workitems
-WHERE  [System.TeamProject] = '$($Config.azdo.project)'
-  AND  [System.AreaPath] UNDER '$($Config.azdo.areaPath)'
-  AND  [System.WorkItemType] IN ($types)
-  AND  [System.CreatedDate] >= @Today - $days
-ORDER BY [System.CreatedDate] DESC
-"@
+    $wiql = Build-AreaPathHistoryWiql -Config $Config -Days $days
     $uri = "$($Config.azdo.baseUrl)/$($Config.azdo.project)/_apis/wit/wiql?api-version=7.1"
     try {
         $resp = Invoke-RestMethod -Method POST -Uri $uri -Headers $headers -Body (@{ query = $wiql } | ConvertTo-Json -Compress) -ContentType 'application/json'
@@ -247,6 +259,29 @@ function Invoke-SelfTest {
         $commits = Get-RecentCommits -RepoRoot $RepoRoot -DaysBack 365 -Cap 5
         # Empty result is acceptable on a brand-new clone, so we don't fail.
         Write-Host "  self-test: git log returned $(@($commits).Count) commit(s)."
+    }
+
+    # WIQL builder must not emit `IN ()` when workItemTypes is empty (AzDO
+    # rejects that with HTTP 400). Regression guard for the bug found during
+    # the WI #2454483 end-to-end validation.
+    $cfgEmpty = ($cfg | ConvertTo-Json -Depth 20 | ConvertFrom-Json)
+    $cfgEmpty.azdo.workItemTypes = @()
+    $wiqlEmpty = Build-AreaPathHistoryWiql -Config $cfgEmpty -Days 90
+    if ($wiqlEmpty -match '\[System\.WorkItemType\] IN \(\s*\)') {
+        Write-Error 'Build-AreaPathHistoryWiql emitted invalid "IN ()" for empty workItemTypes.'; $errors++
+    }
+    if ($wiqlEmpty -match '\[System\.WorkItemType\] IN') {
+        Write-Error 'Build-AreaPathHistoryWiql should omit WorkItemType clause when types are empty.'; $errors++
+    }
+    if ($wiqlEmpty -notmatch '@Today - 90') {
+        Write-Error 'Build-AreaPathHistoryWiql missing date predicate.'; $errors++
+    }
+
+    $cfgTwo = ($cfg | ConvertTo-Json -Depth 20 | ConvertFrom-Json)
+    $cfgTwo.azdo.workItemTypes = @('Bug','Task')
+    $wiqlTwo = Build-AreaPathHistoryWiql -Config $cfgTwo -Days 90
+    if ($wiqlTwo -notmatch "\[System\.WorkItemType\] IN \('Bug', 'Task'\)") {
+        Write-Error 'Build-AreaPathHistoryWiql should emit IN (...) when types are non-empty.'; $errors++
     }
 
     if ($errors -gt 0) {
