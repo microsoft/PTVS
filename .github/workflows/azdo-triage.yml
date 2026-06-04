@@ -225,6 +225,17 @@ jobs:
     #   - reads sanitized/wi-<id>.json, sanitized/diag-<id>.json, run-context.json
     #   - writes verdict.json (schema validated by a post-step)
     #   - uploads verdict-<id> artifact for the apply job to consume
+    # Reusable-workflow callers must explicitly grant every permission the
+    # called workflow declares; implicit defaults are `none`. The compiled
+    # lockfile's `activation` job needs `actions: read` and the `agent`
+    # job needs `actions: read` + `models: read` + `contents: read` +
+    # `issues: read`. Without this block, GH Actions rejects the call
+    # with: "nested job is requesting 'X: read' but is only allowed 'X: none'".
+    permissions:
+      actions: read
+      contents: read
+      issues: read
+      models: read
     uses: ./.github/workflows/azdo-triage-agent.lock.yml
     with:
       workitem_id: ${{ matrix.candidate.id }}
