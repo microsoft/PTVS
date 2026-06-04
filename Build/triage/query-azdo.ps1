@@ -105,6 +105,38 @@ ORDER BY [$dateField] DESC
     return $wiql
 }
 
+function Get-AzdoErrorDetails {
+    param([Parameter(Mandatory)] [System.Management.Automation.ErrorRecord] $ErrRec)
+    # Surface the bits AzDO actually puts useful diagnostics in: the response
+    # body (TF400813/VS401034/etc message codes) and the WWW-Authenticate
+    # header (which on AzDO indicates whether PAT is disabled by org policy,
+    # whether Entra auth is required, etc.). Lost otherwise because
+    # Invoke-RestMethod throws on non-2xx without surfacing the body.
+    $status = $null
+    $reason = $null
+    $body   = $null
+    $wwwAuth = $null
+    if ($ErrRec.Exception.Response) {
+        $resp = $ErrRec.Exception.Response
+        $status = [int] $resp.StatusCode
+        $reason = $resp.ReasonPhrase
+        if ($resp.Headers -and $resp.Headers.WwwAuthenticate) {
+            $wwwAuth = ($resp.Headers.WwwAuthenticate -join '; ')
+        }
+    }
+    # In PowerShell 7+ the response body is in ErrorDetails.Message for
+    # HttpResponseException; in 5.1 it's on the Response stream.
+    if ($ErrRec.ErrorDetails -and $ErrRec.ErrorDetails.Message) {
+        $body = $ErrRec.ErrorDetails.Message
+    }
+    [pscustomobject] @{
+        Status  = $status
+        Reason  = $reason
+        WwwAuth = $wwwAuth
+        Body    = $body
+    }
+}
+
 function Invoke-AzdoRestWithRetry {
     param(
         [Parameter(Mandatory)] [string] $Method,
@@ -144,6 +176,14 @@ function Invoke-AzdoRestWithRetry {
                 Start-Sleep -Seconds $sleep
                 continue
             }
+            # Non-retryable: dump AzDO's diagnostic payload before rethrowing
+            # so the workflow log shows the actual cause (TF/VS code, body)
+            # instead of a bare "401 (Unauthorized)".
+            $det = Get-AzdoErrorDetails -ErrRec $_
+            Write-Host "AzDO REST $Method $Uri failed."
+            Write-Host "  HTTP status     : $($det.Status) $($det.Reason)"
+            if ($det.WwwAuth) { Write-Host "  WWW-Authenticate: $($det.WwwAuth)" }
+            if ($det.Body)    { Write-Host "  Response body   : $($det.Body)" }
             throw
         }
     }
