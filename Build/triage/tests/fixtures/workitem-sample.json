@@ -1,0 +1,31 @@
+{
+    "id": 2711586,
+    "rev": 3,
+    "url": "https://dev.azure.com/devdiv/DevDiv/_workitems/edit/2711586",
+    "fields": {
+        "System.Id": 2711586,
+        "System.Title": "Visual Studio crashes when I open a Python project",
+        "System.WorkItemType": "Bug",
+        "System.State": "Active",
+        "System.AreaPath": "DevDiv\\Python and AI Tools\\Python\\VS IDE",
+        "System.Tags": "vsfeedback",
+        "System.Rev": 3,
+        "System.CreatedDate": "2026-05-08T12:00:00Z",
+        "System.CreatedBy": {
+            "displayName": "Jane Doe",
+            "uniqueName": "jane.doe@example.com"
+        },
+        "System.Description": "<p>VS crashes immediately after I open my Python project.</p>",
+        "Microsoft.VSTS.TCM.ReproSteps": "<ol><li>Open VS</li><li>Open the .pyproj file</li></ol>",
+        "Microsoft.VSTS.TCM.SystemInfo": "<p>Windows 11, VS 17.10.1, Python 3.11.4</p>"
+    },
+    "relations": [
+        {
+            "rel": "AttachedFile",
+            "url": "https://dev.azure.com/devdiv/_apis/wit/attachments/00000000-0000-0000-0000-000000000001",
+            "attributes": {
+                "name": "PythonToolsDiagnostics_20260508.log"
+            }
+        }
+    ]
+}

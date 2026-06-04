@@ -1,0 +1,9 @@
+{
+    "verdict": "real_bug",
+    "confidence": 0.78,
+    "response_md": "",
+    "github_issue_body_md": "**Describe the bug**\nVS crashes immediately after opening a Python project on Windows 11 / VS 17.10.1 / Python 3.11.4.\n\n**Steps to Reproduce**\n1. Open VS\n2. Open the .pyproj file\n\n**Expected behavior**\nThe project loads without VS crashing.\n\n**Additional context**\nDiagnostics log was attached on the original AzDO work item — see frontmatter for the link.",
+    "missing_info": [],
+    "related_urls": [],
+    "source_issue_for_resolution": ""
+}
