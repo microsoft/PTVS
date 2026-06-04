@@ -49,8 +49,10 @@ on:
 permissions:
   contents: read
   issues: write          # to create issues in this repo
-  models: read           # for actions/ai-inference
   id-token: write        # for OIDC -> Entra federated credential
+  # NOTE: `models: read` and `actions: read` are NOT declared here. The
+  # agentic triage step (azdo-triage-agent.lock.yml) declares its own
+  # permissions block, which is what gh-aw uses when called via `uses:`.
 
 concurrency:
   group: azdo-triage
@@ -152,9 +154,10 @@ jobs:
 
       - name: Fetch shared per-run research context
         shell: pwsh
-        env:
-          PTVS_TRIAGE_MCP_READONLY_PAT: ${{ secrets.PTVS_TRIAGE_MCP_READONLY_PAT }}
         run: |
+          # fetch-context.ps1 reads GitHub via $env:GITHUB_TOKEN (auto-injected
+          # for repo-scoped reads). The previous PTVS_TRIAGE_MCP_READONLY_PAT
+          # env var was removed when triage migrated to gh-aw.
           ./Build/triage/fetch-context.ps1 `
             -OutFile $env:RUNNER_TEMP/run-context.json
 
@@ -207,7 +210,6 @@ jobs:
   triage:
     needs: prepare
     if: ${{ inputs.run_triage != false && needs.prepare.outputs.primaries != '[]' && needs.prepare.outputs.primaries != '' }}
-    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       max-parallel: 3
@@ -215,53 +217,19 @@ jobs:
         # only cluster PRIMARIES flow through the matrix; followers are
         # handled by apply-outcomes.ps1 in the apply job.
         candidate: ${{ fromJson(needs.prepare.outputs.primaries) }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: run-artifacts
-          path: ${{ runner.temp }}
-
-      - name: Triage with AI
-        id: triage
-        uses: actions/ai-inference@v1
-        with:
-          prompt-file: ./Build/triage/prompts/triage.prompt.yml
-          input: |
-            workitem_id: ${{ matrix.candidate.id }}
-          file_input: |
-            workitem_json: ${{ runner.temp }}/sanitized/wi-${{ matrix.candidate.id }}.json
-            diagnostics_json: ${{ runner.temp }}/sanitized/diag-${{ matrix.candidate.id }}.json
-            run_context_json: ${{ runner.temp }}/run-context.json
-          enable-github-mcp: true
-          # READ-ONLY token, separate from PTVS_BRIDGE_PAT. Limits blast
-          # radius if the model is induced to misuse MCP.
-          github-mcp-token: ${{ secrets.PTVS_TRIAGE_MCP_READONLY_PAT }}
-          # `issues` toolset lets the model read comments on a candidate
-          # duplicate — what makes "apply the resolution, don't just
-          # link" possible.
-          github-mcp-toolsets: 'repos,issues'
-          model: openai/gpt-4.1
-          max-completion-tokens: 4000
-
-      - name: Persist verdict
-        # outputs.response may contain newlines and quotes; outputs.response-file
-        # is the safe way to capture it.
-        shell: bash
-        run: |
-          cp "${{ steps.triage.outputs.response-file }}" \
-             "$RUNNER_TEMP/verdict-${{ matrix.candidate.id }}.json"
-
-      - uses: actions/upload-artifact@v4
-        with:
-          # Per-candidate artifact name: matrix shards write in parallel and
-          # share `${{ runner.temp }}` only on the same runner, so multiple
-          # shards uploading to a single `verdicts` artifact would race
-          # (actions/upload-artifact@v4 rejects duplicate uploads of the same
-          # name). The apply job re-aggregates via `pattern: verdict-*`.
-          name: verdict-${{ matrix.candidate.id }}
-          path: ${{ runner.temp }}/verdict-${{ matrix.candidate.id }}.json
-          retention-days: 30
+    # Reusable agentic workflow compiled from .github/workflows/azdo-triage-agent.md
+    # via `gh aw compile`. The .lock.yml file MUST be committed alongside
+    # the .md (the .md is the source of truth; the .lock.yml is what GH
+    # Actions actually runs). Per-shard responsibilities:
+    #   - downloads the prepare job's run-artifacts (using parent_run_id)
+    #   - reads sanitized/wi-<id>.json, sanitized/diag-<id>.json, run-context.json
+    #   - writes verdict.json (schema validated by a post-step)
+    #   - uploads verdict-<id> artifact for the apply job to consume
+    uses: ./.github/workflows/azdo-triage-agent.lock.yml
+    with:
+      workitem_id: ${{ matrix.candidate.id }}
+      parent_run_id: ${{ github.run_id }}
+    secrets: inherit
 
   apply:
     # Must include `prepare` in needs: GH Actions only exposes

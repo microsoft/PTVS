@@ -33,9 +33,14 @@ Every Monday at 08:00 UTC the workflow:
 | `post-azdo.ps1` | Helpers (dot-sourced by `apply-outcomes.ps1`): comment, close-as-duplicate, close-as-answered. Concurrency-safe (uses `test /rev`). |
 | `mirror-to-github.ps1` | Helpers (dot-sourced by `apply-outcomes.ps1`): search-then-create mirror issue on `microsoft/PTVS`. |
 | `apply-outcomes.ps1` | Reads verdicts + cluster map and dispatches the per-candidate actions. Honors `$env:DRY_RUN`. |
-| `prompts/triage.prompt.yml` | Main AI triage prompt consumed by `actions/ai-inference`. |
 | `tests/fixtures/` | Canned JSON fixtures for inline `-SelfTest` smoke tests. |
 | `run-tests.ps1` | Runs `-SelfTest` on each script in this directory. Wired into the `triage-tests` job. |
+
+> The judgment step (verdict per candidate) lives outside this directory in
+> [`.github/workflows/azdo-triage-agent.md`](../../.github/workflows/azdo-triage-agent.md),
+> an agentic workflow compiled by [`gh aw`](https://github.github.com/gh-aw/).
+> Its companion `.lock.yml` is what GH Actions actually runs — see
+> [Editing the triage prompt](#editing-the-triage-prompt) below.
 
 ## Secrets the workflow needs
 
@@ -43,8 +48,16 @@ Every Monday at 08:00 UTC the workflow:
 |---|---|
 | `AZDO_TRIAGE_CLIENT_ID`, `AZDO_TRIAGE_TENANT_ID` | OIDC federation to a DevDiv Entra service principal. |
 | `PTVS_BRIDGE_PAT` | Fine-grained PAT (or App token) with `issues:write` + `metadata:read` on `microsoft/PTVS`. |
-| `PTVS_TRIAGE_MCP_READONLY_PAT` | Separate read-only token for `actions/ai-inference`'s GitHub MCP server. |
+| `COPILOT_GITHUB_TOKEN` | PAT used by `gh-aw`'s `engine: copilot` to bill the GitHub Copilot CLI call. Must belong to an identity with an active GitHub Copilot Business / Enterprise entitlement. Validated by the agent job's first step; the workflow fails fast if absent. See [the gh-aw engines reference](https://github.github.com/gh-aw/reference/engines/#github-copilot-default). |
 | `AZDO_PAT` *(fallback)* | PAT with `vso.work_write` if the SP/OIDC path isn't available. |
+
+The agent's GitHub MCP toolset (`issues` + `repos`, read-only) uses the
+auto-injected, repo-scoped `GITHUB_TOKEN` and does NOT need a separate
+PAT — gh-aw's compiled lockfile resolves
+`GH_AW_GITHUB_MCP_SERVER_TOKEN || GH_AW_GITHUB_TOKEN || GITHUB_TOKEN`,
+so the fallback covers us. The previous `PTVS_TRIAGE_MCP_READONLY_PAT`
+secret was removed when the triage step was migrated from
+`actions/ai-inference@v1` to `gh aw`.
 
 The workflow also expects an Environment named `azdo-triage-approval` with
 required reviewers configured.
@@ -67,6 +80,38 @@ work item under our area path:
    `DC - Closed - Fixed`).
 3. Verify that `from-azdo` and `azdo-triage-report` labels exist on
    `microsoft/PTVS` (create them once before the first non-dry-run).
+
+## Editing the triage prompt
+
+The triage judgment lives in
+[`.github/workflows/azdo-triage-agent.md`](../../.github/workflows/azdo-triage-agent.md),
+authored as natural-language markdown with a YAML frontmatter block (engine,
+tools, pre/post steps). GitHub Actions cannot execute the `.md` directly —
+it runs a compiled `.lock.yml` sibling. After any edit to the `.md`, run:
+
+```pwsh
+# one-time, per workstation. The standard install command:
+gh extension install github/gh-aw
+# is blocked by the `github` org's SAML enforcement for non-org-member
+# accounts (HTTP 403 from the releases API). Microsoft FTEs without
+# membership in the github org should install manually from the prebuilt
+# Windows binary instead:
+$ext = Join-Path $env:LOCALAPPDATA "GitHub CLI\extensions\gh-aw"
+New-Item -ItemType Directory -Path $ext -Force | Out-Null
+$tag = (Invoke-WebRequest "https://github.com/github/gh-aw/releases/latest" `
+        -MaximumRedirection 0 -SkipHttpErrorCheck).Headers.Location.Split('/')[-1]
+Invoke-WebRequest "https://github.com/github/gh-aw/releases/download/$tag/windows-amd64.exe" `
+    -OutFile (Join-Path $ext "gh-aw.exe") -UseBasicParsing
+@{ name='gh-aw'; owner='github'; host='github.com'; tag=$tag; ispinned=$false;
+   path=(Join-Path $ext 'gh-aw.exe'); isBinary=$true } | ConvertTo-Json |
+    Out-File (Join-Path $ext 'manifest.yml') -Encoding ascii
+
+# every time the .md changes:
+gh aw compile .github/workflows/azdo-triage-agent.md
+# commit BOTH the .md and the regenerated .lock.yml in the same commit
+```
+
+The `triage-tests` CI job verifies the lockfile is in sync with the source.
 
 ## Running locally
 

@@ -9,8 +9,9 @@
 
         Inputs:
           - verdict-<id>.json files under -VerdictsDir (one per cluster
-            primary). Each is the JSON produced by actions/ai-inference and
-            conforms to triage.prompt.yml's response schema:
+            primary). Each is the JSON produced by the agentic triage step
+            (.github/workflows/azdo-triage-agent.md) and conforms to the
+            response schema defined in that file:
               { verdict, confidence, response_md, github_issue_body_md,
                 missing_info[], related_urls[], source_issue_for_resolution }
           - clusters.json under -RunArtifacts (or sanitized/ within it):
