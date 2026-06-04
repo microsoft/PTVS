@@ -47,9 +47,13 @@ Every Monday at 08:00 UTC the workflow:
 | Secret | Purpose |
 |---|---|
 | `AZDO_TRIAGE_CLIENT_ID`, `AZDO_TRIAGE_TENANT_ID` | OIDC federation to a DevDiv Entra service principal. |
-| `PTVS_BRIDGE_PAT` | Fine-grained PAT (or App token) with `issues:write` + `metadata:read` on `microsoft/PTVS`. |
 | `COPILOT_GITHUB_TOKEN` | PAT used by `gh-aw`'s `engine: copilot` to bill the GitHub Copilot CLI call. Must belong to an identity with an active GitHub Copilot Business / Enterprise entitlement. Validated by the agent job's first step; the workflow fails fast if absent. See [the gh-aw engines reference](https://github.github.com/gh-aw/reference/engines/#github-copilot-default). |
 | `AZDO_PAT` *(fallback)* | PAT with `vso.work_write` if the SP/OIDC path isn't available. |
+
+The workflow's writes to `microsoft/PTVS` issues (Job 1's weekly report and
+Job 2's mirror issues) use the auto-injected `GITHUB_TOKEN`. The workflow's
+top-level `permissions:` block declares `issues: write`, which is what scopes
+that token. No separate PAT (`PTVS_BRIDGE_PAT`) is required.
 
 The agent's GitHub MCP toolset (`issues` + `repos`, read-only) uses the
 auto-injected, repo-scoped `GITHUB_TOKEN` and does NOT need a separate
@@ -122,8 +126,11 @@ The scripts are PowerShell 7 and run on Windows or Linux runners.
 pwsh -File Build/triage/run-tests.ps1
 
 # Dry-run the whole pipeline locally against a real AzDO token.
+# For local runs, set GITHUB_TOKEN to a fine-grained PAT with
+# issues:write + metadata:read on microsoft/PTVS. In GitHub Actions
+# the auto-injected GITHUB_TOKEN is used instead — no PAT needed.
 $env:AZDO_ACCESS_TOKEN = '...'
-$env:PTVS_BRIDGE_PAT   = '...'
+$env:GITHUB_TOKEN      = '...'
 $env:DRY_RUN           = 'true'
 
 ./Build/triage/query-azdo.ps1            -OutFile $env:TEMP/candidates.json -LookbackDays 14

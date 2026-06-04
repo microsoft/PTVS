@@ -15,8 +15,10 @@
         Empty candidate list: nothing is filed; the script exits 0 with a
         log line.
 
-        Auth: $env:PTVS_BRIDGE_PAT (fine-grained PAT with issues:write on
-        microsoft/PTVS).
+        Auth: $env:GITHUB_TOKEN. In GitHub Actions this is the auto-injected,
+        repo-scoped, job-lifetime token (workflow declares `issues: write`).
+        For local runs, set $env:GITHUB_TOKEN to a fine-grained PAT with
+        `issues:write` + `metadata:read` on microsoft/PTVS.
 
     .PARAMETER CandidatesFile
         Path to the titles-only sanitized JSON (from sanitize.ps1 -TitlesOnly).
@@ -60,11 +62,11 @@ function Get-TriageConfig {
 }
 
 function Get-GitHubHeaders {
-    if (-not $env:PTVS_BRIDGE_PAT) {
-        throw 'PTVS_BRIDGE_PAT environment variable is required.'
+    if (-not $env:GITHUB_TOKEN) {
+        throw 'GITHUB_TOKEN environment variable is required.'
     }
     return @{
-        Authorization = "Bearer $env:PTVS_BRIDGE_PAT"
+        Authorization = "Bearer $env:GITHUB_TOKEN"
         Accept        = 'application/vnd.github+json'
         'X-GitHub-Api-Version' = '2022-11-28'
         'User-Agent'  = 'PTVS-azdo-triage-bot'

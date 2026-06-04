@@ -102,7 +102,10 @@ jobs:
       - name: Post weekly report issue
         shell: pwsh
         env:
-          PTVS_BRIDGE_PAT: ${{ secrets.PTVS_BRIDGE_PAT }}
+          # Auto-injected, repo-scoped, job-lifetime token. Workflow-level
+          # `permissions: issues: write` (top of file) is what gives this
+          # token the scope post-report-issue.ps1 needs. No PAT required.
+          GITHUB_TOKEN:    ${{ secrets.GITHUB_TOKEN }}
           LOOKBACK_DAYS:   ${{ inputs.lookback_days || '7' }}
           TRIAGE_WILL_RUN: ${{ inputs.run_triage != false }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -297,7 +300,9 @@ jobs:
         shell: pwsh
         env:
           DRY_RUN: ${{ inputs.dry_run }}
-          PTVS_BRIDGE_PAT: ${{ secrets.PTVS_BRIDGE_PAT }}
+          # Same as Job 1: workflow-level `issues: write` is what mints the
+          # token's scope; mirror-to-github.ps1 only writes to this repo.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ./Build/triage/apply-outcomes.ps1 `
             -VerdictsDir   $env:RUNNER_TEMP `

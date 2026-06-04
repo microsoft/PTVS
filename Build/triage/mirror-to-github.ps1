@@ -31,9 +31,9 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 function Get-GitHubHeaders {
-    if (-not $env:PTVS_BRIDGE_PAT) { throw 'PTVS_BRIDGE_PAT not set.' }
+    if (-not $env:GITHUB_TOKEN) { throw 'GITHUB_TOKEN not set.' }
     return @{
-        Authorization = "Bearer $env:PTVS_BRIDGE_PAT"
+        Authorization = "Bearer $env:GITHUB_TOKEN"
         Accept        = 'application/vnd.github+json'
         'X-GitHub-Api-Version' = '2022-11-28'
         'User-Agent'  = 'PTVS-azdo-triage-bot'
