@@ -44,11 +44,15 @@ Every Monday at 08:00 UTC the workflow:
 
 ## Secrets the workflow needs
 
+The AzDO triage workflow supports two AzDO auth paths, selected automatically
+by [`.github/actions/azdo-token/action.yml`](../../.github/actions/azdo-token/action.yml).
+**Configure exactly one.** PAT takes precedence when both are set.
+
 | Secret | Purpose |
 |---|---|
-| `AZDO_TRIAGE_CLIENT_ID`, `AZDO_TRIAGE_TENANT_ID` | OIDC federation to a DevDiv Entra service principal. |
+| `AZDO_PAT` *(fallback; fastest to provision)* | Azure DevOps Personal Access Token with `vso.work_write` scope. Use this to unblock the workflow while the Entra SP is being provisioned. Tied to the user who minted it; max 1-year lifetime — set a calendar reminder to rotate. When supplied, the OIDC path is skipped. |
+| `AZDO_TRIAGE_CLIENT_ID`, `AZDO_TRIAGE_TENANT_ID` *(preferred; production)* | OIDC federation to a DevDiv Entra service principal. Keyless; tokens are minted per-run with a 1-hour TTL. No rotation required. |
 | `COPILOT_GITHUB_TOKEN` | PAT used by `gh-aw`'s `engine: copilot` to bill the GitHub Copilot CLI call. Must belong to an identity with an active GitHub Copilot Business / Enterprise entitlement. Validated by the agent job's first step; the workflow fails fast if absent. See [the gh-aw engines reference](https://github.github.com/gh-aw/reference/engines/#github-copilot-default). |
-| `AZDO_PAT` *(fallback)* | PAT with `vso.work_write` if the SP/OIDC path isn't available. |
 
 The workflow's writes to `microsoft/PTVS` issues (Job 1's weekly report and
 Job 2's mirror issues) use the auto-injected `GITHUB_TOKEN`. The workflow's

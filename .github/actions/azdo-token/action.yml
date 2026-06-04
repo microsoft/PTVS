@@ -1,34 +1,105 @@
-name: Acquire AzDO access token via GitHub OIDC
+name: Acquire AzDO access token (OIDC preferred, PAT fallback)
 description: |
-  Federates a GitHub Actions OIDC token to a DevDiv Entra service principal
-  via `azure/login@v2`, then mints an Azure DevOps-scoped bearer token via
-  the now-authenticated `az` CLI and exports it as `AZDO_ACCESS_TOKEN` in
-  `$GITHUB_ENV`. The token is auto-masked. Token TTL is ~1 hour.
+  Surfaces an Azure DevOps credential to subsequent steps. Two paths,
+  selected by which inputs are populated. PAT TAKES PRECEDENCE when supplied
+  — when both are configured, the OIDC path is skipped.
 
-  Extracted from three near-identical inline blocks in `azdo-triage.yml`
-  so the well-known AzDO resource AppId and the auth-flow comments are
-  defined in one place — any change (e.g., switching from OIDC to a PAT
-  fallback) only needs to be made here.
+    1) PAT path (fallback, fastest to provision).
+       Caller supplies `azdo-pat`. The action exports `AZDO_PAT` to
+       `$GITHUB_ENV`. Build/triage/*.ps1 already consume this via Basic
+       auth (`Authorization: Basic base64(":<pat>")`). PATs are tied to
+       the user who minted them and max out at 1-year lifetime, so this
+       path is intended as a stop-gap until the Entra SP is provisioned.
+
+    2) OIDC path (preferred, keyless).
+       Caller supplies `client-id` + `tenant-id`. `azure/login@v2`
+       federates the GitHub Actions OIDC JWT to a DevDiv Entra service
+       principal; `az account get-access-token --resource <AzDO appid>`
+       then mints a 1-hour AzDO-scoped bearer token, exported as
+       `AZDO_ACCESS_TOKEN`. Build/triage/*.ps1 prefer this over the PAT.
+
+  Exactly one path must be configured. The first `Validate` step fails
+  fast with a clear error if both are empty.
+
+  Centralizing this here means the well-known AzDO resource AppId, the
+  PAT-vs-OIDC selection logic, and the masking/env-export are all defined
+  in one place — the three azdo-triage.yml jobs (report / prepare / apply)
+  all `uses: ./.github/actions/azdo-token` identically.
 
 inputs:
   client-id:
-    description: Entra application (service principal) client ID.
-    required: true
+    description: |
+      Entra application (service principal) client ID. Required when
+      `azdo-pat` is not provided.
+    required: false
   tenant-id:
-    description: Entra tenant ID.
-    required: true
+    description: |
+      Entra tenant ID. Required when `azdo-pat` is not provided.
+    required: false
+  azdo-pat:
+    description: |
+      Azure DevOps Personal Access Token scoped to `vso.work_write`. When
+      supplied (non-empty after whitespace trimming), the OIDC path is
+      skipped and Basic auth is used via `$env:AZDO_PAT`. Intended as a
+      stop-gap until the Entra SP federated credential is provisioned.
+    required: false
 
 runs:
   using: composite
   steps:
-    - name: Federate GitHub OIDC -> Entra
+    # Decide PAT-vs-OIDC ONCE and expose as a step output so subsequent
+    # `if:` conditions are driven by a normalized (whitespace-trimmed)
+    # signal instead of re-evaluating the raw inputs. This both avoids
+    # the "PAT is just a space" foot-gun and keeps the precedence rule
+    # (PAT wins when supplied) in a single place.
+    - id: auth
+      name: Select AzDO auth path
+      shell: bash
+      env:
+        AZDO_PAT_IN: ${{ inputs.azdo-pat }}
+        CLIENT_ID:   ${{ inputs.client-id }}
+        TENANT_ID:   ${{ inputs.tenant-id }}
+      run: |
+        pat="$(printf '%s' "${AZDO_PAT_IN:-}" | tr -d '[:space:]')"
+        cid="$(printf '%s' "${CLIENT_ID:-}" | tr -d '[:space:]')"
+        tid="$(printf '%s' "${TENANT_ID:-}" | tr -d '[:space:]')"
+        if [ -n "$pat" ]; then
+          echo "Using AzDO auth path: PAT (Basic, \$AZDO_PAT)"
+          echo "path=pat" >> "$GITHUB_OUTPUT"
+        elif [ -n "$cid" ] && [ -n "$tid" ]; then
+          echo "Using AzDO auth path: OIDC (Bearer, \$AZDO_ACCESS_TOKEN)"
+          echo "path=oidc" >> "$GITHUB_OUTPUT"
+        else
+          echo "::error::No AzDO auth configured. Set repo secret AZDO_PAT (fast path), or BOTH AZDO_TRIAGE_CLIENT_ID and AZDO_TRIAGE_TENANT_ID (Entra OIDC path). See Build/triage/README.md."
+          exit 1
+        fi
+
+    # ─── PAT path ─────────────────────────────────────────────────────
+    - name: Export AZDO_PAT (PAT path)
+      if: ${{ steps.auth.outputs.path == 'pat' }}
+      shell: bash
+      env:
+        AZDO_PAT_IN: ${{ inputs.azdo-pat }}
+      run: |
+        echo "::add-mask::$AZDO_PAT_IN"
+        echo "AZDO_PAT=$AZDO_PAT_IN" >> "$GITHUB_ENV"
+        # Defensive: ensure a stale AZDO_ACCESS_TOKEN can never shadow
+        # the PAT (the scripts prefer Bearer over Basic when both env
+        # vars are set). No-op on a fresh job; matters if the action
+        # is ever re-invoked.
+        echo "AZDO_ACCESS_TOKEN=" >> "$GITHUB_ENV"
+
+    # ─── OIDC path ────────────────────────────────────────────────────
+    - name: Federate GitHub OIDC -> Entra (OIDC path)
+      if: ${{ steps.auth.outputs.path == 'oidc' }}
       uses: azure/login@v2
       with:
         client-id: ${{ inputs.client-id }}
         tenant-id: ${{ inputs.tenant-id }}
         allow-no-subscriptions: true
 
-    - name: Mint AzDO-scoped bearer token
+    - name: Mint AzDO-scoped bearer token (OIDC path)
+      if: ${{ steps.auth.outputs.path == 'oidc' }}
       shell: bash
       run: |
         # 499b84ac-1321-427f-aa17-267ca6975798 is the well-known Azure DevOps
@@ -39,3 +110,6 @@ runs:
           --query accessToken -o tsv)
         echo "::add-mask::$AZDO_ACCESS_TOKEN"
         echo "AZDO_ACCESS_TOKEN=$AZDO_ACCESS_TOKEN" >> "$GITHUB_ENV"
+        # Defensive: clear any stale AZDO_PAT so the Bearer path is the
+        # only one the downstream scripts can pick.
+        echo "AZDO_PAT=" >> "$GITHUB_ENV"
