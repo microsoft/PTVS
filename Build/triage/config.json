@@ -1,5 +1,5 @@
 {
-    "$comment": "Configuration for the weekly AzDO triage automation (read + AI draft only; no destructive AzDO writes). See Build/triage/README.md.",
+    "$comment": "Configuration for the weekly AzDO triage automation (read-only fetch + sanitize + summary issue). See Build/triage/README.md.",
 
     "azdo": {
         "organization": "devdiv",
@@ -24,15 +24,6 @@
 
     "limits": {
         "maxCandidatesPerRun": 25,
-        "lookbackDaysDefault": 7,
-        "recentCommitsCap": 150,
-        "releaseTagsCap": 3
-    },
-
-    "$comment_upstream_trackers": "Hint URLs the AI draft may suggest to customers when their issue looks like an upstream defect rather than PTVS itself.",
-    "upstream_tracker_urls": [
-        "https://github.com/microsoft/pylance-release/issues",
-        "https://github.com/microsoft/debugpy/issues",
-        "https://github.com/python/cpython/issues"
-    ]
+        "lookbackDaysDefault": 7
+    }
 }

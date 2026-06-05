@@ -2,42 +2,27 @@
 #
 # Runs inside devdiv/DevDiv (where $(System.AccessToken) has native AzDO REST
 # auth — the same call from a GitHub-hosted runner is bare-401'd by the
-# DevDiv security gateway). End to end:
+# DevDiv security gateway).
 #
-#   1. Cleanup old draft releases (>30 days) — best-effort housekeeping
-#   2. Fetch + parse + sanitize AzDO work items
-#   3. Build slim bundle.json manifest (drops sanitization-aborted items)
-#   4. Create a DRAFT GitHub Release in microsoft/PTVS (using GH_PAT with
-#      Contents:Write) and upload bundle.json + wi-<id>.json + diag-<id>.json
-#      per item as release assets. Draft releases are INVISIBLE to non-push-
-#      access users — verified via GitHub REST docs ("Only users with push
-#      access will receive listings for draft releases").
-#   5. Post a weekly summary issue to microsoft/PTVS with:
-#      - human-readable bullets per work item (title + link, visible)
-#      - a hidden <!--ptvs-triage-release: <tag>--> marker pointing at the
-#        draft release where Phase 2 reads the data
-#      - NO sanitized content inline; no base64; no bundle in the body
-#   6. Publish the same sanitized data as an AzDO build artifact (internal
-#      audit trail, devdiv-only)
+# End to end (4 steps):
+#   1. Query AzDO for open work items under DevDiv\Python and AI Tools\**
+#      that changed in the last 7 days (cap 25).
+#   2. Download + parse any PythonToolsDiagnostics_*.log attachments.
+#   3. Sanitize all of it (PII redaction; drop items that hit secret patterns).
+#   4. Publish the sanitized data as an AzDO build artifact (devdiv-internal
+#      audit trail) AND post a weekly summary issue in microsoft/PTVS with
+#      bullet points (work item title + link) for every non-aborted item.
 #
-# Phase 2 (separate GH workflow, not in this file) will be triggered by the
-# summary issue's label, extract the release tag from the body, download the
-# release assets using the auto-injected GITHUB_TOKEN (contents:read), run an
-# AI analysis matrix per work item, and post each analysis as a comment
-# under the same summary issue. The Phase 2 workflow is also responsible
-# for cleaning up the draft release once analyses are posted.
+# The summary issue body contains NO sanitized content — only public-safe
+# titles + AzDO URLs. The full sanitized JSON lives only in the AzDO build
+# artifact, which never leaves the devdiv tenant.
 #
-# Setup prerequisites (one-time, see Build/triage/README.md Phase 0):
+# Setup prerequisites (one-time, see Build/triage/README.md):
 #   1. Create variable group `PTVS-Triage-Bridge` in devdiv/DevDiv with a
 #      secret variable `GH_PAT` = fine-grained GitHub PAT scoped to
-#      microsoft/PTVS with:
-#        - Issues: Read+Write   (post the weekly summary issue)
-#        - Metadata: Read       (auto-granted)
-#        - Contents: Read+Write (create draft release + upload assets +
-#                                delete stale drafts during cleanup)
+#      microsoft/PTVS with Issues: Read+Write (post the weekly summary issue).
 #   2. Grant the project Build Service identity `View work items in this
-#      node` on area path `DevDiv\Python and AI Tools`. (System.AccessToken
-#      has no authority until this is granted.)
+#      node` on area path `DevDiv\Python and AI Tools`.
 #   3. Create the AzDO Pipeline in devdiv/DevDiv pointing at this file on
 #      the `main` branch of `microsoft/PTVS`.
 
@@ -98,56 +83,6 @@ jobs:
     persistCredentials: false
 
   - task: PowerShell@2
-    displayName: 'Cleanup old draft releases (>30 days)'
-    continueOnError: true     # best-effort; don't fail the run if cleanup fails
-    env:
-      GITHUB_TOKEN: $(GH_PAT)
-    inputs:
-      pwsh: true
-      targetType: inline
-      script: |
-        # Sweep old triage-* draft releases so they don't accumulate. Anything
-        # older than 30 days is gone. The current run's release doesn't exist
-        # yet so this can't delete ourselves. continueOnError because cleanup
-        # failure should never block a fresh fetch from succeeding.
-        Set-StrictMode -Version Latest
-        $ErrorActionPreference = 'Stop'
-
-        $headers = @{
-            Authorization = "Bearer $env:GITHUB_TOKEN"
-            Accept        = 'application/vnd.github+json'
-            'X-GitHub-Api-Version' = '2022-11-28'
-            'User-Agent'  = 'PTVS-Triage-Fetch'
-        }
-        $cutoff  = (Get-Date).AddDays(-30).ToUniversalTime()
-        $deleted = 0
-        $kept    = 0
-        # The releases listing endpoint INCLUDES drafts for push-access tokens.
-        $page = 1
-        while ($true) {
-            $uri = "https://api.github.com/repos/microsoft/PTVS/releases?per_page=100&page=$page"
-            $resp = Invoke-RestMethod -Method GET -Uri $uri -Headers $headers
-            if (-not $resp -or $resp.Count -eq 0) { break }
-            foreach ($r in $resp) {
-                if (-not $r.draft) { continue }
-                if (-not $r.tag_name -or -not $r.tag_name.StartsWith('triage-')) { continue }
-                $created = [DateTime]::Parse($r.created_at, [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::AdjustToUniversal -bor [Globalization.DateTimeStyles]::AssumeUniversal)
-                if ($created -gt $cutoff) { $kept++; continue }
-                $delUri = "https://api.github.com/repos/microsoft/PTVS/releases/$($r.id)"
-                try {
-                    Invoke-RestMethod -Method DELETE -Uri $delUri -Headers $headers | Out-Null
-                    Write-Host "Deleted stale draft: $($r.tag_name) (created $($r.created_at))"
-                    $deleted++
-                } catch {
-                    Write-Warning "Failed to delete $($r.tag_name): $($_.Exception.Message)"
-                }
-            }
-            if ($resp.Count -lt 100) { break }
-            $page++
-        }
-        Write-Host "Cleanup summary: $deleted deleted, $kept retained (under 30d cutoff)."
-
-  - task: PowerShell@2
     displayName: 'query-azdo.ps1 — WIQL + workitemsbatch'
     env:
       # $(System.AccessToken) is the per-pipeline bearer token for the
@@ -195,26 +130,18 @@ jobs:
             -OutDir  "$(Agent.TempDirectory)/sanitized"
 
   - task: PowerShell@2
-    displayName: 'Assemble slim bundle.json manifest + filter sanitization-aborted items'
-    env:
-      LOOKBACK_DAYS: $(LOOKBACK_DAYS)
+    displayName: 'Drop sanitization-aborted items and emit titles-only manifest for issue body'
     inputs:
       pwsh: true
       targetType: inline
       script: |
-        # Build a Phase-2 manifest bundle: per work item, the slim fields the
-        # AI prompt needs as a top-level index (id/title/area/state/url,
-        # ~500-char short_description, condensed diagnostics). The full
-        # sanitized data per work item lives in the individual wi-<id>.json
-        # and diag-<id>.json files, which the create-release step uploads
-        # alongside bundle.json.
-        #
         # SECURITY: items whose `sanitization_aborted == true` are DROPPED from
-        # ALL THREE outputs (bundle, public bullets, release-asset upload).
+        # BOTH downstream outputs (artifact upload + public bullets).
         # sanitize.ps1 sets that flag when it detects a secret pattern (PAT,
         # JWT, AWS key, private-key PEM, etc.) anywhere in the work-item
-        # content. We delete the corresponding wi-/diag- files so they're
-        # excluded from the release asset upload below.
+        # content. We delete the corresponding wi-/diag- files from disk so
+        # they're excluded from the artifact upload below, and skip them when
+        # building the titles-only manifest used by post-report-issue.ps1.
         Set-StrictMode -Version Latest
         $ErrorActionPreference = 'Stop'
 
@@ -222,8 +149,8 @@ jobs:
         if (-not (Test-Path -LiteralPath $sanDir)) {
             throw "Sanitized output directory not found: $sanDir"
         }
-        $items = New-Object System.Collections.Generic.List[object]
-        $titles = New-Object System.Collections.Generic.List[object]
+
+        $titles  = New-Object System.Collections.Generic.List[object]
         $aborted = New-Object System.Collections.Generic.List[int]
         foreach ($f in Get-ChildItem -LiteralPath $sanDir -Filter 'wi-*.json' -File | Sort-Object Name) {
             $wi = Get-Content -LiteralPath $f.FullName -Raw | ConvertFrom-Json
@@ -231,52 +158,12 @@ jobs:
             if ($wi.sanitization_aborted) {
                 Write-Warning "Dropping AzDO #$($wi.id) — sanitization aborted (secret pattern hit: $(($wi.secret_hits) -join ', '))"
                 $aborted.Add([int] $wi.id) | Out-Null
-                # Also remove the file from disk so the create-release step
-                # cannot accidentally upload it as a release asset.
                 Remove-Item -LiteralPath $f.FullName -Force
                 $diagToo = Join-Path $sanDir ("diag-{0}.json" -f $wi.id)
                 if (Test-Path -LiteralPath $diagToo) { Remove-Item -LiteralPath $diagToo -Force }
                 continue
             }
 
-            $diagPath = Join-Path $sanDir ("diag-{0}.json" -f $wi.id)
-            $diag = $null
-            if (Test-Path -LiteralPath $diagPath) {
-                $d = Get-Content -LiteralPath $diagPath -Raw | ConvertFrom-Json
-                $diag = [pscustomobject] @{
-                    vs_version     = $d.vs_version
-                    ptvs_version   = $d.ptvs_version
-                    python_version = $d.python_version
-                    machine_os     = $d.machine_os
-                    # Top 3 only — full list can be many KB.
-                    top_exceptions = @($d.last_exceptions | Select-Object -First 3)
-                }
-            }
-
-            # Strip HTML tags and collapse whitespace; cap at 500 chars.
-            $desc = "$($wi.description_html)"
-            $desc = ($desc -replace '<[^>]+>', ' ') -replace '\s+', ' '
-            $desc = $desc.Trim()
-            if ($desc.Length -gt 500) { $desc = $desc.Substring(0, 500) + '...' }
-
-            $items.Add([pscustomobject] @{
-                id                = $wi.id
-                title             = $wi.title
-                area              = $wi.area_path
-                state             = $wi.state
-                work_item_type    = $wi.work_item_type
-                url               = $wi.url
-                created_date      = $wi.created_date
-                short_description = $desc
-                diagnostics       = $diag
-                wi_asset          = ("wi-{0}.json"   -f $wi.id)
-                diag_asset        = if ($diag) { ("diag-{0}.json" -f $wi.id) } else { $null }
-            }) | Out-Null
-
-            # Mirror entry for the public bullets list (same shape as
-            # sanitize.ps1 -TitlesOnly produces). Rebuilding here rather than
-            # consuming the -TitlesOnly output ensures aborted items get
-            # dropped from the public list too.
             $titles.Add([pscustomobject] @{
                 id             = $wi.id
                 title          = $wi.title
@@ -288,163 +175,14 @@ jobs:
             }) | Out-Null
         }
 
-        $bundle = [pscustomobject] @{
-            schema_version        = '1'
-            generated_at          = (Get-Date).ToUniversalTime().ToString('o')
-            source_azdo_build_id  = [int] '$(Build.BuildId)'
-            source_azdo_build_url = '$(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)'
-            lookback_days         = [int] $env:LOOKBACK_DAYS
-            area_root             = 'DevDiv\Python and AI Tools'
-            items                 = @($items)
-        }
-        $bundleDst = "$(Agent.TempDirectory)/bundle.json"
-        ($bundle | ConvertTo-Json -Depth 20 -Compress) | Set-Content -LiteralPath $bundleDst -Encoding UTF8
-
         $titlesDst = "$(Agent.TempDirectory)/candidates-titles-only.json"
         (ConvertTo-Json -Compress -Depth 10 -InputObject @($titles)) | Set-Content -LiteralPath $titlesDst -Encoding UTF8
 
-        $size = (Get-Item $bundleDst).Length
-        Write-Host "Wrote bundle: $($items.Count) item(s), $size bytes. Dropped $($aborted.Count) sanitization-aborted item(s)."
+        Write-Host "Wrote titles manifest: $($titles.Count) item(s). Dropped $($aborted.Count) sanitization-aborted item(s)."
 
-  - task: PowerShell@2
-    name: createRelease
-    displayName: 'Create draft GitHub Release + upload sanitized assets'
-    env:
-      GITHUB_TOKEN: $(GH_PAT)
-      LOOKBACK_DAYS: $(LOOKBACK_DAYS)
-      BUILD_ID:     $(Build.BuildId)
-      DRY_RUN:      $(DRY_RUN)
-    inputs:
-      pwsh: true
-      targetType: inline
-      script: |
-        # Upload sanitized data as assets on a DRAFT release in microsoft/PTVS.
-        # Draft releases are invisible to non-push-access users (verified via
-        # GitHub REST docs: list-releases endpoint says "Only users with push
-        # access will receive listings for draft releases"). So the data
-        # stays out of public view while still being downloadable by the
-        # auto-injected GITHUB_TOKEN in the Phase 2 GH workflow.
-        #
-        # Tag format: triage-YYYY-MM-DD-<buildId>. The date prefix makes
-        # the cleanup sweep cheap (lexical sort), and the build id ensures
-        # uniqueness across same-day manual reruns.
-        Set-StrictMode -Version Latest
-        $ErrorActionPreference = 'Stop'
-
-        # Dry-run short-circuit: don't create a real draft or upload any
-        # data, but emit a synthetic tag so the post-report-issue step's
-        # dry-run body preview still shows what the marker line WOULD say.
-        $isDryRun = [bool]::Parse(($env:DRY_RUN ?? 'false'))
-        if ($isDryRun) {
-            $synth = "triage-DRYRUN-$(Get-Date -Format 'yyyyMMddHHmmss')-$env:BUILD_ID"
-            Write-Host "DRY RUN: skipping draft-release creation. Synthetic tag: $synth"
-            Write-Host "##vso[task.setvariable variable=releaseTag;isOutput=true]$synth"
-            return
-        }
-
-        # Empty-bundle short-circuit: if there are no items to publish (no
-        # candidates this week, or all were dropped by the sanitization-
-        # aborted filter), don't create an orphan release.
-        $bundle  = "$(Agent.TempDirectory)/bundle.json"
-        if (-not (Test-Path -LiteralPath $bundle)) { throw "bundle.json not found at $bundle" }
-        $bundleData = Get-Content -LiteralPath $bundle -Raw | ConvertFrom-Json
-        $itemCount  = if ($bundleData.items) { @($bundleData.items).Count } else { 0 }
-        if ($itemCount -eq 0) {
-            Write-Host "Bundle has 0 items (empty week or all items sanitization-aborted). Skipping release creation."
-            Write-Host "##vso[task.setvariable variable=releaseTag;isOutput=true]"
-            return
-        }
-
-        # Defense in depth: fail fast if the PAT isn't wired correctly. The
-        # asset upload step would otherwise return a confusing 404/401.
-        if (-not $env:GITHUB_TOKEN -or $env:GITHUB_TOKEN -eq '$(GH_PAT)' -or $env:GITHUB_TOKEN.Trim().Length -lt 20) {
-            throw "GITHUB_TOKEN env var is missing or looks invalid. Confirm the 'PTVS-Triage-Bridge' variable group exists with a secret variable 'GH_PAT' and that this pipeline is authorized to use it."
-        }
-
-        $headers = @{
-            Authorization = "Bearer $env:GITHUB_TOKEN"
-            Accept        = 'application/vnd.github+json'
-            'X-GitHub-Api-Version' = '2022-11-28'
-            'User-Agent'  = 'PTVS-Triage-Fetch'
-        }
-
-        $sanDir  = "$(Agent.TempDirectory)/sanitized"
-
-        # Compose the release tag. ISO date for sortability + build id for uniqueness.
-        $today = (Get-Date).ToUniversalTime().ToString('yyyy-MM-dd')
-        $tag   = "triage-$today-$env:BUILD_ID"
-        $name  = "AzDO triage bundle $today (build $env:BUILD_ID)"
-        $body  = "Sanitized AzDO work-item bundle for the $env:LOOKBACK_DAYS-day window ending $today UTC.`n`nThis is a DRAFT release — invisible to non-push-access users. It exists solely to bridge sanitized data from the devdiv AzDO Pipeline to the Phase 2 GitHub workflow that posts AI analysis comments on the weekly summary issue.`n`nAutomatic cleanup removes drafts older than 30 days."
-
-        $createdReleaseId = $null
-        try {
-            # Create the draft release.
-            $createBody = @{
-                tag_name = $tag
-                name     = $name
-                body     = $body
-                draft    = $true
-                target_commitish = 'main'   # arbitrary; draft releases don't actually tag
-            } | ConvertTo-Json -Compress
-            $release = Invoke-RestMethod -Method POST -Uri 'https://api.github.com/repos/microsoft/PTVS/releases' `
-                -Headers $headers -ContentType 'application/json' -Body $createBody -TimeoutSec 60
-            $createdReleaseId = $release.id
-            Write-Host "Created draft release: $tag (id=$createdReleaseId)"
-
-            # Upload assets. uploads.github.com is the dedicated upload host;
-            # the api.github.com path returns 404 for asset POSTs.
-            function Upload-Asset {
-                param([string] $LocalPath, [string] $AssetName, [string] $ContentType)
-                if (-not (Test-Path -LiteralPath $LocalPath)) {
-                    throw "Asset not found: $LocalPath"
-                }
-                $uploadUri = "https://uploads.github.com/repos/microsoft/PTVS/releases/$createdReleaseId/assets?name=$([uri]::EscapeDataString($AssetName))"
-                $uploadHdr = @{
-                    Authorization = "Bearer $env:GITHUB_TOKEN"
-                    Accept        = 'application/vnd.github+json'
-                    'X-GitHub-Api-Version' = '2022-11-28'
-                    'User-Agent'  = 'PTVS-Triage-Fetch'
-                }
-                # -InFile streams the file body and -ContentType sets the header.
-                Invoke-RestMethod -Method POST -Uri $uploadUri -Headers $uploadHdr `
-                    -ContentType $ContentType -InFile $LocalPath -TimeoutSec 120 | Out-Null
-                Write-Host "  uploaded: $AssetName ($(((Get-Item $LocalPath).Length)) bytes)"
-            }
-
-            # 1) bundle.json — slim metadata manifest (lists work item IDs).
-            Upload-Asset -LocalPath $bundle -AssetName 'bundle.json' -ContentType 'application/json'
-
-            # 2) Per-WI full sanitized data (one wi-<id>.json + optional diag-<id>.json per item).
-            $count = 0
-            foreach ($f in Get-ChildItem -LiteralPath $sanDir -Filter 'wi-*.json' -File | Sort-Object Name) {
-                Upload-Asset -LocalPath $f.FullName -AssetName $f.Name -ContentType 'application/json'
-                $count++
-            }
-            foreach ($f in Get-ChildItem -LiteralPath $sanDir -Filter 'diag-*.json' -File | Sort-Object Name) {
-                Upload-Asset -LocalPath $f.FullName -AssetName $f.Name -ContentType 'application/json'
-            }
-            Write-Host "Uploaded $count work-item files (+ bundle.json + any diag-*.json) to draft release $tag."
-
-            # Export the tag as an output variable for the next step. AzDO syntax:
-            # "##vso[task.setvariable variable=NAME;isOutput=true]VALUE"
-            Write-Host "##vso[task.setvariable variable=releaseTag;isOutput=true]$tag"
-        } catch {
-            # Partial-upload safety net: if anything threw after the release was
-            # created, delete the incomplete release so the post-report step
-            # doesn't publish a tag pointing at half-uploaded data. If cleanup
-            # itself fails, the next scheduled run's 30-day sweep will get it.
-            if ($createdReleaseId) {
-                Write-Warning "Upload pipeline failed. Attempting to delete incomplete release $createdReleaseId..."
-                try {
-                    Invoke-RestMethod -Method DELETE -Uri "https://api.github.com/repos/microsoft/PTVS/releases/$createdReleaseId" `
-                        -Headers $headers -TimeoutSec 60 | Out-Null
-                    Write-Warning "Deleted incomplete release $createdReleaseId."
-                } catch {
-                    Write-Warning "Cleanup DELETE also failed: $($_.Exception.Message). The 30-day cleanup sweep will catch it."
-                }
-            }
-            throw
-        }
+  - publish: $(Agent.TempDirectory)/sanitized
+    displayName: 'Publish sanitized data as AzDO build artifact (audit trail, devdiv-internal)'
+    artifact: sanitized-$(Build.BuildId)
 
   - task: PowerShell@2
     displayName: 'post-report-issue.ps1 — create/update weekly issue in microsoft/PTVS'
@@ -453,12 +191,10 @@ jobs:
       # variable group, scoped to microsoft/PTVS with:
       #   - Issues: Read+Write   (post the weekly summary issue)
       #   - Metadata: Read       (implicit)
-      #   - Contents: Read+Write (create draft release + upload assets)
       # post-report-issue.ps1 reads $env:GITHUB_TOKEN.
       GITHUB_TOKEN:  $(GH_PAT)
       LOOKBACK_DAYS: $(LOOKBACK_DAYS)
       DRY_RUN:       $(DRY_RUN)
-      RELEASE_TAG:   $(createRelease.releaseTag)
     inputs:
       pwsh: true
       targetType: inline
@@ -467,33 +203,14 @@ jobs:
         $ErrorActionPreference = 'Stop'
 
         if (-not $env:GITHUB_TOKEN -or $env:GITHUB_TOKEN -eq '$(GH_PAT)' -or $env:GITHUB_TOKEN.Trim().Length -lt 20) {
-            throw "GITHUB_TOKEN env var is missing or looks invalid."
-        }
-        # RELEASE_TAG can be empty when:
-        #   - Bundle had 0 items (empty week or all sanitization-aborted)
-        #   - In that case post-report-issue.ps1 will also exit early
-        #     (no candidates), so we don't need a marker.
-        # We do NOT throw on empty RELEASE_TAG here; just warn.
-        if (-not $env:RELEASE_TAG) {
-            Write-Warning "RELEASE_TAG env var is empty — issue body will have no Phase 2 marker. Likely cause: bundle had 0 items, or a previous step short-circuited."
+            throw "GITHUB_TOKEN env var is missing or looks invalid. Confirm the 'PTVS-Triage-Bridge' variable group exists with a secret variable 'GH_PAT' and that this pipeline is authorized to use it."
         }
 
         $runUrl = '$(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)'
-        # PowerShell auto-variable name collision: $args is reserved; use
-        # $scriptArgs for clarity.
         $scriptArgs = @(
             '-CandidatesFile', "$(Agent.TempDirectory)/candidates-titles-only.json",
-            '-ReleaseTag',     $env:RELEASE_TAG,
             '-LookbackDays',   ([int] $env:LOOKBACK_DAYS),
-            '-RunUrl',         $runUrl,
-            # Phase 2 GitHub workflow hasn't shipped yet; mark accordingly so
-            # the footer reads honestly. Flip to 'enabled' once the GH-side
-            # workflow is live.
-            '-PhaseTwoStatus', 'pending (Phase 2 workflow not yet deployed)'
+            '-RunUrl',         $runUrl
         )
         if ([bool]::Parse(($env:DRY_RUN ?? 'false'))) { $scriptArgs += '-DryRun' }
         & "$(Build.SourcesDirectory)/Build/triage/post-report-issue.ps1" @scriptArgs
-
-  - publish: $(Agent.TempDirectory)/sanitized
-    displayName: 'Publish sanitized data as build artifact (audit trail, internal-only)'
-    artifact: sanitized-$(Build.BuildId)
