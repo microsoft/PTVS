@@ -2,8 +2,8 @@
 
 Operator documentation for the AzDO Pipeline at
 [`Build/triage/pipelines/fetch.yml`](pipelines/fetch.yml) (Phase 1, shipped)
-and the GitHub workflow that will read its output to add AI analysis
-comments (Phase 2, deferred).
+and the GitHub workflow that will add AI analysis comments under the
+weekly summary issue (Phase 2, deferred).
 
 ## What it does
 
@@ -11,36 +11,50 @@ comments (Phase 2, deferred).
 
 Runs every Monday at 08:00 UTC. End to end:
 
-1. **Query AzDO** for open work items under `DevDiv\Python and AI Tools\**`
+1. **Cleanup**: delete draft releases tagged `triage-*` that are older than
+   30 days (best-effort; doesn't fail the run on errors).
+2. **Query AzDO** for open work items under `DevDiv\Python and AI Tools\**`
    changed in the last 7 days (cap 25). Uses the pipeline's own
    `$(System.AccessToken)` for AzDO REST auth — no PAT needed on the AzDO side.
-2. **Download + parse** any `PythonToolsDiagnostics_*.log` attachments per
+3. **Download + parse** any `PythonToolsDiagnostics_*.log` attachments per
    work item.
-3. **Sanitize** all of it (PII redaction: emails, Windows user paths,
+4. **Sanitize** all of it (PII redaction: emails, Windows user paths,
    machine names, phone numbers; secret detection: PATs, JWTs, AWS keys,
    private-key PEMs, etc.).
-4. **Drop sanitization-aborted items** (anything that hit a secret pattern)
-   from BOTH the public bullet list and the embedded bundle.
-5. **Assemble a slim bundle**: per work item, only the fields the AI
-   analysis prompt needs (id/title/area/state/url, ~500-char short
-   description, condensed diagnostics — top 3 exception messages).
-6. **Post a weekly summary issue** to `microsoft/PTVS`:
+5. **Build a slim manifest** (`bundle.json`) and **drop sanitization-aborted
+   items** (anything that hit a secret pattern) from ALL three downstream
+   outputs: public bullets, release assets, manifest.
+6. **Create a DRAFT GitHub Release** in `microsoft/PTVS` tagged
+   `triage-YYYY-MM-DD-<buildId>` and upload assets:
+   - `bundle.json` — slim manifest listing work items with their asset names
+   - `wi-<id>.json` per work item — full sanitized work item content
+   - `diag-<id>.json` per item with diagnostics — parsed key fields
+   Draft releases are **invisible to non-push-access users** (verified via
+   GitHub REST docs: *"Only users with push access will receive listings for
+   draft releases"*). So Microsoft-internal triage content stays out of public
+   view even though `microsoft/PTVS` is a public repo.
+7. **Post a weekly summary issue** to `microsoft/PTVS`:
    - Title: `AzDO triage report YYYY-MM-DD to YYYY-MM-DD (N open items)`
-   - Body: human-readable bullets per work item + a hidden HTML comment
-     block containing the slim bundle (base64-encoded so user-supplied
-     content like `-->` can't break out)
+   - Body: human-readable bullets per work item + a hidden
+     `<!--ptvs-triage-release: <tag>-->` marker pointing at the draft release
+   - **NO sanitized content inline**; just a pointer
    - Idempotent: searches by title, updates in place on rerun
-7. **Publish sanitized data as a build artifact** (audit trail, internal
-   to devdiv).
+8. **Publish sanitized data as an AzDO build artifact** (audit trail,
+   devdiv-internal).
 
 ### Phase 2 (planned) — GitHub workflow (microsoft/PTVS)
 
 Triggered by `on: issues` for issues labeled `azdo-triage-report`. Will:
-- Parse the hidden bundle from `github.event.issue.body`
+- Extract the `<tag>` from the hidden release-tag marker in the issue body
+- Use the auto-injected `GITHUB_TOKEN` (`contents:read` is sufficient to
+  download draft release assets) to fetch `bundle.json` and per-item
+  `wi-<id>.json` / `diag-<id>.json` files
 - Run an `actions/ai-inference@v1` matrix per work item: produce a short
   analysis of (a) likely root cause area — PTVS / pylance / debugpy /
   upstream CPython / customer config — and (b) suggested action items
 - Post each analysis as a comment under the summary issue
+- Delete the draft release once all comments are posted (or keep for 30d
+  for audit; cleanup-on-next-run handles it either way)
 
 **Read-only by design.** The AI never writes back to AzDO, never closes
 work items, never tags / labels / files duplicates. Engineers read the
@@ -56,12 +70,12 @@ logs). Workable auth paths:
 | Side | Auth |
 |---|---|
 | AzDO REST (read work items, download attachments) | `$(System.AccessToken)` — automatic inside AzDO Pipelines in `devdiv/DevDiv` |
-| GitHub issue write from AzDO side | Fine-grained GitHub PAT stored as AzDO variable group secret |
-| GitHub API from GH workflow (Phase 2) | Auto-injected `GITHUB_TOKEN` |
-| Cross-system handoff | **The summary issue itself** — body has the bundle Phase 2 reads back |
+| GitHub from AzDO (issue + release writes) | Fine-grained GitHub PAT (`GH_PAT`) stored as AzDO variable group secret |
+| GitHub from GH workflow (Phase 2) | Auto-injected `GITHUB_TOKEN` (`contents:read` reads draft assets; `issues:write` posts comments) |
+| Cross-system handoff | A draft GitHub Release in `microsoft/PTVS`. Tag stored as hidden marker in the summary issue body. |
 
-No private companion repo. No `repository_dispatch`. No two-PAT exchange.
-The GitHub issue is the bridge.
+No private companion repo. No `repository_dispatch`. No data in the public
+issue body.
 
 ## Files
 
@@ -72,7 +86,7 @@ The GitHub issue is the bridge.
 | `sanitize.ps1` | PII / secret redaction. Full mode (one `wi-<id>.json` per candidate) and `-TitlesOnly` mode. |
 | `parse-diagnostics.ps1` | Downloads + parses `PythonToolsDiagnostics_*.log` attachments. |
 | `fetch-context.ps1` | GH-side per-run research context (recent commits, releases, fixed-in-next-version). For Phase 2. |
-| `post-report-issue.ps1` | Posts / updates the weekly summary issue. `-BundleFile` embeds the base64-encoded Phase-2 bundle as a hidden HTML comment. |
+| `post-report-issue.ps1` | Posts / updates the weekly summary issue. `-ReleaseTag` adds a hidden marker pointing at the draft release. |
 | `pipelines/fetch.yml` | The AzDO Pipeline YAML — the only thing that actually runs in Phase 1. |
 | `run-tests.ps1` | Runs `-SelfTest` on every script in this directory. |
 | `tests/fixtures/candidates-sample.json` | Sample bare-array candidates for local `post-report-issue.ps1` dry-run. |
@@ -86,8 +100,9 @@ The GitHub issue is the bridge.
    - Resource owner: **microsoft**
    - Repositories: **only** `microsoft/PTVS`
    - Permissions:
-     - **Issues**: Read and write
-     - **Metadata**: Read-only (auto-granted)
+     - **Issues**: Read and write *(post the weekly summary issue)*
+     - **Contents**: Read and write *(create draft releases + upload assets + delete stale drafts)*
+     - **Metadata**: Read-only *(auto-granted)*
    - Expiration: **90 days** (set a calendar reminder for rotation)
    - Copy the token value (only shown once).
 2. **Verify the issue label `azdo-triage-report` exists** (the pipeline
@@ -125,7 +140,13 @@ The GitHub issue is the bridge.
 7. **Re-run the pipeline manually** with `dryRun: true`. Verify it
    completes all steps and prints the would-be issue body in the
    `post-report-issue.ps1` step's log.
-8. **Run without `dryRun`** for the first real summary issue.
+8. **Run without `dryRun`** for the first real summary issue. Expect to
+   see:
+   - A new draft release `triage-YYYY-MM-DD-<buildId>` in
+     https://github.com/microsoft/PTVS/releases (visible only to push-access users)
+   - A new issue with the weekly title in microsoft/PTVS, labeled
+     `azdo-triage-report`, with bullets visible and a single hidden
+     `<!--ptvs-triage-release: ...-->` line at the end of the body
 
 ### Phase 0c — Local testing (no AzDO needed)
 
@@ -139,6 +160,7 @@ pwsh -File Build/triage/run-tests.ps1
 $env:GITHUB_TOKEN = '<your-fine-grained-PAT-from-Phase-0a>'
 ./Build/triage/post-report-issue.ps1 `
   -CandidatesFile Build/triage/tests/fixtures/candidates-sample.json `
+  -ReleaseTag     'triage-2026-06-05-local' `
   -LookbackDays   7 `
   -RunUrl         'https://example.local' `
   -DryRun
@@ -150,23 +172,32 @@ $env:GITHUB_TOKEN = '<your-fine-grained-PAT-from-Phase-0a>'
   can override the schedule branch (`main`) on the manual run to test
   changes from any branch in `microsoft/PTVS`.
 - **Schedule + manual race**: if a manual run and the Monday cron fire on
-  the same day, both target the same weekly title; `post-report-issue.ps1`
-  searches for the existing issue and updates in place. In the rare
-  interleaved-create window (both find no existing issue, both create
-  one), you'll briefly have two issues with the same title — close the
-  duplicate manually.
-- **Failure recovery**: every step is idempotent. Re-run the pipeline and
-  the existing weekly issue updates in place.
+  the same day, both create separate draft releases (tags differ by build
+  id), but both target the same weekly issue title — `post-report-issue.ps1`
+  searches for the existing issue and updates in place. The body will end
+  up pointing at the later run's release; the earlier release becomes
+  orphaned and gets cleaned up at the 30-day mark.
+- **Failure recovery**: every step is idempotent except the draft-release
+  creation (each run creates a NEW tag — guaranteed unique via build id).
+  Re-run the pipeline and an existing weekly issue updates in place with
+  the new release tag pointer.
 - **PR safety**: the pipeline has `trigger: none` AND `pr: none`. It will
   NOT run for PRs — important because it executes PS scripts from the
   checked-out branch with `$(System.AccessToken)` and the bridge PAT.
+- **Auditing a past run**: anyone with push access on microsoft/PTVS can
+  open the Releases page, filter by the `triage-` tag prefix, and download
+  the original `bundle.json` + `wi-<id>.json` + `diag-<id>.json` files.
 
 ## History
 
-- **2026-06** (in progress) — Simplified scope: dropped duplicate detection,
-  AzDO writes, GitHub mirror issues, and the gh-aw agentic step. Phase 1
-  moved to AzDO Pipeline; Phase 2 will be a GitHub workflow that adds AI
-  analysis comments under the weekly summary issue.
+- **2026-06** (in progress) — Architecture refined twice:
+  - First simplified scope: dropped duplicate detection, AzDO writes, GitHub
+    mirror issues, and the gh-aw agentic step. Initial design embedded a
+    base64-encoded slim bundle in the public issue body (still visible to
+    public viewers, even if hidden from rendering).
+  - Then moved the bundle out of the issue body entirely. Sanitized data now
+    lives in draft GitHub Releases (access-controlled to push-access users).
+    Issue body is just bullets + a release-tag pointer.
 - **2026-05** — Initial implementation with full triage pipeline (`PR #8523`).
   Never ran successfully end-to-end because DevDiv blocks GitHub-hosted
   runner IPs from authenticating to AzDO.
