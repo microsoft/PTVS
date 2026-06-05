@@ -1,0 +1,274 @@
+# PTVS-Triage-Fetch — weekly AzDO triage fetch + summary issue
+#
+# Runs inside devdiv/DevDiv (where $(System.AccessToken) has native AzDO REST
+# auth — the same call from a GitHub-hosted runner is bare-401'd by the
+# DevDiv security gateway). Produces a single weekly summary issue in
+# microsoft/PTVS with:
+#   - human-readable bullets per work item (id + title + area + created date)
+#   - a HIDDEN, machine-readable slim bundle (sanitized metadata + condensed
+#     diagnostics) embedded as an HTML comment. Phase 2 (a GitHub Actions
+#     workflow triggered by `on: issues`) parses the bundle from the body,
+#     runs an AI analysis matrix per work item, and posts each analysis as
+#     a comment under the same issue.
+#
+# Setup prerequisites (one-time, see Build/triage/README.md Phase 0):
+#   1. Create variable group `PTVS-Triage-Bridge` in devdiv/DevDiv with a
+#      secret variable `GH_PAT` = fine-grained GitHub PAT scoped to
+#      microsoft/PTVS with Issues:Write + Metadata:Read.
+#   2. Grant the project Build Service identity `View work items in this
+#      node` on area path `DevDiv\Python and AI Tools`. (System.AccessToken
+#      has no authority until this is granted.)
+#   3. Create the AzDO Pipeline in devdiv/DevDiv pointing at this file on
+#      the `main` branch of `microsoft/PTVS`.
+
+trigger: none    # do not run on every PTVS push; only schedule + manual.
+pr: none         # NEVER run for PRs — would execute untrusted modified
+                 # scripts with $(System.AccessToken) and the bridge PAT.
+
+# The schedule fires even when source code hasn't changed since the last
+# successful run — `always: true` is REQUIRED for a fetch pipeline whose
+# data source (AzDO work items) is independent of repo state.
+schedules:
+- cron: "0 8 * * 1"
+  displayName: Weekly Monday triage fetch (08:00 UTC)
+  branches:
+    include:
+    - main
+  always: true
+
+parameters:
+- name: lookbackDays
+  displayName: How many days back to scan
+  type: number
+  default: 7
+- name: maxCandidates
+  displayName: Hard cap on candidates per run (cost-safety)
+  type: number
+  default: 25
+- name: workitemId
+  displayName: (optional) Triage only this single AzDO work item ID
+  type: string
+  default: ' '
+- name: dryRun
+  displayName: Dry-run (print issue body to logs; do not post)
+  type: boolean
+  default: false
+
+variables:
+- group: PTVS-Triage-Bridge   # provides $(GH_PAT)
+- name: LOOKBACK_DAYS
+  value: ${{ parameters.lookbackDays }}
+- name: MAX_CANDIDATES
+  value: ${{ parameters.maxCandidates }}
+- name: WORKITEM_ID
+  value: ${{ parameters.workitemId }}
+- name: DRY_RUN
+  value: ${{ parameters.dryRun }}
+
+pool:
+  vmImage: ubuntu-latest
+
+jobs:
+- job: Fetch
+  displayName: Fetch + sanitize + post summary issue
+  timeoutInMinutes: 20
+  steps:
+  - checkout: self
+    displayName: Checkout PTVS scripts
+    persistCredentials: false
+
+  - task: PowerShell@2
+    displayName: 'query-azdo.ps1 — WIQL + workitemsbatch'
+    env:
+      # $(System.AccessToken) is the per-pipeline bearer token for the
+      # Build Service identity. Bare reference to it from script blocks
+      # is NOT auto-injected; map explicitly via env: like this.
+      AZDO_ACCESS_TOKEN: $(System.AccessToken)
+      LOOKBACK_DAYS:     $(LOOKBACK_DAYS)
+      MAX_CANDIDATES:    $(MAX_CANDIDATES)
+      WORKITEM_ID:       $(WORKITEM_ID)
+    inputs:
+      pwsh: true
+      targetType: inline
+      script: |
+        $extra = @{}
+        if ($env:WORKITEM_ID -and $env:WORKITEM_ID.Trim()) {
+            $extra['WorkItemId'] = $env:WORKITEM_ID.Trim()
+        }
+        & "$(Build.SourcesDirectory)/Build/triage/query-azdo.ps1" `
+            -OutFile        "$(Agent.TempDirectory)/candidates.json" `
+            -LookbackDays   ([int] $env:LOOKBACK_DAYS) `
+            -MaxCandidates  ([int] $env:MAX_CANDIDATES) `
+            @extra
+
+  - task: PowerShell@2
+    displayName: 'parse-diagnostics.ps1 — download + parse log attachments'
+    env:
+      AZDO_ACCESS_TOKEN: $(System.AccessToken)
+    inputs:
+      pwsh: true
+      targetType: inline
+      script: |
+        & "$(Build.SourcesDirectory)/Build/triage/parse-diagnostics.ps1" `
+            -CandidatesFile "$(Agent.TempDirectory)/candidates.json" `
+            -OutDir         "$(Agent.TempDirectory)/diag-raw"
+
+  - task: PowerShell@2
+    displayName: 'sanitize.ps1 (full) — PII redaction → sanitized/wi-*.json + diag-*.json'
+    inputs:
+      pwsh: true
+      targetType: inline
+      script: |
+        & "$(Build.SourcesDirectory)/Build/triage/sanitize.ps1" `
+            -InFile  "$(Agent.TempDirectory)/candidates.json" `
+            -DiagDir "$(Agent.TempDirectory)/diag-raw" `
+            -OutDir  "$(Agent.TempDirectory)/sanitized"
+
+  - task: PowerShell@2
+    displayName: 'Assemble slim bundle.json + filter sanitization-aborted items'
+    env:
+      LOOKBACK_DAYS: $(LOOKBACK_DAYS)
+    inputs:
+      pwsh: true
+      targetType: inline
+      script: |
+        # Build a Phase-2-consumable bundle: per work item, just the fields the
+        # AI analysis prompt needs (id/title/area/state/url, ~500-char short
+        # description, condensed diagnostics). Full per-WI JSON stays in the
+        # build artifact (audit trail) and never enters the public issue body.
+        #
+        # SECURITY: items whose `sanitization_aborted == true` are DROPPED from
+        # BOTH the bundle AND the public titles list (rebuilt here from
+        # sanitized data). sanitize.ps1 sets that flag when it detects a
+        # secret pattern (PAT, JWT, AWS key, private-key PEM, etc.) anywhere
+        # in the work-item content. Publishing those to a public GitHub
+        # issue would defeat the redaction guarantees.
+        Set-StrictMode -Version Latest
+        $ErrorActionPreference = 'Stop'
+
+        $sanDir = "$(Agent.TempDirectory)/sanitized"
+        if (-not (Test-Path -LiteralPath $sanDir)) {
+            throw "Sanitized output directory not found: $sanDir"
+        }
+        $items = New-Object System.Collections.Generic.List[object]
+        $titles = New-Object System.Collections.Generic.List[object]
+        $aborted = New-Object System.Collections.Generic.List[int]
+        foreach ($f in Get-ChildItem -LiteralPath $sanDir -Filter 'wi-*.json' -File | Sort-Object Name) {
+            $wi = Get-Content -LiteralPath $f.FullName -Raw | ConvertFrom-Json
+
+            if ($wi.sanitization_aborted) {
+                Write-Warning "Dropping AzDO #$($wi.id) — sanitization aborted (secret pattern hit: $(($wi.secret_hits) -join ', '))"
+                $aborted.Add([int] $wi.id) | Out-Null
+                continue
+            }
+
+            $diagPath = Join-Path $sanDir ("diag-{0}.json" -f $wi.id)
+            $diag = $null
+            if (Test-Path -LiteralPath $diagPath) {
+                $d = Get-Content -LiteralPath $diagPath -Raw | ConvertFrom-Json
+                $diag = [pscustomobject] @{
+                    vs_version     = $d.vs_version
+                    ptvs_version   = $d.ptvs_version
+                    python_version = $d.python_version
+                    machine_os     = $d.machine_os
+                    # Top 3 only — full list can be many KB.
+                    top_exceptions = @($d.last_exceptions | Select-Object -First 3)
+                }
+            }
+
+            # Strip HTML tags and collapse whitespace; cap at 500 chars.
+            $desc = "$($wi.description_html)"
+            $desc = ($desc -replace '<[^>]+>', ' ') -replace '\s+', ' '
+            $desc = $desc.Trim()
+            if ($desc.Length -gt 500) { $desc = $desc.Substring(0, 500) + '...' }
+
+            $items.Add([pscustomobject] @{
+                id                = $wi.id
+                title             = $wi.title
+                area              = $wi.area_path
+                state             = $wi.state
+                work_item_type    = $wi.work_item_type
+                url               = $wi.url
+                created_date      = $wi.created_date
+                short_description = $desc
+                diagnostics       = $diag
+            }) | Out-Null
+
+            # Mirror entry for the public bullets list (same shape as
+            # sanitize.ps1 -TitlesOnly produces). Rebuilding here rather than
+            # consuming the -TitlesOnly output ensures aborted items get
+            # dropped from the public list too.
+            $titles.Add([pscustomobject] @{
+                id             = $wi.id
+                title          = $wi.title
+                url            = $wi.url
+                area_path      = $wi.area_path
+                created_date   = $wi.created_date
+                state          = $wi.state
+                work_item_type = $wi.work_item_type
+            }) | Out-Null
+        }
+
+        $bundle = [pscustomobject] @{
+            schema_version        = '1'
+            generated_at          = (Get-Date).ToUniversalTime().ToString('o')
+            source_azdo_build_id  = [int] '$(Build.BuildId)'
+            source_azdo_build_url = '$(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)'
+            lookback_days         = [int] $env:LOOKBACK_DAYS
+            area_root             = 'DevDiv\Python and AI Tools'
+            items                 = @($items)
+        }
+        $bundleDst = "$(Agent.TempDirectory)/bundle.json"
+        ($bundle | ConvertTo-Json -Depth 20 -Compress) | Set-Content -LiteralPath $bundleDst -Encoding UTF8
+
+        $titlesDst = "$(Agent.TempDirectory)/candidates-titles-only.json"
+        (ConvertTo-Json -Compress -Depth 10 -InputObject @($titles)) | Set-Content -LiteralPath $titlesDst -Encoding UTF8
+
+        $size = (Get-Item $bundleDst).Length
+        Write-Host "Wrote bundle: $($items.Count) item(s), $size bytes. Dropped $($aborted.Count) sanitization-aborted item(s)."
+        if ($size -gt 55000) {
+            Write-Warning "Bundle is $size bytes; issue body cap is 65536. post-report-issue.ps1 will fail if it exceeds 55000."
+        }
+
+  - task: PowerShell@2
+    displayName: 'post-report-issue.ps1 — create/update weekly issue in microsoft/PTVS'
+    env:
+      # GH_PAT is a fine-grained GitHub PAT in the PTVS-Triage-Bridge
+      # variable group, scoped to microsoft/PTVS with Issues:Write +
+      # Metadata:Read. post-report-issue.ps1 reads $env:GITHUB_TOKEN.
+      GITHUB_TOKEN:  $(GH_PAT)
+      LOOKBACK_DAYS: $(LOOKBACK_DAYS)
+      DRY_RUN:       $(DRY_RUN)
+    inputs:
+      pwsh: true
+      targetType: inline
+      script: |
+        Set-StrictMode -Version Latest
+        $ErrorActionPreference = 'Stop'
+
+        # Defense in depth: fail fast with a clear error if the GH_PAT
+        # variable group isn't wired up correctly. Without this, the script
+        # would just get a 401 from GitHub which is harder to diagnose.
+        if (-not $env:GITHUB_TOKEN -or $env:GITHUB_TOKEN -eq '$(GH_PAT)' -or $env:GITHUB_TOKEN.Trim().Length -lt 20) {
+            throw "GITHUB_TOKEN env var is missing or looks invalid. Confirm the 'PTVS-Triage-Bridge' variable group exists with a secret variable 'GH_PAT' and that this pipeline is authorized to use it."
+        }
+
+        $runUrl = '$(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)'
+        # PowerShell auto-variable name collision: $args is reserved; use
+        # $scriptArgs for clarity.
+        $scriptArgs = @(
+            '-CandidatesFile', "$(Agent.TempDirectory)/candidates-titles-only.json",
+            '-BundleFile',     "$(Agent.TempDirectory)/bundle.json",
+            '-LookbackDays',   ([int] $env:LOOKBACK_DAYS),
+            '-RunUrl',         $runUrl,
+            # Phase 2 GitHub workflow hasn't shipped yet; mark accordingly so
+            # the footer reads honestly. Flip to 'enabled' once the GH-side
+            # workflow is live.
+            '-PhaseTwoStatus', 'pending (Phase 2 workflow not yet deployed)'
+        )
+        if ([bool]::Parse(($env:DRY_RUN ?? 'false'))) { $scriptArgs += '-DryRun' }
+        & "$(Build.SourcesDirectory)/Build/triage/post-report-issue.ps1" @scriptArgs
+
+  - publish: $(Agent.TempDirectory)/sanitized
+    displayName: 'Publish sanitized data as build artifact (audit trail, internal-only)'
+    artifact: sanitized-$(Build.BuildId)

@@ -26,19 +26,30 @@
     .PARAMETER LookbackDays
         Window size, used for title computation.
 
-    .PARAMETER TriageWillRun
-        Whether Job 2 will execute on this run. Used in the body footer.
-        Ignored when -DraftsFile is supplied (drafts inline implies Job 2 ran).
-
     .PARAMETER RunUrl
-        URL of the current GH Actions run, embedded in the body footer.
+        URL of the current pipeline run (AzDO or GH Actions), embedded in the
+        body footer for audit.
 
-    .PARAMETER DraftsFile
-        Optional. Path to a drafts.json file conforming to the schema in
-        Build/triage/handoff-schema.md. When supplied, each candidate's
-        bullet is followed by an indented block containing the AI-drafted
-        suggested customer response, ready for a human to review + copy
-        into AzDO.
+    .PARAMETER BundleFile
+        Optional. Path to a slim sanitized bundle JSON (work-item metadata +
+        condensed diagnostics) that gets embedded as a hidden HTML comment in
+        the issue body. Used by Phase 2's GH workflow: the workflow's
+        `on: issues` trigger reads `github.event.issue.body`, extracts the
+        bundle from the hidden marker, runs AI analysis per work item, and
+        posts the analyses back as comments under the same issue.
+
+        The bundle is base64-encoded (UTF-8 JSON → base64) and wrapped
+        between sentinels:
+          <!--ptvs-triage-bundle-v1
+          <base64...>
+          -->
+        Base64 keeps user-controlled `-->` from prematurely closing the
+        HTML comment. Phase 2 must base64-decode before parsing JSON.
+
+    .PARAMETER PhaseTwoStatus
+        Optional. Human-readable footer label describing whether Phase 2
+        (AI analysis comments) is expected to run on this issue. Examples:
+        'enabled', 'disabled (fetch only)', 'pending'.
 
     .PARAMETER ConfigPath
         Path to Build/triage/config.json.
@@ -53,9 +64,9 @@
 param(
     [string] $CandidatesFile,
     [int]    $LookbackDays = 7,
-    [bool]   $TriageWillRun = $true,
     [string] $RunUrl,
-    [string] $DraftsFile,
+    [string] $BundleFile,
+    [string] $PhaseTwoStatus = 'enabled',
     [string] $ConfigPath = (Join-Path $PSScriptRoot 'config.json'),
     [switch] $DryRun,
     [switch] $SelfTest
@@ -121,11 +132,11 @@ function Build-IssueTitle {
 function Build-IssueBody {
     param(
         [Parameter()] [AllowEmptyCollection()] [object[]] $Candidates,
-        [Parameter(Mandatory)] [bool]     $TriageWillRun,
         [Parameter()]          [string]   $RunUrl,
         [Parameter(Mandatory)] [int]      $LookbackDays,
         [Parameter(Mandatory)] [string]   $AreaRoot,
-        [Parameter()] [hashtable]         $DraftsById = $null
+        [Parameter()]          [string]   $PhaseTwoStatus = 'enabled',
+        [Parameter()] [AllowNull()]       $Bundle = $null
     )
     if ($null -eq $Candidates) { $Candidates = @() }
     $sb = New-Object System.Text.StringBuilder
@@ -138,10 +149,8 @@ function Build-IssueBody {
         $null = $sb.AppendLine("No open AzDO work items had activity in the last $LookbackDays day(s) under ``$displayRoot\**``.")
     } else {
         $null = $sb.AppendLine("$count open work item(s) with activity in the past $LookbackDays day(s) under ``$displayRoot\**``.")
-        if ($DraftsById -and $DraftsById.Count -gt 0) {
-            $null = $sb.AppendLine()
-            $null = $sb.AppendLine("Each item below has an AI-drafted suggested response. **Review before posting** — drafts are starting points, not approved replies.")
-        }
+        $null = $sb.AppendLine()
+        $null = $sb.AppendLine("AI analysis comments will appear below as Phase 2 processes each item.")
         $null = $sb.AppendLine()
         foreach ($c in $Candidates) {
             $subpath = Format-AreaSubpath -Full $c.area_path -Root $AreaRoot
@@ -150,30 +159,26 @@ function Build-IssueBody {
             # Escape pipe so it doesn't break our bullet visually in some GH renderers.
             $title   = $title -replace '\r?\n', ' '
             $null = $sb.AppendLine("- [AzDO #$($c.id)]($($c.url)) — ``$title`` — created $date — area: $subpath")
-
-            if ($DraftsById) {
-                $key = "$($c.id)"
-                if ($DraftsById.ContainsKey($key)) {
-                    $draft = $DraftsById[$key]
-                    $null = $sb.AppendLine()
-                    $null = $sb.AppendLine("  <details><summary><strong>Suggested response</strong> (AI draft, please review)</summary>")
-                    $null = $sb.AppendLine()
-                    # Indent each line by 2 spaces so it stays inside the <details> bullet child.
-                    foreach ($line in ($draft -split "`r?`n")) {
-                        $null = $sb.AppendLine("  $line")
-                    }
-                    $null = $sb.AppendLine()
-                    $null = $sb.AppendLine("  </details>")
-                    $null = $sb.AppendLine()
-                }
-            }
         }
     }
     $null = $sb.AppendLine()
     $null = $sb.AppendLine('---')
-    $triageState = if ($DraftsById) { 'drafts inline below' } elseif ($TriageWillRun) { 'enabled' } else { 'disabled (fetch only)' }
     $runLine = if ($RunUrl) { "[run details]($RunUrl)" } else { 'run details unavailable' }
-    $null = $sb.AppendLine("_Generated by ``.github/workflows/triage-draft.yml``. Triage: $triageState. $runLine._")
+    $null = $sb.AppendLine("_Generated by AzDO Pipeline ``PTVS-Triage-Fetch``. Phase 2 analysis: $PhaseTwoStatus. $runLine._")
+
+    # Hidden, machine-readable bundle for Phase 2. Surrounded by stable
+    # sentinels so a triggered GH workflow can locate + parse it
+    # deterministically from `github.event.issue.body`. Bundle is base64-
+    # encoded so user-controlled content (e.g., a title containing `-->`)
+    # cannot break out of the HTML comment.
+    if ($null -ne $Bundle) {
+        $null = $sb.AppendLine()
+        $null = $sb.AppendLine('<!--ptvs-triage-bundle-v1')
+        $json = ($Bundle | ConvertTo-Json -Depth 20 -Compress)
+        $b64  = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($json))
+        $null = $sb.AppendLine($b64)
+        $null = $sb.AppendLine('-->')
+    }
     return $sb.ToString()
 }
 
@@ -227,9 +232,9 @@ function Invoke-Post {
     param(
         [string] $CandidatesFile,
         [int]    $LookbackDays,
-        [bool]   $TriageWillRun,
         [string] $RunUrl,
-        [string] $DraftsFile,
+        [string] $BundleFile,
+        [string] $PhaseTwoStatus,
         [object] $Config,
         [switch] $DryRun
     )
@@ -245,28 +250,35 @@ function Invoke-Post {
         $candidates = if ($null -eq $parsed) { @() } elseif ($parsed -is [System.Array]) { @($parsed) } else { @($parsed) }
     }
 
-    # Load drafts if supplied. Map work_item_id (string) -> drafted_response_md.
-    $draftsById = $null
-    if ($DraftsFile) {
-        if (-not (Test-Path -LiteralPath $DraftsFile)) {
-            throw "Drafts file not found: $DraftsFile"
+    # Load the slim bundle if supplied (for Phase 2 hidden-comment embedding).
+    $bundle = $null
+    if ($BundleFile) {
+        if (-not (Test-Path -LiteralPath $BundleFile)) {
+            throw "Bundle file not found: $BundleFile"
         }
-        $draftsRaw = Get-Content -LiteralPath $DraftsFile -Raw
-        if (-not [string]::IsNullOrWhiteSpace($draftsRaw)) {
-            $draftsObj = $draftsRaw | ConvertFrom-Json
-            $draftsById = @{}
-            foreach ($d in @($draftsObj.drafts)) {
-                if ($d.work_item_id -and $d.drafted_response_md) {
-                    $draftsById["$($d.work_item_id)"] = [string]$d.drafted_response_md
-                }
+        $bundleRaw = Get-Content -LiteralPath $BundleFile -Raw
+        if (-not [string]::IsNullOrWhiteSpace($bundleRaw)) {
+            $bundle = $bundleRaw | ConvertFrom-Json
+            $bundleSize = ($bundleRaw.Length)
+            Write-Host "Loaded bundle from $BundleFile ($bundleSize chars)."
+            # Hard-cap the body at 60000 chars to leave headroom under GH's
+            # 65536-char limit for the human-readable bullets + footer.
+            if ($bundleSize -gt 55000) {
+                throw "Bundle is too large to embed in issue body ($bundleSize chars > 55000). Reduce per-WI content in sanitize.ps1 before retrying."
             }
-            Write-Host "Loaded $($draftsById.Count) draft(s) from $DraftsFile."
         }
     }
 
     $windowEnd = [DateTime]::UtcNow.Date
     $title = Build-IssueTitle -WindowEnd $windowEnd -LookbackDays $LookbackDays -Count $candidates.Count
-    $body  = Build-IssueBody  -Candidates $candidates -TriageWillRun $TriageWillRun -RunUrl $RunUrl -LookbackDays $LookbackDays -AreaRoot $Config.azdo.areaPath -DraftsById $draftsById
+    $body  = Build-IssueBody  -Candidates $candidates -RunUrl $RunUrl -LookbackDays $LookbackDays -AreaRoot $Config.azdo.areaPath -PhaseTwoStatus $PhaseTwoStatus -Bundle $bundle
+
+    # Final defensive check — issue body limit is 65536 chars. Catches the case
+    # where bullets + footer + base64 bundle together overflow even though the
+    # raw bundle was under the per-file cap.
+    if ($body.Length -gt 65000) {
+        throw "Issue body is $($body.Length) chars; GitHub's hard limit is 65536. Reduce per-WI content (short_description cap, top_exceptions count) in the bundle assembly step before retrying."
+    }
 
     if ($candidates.Count -eq 0) {
         Write-Host 'No candidates in the lookback window. Skipping issue creation.'
@@ -322,9 +334,9 @@ function Invoke-SelfTest {
     }
 
     # Empty body.
-    $b = Build-IssueBody -Candidates @() -TriageWillRun $true -RunUrl 'https://example/run/1' -LookbackDays 7 -AreaRoot 'DevDiv\Python and AI Tools'
+    $b = Build-IssueBody -Candidates @() -RunUrl 'https://example/run/1' -LookbackDays 7 -AreaRoot 'DevDiv\Python and AI Tools' -PhaseTwoStatus 'enabled'
     if ($b -notmatch 'No open AzDO work items') { Write-Error "Empty-body branch missing: $b"; $errors++ }
-    if ($b -notmatch 'Triage: enabled') { Write-Error "Empty-body footer missing: $b"; $errors++ }
+    if ($b -notmatch 'Phase 2 analysis: enabled') { Write-Error "Empty-body footer missing: $b"; $errors++ }
     if ($b -notmatch [regex]::Escape('DevDiv\Python and AI Tools\**')) { Write-Error "Empty-body area string missing: $b"; $errors++ }
 
     # Non-empty body with one candidate.
@@ -339,22 +351,63 @@ function Invoke-SelfTest {
             work_item_type = 'Bug'
         }
     )
-    $b = Build-IssueBody -Candidates $cands -TriageWillRun $false -RunUrl 'https://example/run/2' -LookbackDays 7 -AreaRoot 'DevDiv\Python and AI Tools\'
+    $b = Build-IssueBody -Candidates $cands -RunUrl 'https://example/run/2' -LookbackDays 7 -AreaRoot 'DevDiv\Python and AI Tools\' -PhaseTwoStatus 'pending'
     if ($b -notmatch '\[AzDO #2711586\]') { Write-Error "Bullet link missing in body."; $errors++ }
     if ($b -notmatch 'area: Python\\VS IDE') { Write-Error "Subpath not formatted: $b"; $errors++ }
     if ($b -notmatch 'created 2026-05-08') { Write-Error "Date not formatted: $b"; $errors++ }
-    if ($b -notmatch 'disabled \(fetch only\)') { Write-Error "Triage state line missing: $b"; $errors++ }
+    if ($b -notmatch 'Phase 2 analysis: pending') { Write-Error "Phase-two status line missing: $b"; $errors++ }
+    if ($b -match 'ptvs-triage-bundle-v1') { Write-Error "Bundle marker should NOT appear when no bundle is passed: $b"; $errors++ }
 
-    # Body with drafts inlined.
-    $draftsById = @{ '2711586' = "Thanks for reporting this!`n`nWe believe this matches the crash fixed in 17.10.2." }
-    $b = Build-IssueBody -Candidates $cands -TriageWillRun $true -RunUrl 'https://example/run/3' -LookbackDays 7 -AreaRoot 'DevDiv\Python and AI Tools\' -DraftsById $draftsById
-    if ($b -notmatch '<details><summary><strong>Suggested response</strong>') { Write-Error "Drafts <details> block missing"; $errors++ }
-    if ($b -notmatch 'Thanks for reporting this') { Write-Error "Draft content missing"; $errors++ }
-    if ($b -notmatch 'drafts inline below') { Write-Error "Footer should reflect drafts mode"; $errors++ }
-
-    # Footer text in fetch-only mode.
-    $b2 = Build-IssueBody -Candidates $cands -TriageWillRun $false -RunUrl 'https://example/run/4' -LookbackDays 7 -AreaRoot 'DevDiv\Python and AI Tools\'
-    if ($b2 -notmatch 'disabled \(fetch only\)') { Write-Error "Fetch-only footer wording mismatch: $b2"; $errors++ }
+    # Body with a slim bundle embedded (base64-encoded).
+    $bundle = [pscustomobject] @{
+        schema_version = '1'
+        generated_at   = '2026-06-04T08:00:00Z'
+        items          = @(
+            [pscustomobject] @{
+                id    = 2711586
+                title = 'crash on project open'
+                area  = 'Python\VS IDE'
+                state = 'Active'
+                short_description = 'VS crashes immediately after opening pyproj.'
+            }
+        )
+    }
+    $b = Build-IssueBody -Candidates $cands -RunUrl 'https://example/run/3' -LookbackDays 7 -AreaRoot 'DevDiv\Python and AI Tools\' -PhaseTwoStatus 'enabled' -Bundle $bundle
+    if ($b -notmatch '<!--ptvs-triage-bundle-v1') { Write-Error "Bundle open sentinel missing"; $errors++ }
+    if ($b -notmatch '-->') { Write-Error "Bundle close sentinel missing"; $errors++ }
+    # Verify base64 round-trip. Extract the line between the sentinels and
+    # decode it back to JSON.
+    if ($b -match '(?ms)<!--ptvs-triage-bundle-v1\s*\r?\n(.+?)\r?\n-->') {
+        $decoded = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($Matches[1].Trim()))
+        if ($decoded -notmatch '"id":2711586') { Write-Error "Decoded bundle JSON missing id field: $decoded"; $errors++ }
+    } else {
+        Write-Error "Bundle sentinel block not found or malformed in body"; $errors++
+    }
+    # Adversarial input: a title containing `-->` MUST NOT break the bundle
+    # extraction. The `-->` in visible bullet text is harmless (rendered as
+    # literal text); what matters is that Phase 2 can still extract the
+    # bundle correctly using a non-greedy match.
+    $candsAdv = @(
+        [pscustomobject] @{
+            id           = 4242
+            title        = 'crash --> see attached log'
+            url          = 'https://dev.azure.com/devdiv/DevDiv/_workitems/edit/4242'
+            area_path    = 'DevDiv\Python and AI Tools\Python\VS IDE'
+            created_date = '2026-06-01T12:00:00Z'
+            state        = 'Active'
+            work_item_type = 'Bug'
+        }
+    )
+    $bundleAdv = [pscustomobject] @{ schema_version = '1'; items = @([pscustomobject] @{ id = 4242; title = '--> escape this' }) }
+    $bAdv = Build-IssueBody -Candidates $candsAdv -RunUrl 'x' -LookbackDays 7 -AreaRoot 'DevDiv\Python and AI Tools\' -PhaseTwoStatus 'enabled' -Bundle $bundleAdv
+    if ($bAdv -notmatch '(?ms)<!--ptvs-triage-bundle-v1\s*\r?\n([A-Za-z0-9+/=]+)\r?\n-->') {
+        Write-Error "Adversarial: bundle marker not recoverable with non-greedy match: $bAdv"; $errors++
+    } else {
+        $advB64 = $Matches[1].Trim()
+        $advDecoded = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($advB64))
+        if ($advDecoded -notmatch '"id":4242') { Write-Error "Adversarial decoded bundle missing id: $advDecoded"; $errors++ }
+        if ($advDecoded -notmatch '"--> escape this"') { Write-Error "Adversarial decoded bundle missing escaped title: $advDecoded"; $errors++ }
+    }
 
     if ($errors -gt 0) {
         throw "post-report-issue.ps1 self-test failed with $errors error(s)."
@@ -367,4 +420,4 @@ if ($SelfTest) { Invoke-SelfTest; return }
 if (-not $CandidatesFile) { throw '-CandidatesFile is required (omit only with -SelfTest).' }
 
 $cfg = Get-TriageConfig -Path $ConfigPath
-Invoke-Post -CandidatesFile $CandidatesFile -LookbackDays $LookbackDays -TriageWillRun $TriageWillRun -RunUrl $RunUrl -DraftsFile $DraftsFile -Config $cfg -DryRun:$DryRun
+Invoke-Post -CandidatesFile $CandidatesFile -LookbackDays $LookbackDays -RunUrl $RunUrl -BundleFile $BundleFile -PhaseTwoStatus $PhaseTwoStatus -Config $cfg -DryRun:$DryRun
