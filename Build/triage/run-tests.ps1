@@ -20,11 +20,7 @@ $scripts = @(
     'sanitize.ps1',
     'post-report-issue.ps1',
     'fetch-context.ps1',
-    'parse-diagnostics.ps1',
-    'cluster.ps1',
-    'post-azdo.ps1',
-    'mirror-to-github.ps1',
-    'apply-outcomes.ps1'
+    'parse-diagnostics.ps1'
 )
 
 $failed = New-Object System.Collections.Generic.List[string]

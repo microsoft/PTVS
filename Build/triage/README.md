@@ -1,186 +1,183 @@
-# Build/triage — weekly AzDO triage automation
+# Build/triage — weekly AzDO triage helper (read + AI draft)
 
 Operator documentation for the workflow defined in
-[`.github/workflows/azdo-triage.yml`](../../.github/workflows/azdo-triage.yml).
-This README is the source of truth for day-to-day operation and the
-phase 0 configuration that must be completed before flipping `dry_run` off.
+[`.github/workflows/triage-draft.yml`](../../.github/workflows/triage-draft.yml)
+and the companion AzDO Pipeline at `Build/triage/pipelines/fetch.yml` (added
+in Phase 2).
 
 ## What it does
 
-Every Monday at 08:00 UTC the workflow:
+Once per week (manually for now; cron later) the system:
 
-1. **Job 1 — Weekly report (always runs).** Queries Azure DevOps for open work
-   items under `DevDiv\Python and AI Tools\**` created in the last 7 days and
-   files a single summary issue in `microsoft/PTVS` titled
-   `AzDO triage report YYYY-MM-DD to YYYY-MM-DD (<N> open items)`. The only
-   write is this read-only-style summary.
-2. **Job 2 — Triage pipeline (conditional on `run_triage`).** Runs as three
-   GitHub-Actions jobs (`prepare` → `triage` → `apply`). The `apply` step
-   needs a human reviewer to approve the `azdo-triage-approval` environment
-   before any AzDO/GitHub writes happen.
+1. **AzDO Pipeline (devdiv/DevDiv)** — Fetches open work items under
+   `DevDiv\Python and AI Tools\**` created in the lookback window, sanitizes
+   them (PII / secret redaction), downloads + parses any
+   `PythonToolsDiagnostics_*.log` attachments, and pushes a single
+   `input.json` to the private companion repo `microsoft/PTVS-triage-data`
+   under `runs/<correlation_id>/`.
+2. **GitHub workflow (microsoft/PTVS)** — Checks out `input.json` from the
+   companion repo at the exact `data_sha`, asks GitHub Models (`actions/ai-inference`)
+   to draft a suggested customer response per work item (matrix, max 3 parallel),
+   and posts a single weekly summary issue listing the items with the drafts
+   inlined under each one.
+
+**Read-only by design.** The AI never:
+
+- replies to the AzDO work item
+- closes or changes the state of any work item
+- changes labels / tags / area paths
+- mirrors items into GitHub issues
+- finds or marks duplicates
+
+The drafts are review-only — a human reads the weekly summary issue and
+manually copies good drafts into AzDO comments. This is the explicit
+2026-06 simplification (removed `apply-outcomes.ps1`, `post-azdo.ps1`,
+`mirror-to-github.ps1`, `cluster.ps1`).
+
+## Why split between two systems
+
+DevDiv's tenant security gateway returns bare HTTP 401 to authenticated
+requests from GitHub-hosted runner IPs, regardless of whether the credential
+is a PAT or an Entra OIDC bearer token (verified empirically — `X-VSS-E2EID`
+captured in the rejected workflow logs). The only paths that work end-to-end
+without admin onboarding are:
+
+| Side | Auth |
+|---|---|
+| AzDO REST (read work items, download attachments) | `$(System.AccessToken)` natively available inside AzDO Pipelines in `devdiv/DevDiv` |
+| GitHub API (post weekly issue, run AI) | Auto-injected `GITHUB_TOKEN` natively available in GH Actions |
+| Cross-system handoff | Private git companion repo `microsoft/PTVS-triage-data`, one fine-grained PAT per direction |
+
+See [`Build/triage/handoff-schema.md`](handoff-schema.md) for the JSON
+schemas used for the handoff.
 
 ## Files
 
 | Path | Role |
 |---|---|
-| `config.json` | Endpoints, area path, label whitelist, confidence thresholds, DC field/state names. **Phase 0 must overwrite `azdo.duplicateFieldName` and verify `azdo.states.*`.** |
-| `query-azdo.ps1` | WIQL query + `workitemsbatch` fetch. Used by Job 1 and Job 2's `prepare`. |
-| `sanitize.ps1` | PII / secret redaction. `-TitlesOnly` is the lightweight Job 1 path; full mode is the Job 2 path. |
-| `post-report-issue.ps1` | Job 1 writer. Idempotent (search-by-title before create). |
-| `fetch-context.ps1` | Per-run research context (commits, releases, fixed-in-next-version, area-path history). |
-| `parse-diagnostics.ps1` | Downloads `PythonToolsDiagnostics_*.log` attachments and extracts the structured header. |
-| `cluster.ps1` | Within-batch dedup via offline Jaccard on title+body tokens. Outputs `clusters.json` and `primaries.json`. |
-| `post-azdo.ps1` | Helpers (dot-sourced by `apply-outcomes.ps1`): comment, close-as-duplicate, close-as-answered. Concurrency-safe (uses `test /rev`). |
-| `mirror-to-github.ps1` | Helpers (dot-sourced by `apply-outcomes.ps1`): search-then-create mirror issue on `microsoft/PTVS`. |
-| `apply-outcomes.ps1` | Reads verdicts + cluster map and dispatches the per-candidate actions. Honors `$env:DRY_RUN`. |
-| `tests/fixtures/` | Canned JSON fixtures for inline `-SelfTest` smoke tests. |
-| `run-tests.ps1` | Runs `-SelfTest` on each script in this directory. Wired into the `triage-tests` job. |
+| `config.json` | Endpoints, area path, excluded states/tags, limits, upstream tracker URLs |
+| `handoff-schema.md` | JSON contract for `input.json` and `drafts.json` |
+| `query-azdo.ps1` | WIQL query + `workitemsbatch` fetch. Runs in the AzDO pipeline. |
+| `sanitize.ps1` | PII / secret redaction. Full mode (one `wi-<id>.json` per candidate) and `-TitlesOnly` mode. |
+| `parse-diagnostics.ps1` | Downloads + parses `PythonToolsDiagnostics_*.log` attachments. |
+| `fetch-context.ps1` | GH-side per-run research context (recent commits, releases, fixed-in-next-version). |
+| `post-report-issue.ps1` | Posts / updates the weekly summary issue in `microsoft/PTVS`. Optional `-DraftsFile` inlines drafts under each bullet. |
+| `run-tests.ps1` | Runs `-SelfTest` on every script in this directory. Wired into the `triage-tests` job. |
+| `tests/fixtures/input-sample.json` | Sample `input.json` for local testing without the companion repo. |
+| `pipelines/fetch.yml` *(Phase 2)* | AzDO Pipeline YAML — fetch + sanitize + push to companion repo. Not yet committed. |
 
-> The judgment step (verdict per candidate) lives outside this directory in
-> [`.github/workflows/azdo-triage-agent.md`](../../.github/workflows/azdo-triage-agent.md),
-> an agentic workflow compiled by [`gh aw`](https://github.github.com/gh-aw/).
-> Its companion `.lock.yml` is what GH Actions actually runs — see
-> [Editing the triage prompt](#editing-the-triage-prompt) below.
+The AI prompt lives in
+[`.github/prompts/triage-draft.prompt.yml`](../../.github/prompts/triage-draft.prompt.yml)
+as a structured GitHub Models `.prompt.yml` (system + user messages, model
+choice, temperature). Bump `prompt_version` in `triage-draft.yml` if you
+materially change it so older drafts are auditable.
 
-## Secrets the workflow needs
+## Secrets and access required
 
-The AzDO triage workflow supports two AzDO auth paths, selected automatically
-by [`.github/actions/azdo-token/action.yml`](../../.github/actions/azdo-token/action.yml).
-**Configure exactly one.** PAT takes precedence when both are set.
+### On the GitHub side (microsoft/PTVS)
 
 | Secret | Purpose |
 |---|---|
-| `AZDO_PAT` *(fallback; fastest to provision)* | Azure DevOps Personal Access Token with `vso.work_write` scope. Use this to unblock the workflow while the Entra SP is being provisioned. Tied to the user who minted it; max 1-year lifetime — set a calendar reminder to rotate. When supplied, the OIDC path is skipped. |
-| `AZDO_TRIAGE_CLIENT_ID`, `AZDO_TRIAGE_TENANT_ID` *(preferred; production)* | OIDC federation to a DevDiv Entra service principal. Keyless; tokens are minted per-run with a 1-hour TTL. No rotation required. |
-| `COPILOT_GITHUB_TOKEN` | PAT used by `gh-aw`'s `engine: copilot` to bill the GitHub Copilot CLI call. Must belong to an identity with an active GitHub Copilot Business / Enterprise entitlement. Validated by the agent job's first step; the workflow fails fast if absent. See [the gh-aw engines reference](https://github.github.com/gh-aw/reference/engines/#github-copilot-default). |
+| `PTVS_TRIAGE_DATA_PAT` | Fine-grained PAT for checking out `microsoft/PTVS-triage-data` at a specific SHA (private repo, so the auto-injected `GITHUB_TOKEN` doesn't suffice). Phase 1 also uses this; Phase 3 will switch to a GitHub App installation token. |
+| `GITHUB_TOKEN` *(auto-injected)* | Used for `actions/ai-inference` (workflow declares `models: read`) and for posting the weekly summary issue (workflow declares `issues: write`). |
 
-The workflow's writes to `microsoft/PTVS` issues (Job 1's weekly report and
-Job 2's mirror issues) use the auto-injected `GITHUB_TOKEN`. The workflow's
-top-level `permissions:` block declares `issues: write`, which is what scopes
-that token. No separate PAT (`PTVS_BRIDGE_PAT`) is required.
+### On the AzDO side (devdiv/DevDiv, Phase 2)
 
-The agent's GitHub MCP toolset (`issues` + `repos`, read-only) uses the
-auto-injected, repo-scoped `GITHUB_TOKEN` and does NOT need a separate
-PAT — gh-aw's compiled lockfile resolves
-`GH_AW_GITHUB_MCP_SERVER_TOKEN || GH_AW_GITHUB_TOKEN || GITHUB_TOKEN`,
-so the fallback covers us. The previous `PTVS_TRIAGE_MCP_READONLY_PAT`
-secret was removed when the triage step was migrated from
-`actions/ai-inference@v1` to `gh aw`.
+| Setting | Purpose |
+|---|---|
+| `$(System.AccessToken)` | Native bearer token for the pipeline's Build Service identity. Has WIT scopes — but the Build Service identity must be granted `View work items` + `Edit work items` on the area path `DevDiv\Python and AI Tools` before it actually authorizes anything (see Phase 0b below). |
+| Variable group `PTVS-Triage-Bridge` | Holds `PTVS_BRIDGE_PAT` (fine-grained GitHub PAT scoped to `microsoft/PTVS-triage-data` with `contents:write`, and `microsoft/PTVS` with `repository_dispatch:write` for Phase 3). |
 
-The workflow also expects an Environment named `azdo-triage-approval` with
-required reviewers configured.
+## Phase 0 — One-time setup
 
-## Phase 0 checklist (must complete before flipping `dry_run` to `false`)
+### Phase 0a — GitHub setup (~10 min, no admin required)
 
-Before the first run with `dry_run: false`, the following placeholders in
-`config.json` MUST be replaced with the values observed on a real DevDiv
-work item under our area path:
+1. **Create private repo `microsoft/PTVS-triage-data`**:
+   - Visibility: **private**
+   - Disable: issues, wiki, discussions, projects, packages
+   - Access: invite ONLY @StellaHuang95 + 1 backup reviewer (avoid inheriting microsoft/PTVS's broader access)
+2. **Generate a fine-grained PAT** at https://github.com/settings/personal-access-tokens/new:
+   - Resource owner: **microsoft**
+   - Repositories: select `PTVS-triage-data` and `PTVS`
+   - Permissions on `PTVS-triage-data`: **Contents: Read and write**
+   - Permissions on `PTVS`: **Issues: Read** (the workflow's own `GITHUB_TOKEN` handles writes), **Metadata: Read**, **Contents: Read**, and *(Phase 3)* **Repository dispatch: Write**
+   - Expiration: **90 days** (set a calendar reminder for rotation)
+3. **Set the GitHub secret**:
+   ```powershell
+   gh secret set PTVS_TRIAGE_DATA_PAT --repo microsoft/PTVS
+   ```
 
-1. `azdo.duplicateFieldName` — the REST field name behind the
-   "Duplicate Feedback Ticket ID" field on the Overview tab. Likely
-   `Microsoft.VSTS.Common.DuplicateFeedbackTicketId` but verify with
-   `GET .../wit/workitems/{id}?$expand=all` and inspect `fields`.
-   `Close-AzdoAsDuplicate` will refuse to PATCH while the placeholder
-   string is still set.
-2. `azdo.states.duplicate`, `azdo.states.answered`, `azdo.states.fixed` —
-   the exact DC close-state strings available on the work item type. Defaults
-   are best public guesses (`DC - Closed - Duplicated`, `DC - Closed - Other`,
-   `DC - Closed - Fixed`).
-3. Verify that `from-azdo` and `azdo-triage-report` labels exist on
-   `microsoft/PTVS` (create them once before the first non-dry-run).
+### Phase 0b — AzDO setup (~30 min, may need admin help) — Phase 2 only
 
-## Editing the triage prompt
+These steps are only needed when adding the AzDO Pipeline (`pipelines/fetch.yml`)
+in Phase 2. Skip for Phase 1 fixtures testing.
 
-The triage judgment lives in
-[`.github/workflows/azdo-triage-agent.md`](../../.github/workflows/azdo-triage-agent.md),
-authored as natural-language markdown with a YAML frontmatter block (engine,
-tools, pre/post steps). GitHub Actions cannot execute the `.md` directly —
-it runs a compiled `.lock.yml` sibling. After any edit to the `.md`, run:
+4. **Create the AzDO Pipeline `PTVS-Triage-Fetch`** in `devdiv/DevDiv` pointing at `Build/triage/pipelines/fetch.yml` on the `main` branch of `microsoft/PTVS`.
+5. **Run it once** so the Build Service identity is provisioned (it'll fail — that's expected).
+6. **Grant the Build Service identity work-item permissions** (read-only — the AzDO Pipeline only fetches; it never writes):
+   - https://dev.azure.com/devdiv/DevDiv/_settings/permissions → search `DevDiv Build Service (devdiv)`
+   - Grant: **View work items in this node** at the project level
+   - On area path `DevDiv\Python and AI Tools`: same permission (inherited to children)
+7. **Create variable group `PTVS-Triage-Bridge`** with `PTVS_BRIDGE_PAT` (marked secret); restrict pipeline access to the `PTVS-Triage-Fetch` pipeline only.
 
-```pwsh
-# one-time, per workstation. The standard install command:
-gh extension install github/gh-aw
-# is blocked by the `github` org's SAML enforcement for non-org-member
-# accounts (HTTP 403 from the releases API). Microsoft FTEs without
-# membership in the github org should install manually from the prebuilt
-# Windows binary instead:
-$ext = Join-Path $env:LOCALAPPDATA "GitHub CLI\extensions\gh-aw"
-New-Item -ItemType Directory -Path $ext -Force | Out-Null
-$tag = (Invoke-WebRequest "https://github.com/github/gh-aw/releases/latest" `
-        -MaximumRedirection 0 -SkipHttpErrorCheck).Headers.Location.Split('/')[-1]
-Invoke-WebRequest "https://github.com/github/gh-aw/releases/download/$tag/windows-amd64.exe" `
-    -OutFile (Join-Path $ext "gh-aw.exe") -UseBasicParsing
-@{ name='gh-aw'; owner='github'; host='github.com'; tag=$tag; ispinned=$false;
-   path=(Join-Path $ext 'gh-aw.exe'); isBinary=$true } | ConvertTo-Json |
-    Out-File (Join-Path $ext 'manifest.yml') -Encoding ascii
+### Phase 0c — Phase 1 testing without companion repo (0 min)
 
-# every time the .md changes:
-gh aw compile .github/workflows/azdo-triage-agent.md
-# commit BOTH the .md and the regenerated .lock.yml in the same commit
+The new GH workflow's `fixtures_path` input bypasses the companion-repo
+checkout entirely. Run a smoke test now:
+
+```powershell
+gh workflow run triage-draft.yml --repo microsoft/PTVS `
+  --ref fix/triage-reusable-workflow-permissions `
+  -f correlation_id=local-fixture-001 `
+  -f fixtures_path=Build/triage/tests/fixtures/input-sample.json `
+  -f lookback_days=7 `
+  -f dry_run=true
 ```
 
-The `triage-tests` CI job verifies the lockfile is in sync with the source.
+This exercises the matrix + AI inference + issue-formatting end-to-end against
+the one-candidate sample fixture under `Build/triage/tests/fixtures/`. With
+`-f dry_run=true` the workflow logs the issue body instead of posting.
 
 ## Running locally
 
-The scripts are PowerShell 7 and run on Windows or Linux runners.
+The PowerShell scripts are PowerShell 7 and run on Windows or Linux:
 
 ```pwsh
-# Run the inline smoke tests.
+# Run inline smoke tests on every script.
 pwsh -File Build/triage/run-tests.ps1
 
-# Dry-run the whole pipeline locally against a real AzDO token.
-# For local runs, set GITHUB_TOKEN to a fine-grained PAT with
-# issues:write + metadata:read on microsoft/PTVS. In GitHub Actions
-# the auto-injected GITHUB_TOKEN is used instead — no PAT needed.
-$env:AZDO_ACCESS_TOKEN = '...'
-$env:GITHUB_TOKEN      = '...'
-$env:DRY_RUN           = 'true'
-
-./Build/triage/query-azdo.ps1            -OutFile $env:TEMP/candidates.json -LookbackDays 14
-./Build/triage/sanitize.ps1 -TitlesOnly  -InFile $env:TEMP/candidates.json  -OutFile $env:TEMP/cands-titles.json
-./Build/triage/post-report-issue.ps1     -CandidatesFile $env:TEMP/cands-titles.json -LookbackDays 14 -TriageWillRun $true -DryRun
-```
-
-See the [REST happy-path walkthrough](#rest-happy-path-walkthrough) below
-for the curl-level sequence.
-
-## REST happy-path walkthrough
-
-For one-off manual reproduction of what the pipeline does, the curl-level
-sequence per primary candidate is:
-
-```bash
-# 1. WIQL: enumerate the past 7 days under the area path
-curl -s -H "Authorization: Bearer $AZDO_ACCESS_TOKEN" \
-     -H 'Content-Type: application/json' \
-     "$AZDO_BASE/$PROJECT/_apis/wit/wiql?api-version=7.0" \
-     -d '{"query":"SELECT [System.Id] FROM WorkItems WHERE [System.AreaPath] UNDER \"DevDiv\\Python and AI Tools\" AND [System.CreatedDate] >= @Today - 7"}'
-
-# 2. workitemsbatch: hydrate fields + tags
-curl -s -H "Authorization: Bearer $AZDO_ACCESS_TOKEN" \
-     -H 'Content-Type: application/json' \
-     "$AZDO_BASE/$PROJECT/_apis/wit/workitemsbatch?api-version=7.0" \
-     -d '{"ids":[12345,67890],"fields":["System.Title","System.State","System.Tags"]}'
-
-# 3. comments: post the AI response or the DC duplicate template
-curl -s -H "Authorization: Bearer $AZDO_ACCESS_TOKEN" \
-     -H 'Content-Type: application/json' \
-     "$AZDO_BASE/$PROJECT/_apis/wit/workItems/12345/comments?api-version=7.0-preview.3" \
-     -d '{"text":"..."}'
-
-# 4. PATCH: close as DC duplicate (test /rev guards concurrent edits)
-curl -s -X PATCH -H "Authorization: Bearer $AZDO_ACCESS_TOKEN" \
-     -H 'Content-Type: application/json-patch+json' \
-     "$AZDO_BASE/$PROJECT/_apis/wit/workitems/12345?api-version=7.0" \
-     -d '[{"op":"test","path":"/rev","value":430},
-         {"op":"add","path":"/fields/System.State","value":"DC - Closed - Duplicated"},
-         {"op":"add","path":"/fields/Microsoft.VSTS.Common.DuplicateFeedbackTicketId","value":"https://github.com/microsoft/PTVS/issues/8123"},
-         {"op":"add","path":"/fields/System.Tags","value":"triaged-by-ai; from-azdo"}]'
+# Dry-run the report-posting step against the fixtures (no AzDO calls, no AI).
+# candidates-sample.json is the bare array shape post-report-issue.ps1 expects;
+# drafts-sample.json is shaped like the workflow's aggregate step produces.
+$env:GITHUB_TOKEN = '...'  # fine-grained PAT with issues:write on microsoft/PTVS
+./Build/triage/post-report-issue.ps1 `
+  -CandidatesFile Build/triage/tests/fixtures/candidates-sample.json `
+  -DraftsFile     Build/triage/tests/fixtures/drafts-sample.json `
+  -LookbackDays   7 `
+  -RunUrl         'https://example.local' `
+  -DryRun
 ```
 
 ## Reverting
 
-Set `dry_run: true` from the **workflow_dispatch** UI, or disable the
-workflow file entirely. Job 1 (the report) is low-risk and can be left on
-while triage automation is paused.
+The workflow is `workflow_dispatch`-triggered only — there's no schedule to
+disable. To "stop" it, simply don't trigger it (and don't run the AzDO
+Pipeline that populates the companion repo).
+
+To remove permanently: delete `.github/workflows/triage-draft.yml`,
+`.github/prompts/triage-draft.prompt.yml`, and `Build/triage/pipelines/`.
+The supporting PS scripts (`query-azdo.ps1`, `sanitize.ps1`,
+`parse-diagnostics.ps1`, `fetch-context.ps1`, `post-report-issue.ps1`) have
+no other consumers and can also be deleted.
+
+## History
+
+- **2026-06** — Simplified scope: dropped duplicate detection, AzDO writes,
+  GitHub mirror issues, and the gh-aw agentic step. Replaced with a simple
+  `actions/ai-inference` matrix that drafts a suggested response per work
+  item. Reason: the destructive paths added significant complexity (verdict
+  schema, confidence thresholds, environment approvals, state machine
+  config) that wasn't earning its keep for a team in maintenance mode.
+- **2026-05** — Initial implementation with full triage pipeline (`PR #8523`).
+  Never ran successfully end-to-end because DevDiv blocks GitHub-hosted
+  runner IPs from authenticating to AzDO.

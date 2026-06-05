@@ -1,0 +1,414 @@
+name: AzDO triage — draft responses
+
+# Reads sanitized AzDO work-item data prepared by an AzDO Pipeline (or local
+# fixtures) and drafts a suggested customer-facing response for each work item
+# using actions/ai-inference. Posts a single weekly GitHub issue with the
+# drafts inline so a human can review and copy/paste good ones into AzDO.
+#
+# Read-only by design: the AI never writes back to AzDO, never closes work
+# items, never tags / labels / files duplicates. The destructive paths
+# (apply-outcomes.ps1, post-azdo.ps1, mirror-to-github.ps1) were removed in
+# the 2026-06 simplification.
+#
+# Companion repo handoff: AzDO Pipeline 1 commits
+# `runs/<correlation_id>/input.json` to a private `microsoft/PTVS-triage-data`
+# repo, then triggers this workflow with the exact data_sha. We checkout that
+# SHA, never a moving branch, to avoid race conditions with concurrent fetches.
+#
+# Phase 1 (this commit): workflow_dispatch only; AzDO pipeline doesn't exist
+# yet, so a `fixtures_path` input lets the workflow be tested against checked-in
+# fixtures under Build/triage/tests/fixtures/. Phase 3 will add a
+# repository_dispatch trigger and drop fixtures_path.
+
+on:
+  workflow_dispatch:
+    inputs:
+      correlation_id:
+        description: "Trust anchor matching input.json (e.g. 'ado-12345-2026-06-04T08-00-00Z' or 'local-fixture-001')."
+        required: true
+      data_sha:
+        description: "Commit SHA in microsoft/PTVS-triage-data containing runs/<correlation_id>/input.json. Leave empty if using fixtures_path."
+        required: false
+        default: ""
+      source_azdo_build_url:
+        description: "URL of the AzDO Pipeline run that produced the input. For audit. Leave empty if using fixtures_path."
+        required: false
+        default: ""
+      fixtures_path:
+        description: "(local test only) Path within microsoft/PTVS to a local input.json. Used when companion repo isn't set up yet. e.g. 'Build/triage/tests/fixtures/input-sample.json'."
+        required: false
+        default: ""
+      lookback_days:
+        description: "Window size used by the AzDO fetcher (echoed in the issue title)."
+        required: false
+        default: "7"
+      dry_run:
+        description: "If true, print the aggregated issue body to logs instead of posting."
+        required: false
+        default: "false"
+        type: boolean
+
+permissions:
+  contents: read
+  # Workflow-level default is intentionally read-only. Each job that needs
+  # writes (issues:write for report, models:read for draft) elevates its
+  # own permissions via a job-level `permissions:` block. Job-level
+  # permissions REPLACE workflow-level for that job.
+
+concurrency:
+  group: triage-draft
+  cancel-in-progress: false
+
+jobs:
+  # ────────────────────────────────────────────────────────────────
+  # JOB 1 — Prepare: load input.json and emit the matrix of work items.
+  # ────────────────────────────────────────────────────────────────
+  prepare:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      candidates: ${{ steps.matrix.outputs.candidates }}
+      candidate_count: ${{ steps.matrix.outputs.count }}
+    steps:
+      - name: Checkout PTVS (for scripts, fixtures, and config)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0    # fetch-context.ps1 needs ~90d of git log
+
+      - name: Validate inputs (need either data_sha or fixtures_path)
+        shell: bash
+        env:
+          DATA_SHA:      ${{ inputs.data_sha }}
+          FIXTURES_PATH: ${{ inputs.fixtures_path }}
+        run: |
+          if [ -z "${DATA_SHA}" ] && [ -z "${FIXTURES_PATH}" ]; then
+            echo "::error::Must supply either 'data_sha' (companion repo SHA) or 'fixtures_path' (local file). Both are empty."
+            exit 1
+          fi
+          if [ -n "${DATA_SHA}" ] && [ -n "${FIXTURES_PATH}" ]; then
+            echo "::warning::Both data_sha and fixtures_path supplied. fixtures_path takes precedence."
+          fi
+
+      - name: Checkout PTVS-triage-data at data_sha
+        if: ${{ inputs.fixtures_path == '' }}
+        uses: actions/checkout@v4
+        with:
+          repository: microsoft/PTVS-triage-data
+          ref: ${{ inputs.data_sha }}
+          path: triage-data
+          token: ${{ secrets.PTVS_TRIAGE_DATA_PAT }}
+
+      - name: Stage input.json + verify correlation_id
+        id: stage
+        shell: pwsh
+        env:
+          CORRELATION_ID: ${{ inputs.correlation_id }}
+          FIXTURES_PATH:  ${{ inputs.fixtures_path }}
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+
+          if ($env:FIXTURES_PATH) {
+            $src = Join-Path $PWD $env:FIXTURES_PATH
+            Write-Host "Using fixtures_path: $src"
+          } else {
+            $src = Join-Path $PWD "triage-data/runs/$env:CORRELATION_ID/input.json"
+            Write-Host "Using companion-repo path: $src"
+          }
+          if (-not (Test-Path -LiteralPath $src)) {
+            throw "input.json not found at: $src"
+          }
+          $data = Get-Content -LiteralPath $src -Raw | ConvertFrom-Json
+
+          # Trust-anchor verification: correlation_id in the file MUST match
+          # what the workflow caller claimed.
+          if ($data.correlation_id -ne $env:CORRELATION_ID) {
+            throw "correlation_id mismatch. workflow input='$env:CORRELATION_ID' but input.json='$($data.correlation_id)'."
+          }
+
+          # Schema gate.
+          if ($data.schema_version -ne '1') {
+            throw "Unsupported schema_version '$($data.schema_version)'. This workflow handles only schema_version=1."
+          }
+
+          $dst = Join-Path $env:RUNNER_TEMP 'input.json'
+          Copy-Item -LiteralPath $src -Destination $dst -Force
+          Write-Host "Staged $($data.candidates.Count) candidate(s); diagnostics for $(@($data.diagnostics.PSObject.Properties).Count) item(s)."
+
+      - name: Fetch per-run research context (GitHub-side only)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          ./Build/triage/fetch-context.ps1 -OutFile $env:RUNNER_TEMP/run-context.json
+
+      - name: Upload staged run artifacts (input.json + run-context.json)
+        uses: actions/upload-artifact@v4
+        with:
+          name: triage-input
+          path: |
+            ${{ runner.temp }}/input.json
+            ${{ runner.temp }}/run-context.json
+          retention-days: 7
+
+      - name: Build candidates matrix from input.json
+        id: matrix
+        shell: pwsh
+        run: |
+          $data = Get-Content -LiteralPath $env:RUNNER_TEMP/input.json -Raw | ConvertFrom-Json
+          # Matrix entries are JUST the id (string). Per-WI scripts will look
+          # up everything else from the staged input.json artifact.
+          $ids = @($data.candidates | ForEach-Object { @{ id = "$($_.id)" } })
+          $json = ConvertTo-Json -Compress -Depth 5 -InputObject $ids
+          if (-not $json) { $json = '[]' }
+          Write-Host "Matrix has $($ids.Count) work item(s):"
+          Write-Host $json
+          # Multi-line-safe heredoc.
+          @(
+            "candidates<<__EOF__"
+            $json
+            "__EOF__"
+            "count=$($ids.Count)"
+          ) | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+  # ────────────────────────────────────────────────────────────────
+  # JOB 2 — Matrix: one ai-inference draft per work item.
+  # ────────────────────────────────────────────────────────────────
+  draft:
+    needs: prepare
+    if: ${{ needs.prepare.outputs.candidate_count != '0' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      models: read
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        candidate: ${{ fromJson(needs.prepare.outputs.candidates) }}
+    steps:
+      - name: Checkout PTVS (for scripts + prompt file)
+        uses: actions/checkout@v4
+
+      - name: Download staged triage-input
+        uses: actions/download-artifact@v4
+        with:
+          name: triage-input
+          path: ${{ runner.temp }}
+
+      - name: Extract per-work-item inputs for the prompt
+        id: extract
+        shell: pwsh
+        env:
+          WI_ID: ${{ matrix.candidate.id }}
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+
+          $data = Get-Content -LiteralPath $env:RUNNER_TEMP/input.json -Raw | ConvertFrom-Json
+          $wi   = $data.candidates | Where-Object { "$($_.id)" -eq $env:WI_ID } | Select-Object -First 1
+          if (-not $wi) { throw "Work item $env:WI_ID not found in input.json" }
+
+          $diag = $null
+          if ($data.diagnostics -and $data.diagnostics.PSObject.Properties[$env:WI_ID]) {
+            $diag = $data.diagnostics.PSObject.Properties[$env:WI_ID].Value
+          }
+
+          # Write per-WI files for ai-inference file_input.
+          ($wi   | ConvertTo-Json -Depth 20) | Set-Content -LiteralPath $env:RUNNER_TEMP/workitem.json   -Encoding UTF8
+          (($diag ? $diag : @{}) | ConvertTo-Json -Depth 20) | Set-Content -LiteralPath $env:RUNNER_TEMP/diagnostics.json -Encoding UTF8
+
+          Write-Host "Prepared inputs for AzDO #$env:WI_ID."
+
+      - name: Draft response via GitHub Models
+        id: draft
+        uses: actions/ai-inference@v1
+        with:
+          prompt-file: .github/prompts/triage-draft.prompt.yml
+          file_input: |
+            workitem_json: ${{ runner.temp }}/workitem.json
+            diagnostics_json: ${{ runner.temp }}/diagnostics.json
+            context_json: ${{ runner.temp }}/run-context.json
+
+      - name: Persist draft as draft-<id>.json
+        shell: pwsh
+        env:
+          WI_ID:    ${{ matrix.candidate.id }}
+          RESPONSE: ${{ steps.draft.outputs.response }}
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+
+          $out = [pscustomobject] @{
+            work_item_id        = [int] $env:WI_ID
+            drafted_response_md = "$env:RESPONSE"
+            model               = 'openai/gpt-4o'
+            prompt_version      = '1'
+          }
+          $dst = Join-Path $env:RUNNER_TEMP ("draft-{0}.json" -f $env:WI_ID)
+          ($out | ConvertTo-Json -Depth 5) | Set-Content -LiteralPath $dst -Encoding UTF8
+          Write-Host "Wrote $dst ($($env:RESPONSE.Length) chars)."
+
+      - name: Upload draft artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: draft-${{ matrix.candidate.id }}
+          path: ${{ runner.temp }}/draft-${{ matrix.candidate.id }}.json
+          retention-days: 30
+
+  # ────────────────────────────────────────────────────────────────
+  # JOB 3 — Aggregate drafts and post the weekly issue.
+  # Runs regardless of partial draft failures (fail-fast: false above) so
+  # we still surface whatever drafts succeeded plus the candidate list.
+  # ────────────────────────────────────────────────────────────────
+  report:
+    needs: [prepare, draft]
+    if: always() && needs.prepare.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: triage-input
+          path: ${{ runner.temp }}
+
+      - name: Download all per-WI drafts
+        if: ${{ needs.draft.result == 'success' || needs.draft.result == 'failure' }}
+        uses: actions/download-artifact@v4
+        with:
+          pattern: draft-*
+          path: ${{ runner.temp }}/drafts
+          merge-multiple: true
+
+      - name: Aggregate drafts.json
+        id: aggregate
+        shell: pwsh
+        env:
+          CORRELATION_ID: ${{ inputs.correlation_id }}
+          RUN_URL:        ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          RUN_ID:         ${{ github.run_id }}
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+
+          $drafts = @()
+          $securityHoldIds = @()
+          $dir = Join-Path $env:RUNNER_TEMP 'drafts'
+          if (Test-Path -LiteralPath $dir) {
+            foreach ($f in Get-ChildItem -LiteralPath $dir -Filter 'draft-*.json' -File) {
+              try {
+                $d = Get-Content -LiteralPath $f.FullName -Raw | ConvertFrom-Json
+                # Security defense in depth: drop drafts where the AI flagged the
+                # report as security-sensitive. Don't emit anything about these
+                # items to the public weekly issue — the title/description could
+                # itself disclose the vulnerability. Phase 2's sanitize.ps1 will
+                # filter these upstream by area/tag; this is the GH-side safety net.
+                $resp = "$($d.drafted_response_md)"
+                if ($resp -and $resp.TrimStart().StartsWith('SECURITY_HOLD')) {
+                  Write-Host "::warning::Dropping AzDO #$($d.work_item_id) — AI flagged as security-sensitive. Item will be omitted from the weekly issue."
+                  $securityHoldIds += [int] $d.work_item_id
+                  continue
+                }
+                $drafts += $d
+              } catch {
+                Write-Warning "Could not parse $($f.Name): $($_.Exception.Message)"
+              }
+            }
+          }
+          # Stable order by work_item_id so the issue body is deterministic.
+          $drafts = @($drafts | Sort-Object work_item_id)
+
+          $out = [pscustomobject] @{
+            schema_version  = '1'
+            correlation_id  = $env:CORRELATION_ID
+            github_run_id   = [int] $env:RUN_ID
+            github_run_url  = $env:RUN_URL
+            generated_at    = (Get-Date).ToUniversalTime().ToString('o')
+            drafts          = $drafts
+          }
+          $dst = Join-Path $env:RUNNER_TEMP 'drafts.json'
+          ($out | ConvertTo-Json -Depth 20) | Set-Content -LiteralPath $dst -Encoding UTF8
+          Write-Host "Aggregated $($drafts.Count) draft(s) -> $dst (dropped $($securityHoldIds.Count) security-flagged)."
+
+          # Persist the security-hold ids so the next step can also drop them
+          # from the candidates list before posting.
+          ($securityHoldIds -join ',') | Set-Content -LiteralPath $env:RUNNER_TEMP/security-hold-ids.txt -Encoding UTF8
+
+      - name: Upload drafts.json artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: drafts
+          path: ${{ runner.temp }}/drafts.json
+          retention-days: 30
+
+      - name: Build candidates-titles-only.json for the report script
+        shell: pwsh
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+          # post-report-issue.ps1 takes the same shape sanitize.ps1 -TitlesOnly
+          # produces — an array of candidates with title/id/url/area/created.
+          # Build that from input.json.candidates (already sanitized upstream).
+          $data = Get-Content -LiteralPath $env:RUNNER_TEMP/input.json -Raw | ConvertFrom-Json
+
+          # Drop any candidate the aggregate step flagged as security-sensitive.
+          $holdIds = @()
+          $holdFile = Join-Path $env:RUNNER_TEMP 'security-hold-ids.txt'
+          if (Test-Path -LiteralPath $holdFile) {
+            $holdStr = (Get-Content -LiteralPath $holdFile -Raw).Trim()
+            if ($holdStr) {
+              $holdIds = @($holdStr -split ',' | ForEach-Object { [int] $_ })
+            }
+          }
+
+          $titles = @($data.candidates | Where-Object { $holdIds -notcontains [int] $_.id } | ForEach-Object {
+            [pscustomobject] @{
+              id           = $_.id
+              title        = $_.title
+              url          = $_.url
+              area_path    = $_.area_path
+              created_date = $_.created_date
+              state        = $_.state
+              work_item_type = $_.work_item_type
+            }
+          })
+          ($titles | ConvertTo-Json -Depth 20) | Set-Content -LiteralPath $env:RUNNER_TEMP/candidates-titles-only.json -Encoding UTF8
+          Write-Host "Wrote $($titles.Count) candidate(s) to candidates-titles-only.json (dropped $($holdIds.Count) security-flagged)."
+
+      - name: Post weekly report issue (with drafts inline)
+        env:
+          GITHUB_TOKEN:    ${{ secrets.GITHUB_TOKEN }}
+          LOOKBACK_DAYS:   ${{ inputs.lookback_days || '7' }}
+          RUN_URL:         ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          DRY_RUN_INPUT:   ${{ inputs.dry_run }}
+        shell: pwsh
+        run: |
+          $dryRun = [bool]::Parse(($env:DRY_RUN_INPUT ?? 'false'))
+          $args = @(
+            '-CandidatesFile', "$env:RUNNER_TEMP/candidates-titles-only.json",
+            '-DraftsFile',     "$env:RUNNER_TEMP/drafts.json",
+            '-LookbackDays',   ([int] $env:LOOKBACK_DAYS),
+            '-RunUrl',         $env:RUN_URL,
+            '-TriageWillRun', $true
+          )
+          if ($dryRun) { $args += '-DryRun' }
+          ./Build/triage/post-report-issue.ps1 @args
+
+  # ────────────────────────────────────────────────────────────────
+  # Self-tests for the Build/triage/** scripts. Runs on every workflow
+  # invocation as a safety net; cheap (no network).
+  # ────────────────────────────────────────────────────────────────
+  triage-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Build/triage self-tests
+        shell: pwsh
+        run: ./Build/triage/run-tests.ps1

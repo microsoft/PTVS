@@ -1,0 +1,15 @@
+{
+    "schema_version": "1",
+    "correlation_id": "local-fixture-001",
+    "github_run_id": 0,
+    "github_run_url": "https://github.com/microsoft/PTVS/actions/runs/0",
+    "generated_at": "2026-06-04T08:30:00Z",
+    "drafts": [
+        {
+            "work_item_id": 2711586,
+            "drafted_response_md": "Thanks for reporting this! It looks like a crash on opening Python projects in VS 17.10.1. We've added a fix that should ship in the next VS update — please update to the latest preview when available and try again. If the crash persists, please attach a fresh PythonToolsDiagnostics_*.log so we can dig deeper.\n\nHappy coding!",
+            "model": "openai/gpt-4o",
+            "prompt_version": "1"
+        }
+    ]
+}
