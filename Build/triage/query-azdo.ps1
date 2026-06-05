@@ -105,6 +105,64 @@ ORDER BY [$dateField] DESC
     return $wiql
 }
 
+function Get-AzdoErrorDetails {
+    param([Parameter(Mandatory)] [System.Management.Automation.ErrorRecord] $ErrRec)
+    # Surface the bits AzDO actually puts useful diagnostics in: the response
+    # body (TF400813/VS401034/etc message codes) and the WWW-Authenticate
+    # header (which on AzDO indicates whether PAT is disabled by org policy,
+    # whether Entra auth is required, etc.). Lost otherwise because
+    # Invoke-RestMethod throws on non-2xx without surfacing the body.
+    $status = $null
+    $reason = $null
+    $body   = $null
+    $wwwAuth = $null
+    $allHeaders = @()
+    if ($ErrRec.Exception.Response) {
+        $resp = $ErrRec.Exception.Response
+        $status = [int] $resp.StatusCode
+        $reason = $resp.ReasonPhrase
+        if ($resp.Headers) {
+            # WWW-Authenticate on its own.
+            try {
+                if ($resp.Headers.WwwAuthenticate) {
+                    $wwwAuth = ($resp.Headers.WwwAuthenticate -join '; ')
+                }
+            } catch { }
+            # Dump *all* response headers as a fallback — even when AzDO
+            # omits WWW-Authenticate, X-TFS-* / X-VSS-* headers often carry
+            # the actual reason.
+            try {
+                foreach ($h in $resp.Headers) {
+                    $allHeaders += ("{0}: {1}" -f $h.Key, ($h.Value -join ', '))
+                }
+            } catch { }
+        }
+        # Try Content.ReadAsStringAsync — sometimes the body is here when
+        # ErrorDetails.Message is empty (stream already consumed elsewhere).
+        try {
+            if ($resp.Content) {
+                $task = $resp.Content.ReadAsStringAsync()
+                $task.Wait(2000) | Out-Null
+                if ($task.IsCompletedSuccessfully) {
+                    $body = $task.Result
+                }
+            }
+        } catch { }
+    }
+    # In PowerShell 7+ the response body is in ErrorDetails.Message for
+    # HttpResponseException; in 5.1 it's on the Response stream.
+    if (-not $body -and $ErrRec.ErrorDetails -and $ErrRec.ErrorDetails.Message) {
+        $body = $ErrRec.ErrorDetails.Message
+    }
+    [pscustomobject] @{
+        Status     = $status
+        Reason     = $reason
+        WwwAuth    = $wwwAuth
+        Body       = $body
+        AllHeaders = $allHeaders
+    }
+}
+
 function Invoke-AzdoRestWithRetry {
     param(
         [Parameter(Mandatory)] [string] $Method,
@@ -143,6 +201,18 @@ function Invoke-AzdoRestWithRetry {
                 Write-Warning "AzDO REST $Method $Uri failed (HTTP $status). Retry $attempt/$MaxAttempts after ${sleep}s."
                 Start-Sleep -Seconds $sleep
                 continue
+            }
+            # Non-retryable: dump AzDO's diagnostic payload before rethrowing
+            # so the workflow log shows the actual cause (TF/VS code, body)
+            # instead of a bare "401 (Unauthorized)".
+            $det = Get-AzdoErrorDetails -ErrRec $_
+            Write-Host "AzDO REST $Method $Uri failed."
+            Write-Host "  HTTP status     : $($det.Status) $($det.Reason)"
+            if ($det.WwwAuth) { Write-Host "  WWW-Authenticate: $($det.WwwAuth)" }
+            if ($det.Body)    { Write-Host "  Response body   : $($det.Body)" }
+            if ($det.AllHeaders -and $det.AllHeaders.Count -gt 0) {
+                Write-Host "  Response headers:"
+                foreach ($h in $det.AllHeaders) { Write-Host "    $h" }
             }
             throw
         }

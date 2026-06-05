@@ -6,8 +6,7 @@
         The repo does not use Pester. Each script accepts a -SelfTest switch
         that runs inline assertions against the fixtures under
         Build/triage/tests/fixtures/. This runner just invokes them all and
-        fails if any one fails. Wired into the workflow via the triage-tests
-        job (see .github/workflows/azdo-triage.yml).
+        fails if any one fails.
 #>
 [CmdletBinding()]
 param()
@@ -19,12 +18,7 @@ $scripts = @(
     'query-azdo.ps1',
     'sanitize.ps1',
     'post-report-issue.ps1',
-    'fetch-context.ps1',
-    'parse-diagnostics.ps1',
-    'cluster.ps1',
-    'post-azdo.ps1',
-    'mirror-to-github.ps1',
-    'apply-outcomes.ps1'
+    'parse-diagnostics.ps1'
 )
 
 $failed = New-Object System.Collections.Generic.List[string]

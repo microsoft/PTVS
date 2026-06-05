@@ -1,0 +1,223 @@
+# PTVS-Triage-Fetch — weekly AzDO triage fetch + summary issue
+#
+# Runs inside devdiv/DevDiv (where $(System.AccessToken) has native AzDO REST
+# auth — the same call from a GitHub-hosted runner is bare-401'd by the
+# DevDiv security gateway).
+#
+# End to end (4 steps):
+#   1. Query AzDO for open work items under DevDiv\Python and AI Tools\**
+#      that changed in the last 7 days (cap 25).
+#   2. Download + parse any PythonToolsDiagnostics_*.log attachments.
+#   3. Sanitize all of it (PII redaction; drop items that hit secret patterns).
+#   4. Publish the sanitized data as an AzDO build artifact (devdiv-internal
+#      audit trail) AND post a weekly summary issue in microsoft/PTVS with
+#      bullet points (work item title + link) for every non-aborted item.
+#
+# The summary issue body contains NO sanitized content — only public-safe
+# titles + AzDO URLs. The full sanitized JSON lives only in the AzDO build
+# artifact, which never leaves the devdiv tenant.
+#
+# Setup prerequisites (one-time, see Build/triage/README.md):
+#   1. Create variable group `PTVS-Triage-Bridge` in devdiv/DevDiv with a
+#      secret variable `GH_PAT` = fine-grained GitHub PAT scoped to
+#      microsoft/PTVS with Issues: Read+Write (post the weekly summary issue).
+#   2. Grant the project Build Service identity `View work items in this
+#      node` on area path `DevDiv\Python and AI Tools`.
+#   3. Create the AzDO Pipeline in devdiv/DevDiv pointing at this file on
+#      the `main` branch of `microsoft/PTVS`.
+
+trigger: none    # do not run on every PTVS push; manual-only for now
+                 # (cron schedule is commented out below — re-enable when ready).
+pr: none         # NEVER run for PRs — would execute untrusted modified
+                 # scripts with $(System.AccessToken) and the bridge PAT.
+
+# The schedule is intentionally disabled for now — the pipeline is manual-only
+# while we verify the end-to-end run in production. To re-enable the weekly
+# cron, uncomment the `schedules:` block below.
+#
+# Notes for when re-enabling:
+#   - `always: true` is REQUIRED for a fetch pipeline whose data source (AzDO
+#     work items) is independent of repo state — without it, AzDO skips the
+#     scheduled run when no commits landed since the last successful run.
+#
+# schedules:
+# - cron: "0 8 * * 1"
+#   displayName: Weekly Monday triage fetch (08:00 UTC)
+#   branches:
+#     include:
+#     - main
+#   always: true
+
+parameters:
+- name: lookbackDays
+  displayName: How many days back to scan
+  type: number
+  default: 7
+- name: maxCandidates
+  displayName: Hard cap on candidates per run (cost-safety)
+  type: number
+  default: 25
+- name: workitemId
+  displayName: (optional) Triage only this single AzDO work item ID
+  type: string
+  default: ' '
+- name: dryRun
+  displayName: Dry-run (print issue body to logs; do not post)
+  type: boolean
+  default: false
+
+variables:
+- group: PTVS-Triage-Bridge   # provides $(GH_PAT)
+- name: LOOKBACK_DAYS
+  value: ${{ parameters.lookbackDays }}
+- name: MAX_CANDIDATES
+  value: ${{ parameters.maxCandidates }}
+- name: WORKITEM_ID
+  value: ${{ parameters.workitemId }}
+- name: DRY_RUN
+  value: ${{ parameters.dryRun }}
+
+pool:
+  vmImage: ubuntu-latest
+
+jobs:
+- job: Fetch
+  displayName: Fetch + sanitize + post summary issue
+  timeoutInMinutes: 20
+  steps:
+  - checkout: self
+    displayName: Checkout PTVS scripts
+    persistCredentials: false
+
+  - task: PowerShell@2
+    displayName: 'query-azdo.ps1 — WIQL + workitemsbatch'
+    env:
+      # $(System.AccessToken) is the per-pipeline bearer token for the
+      # Build Service identity. Bare reference to it from script blocks
+      # is NOT auto-injected; map explicitly via env: like this.
+      AZDO_ACCESS_TOKEN: $(System.AccessToken)
+      LOOKBACK_DAYS:     $(LOOKBACK_DAYS)
+      MAX_CANDIDATES:    $(MAX_CANDIDATES)
+      WORKITEM_ID:       $(WORKITEM_ID)
+    inputs:
+      pwsh: true
+      targetType: inline
+      script: |
+        $extra = @{}
+        if ($env:WORKITEM_ID -and $env:WORKITEM_ID.Trim()) {
+            $extra['WorkItemId'] = $env:WORKITEM_ID.Trim()
+        }
+        & "$(Build.SourcesDirectory)/Build/triage/query-azdo.ps1" `
+            -OutFile        "$(Agent.TempDirectory)/candidates.json" `
+            -LookbackDays   ([int] $env:LOOKBACK_DAYS) `
+            -MaxCandidates  ([int] $env:MAX_CANDIDATES) `
+            @extra
+
+  - task: PowerShell@2
+    displayName: 'parse-diagnostics.ps1 — download + parse log attachments'
+    env:
+      AZDO_ACCESS_TOKEN: $(System.AccessToken)
+    inputs:
+      pwsh: true
+      targetType: inline
+      script: |
+        & "$(Build.SourcesDirectory)/Build/triage/parse-diagnostics.ps1" `
+            -CandidatesFile "$(Agent.TempDirectory)/candidates.json" `
+            -OutDir         "$(Agent.TempDirectory)/diag-raw"
+
+  - task: PowerShell@2
+    displayName: 'sanitize.ps1 (full) — PII redaction → sanitized/wi-*.json + diag-*.json'
+    inputs:
+      pwsh: true
+      targetType: inline
+      script: |
+        & "$(Build.SourcesDirectory)/Build/triage/sanitize.ps1" `
+            -InFile  "$(Agent.TempDirectory)/candidates.json" `
+            -DiagDir "$(Agent.TempDirectory)/diag-raw" `
+            -OutDir  "$(Agent.TempDirectory)/sanitized"
+
+  - task: PowerShell@2
+    displayName: 'Drop sanitization-aborted items and emit titles-only manifest for issue body'
+    inputs:
+      pwsh: true
+      targetType: inline
+      script: |
+        # SECURITY: items whose `sanitization_aborted == true` are DROPPED from
+        # BOTH downstream outputs (artifact upload + public bullets).
+        # sanitize.ps1 sets that flag when it detects a secret pattern (PAT,
+        # JWT, AWS key, private-key PEM, etc.) anywhere in the work-item
+        # content. We delete the corresponding wi-/diag- files from disk so
+        # they're excluded from the artifact upload below, and skip them when
+        # building the titles-only manifest used by post-report-issue.ps1.
+        Set-StrictMode -Version Latest
+        $ErrorActionPreference = 'Stop'
+
+        $sanDir = "$(Agent.TempDirectory)/sanitized"
+        if (-not (Test-Path -LiteralPath $sanDir)) {
+            throw "Sanitized output directory not found: $sanDir"
+        }
+
+        $titles  = New-Object System.Collections.Generic.List[object]
+        $aborted = New-Object System.Collections.Generic.List[int]
+        foreach ($f in Get-ChildItem -LiteralPath $sanDir -Filter 'wi-*.json' -File | Sort-Object Name) {
+            $wi = Get-Content -LiteralPath $f.FullName -Raw | ConvertFrom-Json
+
+            if ($wi.sanitization_aborted) {
+                Write-Warning "Dropping AzDO #$($wi.id) — sanitization aborted (secret pattern hit: $(($wi.secret_hits) -join ', '))"
+                $aborted.Add([int] $wi.id) | Out-Null
+                Remove-Item -LiteralPath $f.FullName -Force
+                $diagToo = Join-Path $sanDir ("diag-{0}.json" -f $wi.id)
+                if (Test-Path -LiteralPath $diagToo) { Remove-Item -LiteralPath $diagToo -Force }
+                continue
+            }
+
+            $titles.Add([pscustomobject] @{
+                id             = $wi.id
+                title          = $wi.title
+                url            = $wi.url
+                area_path      = $wi.area_path
+                created_date   = $wi.created_date
+                state          = $wi.state
+                work_item_type = $wi.work_item_type
+            }) | Out-Null
+        }
+
+        $titlesDst = "$(Agent.TempDirectory)/candidates-titles-only.json"
+        (ConvertTo-Json -Compress -Depth 10 -InputObject @($titles)) | Set-Content -LiteralPath $titlesDst -Encoding UTF8
+
+        Write-Host "Wrote titles manifest: $($titles.Count) item(s). Dropped $($aborted.Count) sanitization-aborted item(s)."
+
+  - publish: $(Agent.TempDirectory)/sanitized
+    displayName: 'Publish sanitized data as AzDO build artifact (audit trail, devdiv-internal)'
+    artifact: sanitized-$(Build.BuildId)
+
+  - task: PowerShell@2
+    displayName: 'post-report-issue.ps1 — create/update weekly issue in microsoft/PTVS'
+    env:
+      # GH_PAT is a fine-grained GitHub PAT in the PTVS-Triage-Bridge
+      # variable group, scoped to microsoft/PTVS with:
+      #   - Issues: Read+Write   (post the weekly summary issue)
+      #   - Metadata: Read       (implicit)
+      # post-report-issue.ps1 reads $env:GITHUB_TOKEN.
+      GITHUB_TOKEN:  $(GH_PAT)
+      LOOKBACK_DAYS: $(LOOKBACK_DAYS)
+      DRY_RUN:       $(DRY_RUN)
+    inputs:
+      pwsh: true
+      targetType: inline
+      script: |
+        Set-StrictMode -Version Latest
+        $ErrorActionPreference = 'Stop'
+
+        if (-not $env:GITHUB_TOKEN -or $env:GITHUB_TOKEN -eq '$(GH_PAT)' -or $env:GITHUB_TOKEN.Trim().Length -lt 20) {
+            throw "GITHUB_TOKEN env var is missing or looks invalid. Confirm the 'PTVS-Triage-Bridge' variable group exists with a secret variable 'GH_PAT' and that this pipeline is authorized to use it."
+        }
+
+        $runUrl = '$(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)'
+        $scriptArgs = @(
+            '-CandidatesFile', "$(Agent.TempDirectory)/candidates-titles-only.json",
+            '-LookbackDays',   ([int] $env:LOOKBACK_DAYS),
+            '-RunUrl',         $runUrl
+        )
+        if ([bool]::Parse(($env:DRY_RUN ?? 'false'))) { $scriptArgs += '-DryRun' }
+        & "$(Build.SourcesDirectory)/Build/triage/post-report-issue.ps1" @scriptArgs
