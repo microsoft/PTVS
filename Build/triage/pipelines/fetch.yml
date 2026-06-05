@@ -26,20 +26,27 @@
 #   3. Create the AzDO Pipeline in devdiv/DevDiv pointing at this file on
 #      the `main` branch of `microsoft/PTVS`.
 
-trigger: none    # do not run on every PTVS push; only schedule + manual.
+trigger: none    # do not run on every PTVS push; manual-only for now
+                 # (cron schedule is commented out below — re-enable when ready).
 pr: none         # NEVER run for PRs — would execute untrusted modified
                  # scripts with $(System.AccessToken) and the bridge PAT.
 
-# The schedule fires even when source code hasn't changed since the last
-# successful run — `always: true` is REQUIRED for a fetch pipeline whose
-# data source (AzDO work items) is independent of repo state.
-schedules:
-- cron: "0 8 * * 1"
-  displayName: Weekly Monday triage fetch (08:00 UTC)
-  branches:
-    include:
-    - main
-  always: true
+# The schedule is intentionally disabled for now — the pipeline is manual-only
+# while we verify the end-to-end run in production. To re-enable the weekly
+# cron, uncomment the `schedules:` block below.
+#
+# Notes for when re-enabling:
+#   - `always: true` is REQUIRED for a fetch pipeline whose data source (AzDO
+#     work items) is independent of repo state — without it, AzDO skips the
+#     scheduled run when no commits landed since the last successful run.
+#
+# schedules:
+# - cron: "0 8 * * 1"
+#   displayName: Weekly Monday triage fetch (08:00 UTC)
+#   branches:
+#     include:
+#     - main
+#   always: true
 
 parameters:
 - name: lookbackDays
