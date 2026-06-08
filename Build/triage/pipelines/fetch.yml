@@ -183,7 +183,11 @@ jobs:
         }
 
         $titlesDst = "$(Agent.TempDirectory)/candidates-titles-only.json"
-        (ConvertTo-Json -Compress -Depth 10 -InputObject @($titles)) | Set-Content -LiteralPath $titlesDst -Encoding UTF8
+        # Pass the List directly (do NOT wrap in @()). PowerShell 7.5's
+        # ConvertTo-Json parameter binder errors with "Argument types do
+        # not match" when given @() around a List[object].
+        $json = ConvertTo-Json -Compress -Depth 10 -InputObject $titles
+        Set-Content -LiteralPath $titlesDst -Value $json -Encoding UTF8
 
         Write-Host "Wrote titles manifest: $($titles.Count) item(s). Dropped $($aborted.Count) sanitization-aborted item(s)."
 
