@@ -223,10 +223,14 @@ jobs:
         }
 
         $runUrl = '$(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)'
-        $scriptArgs = @(
-            '-CandidatesFile', "$(Agent.TempDirectory)/candidates-titles-only.json",
-            '-LookbackDays',   ([int] $env:LOOKBACK_DAYS),
-            '-RunUrl',         $runUrl
-        )
-        if ([bool]::Parse(($env:DRY_RUN ?? 'false'))) { $scriptArgs += '-DryRun' }
+        # Use HASHTABLE splatting (not array splatting). When you call a .ps1
+        # via @arrayName, PowerShell binds positionally — the '-Name' tokens
+        # are taken as values, not parameter names — so the wrong values end
+        # up on the wrong parameters. Hashtable splatting binds by name.
+        $scriptArgs = @{
+            CandidatesFile = "$(Agent.TempDirectory)/candidates-titles-only.json"
+            LookbackDays   = [int] $env:LOOKBACK_DAYS
+            RunUrl         = $runUrl
+        }
+        if ([bool]::Parse(($env:DRY_RUN ?? 'false'))) { $scriptArgs['DryRun'] = $true }
         & "$(Build.SourcesDirectory)/Build/triage/post-report-issue.ps1" @scriptArgs
