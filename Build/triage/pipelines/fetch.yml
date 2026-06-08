@@ -213,15 +213,24 @@ jobs:
         Set-StrictMode -Version Latest
         $ErrorActionPreference = 'Stop'
 
-        if (-not $env:GITHUB_TOKEN -or $env:GITHUB_TOKEN -eq '$(GH_PAT)' -or $env:GITHUB_TOKEN.Trim().Length -lt 20) {
-            throw "GITHUB_TOKEN env var is missing or looks invalid. Confirm the 'PTVS-Triage-Bridge' variable group exists with a secret variable 'GH_PAT' and that this pipeline is authorized to use it."
+        # Sanity check: GH_PAT must be present and look like a real token.
+        # Don't compare to a literal '$(GH_PAT)' placeholder here — AzDO
+        # substitutes that macro at YAML processing time (yes, even for
+        # secrets, even inside PowerShell single-quoted strings), so any
+        # literal comparison silently becomes a self-comparison.
+        if (-not $env:GITHUB_TOKEN -or $env:GITHUB_TOKEN.Trim().Length -lt 20) {
+            throw "GITHUB_TOKEN env var is missing or looks too short. Confirm the 'PTVS-Triage-Bridge' variable group exists with a secret variable 'GH_PAT' (value pasted + saved), and that this pipeline is authorized to use it."
         }
 
         $runUrl = '$(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)'
-        $scriptArgs = @(
-            '-CandidatesFile', "$(Agent.TempDirectory)/candidates-titles-only.json",
-            '-LookbackDays',   ([int] $env:LOOKBACK_DAYS),
-            '-RunUrl',         $runUrl
-        )
-        if ([bool]::Parse(($env:DRY_RUN ?? 'false'))) { $scriptArgs += '-DryRun' }
+        # Use HASHTABLE splatting (not array splatting). When you call a .ps1
+        # via @arrayName, PowerShell binds positionally — the '-Name' tokens
+        # are taken as values, not parameter names — so the wrong values end
+        # up on the wrong parameters. Hashtable splatting binds by name.
+        $scriptArgs = @{
+            CandidatesFile = "$(Agent.TempDirectory)/candidates-titles-only.json"
+            LookbackDays   = [int] $env:LOOKBACK_DAYS
+            RunUrl         = $runUrl
+        }
+        if ([bool]::Parse(($env:DRY_RUN ?? 'false'))) { $scriptArgs['DryRun'] = $true }
         & "$(Build.SourcesDirectory)/Build/triage/post-report-issue.ps1" @scriptArgs
