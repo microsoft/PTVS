@@ -196,30 +196,6 @@ jobs:
     artifact: sanitized-$(Build.BuildId)
 
   - task: PowerShell@2
-    displayName: 'DEBUG (temporary): introspect $(GH_PAT) without leaking value'
-    env:
-      GITHUB_TOKEN: $(GH_PAT)
-    inputs:
-      pwsh: true
-      targetType: inline
-      script: |
-        $v = $env:GITHUB_TOKEN
-        Write-Host "----- GH_PAT diagnostics (value never printed) -----"
-        Write-Host "type:           $(if ($null -eq $v) { '<null>' } else { $v.GetType().FullName })"
-        Write-Host "isNull:         $($null -eq $v)"
-        Write-Host "isEmptyString:  $($v -eq '')"
-        Write-Host "literalPlaceholder: $($v -eq '$(GH_PAT)')"
-        if ($null -ne $v -and $v -ne '') {
-            Write-Host "length:         $($v.Length)"
-            Write-Host "lengthAfterTrim: $($v.Trim().Length)"
-            Write-Host "startsWithGhp_:    $($v.StartsWith('ghp_'))"
-            Write-Host "startsWithGithubPat_: $($v.StartsWith('github_pat_'))"
-            Write-Host "hasLeadingWhitespace:  $($v.Length -ne $v.TrimStart().Length)"
-            Write-Host "hasTrailingWhitespace: $($v.Length -ne $v.TrimEnd().Length)"
-        }
-        Write-Host "---------------------------------------------------"
-
-  - task: PowerShell@2
     displayName: 'post-report-issue.ps1 — create/update weekly issue in microsoft/PTVS'
     env:
       # GH_PAT is a fine-grained GitHub PAT in the PTVS-Triage-Bridge
@@ -237,8 +213,13 @@ jobs:
         Set-StrictMode -Version Latest
         $ErrorActionPreference = 'Stop'
 
-        if (-not $env:GITHUB_TOKEN -or $env:GITHUB_TOKEN -eq '$(GH_PAT)' -or $env:GITHUB_TOKEN.Trim().Length -lt 20) {
-            throw "GITHUB_TOKEN env var is missing or looks invalid. Confirm the 'PTVS-Triage-Bridge' variable group exists with a secret variable 'GH_PAT' and that this pipeline is authorized to use it."
+        # Sanity check: GH_PAT must be present and look like a real token.
+        # Don't compare to a literal '$(GH_PAT)' placeholder here — AzDO
+        # substitutes that macro at YAML processing time (yes, even for
+        # secrets, even inside PowerShell single-quoted strings), so any
+        # literal comparison silently becomes a self-comparison.
+        if (-not $env:GITHUB_TOKEN -or $env:GITHUB_TOKEN.Trim().Length -lt 20) {
+            throw "GITHUB_TOKEN env var is missing or looks too short. Confirm the 'PTVS-Triage-Bridge' variable group exists with a secret variable 'GH_PAT' (value pasted + saved), and that this pipeline is authorized to use it."
         }
 
         $runUrl = '$(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)'
