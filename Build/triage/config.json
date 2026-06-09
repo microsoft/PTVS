@@ -6,12 +6,12 @@
         "project": "DevDiv",
         "baseUrl": "https://dev.azure.com/devdiv",
         "areaPath": "DevDiv\\Python and AI Tools",
-        "$comment_workItemTypes": "Scopes the report to externally-reported items only. 'FeedbackTicket' is the type the VS Developer Community → AzDO sync creates for every imported item, and the only type with the Microsoft.DevDiv.DeveloperCommunityId field populated. Internal-only work (S360, compliance, internal Watson buckets, accessibility benchmarks, etc.) is filed as Bug / Task / Assessment and is excluded by construction. Empty array means 'any work item type'.",
-        "workItemTypes": [ "FeedbackTicket" ],
+        "$comment_workItemTypes": "Scopes the report to externally-reported items only. 'FeedbackTicket' and 'SuggestionTicket' are the two types the VS Developer Community → AzDO sync creates for every imported item. Empirically verified 2026-06-09 against live devdiv AzDO: in DevDiv\\Python and AI Tools over the last year, 112 work items of these two types existed (all carried Microsoft.DevDiv.DeveloperCommunityId), while every other type — Bug / Task / Assessment — represented internal work (S360, compliance, internal Watson buckets, accessibility benchmarks, Bugs spun off during triage from a DC FeedbackTicket). Restricting by type keeps internal-only items out of the public mirror by construction. Empty array means 'any work item type'.",
+        "workItemTypes": [ "FeedbackTicket", "SuggestionTicket" ],
         "$comment_dateField": "Which date field the lookback filters on. 'ChangedDate' (default) catches reopens and recent activity on older items; 'CreatedDate' catches only newly-filed items.",
         "dateField": "ChangedDate",
-        "$comment_excludedStates": "WIQL clause uses substring match (NOT [System.State] CONTAINS '<value>'), so 'Closed' also excludes DC close-states like 'DC - Closed - Duplicated'.",
-        "excludedStates": [ "Closed", "Resolved", "Completed", "Removed" ],
+        "$comment_excludedStates": "WIQL clause uses substring match (NOT [System.State] CONTAINS '<value>'). With workItemTypes restricted to FeedbackTicket/SuggestionTicket, the relevant lifecycle states are DC-specific: DC - New, DC - Under Review, DC - Under Investigation, DC - Closed - Duplicate, DC - Closed - Not a Bug, DC - Closed - Not Enough Info, DC - Closed - Lower Priority, DC - Closed - Out of Scope, DC - Closed - Other Product, DC - Closed - Fixed, DC - Fixed Pending Release. We exclude only the truly-done states — anything with 'Fixed' in the name, which catches both 'DC - Closed - Fixed' (13/year) and 'DC - Fixed Pending Release' (1/year). DC items in *other* 'DC - Closed - X' states are NOT excluded: empirically ~95% of DC items get auto-closed by DC within hours of submission (Duplicate / Not Enough Info / etc.), but those closures still warrant team review (verify the dup link, decide whether to follow up with the customer, etc.). 'Resolved', 'Completed', 'Removed' are kept for safety if an operator broadens workItemTypes back to Bug/Task.",
+        "excludedStates": [ "Fixed", "Resolved", "Completed", "Removed" ],
         "excludedTags": [ "triaged-by-ai", "do-not-triage" ]
     },
 

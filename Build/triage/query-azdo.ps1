@@ -419,17 +419,25 @@ function Invoke-SelfTest {
     if ($wiql -notmatch "NOT \[System.Tags\] CONTAINS 'do-not-triage'") {
         Write-Error "WIQL missing do-not-triage exclusion."; $errors++
     }
-    if ($wiql -notmatch "NOT \[System.State\] CONTAINS 'Closed'") {
-        Write-Error "WIQL missing 'Closed' substring exclusion."; $errors++
+    # Default state filter must exclude 'Fixed' (substring catches both
+    # 'DC - Closed - Fixed' and 'DC - Fixed Pending Release'), and must
+    # NOT exclude bare 'Closed' anymore — that would also drop legitimate
+    # triage candidates like 'DC - Closed - Duplicate' / 'Not Enough Info'
+    # which need team review. See config.json $comment_excludedStates for
+    # the empirical justification.
+    if ($wiql -notmatch "NOT \[System.State\] CONTAINS 'Fixed'") {
+        Write-Error "WIQL missing 'Fixed' substring exclusion."; $errors++
     }
-    # Default config now scopes to FeedbackTicket only — the type the VS
-    # Developer Community sync creates. Verified empirically (2026-06-09):
-    # 81/81 FeedbackTickets in DevDiv\Python and AI Tools over the last
-    # year carried Microsoft.DevDiv.DeveloperCommunityId; 0 non-Feedback
-    # items in that area were directly DC-originated. Type filter is
-    # therefore both necessary and sufficient.
-    if ($wiql -notmatch "\[System\.WorkItemType\] IN \('FeedbackTicket'\)") {
-        Write-Error "WIQL missing FeedbackTicket type filter."; $errors++
+    if ($wiql -match "NOT \[System.State\] CONTAINS 'Closed'") {
+        Write-Error "WIQL must NOT exclude bare 'Closed' — that suppresses the entire DC triage feed (every DC item gets a 'DC - Closed - X' state within hours of submission)."; $errors++
+    }
+    # Default config scopes to FeedbackTicket AND SuggestionTicket — the two
+    # types the VS Developer Community sync creates. Verified empirically
+    # (2026-06-09): 112/112 such items in DevDiv\Python and AI Tools over
+    # the last year carried Microsoft.DevDiv.DeveloperCommunityId; 0 items
+    # of other types were directly DC-originated.
+    if ($wiql -notmatch "\[System\.WorkItemType\] IN \('FeedbackTicket', 'SuggestionTicket'\)") {
+        Write-Error "WIQL missing FeedbackTicket/SuggestionTicket type filter."; $errors++
     }
     # Date field should be ChangedDate per config.
     if ($wiql -notmatch '\[System\.ChangedDate\] > @Today') {
