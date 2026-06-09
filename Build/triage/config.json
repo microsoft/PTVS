@@ -1,0 +1,29 @@
+{
+    "$comment": "Configuration for the weekly AzDO triage automation (read-only fetch + sanitize + summary issue). See Build/triage/README.md.",
+
+    "azdo": {
+        "organization": "devdiv",
+        "project": "DevDiv",
+        "baseUrl": "https://dev.azure.com/devdiv",
+        "areaPath": "DevDiv\\Python and AI Tools",
+        "$comment_workItemTypes": "Empty array means 'any work item type'. Mirrors the manual top-level-items query: Work Item Type = [Any].",
+        "workItemTypes": [],
+        "$comment_dateField": "Which date field the lookback filters on. 'ChangedDate' (default) catches reopens and recent activity on older items; 'CreatedDate' catches only newly-filed items.",
+        "dateField": "ChangedDate",
+        "$comment_excludedStates": "WIQL clause uses substring match (NOT [System.State] CONTAINS '<value>'), so 'Closed' also excludes DC close-states like 'DC - Closed - Duplicated'.",
+        "excludedStates": [ "Closed", "Resolved", "Completed", "Removed" ],
+        "excludedTags": [ "triaged-by-ai", "do-not-triage" ]
+    },
+
+    "github": {
+        "owner": "microsoft",
+        "repo": "PTVS",
+        "defaultAssignee": "StellaHuang95",
+        "reportLabel": "azdo-triage-report"
+    },
+
+    "limits": {
+        "maxCandidatesPerRun": 25,
+        "lookbackDaysDefault": 7
+    }
+}

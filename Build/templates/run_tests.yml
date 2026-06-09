@@ -65,9 +65,9 @@ steps:
 
   - task: Cache@2
     displayName: 'Restore glass binaries from cache'
-    condition: eq('${{ parameters.refreshGlassCache }}', 'false')
+    condition: and(eq('${{ parameters.refreshGlassCache }}', 'false'), ne(variables['System.PullRequest.IsFork'], 'True'))
     inputs:
-      key: 'glass | Build/setup_glass.py'
+      key: '"glass" | Build/setup_glass.py'
       path: '$(Build.SourcesDirectory)\GlassTests'
       cacheHitVar: 'CACHE_RESTORED'
 
@@ -76,14 +76,32 @@ steps:
       $refreshGlassCache = '${{ parameters.refreshGlassCache }}' -eq 'true'
       $cacheState = '$(CACHE_RESTORED)'
       $cacheRestored = $cacheState -eq 'true' -or $cacheState -eq 'inexact'
-      $setupGlass = -not $isForkPr -and ($cacheState -eq 'false' -or $refreshGlassCache)
-      $runGlass = $cacheRestored -or $setupGlass
-      $forkCacheMiss = $isForkPr -and -not $cacheRestored -and -not $refreshGlassCache
+      $requiredGlassFiles = @(
+        '$(Build.SourcesDirectory)\GlassTests\vstest.console.exe',
+        '$(Build.SourcesDirectory)\GlassTests\PythonTests\PythonConcord.GlassTestRoot',
+        '$(Build.SourcesDirectory)\GlassTests\PythonTests\PythonEngine.regdef'
+      )
+      $cacheUsable = $cacheRestored
+      foreach ($requiredGlassFile in $requiredGlassFiles) {
+        if (-not (Test-Path -LiteralPath $requiredGlassFile)) {
+          $cacheUsable = $false
+          break
+        }
+      }
+
+      if ($cacheRestored -and -not $cacheUsable) {
+        Write-Warning "GlassTests cache was restored, but required Glass files are missing. Treating the cache as a miss."
+      }
+
+      $setupGlass = -not $isForkPr -and ($refreshGlassCache -or -not $cacheUsable)
+      $runGlass = $cacheUsable -or $setupGlass
+      $skipGlassOnForkCacheMiss = $isForkPr -and -not $cacheUsable -and -not $refreshGlassCache
 
       Write-Host "CACHE_RESTORED=$cacheState"
+      Write-Host "GLASS_CACHE_USABLE=$($cacheUsable.ToString().ToLowerInvariant())"
       Write-Host "##vso[task.setvariable variable=SETUP_GLASS]$($setupGlass.ToString().ToLowerInvariant())"
       Write-Host "##vso[task.setvariable variable=RUN_GLASS]$($runGlass.ToString().ToLowerInvariant())"
-      Write-Host "##vso[task.setvariable variable=FORK_GLASS_CACHE_MISS]$($forkCacheMiss.ToString().ToLowerInvariant())"
+      Write-Host "##vso[task.setvariable variable=SKIP_GLASS_ON_FORK_CACHE_MISS]$($skipGlassOnForkCacheMiss.ToString().ToLowerInvariant())"
     displayName: 'Set Glass test conditions'
 
   - task: AzureCLI@2
@@ -119,13 +137,13 @@ steps:
     displayName: 'Cache glass binaries'
     condition: and(succeeded(), eq(variables['SETUP_GLASS'], 'true'))
     inputs:
-      key: 'glass | Build/setup_glass.py'
+      key: '"glass" | Build/setup_glass.py'
       path: '$(Build.SourcesDirectory)\GlassTests'
 
   - powershell: |
-      Write-Error "GlassTests cache was not restored for this fork PR, and fork PRs cannot run setup_glass.py because the internal DevDiv drop token is unavailable. For changes that need Glass setup or cache refresh, create the PR from a branch in the upstream microsoft/PTVS repository instead of a fork, or ask a maintainer to run a trusted main/release build to populate the 'glass' cache before rerunning this PR validation."
-    displayName: 'Fail Glass tests on fork cache miss'
-    condition: and(succeeded(), eq(variables['FORK_GLASS_CACHE_MISS'], 'true'))
+      Write-Warning "GlassTests cache restore is disabled for fork PRs to prevent Cache@2 post-job cache writes, and fork PRs cannot run setup_glass.py because the internal DevDiv drop token is unavailable. Skipping Glass tests for this validation. A trusted main/release build can refresh the 'glass' cache."
+    displayName: 'Skip Glass tests on fork cache miss'
+    condition: and(succeeded(), eq(variables['SKIP_GLASS_ON_FORK_CACHE_MISS'], 'true'))
 
   # Run the glass tests
   - task: PythonScript@0

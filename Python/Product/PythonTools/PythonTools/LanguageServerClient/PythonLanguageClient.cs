@@ -100,6 +100,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private static TaskCompletionSource<int> _readyTcs = new TaskCompletionSource<int>();
         private bool _loaded = false;
         private Timer _deferredSettingsChangedTimer;
+        // Set by the dispose action before any other cleanup; consulted by the
+        // deferred timer callback, TriggerWorkspaceUpdateConfig and GetSettings so
+        // a timer tick scheduled before disposal cannot dereference cleared state.
+        private volatile bool _disposed;
         private const int _defaultSettingsDelayMS = 5000;
 
         public PythonLanguageClient() {
@@ -136,7 +140,19 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             await JoinableTaskContext.Factory.SwitchToMainThreadAsync();
             CreateClientContexts();
 
-            _deferredSettingsChangedTimer = new Timer(state => TriggerWorkspaceUpdateConfig(), state: null, Timeout.Infinite, Timeout.Infinite);
+            _deferredSettingsChangedTimer = new Timer(state => {
+                // Guard the callback body: a tick scheduled before disposal can fire
+                // after the language client has been torn down.
+                if (_disposed) {
+                    return;
+                }
+                try {
+                    TriggerWorkspaceUpdateConfig();
+                } catch (NullReferenceException) {
+                    // Field was nulled or service disappeared during teardown.
+                } catch (ObjectDisposedException) {
+                }
+            }, state: null, Timeout.Infinite, Timeout.Infinite);
             _analysisOptions = Site.GetPythonToolsService().AnalysisOptions;
             _advancedEditorOptions = Site.GetPythonToolsService().AdvancedEditorOptions;
             _analysisOptions.Changed += OnSettingsChanged;
@@ -152,6 +168,14 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             WorkspaceService.OnActiveWorkspaceChanged += OnWorkspaceOpening;
 
             _disposables.Add(() => {
+                // Mark disposed and stop the timer FIRST so any in-flight tick bails
+                // out and no new ticks are scheduled while we tear down fields.
+                _disposed = true;
+                try {
+                    _deferredSettingsChangedTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                } catch (ObjectDisposedException) {
+                }
+
                 _clientContexts.ForEach(c => {
                     c.InterpreterChanged -= OnInterpreterChanged;
                     c.SearchPathsChanged -= OnSettingsChanged;
@@ -243,6 +267,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private Task TriggerWorkspaceUpdateConfig() {
+            // Bail if the client is being torn down.
+            if (_disposed || _rpc == null) {
+                return Task.CompletedTask;
+            }
             Debug.WriteLine("Settings Changed");
             return InvokeDidChangeConfigurationAsync(new LSP.DidChangeConfigurationParams() {
                 // Pylance will ask us for per workspace configuration settings. We can send
@@ -322,12 +350,12 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         public Task InvokeDidChangeConfigurationAsync(LSP.DidChangeConfigurationParams request) {
 
-            return _rpc.NotifyWithParameterObjectAsync("workspace/didChangeConfiguration", request);
+            return NotifyWithParametersAsync("workspace/didChangeConfiguration", request);
         }
 
-        public async Task InvokeDidChangeWorkspaceFoldersAsync(WorkspaceFolder[] added, WorkspaceFolder[] removed) {
+        public Task InvokeDidChangeWorkspaceFoldersAsync(WorkspaceFolder[] added, WorkspaceFolder[] removed) {
 
-            await _rpc.NotifyWithParameterObjectAsync("workspace/didChangeWorkspaceFolders",
+            return NotifyWithParametersAsync("workspace/didChangeWorkspaceFolders",
                 new DidChangeWorkspaceFoldersParams {
                     changeEvent = new WorkspaceFoldersChangeEvent {
                         added = added,
@@ -358,18 +386,44 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private async Task<R> InvokeWithParametersAsync<R>(string request, object parameters, CancellationToken t) where R : class {
             await _readyTcs.Task.ConfigureAwait(false);
 
-            return await _rpc.InvokeWithParameterObjectAsync<R>(request, parameters, t).ConfigureAwait(false);
+            var rpc = _rpc;
+            if (rpc == null) {
+                return null;
+            }
+
+            try {
+                return await rpc.InvokeWithParameterObjectAsync<R>(request, parameters, t).ConfigureAwait(false);
+            } catch (ConnectionLostException) {
+                // Pylance crashed mid-request. Returning null - editor LSP integration
+                // tolerates null (no completions / no references shown) rather than
+                // tearing down VS via the dispatcher.
+                return null;
+            } catch (ObjectDisposedException) {
+                // JsonRpc was disposed mid-request - same shutdown semantic.
+                return null;
+            }
         }
 
         private async Task NotifyWithParametersAsync(string request, object parameters) {
             await _readyTcs.Task.ConfigureAwait(false);
 
-            await _rpc.NotifyWithParameterObjectAsync(request, parameters).ConfigureAwait(false);
+            var rpc = _rpc;
+            if (rpc == null) {
+                return;
+            }
+
+            try {
+                await rpc.NotifyWithParameterObjectAsync(request, parameters).ConfigureAwait(false);
+            } catch (ConnectionLostException) {
+                // Pylance crashed mid-notify - silently drop; the notification is fire-and-forget.
+            } catch (ObjectDisposedException) {
+            }
         }
 
         private LanguageServerSettings.PythonSettings GetSettings(Uri scopeUri = null) {
-            // guard on shutdown
-            if (_clientContexts.Count() == 0) {
+            // guard on shutdown - either we're being disposed or essential state
+            // hasn't been wired up yet.
+            if (_disposed || _analysisOptions == null || _advancedEditorOptions == null || _clientContexts.Count() == 0) {
                 return null;
             }
             IPythonLanguageClientContext context = null;
@@ -483,7 +537,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     createEvent.Uri = new Uri(CommonUtils.GetParent(context.InterpreterConfiguration.InterpreterPath));
                     var didChangeParams = new DidChangeWatchedFilesParams();
                     didChangeParams.Changes = new FileEvent[] { createEvent };
-                    _rpc.NotifyWithParameterObjectAsync(Methods.WorkspaceDidChangeWatchedFiles.Name, didChangeParams);
+                    NotifyWithParametersAsync(Methods.WorkspaceDidChangeWatchedFiles.Name, didChangeParams).DoNotWait();
                 });
                
                 

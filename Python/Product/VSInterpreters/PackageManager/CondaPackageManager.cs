@@ -114,8 +114,14 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private async void _historyWatcherTimer_Elapsed(object state) {
+            // Snapshot the field to avoid a race with DisableNotifications/Dispose,
+            // which sets _historyWatcherTimer to null after disposing it.
+            var timer = _historyWatcherTimer;
+            if (timer == null) {
+                return;
+            }
             try {
-                _historyWatcherTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                timer.Change(Timeout.Infinite, Timeout.Infinite);
             } catch (ObjectDisposedException) {
             }
 
@@ -124,8 +130,14 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private void _historyWatcher_Changed(object sender, FileSystemEventArgs e) {
             if (PathUtils.IsSamePath(e.FullPath, _historyPath)) {
+                // Snapshot the field to avoid a race with DisableNotifications/Dispose,
+                // which sets _historyWatcherTimer to null after disposing it.
+                var timer = _historyWatcherTimer;
+                if (timer == null) {
+                    return;
+                }
                 try {
-                    _historyWatcherTimer.Change(1000, Timeout.Infinite);
+                    timer.Change(1000, Timeout.Infinite);
                 } catch (ObjectDisposedException) {
                 }
             }

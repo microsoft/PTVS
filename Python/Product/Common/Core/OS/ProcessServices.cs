@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -24,13 +25,29 @@ using System.Threading.Tasks;
 namespace Microsoft.PythonTools.Common.Core.OS {
     public sealed class ProcessServices : IProcessServices {
         public IProcess Start(ProcessStartInfo psi) {
-            var process = Process.Start(psi);
-            return process != null ? new PlatformProcess(this, process) : null;
+            try {
+                var process = Process.Start(psi);
+                return process != null ? new PlatformProcess(this, process) : null;
+            } catch (Win32Exception) {
+                // Interpreter executable is missing/renamed/access-denied. Returning null
+                // lets callers treat the environment as unavailable rather than crashing
+                // VS via an unhandled exception on the dispatcher.
+                return null;
+            } catch (InvalidOperationException) {
+                // ProcessStartInfo state invalid (e.g. FileName not set).
+                return null;
+            }
         }
 
         public IProcess Start(string path) {
-            var process = Process.Start(path);
-            return process != null ? new PlatformProcess(this, process) : null;
+            try {
+                var process = Process.Start(path);
+                return process != null ? new PlatformProcess(this, process) : null;
+            } catch (Win32Exception) {
+                return null;
+            } catch (InvalidOperationException) {
+                return null;
+            }
         }
 
         public void Kill(IProcess process) => Kill(process.Id);
@@ -40,6 +57,11 @@ namespace Microsoft.PythonTools.Common.Core.OS {
         public async Task<string> ExecuteAndCaptureOutputAsync(ProcessStartInfo startInfo, CancellationToken cancellationToken = default) {
             var output = string.Empty;
             using (var process = Start(startInfo)) {
+                // Start now returns null when the executable is missing instead of
+                // throwing Win32Exception. Treat null as "no output".
+                if (process == null) {
+                    return output;
+                }
 
                 if (startInfo.RedirectStandardError && process is PlatformProcess p) {
                     p.Process.ErrorDataReceived += (s, e) => { };

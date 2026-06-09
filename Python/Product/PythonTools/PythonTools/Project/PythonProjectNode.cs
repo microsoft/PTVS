@@ -1249,7 +1249,27 @@ namespace Microsoft.PythonTools.Project {
             if (IsClosed) {
                 return;
             }
-            ReanalyzeProject_Notify?.Invoke(this, EventArgs.Empty);
+            // Snap Site to a local: the timer can fire during teardown after
+            // Close() nulls Site but before IsClosed flips, or during a
+            // partially-initialized project, which would NRE the call below.
+            var site = Site;
+            if (site == null) {
+                return;
+            }
+            // Subscribers mutate the project hierarchy, which VS's
+            // SolutionItemCacheInvalidator now asserts must run on the UI
+            // thread (VS 17.14+ tightened threading). Marshal the event raise
+            // back to the UI thread to avoid RPC_E_WRONG_THREAD.
+            try {
+                site.GetUIThread().InvokeAsync(() => {
+                    if (IsClosed) {
+                        return;
+                    }
+                    ReanalyzeProject_Notify?.Invoke(this, EventArgs.Empty);
+                }).DoNotWait();
+            } catch (ObjectDisposedException) {
+                // Site disposed during shutdown - safe to drop the notification.
+            }
         }
 
         protected override string AssemblyReferenceTargetMoniker {

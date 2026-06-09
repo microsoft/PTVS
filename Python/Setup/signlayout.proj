@@ -96,6 +96,31 @@
     </ItemGroup>
   </Target>
 
+  <Target Name="_StageTemplateFiles" BeforeTargets="_AddTemplateFiles">
+    <ItemGroup>
+      <!-- Glob from Python\Templates\ so RecursiveDir preserves Django\ and Web\ subdirectory structure -->
+      <_TemplateSourceFiles Include="$(BuildRoot)\Python\Templates\**\*.js;$(BuildRoot)\Python\Templates\**\*.ttf" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_TemplateSourceFiles)"
+          DestinationFiles="@(_TemplateSourceFiles->'$(BinariesOutputPath)templates\%(RecursiveDir)%(Filename)%(Extension)')" />
+  </Target>
+  <Target Name="_AddTemplateFiles" BeforeTargets="_PreserveUnsigned;ListFiles">
+    <ItemGroup>
+      <TemplateFilesToSign Include="$(BinariesOutputPath)templates\**\*.js;$(BinariesOutputPath)templates\**\*.ttf" />
+      <!-- Drop zero-byte files (e.g. the empty 'Add New Item -> JavaScript' template placeholder).
+           signtool cannot map a 0-byte file (CreateFileMapping fails with ERROR_FILE_INVALID 0x3EE),
+           which would otherwise break the signing step. -->
+      <TemplateFilesToSign Remove="@(TemplateFilesToSign)"
+                           Condition="'$([System.IO.File]::ReadAllText(%(TemplateFilesToSign.FullPath)))' == ''" />
+      <FilesToSign Include="@(TemplateFilesToSign)">
+        <Authenticode>3PartyScriptsSHA2</Authenticode>
+        <StrongName></StrongName>
+        <SignedPath>$(BinariesOutputPath)templates\%(RecursiveDir)%(Filename)%(Extension)</SignedPath>
+        <UnsignedPath>$(UnsignedOutputPath)templates\%(RecursiveDir)%(Filename)%(Extension)</UnsignedPath>
+      </FilesToSign>
+    </ItemGroup>
+  </Target>
+
   <Target Name="_PreserveUnsigned" Inputs="%(FilesToSign.FullPath)" Outputs="%(FilesToSign.UnsignedPath)" BeforeTargets="SignFiles">
     <Copy SourceFiles="%(FilesToSign.FullPath)" DestinationFiles="%(FilesToSign.UnsignedPath)" />
   </Target>
@@ -127,9 +152,18 @@
     </ItemGroup>
   </Target>
 
+  <Target Name="_CopySignedTemplateFiles">
+    <ItemGroup>
+      <_SignedTemplateFiles Include="$(BinariesOutputPath)templates\**\*.js;$(BinariesOutputPath)templates\**\*.ttf" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_SignedTemplateFiles)"
+          DestinationFiles="@(_SignedTemplateFiles->'$(BuildRoot)\Python\Templates\%(RecursiveDir)%(Filename)%(Extension)')"
+          OverwriteReadOnlyFiles="true" />
+  </Target>
+
 
   <Target Name="_UpdateLayoutWithSignedBinaries"
-          DependsOnTargets="_GetBinariesInLayout;_GetJsFilesInLayout"
+          DependsOnTargets="_GetBinariesInLayout;_GetJsFilesInLayout;_CopySignedTemplateFiles"
           AfterTargets="SignFiles">
     <Copy SourceFiles="%(_BinariesToCopy.FullPath)" DestinationFiles="%(_BinariesToCopy.TargetPath)" />
   </Target>
