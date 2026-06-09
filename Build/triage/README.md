@@ -8,8 +8,15 @@ Operator documentation for the AzDO Pipeline at
 `PTVS-Triage-Fetch` runs in `devdiv/DevDiv` every Monday at 08:00 UTC. End to end:
 
 1. **Query AzDO** for open work items under `DevDiv\Python and AI Tools\**`
-   changed in the last 7 days (cap 25). Uses the pipeline's own
-   `$(System.AccessToken)` for AzDO REST auth — no PAT needed on the AzDO side.
+   changed in the last 7 days (cap 25), **restricted to `FeedbackTicket`
+   work items** — the type the VS Developer Community → AzDO sync creates
+   for every imported item, and the only type with the
+   `Microsoft.DevDiv.DeveloperCommunityId` field populated. Internal-only
+   work (S360, compliance, internal Watson clusters, accessibility
+   benchmarks, etc.) is filed as `Bug` / `Task` / `Assessment` and is
+   excluded by query construction, so it can never reach the public
+   summary issue. Uses the pipeline's own `$(System.AccessToken)` for
+   AzDO REST auth — no PAT needed on the AzDO side.
 2. **Download + parse** any `PythonToolsDiagnostics_*.log` attachments per
    work item.
 3. **Sanitize** all of it (PII redaction: emails, Windows user paths,

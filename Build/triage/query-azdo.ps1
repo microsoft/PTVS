@@ -407,21 +407,36 @@ function Invoke-SelfTest {
     if ($wiql -notmatch "NOT \[System.State\] CONTAINS 'Closed'") {
         Write-Error "WIQL missing 'Closed' substring exclusion."; $errors++
     }
-    # workItemTypes is empty in config => no IN (...) clause should be emitted.
-    if ($wiql -match '\[System\.WorkItemType\] IN') {
-        Write-Error "WIQL should not emit WorkItemType IN clause when types list is empty."; $errors++
+    # Default config now scopes to FeedbackTicket only — the type the VS
+    # Developer Community sync creates. Verified empirically (2026-06-09):
+    # 81/81 FeedbackTickets in DevDiv\Python and AI Tools over the last
+    # year carried Microsoft.DevDiv.DeveloperCommunityId; 0 non-Feedback
+    # items in that area were directly DC-originated. Type filter is
+    # therefore both necessary and sufficient.
+    if ($wiql -notmatch "\[System\.WorkItemType\] IN \('FeedbackTicket'\)") {
+        Write-Error "WIQL missing FeedbackTicket type filter."; $errors++
     }
     # Date field should be ChangedDate per config.
     if ($wiql -notmatch '\[System\.ChangedDate\] > @Today') {
         Write-Error "WIQL should use ChangedDate when configured."; $errors++
     }
 
-    # 1b. Non-empty workItemTypes path still emits IN (...) clause.
+    # 1b. Non-empty workItemTypes path with multiple entries renders correctly.
     $cfg2 = ($config | ConvertTo-Json -Depth 20 | ConvertFrom-Json)
     $cfg2.azdo.workItemTypes = @('Bug', 'Task')
     $wiql2 = Build-WiqlQuery -Config $cfg2 -LookbackDays 7
     if ($wiql2 -notmatch "\[System\.WorkItemType\] IN \('Bug', 'Task'\)") {
         Write-Error "WIQL with non-empty types should emit IN clause."; $errors++
+    }
+
+    # 1c. Empty workItemTypes array => no IN (...) clause emitted (this is
+    # the back-compat "any work item type" path that an operator could opt
+    # into if they wanted to broaden the scope beyond DC items).
+    $cfg3 = ($config | ConvertTo-Json -Depth 20 | ConvertFrom-Json)
+    $cfg3.azdo.workItemTypes = @()
+    $wiql3 = Build-WiqlQuery -Config $cfg3 -LookbackDays 7
+    if ($wiql3 -match '\[System\.WorkItemType\] IN') {
+        Write-Error "Empty workItemTypes should suppress the IN clause entirely."; $errors++
     }
 
     # 2. Convert-WorkItemToCandidate handles a minimal fixture.

@@ -5,10 +5,10 @@
     "fields": {
         "System.Id": 2711586,
         "System.Title": "Visual Studio crashes when I open a Python project",
-        "System.WorkItemType": "Bug",
+        "System.WorkItemType": "FeedbackTicket",
         "System.State": "Active",
         "System.AreaPath": "DevDiv\\Python and AI Tools\\Python\\VS IDE",
-        "System.Tags": "vsfeedback",
+        "System.Tags": "dc_prod_external; dcspace:Visual Studio; dctags:Python; dctags:debugger",
         "System.Rev": 3,
         "System.CreatedDate": "2026-05-08T12:00:00Z",
         "System.CreatedBy": {
