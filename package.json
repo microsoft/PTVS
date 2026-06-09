@@ -1,7 +1,7 @@
 {
-    "name":  "ptvs",
-    "private":  true,
-    "devDependencies":  {
-                            "@pylance/pylance":  "2026.1.1"
-                        }
+  "name": "ptvs",
+  "private": true,
+  "devDependencies": {
+    "@pylance/pylance": "2026.2.1"
+  }
 }
