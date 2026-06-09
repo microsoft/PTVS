@@ -17,8 +17,16 @@ Operator documentation for the AzDO Pipeline at
    excluded by query construction, so it can never reach the public
    summary issue. Uses the pipeline's own `$(System.AccessToken)` for
    AzDO REST auth — no PAT needed on the AzDO side.
-2. **Download + parse** any `PythonToolsDiagnostics_*.log` attachments per
-   work item.
+2. **Download + parse** any attachments listed on each work item. The
+   PythonToolsDiagnostics log gets its existing structured field
+   extraction (VS / PTVS / Python versions, loaded assemblies, last
+   exceptions). Every other attachment is captured by metadata, and for
+   text-friendly extensions (`.log .txt .json .xml .md .csv .config
+   .yaml .yml`) a small head excerpt is captured for context. The
+   per-candidate diag JSON also carries the work item's title, AzDO
+   URL, area path, and plain-text-decoded description / repro steps /
+   system info so a reader has full context without round-tripping back
+   to AzDO.
 3. **Sanitize** all of it (PII redaction: emails, Windows user paths,
    machine names, phone numbers; secret detection: PATs, JWTs, AWS keys,
    private-key PEMs, etc.). Items that hit a secret pattern are dropped
@@ -57,7 +65,7 @@ outbound step that talks to GitHub: posting the summary issue.
 |---|---|
 | `config.json` | Endpoints, area path, excluded states/tags, limits |
 | `query-azdo.ps1` | WIQL query + `workitemsbatch` fetch. Runs in the AzDO pipeline. |
-| `parse-diagnostics.ps1` | Downloads + parses `PythonToolsDiagnostics_*.log` attachments. |
+| `parse-diagnostics.ps1` | Builds one rich `diag-<id>.json` per candidate: work-item context + every attachment's metadata + a text excerpt for text-friendly ones + the structured `PythonToolsDiagnostics_*.log` field extraction. |
 | `sanitize.ps1` | PII / secret redaction. Full mode (one `wi-<id>.json` per candidate) and `-TitlesOnly` mode. |
 | `post-report-issue.ps1` | Posts / updates the weekly summary issue in `microsoft/PTVS`. |
 | `pipelines/fetch.yml` | The AzDO Pipeline YAML — the only thing that actually runs on a schedule. |

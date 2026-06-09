@@ -24,7 +24,23 @@
             "rel": "AttachedFile",
             "url": "https://dev.azure.com/devdiv/_apis/wit/attachments/00000000-0000-0000-0000-000000000001",
             "attributes": {
-                "name": "PythonToolsDiagnostics_20260508.log"
+                "name": "PythonToolsDiagnostics_20260508.log",
+                "resourceSize": 12345
+            }
+        },
+        {
+            "rel": "AttachedFile",
+            "url": "https://dev.azure.com/devdiv/_apis/wit/attachments/00000000-0000-0000-0000-000000000002",
+            "attributes": {
+                "name": "screenshot.png",
+                "resourceSize": 67890
+            }
+        },
+        {
+            "rel": "AttachedFile",
+            "url": "https://dev.azure.com/devdiv/_apis/wit/attachments/00000000-0000-0000-0000-000000000003",
+            "attributes": {
+                "name": "vsfeedback-notes.txt"
             }
         }
     ]

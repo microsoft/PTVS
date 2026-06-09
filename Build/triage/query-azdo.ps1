@@ -307,10 +307,25 @@ function Convert-WorkItemToCandidate {
             if ($rel.rel -eq 'AttachedFile') {
                 $url = $rel.url
                 $name = $null
-                if ($rel.attributes -and $rel.attributes.name) { $name = $rel.attributes.name }
+                $sizeBytes = $null
+                if ($rel.PSObject.Properties['attributes'] -and $rel.attributes) {
+                    if ($rel.attributes.PSObject.Properties['name'] -and $rel.attributes.name) {
+                        $name = $rel.attributes.name
+                    }
+                    # AzDO reports resourceSize when work-item relations are
+                    # expanded ($expand=All / Relations). Use it as a pre-download
+                    # gate in parse-diagnostics.ps1 so we don't pull a 50MB log
+                    # just to discover it's too big.
+                    if ($rel.attributes.PSObject.Properties['resourceSize'] -and `
+                        $null -ne $rel.attributes.resourceSize -and `
+                        '' -ne ([string] $rel.attributes.resourceSize)) {
+                        try { $sizeBytes = [int64] $rel.attributes.resourceSize } catch { $sizeBytes = $null }
+                    }
+                }
                 $attachments += [pscustomobject] @{
-                    name = $name
-                    url  = $url
+                    name       = $name
+                    url        = $url
+                    size_bytes = $sizeBytes
                 }
             }
         }
@@ -447,6 +462,18 @@ function Invoke-SelfTest {
         if (-not $cand.title) { Write-Error "Candidate title is empty."; $errors++ }
         if ($cand.id -ne $wi.id) { Write-Error "Candidate id mismatch."; $errors++ }
         if (-not $cand.url.EndsWith("/_workitems/edit/$($wi.id)")) { Write-Error "Candidate url malformed."; $errors++ }
+
+        # Attachment metadata: pass-through of resourceSize when AzDO gives
+        # us one, $null when the relation omits it. parse-diagnostics.ps1
+        # uses this to skip large attachments without downloading them.
+        $atts = @($cand.attachments)
+        if ($atts.Count -lt 3) { Write-Error "Expected ≥3 attachments from fixture, got $($atts.Count)."; $errors++ }
+        $logAtt    = $atts | Where-Object { $_.name -eq 'PythonToolsDiagnostics_20260508.log' } | Select-Object -First 1
+        $shotAtt   = $atts | Where-Object { $_.name -eq 'screenshot.png' }                     | Select-Object -First 1
+        $notesAtt  = $atts | Where-Object { $_.name -eq 'vsfeedback-notes.txt' }               | Select-Object -First 1
+        if (-not $logAtt   -or $logAtt.size_bytes  -ne 12345) { Write-Error "Attachment size pass-through broken for the diagnostics log."; $errors++ }
+        if (-not $shotAtt  -or $shotAtt.size_bytes -ne 67890) { Write-Error "Attachment size pass-through broken for the screenshot."; $errors++ }
+        if (-not $notesAtt -or $null -ne $notesAtt.size_bytes) { Write-Error "Attachment with no resourceSize should expose size_bytes=`$null."; $errors++ }
     } else {
         Write-Warning "Fixture not present at $fixtureFile (skipping conversion test)."
     }
