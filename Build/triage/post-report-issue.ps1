@@ -204,7 +204,19 @@ function Invoke-Post {
         $candidates = @()
     } else {
         $parsed = $raw | ConvertFrom-Json
-        $candidates = if ($null -eq $parsed) { @() } elseif ($parsed -is [System.Array]) { @($parsed) } else { @($parsed) }
+        # Use an explicit if/elseif/else statement (NOT the if-expression
+        # form `$x = if (...) { @() }`). PowerShell unwraps single-statement
+        # if-expressions when the branch yields an empty array — `$x` ends
+        # up `$null` rather than `@()`, then `$candidates.Count` throws
+        # under StrictMode. The if-statement form below assigns directly
+        # in each branch, which preserves the array shape.
+        if ($null -eq $parsed) {
+            $candidates = @()
+        } elseif ($parsed -is [System.Array]) {
+            $candidates = @($parsed)
+        } else {
+            $candidates = @($parsed)
+        }
     }
 
     $windowEnd = [DateTime]::UtcNow.Date
@@ -295,6 +307,28 @@ function Invoke-SelfTest {
     if ($b -match 'ptvs-triage-release') { Write-Error "Body should not contain release-tag marker: $b"; $errors++ }
     # Body should be small — no inline data.
     if ($b.Length -gt 2000) { Write-Error "Body unexpectedly large ($($b.Length) chars) — should be small"; $errors++ }
+
+    # End-to-end: Invoke-Post against an empty `[]` candidates file MUST NOT
+    # crash with "The property 'Count' cannot be found on this object".
+    # Regression for the case the FeedbackTicket-only filter hits constantly:
+    # a typical week has 0 open DC items in the lookback window.
+    $tmpRoot = Join-Path ([IO.Path]::GetTempPath()) ("post-empty-{0}" -f ([Guid]::NewGuid().ToString('N')))
+    New-Item -ItemType Directory -Force -Path $tmpRoot | Out-Null
+    try {
+        $emptyFile = Join-Path $tmpRoot 'cands.json'
+        '[]' | Set-Content -LiteralPath $emptyFile -Encoding UTF8
+        $cfgPath = Join-Path $PSScriptRoot 'config.json'
+        $cfg = Get-TriageConfig -Path $cfgPath
+        try {
+            # -DryRun avoids the GitHub call. If Invoke-Post crashes on
+            # $candidates.Count, this throws and gets caught below.
+            Invoke-Post -CandidatesFile $emptyFile -LookbackDays 7 -RunUrl 'https://example/run/x' -Config $cfg -DryRun
+        } catch {
+            Write-Error "Invoke-Post crashed on empty `[]` input: $($_.Exception.Message)"; $errors++
+        }
+    } finally {
+        if (Test-Path -LiteralPath $tmpRoot) { Remove-Item -LiteralPath $tmpRoot -Recurse -Force -ErrorAction SilentlyContinue }
+    }
 
     if ($errors -gt 0) {
         throw "post-report-issue.ps1 self-test failed with $errors error(s)."
