@@ -311,18 +311,35 @@ function Sanitize-Candidate {
         system_info        = Remove-PiiFromString -Text (ConvertFrom-HtmlForScan ([string] $Candidate.system_info))                       -SecretHitsRef $secretsRef -RedactedHitsRef $redactedRef
         comments           = @(
             foreach ($c in @($Candidate.comments)) {
+                # AzDO's comments REST endpoint returns `text` as HTML, so any
+                # `@` / `=` / `<` / `>` / `&` a customer typed shows up as
+                # `&#64;` / `&#61;` / `&lt;` / `&gt;` / `&amp;` and would slip
+                # past the email + connection-string regexes verbatim. Run the
+                # same HtmlDecode pre-pass as the three body fields above so
+                # entity-encoded PII / secrets are exposed to the scanner and
+                # replaced with the canonical decoded characters in the
+                # output.
                 [pscustomobject] @{
                     id          = $c.id
                     createdDate = $c.createdDate
-                    text        = Remove-PiiFromString -Text $c.text -SecretHitsRef $secretsRef -RedactedHitsRef $redactedRef
+                    text        = Remove-PiiFromString -Text (ConvertFrom-HtmlForScan ([string] $c.text)) -SecretHitsRef $secretsRef -RedactedHitsRef $redactedRef
                 }
             }
         )
         attachments        = @(
             foreach ($a in @($Candidate.attachments)) {
+                # Customer-uploaded filenames + URLs regularly carry PII:
+                # `crash on john.doe@contoso.com.log`,
+                # `C:\Users\jdoe\repro.py`, `screenshot from +1-555-...-...png`,
+                # or attachment URLs that embed an email-shaped guid. Run
+                # both name and url through the same scanner as the body
+                # fields, sharing the secret-hit / redact-hit refs so a
+                # secret pattern hiding in a filename also flips
+                # sanitization_aborted (the diag-side deep walker already
+                # does this; we were the inconsistent path).
                 [pscustomobject] @{
-                    name = $a.name
-                    url  = $a.url
+                    name = Remove-PiiFromString -Text ([string] $a.name) -SecretHitsRef $secretsRef -RedactedHitsRef $redactedRef
+                    url  = Remove-PiiFromString -Text ([string] $a.url)  -SecretHitsRef $secretsRef -RedactedHitsRef $redactedRef
                 }
             }
         )
@@ -899,6 +916,104 @@ function Invoke-SelfTest {
     }
     if ((ConvertFrom-HtmlForScan -Text 'a&#64;b &amp; c &lt;d&gt;') -ne 'a@b & c <d>') {
         Write-Error "ConvertFrom-HtmlForScan didn't decode entities correctly."; $errors++
+    }
+
+    # Comments: same HtmlDecode pre-pass as the three body fields.
+    # AzDO's comments REST endpoint returns `text` as HTML, so any
+    # entity-encoded PII / secret in a comment must be decoded before
+    # the regex pass, not preserved verbatim. Regression repro: a
+    # customer comment containing `alice&#64;example.com` would
+    # otherwise survive unredacted in wi-<id>.json.
+    $candCom = [pscustomobject] @{
+        id = 7001; rev = 1; work_item_type = 'FeedbackTicket'; state = 'DC - New';
+        area_path = 'x'; tags = ''; url = 'u'; created_date = '2026-01-01';
+        comment_count = 2; attachments = @();
+        title            = 'plain title'
+        description_html = ''
+        repro_steps_html = ''
+        system_info      = ''
+        comments = @(
+            [pscustomobject] @{ id = 1; createdDate = '2026-01-01'; text = '<p>contact alice&#64;example.com</p>' },
+            [pscustomobject] @{ id = 2; createdDate = '2026-01-01'; text = '<p>set Password&#61;hunter2 in app.config</p>' }
+        )
+    }
+    $sanCom = Sanitize-Candidate -Candidate $candCom
+    $com0 = @($sanCom.comments)[0].text
+    $com1 = @($sanCom.comments)[1].text
+    if ($com0 -match 'alice') {
+        Write-Error "Comments HtmlDecode: encoded email PII survived in comment 0: '$com0'"; $errors++
+    }
+    if ($com0 -notmatch '<redacted-email>') {
+        Write-Error "Comments HtmlDecode: <redacted-email> marker missing from comment 0: '$com0'"; $errors++
+    }
+    if ($com0 -match '&#64;') {
+        Write-Error "Comments HtmlDecode: raw entity &#64; left in comment 0: '$com0'"; $errors++
+    }
+    if ($com1 -match 'hunter2') {
+        Write-Error "Comments HtmlDecode: connection-string-pw not redacted (was Password&#61;): '$com1'"; $errors++
+    }
+    if ($com1 -notmatch 'Password=<redacted-secret>') {
+        Write-Error "Comments HtmlDecode: redact marker missing on connection-string-pw in comment 1: '$com1'"; $errors++
+    }
+
+    # Attachments: name + url must be scrubbed in the wi (the diag
+    # deep walker already does this — wi was the inconsistent path).
+    # Customer-uploaded filenames carry PII often (`crash on
+    # john@x.com.log`, `C:\Users\jdoe\repro.py`, …) and the same
+    # SecretHitsRef is shared so a secret hiding in a filename flips
+    # sanitization_aborted just like body content would.
+    $candAtt = [pscustomobject] @{
+        id = 7002; rev = 1; work_item_type = 'FeedbackTicket'; state = 'DC - New';
+        area_path = 'x'; tags = ''; url = 'u'; created_date = '2026-01-01';
+        comment_count = 0; comments = @();
+        title            = 'plain title'
+        description_html = ''
+        repro_steps_html = ''
+        system_info      = ''
+        attachments = @(
+            [pscustomobject] @{ name = 'crash on john.doe@contoso.com.log'; url = 'https://example/a1' },
+            [pscustomobject] @{ name = 'repro from C:\Users\jdoe\app.py';   url = 'https://example/a2' }
+        )
+    }
+    $sanAtt = Sanitize-Candidate -Candidate $candAtt
+    $att0 = @($sanAtt.attachments)[0]
+    $att1 = @($sanAtt.attachments)[1]
+    if ($att0.name -match 'john.doe@') {
+        Write-Error "Attachments scrub: email PII survived in attachment 0 name: '$($att0.name)'"; $errors++
+    }
+    if ($att0.name -notmatch '<redacted-email>') {
+        Write-Error "Attachments scrub: <redacted-email> marker missing from attachment 0 name: '$($att0.name)'"; $errors++
+    }
+    if ($att1.name -match 'jdoe') {
+        Write-Error "Attachments scrub: Windows username survived in attachment 1 name: '$($att1.name)'"; $errors++
+    }
+    if ($att1.name -notmatch [regex]::Escape('C:\Users\<redacted-user>\')) {
+        Write-Error "Attachments scrub: Windows-path tail format lost on attachment 1 name: '$($att1.name)'"; $errors++
+    }
+
+    # Attachment-name secret hit: a name containing an abort-class
+    # secret must flip sanitization_aborted on the wi (shared refs).
+    $candAttSec = [pscustomobject] @{
+        id = 7003; rev = 1; work_item_type = 'FeedbackTicket'; state = 'DC - New';
+        area_path = 'x'; tags = ''; url = 'u'; created_date = '2026-01-01';
+        comment_count = 0; comments = @();
+        title            = 'plain title'
+        description_html = ''
+        repro_steps_html = ''
+        system_info      = ''
+        attachments = @(
+            [pscustomobject] @{ name = 'token_ghp_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.txt'; url = 'https://example/a' }
+        )
+    }
+    $sanAttSec = Sanitize-Candidate -Candidate $candAttSec
+    if (-not $sanAttSec.sanitization_aborted) {
+        Write-Error 'Attachments scrub: abort-class ghp_ in attachment name should flip sanitization_aborted.'; $errors++
+    }
+    if (-not (@($sanAttSec.secret_hits) -contains 'github-pat-classic')) {
+        Write-Error "Attachments scrub: ghp_ in attachment name should reach secret_hits. hits=[$($sanAttSec.secret_hits -join ', ')]"; $errors++
+    }
+    if (@($sanAttSec.attachments)[0].name -match 'ghp_[A-Za-z0-9]{36}') {
+        Write-Error "Attachments scrub: ghp_ literal survived in attachment name (defense-in-depth not applied): '$(@($sanAttSec.attachments)[0].name)'"; $errors++
     }
 
     if ($errors -gt 0) {
