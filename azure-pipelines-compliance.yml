@@ -29,220 +29,232 @@ schedules:
     - main
   always: true
 
-jobs:
+resources:
+  repositories:
+  - repository: 1ESPipelineTemplates
+    type: git
+    name: 1ESPipelineTemplates/1ESPipelineTemplates
+    ref: refs/tags/release
 
-- job: Compliance
-  timeoutInMinutes: 0   # maximum timeout, some compliance tasks take a long time to run
+extends:
+  template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
+  parameters:
+    pool:
+      name: VSEng-MicroBuildVSStable
+      os: windows
+      demands:
+      - msbuild
+      - VisualStudio_18.0
+    featureFlags:
+      useOptimizedSDLTasks: true
+    sdl:
+      tsa:
+        enabled: true
+        configFile: $(Build.SourcesDirectory)\TsaConfig.json
+      componentgovernance:
+        alertWarningLevel: High
+        verbosity: Verbose
+      codeql:
+        compiled:
+          enabled: true
+        language: cpp,csharp
+        interpreted:
+          language: python
+      sourceAnalysisPool:
+        name: VSEng-MicroBuildVSStable
+        os: windows
+    stages:
+    - stage: Compliance
+      displayName: Compliance
+      jobs:
+      - job: Compliance
+        timeoutInMinutes: 0   # maximum timeout, some compliance tasks take a long time to run
 
-  # The agent pool the build will run on
-  pool:
-    name: VSEng-MicroBuildVSStable
-    demands: 
-    - msbuild
-    - VisualStudio_18.0
+        # The agent pool the build will run on
+        pool:
+          name: VSEng-MicroBuildVSStable
+          demands:
+          - msbuild
+          - VisualStudio_18.0
 
-  # Job variables
-  variables:
-    - name: CopyTestData
-      value: false
+        templateContext:
+          sdl:
+            suppression:
+              suppressionFile: $(Build.SourcesDirectory)\.gdn\.gdnsuppress
+              suppressionSet: default
+            binaryAnalysis:
+              incremental: true
+          outputs:
+          - output: pipelineArtifact
+            displayName: Publish Staging Directory
+            targetPath: $(Build.StagingDirectory)
+            artifactName: drop
+            condition: succeededOrFailed()
+            sbomEnabled: false
 
-    # PTVS variable group
-    # This contains variables shared between various PTVS pipelines
-    - group: PTVS-Dev18
+        # Job variables
+        variables:
+          - name: CopyTestData
+            value: false
 
-  steps:
+          # PTVS variable group
+          # This contains variables shared between various PTVS pipelines
+          - group: PTVS-Dev18
 
-  # Check out code clean from source control
-  - checkout: self
-    clean: true
+        steps:
 
-  # Install plugins needed for swixproj/vsmanproj and signing
-  # We don't use Build/templates/install_microbuild_plugins.yml here because this project doesn't need to real sign
-  - task: MicroBuildSwixPlugin@3
-    displayName: 'Install microbuild swix plugin'
+        # Check out code clean from source control
+        - checkout: self
+          clean: true
+          fetchDepth: 1
 
-  # Restore packages and install dependencies (pylance, debugpy)
-  - template: Build/templates/restore_packages.yml
-    parameters:
-      pylanceVersion: ${{ parameters.pylanceVersion }}
-      debugpyVersion: ${{ parameters.debugpyVersion }}
+        # Install plugins needed for swixproj/vsmanproj and signing
+        # We don't use Build/templates/install_microbuild_plugins.yml here because this project doesn't need to real sign
+        - task: MicroBuildSwixPlugin@3
+          displayName: 'Install microbuild swix plugin'
 
-  # Clean the Guardian temp files
-  - powershell: Get-ChildItem -Path $env:TEMP -Filter 'MpCmdRun.*' -Recurse -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force
-    displayName: Clean guardian temp files
-    continueOnError: true
+        # Install supported runtimes before restoring dependencies.
+        - task: NodeTool@0
+          displayName: Use Node.js 20
+          inputs:
+            versionSpec: '20.x'
 
-  - powershell: npm i -g npm@8
-    displayName: downgrade npm
- 
-  # Update node
-  # See https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/tool/node-js?view=azure-devops
-  - task: NodeTool@0
-    displayName: Update node
-    inputs:
-      versionSpec: '14.x'
+        - task: UsePythonVersion@0
+          displayName: 'Use Python 3.x'
 
-  - task: UsePythonVersion@0
-    displayName: 'Use Python 3.x'
+        # Restore packages and install dependencies (pylance, debugpy)
+        - template: /Build/templates/restore_packages.yml@self
+          parameters:
+            pylanceVersion: ${{ parameters.pylanceVersion }}
+            debugpyVersion: ${{ parameters.debugpyVersion }}
 
-  # Initialize CodeQL before the build
-  # See https://devdiv.visualstudio.com/DevDiv/_wiki/wikis/DevDiv.wiki/1761/Static-Analysis and
-  # https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/codeql/configuring-codeql3000-ado-pipelines
-  - task: CodeQL3000Init@0
-    displayName: Initialize CodeQL
-    inputs:
-      Enabled: true
-      Language: python,csharp,cpp
-      TSAEnabled: true
-      TSAOptionsPath: $(Build.SourcesDirectory)\TsaConfig.json
-    condition: succeededOrFailed()
-    continueOnError: True
+        # Clean the Guardian temp files
+        - powershell: Get-ChildItem -Path $env:TEMP -Filter 'MpCmdRun.*' -Recurse -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force
+          displayName: Clean guardian temp files
+          continueOnError: true
 
-  # Build and publish logs
-  - template: Build/templates/build.yml
+        # Build and publish logs
+        - template: /Build/templates/build.yml@self
 
-  # Finalize CodeQL after the build
-  - task: CodeQL3000Finalize@0
-    displayName: Finalize CodeQL
-    condition: succeededOrFailed()
-    continueOnError: True
+        # Anti-Malware Scan of build sources and/or artifacts
+        # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/antimalware-scan-build-task
+        - task: AntiMalware@4
+          displayName: 'Run Antivirus on Source'
+          inputs:
+            FileDirPath: $(Build.SourcesDirectory)
+          condition: succeededOrFailed()
+          continueOnError: True
+        - task: AntiMalware@4
+          displayName: Run Antivirus on Binaries
+          inputs:
+            FileDirPath: $(Build.BinariesDirectory)
+          condition: succeededOrFailed()
+          continueOnError: True
 
-  # Anti-Malware Scan of build sources and/or artifacts
-  # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/antimalware-scan-build-task
-  - task: AntiMalware@4
-    displayName: 'Run Antivirus on Source'
-    inputs:
-      FileDirPath: $(Build.SourcesDirectory)
-    condition: succeededOrFailed()
-    continueOnError: True
-  - task: AntiMalware@4
-    displayName: Run Antivirus on Binaries
-    inputs:
-      FileDirPath: $(Build.BinariesDirectory)
-    condition: succeededOrFailed()
-    continueOnError: True
+        # Copy files for Scanning
+        - task: CopyFiles@2
+          displayName: 'Copy Files for Scanning'
+          inputs:
+            SourceFolder: $(Build.BinariesDirectory)
+            Contents: |
+              layout\Microsoft.CookiecutterTools\Microsoft.CookiecutterTools.*
+              layout\Microsoft.PythonTools.Core\Microsoft.PythonTools.*
+              layout\Microsoft.PythonTools.Core\PyDebugAttach*.*
+              layout\Microsoft.PythonTools.Debugger.VCLauncher\Microsoft.PythonTools.*
+              layout\Microsoft.PythonTools.Django\Microsoft.PythonTools.*
+              layout\Microsoft.PythonTools.Profiling\Microsoft.PythonTools.*
+              layout\Microsoft.PythonTools.Profiling\VsPyProf*.*
+            TargetFolder: $(Agent.TempDirectory)\FilesToScan
 
-  # Copy files for Scanning
-  - task: CopyFiles@2
-    displayName: 'Copy Files for Scanning'
-    inputs:
-      SourceFolder: $(Build.BinariesDirectory)
-      Contents: |
-        layout\Microsoft.CookiecutterTools\Microsoft.CookiecutterTools.*
-        layout\Microsoft.PythonTools.Core\Microsoft.PythonTools.*
-        layout\Microsoft.PythonTools.Core\PyDebugAttach*.*
-        layout\Microsoft.PythonTools.Debugger.VCLauncher\Microsoft.PythonTools.*
-        layout\Microsoft.PythonTools.Django\Microsoft.PythonTools.*
-        layout\Microsoft.PythonTools.Profiling\Microsoft.PythonTools.*
-        layout\Microsoft.PythonTools.Profiling\VsPyProf*.*
-      TargetFolder: $(Agent.TempDirectory)\FilesToScan
+        # Analyze python files for common vulnerabilities
+        # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/bandit-build-task
+        - task: Bandit@1
+          displayName: 'Run Bandit'
+          inputs:
+            targetsType: banditPattern
+            targetsBandit: '$(Build.SourcesDirectory)\Python\Product'
+          condition: succeededOrFailed()
+          continueOnError: True
 
-  # Analyze python files for common vulnerabilities
-  # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/bandit-build-task
-  - task: Bandit@1
-    displayName: 'Run Bandit'
-    inputs:
-      targetsType: banditPattern
-      targetsBandit: '$(Build.SourcesDirectory)\Python\Product'
-    condition: succeededOrFailed()
-    continueOnError: True
+        # Analyze binaries for security vulnerabilities
+        # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/binskim-build-task
+        - task: BinSkim@4
+          displayName: Run BinSkim
+          inputs:
+            # Use the same files copied for ApiScan
+            TargetPattern: binskimPattern
+            AnalyzeTargetBinskim: |
+              $(Agent.TempDirectory)\FilesToScan\*.dll
+              $(Agent.TempDirectory)\FilesToScan\*.exe
+          condition: succeededOrFailed()
+          continueOnError: True
 
-  # Analyze binaries for security vulnerabilities
-  # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/binskim-build-task
-  - task: BinSkim@4
-    displayName: Run BinSkim
-    inputs:
-      # Use the same files copied for ApiScan
-      TargetPattern: binskimPattern
-      AnalyzeTargetBinskim: |
-        $(Agent.TempDirectory)\FilesToScan\*.dll 
-        $(Agent.TempDirectory)\FilesToScan\*.exe
-    condition: succeededOrFailed()
-    continueOnError: True
+        # Analyze source and build output text files for credentials
+        # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/credscan-azure-devops-build-task
+        - task: CredScan@2
+          displayName: Run CredScan
+          inputs:
+            toolMajorVersion: V2
+          condition: succeededOrFailed()
+          continueOnError: True
 
-  # Run component governance detection
-  # See http://aka.ms/cgdocs for more info
-  - task: ComponentGovernanceComponentDetection@0
-    displayName: Run Component Detection
-    inputs:
-      scanType: 'Register'
-      verbosity: 'Verbose'
-      alertWarningLevel: 'High'
-    condition: succeededOrFailed()
-    continueOnError: True
+        # Scan C/C++ for security vulnerabilities
+        # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/flawfinder-build-task
+        - task: Flawfinder@2
+          displayName: 'Run Flawfinder'
+          condition: succeededOrFailed()
+          continueOnError: True
 
-  # Analyze source and build output text files for credentials
-  # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/credscan-azure-devops-build-task
-  - task: CredScan@2
-    displayName: Run CredScan
-    inputs:
-      toolMajorVersion: V2
-    condition: succeededOrFailed()
-    continueOnError: True
+        # Scan text elements including code, code comments, and content/web pages, for sensitive terms based on legal, cultural, or geopolitical reasons
+        # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/policheck-build-task
+        - task: PoliCheck@2
+          displayName: Run PoliCheck
+          inputs:
+            optionsFC: 1 # Enables scanning of comments
+            optionsUEPATH: $(Build.SourcesDirectory)\Build\PoliCheckExclusions.xml
+          condition: succeededOrFailed()
+          continueOnError: True
 
-  # Scan C/C++ for security vulnerabilities
-  # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/flawfinder-build-task
-  - task: Flawfinder@2
-    displayName: 'Run Flawfinder'
-    condition: succeededOrFailed()
-    continueOnError: True
+        # Analyze unmanaged C/C++ code for security vulnerabilities
+        # https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/prefast-build-task
+        - task: SDLNativeRules@2
+          displayName: Run PREfast SDL Native Rules for MSBuild
+          condition: succeededOrFailed()
+          continueOnError: True
 
-  # Scan text elements including code, code comments, and content/web pages, for sensitive terms based on legal, cultural, or geopolitical reasons
-  # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/policheck-build-task
-  - task: PoliCheck@2
-    displayName: Run PoliCheck
-    inputs:
-      optionsFC: 1 # Enables scanning of comments
-      optionsUEPATH: $(Build.SourcesDirectory)\Build\PoliCheckExclusions.xml
-    condition: succeededOrFailed()
-    continueOnError: True
+        - task: MicroBuildCleanup@1
+          displayName: MicroBuild cleanup
+          continueOnError: True
 
-  # Analyze unmanaged C/C++ code for security vulnerabilities
-  # https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/prefast-build-task
-  - task: SDLNativeRules@2
-    displayName: Run PREfast SDL Native Rules for MSBuild
-    condition: succeededOrFailed()
-    continueOnError: True
+        # Generate security analysis report
+        # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/security-analysis-report-build-task
+        - task: SdtReport@1
+          displayName: Create Security Analysis Report
+          inputs:
+            AllTools: true
+            BinSkimBreakOn: WarningAbove
+            PoliCheckBreakOn: Severity4Above
+            RoslynAnalyzersBreakOn: WarningAbove
+          condition: succeededOrFailed()
+          continueOnError: True
 
-  - task: MicroBuildCleanup@1
-    displayName: MicroBuild cleanup
-    continueOnError: True
+        # Publish security analysis logs
+        - task: PublishSecurityAnalysisLogs@2
+          displayName: Publish Security Analysis Logs
+          condition: succeededOrFailed()
+          continueOnError: True
 
-  # Generate security analysis report
-  # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/security-analysis-report-build-task
-  - task: SdtReport@1
-    displayName: Create Security Analysis Report
-    inputs:
-      AllTools: true
-      BinSkimBreakOn: WarningAbove
-      PoliCheckBreakOn: Severity4Above
-      RoslynAnalyzersBreakOn: WarningAbove
-    condition: succeededOrFailed()
-    continueOnError: True
+        # Copy sdt logs for publishing
+        - task: CopyFiles@2
+          displayName: Save SDT logs to Staging Directory
+          inputs:
+            SourceFolder: $(Agent.BuildDirectory)\_sdt
+            TargetFolder: $(Build.StagingDirectory)
 
-  # Publish security analysis logs
-  - task: PublishSecurityAnalysisLogs@2
-    displayName: Publish Security Analysis Logs
-    condition: succeededOrFailed()
-    continueOnError: True
-
-  # Copy sdt logs for publishing
-  - task: CopyFiles@2
-    displayName: Save SDT logs to Staging Directory
-    inputs:
-      SourceFolder: $(Agent.BuildDirectory)\_sdt
-      TargetFolder: $(Build.StagingDirectory)
-
-  # Publish staging artifacts
-  - task: PublishBuildArtifacts@1
-    displayName: Publish Staging Directory
-    inputs:
-      PathtoPublish: $(Build.StagingDirectory)
-
-  # Upload results to TSA
-  # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/tsa-upload-build-task
-  - task: TSAUpload@2
-    displayName: TSA Upload
-    inputs:
-      GdnPublishTsaOnboard: True
-      GdnPublishTsaConfigFile: $(Build.SourcesDirectory)\TsaConfig.json
+        # Upload results to TSA
+        # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/tsa-upload-build-task
+        - task: TSAUpload@2
+          displayName: TSA Upload
+          inputs:
+            GdnPublishTsaOnboard: True
+            GdnPublishTsaConfigFile: $(Build.SourcesDirectory)\TsaConfig.json
