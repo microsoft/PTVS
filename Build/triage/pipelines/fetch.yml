@@ -17,14 +17,54 @@
 # titles + AzDO URLs. The full sanitized JSON lives only in the AzDO build
 # artifact, which never leaves the devdiv tenant.
 #
-# Setup prerequisites (one-time, see Build/triage/README.md):
+# Setup prerequisites (one-time):
 #   1. Create variable group `PTVS-Triage-Bridge` in devdiv/DevDiv with a
 #      secret variable `GH_PAT` = fine-grained GitHub PAT scoped to
-#      microsoft/PTVS with Issues: Read+Write (post the weekly summary issue).
+#      microsoft/PTVS with Issues: Read+Write (post the weekly summary
+#      issue). GitHub fine-grained PATs expire after at most ~90 days —
+#      set a calendar reminder and rotate by overwriting the variable
+#      group value before expiry.
 #   2. Grant the project Build Service identity `View work items in this
-#      node` on area path `DevDiv\Python and AI Tools`.
+#      node` on area path `DevDiv\Python and AI Tools`. NOTE: this is
+#      NOT granted by default. The very first pipeline run typically
+#      fails on `query-azdo.ps1` with a 401 (the failed run is what
+#      provisions the Build Service identity in AzDO permissions);
+#      grant the permission, then re-run manually.
 #   3. Create the AzDO Pipeline in devdiv/DevDiv pointing at this file on
-#      the `main` branch of `microsoft/PTVS`.
+#      the `main` branch of `microsoft/PTVS`. Name it `PTVS-Triage-Fetch`.
+#   4. Create the GitHub issue label once (the script does NOT auto-create
+#      labels):
+#        gh label create azdo-triage-report \
+#          --color 0e8a16 \
+#          --description 'Weekly AzDO triage report from PTVS-Triage-Fetch' \
+#          --repo microsoft/PTVS
+#      Idempotent — safe to re-run; fails with "already exists" if so.
+#
+# Local dry-run (run end-to-end against AzDO without posting to GitHub):
+#   $env:GITHUB_TOKEN     = '<fine-grained PAT scoped to microsoft/PTVS>'
+#   $env:AZDO_ACCESS_TOKEN = (az account get-access-token `
+#     --resource 499b84ac-1321-427f-aa17-267ca6975798 `
+#     --query accessToken -o tsv)
+#   pwsh -File Build/triage/query-azdo.ps1         -OutFile cands.json
+#   pwsh -File Build/triage/parse-diagnostics.ps1  -CandidatesFile cands.json -OutDir diag
+#   pwsh -File Build/triage/sanitize.ps1           -InFile cands.json -DiagDir diag -OutDir san
+#   pwsh -File Build/triage/post-report-issue.ps1  -CandidatesFile <titles-only.json> -DryRun
+#
+# Audit / operational notes:
+#   - Every pipeline run uploads a `sanitized-<BuildId>` artifact containing
+#     the full sanitized wi-*.json + diag-*.json. AzDO retention applies.
+#     The public summary issue contains only titles + AzDO links; no
+#     sanitized content is mirrored to GitHub.
+#   - Idempotency: post-report-issue.ps1 searches for an OPEN issue with
+#     the same weekly title and updates the body in place. If the operator
+#     closed the previous report, a new issue is filed so the latest list
+#     surfaces in the feed.
+#   - Manual re-runs: Pipelines → PTVS-Triage-Fetch → Run pipeline. You
+#     can override the branch on a manual run to test changes from a
+#     non-main branch in microsoft/PTVS.
+#   - PR safety: `trigger: none` AND `pr: none` below — the pipeline must
+#     NEVER run on PRs, because it would execute untrusted PR-modified
+#     scripts with $(System.AccessToken) + the bridge PAT.
 
 trigger: none    # do not run on every PTVS push; manual-only for now
                  # (cron schedule is commented out below — re-enable when ready).

@@ -80,10 +80,27 @@ function Build-WiqlQuery {
         $typeClause = "  AND  [System.WorkItemType] IN ($types)`n"
     }
 
-    # Use substring NOT CONTAINS so 'Closed' also excludes DC states like
-    # 'DC - Closed - Duplicated' (set by this pipeline when closing).
-    $excludedStates = ($Config.azdo.excludedStates | ForEach-Object { "NOT [System.State] CONTAINS '$_'" }) -join ' AND '
-    $excludedTagsClause = ($Config.azdo.excludedTags | ForEach-Object { "NOT [System.Tags] CONTAINS '$_'" }) -join ' AND '
+    # Substring NOT CONTAINS lets a single configured value (e.g. 'Fixed')
+    # exclude every state whose name contains it ('DC - Closed - Fixed',
+    # 'DC - Fixed Pending Release', plain 'Fixed', ...). The pipeline is
+    # read-only and never sets these states itself — see
+    # config.json:$comment_excludedStates for the full rationale on which
+    # states are excluded vs. kept.
+    #
+    # Empty `excludedStates` / `excludedTags` arrays are guarded the same
+    # way as `workItemTypes` above: emit no clause at all instead of an
+    # empty string. Without the guard, an operator who empties either
+    # array in config.json gets malformed WIQL like
+    # `… AND  AND  AND  ORDER BY …` and the WIQL POST 400s with a
+    # cryptic parse error.
+    $excludedStates = ''
+    if ($Config.azdo.excludedStates -and @($Config.azdo.excludedStates).Count -gt 0) {
+        $excludedStates = ($Config.azdo.excludedStates | ForEach-Object { "NOT [System.State] CONTAINS '$_'" }) -join ' AND '
+    }
+    $excludedTagsClause = ''
+    if ($Config.azdo.excludedTags -and @($Config.azdo.excludedTags).Count -gt 0) {
+        $excludedTagsClause = ($Config.azdo.excludedTags | ForEach-Object { "NOT [System.Tags] CONTAINS '$_'" }) -join ' AND '
+    }
 
     # Date field is configurable; falls back to CreatedDate for back-compat.
     $dateField = 'System.ChangedDate'
@@ -92,15 +109,19 @@ function Build-WiqlQuery {
         $dateField = if ($df.StartsWith('System.')) { $df } else { "System.$df" }
     }
 
+    # Build the WHERE-tail conditionally so empty exclusion arrays don't
+    # leave dangling `AND` operators in the final query.
+    $tail = ''
+    if ($excludedStates)     { $tail += "  AND  $excludedStates`n" }
+    if ($excludedTagsClause) { $tail += "  AND  $excludedTagsClause`n" }
+
     $wiql = @"
 SELECT [System.Id]
 FROM   workitems
 WHERE  [System.TeamProject] = '$($Config.azdo.project)'
   AND  [System.AreaPath] UNDER '$area'
 $typeClause  AND  [$dateField] > @Today - $LookbackDays
-  AND  $excludedStates
-  AND  $excludedTagsClause
-ORDER BY [$dateField] DESC
+${tail}ORDER BY [$dateField] DESC
 "@
     return $wiql
 }
@@ -307,10 +328,25 @@ function Convert-WorkItemToCandidate {
             if ($rel.rel -eq 'AttachedFile') {
                 $url = $rel.url
                 $name = $null
-                if ($rel.attributes -and $rel.attributes.name) { $name = $rel.attributes.name }
+                $sizeBytes = $null
+                if ($rel.PSObject.Properties['attributes'] -and $rel.attributes) {
+                    if ($rel.attributes.PSObject.Properties['name'] -and $rel.attributes.name) {
+                        $name = $rel.attributes.name
+                    }
+                    # AzDO reports resourceSize when work-item relations are
+                    # expanded ($expand=All / Relations). Use it as a pre-download
+                    # gate in parse-diagnostics.ps1 so we don't pull a 50MB log
+                    # just to discover it's too big.
+                    if ($rel.attributes.PSObject.Properties['resourceSize'] -and `
+                        $null -ne $rel.attributes.resourceSize -and `
+                        '' -ne ([string] $rel.attributes.resourceSize)) {
+                        try { $sizeBytes = [int64] $rel.attributes.resourceSize } catch { $sizeBytes = $null }
+                    }
+                }
                 $attachments += [pscustomobject] @{
-                    name = $name
-                    url  = $url
+                    name       = $name
+                    url        = $url
+                    size_bytes = $sizeBytes
                 }
             }
         }
@@ -404,24 +440,84 @@ function Invoke-SelfTest {
     if ($wiql -notmatch "NOT \[System.Tags\] CONTAINS 'do-not-triage'") {
         Write-Error "WIQL missing do-not-triage exclusion."; $errors++
     }
-    if ($wiql -notmatch "NOT \[System.State\] CONTAINS 'Closed'") {
-        Write-Error "WIQL missing 'Closed' substring exclusion."; $errors++
+    # Default state filter must exclude 'Fixed' (substring catches both
+    # 'DC - Closed - Fixed' and 'DC - Fixed Pending Release'), and must
+    # NOT exclude bare 'Closed' anymore — that would also drop legitimate
+    # triage candidates like 'DC - Closed - Duplicate' / 'Not Enough Info'
+    # which need team review. See config.json $comment_excludedStates for
+    # the empirical justification.
+    if ($wiql -notmatch "NOT \[System.State\] CONTAINS 'Fixed'") {
+        Write-Error "WIQL missing 'Fixed' substring exclusion."; $errors++
     }
-    # workItemTypes is empty in config => no IN (...) clause should be emitted.
-    if ($wiql -match '\[System\.WorkItemType\] IN') {
-        Write-Error "WIQL should not emit WorkItemType IN clause when types list is empty."; $errors++
+    if ($wiql -match "NOT \[System.State\] CONTAINS 'Closed'") {
+        Write-Error "WIQL must NOT exclude bare 'Closed' — that suppresses the entire DC triage feed (every DC item gets a 'DC - Closed - X' state within hours of submission)."; $errors++
+    }
+    # Default config scopes to FeedbackTicket AND SuggestionTicket — the two
+    # types the VS Developer Community sync creates. Verified empirically
+    # (2026-06-09): 112/112 such items in DevDiv\Python and AI Tools over
+    # the last year carried Microsoft.DevDiv.DeveloperCommunityId; 0 items
+    # of other types were directly DC-originated.
+    if ($wiql -notmatch "\[System\.WorkItemType\] IN \('FeedbackTicket', 'SuggestionTicket'\)") {
+        Write-Error "WIQL missing FeedbackTicket/SuggestionTicket type filter."; $errors++
     }
     # Date field should be ChangedDate per config.
     if ($wiql -notmatch '\[System\.ChangedDate\] > @Today') {
         Write-Error "WIQL should use ChangedDate when configured."; $errors++
     }
 
-    # 1b. Non-empty workItemTypes path still emits IN (...) clause.
+    # 1b. Non-empty workItemTypes path with multiple entries renders correctly.
     $cfg2 = ($config | ConvertTo-Json -Depth 20 | ConvertFrom-Json)
     $cfg2.azdo.workItemTypes = @('Bug', 'Task')
     $wiql2 = Build-WiqlQuery -Config $cfg2 -LookbackDays 7
     if ($wiql2 -notmatch "\[System\.WorkItemType\] IN \('Bug', 'Task'\)") {
         Write-Error "WIQL with non-empty types should emit IN clause."; $errors++
+    }
+
+    # 1c. Empty workItemTypes array => no IN (...) clause emitted (this is
+    # the back-compat "any work item type" path that an operator could opt
+    # into if they wanted to broaden the scope beyond DC items).
+    $cfg3 = ($config | ConvertTo-Json -Depth 20 | ConvertFrom-Json)
+    $cfg3.azdo.workItemTypes = @()
+    $wiql3 = Build-WiqlQuery -Config $cfg3 -LookbackDays 7
+    if ($wiql3 -match '\[System\.WorkItemType\] IN') {
+        Write-Error "Empty workItemTypes should suppress the IN clause entirely."; $errors++
+    }
+
+    # 1d. Empty excludedStates / excludedTags arrays MUST suppress their
+    # AND clauses entirely instead of emitting a dangling
+    # `AND  AND  ORDER BY …`. Without this guard, an operator who clears
+    # either array in config.json gets a WIQL POST that 400s with a parse
+    # error on the empty operand.
+    $cfg4 = ($config | ConvertTo-Json -Depth 20 | ConvertFrom-Json)
+    $cfg4.azdo.excludedStates = @()
+    $cfg4.azdo.excludedTags   = @()
+    $wiql4 = Build-WiqlQuery -Config $cfg4 -LookbackDays 7
+    if ($wiql4 -match '(?m)^\s*AND\s*$') {
+        Write-Error "Build-WiqlQuery emitted a dangling 'AND' line with empty exclusion arrays:`n$wiql4"; $errors++
+    }
+    if ($wiql4 -match '\bAND\s+AND\b') {
+        Write-Error "Build-WiqlQuery emitted 'AND AND' with empty exclusion arrays:`n$wiql4"; $errors++
+    }
+    if ($wiql4 -match '\bAND\s+ORDER\s+BY\b') {
+        Write-Error "Build-WiqlQuery left a trailing 'AND' before ORDER BY with empty exclusion arrays:`n$wiql4"; $errors++
+    }
+    # The exclusion clauses themselves must be gone (not just well-formed).
+    if ($wiql4 -match 'NOT \[System\.State\] CONTAINS') {
+        Write-Error "Build-WiqlQuery still emitted a state exclusion when excludedStates was empty."; $errors++
+    }
+    if ($wiql4 -match 'NOT \[System\.Tags\] CONTAINS') {
+        Write-Error "Build-WiqlQuery still emitted a tag exclusion when excludedTags was empty."; $errors++
+    }
+    # Only one of the two empty: still no dangling AND, and the other
+    # exclusion still present.
+    $cfg5 = ($config | ConvertTo-Json -Depth 20 | ConvertFrom-Json)
+    $cfg5.azdo.excludedStates = @()  # tags stay default
+    $wiql5 = Build-WiqlQuery -Config $cfg5 -LookbackDays 7
+    if ($wiql5 -match '\bAND\s+AND\b') {
+        Write-Error "Build-WiqlQuery emitted 'AND AND' with only excludedStates empty:`n$wiql5"; $errors++
+    }
+    if ($wiql5 -notmatch "NOT \[System\.Tags\] CONTAINS 'do-not-triage'") {
+        Write-Error "Build-WiqlQuery dropped the tag exclusion when only states were emptied."; $errors++
     }
 
     # 2. Convert-WorkItemToCandidate handles a minimal fixture.
@@ -432,6 +528,18 @@ function Invoke-SelfTest {
         if (-not $cand.title) { Write-Error "Candidate title is empty."; $errors++ }
         if ($cand.id -ne $wi.id) { Write-Error "Candidate id mismatch."; $errors++ }
         if (-not $cand.url.EndsWith("/_workitems/edit/$($wi.id)")) { Write-Error "Candidate url malformed."; $errors++ }
+
+        # Attachment metadata: pass-through of resourceSize when AzDO gives
+        # us one, $null when the relation omits it. parse-diagnostics.ps1
+        # uses this to skip large attachments without downloading them.
+        $atts = @($cand.attachments)
+        if ($atts.Count -lt 3) { Write-Error "Expected ≥3 attachments from fixture, got $($atts.Count)."; $errors++ }
+        $logAtt    = $atts | Where-Object { $_.name -eq 'PythonToolsDiagnostics_20260508.log' } | Select-Object -First 1
+        $shotAtt   = $atts | Where-Object { $_.name -eq 'screenshot.png' }                     | Select-Object -First 1
+        $notesAtt  = $atts | Where-Object { $_.name -eq 'vsfeedback-notes.txt' }               | Select-Object -First 1
+        if (-not $logAtt   -or $logAtt.size_bytes  -ne 12345) { Write-Error "Attachment size pass-through broken for the diagnostics log."; $errors++ }
+        if (-not $shotAtt  -or $shotAtt.size_bytes -ne 67890) { Write-Error "Attachment size pass-through broken for the screenshot."; $errors++ }
+        if (-not $notesAtt -or $null -ne $notesAtt.size_bytes) { Write-Error "Attachment with no resourceSize should expose size_bytes=`$null."; $errors++ }
     } else {
         Write-Warning "Fixture not present at $fixtureFile (skipping conversion test)."
     }

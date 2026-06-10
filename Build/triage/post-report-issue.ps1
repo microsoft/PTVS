@@ -8,9 +8,18 @@
         Job 1 of the weekly triage workflow. Always runs — independent of the
         triage pipeline gate.
 
-        Idempotency: the script searches for an existing issue whose title
-        exactly matches the computed weekly title. If found, the body is
-        updated in place rather than a duplicate filed.
+        Idempotency: the script lists open issues with the report label via
+        the read-your-writes-consistent List Issues endpoint, then matches
+        on exact title. If found, the body is updated in place rather than
+        a duplicate filed. If only CLOSED issues match (the operator already
+        closed the previous report to mean "done triaging this list"), a
+        new issue is filed so the latest list surfaces in the operator's
+        feed instead of silently zombie-updating the closed one.
+
+        We deliberately avoid the GitHub Search API for the existence
+        check — Search is eventually consistent (newly-created issues
+        take 30 s to several minutes to index) and a same-week manual
+        re-run would silently file a duplicate during that window.
 
         Empty candidate list: nothing is filed; the script exits 0 with a
         log line.
@@ -106,6 +115,33 @@ function Build-IssueTitle {
     return "AzDO triage report $start to $end ($Count open items)"
 }
 
+function Format-MarkdownInlineCode {
+    # Wrap text in Markdown inline-code spans, safely escaping any
+    # backticks the text itself contains. CommonMark's rule: an inline-
+    # code span is delimited by a run of N backticks (N >= 1); inside
+    # the span any run of <N backticks is literal. So if the text
+    # contains a single backtick, wrap with two; if it contains a
+    # run of two, wrap with three; etc. We also pad with a leading
+    # and trailing space when the text starts/ends with a backtick,
+    # which CommonMark trims away — preventing GitHub from chopping
+    # off our delimiters.
+    # Without this, a customer-supplied title or pipeline name
+    # containing a literal `…` terminates the inline-code span early
+    # and the rest of the bullet renders as plain text.
+    param([string] $Text)
+    if ([string]::IsNullOrEmpty($Text)) { return '``' }
+    # Find the longest run of consecutive backticks in $Text and pick
+    # a delimiter one longer.
+    $longest = 0
+    foreach ($m in [regex]::Matches($Text, '`+')) {
+        if ($m.Length -gt $longest) { $longest = $m.Length }
+    }
+    $delim = '`' * ($longest + 1)
+    $pad = ''
+    if ($Text.StartsWith('`') -or $Text.EndsWith('`')) { $pad = ' ' }
+    return "$delim$pad$Text$pad$delim"
+}
+
 function Build-IssueBody {
     param(
         [Parameter()] [AllowEmptyCollection()] [object[]] $Candidates,
@@ -120,10 +156,11 @@ function Build-IssueBody {
     # we're recursing under it, regardless of whether config stored the trailing
     # backslash.
     $displayRoot = $AreaRoot.TrimEnd('\')
+    $rootCode    = Format-MarkdownInlineCode -Text ("$displayRoot\**")
     if ($count -eq 0) {
-        $null = $sb.AppendLine("No open AzDO work items had activity in the last $LookbackDays day(s) under ``$displayRoot\**``.")
+        $null = $sb.AppendLine("No open AzDO work items had activity in the last $LookbackDays day(s) under $rootCode.")
     } else {
-        $null = $sb.AppendLine("$count open work item(s) with activity in the past $LookbackDays day(s) under ``$displayRoot\**``.")
+        $null = $sb.AppendLine("$count open work item(s) with activity in the past $LookbackDays day(s) under $rootCode.")
         $null = $sb.AppendLine()
         foreach ($c in $Candidates) {
             $subpath = Format-AreaSubpath -Full $c.area_path -Root $AreaRoot
@@ -131,7 +168,8 @@ function Build-IssueBody {
             $title   = $c.title
             # Collapse newlines so the bullet renders on one line.
             $title   = $title -replace '\r?\n', ' '
-            $null = $sb.AppendLine("- [AzDO #$($c.id)]($($c.url)) — ``$title`` — created $date — area: $subpath")
+            $titleCode = Format-MarkdownInlineCode -Text $title
+            $null = $sb.AppendLine("- [AzDO #$($c.id)]($($c.url)) — $titleCode — created $date — area: $subpath")
         }
     }
     $null = $sb.AppendLine()
@@ -149,14 +187,50 @@ function Find-ExistingReportIssue {
         [Parameter(Mandatory)] [string] $Label,
         [Parameter(Mandatory)] [hashtable] $Headers
     )
-    # Use Search API: scope to repo + label + exact title match.
-    # GitHub search needs the title wrapped in quotes for phrase match.
-    $q = "repo:$Owner/$Repo label:`"$Label`" in:title `"$Title`""
-    $uri = "https://api.github.com/search/issues?q=$([uri]::EscapeDataString($q))"
-    $resp = Invoke-RestMethod -Method GET -Uri $uri -Headers $Headers
-    if (-not $resp.items) { return $null }
-    foreach ($item in $resp.items) {
-        if ($item.title -eq $Title) { return $item }
+    # Use the LIST issues endpoint (`GET /repos/{owner}/{repo}/issues`),
+    # NOT the Search API. The Search index is eventually consistent —
+    # newly-created issues commonly take 30 s to several minutes to
+    # become discoverable. With Search, a same-week manual re-run
+    # kicked off shortly after a successful run (or a manual run that
+    # races the future cron) would see "no match", fall through to
+    # New-ReportIssue, and file a SECOND issue with the same title.
+    # The list endpoint is read-your-writes consistent, so it always
+    # sees the just-created issue.
+    #
+    # Filtering:
+    #   - state=open: same rationale as before. A closed previous
+    #     report means "operator is done with that list" — we want a
+    #     fresh issue to surface in the feed rather than silently
+    #     zombie-updating the closed one.
+    #   - labels=<reportLabel>: server-side narrowing so we don't
+    #     paginate every open issue in the repo.
+    #   - per_page=100: max page size. With the report label scoped
+    #     to weekly summary issues that the operator typically closes
+    #     within days, the open set is small (≤ a handful); one page
+    #     is plenty. Defensive belt-and-suspenders: if the API ever
+    #     returns ≥100 open report issues, we'd need to paginate, but
+    #     in practice that's a signal something else is broken (the
+    #     operator stopped closing reports).
+    #
+    # Post-filter on:
+    #   - exact-match title
+    #   - state -eq 'open' (defensive)
+    #   - NOT a pull request (this endpoint also returns PRs alongside
+    #     issues; `pull_request` field presence distinguishes them)
+    $label = [uri]::EscapeDataString($Label)
+    $uri   = "https://api.github.com/repos/$Owner/$Repo/issues?state=open&labels=$label&per_page=100"
+    $resp  = Invoke-RestMethod -Method GET -Uri $uri -Headers $Headers
+    if (-not $resp) { return $null }
+    # The list endpoint returns an array directly (not an `items`
+    # wrapper like Search does). A single-item response can collapse
+    # to a scalar under StrictMode — guard with @().
+    foreach ($item in @($resp)) {
+        # StrictMode-safe property reads: `.PSObject.Properties[name]`
+        # returns $null when absent instead of throwing.
+        $isPullRequest = ($item.PSObject.Properties['pull_request'] -and $item.pull_request)
+        if ($item.title -eq $Title -and $item.state -eq 'open' -and -not $isPullRequest) {
+            return $item
+        }
     }
     return $null
 }
@@ -204,7 +278,19 @@ function Invoke-Post {
         $candidates = @()
     } else {
         $parsed = $raw | ConvertFrom-Json
-        $candidates = if ($null -eq $parsed) { @() } elseif ($parsed -is [System.Array]) { @($parsed) } else { @($parsed) }
+        # Use an explicit if/elseif/else statement (NOT the if-expression
+        # form `$x = if (...) { @() }`). PowerShell unwraps single-statement
+        # if-expressions when the branch yields an empty array — `$x` ends
+        # up `$null` rather than `@()`, then `$candidates.Count` throws
+        # under StrictMode. The if-statement form below assigns directly
+        # in each branch, which preserves the array shape.
+        if ($null -eq $parsed) {
+            $candidates = @()
+        } elseif ($parsed -is [System.Array]) {
+            $candidates = @($parsed)
+        } else {
+            $candidates = @($parsed)
+        }
     }
 
     $windowEnd = [DateTime]::UtcNow.Date
@@ -295,6 +381,180 @@ function Invoke-SelfTest {
     if ($b -match 'ptvs-triage-release') { Write-Error "Body should not contain release-tag marker: $b"; $errors++ }
     # Body should be small — no inline data.
     if ($b.Length -gt 2000) { Write-Error "Body unexpectedly large ($($b.Length) chars) — should be small"; $errors++ }
+
+    # Format-MarkdownInlineCode: backtick-safe wrapping.
+    if ((Format-MarkdownInlineCode -Text 'plain text') -ne '`plain text`') {
+        Write-Error 'Inline-code helper broke the simple no-backtick case.'; $errors++
+    }
+    # Single backtick in text → wrap with double backticks.
+    $oneBt = Format-MarkdownInlineCode -Text 'has a ` backtick'
+    if ($oneBt -ne '``has a ` backtick``') {
+        Write-Error "Inline-code helper didn't widen the delimiter for a single backtick: '$oneBt'"; $errors++
+    }
+    # Run of two backticks → wrap with triple.
+    $twoBt = Format-MarkdownInlineCode -Text 'has `` two'
+    if ($twoBt -ne '```has `` two```') {
+        Write-Error "Inline-code helper didn't widen the delimiter for a `` run: '$twoBt'"; $errors++
+    }
+    # Leading backtick → pad with space so CommonMark doesn't eat the delimiter.
+    $leadBt = Format-MarkdownInlineCode -Text '`start'
+    if ($leadBt -ne '`` `start ``') {
+        Write-Error "Inline-code helper didn't pad a leading backtick: '$leadBt'"; $errors++
+    }
+
+    # Backtick-in-title regression: a customer-supplied AzDO title
+    # containing a literal `` ` `` would terminate the bullet's inline-
+    # code span early and leave the rest of the bullet as plain text
+    # (date / area subpath). The fix widens the delimiter and
+    # round-trips correctly on GitHub. Use single-quoted strings so
+    # PowerShell doesn't eat the backtick as its escape character.
+    $btCands = @(
+        [pscustomobject] @{
+            id           = 999000
+            title        = 'crash in foo`bar with backtick'  # literal ` in title (single-quoted to escape)
+            url          = 'https://dev.azure.com/devdiv/DevDiv/_workitems/edit/999000'
+            area_path    = 'DevDiv\Python and AI Tools\Python'
+            created_date = '2026-06-01T12:00:00Z'
+            state        = 'Active'
+            work_item_type = 'Bug'
+        }
+    )
+    $btBody = Build-IssueBody -Candidates $btCands -RunUrl 'https://example/run/bt' -LookbackDays 7 -AreaRoot 'DevDiv\Python and AI Tools\'
+    # The full bullet must survive — the trailing `— created` / `— area`
+    # segments are how we detect early termination of the code span.
+    if ($btBody -notmatch 'created 2026-06-01') {
+        Write-Error 'Backtick title: created-date segment missing — code span terminated early.'; $errors++
+    }
+    if ($btBody -notmatch 'area: Python') {
+        Write-Error 'Backtick title: area subpath segment missing — code span terminated early.'; $errors++
+    }
+    # The single-backtick title must be wrapped in DOUBLE backticks
+    # (delimiter widened by one beyond the longest run of backticks in
+    # the title).
+    if ($btBody -notmatch '``crash in foo`bar with backtick``') {
+        Write-Error "Backtick title: not wrapped in double backticks. Body: $btBody"; $errors++
+    }
+
+    # End-to-end: Invoke-Post against an empty `[]` candidates file MUST NOT
+    # crash with "The property 'Count' cannot be found on this object".
+    # Regression for the case the FeedbackTicket-only filter hits constantly:
+    # a typical week has 0 open DC items in the lookback window.
+    $tmpRoot = Join-Path ([IO.Path]::GetTempPath()) ("post-empty-{0}" -f ([Guid]::NewGuid().ToString('N')))
+    New-Item -ItemType Directory -Force -Path $tmpRoot | Out-Null
+    try {
+        $emptyFile = Join-Path $tmpRoot 'cands.json'
+        '[]' | Set-Content -LiteralPath $emptyFile -Encoding UTF8
+        $cfgPath = Join-Path $PSScriptRoot 'config.json'
+        $cfg = Get-TriageConfig -Path $cfgPath
+        try {
+            # -DryRun avoids the GitHub call. If Invoke-Post crashes on
+            # $candidates.Count, this throws and gets caught below.
+            Invoke-Post -CandidatesFile $emptyFile -LookbackDays 7 -RunUrl 'https://example/run/x' -Config $cfg -DryRun
+        } catch {
+            Write-Error "Invoke-Post crashed on empty `[]` input: $($_.Exception.Message)"; $errors++
+        }
+    } finally {
+        if (Test-Path -LiteralPath $tmpRoot) { Remove-Item -LiteralPath $tmpRoot -Recurse -Force -ErrorAction SilentlyContinue }
+    }
+
+    # Find-ExistingReportIssue: uses the read-your-writes-consistent
+    # List Issues endpoint (NOT Search), filters to state=open + the
+    # report label, and post-filters on exact title. Two regressions
+    # this test locks down:
+    #  (a) closed-issue zombie-update — earlier this week the operator
+    #      closed report #N within a minute of it being filed; the next
+    #      pipeline run silently updated that closed issue's body,
+    #      hiding the latest list from the operator's feed.
+    #  (b) Search-API eventual-consistency duplicate — Search takes 30s
+    #      to several minutes to index a new issue. A same-week re-run
+    #      kicked off in that window would silently file a duplicate.
+    #      List Issues is read-your-writes consistent, so the
+    #      just-filed issue is always visible.
+    $script:__capturedUri = $null
+    $script:__listResp    = $null
+    function script:Invoke-RestMethod {
+        param([string] $Method, [string] $Uri, [hashtable] $Headers,
+              [string] $Body, [string] $ContentType)
+        $script:__capturedUri = $Uri
+        return $script:__listResp
+    }
+    try {
+        # Pretend the List endpoint returned both a closed and an open
+        # match (it would normally only return open with state=open in
+        # the URL, but the post-filter still rejects a hypothetical
+        # closed entry as defense-in-depth).
+        $script:__listResp = @(
+            [pscustomobject] @{ number = 100; title = 'Match'; state = 'closed'; html_url = 'u-closed' },
+            [pscustomobject] @{ number = 101; title = 'Match'; state = 'open';   html_url = 'u-open'   }
+        )
+        $found = Find-ExistingReportIssue -Owner 'o' -Repo 'r' -Title 'Match' -Label 'L' -Headers @{}
+        if ($script:__capturedUri -notmatch '/repos/o/r/issues') {
+            Write-Error "Find-ExistingReportIssue: did NOT call the list-issues endpoint. Uri=$($script:__capturedUri)"; $errors++
+        }
+        if ($script:__capturedUri -match '/search/') {
+            Write-Error "Find-ExistingReportIssue: still using Search API. Uri=$($script:__capturedUri)"; $errors++
+        }
+        if ($script:__capturedUri -notmatch 'state=open') {
+            Write-Error "Find-ExistingReportIssue: missing state=open. Uri=$($script:__capturedUri)"; $errors++
+        }
+        if ($script:__capturedUri -notmatch 'labels=L') {
+            Write-Error "Find-ExistingReportIssue: missing labels= query. Uri=$($script:__capturedUri)"; $errors++
+        }
+        if (-not $found) {
+            Write-Error 'Find-ExistingReportIssue: returned $null when an open match existed.'; $errors++
+        } elseif ($found.number -ne 101) {
+            Write-Error "Find-ExistingReportIssue: returned wrong item (#$($found.number)); expected the OPEN one (#101)."; $errors++
+        }
+
+        # Closed-only response: must return $null so caller files fresh.
+        $script:__listResp = @(
+            [pscustomobject] @{ number = 200; title = 'Match'; state = 'closed'; html_url = 'u-closed-only' }
+        )
+        $found2 = Find-ExistingReportIssue -Owner 'o' -Repo 'r' -Title 'Match' -Label 'L' -Headers @{}
+        if ($found2) {
+            Write-Error "Find-ExistingReportIssue: returned closed issue when no open match exists. Got #$($found2.number)."; $errors++
+        }
+
+        # PR collision: /repos/{owner}/{repo}/issues also returns PRs
+        # alongside issues; the `pull_request` field-presence filter
+        # must reject them so an identically-titled PR can't be
+        # mistaken for the report issue.
+        $script:__listResp = @(
+            [pscustomobject] @{ number = 300; title = 'Match'; state = 'open'; pull_request = [pscustomobject] @{ url = 'pr-url' }; html_url = 'pr' }
+        )
+        $found3 = Find-ExistingReportIssue -Owner 'o' -Repo 'r' -Title 'Match' -Label 'L' -Headers @{}
+        if ($found3) {
+            Write-Error "Find-ExistingReportIssue: matched a PR (#$($found3.number)) instead of skipping it."; $errors++
+        }
+
+        # Empty list response: returns $null cleanly.
+        $script:__listResp = @()
+        $found4 = Find-ExistingReportIssue -Owner 'o' -Repo 'r' -Title 'Match' -Label 'L' -Headers @{}
+        if ($found4) {
+            Write-Error 'Find-ExistingReportIssue: returned non-null on empty list response.'; $errors++
+        }
+
+        # Single-item list response (PowerShell collapses to scalar
+        # without the @(...) wrap inside the function): must still
+        # work, since the matching path is the most common one.
+        $script:__listResp = [pscustomobject] @{ number = 400; title = 'Match'; state = 'open'; html_url = 'u-single' }
+        $found5 = Find-ExistingReportIssue -Owner 'o' -Repo 'r' -Title 'Match' -Label 'L' -Headers @{}
+        if (-not $found5 -or $found5.number -ne 400) {
+            Write-Error "Find-ExistingReportIssue: single-item collapsed response was not handled. Got: $($found5.number)."; $errors++
+        }
+
+        # Label with special chars must be URL-escaped in the query.
+        $script:__capturedUri = $null
+        $script:__listResp    = @()
+        $null = Find-ExistingReportIssue -Owner 'o' -Repo 'r' -Title 'X' -Label 'with space' -Headers @{}
+        if ($script:__capturedUri -notmatch 'labels=with%20space') {
+            Write-Error "Find-ExistingReportIssue: label not URL-escaped. Uri=$($script:__capturedUri)"; $errors++
+        }
+    } finally {
+        Remove-Item Function:script:Invoke-RestMethod -ErrorAction SilentlyContinue
+        $script:__capturedUri = $null
+        $script:__listResp    = $null
+    }
 
     if ($errors -gt 0) {
         throw "post-report-issue.ps1 self-test failed with $errors error(s)."
