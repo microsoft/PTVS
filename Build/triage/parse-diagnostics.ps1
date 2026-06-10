@@ -25,10 +25,14 @@
           }
 
         - HTML fields from the work item (description, repro steps, system
-          info) are decoded with [System.Net.WebUtility]::HtmlDecode and then
-          stripped to plain text so downstream consumers don't have to deal
-          with markup. HtmlDecode is broad (not a whitelist) so PII / secrets
-          hidden behind entity encoding are exposed to sanitize.ps1.
+          info) are stripped to plain text so downstream consumers don't have
+          to deal with markup. Tags are removed from the *raw* HTML first
+          (before HtmlDecode) so that entity-encoded angle brackets like
+          `List&lt;int&gt;` or pyproj/XML fragments survive as `List<int>`
+          in the output instead of being silently deleted as if they were
+          tags. HtmlDecode then runs broadly (not a whitelist) on the
+          remaining text so PII / secrets hidden behind entity encoding are
+          exposed to sanitize.ps1.
         - Attachment processing is data-driven: every relation with
           rel == 'AttachedFile' is enumerated, classified by extension
           (text-friendly = .log .txt .json .xml .md .csv .config .yaml .yml)
@@ -38,7 +42,11 @@
           the AzDO attachment API, capture the first ExcerptBytes of text as
           content_excerpt, and flag excerpt_truncated when the file was
           larger than that. Per-candidate text download count is capped by
-          MaxTextAttachments so a single noisy item can't blow the budget.
+          MaxTextAttachments so a single noisy item can't blow the budget --
+          except for the PythonToolsDiagnostics_*.log itself, which is the
+          primary structured-extraction source and is always downloaded
+          regardless of position in the attachment list. It also doesn't
+          count against the budget so it can't be starved out by ordering.
         - For the PythonToolsDiagnostics_*.log specifically, we ALSO run the
           legacy field extractor over the captured text and stash the result
           under python_tools_diagnostics. When no such log is attached or it
@@ -114,20 +122,29 @@ function Get-OptionalProp {
 function ConvertTo-PlainText {
     param([string] $Html)
     if ([string]::IsNullOrEmpty($Html)) { return '' }
-    # 1. Broad HTML entity decode (NOT a whitelist) — exposes any PII /
-    #    secrets that the original poster may have entity-encoded so the
-    #    downstream sanitizer's regexes can see them.
-    $decoded = [System.Net.WebUtility]::HtmlDecode($Html)
-    # 2. Replace block-level tags with newlines so paragraph structure
+    # 1. Replace block-level tags with newlines so paragraph structure
     #    survives, then drop all remaining tags. We drop with the empty
     #    string (not a space) so `<b>foo</b>.` collapses to `foo.` instead
     #    of `foo .` — inline tags shouldn't introduce whitespace.
-    $decoded = [regex]::Replace($decoded, '(?i)<\s*(br|/p|/div|/li|/h[1-6]|/tr)[^>]*>', "`n")
-    $stripped = [regex]::Replace($decoded, '<[^>]+>', '')
+    #    These two passes run on the *raw* HTML (before HtmlDecode) so that
+    #    entity-encoded angle brackets like `List&lt;int&gt;` or
+    #    `<MyType&lt;T&gt;>` survive: they have no literal `<`/`>` in the
+    #    raw text, so the tag-strip regex can't see them as tags. Doing it
+    #    the other way around (decode-then-strip) would turn `List&lt;int&gt;`
+    #    into `List<int>` and then silently delete `<int>` as if it were a
+    #    tag, destroying exactly the repro detail the artifact is meant to
+    #    surface (generic types, XML/pyproj fragments).
+    $stripped = [regex]::Replace($Html,     '(?i)<\s*(br|/p|/div|/li|/h[1-6]|/tr)[^>]*>', "`n")
+    $stripped = [regex]::Replace($stripped, '<[^>]+>', '')
+    # 2. Broad HTML entity decode (NOT a whitelist) — exposes any PII /
+    #    secrets that the original poster may have entity-encoded so the
+    #    downstream sanitizer's regexes can see them. Runs *after* tag
+    #    stripping (see above) so encoded brackets aren't mistaken for tags.
+    $decoded = [System.Net.WebUtility]::HtmlDecode($stripped)
     # 3. Collapse runs of whitespace; preserve paragraph breaks.
-    $stripped = [regex]::Replace($stripped, '[ \t]+', ' ')
-    $stripped = [regex]::Replace($stripped, '(\r?\n\s*){2,}', "`n`n")
-    return $stripped.Trim()
+    $decoded = [regex]::Replace($decoded, '[ \t]+', ' ')
+    $decoded = [regex]::Replace($decoded, '(\r?\n\s*){2,}', "`n`n")
+    return $decoded.Trim()
 }
 
 function Get-AttachmentKind {
@@ -136,6 +153,18 @@ function Get-AttachmentKind {
     $ext = [IO.Path]::GetExtension($Name).ToLowerInvariant()
     if ($Script:TextFriendlyExt -contains $ext) { return 'text' }
     return 'binary'
+}
+
+function Test-IsPythonToolsDiagnosticsLog {
+    # PTVS attaches its diagnostics dump as `PythonToolsDiagnostics_<ts>.log`
+    # (or `PythonToolsDiagnostics.log`). This is the primary structured-
+    # extraction source for each candidate: it gets priority handling in the
+    # attachment loop (bypasses the per-candidate text-attachment budget and
+    # doesn't count against it) so a noisy item with many other text
+    # attachments can't starve out the diagnostics log via ordering.
+    param([string] $Name)
+    if ([string]::IsNullOrEmpty($Name)) { return $false }
+    return ($Name -match '(?i)PythonToolsDiagnostics.*\.log$')
 }
 
 function Extract-DiagnosticsFields {
@@ -301,7 +330,7 @@ function Get-PythonToolsDiagnosticsBlock {
     $ptdEntry = $null
     foreach ($e in $AttachmentEntries) {
         $n = Get-OptionalProp -Object $e -Name 'name'
-        if ($n -and ($n -match '(?i)PythonToolsDiagnostics.*\.log$')) {
+        if (Test-IsPythonToolsDiagnosticsLog -Name ([string] $n)) {
             $ptdEntry = $e
             break
         }
@@ -382,7 +411,15 @@ function Invoke-Parse {
             if (-not $a) { continue }
             $aname = Get-OptionalProp -Object $a -Name 'name'
             $akind = Get-AttachmentKind -Name ([string] $aname)
-            if ($akind -eq 'text' -and $textCount -ge $MaxTextAttachments) {
+            # The PythonToolsDiagnostics_*.log is the primary structured-
+            # extraction source; always process it even when the per-candidate
+            # text-attachment budget would otherwise skip it (e.g. when ≥
+            # MaxTextAttachments noisier text attachments enumerate first in
+            # the AzDO relation order). It also doesn't count against the
+            # budget so its position in the attachment list can't starve out
+            # the diagnostics extraction.
+            $isPtdLog = Test-IsPythonToolsDiagnosticsLog -Name ([string] $aname)
+            if ($akind -eq 'text' -and -not $isPtdLog -and $textCount -ge $MaxTextAttachments) {
                 # Budget exhausted — record metadata only.
                 $entries.Add([pscustomobject] @{
                     name              = $aname
@@ -398,7 +435,9 @@ function Invoke-Parse {
             }
             $entry = Get-AttachmentEntry -Attachment $a -Headers $headers `
                        -MaxLogBytes $MaxLogBytes -ExcerptBytes $ExcerptBytes
-            if ($entry.downloaded) { $textCount++ }
+            # PTD logs are exempt from the budget so we don't count them; all
+            # other downloaded text attachments do count.
+            if ($entry.downloaded -and -not $isPtdLog) { $textCount++ }
             $entries.Add($entry) | Out-Null
         }
 
@@ -524,6 +563,100 @@ System.NullReferenceException: Object reference not set to an instance of an obj
     $ptdSkip = Get-PythonToolsDiagnosticsBlock -AttachmentEntries $entriesSkipped
     if ($ptdSkip.present)                                { Write-Error 'PTD with skipped log should have present=false.'; $errors++ }
     if ($ptdSkip.reason -notmatch 'exceeds cap')         { Write-Error 'PTD reason should carry over skip_reason.';      $errors++ }
+
+    # 8. ConvertTo-PlainText: entity-encoded angle brackets MUST survive.
+    #    Decode-then-strip ordering (the prior bug) would turn `List&lt;int&gt;`
+    #    into `List<int>` and then silently delete `<int>` as if it were a tag.
+    #    Strip-then-decode preserves it. This is the repro detail feature
+    #    that the artifact exists to surface (generic types, XML / pyproj
+    #    fragments).
+    $generics = 'use List&lt;int&gt; and Dictionary&lt;K,V&gt; here'
+    $genericsPlain = ConvertTo-PlainText -Html $generics
+    if ($genericsPlain -ne 'use List<int> and Dictionary<K,V> here') {
+        Write-Error "ConvertTo-PlainText destroyed encoded angle brackets: '$genericsPlain'"
+        $errors++
+    }
+    # Same input but with real surrounding tags: real tags are still stripped,
+    # encoded brackets still survive.
+    $mixed = '<p>before <i>middle</i> &lt;encoded&gt; after</p>'
+    $mixedPlain = ConvertTo-PlainText -Html $mixed
+    if ($mixedPlain -notmatch 'before middle <encoded> after') {
+        Write-Error "ConvertTo-PlainText didn't preserve encoded brackets in mixed HTML: '$mixedPlain'"
+        $errors++
+    }
+    # An XML / pyproj-style fragment with real tags as content (i.e. the
+    # user pasted XML inside their repro): encoded `&lt;`/`&gt;` correctly
+    # roundtrip to `<`/`>` and aren't mistaken for tags.
+    $pyprojSnippet = '<p>Add to .pyproj:</p>&lt;ItemGroup&gt;&lt;Compile Include=&quot;a.py&quot;/&gt;&lt;/ItemGroup&gt;'
+    $pyprojPlain = ConvertTo-PlainText -Html $pyprojSnippet
+    if ($pyprojPlain -notmatch '<ItemGroup><Compile Include="a\.py"/></ItemGroup>') {
+        Write-Error "ConvertTo-PlainText destroyed pyproj fragment: '$pyprojPlain'"
+        $errors++
+    }
+
+    # 9. Test-IsPythonToolsDiagnosticsLog: case-insensitive, tolerates the
+    #    timestamp suffix (PythonToolsDiagnostics_<ts>.log). Used to give
+    #    the PTD log priority over the per-candidate text-attachment budget.
+    foreach ($n in @('PythonToolsDiagnostics.log',
+                      'PythonToolsDiagnostics_20260508.log',
+                      'PythonToolsDiagnostics_20260508_120000.log',
+                      'pythontoolsdiagnostics_x.LOG')) {
+        if (-not (Test-IsPythonToolsDiagnosticsLog -Name $n)) {
+            Write-Error "Test-IsPythonToolsDiagnosticsLog: '$n' should match."
+            $errors++
+        }
+    }
+    foreach ($n in @('', 'screenshot.png', 'other.log', 'PythonToolsDiagnostics.txt',
+                      'crashdump.dmp', 'app.config')) {
+        if (Test-IsPythonToolsDiagnosticsLog -Name $n) {
+            Write-Error "Test-IsPythonToolsDiagnosticsLog: '$n' should NOT match."
+            $errors++
+        }
+    }
+    if (Test-IsPythonToolsDiagnosticsLog -Name $null) {
+        Write-Error 'Test-IsPythonToolsDiagnosticsLog should return $false on $null.'; $errors++
+    }
+
+    # 10. Attachment-loop budget bypass for the PTVS diagnostics log: even
+    #     when MaxTextAttachments text attachments enumerate before the PTD
+    #     log, the PTD log is NOT skipped and does NOT count against the
+    #     budget. Re-implements the loop's decision logic against an in-memory
+    #     attachment list (no network) to verify the priority rule without
+    #     having to mock Get-AttachmentEntry.
+    $maxText = 10
+    $attList = @()
+    1..$maxText | ForEach-Object {
+        $attList += [pscustomobject] @{ name = "extra-$_.log" }
+    }
+    # PTD log LAST — exactly the failure pattern in the PR review comment.
+    $attList += [pscustomobject] @{ name = 'PythonToolsDiagnostics_20260508.log' }
+    $attList += [pscustomobject] @{ name = 'extra-final.txt' }  # past budget AND past PTD
+    $simTextCount = 0
+    $simProcessed = New-Object System.Collections.Generic.List[string]
+    $simSkipped   = New-Object System.Collections.Generic.List[string]
+    foreach ($a in $attList) {
+        $aname = $a.name
+        $akind = Get-AttachmentKind -Name $aname
+        $isPtdLog = Test-IsPythonToolsDiagnosticsLog -Name $aname
+        if ($akind -eq 'text' -and -not $isPtdLog -and $simTextCount -ge $maxText) {
+            $simSkipped.Add($aname) | Out-Null
+            continue
+        }
+        $simProcessed.Add($aname) | Out-Null
+        if (-not $isPtdLog) { $simTextCount++ }
+    }
+    if ($simProcessed -notcontains 'PythonToolsDiagnostics_20260508.log') {
+        Write-Error 'PTD log must be processed even when the per-candidate text budget is exhausted.'; $errors++
+    }
+    if ($simSkipped   -contains    'PythonToolsDiagnostics_20260508.log') {
+        Write-Error 'PTD log should never appear in the skipped list.'; $errors++
+    }
+    if ($simSkipped   -notcontains 'extra-final.txt') {
+        Write-Error 'Non-PTD text attachment past budget should be skipped.'; $errors++
+    }
+    if ($simTextCount -ne $maxText) {
+        Write-Error "PTD log should not count against budget; expected textCount=$maxText, got $simTextCount."; $errors++
+    }
 
     if ($errors -gt 0) {
         throw "parse-diagnostics.ps1 self-test failed with $errors error(s)."
