@@ -16,9 +16,19 @@
                        item alone. Used by Job 1 to compose the public weekly
                        report.
 
-        Behavior on secret-pattern hit: ABORT that candidate. The script either
-        marks it with a `sanitization_aborted` flag (kept out of public mirror)
-        or — when -FailOnSecret is set — exits non-zero. Default is to flag.
+        Behavior on secret-pattern hit depends on the action class declared
+        on each regex in $Script:SecretRegexes:
+          - 'abort'  : high-confidence pattern (e.g. ghp_..., PEM headers,
+                       AKIA..., JWT, AccountKey=...). Flags the candidate
+                       with `sanitization_aborted = true` so fetch.yml
+                       Step 4 deletes the wi/diag pair from the artifact.
+                       When -FailOnSecret is set, also exits non-zero.
+          - 'redact' : lower-confidence pattern that may appear naturally in
+                       customer free-text (e.g. `Password=hunter2` in a
+                       repro). Redacted in place via the per-regex
+                       `replacement`, then surfaced in `redacted_secrets`
+                       on the sanitized wi for operator visibility. The
+                       item still flows through triage; no abort.
 
     .PARAMETER InFile
         Path to candidates.json (from query-azdo.ps1).
@@ -58,9 +68,9 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-# Patterns. These are intentionally generous — false positives on customer
-# content are cheap (just an extra `<redacted>`) while false negatives are
-# expensive (a PII leak on the public GitHub).
+# PII regexes (redact-in-place). Generous on purpose — false positives
+# here are cheap (just an extra `<redacted-*>` marker in the artifact)
+# while false negatives are expensive (a PII leak on the public GitHub).
 $Script:EmailRegex     = '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}'
 $Script:WinUserPath    = '(?i)([A-Z]:\\Users\\)([^\\/<>"|?*\s]+)'
 $Script:UnixHome       = '(?i)(/home/|/Users/)([A-Za-z0-9._-]+)'
@@ -68,32 +78,84 @@ $Script:SidRegex       = 'S-1-[0-9-]{6,}'
 $Script:MachineNameLn  = '(?im)^\s*(Machine Name|MachineName|Computer Name|HostName)\s*[:=]\s*[^\r\n]+'
 $Script:PhoneRegex     = '(?:\+?\d{1,3}[\s.-]?)?(?:\(?\d{3}\)?[\s.-]?)\d{3}[\s.-]?\d{4}'
 
-# Secret regexes — fail loudly when these match in user content.
+# Secret regexes. Each entry carries an `action`:
+#   - 'abort'  — high-confidence pattern (specific prefix + length + charset);
+#                a match flags `sanitization_aborted` so fetch.yml Step 4
+#                deletes the whole wi/diag pair from the artifact. False
+#                positives here cost a lost triage item, so use only when
+#                the pattern is specific enough that a hit is almost
+#                certainly a real secret.
+#   - 'redact' — lower-confidence pattern that may appear naturally in
+#                customer free-text (e.g. `Password=hunter2` in a repro
+#                description). On a hit we redact in place with the
+#                per-regex `replacement` and let the item flow through
+#                triage. Tracked separately on the sanitized wi as
+#                `redacted_secrets` for operator visibility, without
+#                triggering the abort drop.
+# Feature #2 expanded the scan surface from compact log fields to full
+# descriptions + repro + up to 10×16KB attachment excerpts per item, so
+# generic redact-class patterns must NOT be promoted to abort or we
+# silently shrink the triage feed on benign customer wording.
 $Script:SecretRegexes = @(
-    @{ name = 'github-pat-classic';   pattern = 'ghp_[A-Za-z0-9]{36}' },
-    @{ name = 'github-pat-fine';      pattern = 'github_pat_[A-Za-z0-9_]{82}' },
-    @{ name = 'github-app-token';     pattern = '(?:ghs|gho|ghu|ghr)_[A-Za-z0-9]{36}' },
-    @{ name = 'azure-storage-key';    pattern = 'AccountKey=[A-Za-z0-9+/=]{40,}' },
-    @{ name = 'sas-token';            pattern = '[?&]sig=[A-Za-z0-9%+/=]{20,}' },
-    @{ name = 'jwt';                  pattern = 'eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}' },
-    @{ name = 'aws-access-key';       pattern = 'AKIA[0-9A-Z]{16}' },
-    @{ name = 'private-key-pem';      pattern = '-----BEGIN (?:RSA |EC |OPENSSH |DSA |PGP )?PRIVATE KEY-----' },
-    @{ name = 'connection-string-pw'; pattern = '(?i)(Password|Pwd)\s*=\s*[^;<>"\s]{6,}' }
+    @{ name = 'github-pat-classic';   action = 'abort';
+       pattern = 'ghp_[A-Za-z0-9]{36}' },
+    @{ name = 'github-pat-fine';      action = 'abort';
+       pattern = 'github_pat_[A-Za-z0-9_]{82}' },
+    @{ name = 'github-app-token';     action = 'abort';
+       pattern = '(?:ghs|gho|ghu|ghr)_[A-Za-z0-9]{36}' },
+    @{ name = 'azure-storage-key';    action = 'abort';
+       pattern = 'AccountKey=[A-Za-z0-9+/=]{40,}' },
+    @{ name = 'sas-token';            action = 'abort';
+       pattern = '[?&]sig=[A-Za-z0-9%+/=]{20,}' },
+    @{ name = 'jwt';                  action = 'abort';
+       pattern = 'eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}' },
+    @{ name = 'aws-access-key';       action = 'abort';
+       pattern = 'AKIA[0-9A-Z]{16}' },
+    @{ name = 'private-key-pem';      action = 'abort';
+       pattern = '-----BEGIN (?:RSA |EC |OPENSSH |DSA |PGP )?PRIVATE KEY-----' },
+    # connection-string-pw: GENERIC pattern that fires on benign customer
+    # wording like `Password=hunter2`, `Set Pwd=changeme in config`, etc.
+    # Redact in place (preserving the `Password=` / `Pwd=` prefix so the
+    # reader still sees the structure) instead of aborting the whole item.
+    @{ name = 'connection-string-pw'; action = 'redact';
+       pattern     = '(?i)(Password|Pwd)\s*=\s*[^;<>"\s]{6,}';
+       replacement = '$1=<redacted-secret>' }
 )
 
 function Remove-PiiFromString {
     param(
         [Parameter()] [string] $Text,
-        [ref] $SecretHitsRef
+        [ref] $SecretHitsRef,
+        # Untyped: PowerShell's [ref] parameter binder rejects $null, so we
+        # accept any object here. Callers pass `([ref] $list)` which produces
+        # a [System.Management.Automation.PSReference]; we read .Value on it
+        # the same way as $SecretHitsRef. Defaulting to $null lets existing
+        # callers that only care about abort-class hits omit the parameter.
+        [Parameter()] $RedactedHitsRef = $null
     )
     if ([string]::IsNullOrEmpty($Text)) { return $Text }
 
     $result = $Text
 
-    # 1. Secret detection (no redaction — we abort or flag instead).
+    # 1a. High-confidence secrets: flag for abort (no in-place modification).
+    #     Process these FIRST so a redact-class pattern overlapping the same
+    #     span (e.g. `Password=ghp_aaa...`) doesn't eat the high-confidence
+    #     match before we can detect it.
     foreach ($s in $Script:SecretRegexes) {
+        if ($s.action -ne 'abort') { continue }
         if ($result -match $s.pattern) {
             if ($null -ne $SecretHitsRef) { $SecretHitsRef.Value += $s.name }
+        }
+    }
+
+    # 1b. Lower-confidence secrets: redact in place so the item still flows
+    #     through triage instead of being silently dropped. Track separately
+    #     on $RedactedHitsRef (when provided) for operator visibility.
+    foreach ($s in $Script:SecretRegexes) {
+        if ($s.action -ne 'redact') { continue }
+        if ($result -match $s.pattern) {
+            $result = [regex]::Replace($result, $s.pattern, $s.replacement)
+            if ($null -ne $RedactedHitsRef) { $RedactedHitsRef.Value += $s.name }
         }
     }
 
@@ -127,24 +189,32 @@ function Remove-PiiFromValue {
     # from collapsing single-element arrays into scalars on return.
     param(
         [Parameter()] [AllowNull()] [object] $Value,
-        [ref] $SecretHitsRef
+        [ref] $SecretHitsRef,
+        # Untyped optional ref (see Remove-PiiFromString for rationale).
+        [Parameter()] $RedactedHitsRef = $null
     )
     if ($null -eq $Value) { return $null }
     if ($Value -is [string]) {
-        return Remove-PiiFromString -Text $Value -SecretHitsRef $SecretHitsRef
+        return Remove-PiiFromString -Text $Value `
+                                    -SecretHitsRef $SecretHitsRef `
+                                    -RedactedHitsRef $RedactedHitsRef
     }
     if ($Value -is [System.Management.Automation.PSCustomObject]) {
         $newObj = [pscustomobject] @{}
         foreach ($p in $Value.PSObject.Properties) {
             Add-Member -InputObject $newObj -NotePropertyName $p.Name `
-                -NotePropertyValue (Remove-PiiFromValue -Value $p.Value -SecretHitsRef $SecretHitsRef) -Force
+                -NotePropertyValue (Remove-PiiFromValue -Value $p.Value `
+                                                       -SecretHitsRef $SecretHitsRef `
+                                                       -RedactedHitsRef $RedactedHitsRef) -Force
         }
         return $newObj
     }
     if ($Value -is [System.Collections.IEnumerable] -and -not ($Value -is [string])) {
         $items = New-Object System.Collections.Generic.List[object]
         foreach ($i in $Value) {
-            $items.Add((Remove-PiiFromValue -Value $i -SecretHitsRef $SecretHitsRef)) | Out-Null
+            $items.Add((Remove-PiiFromValue -Value $i `
+                                            -SecretHitsRef $SecretHitsRef `
+                                            -RedactedHitsRef $RedactedHitsRef)) | Out-Null
         }
         # Wrap with unary comma so a one-element list still serializes as
         # a JSON array — without this, PowerShell collapses single-element
@@ -166,8 +236,10 @@ function Remove-PiiFromTitle {
 
 function Sanitize-Candidate {
     param([Parameter(Mandatory)] [object] $Candidate)
-    $secrets = New-Object System.Collections.Generic.List[string]
-    $secretsRef = [ref] $secrets
+    $secrets  = New-Object System.Collections.Generic.List[string]
+    $redacted = New-Object System.Collections.Generic.List[string]
+    $secretsRef  = [ref] $secrets
+    $redactedRef = [ref] $redacted
 
     $san = [pscustomobject] @{
         id                 = $Candidate.id
@@ -180,16 +252,16 @@ function Sanitize-Candidate {
         created_date       = $Candidate.created_date
         comment_count      = $Candidate.comment_count
 
-        title              = Remove-PiiFromString -Text $Candidate.title             -SecretHitsRef $secretsRef
-        description_html   = Remove-PiiFromString -Text $Candidate.description_html  -SecretHitsRef $secretsRef
-        repro_steps_html   = Remove-PiiFromString -Text $Candidate.repro_steps_html  -SecretHitsRef $secretsRef
-        system_info        = Remove-PiiFromString -Text $Candidate.system_info       -SecretHitsRef $secretsRef
+        title              = Remove-PiiFromString -Text $Candidate.title             -SecretHitsRef $secretsRef -RedactedHitsRef $redactedRef
+        description_html   = Remove-PiiFromString -Text $Candidate.description_html  -SecretHitsRef $secretsRef -RedactedHitsRef $redactedRef
+        repro_steps_html   = Remove-PiiFromString -Text $Candidate.repro_steps_html  -SecretHitsRef $secretsRef -RedactedHitsRef $redactedRef
+        system_info        = Remove-PiiFromString -Text $Candidate.system_info       -SecretHitsRef $secretsRef -RedactedHitsRef $redactedRef
         comments           = @(
             foreach ($c in @($Candidate.comments)) {
                 [pscustomobject] @{
                     id          = $c.id
                     createdDate = $c.createdDate
-                    text        = Remove-PiiFromString -Text $c.text -SecretHitsRef $secretsRef
+                    text        = Remove-PiiFromString -Text $c.text -SecretHitsRef $secretsRef -RedactedHitsRef $redactedRef
                 }
             }
         )
@@ -207,7 +279,13 @@ function Sanitize-Candidate {
         # created_by_display / created_by_email are deliberately omitted.
 
         sanitization_aborted = $false
+        # secret_hits holds ONLY abort-class matches; presence of any entry
+        # means fetch.yml Step 4 will drop this wi/diag pair.
         secret_hits          = @($secrets | Sort-Object -Unique)
+        # redacted_secrets holds lower-confidence patterns (e.g.
+        # connection-string-pw) that were redacted in place. Surfaced for
+        # operator visibility; does NOT trigger the drop.
+        redacted_secrets     = @($redacted | Sort-Object -Unique)
     }
 
     if ($secrets.Count -gt 0) {
@@ -260,42 +338,77 @@ function Invoke-Full {
 
     # Sanitize each diag-<id>.json if present. The current diag schema is
     # nested (work_item{...}, attachments[]{content_excerpt,...}, etc.) so
-    # we use Remove-PiiFromValue to walk the whole tree. Any secret hit
-    # inside a diag file gets PROPAGATED back to the matching wi-<id>.json:
-    # fetch.yml Step 4 reads sanitization_aborted off the wi file to decide
-    # whether to drop the pair, so a secret found only in diag content must
-    # flip the wi flag too — otherwise the diag file would still ride along
-    # in the AzDO artifact upload.
+    # we use Remove-PiiFromValue to walk the whole tree. Any ABORT-class
+    # secret hit inside a diag file gets PROPAGATED back to the matching
+    # wi-<id>.json: fetch.yml Step 4 reads sanitization_aborted off the wi
+    # file to decide whether to drop the pair, so a secret found only in
+    # diag content must flip the wi flag too — otherwise the diag file
+    # would still ride along in the AzDO artifact upload.
+    # REDACT-class hits (e.g. connection-string-pw matching `Password=...`
+    # in a customer repro) are propagated to wi.redacted_secrets for
+    # operator visibility but do NOT trigger the abort drop, since
+    # redact-class patterns are scrubbed in place.
     if ($DiagDir -and (Test-Path -LiteralPath $DiagDir)) {
         $diagFiles = Get-ChildItem -LiteralPath $DiagDir -Filter 'diag-*.json' -ErrorAction SilentlyContinue
         foreach ($df in $diagFiles) {
             $diag = Get-Content -LiteralPath $df.FullName -Raw | ConvertFrom-Json
-            $secrets = New-Object System.Collections.Generic.List[string]
-            $diagSan = Remove-PiiFromValue -Value $diag -SecretHitsRef ([ref] $secrets)
+            $secrets  = New-Object System.Collections.Generic.List[string]
+            $redacted = New-Object System.Collections.Generic.List[string]
+            $diagSan = Remove-PiiFromValue -Value $diag `
+                                            -SecretHitsRef    ([ref] $secrets) `
+                                            -RedactedHitsRef  ([ref] $redacted)
             $outPath = Join-Path $OutDir $df.Name
             ($diagSan | ConvertTo-Json -Depth 25) | Set-Content -LiteralPath $outPath -Encoding UTF8
 
-            if ($secrets.Count -gt 0) {
-                $uniq = @($secrets | Sort-Object -Unique)
-                Write-Warning "Secret pattern(s) in $($df.Name): $($uniq -join ', '). Blocking mirror downstream."
-                $anyAborted = $true
+            $hasAbort   = $secrets.Count  -gt 0
+            $hasRedact  = $redacted.Count -gt 0
 
-                # Find the sibling wi-<id>.json and flip sanitization_aborted
-                # so fetch.yml Step 4's drop loop catches both files.
+            if ($hasAbort -or $hasRedact) {
+                $uniqAbort  = @($secrets  | Sort-Object -Unique)
+                $uniqRedact = @($redacted | Sort-Object -Unique)
+                if ($hasAbort) {
+                    Write-Warning "Secret pattern(s) in $($df.Name): $($uniqAbort -join ', '). Blocking mirror downstream."
+                    $anyAborted = $true
+                }
+                if ($hasRedact) {
+                    Write-Host "Redacted lower-confidence secret pattern(s) in $($df.Name): $($uniqRedact -join ', ')."
+                }
+
+                # Find the sibling wi-<id>.json and propagate hits. Abort-class
+                # hits flip sanitization_aborted (so fetch.yml Step 4 catches
+                # both files); redact-class hits go into redacted_secrets for
+                # operator visibility but don't trigger the drop.
                 $idMatch = [regex]::Match($df.Name, '^diag-(\d+)\.json$')
                 if ($idMatch.Success) {
                     $wiPath = Join-Path $OutDir ("wi-{0}.json" -f $idMatch.Groups[1].Value)
                     if (Test-Path -LiteralPath $wiPath) {
                         $wi = Get-Content -LiteralPath $wiPath -Raw | ConvertFrom-Json
-                        $wi.sanitization_aborted = $true
-                        $existing = @()
-                        if ($wi.PSObject.Properties['secret_hits'] -and $wi.secret_hits) {
-                            $existing = @($wi.secret_hits)
+                        $wiTouched = $false
+                        if ($hasAbort) {
+                            $wi.sanitization_aborted = $true
+                            $existing = @()
+                            if ($wi.PSObject.Properties['secret_hits'] -and $wi.secret_hits) {
+                                $existing = @($wi.secret_hits)
+                            }
+                            $wi.secret_hits = @(($existing + $uniqAbort) | Sort-Object -Unique)
+                            Write-Warning "Propagated diag secret hit(s) to $(Split-Path $wiPath -Leaf): $($wi.secret_hits -join ', ')."
+                            $wiTouched = $true
                         }
-                        $wi.secret_hits = @(($existing + $uniq) | Sort-Object -Unique)
-                        ($wi | ConvertTo-Json -Depth 20) | Set-Content -LiteralPath $wiPath -Encoding UTF8
-                        Write-Warning "Propagated diag secret hit(s) to $(Split-Path $wiPath -Leaf): $($wi.secret_hits -join ', ')."
-                    } else {
+                        if ($hasRedact) {
+                            $existingR = @()
+                            if ($wi.PSObject.Properties['redacted_secrets'] -and $wi.redacted_secrets) {
+                                $existingR = @($wi.redacted_secrets)
+                            } elseif (-not $wi.PSObject.Properties['redacted_secrets']) {
+                                # Older wi shape pre-redacted_secrets — add the field.
+                                Add-Member -InputObject $wi -NotePropertyName 'redacted_secrets' -NotePropertyValue @() -Force
+                            }
+                            $wi.redacted_secrets = @(($existingR + $uniqRedact) | Sort-Object -Unique)
+                            $wiTouched = $true
+                        }
+                        if ($wiTouched) {
+                            ($wi | ConvertTo-Json -Depth 20) | Set-Content -LiteralPath $wiPath -Encoding UTF8
+                        }
+                    } elseif ($hasAbort) {
                         Write-Warning "No matching wi-$($idMatch.Groups[1].Value).json next to $($df.Name); diag will still be dropped by Step 4 if a sibling appears later."
                     }
                 }
@@ -440,6 +553,154 @@ function Invoke-SelfTest {
         }
     } finally {
         if (Test-Path -LiteralPath $tmpRoot) { Remove-Item -LiteralPath $tmpRoot -Recurse -Force -ErrorAction SilentlyContinue }
+    }
+
+    # Redact-in-place for low-confidence connection-string-pw: customer text
+    # with `Password=hunter2` must be redacted in place (preserving the
+    # `Password=` prefix so the structure is visible) and MUST NOT trigger
+    # the abort drop. Pre-fix behavior: this would flip sanitization_aborted
+    # and fetch.yml Step 4 would silently delete the wi/diag pair, shrinking
+    # the triage feed on benign customer wording.
+    foreach ($t in @(
+        'Repro: set Password=hunter2 in your config file',
+        'I had to add Pwd=changeme to my appsettings.json',
+        'The error happens when Password=test123 is set',
+        'Pwd=abcdef should not crash the app',
+        'Server=foo;Database=bar;Password=correct-horse-battery-staple;'
+    )) {
+        $abortHits   = New-Object System.Collections.Generic.List[string]
+        $redactHits  = New-Object System.Collections.Generic.List[string]
+        $clean = Remove-PiiFromString -Text $t `
+                                       -SecretHitsRef   ([ref] $abortHits) `
+                                       -RedactedHitsRef ([ref] $redactHits)
+        if ($abortHits.Count -ne 0) {
+            Write-Error "Low-confidence Password= text triggered ABORT (should redact-in-place): '$t' -> hits=[$($abortHits -join ', ')]"; $errors++
+        }
+        if (-not ($redactHits -contains 'connection-string-pw')) {
+            Write-Error "Low-confidence Password= text did not report 'connection-string-pw' to RedactedHitsRef: '$t' -> redacted=[$($redactHits -join ', ')]"; $errors++
+        }
+        if ($clean -match '(?i)(Password|Pwd)\s*=\s*[^;<>"\s<]{6,}') {
+            Write-Error "Redacted output still contains a Password=/Pwd= match: '$clean'"; $errors++
+        }
+        if ($clean -notmatch '(?i)(Password|Pwd)=<redacted-secret>') {
+            Write-Error "Redaction did not preserve the Password=/Pwd= prefix: '$clean'"; $errors++
+        }
+    }
+
+    # High-confidence patterns still abort. Spot-check ghp_ and PEM/AKIA.
+    foreach ($t in @(
+        'token: ghp_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+        '-----BEGIN RSA PRIVATE KEY-----abc',
+        'access AKIAIOSFODNN7EXAMPLE here'
+    )) {
+        $abortHits = New-Object System.Collections.Generic.List[string]
+        $_ = Remove-PiiFromString -Text $t -SecretHitsRef ([ref] $abortHits)
+        if ($abortHits.Count -lt 1) {
+            Write-Error "High-confidence pattern did not abort: '$t'"; $errors++
+        }
+    }
+
+    # Mixed: when both a high-confidence (abort) and low-confidence (redact)
+    # pattern appear in the same string, abort still wins (so the item is
+    # dropped) AND the low-confidence portion is redacted in the output.
+    $mixed = 'Set Password=hunter2 and token=ghp_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+    $aMix = New-Object System.Collections.Generic.List[string]
+    $rMix = New-Object System.Collections.Generic.List[string]
+    $cleanMix = Remove-PiiFromString -Text $mixed `
+                                      -SecretHitsRef   ([ref] $aMix) `
+                                      -RedactedHitsRef ([ref] $rMix)
+    if (-not ($aMix -contains 'github-pat-classic')) {
+        Write-Error "Mixed text: abort-class ghp_ not detected. aMix=[$($aMix -join ', ')]"; $errors++
+    }
+    if (-not ($rMix -contains 'connection-string-pw')) {
+        Write-Error "Mixed text: redact-class connection-string-pw not detected. rMix=[$($rMix -join ', ')]"; $errors++
+    }
+    if ($cleanMix -notmatch 'Password=<redacted-secret>') {
+        Write-Error "Mixed text: Password= portion not redacted in cleaned output: '$cleanMix'"; $errors++
+    }
+
+    # Sanitize-Candidate: redact-class hit must NOT flip sanitization_aborted,
+    # must populate redacted_secrets, and must leave secret_hits empty. Item
+    # flows through triage instead of being dropped.
+    $candR = [pscustomobject] @{
+        id = 901; rev = 1; work_item_type = 'Bug'; state = 'Active';
+        area_path = 'x'; tags = ''; url = 'u'; created_date = '2026-01-01';
+        comment_count = 0; comments = @(); attachments = @();
+        title            = 'plain title'
+        description_html = 'Customer says: set Password=hunter2 in appsettings'
+        repro_steps_html = ''
+        system_info      = ''
+    }
+    $sanR = Sanitize-Candidate -Candidate $candR
+    if ($sanR.sanitization_aborted) {
+        Write-Error 'Sanitize-Candidate: low-confidence Password= match triggered abort (should redact instead).'; $errors++
+    }
+    if (@($sanR.secret_hits).Count -ne 0) {
+        Write-Error "Sanitize-Candidate: redact-class match leaked into secret_hits: [$($sanR.secret_hits -join ', ')]"; $errors++
+    }
+    if (-not (@($sanR.redacted_secrets) -contains 'connection-string-pw')) {
+        Write-Error "Sanitize-Candidate: redacted_secrets missing 'connection-string-pw': [$($sanR.redacted_secrets -join ', ')]"; $errors++
+    }
+    if ($sanR.description_html -match 'hunter2') {
+        Write-Error "Sanitize-Candidate: Password value 'hunter2' not redacted from description_html: '$($sanR.description_html)'"; $errors++
+    }
+
+    # End-to-end: diag-only redact-class hit propagates to wi.redacted_secrets
+    # WITHOUT flipping sanitization_aborted. fetch.yml Step 4 should NOT
+    # drop this item.
+    $tmpRoot2 = Join-Path ([IO.Path]::GetTempPath()) ("sanitize-test-r-{0}" -f ([Guid]::NewGuid().ToString('N')))
+    $tmpDiag2 = Join-Path $tmpRoot2 'diag'
+    $tmpOut2  = Join-Path $tmpRoot2 'out'
+    New-Item -ItemType Directory -Force -Path $tmpDiag2, $tmpOut2 | Out-Null
+    try {
+        $candIn2 = @(
+            [pscustomobject] @{
+                id = 24680; rev = 1; title = 'plain'; description_html = ''; repro_steps_html = ''
+                system_info = ''; tags = ''; area_path = 'x'; work_item_type = 'Bug'; state = 'Active'
+                created_date = '2026-01-01'; changed_date = '2026-01-01'
+                created_by_display = 'X'; created_by_email = 'x@e.com'
+                url = 'https://example/24680'; comment_count = 0; comments = @(); attachments = @()
+            }
+        )
+        $candIn2Path = Join-Path $tmpRoot2 'candidates.json'
+        ($candIn2 | ConvertTo-Json -Depth 20) | Set-Content -LiteralPath $candIn2Path -Encoding UTF8
+
+        $diagDoc2 = [pscustomobject] @{
+            work_item = [pscustomobject] @{ id = 24680; title = 'plain'; description = 'fine' }
+            attachments = @(
+                [pscustomobject] @{
+                    name = 'app.config'; url = 'u'; size_bytes = 100; kind = 'text';
+                    downloaded = $true; skip_reason = $null;
+                    content_excerpt = '<add key="conn" value="Server=db;Password=p@ssw0rd-here;" />'
+                    excerpt_truncated = $false
+                }
+            )
+            python_tools_diagnostics = [pscustomobject] @{ present = $false; reason = 'n/a' }
+        }
+        ($diagDoc2 | ConvertTo-Json -Depth 25) | Set-Content -LiteralPath (Join-Path $tmpDiag2 'diag-24680.json') -Encoding UTF8
+
+        Invoke-Full -InFile $candIn2Path -OutDir $tmpOut2 -DiagDir $tmpDiag2
+
+        $wiR = Get-Content -LiteralPath (Join-Path $tmpOut2 'wi-24680.json') -Raw | ConvertFrom-Json
+        if ($wiR.sanitization_aborted) {
+            Write-Error 'E2E: diag-only redact-class hit incorrectly flipped sanitization_aborted on the wi.'; $errors++
+        }
+        if (@($wiR.secret_hits).Count -ne 0) {
+            Write-Error "E2E: redact-class diag hit leaked into wi.secret_hits: [$($wiR.secret_hits -join ', ')]"; $errors++
+        }
+        if (-not (@($wiR.redacted_secrets) -contains 'connection-string-pw')) {
+            Write-Error "E2E: wi.redacted_secrets missing propagated 'connection-string-pw': [$($wiR.redacted_secrets -join ', ')]"; $errors++
+        }
+        # Verify the diag content was actually scrubbed on disk.
+        $diagR = Get-Content -LiteralPath (Join-Path $tmpOut2 'diag-24680.json') -Raw
+        if ($diagR -match 'p@ssw0rd-here') {
+            Write-Error 'E2E: redacted-class password value leaked into sanitized diag file on disk.'; $errors++
+        }
+        if ($diagR -notmatch 'Password=<redacted-secret>') {
+            Write-Error 'E2E: sanitized diag file does not contain the Password=<redacted-secret> marker.'; $errors++
+        }
+    } finally {
+        if (Test-Path -LiteralPath $tmpRoot2) { Remove-Item -LiteralPath $tmpRoot2 -Recurse -Force -ErrorAction SilentlyContinue }
     }
 
     if ($errors -gt 0) {
