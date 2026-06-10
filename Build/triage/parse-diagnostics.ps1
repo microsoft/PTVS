@@ -49,9 +49,14 @@
           count against the budget so it can't be starved out by ordering.
         - For the PythonToolsDiagnostics_*.log specifically, we ALSO run the
           legacy field extractor over the captured text and stash the result
-          under python_tools_diagnostics. When no such log is attached or it
-          can't be captured, python_tools_diagnostics.present is false and
-          python_tools_diagnostics.reason explains why.
+          under python_tools_diagnostics. The extractor sees the FULL
+          downloaded bytes (up to MaxLogBytes), captured out-of-band from
+          Get-AttachmentEntry — NOT the JSON-visible content_excerpt cap.
+          This matters because PTVS logs commonly put the exception
+          section *after* 100+ "Loaded Assembly:" lines, which pushes
+          last_exceptions past a 16 KB head excerpt. When no such log is
+          attached or it can't be captured, python_tools_diagnostics.present
+          is false and python_tools_diagnostics.reason explains why.
 
         Always emits one diag-<id>.json per candidate — including when there
         are zero attachments — so the artifact has a 1:1 mapping with
@@ -269,7 +274,22 @@ function Get-AttachmentEntry {
         [object]    $Attachment,
         [hashtable] $Headers,
         [int]       $MaxLogBytes,
-        [int]       $ExcerptBytes
+        [int]       $ExcerptBytes,
+        # Optional out-parameter: when the caller passes a [ref] $var
+        # here, we also write the FULL downloaded text (up to
+        # MaxLogBytes) into that variable. The JSON-visible
+        # `content_excerpt` field is still capped at ExcerptBytes —
+        # this is a separate channel for callers that need the full
+        # bytes for structured extraction without paying the JSON-
+        # size cost of putting it on disk. Today only the PTVS
+        # diagnostics-log path uses this: Extract-DiagnosticsFields
+        # needs to see assemblies + exceptions that frequently land
+        # *after* the 16KB excerpt cap in real PTVS logs (100+ asm
+        # lines before the exception section is typical), and the
+        # bytes are already in $tmp so capturing them is free.
+        # Default $null = no capture (back-compat for every other
+        # call site).
+        [Parameter()] $FullTextRef = $null
     )
     $name = Get-OptionalProp -Object $Attachment -Name 'name'
     $url  = Get-OptionalProp -Object $Attachment -Name 'url'
@@ -319,6 +339,12 @@ function Get-AttachmentEntry {
         }
         $text = Get-Content -LiteralPath $tmp -Raw -ErrorAction Stop
         $entry.downloaded = $true
+        # Surface the full text out-of-band BEFORE excerpting, when the
+        # caller asked for it. The JSON-visible excerpt below stays
+        # capped regardless.
+        if ($null -ne $FullTextRef -and $null -ne $text) {
+            $FullTextRef.Value = $text
+        }
         if ($null -ne $text -and $text.Length -gt $ExcerptBytes) {
             $entry.content_excerpt   = $text.Substring(0, $ExcerptBytes)
             $entry.excerpt_truncated = $true
@@ -359,7 +385,20 @@ function New-DiagnosticsStub {
 function Get-PythonToolsDiagnosticsBlock {
     # Locates a PythonToolsDiagnostics_*.log entry in the already-processed
     # attachments list, and (if downloaded) runs the field extractor.
-    param([System.Collections.IEnumerable] $AttachmentEntries)
+    #
+    # $PtdFullText (optional): when the caller captured the FULL downloaded
+    # PTD text out-of-band via Get-AttachmentEntry's -FullTextRef channel,
+    # the extractor runs over that instead of the JSON-visible
+    # content_excerpt. This is the difference between catching a
+    # 35 KB log's exception section (typically *after* a 100+-line
+    # assembly dump) and silently emitting `last_exceptions = []`
+    # because the 16 KB head excerpt only contains assembly lines.
+    # When $null (back-compat / tests / no capture), falls back to
+    # the excerpt so the function still degrades gracefully.
+    param(
+        [System.Collections.IEnumerable] $AttachmentEntries,
+        [Parameter()] [AllowNull()] [string] $PtdFullText = $null
+    )
     $ptd = New-DiagnosticsStub
     $ptdEntry = $null
     foreach ($e in $AttachmentEntries) {
@@ -374,11 +413,16 @@ function Get-PythonToolsDiagnosticsBlock {
     $ptd.source_attachment_name = $ptdEntry.name
     $ptd.source_attachment_url  = $ptdEntry.url
 
-    if ($ptdEntry.downloaded -and $ptdEntry.content_excerpt) {
-        # If excerpt_truncated, we only have the head of the file, but the
-        # PTVS diagnostics format puts version headers + initial assemblies
-        # + first exceptions near the top, so head-extraction is fine.
-        $fields = Extract-DiagnosticsFields -LogText $ptdEntry.content_excerpt
+    if ($ptdEntry.downloaded -and ($PtdFullText -or $ptdEntry.content_excerpt)) {
+        # Prefer the FULL downloaded text when available — PTVS
+        # diagnostics logs commonly put the exception section *after*
+        # 100+ "Loaded Assembly:" lines, which routinely pushes the
+        # exception block past the 16 KB content_excerpt cap. Falls
+        # back to the excerpt only when the caller didn't capture the
+        # full text (e.g. older callers, tests that build an entry by
+        # hand without a FullTextRef).
+        $sourceText = if ($PtdFullText) { $PtdFullText } else { $ptdEntry.content_excerpt }
+        $fields = Extract-DiagnosticsFields -LogText $sourceText
         $ptd.present           = $true
         $ptd.reason            = $null
         $ptd.vs_version        = $fields.vs_version
@@ -441,6 +485,11 @@ function Invoke-Parse {
 
         $entries      = New-Object System.Collections.Generic.List[object]
         $textCount    = 0
+        # Captured out-of-band for the PTD log only: full downloaded text
+        # (up to MaxLogBytes) for Extract-DiagnosticsFields. The
+        # content_excerpt field on the entry still gets capped at
+        # ExcerptBytes for the on-disk JSON.
+        $ptdFullText  = $null
         foreach ($a in $allAttachments) {
             if (-not $a) { continue }
             $aname = Get-OptionalProp -Object $a -Name 'name'
@@ -467,15 +516,27 @@ function Invoke-Parse {
                 }) | Out-Null
                 continue
             }
-            $entry = Get-AttachmentEntry -Attachment $a -Headers $headers `
-                       -MaxLogBytes $MaxLogBytes -ExcerptBytes $ExcerptBytes
+            if ($isPtdLog) {
+                # PTD log: capture the full downloaded text out-of-band so
+                # Extract-DiagnosticsFields sees assemblies + exceptions
+                # past the 16 KB content_excerpt cap. Real PTVS logs run
+                # 30-200 KB and put exceptions *after* the assembly dump.
+                $fullRef = [ref] $null
+                $entry = Get-AttachmentEntry -Attachment $a -Headers $headers `
+                           -MaxLogBytes $MaxLogBytes -ExcerptBytes $ExcerptBytes `
+                           -FullTextRef $fullRef
+                if ($fullRef.Value) { $ptdFullText = $fullRef.Value }
+            } else {
+                $entry = Get-AttachmentEntry -Attachment $a -Headers $headers `
+                           -MaxLogBytes $MaxLogBytes -ExcerptBytes $ExcerptBytes
+            }
             # PTD logs are exempt from the budget so we don't count them; all
             # other downloaded text attachments do count.
             if ($entry.downloaded -and -not $isPtdLog) { $textCount++ }
             $entries.Add($entry) | Out-Null
         }
 
-        $ptd = Get-PythonToolsDiagnosticsBlock -AttachmentEntries $entries
+        $ptd = Get-PythonToolsDiagnosticsBlock -AttachmentEntries $entries -PtdFullText $ptdFullText
 
         # Convert List[object] to a native array BEFORE building the
         # pscustomobject — PowerShell 7.5's @() around a generic List
@@ -597,6 +658,35 @@ System.NullReferenceException: Object reference not set to an instance of an obj
     $ptdSkip = Get-PythonToolsDiagnosticsBlock -AttachmentEntries $entriesSkipped
     if ($ptdSkip.present)                                { Write-Error 'PTD with skipped log should have present=false.'; $errors++ }
     if ($ptdSkip.reason -notmatch 'exceeds cap')         { Write-Error 'PTD reason should carry over skip_reason.';      $errors++ }
+
+    # 7b. Get-PythonToolsDiagnosticsBlock with -PtdFullText: the field
+    #     extractor MUST run over the full text when provided, not the
+    #     content_excerpt cap. Repro: a 35 KB PTVS log where the
+    #     exception section sits *after* the assembly dump. With only the
+    #     16 KB excerpt, last_exceptions ends up empty (the assembly
+    #     dump alone exceeds 16 KB); with full text it should be 1.
+    $bigHead = ('Loaded Assembly: SomePkg.Asm' + [Environment]::NewLine) * 800   # ~24 KB of asm lines
+    $bigTail = 'System.NullReferenceException: example' + [Environment]::NewLine + '   at Foo.Bar() in Foo.cs:line 1' + [Environment]::NewLine
+    $bigLog  = $bigHead + $bigTail
+    $excerpt = $bigLog.Substring(0, [Math]::Min(16KB, $bigLog.Length))
+    $entriesBig = @(
+        [pscustomobject] @{ name = 'PythonToolsDiagnostics_big.log'; url = 'u4'; size_bytes = $bigLog.Length; kind = 'text';
+                            downloaded = $true; skip_reason = $null;
+                            content_excerpt = $excerpt; excerpt_truncated = $true }
+    )
+    # Without PtdFullText: should regress to extracting from the 16KB
+    # head excerpt; last_exceptions should be 0 (the exception sits
+    # past the cap). Documents the prior bug for the next reader.
+    $ptdHead = Get-PythonToolsDiagnosticsBlock -AttachmentEntries $entriesBig
+    if (-not $ptdHead.present)                                  { Write-Error 'Excerpt-only PTD: present should still be true.'; $errors++ }
+    if (@($ptdHead.last_exceptions).Count -ne 0)                { Write-Error "Excerpt-only PTD: precondition wrong, expected 0 exceptions in head excerpt, got $(@($ptdHead.last_exceptions).Count). Test setup is broken."; $errors++ }
+    # WITH PtdFullText: the exception in the tail must be detected.
+    $ptdFull = Get-PythonToolsDiagnosticsBlock -AttachmentEntries $entriesBig -PtdFullText $bigLog
+    if (-not $ptdFull.present)                                  { Write-Error 'Full-text PTD: present should be true.'; $errors++ }
+    if (@($ptdFull.last_exceptions).Count -lt 1)                { Write-Error "Full-text PTD: last_exceptions should have ≥1 entry from the tail, got 0. Full-text path not wired."; $errors++ }
+    if ((@($ptdFull.last_exceptions)[0]) -notmatch 'NullReferenceException') {
+        Write-Error "Full-text PTD: first exception should mention NullReferenceException, got: $(@($ptdFull.last_exceptions)[0])"; $errors++
+    }
 
     # 8. ConvertTo-PlainText: entity-encoded angle brackets MUST survive.
     #    Decode-then-strip ordering (the prior bug) would turn `List&lt;int&gt;`

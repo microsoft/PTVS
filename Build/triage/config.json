@@ -1,5 +1,5 @@
 {
-    "$comment": "Configuration for the weekly AzDO triage automation (read-only fetch + sanitize + summary issue). See Build/triage/README.md.",
+    "$comment": "Configuration for the weekly AzDO triage automation (read-only fetch + sanitize + summary issue). Setup, dry-run, and operational notes live in the header comment of Build/triage/pipelines/fetch.yml.",
 
     "azdo": {
         "organization": "devdiv",
