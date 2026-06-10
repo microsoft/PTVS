@@ -18,7 +18,7 @@ name: $(date:yy)$(DayOfYear)$(rev:.r)
 trigger: none
 pr: none
 
-# Trigger builds on a nightly schedule, as long as there are changes
+# Trigger builds on a nightly schedule so compliance scans stay current.
 # Ignore the azure-pipelines.yml, since that's a different pipeline
 # All times are in UTC, so 8AM = Midnight PST
 schedules:
@@ -27,6 +27,7 @@ schedules:
   branches:
     include:
     - main
+  always: true
 
 jobs:
 
