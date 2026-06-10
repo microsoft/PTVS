@@ -115,6 +115,33 @@ function Build-IssueTitle {
     return "AzDO triage report $start to $end ($Count open items)"
 }
 
+function Format-MarkdownInlineCode {
+    # Wrap text in Markdown inline-code spans, safely escaping any
+    # backticks the text itself contains. CommonMark's rule: an inline-
+    # code span is delimited by a run of N backticks (N >= 1); inside
+    # the span any run of <N backticks is literal. So if the text
+    # contains a single backtick, wrap with two; if it contains a
+    # run of two, wrap with three; etc. We also pad with a leading
+    # and trailing space when the text starts/ends with a backtick,
+    # which CommonMark trims away — preventing GitHub from chopping
+    # off our delimiters.
+    # Without this, a customer-supplied title or pipeline name
+    # containing a literal `…` terminates the inline-code span early
+    # and the rest of the bullet renders as plain text.
+    param([string] $Text)
+    if ([string]::IsNullOrEmpty($Text)) { return '``' }
+    # Find the longest run of consecutive backticks in $Text and pick
+    # a delimiter one longer.
+    $longest = 0
+    foreach ($m in [regex]::Matches($Text, '`+')) {
+        if ($m.Length -gt $longest) { $longest = $m.Length }
+    }
+    $delim = '`' * ($longest + 1)
+    $pad = ''
+    if ($Text.StartsWith('`') -or $Text.EndsWith('`')) { $pad = ' ' }
+    return "$delim$pad$Text$pad$delim"
+}
+
 function Build-IssueBody {
     param(
         [Parameter()] [AllowEmptyCollection()] [object[]] $Candidates,
@@ -129,10 +156,11 @@ function Build-IssueBody {
     # we're recursing under it, regardless of whether config stored the trailing
     # backslash.
     $displayRoot = $AreaRoot.TrimEnd('\')
+    $rootCode    = Format-MarkdownInlineCode -Text ("$displayRoot\**")
     if ($count -eq 0) {
-        $null = $sb.AppendLine("No open AzDO work items had activity in the last $LookbackDays day(s) under ``$displayRoot\**``.")
+        $null = $sb.AppendLine("No open AzDO work items had activity in the last $LookbackDays day(s) under $rootCode.")
     } else {
-        $null = $sb.AppendLine("$count open work item(s) with activity in the past $LookbackDays day(s) under ``$displayRoot\**``.")
+        $null = $sb.AppendLine("$count open work item(s) with activity in the past $LookbackDays day(s) under $rootCode.")
         $null = $sb.AppendLine()
         foreach ($c in $Candidates) {
             $subpath = Format-AreaSubpath -Full $c.area_path -Root $AreaRoot
@@ -140,7 +168,8 @@ function Build-IssueBody {
             $title   = $c.title
             # Collapse newlines so the bullet renders on one line.
             $title   = $title -replace '\r?\n', ' '
-            $null = $sb.AppendLine("- [AzDO #$($c.id)]($($c.url)) — ``$title`` — created $date — area: $subpath")
+            $titleCode = Format-MarkdownInlineCode -Text $title
+            $null = $sb.AppendLine("- [AzDO #$($c.id)]($($c.url)) — $titleCode — created $date — area: $subpath")
         }
     }
     $null = $sb.AppendLine()
@@ -352,6 +381,59 @@ function Invoke-SelfTest {
     if ($b -match 'ptvs-triage-release') { Write-Error "Body should not contain release-tag marker: $b"; $errors++ }
     # Body should be small — no inline data.
     if ($b.Length -gt 2000) { Write-Error "Body unexpectedly large ($($b.Length) chars) — should be small"; $errors++ }
+
+    # Format-MarkdownInlineCode: backtick-safe wrapping.
+    if ((Format-MarkdownInlineCode -Text 'plain text') -ne '`plain text`') {
+        Write-Error 'Inline-code helper broke the simple no-backtick case.'; $errors++
+    }
+    # Single backtick in text → wrap with double backticks.
+    $oneBt = Format-MarkdownInlineCode -Text 'has a ` backtick'
+    if ($oneBt -ne '``has a ` backtick``') {
+        Write-Error "Inline-code helper didn't widen the delimiter for a single backtick: '$oneBt'"; $errors++
+    }
+    # Run of two backticks → wrap with triple.
+    $twoBt = Format-MarkdownInlineCode -Text 'has `` two'
+    if ($twoBt -ne '```has `` two```') {
+        Write-Error "Inline-code helper didn't widen the delimiter for a `` run: '$twoBt'"; $errors++
+    }
+    # Leading backtick → pad with space so CommonMark doesn't eat the delimiter.
+    $leadBt = Format-MarkdownInlineCode -Text '`start'
+    if ($leadBt -ne '`` `start ``') {
+        Write-Error "Inline-code helper didn't pad a leading backtick: '$leadBt'"; $errors++
+    }
+
+    # Backtick-in-title regression: a customer-supplied AzDO title
+    # containing a literal `` ` `` would terminate the bullet's inline-
+    # code span early and leave the rest of the bullet as plain text
+    # (date / area subpath). The fix widens the delimiter and
+    # round-trips correctly on GitHub. Use single-quoted strings so
+    # PowerShell doesn't eat the backtick as its escape character.
+    $btCands = @(
+        [pscustomobject] @{
+            id           = 999000
+            title        = 'crash in foo`bar with backtick'  # literal ` in title (single-quoted to escape)
+            url          = 'https://dev.azure.com/devdiv/DevDiv/_workitems/edit/999000'
+            area_path    = 'DevDiv\Python and AI Tools\Python'
+            created_date = '2026-06-01T12:00:00Z'
+            state        = 'Active'
+            work_item_type = 'Bug'
+        }
+    )
+    $btBody = Build-IssueBody -Candidates $btCands -RunUrl 'https://example/run/bt' -LookbackDays 7 -AreaRoot 'DevDiv\Python and AI Tools\'
+    # The full bullet must survive — the trailing `— created` / `— area`
+    # segments are how we detect early termination of the code span.
+    if ($btBody -notmatch 'created 2026-06-01') {
+        Write-Error 'Backtick title: created-date segment missing — code span terminated early.'; $errors++
+    }
+    if ($btBody -notmatch 'area: Python') {
+        Write-Error 'Backtick title: area subpath segment missing — code span terminated early.'; $errors++
+    }
+    # The single-backtick title must be wrapped in DOUBLE backticks
+    # (delimiter widened by one beyond the longest run of backticks in
+    # the title).
+    if ($btBody -notmatch '``crash in foo`bar with backtick``') {
+        Write-Error "Backtick title: not wrapped in double backticks. Body: $btBody"; $errors++
+    }
 
     # End-to-end: Invoke-Post against an empty `[]` candidates file MUST NOT
     # crash with "The property 'Count' cannot be found on this object".

@@ -86,8 +86,21 @@ function Build-WiqlQuery {
     # read-only and never sets these states itself — see
     # config.json:$comment_excludedStates for the full rationale on which
     # states are excluded vs. kept.
-    $excludedStates = ($Config.azdo.excludedStates | ForEach-Object { "NOT [System.State] CONTAINS '$_'" }) -join ' AND '
-    $excludedTagsClause = ($Config.azdo.excludedTags | ForEach-Object { "NOT [System.Tags] CONTAINS '$_'" }) -join ' AND '
+    #
+    # Empty `excludedStates` / `excludedTags` arrays are guarded the same
+    # way as `workItemTypes` above: emit no clause at all instead of an
+    # empty string. Without the guard, an operator who empties either
+    # array in config.json gets malformed WIQL like
+    # `… AND  AND  AND  ORDER BY …` and the WIQL POST 400s with a
+    # cryptic parse error.
+    $excludedStates = ''
+    if ($Config.azdo.excludedStates -and @($Config.azdo.excludedStates).Count -gt 0) {
+        $excludedStates = ($Config.azdo.excludedStates | ForEach-Object { "NOT [System.State] CONTAINS '$_'" }) -join ' AND '
+    }
+    $excludedTagsClause = ''
+    if ($Config.azdo.excludedTags -and @($Config.azdo.excludedTags).Count -gt 0) {
+        $excludedTagsClause = ($Config.azdo.excludedTags | ForEach-Object { "NOT [System.Tags] CONTAINS '$_'" }) -join ' AND '
+    }
 
     # Date field is configurable; falls back to CreatedDate for back-compat.
     $dateField = 'System.ChangedDate'
@@ -96,15 +109,19 @@ function Build-WiqlQuery {
         $dateField = if ($df.StartsWith('System.')) { $df } else { "System.$df" }
     }
 
+    # Build the WHERE-tail conditionally so empty exclusion arrays don't
+    # leave dangling `AND` operators in the final query.
+    $tail = ''
+    if ($excludedStates)     { $tail += "  AND  $excludedStates`n" }
+    if ($excludedTagsClause) { $tail += "  AND  $excludedTagsClause`n" }
+
     $wiql = @"
 SELECT [System.Id]
 FROM   workitems
 WHERE  [System.TeamProject] = '$($Config.azdo.project)'
   AND  [System.AreaPath] UNDER '$area'
 $typeClause  AND  [$dateField] > @Today - $LookbackDays
-  AND  $excludedStates
-  AND  $excludedTagsClause
-ORDER BY [$dateField] DESC
+${tail}ORDER BY [$dateField] DESC
 "@
     return $wiql
 }
@@ -464,6 +481,43 @@ function Invoke-SelfTest {
     $wiql3 = Build-WiqlQuery -Config $cfg3 -LookbackDays 7
     if ($wiql3 -match '\[System\.WorkItemType\] IN') {
         Write-Error "Empty workItemTypes should suppress the IN clause entirely."; $errors++
+    }
+
+    # 1d. Empty excludedStates / excludedTags arrays MUST suppress their
+    # AND clauses entirely instead of emitting a dangling
+    # `AND  AND  ORDER BY …`. Without this guard, an operator who clears
+    # either array in config.json gets a WIQL POST that 400s with a parse
+    # error on the empty operand.
+    $cfg4 = ($config | ConvertTo-Json -Depth 20 | ConvertFrom-Json)
+    $cfg4.azdo.excludedStates = @()
+    $cfg4.azdo.excludedTags   = @()
+    $wiql4 = Build-WiqlQuery -Config $cfg4 -LookbackDays 7
+    if ($wiql4 -match '(?m)^\s*AND\s*$') {
+        Write-Error "Build-WiqlQuery emitted a dangling 'AND' line with empty exclusion arrays:`n$wiql4"; $errors++
+    }
+    if ($wiql4 -match '\bAND\s+AND\b') {
+        Write-Error "Build-WiqlQuery emitted 'AND AND' with empty exclusion arrays:`n$wiql4"; $errors++
+    }
+    if ($wiql4 -match '\bAND\s+ORDER\s+BY\b') {
+        Write-Error "Build-WiqlQuery left a trailing 'AND' before ORDER BY with empty exclusion arrays:`n$wiql4"; $errors++
+    }
+    # The exclusion clauses themselves must be gone (not just well-formed).
+    if ($wiql4 -match 'NOT \[System\.State\] CONTAINS') {
+        Write-Error "Build-WiqlQuery still emitted a state exclusion when excludedStates was empty."; $errors++
+    }
+    if ($wiql4 -match 'NOT \[System\.Tags\] CONTAINS') {
+        Write-Error "Build-WiqlQuery still emitted a tag exclusion when excludedTags was empty."; $errors++
+    }
+    # Only one of the two empty: still no dangling AND, and the other
+    # exclusion still present.
+    $cfg5 = ($config | ConvertTo-Json -Depth 20 | ConvertFrom-Json)
+    $cfg5.azdo.excludedStates = @()  # tags stay default
+    $wiql5 = Build-WiqlQuery -Config $cfg5 -LookbackDays 7
+    if ($wiql5 -match '\bAND\s+AND\b') {
+        Write-Error "Build-WiqlQuery emitted 'AND AND' with only excludedStates empty:`n$wiql5"; $errors++
+    }
+    if ($wiql5 -notmatch "NOT \[System\.Tags\] CONTAINS 'do-not-triage'") {
+        Write-Error "Build-WiqlQuery dropped the tag exclusion when only states were emptied."; $errors++
     }
 
     # 2. Convert-WorkItemToCandidate handles a minimal fixture.
