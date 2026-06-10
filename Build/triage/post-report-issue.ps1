@@ -8,9 +8,13 @@
         Job 1 of the weekly triage workflow. Always runs — independent of the
         triage pipeline gate.
 
-        Idempotency: the script searches for an existing issue whose title
+        Idempotency: the script searches for an OPEN issue whose title
         exactly matches the computed weekly title. If found, the body is
-        updated in place rather than a duplicate filed.
+        updated in place rather than a duplicate filed. If only CLOSED
+        issues match (the operator already closed the previous report
+        to mean "done triaging this list"), a new issue is filed so the
+        latest list surfaces in the operator's feed instead of silently
+        zombie-updating the closed one.
 
         Empty candidate list: nothing is filed; the script exits 0 with a
         log line.
@@ -149,14 +153,36 @@ function Find-ExistingReportIssue {
         [Parameter(Mandatory)] [string] $Label,
         [Parameter(Mandatory)] [hashtable] $Headers
     )
-    # Use Search API: scope to repo + label + exact title match.
+    # Use Search API: scope to repo + label + exact title match + OPEN only.
     # GitHub search needs the title wrapped in quotes for phrase match.
-    $q = "repo:$Owner/$Repo label:`"$Label`" in:title `"$Title`""
+    #
+    # `is:open` is load-bearing: without it, the Search API also returns
+    # closed issues with the same title, and we'd silently zombie-update
+    # an issue the operator already closed (which they typically close
+    # to mean "done triaging this list"). Scoping to open issues means:
+    #   - same-week re-runs with matching title → update the live issue
+    #     in place (idempotent, the original goal).
+    #   - re-runs after the operator closed the previous report → fall
+    #     through to New-ReportIssue and file a fresh issue so the new
+    #     list surfaces in the operator's feed.
+    # The title already varies with `$candidates.Count`, so any week
+    # where the count changes between runs creates a new issue
+    # regardless.
+    $q = "repo:$Owner/$Repo label:`"$Label`" in:title `"$Title`" is:open"
     $uri = "https://api.github.com/search/issues?q=$([uri]::EscapeDataString($q))"
     $resp = Invoke-RestMethod -Method GET -Uri $uri -Headers $Headers
     if (-not $resp.items) { return $null }
     foreach ($item in $resp.items) {
-        if ($item.title -eq $Title) { return $item }
+        # Belt-and-suspenders: filter again in code in case the API
+        # contract changes. The Search API also surfaces pull requests
+        # under `/search/issues`; explicitly require an issue (no
+        # `pull_request` field) so a PR titled identically can't match.
+        # StrictMode-safe property reads: `.PSObject.Properties[name]`
+        # returns $null when absent instead of throwing.
+        $isPullRequest = ($item.PSObject.Properties['pull_request'] -and $item.pull_request)
+        if ($item.title -eq $Title -and $item.state -eq 'open' -and -not $isPullRequest) {
+            return $item
+        }
     }
     return $null
 }
@@ -328,6 +354,75 @@ function Invoke-SelfTest {
         }
     } finally {
         if (Test-Path -LiteralPath $tmpRoot) { Remove-Item -LiteralPath $tmpRoot -Recurse -Force -ErrorAction SilentlyContinue }
+    }
+
+    # Find-ExistingReportIssue: the Search query MUST include `is:open`
+    # and MUST filter the matched items to open-only, so a closed
+    # previous report doesn't get zombie-updated. Regression repro:
+    # earlier this week the operator closed report #N within a minute
+    # of it being filed; the next pipeline run silently updated that
+    # closed issue's body, hiding the latest list from the operator's
+    # feed.
+    $script:__capturedUri = $null
+    $script:__searchResp  = $null
+    function script:Invoke-RestMethod {
+        param([string] $Method, [string] $Uri, [hashtable] $Headers,
+              [string] $Body, [string] $ContentType)
+        $script:__capturedUri = $Uri
+        return $script:__searchResp
+    }
+    try {
+        # Pretend GitHub returned both a closed and an open match.
+        $script:__searchResp = [pscustomobject] @{
+            items = @(
+                [pscustomobject] @{ number = 100; title = 'Match'; state = 'closed'; html_url = 'u-closed' },
+                [pscustomobject] @{ number = 101; title = 'Match'; state = 'open';   html_url = 'u-open'   }
+            )
+        }
+        $found = Find-ExistingReportIssue -Owner 'o' -Repo 'r' -Title 'Match' -Label 'L' -Headers @{}
+        if ($script:__capturedUri -notmatch 'is%3Aopen') {
+            Write-Error "Find-ExistingReportIssue: query did not include is:open. Uri=$($script:__capturedUri)"; $errors++
+        }
+        if (-not $found) {
+            Write-Error 'Find-ExistingReportIssue: returned $null when an open match existed.'; $errors++
+        } elseif ($found.number -ne 101) {
+            Write-Error "Find-ExistingReportIssue: returned wrong item (#$($found.number)); expected the OPEN one (#101)."; $errors++
+        }
+
+        # Closed-only: must return $null so caller files a fresh issue.
+        $script:__searchResp = [pscustomobject] @{
+            items = @(
+                [pscustomobject] @{ number = 200; title = 'Match'; state = 'closed'; html_url = 'u-closed-only' }
+            )
+        }
+        $found2 = Find-ExistingReportIssue -Owner 'o' -Repo 'r' -Title 'Match' -Label 'L' -Headers @{}
+        if ($found2) {
+            Write-Error "Find-ExistingReportIssue: returned closed issue when no open match exists. Got #$($found2.number)."; $errors++
+        }
+
+        # PR collision: /search/issues also returns PRs; the `pull_request`
+        # field filter must reject them so an identically-titled PR can't
+        # be mistaken for the report issue.
+        $script:__searchResp = [pscustomobject] @{
+            items = @(
+                [pscustomobject] @{ number = 300; title = 'Match'; state = 'open'; pull_request = [pscustomobject] @{ url = 'pr-url' }; html_url = 'pr' }
+            )
+        }
+        $found3 = Find-ExistingReportIssue -Owner 'o' -Repo 'r' -Title 'Match' -Label 'L' -Headers @{}
+        if ($found3) {
+            Write-Error "Find-ExistingReportIssue: matched a PR (#$($found3.number)) instead of skipping it."; $errors++
+        }
+
+        # Empty Search response: returns $null cleanly.
+        $script:__searchResp = [pscustomobject] @{ items = @() }
+        $found4 = Find-ExistingReportIssue -Owner 'o' -Repo 'r' -Title 'Match' -Label 'L' -Headers @{}
+        if ($found4) {
+            Write-Error 'Find-ExistingReportIssue: returned non-null on empty Search response.'; $errors++
+        }
+    } finally {
+        Remove-Item Function:script:Invoke-RestMethod -ErrorAction SilentlyContinue
+        $script:__capturedUri = $null
+        $script:__searchResp  = $null
     }
 
     if ($errors -gt 0) {
