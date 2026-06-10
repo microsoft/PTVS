@@ -80,8 +80,12 @@ function Build-WiqlQuery {
         $typeClause = "  AND  [System.WorkItemType] IN ($types)`n"
     }
 
-    # Use substring NOT CONTAINS so 'Closed' also excludes DC states like
-    # 'DC - Closed - Duplicated' (set by this pipeline when closing).
+    # Substring NOT CONTAINS lets a single configured value (e.g. 'Fixed')
+    # exclude every state whose name contains it ('DC - Closed - Fixed',
+    # 'DC - Fixed Pending Release', plain 'Fixed', ...). The pipeline is
+    # read-only and never sets these states itself — see
+    # config.json:$comment_excludedStates for the full rationale on which
+    # states are excluded vs. kept.
     $excludedStates = ($Config.azdo.excludedStates | ForEach-Object { "NOT [System.State] CONTAINS '$_'" }) -join ' AND '
     $excludedTagsClause = ($Config.azdo.excludedTags | ForEach-Object { "NOT [System.Tags] CONTAINS '$_'" }) -join ' AND '
 

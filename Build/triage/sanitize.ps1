@@ -23,6 +23,11 @@
                        with `sanitization_aborted = true` so fetch.yml
                        Step 4 deletes the wi/diag pair from the artifact.
                        When -FailOnSecret is set, also exits non-zero.
+                       As defense-in-depth, the literal token is ALSO
+                       redacted in place (replaced with
+                       `<redacted-secret:<name>>`) so the on-disk
+                       artifact never carries the raw secret even if
+                       Step 4 is skipped or reordered.
           - 'redact' : lower-confidence pattern that may appear naturally in
                        customer free-text (e.g. `Password=hunter2` in a
                        repro). Redacted in place via the per-regex
@@ -81,10 +86,14 @@ $Script:PhoneRegex     = '(?:\+?\d{1,3}[\s.-]?)?(?:\(?\d{3}\)?[\s.-]?)\d{3}[\s.-
 # Secret regexes. Each entry carries an `action`:
 #   - 'abort'  — high-confidence pattern (specific prefix + length + charset);
 #                a match flags `sanitization_aborted` so fetch.yml Step 4
-#                deletes the whole wi/diag pair from the artifact. False
-#                positives here cost a lost triage item, so use only when
-#                the pattern is specific enough that a hit is almost
-#                certainly a real secret.
+#                deletes the whole wi/diag pair from the artifact, AND
+#                redacts the literal token in place with a
+#                `<redacted-secret:<name>>` marker as defense-in-depth so
+#                the on-disk artifact never carries the raw secret even
+#                if Step 4 is skipped or reordered. False positives here
+#                cost a lost triage item, so use only when the pattern is
+#                specific enough that a hit is almost certainly a real
+#                secret.
 #   - 'redact' — lower-confidence pattern that may appear naturally in
 #                customer free-text (e.g. `Password=hunter2` in a repro
 #                description). On a hit we redact in place with the
@@ -117,6 +126,17 @@ $Script:SecretRegexes = @(
     # wording like `Password=hunter2`, `Set Pwd=changeme in config`, etc.
     # Redact in place (preserving the `Password=` / `Pwd=` prefix so the
     # reader still sees the structure) instead of aborting the whole item.
+    #
+    # The `{6,}` value-length floor is intentional: customer free-text in
+    # repros frequently contains short placeholders like `Password=1234`,
+    # `Pwd=abc`, `Password=test`, which are example/illustrative values
+    # rather than real credentials. Requiring 6+ chars trims that noise.
+    # The trade-off is that a real credential happening to be shorter
+    # than 6 chars (rare, but possible if someone uses `Pwd=abcde`) is
+    # silently let through to triage. Accepted: real secrets that short
+    # are extremely uncommon, and the higher-confidence patterns above
+    # (ghp_, PEM, AKIA, JWT, AccountKey=) have no length floor since
+    # their prefix already makes a hit almost certainly real.
     @{ name = 'connection-string-pw'; action = 'redact';
        pattern     = '(?i)(Password|Pwd)\s*=\s*[^;<>"\s]{6,}';
        replacement = '$1=<redacted-secret>' }
@@ -137,14 +157,25 @@ function Remove-PiiFromString {
 
     $result = $Text
 
-    # 1a. High-confidence secrets: flag for abort (no in-place modification).
-    #     Process these FIRST so a redact-class pattern overlapping the same
-    #     span (e.g. `Password=ghp_aaa...`) doesn't eat the high-confidence
-    #     match before we can detect it.
+    # 1a. High-confidence secrets: flag for abort AND redact-in-place as
+    #     defense-in-depth, so the literal token (`ghp_…`, PEM, `AKIA…`)
+    #     never sits on disk in -OutDir even if fetch.yml Step 4 (which
+    #     deletes the wi/diag pair when sanitization_aborted=true) is
+    #     skipped, reordered, or fails to run. The abort flag is still
+    #     authoritative — Step 4 will drop the pair downstream — this
+    #     just stops the on-disk artifact from carrying the raw secret
+    #     in the meantime. Process abort patterns FIRST so a redact-class
+    #     pattern overlapping the same span (e.g. `Password=ghp_aaa...`)
+    #     doesn't eat the high-confidence match before we can detect it.
+    #     We use `.Value.Add()` (not `+= $s.name`) because `+=` on a
+    #     [ref]-wrapped Generic.List[string] silently re-materializes the
+    #     backing field as object[] (PowerShell + concat semantics), and
+    #     any future `.Add()` from the caller would then break.
     foreach ($s in $Script:SecretRegexes) {
         if ($s.action -ne 'abort') { continue }
         if ($result -match $s.pattern) {
-            if ($null -ne $SecretHitsRef) { $SecretHitsRef.Value += $s.name }
+            if ($null -ne $SecretHitsRef) { $SecretHitsRef.Value.Add($s.name) | Out-Null }
+            $result = [regex]::Replace($result, $s.pattern, "<redacted-secret:$($s.name)>")
         }
     }
 
@@ -155,7 +186,7 @@ function Remove-PiiFromString {
         if ($s.action -ne 'redact') { continue }
         if ($result -match $s.pattern) {
             $result = [regex]::Replace($result, $s.pattern, $s.replacement)
-            if ($null -ne $RedactedHitsRef) { $RedactedHitsRef.Value += $s.name }
+            if ($null -ne $RedactedHitsRef) { $RedactedHitsRef.Value.Add($s.name) | Out-Null }
         }
     }
 
@@ -234,6 +265,28 @@ function Remove-PiiFromTitle {
     return $t
 }
 
+function ConvertFrom-HtmlForScan {
+    # HtmlDecode-only pre-pass for PII scanning of AzDO body HTML fields
+    # (description_html / repro_steps_html / system_info). The PII and
+    # secret regexes only match literal `@`, `=`, etc., so any entity-
+    # encoded PII the customer or AzDO entity-encodes (e.g.
+    # `alice&#64;example.com`, `Password&#61;hunter2`, `&amp;`) would
+    # otherwise slip past the scanner. Decoding before the scan exposes
+    # those forms to detection AND replaces them in the output with the
+    # canonical decoded characters — so the on-disk artifact carries the
+    # decoded-and-redacted text (never the encoded leak).
+    # We do NOT strip tags here: keeping `<p>`/`<br>`/etc. in the field
+    # preserves the original document structure for the operator
+    # reviewing the artifact, and avoids losing repro detail that
+    # happened to contain encoded angle brackets (the diag path uses
+    # ConvertTo-PlainText with strip-then-decode for the same reason).
+    # Safe on $null / empty / plain-text input — returns '' or the
+    # original string when there's nothing to decode.
+    param([Parameter()] [AllowNull()] [string] $Text)
+    if ([string]::IsNullOrEmpty($Text)) { return '' }
+    return [System.Net.WebUtility]::HtmlDecode($Text)
+}
+
 function Sanitize-Candidate {
     param([Parameter(Mandatory)] [object] $Candidate)
     $secrets  = New-Object System.Collections.Generic.List[string]
@@ -252,10 +305,10 @@ function Sanitize-Candidate {
         created_date       = $Candidate.created_date
         comment_count      = $Candidate.comment_count
 
-        title              = Remove-PiiFromString -Text $Candidate.title             -SecretHitsRef $secretsRef -RedactedHitsRef $redactedRef
-        description_html   = Remove-PiiFromString -Text $Candidate.description_html  -SecretHitsRef $secretsRef -RedactedHitsRef $redactedRef
-        repro_steps_html   = Remove-PiiFromString -Text $Candidate.repro_steps_html  -SecretHitsRef $secretsRef -RedactedHitsRef $redactedRef
-        system_info        = Remove-PiiFromString -Text $Candidate.system_info       -SecretHitsRef $secretsRef -RedactedHitsRef $redactedRef
+        title              = Remove-PiiFromString -Text $Candidate.title                                                                  -SecretHitsRef $secretsRef -RedactedHitsRef $redactedRef
+        description_html   = Remove-PiiFromString -Text (ConvertFrom-HtmlForScan ([string] $Candidate.description_html))                  -SecretHitsRef $secretsRef -RedactedHitsRef $redactedRef
+        repro_steps_html   = Remove-PiiFromString -Text (ConvertFrom-HtmlForScan ([string] $Candidate.repro_steps_html))                  -SecretHitsRef $secretsRef -RedactedHitsRef $redactedRef
+        system_info        = Remove-PiiFromString -Text (ConvertFrom-HtmlForScan ([string] $Candidate.system_info))                       -SecretHitsRef $secretsRef -RedactedHitsRef $redactedRef
         comments           = @(
             foreach ($c in @($Candidate.comments)) {
                 [pscustomobject] @{
@@ -409,7 +462,17 @@ function Invoke-Full {
                             ($wi | ConvertTo-Json -Depth 20) | Set-Content -LiteralPath $wiPath -Encoding UTF8
                         }
                     } elseif ($hasAbort) {
-                        Write-Warning "No matching wi-$($idMatch.Groups[1].Value).json next to $($df.Name); diag will still be dropped by Step 4 if a sibling appears later."
+                        # Fail-closed: orphan diag with an abort-class secret
+                        # would NOT be dropped by fetch.yml Step 4 (Step 4
+                        # iterates wi-*.json and reads sanitization_aborted
+                        # to decide whether to delete the matching diag).
+                        # Without a sibling wi file, the diag would ride
+                        # along in the artifact upload with the secret
+                        # intact. Delete the orphan diag immediately so the
+                        # bytes never reach the artifact, regardless of
+                        # whether -FailOnSecret was set.
+                        Write-Warning "No matching wi-$($idMatch.Groups[1].Value).json next to $($df.Name); deleting orphan diag (abort-class secret hit, failing closed)."
+                        Remove-Item -LiteralPath $outPath -Force -ErrorAction SilentlyContinue
                     }
                 }
             }
@@ -701,6 +764,141 @@ function Invoke-SelfTest {
         }
     } finally {
         if (Test-Path -LiteralPath $tmpRoot2) { Remove-Item -LiteralPath $tmpRoot2 -Recurse -Force -ErrorAction SilentlyContinue }
+    }
+
+    # Defense-in-depth: abort-class secret must also be REDACTED in place
+    # so the on-disk artifact never contains the literal token, even if
+    # fetch.yml Step 4 (which drops the wi/diag pair based on
+    # sanitization_aborted) is skipped or reordered.
+    $abortDefHits = New-Object System.Collections.Generic.List[string]
+    $abortDefClean = Remove-PiiFromString -Text 'token: ghp_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa here' `
+                                          -SecretHitsRef ([ref] $abortDefHits)
+    if ($abortDefHits.Count -lt 1 -or -not ($abortDefHits -contains 'github-pat-classic')) {
+        Write-Error "Defense-in-depth: abort hit not flagged. hits=[$($abortDefHits -join ', ')]"; $errors++
+    }
+    if ($abortDefClean -match 'ghp_[A-Za-z0-9]{36}') {
+        Write-Error "Defense-in-depth: literal abort-class secret survived in cleaned output: '$abortDefClean'"; $errors++
+    }
+    if ($abortDefClean -notmatch '<redacted-secret:github-pat-classic>') {
+        Write-Error "Defense-in-depth: abort-class marker missing from cleaned output: '$abortDefClean'"; $errors++
+    }
+    # Same for PEM / AKIA — every abort regex must redact in place.
+    foreach ($pair in @(
+        @{ in = '-----BEGIN RSA PRIVATE KEY-----abcdef'; name = 'private-key-pem';  leak = '-----BEGIN RSA PRIVATE KEY-----' },
+        @{ in = 'access AKIAIOSFODNN7EXAMPLE here';      name = 'aws-access-key';   leak = 'AKIAIOSFODNN7EXAMPLE' }
+    )) {
+        $h = New-Object System.Collections.Generic.List[string]
+        $c = Remove-PiiFromString -Text $pair.in -SecretHitsRef ([ref] $h)
+        if (-not ($h -contains $pair.name)) {
+            Write-Error "Defense-in-depth: $($pair.name) not detected for input '$($pair.in)'."; $errors++
+        }
+        if ($c -match [regex]::Escape($pair.leak)) {
+            Write-Error "Defense-in-depth: literal $($pair.name) survived: '$c'"; $errors++
+        }
+        if ($c -notmatch [regex]::Escape("<redacted-secret:$($pair.name)>")) {
+            Write-Error "Defense-in-depth: $($pair.name) marker missing: '$c'"; $errors++
+        }
+    }
+
+    # .Value.Add() (not +=) must preserve the Generic.List[string] type
+    # of the caller's secret-hits collection across multiple matches.
+    # With +=, a single hit re-materializes the backing field as
+    # object[] and future .Add() calls from the caller would break.
+    $typedHits = New-Object System.Collections.Generic.List[string]
+    $ref       = [ref] $typedHits
+    $_ = Remove-PiiFromString -Text 'first ghp_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa and second AKIAIOSFODNN7EXAMPLE' `
+                              -SecretHitsRef $ref
+    if ($ref.Value -isnot [System.Collections.Generic.List[string]]) {
+        Write-Error "List type lost after first .Add() — got $($ref.Value.GetType().FullName) instead of List[string]."; $errors++
+    }
+    # Verify .Add() is still callable on the caller-side variable after
+    # the function returns.
+    try { $typedHits.Add('manual-after-call') | Out-Null } catch {
+        Write-Error "Caller-side .Add() broke after Remove-PiiFromString: $($_.Exception.Message)"; $errors++
+    }
+
+    # HtmlDecode pre-pass for wi body fields: entity-encoded PII in
+    # description_html / repro_steps_html / system_info must be detected
+    # and redacted, not preserved verbatim. Matches the diag path
+    # (parse-diagnostics.ps1 ConvertTo-PlainText) which already decodes
+    # entities before sanitization.
+    $candHtml = [pscustomobject] @{
+        id = 555; rev = 1; work_item_type = 'FeedbackTicket'; state = 'DC - New';
+        area_path = 'x'; tags = ''; url = 'u'; created_date = '2026-01-01';
+        comment_count = 0; comments = @(); attachments = @();
+        title            = 'plain title'
+        description_html = '<p>Contact alice&#64;example.com about bob&#64;example.com</p>'
+        repro_steps_html = '<p>set token to ghp_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb</p>'
+        system_info      = 'machine path: C:\Users\jdoe&#92;app.py'
+    }
+    $sanHtml = Sanitize-Candidate -Candidate $candHtml
+    if ($sanHtml.description_html -match 'alice|bob') {
+        Write-Error "HtmlDecode pre-pass: encoded email PII survived in description_html: '$($sanHtml.description_html)'"; $errors++
+    }
+    if ($sanHtml.description_html -notmatch '<redacted-email>') {
+        Write-Error "HtmlDecode pre-pass: <redacted-email> marker missing from description_html: '$($sanHtml.description_html)'"; $errors++
+    }
+    if ($sanHtml.description_html -match '&#64;') {
+        Write-Error "HtmlDecode pre-pass: raw entity &#64; left in description_html: '$($sanHtml.description_html)'"; $errors++
+    }
+    if (-not ($sanHtml.sanitization_aborted)) {
+        Write-Error 'HtmlDecode pre-pass: abort-class ghp_ inside encoded repro_steps_html should flip sanitization_aborted.'; $errors++
+    }
+    if (-not (@($sanHtml.secret_hits) -contains 'github-pat-classic')) {
+        Write-Error "HtmlDecode pre-pass: ghp_ in repro_steps_html should reach secret_hits. hits=[$($sanHtml.secret_hits -join ', ')]"; $errors++
+    }
+    if ($sanHtml.repro_steps_html -match 'ghp_[A-Za-z0-9]{36}') {
+        Write-Error "HtmlDecode pre-pass: ghp_ literal survived in repro_steps_html (defense-in-depth + html-decode interaction): '$($sanHtml.repro_steps_html)'"; $errors++
+    }
+
+    # Orphan diag with abort-class secret: must be DELETED from -OutDir
+    # so it doesn't ride along in the artifact upload. Step 4 keys off
+    # sanitization_aborted in wi-*.json; without a sibling wi file Step 4
+    # would never see this diag, so we have to fail closed locally.
+    $tmpRoot3 = Join-Path ([IO.Path]::GetTempPath()) ("sanitize-test-orphan-{0}" -f ([Guid]::NewGuid().ToString('N')))
+    $tmpDiag3 = Join-Path $tmpRoot3 'diag'
+    $tmpOut3  = Join-Path $tmpRoot3 'out'
+    New-Item -ItemType Directory -Force -Path $tmpDiag3, $tmpOut3 | Out-Null
+    try {
+        # Candidates list is empty — no wi-*.json will be emitted, so the
+        # diag we drop below is a true orphan once sanitization runs.
+        $candIn3Path = Join-Path $tmpRoot3 'candidates.json'
+        '[]' | Set-Content -LiteralPath $candIn3Path -Encoding UTF8
+
+        $diagDoc3 = [pscustomobject] @{
+            work_item = [pscustomobject] @{ id = 77777; title = 'orphan'; description = 'fine' }
+            attachments = @(
+                [pscustomobject] @{
+                    name = 'creds.txt'; url = 'u'; size_bytes = 100; kind = 'text';
+                    downloaded = $true; skip_reason = $null;
+                    content_excerpt = 'token=ghp_ccccccccccccccccccccccccccccccccccc1'
+                    excerpt_truncated = $false
+                }
+            )
+            python_tools_diagnostics = [pscustomobject] @{ present = $false; reason = 'n/a' }
+        }
+        $diagOrphanPath = Join-Path $tmpDiag3 'diag-77777.json'
+        ($diagDoc3 | ConvertTo-Json -Depth 25) | Set-Content -LiteralPath $diagOrphanPath -Encoding UTF8
+
+        Invoke-Full -InFile $candIn3Path -OutDir $tmpOut3 -DiagDir $tmpDiag3
+
+        $orphanInOut = Join-Path $tmpOut3 'diag-77777.json'
+        if (Test-Path -LiteralPath $orphanInOut) {
+            Write-Error "Orphan diag with abort-class secret survived in OutDir (fail-closed violated): $orphanInOut"; $errors++
+        }
+    } finally {
+        if (Test-Path -LiteralPath $tmpRoot3) { Remove-Item -LiteralPath $tmpRoot3 -Recurse -Force -ErrorAction SilentlyContinue }
+    }
+
+    # ConvertFrom-HtmlForScan helper: empty / null safe, leaves plain
+    # text untouched, decodes a representative entity set.
+    if ((ConvertFrom-HtmlForScan -Text $null) -ne '') { Write-Error 'ConvertFrom-HtmlForScan should return empty on $null.'; $errors++ }
+    if ((ConvertFrom-HtmlForScan -Text '')    -ne '') { Write-Error 'ConvertFrom-HtmlForScan should return empty on empty.'; $errors++ }
+    if ((ConvertFrom-HtmlForScan -Text 'no entities here') -ne 'no entities here') {
+        Write-Error 'ConvertFrom-HtmlForScan should pass plain text through unchanged.'; $errors++
+    }
+    if ((ConvertFrom-HtmlForScan -Text 'a&#64;b &amp; c &lt;d&gt;') -ne 'a@b & c <d>') {
+        Write-Error "ConvertFrom-HtmlForScan didn't decode entities correctly."; $errors++
     }
 
     if ($errors -gt 0) {

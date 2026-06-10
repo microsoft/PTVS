@@ -223,13 +223,40 @@ function Extract-DiagnosticsFields {
 function Get-AzdoAttachmentBytes {
     # Downloads an attachment to a temp file and returns the path. The
     # caller is responsible for deleting. Returns $null on failure.
-    param([object] $Attachment, [hashtable] $Headers)
+    #
+    # When $MaxBytes > 0 we add an HTTP Range header (`bytes=0-$MaxBytes`)
+    # so an AzDO relation whose `resourceSize` was omitted (the
+    # `vsfeedback-notes.txt` case is exactly this) can't blow the cap by
+    # streaming an unbounded download — without the Range, a multi-MB
+    # attachment with no advertised size would be fully pulled before
+    # being rejected by the post-download `MaxLogBytes` check, defeating
+    # part of the cap's bandwidth purpose. AzDO's attachment service
+    # supports byte-range serving; servers that ignore the header simply
+    # respond 200 with the full body, in which case the caller's post-
+    # download size check still rejects oversize files (degraded from
+    # bandwidth-capped to bytes-capped at the disk write).
+    # The Range request asks for bytes [0..MaxBytes] inclusive, i.e. up
+    # to MaxBytes+1 bytes; the caller compares the downloaded length to
+    # the original cap (`>` not `>=`) so any read above MaxBytes signals
+    # an oversize source.
+    param(
+        [object]    $Attachment,
+        [hashtable] $Headers,
+        [int]       $MaxBytes = 0
+    )
     $url = $Attachment.url
     if ($url -notmatch '\?') { $url += '?api-version=7.1' } else { $url += '&api-version=7.1' }
     if ($url -notmatch '(?i)[?&]download=') { $url += '&download=true' }
+    $reqHeaders = $Headers
+    if ($MaxBytes -gt 0) {
+        # Clone so we don't mutate the caller's auth-headers hashtable.
+        $reqHeaders = @{}
+        foreach ($k in $Headers.Keys) { $reqHeaders[$k] = $Headers[$k] }
+        $reqHeaders['Range'] = "bytes=0-$MaxBytes"
+    }
     $tmp = [IO.Path]::GetTempFileName()
     try {
-        Invoke-WebRequest -Uri $url -Headers $Headers -OutFile $tmp -ErrorAction Stop | Out-Null
+        Invoke-WebRequest -Uri $url -Headers $reqHeaders -OutFile $tmp -ErrorAction Stop | Out-Null
         return $tmp
     } catch {
         if (Test-Path -LiteralPath $tmp) { Remove-Item -LiteralPath $tmp -Force -ErrorAction SilentlyContinue }
@@ -274,10 +301,17 @@ function Get-AttachmentEntry {
 
     $tmp = $null
     try {
-        $tmp = Get-AzdoAttachmentBytes -Attachment $Attachment -Headers $Headers
+        # Pass MaxLogBytes through so Get-AzdoAttachmentBytes range-caps
+        # the download. Critical for relations where AzDO omitted
+        # resourceSize (the pre-download size gate above is skipped in
+        # that case): without the range cap we'd stream the whole file
+        # before the post-download check rejects it.
+        $tmp = Get-AzdoAttachmentBytes -Attachment $Attachment -Headers $Headers -MaxBytes $MaxLogBytes
         $actualSize = (Get-Item -LiteralPath $tmp).Length
-        # Post-download size check guards the case where AzDO omitted
-        # resourceSize on the relation (or it was wrong).
+        # Post-download size check guards both (a) the case where AzDO
+        # omitted resourceSize on the relation (or it was wrong), and
+        # (b) the case where the server ignored our Range header and
+        # streamed the whole file anyway.
         if ($null -eq $size) { $entry.size_bytes = $actualSize }
         if ($actualSize -gt $MaxLogBytes) {
             $entry.skip_reason = "downloaded size $actualSize bytes exceeds cap $MaxLogBytes"
@@ -656,6 +690,67 @@ System.NullReferenceException: Object reference not set to an instance of an obj
     }
     if ($simTextCount -ne $maxText) {
         Write-Error "PTD log should not count against budget; expected textCount=$maxText, got $simTextCount."; $errors++
+    }
+
+    # 11. Get-AzdoAttachmentBytes Range-cap: when MaxBytes > 0 the request
+    #     MUST carry an HTTP `Range: bytes=0-<MaxBytes>` header so an
+    #     unbounded attachment with no advertised resourceSize can't blow
+    #     the bandwidth cap. Shadow Invoke-WebRequest locally to capture
+    #     the headers actually sent, without making a real network call.
+    $script:__captured = [pscustomobject] @{ Uri = $null; Headers = $null; OutFile = $null }
+    function script:Invoke-WebRequest {
+        param([string] $Uri, [hashtable] $Headers, [string] $Method,
+              [string] $OutFile, $ErrorAction)
+        $script:__captured.Uri     = $Uri
+        $script:__captured.Headers = $Headers
+        $script:__captured.OutFile = $OutFile
+        if ($OutFile) { [IO.File]::WriteAllBytes($OutFile, [byte[]](0..9)) }
+    }
+    try {
+        $attMock = [pscustomobject] @{ url = 'https://example/_apis/wit/attachments/abc' }
+        $base    = @{ Authorization = 'Bearer sample' }
+
+        # MaxBytes > 0: Range header set, base headers preserved, caller's
+        # base hashtable not mutated.
+        $script:__captured.Uri = $null; $script:__captured.Headers = $null
+        $tmp1 = Get-AzdoAttachmentBytes -Attachment $attMock -Headers $base -MaxBytes 4096
+        try {
+            if (-not $script:__captured.Headers) {
+                Write-Error 'Range cap: Invoke-WebRequest was not invoked.'; $errors++
+            } else {
+                if (-not $script:__captured.Headers.ContainsKey('Range')) {
+                    Write-Error 'Range cap: missing Range header when MaxBytes > 0.'; $errors++
+                } elseif ($script:__captured.Headers['Range'] -ne 'bytes=0-4096') {
+                    Write-Error "Range cap: wrong Range value '$($script:__captured.Headers['Range'])', expected 'bytes=0-4096'."; $errors++
+                }
+                if ($script:__captured.Headers['Authorization'] -ne 'Bearer sample') {
+                    Write-Error 'Range cap: base Authorization header was lost when Range was added.'; $errors++
+                }
+            }
+            if ($base.ContainsKey('Range')) {
+                Write-Error 'Range cap: caller-side Headers hashtable was mutated (Range key added).'; $errors++
+            }
+        } finally {
+            if ($tmp1 -and (Test-Path -LiteralPath $tmp1)) { Remove-Item -LiteralPath $tmp1 -Force -ErrorAction SilentlyContinue }
+        }
+
+        # MaxBytes default (0): NO Range header — keep the legacy code path
+        # for callers that don't need a cap.
+        $script:__captured.Headers = $null
+        $tmp2 = Get-AzdoAttachmentBytes -Attachment $attMock -Headers $base
+        try {
+            if (-not $script:__captured.Headers) {
+                Write-Error 'Range cap (off): Invoke-WebRequest was not invoked.'; $errors++
+            } elseif ($script:__captured.Headers.ContainsKey('Range')) {
+                Write-Error 'Range cap (off): Range header set when MaxBytes was 0.'; $errors++
+            }
+        } finally {
+            if ($tmp2 -and (Test-Path -LiteralPath $tmp2)) { Remove-Item -LiteralPath $tmp2 -Force -ErrorAction SilentlyContinue }
+        }
+    } finally {
+        # Restore the real cmdlet by removing the function shadow.
+        Remove-Item Function:script:Invoke-WebRequest -ErrorAction SilentlyContinue
+        $script:__captured = $null
     }
 
     if ($errors -gt 0) {
