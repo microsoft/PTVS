@@ -1,10 +1,10 @@
-# PTVS-Triage-Fetch — weekly AzDO triage fetch + summary issue
+# PTVS-Triage-Fetch — weekly AzDO triage fetch + analyze + summary issue
 #
 # Runs inside devdiv/DevDiv (where $(System.AccessToken) has native AzDO REST
 # auth — the same call from a GitHub-hosted runner is bare-401'd by the
 # DevDiv security gateway).
 #
-# End to end (4 steps):
+# End to end (6 phases):
 #   1. Query AzDO for open work items under DevDiv\Python and AI Tools\**
 #      that changed in the last 7 days (cap 25).
 #   2. Download + parse any PythonToolsDiagnostics_*.log attachments.
@@ -12,18 +12,32 @@
 #   4. Publish the sanitized data as an AzDO build artifact (devdiv-internal
 #      audit trail) AND post a weekly summary issue in microsoft/PTVS with
 #      bullet points (work item title + link) for every non-aborted item.
+#   5. Install GitHub Copilot CLI on the agent and run an agentic per-item
+#      triage analysis against the PTVS source tree (this pipeline's checkout).
+#   6. Post each Copilot analysis as a threaded comment on the weekly issue
+#      from step 4. Phases 5–6 skip cleanly when no issue was created (dryRun
+#      mode or no candidates).
 #
 # The summary issue body contains NO sanitized content — only public-safe
 # titles + AzDO URLs. The full sanitized JSON lives only in the AzDO build
-# artifact, which never leaves the devdiv tenant.
+# artifact, which never leaves the devdiv tenant. The per-item analyses
+# Copilot produces ARE posted publicly as issue comments — they are
+# generated from already-sanitized JSON, but operators should still review
+# (the post step is gated on dryRun).
 #
 # Setup prerequisites (one-time):
-#   1. Create variable group `PTVS-Triage-Bridge` in devdiv/DevDiv with a
-#      secret variable `GH_PAT` = fine-grained GitHub PAT scoped to
-#      microsoft/PTVS with Issues: Read+Write (post the weekly summary
-#      issue). GitHub fine-grained PATs expire after at most ~90 days —
-#      set a calendar reminder and rotate by overwriting the variable
-#      group value before expiry.
+#   1. Create variable group `PTVS-Triage-Bridge` in devdiv/DevDiv with two
+#      SECRET variables:
+#        - GH_PAT      = fine-grained GitHub PAT scoped to microsoft/PTVS
+#                        with Issues: Read+Write (post the weekly summary
+#                        issue AND comment per-item analyses on it).
+#        - COPILOT_PAT = fine-grained GitHub PAT with the `Copilot Requests`
+#                        Account permission (account-scoped, not repo-scoped).
+#                        Authenticates the Copilot CLI step. Microsoft's
+#                        `aka.ms/goodbye-msft-pats` policy applies to AzDO
+#                        PATs only — GitHub PATs are unaffected.
+#      Both PATs expire after at most ~90 days — set a calendar reminder and
+#      rotate by overwriting the variable group value before expiry.
 #   2. Grant the project Build Service identity `View work items in this
 #      node` on area path `DevDiv\Python and AI Tools`. NOTE: this is
 #      NOT granted by default. The very first pipeline run typically
@@ -105,9 +119,13 @@ parameters:
   displayName: Dry-run (print issue body to logs; do not post)
   type: boolean
   default: false
+- name: runAnalyze
+  displayName: Run Copilot per-item triage analysis (uncheck to skip phases 5-6)
+  type: boolean
+  default: true
 
 variables:
-- group: PTVS-Triage-Bridge   # provides $(GH_PAT)
+- group: PTVS-Triage-Bridge   # provides $(GH_PAT) and $(COPILOT_PAT)
 - name: LOOKBACK_DAYS
   value: ${{ parameters.lookbackDays }}
 - name: MAX_CANDIDATES
@@ -116,14 +134,19 @@ variables:
   value: ${{ parameters.workitemId }}
 - name: DRY_RUN
   value: ${{ parameters.dryRun }}
+- name: RUN_ANALYZE
+  value: ${{ parameters.runAnalyze }}
 
 pool:
   vmImage: ubuntu-latest
 
 jobs:
 - job: Fetch
-  displayName: Fetch + sanitize + post summary issue
-  timeoutInMinutes: 20
+  displayName: Fetch + sanitize + analyze + post summary issue
+  # 25 items * 180s worst-case copilot + ~10 min Fetch overhead + slack.
+  # The per-item PerItemTimeoutSeconds default in analyze.ps1 (180s) was
+  # picked so the worst-case loop fits inside this budget.
+  timeoutInMinutes: 120
   steps:
   - checkout: self
     displayName: Checkout PTVS scripts
@@ -274,3 +297,88 @@ jobs:
         }
         if ([bool]::Parse(($env:DRY_RUN ?? 'false'))) { $scriptArgs['DryRun'] = $true }
         & "$(Build.SourcesDirectory)/Build/triage/post-report-issue.ps1" @scriptArgs
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Phases 5–6: agentic per-item triage via GitHub Copilot CLI.
+  #
+  # Gated on TWO conditions:
+  #   (a) `runAnalyze` pipeline parameter is true (checkbox-controlled at
+  #       Run-pipeline time; defaults to true so cron-triggered runs
+  #       always include the analysis).
+  #   (b) `issueNumber` job variable is non-empty -- post-report-issue.ps1
+  #       emits it on the create/update path and emits empty on the
+  #       dryRun and no-candidates paths.
+  # If either is false the whole Analyze block skips cleanly with zero
+  # Copilot AI credit spend; the Fetch portion of the pipeline still
+  # completes normally and publishes the sanitized artifact.
+  #
+  # Auth: $(COPILOT_PAT) — a GitHub fine-grained PAT with the `Copilot
+  # Requests` Account permission, stored as a SECRET in the
+  # PTVS-Triage-Bridge variable group. analyze.ps1 detects both an
+  # unset COPILOT_PAT variable and the unresolved-macro fingerprint
+  # `$(COPILOT_PAT)` left behind when the variable group is unlinked,
+  # and throws a clear error in both cases.
+
+  - task: NodeTool@0
+    displayName: 'Install Node.js 22 (for Copilot CLI)'
+    condition: and(succeeded(), eq(variables['RUN_ANALYZE'], 'True'), ne(variables['issueNumber'], ''))
+    inputs:
+      versionSpec: '22.x'
+
+  - task: PowerShell@2
+    displayName: 'Install GitHub Copilot CLI'
+    condition: and(succeeded(), eq(variables['RUN_ANALYZE'], 'True'), ne(variables['issueNumber'], ''))
+    inputs:
+      pwsh: true
+      targetType: inline
+      script: |
+        Set-StrictMode -Version Latest
+        $ErrorActionPreference = 'Stop'
+        sudo npm install -g '@github/copilot@latest'
+        copilot --version
+
+  - task: PowerShell@2
+    displayName: 'analyze.ps1 — Copilot per-item triage'
+    condition: and(succeeded(), eq(variables['RUN_ANALYZE'], 'True'), ne(variables['issueNumber'], ''))
+    env:
+      # COPILOT_PAT = fine-grained GitHub PAT, `Copilot Requests` Account
+      # permission. Authenticates Copilot CLI for inference.
+      # GH_TOKEN here lets the agentic `gh issue list` / `gh pr list`
+      # calls Copilot makes against microsoft/PTVS authenticate without
+      # re-prompting. Same Issues:Read+Write PAT we already use to post.
+      COPILOT_GITHUB_TOKEN: $(COPILOT_PAT)
+      GH_TOKEN:             $(GH_PAT)
+    inputs:
+      pwsh: true
+      targetType: inline
+      script: |
+        & "$(Build.SourcesDirectory)/Build/triage/analyze.ps1" `
+            -SanitizedDir "$(Agent.TempDirectory)/sanitized" `
+            -PtvsRepo     "$(Build.SourcesDirectory)" `
+            -OutDir       "$(Agent.TempDirectory)/analyses"
+
+  - publish: $(Agent.TempDirectory)/analyses
+    displayName: 'Publish analyses artifact (audit trail, devdiv-internal)'
+    artifact: analyses-$(Build.BuildId)
+    # `succeeded()` (not `succeededOrFailed()`): if analyze.ps1 threw
+    # before reaching its `New-Item -Path $OutDir` call (e.g., missing
+    # COPILOT_PAT), the dir does not exist and `publish:` would error
+    # trying to read it. When analyze.ps1 succeeds with per-item stubs
+    # (the common partial-failure case) it still exits 0, so the
+    # artifact still uploads.
+    condition: and(succeeded(), eq(variables['RUN_ANALYZE'], 'True'), ne(variables['issueNumber'], ''))
+
+  - task: PowerShell@2
+    displayName: 'post-analyses.ps1 — comment per-item analyses on the triage issue'
+    condition: and(succeeded(), eq(variables['RUN_ANALYZE'], 'True'), ne(variables['issueNumber'], ''))
+    env:
+      GH_TOKEN: $(GH_PAT)
+    inputs:
+      pwsh: true
+      targetType: inline
+      script: |
+        $runUrl = '$(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)'
+        & "$(Build.SourcesDirectory)/Build/triage/post-analyses.ps1" `
+            -AnalysisDir "$(Agent.TempDirectory)/analyses" `
+            -IssueNumber '$(issueNumber)' `
+            -RunUrl      $runUrl

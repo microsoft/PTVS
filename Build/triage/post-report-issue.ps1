@@ -24,10 +24,11 @@
         Empty candidate list: nothing is filed; the script exits 0 with a
         log line.
 
-        Auth: $env:GITHUB_TOKEN. In GitHub Actions this is the auto-injected,
-        repo-scoped, job-lifetime token (workflow declares `issues: write`).
-        For local runs, set $env:GITHUB_TOKEN to a fine-grained PAT with
-        `issues:write` + `metadata:read` on microsoft/PTVS.
+        Auth: $env:GITHUB_TOKEN. In the AzDO pipeline this comes from
+        the `GH_PAT` secret variable in the `PTVS-Triage-Bridge` variable
+        group — a fine-grained GitHub PAT scoped to microsoft/PTVS with
+        Issues: Read+Write. For local runs, set $env:GITHUB_TOKEN to a
+        similarly-scoped PAT.
 
     .PARAMETER CandidatesFile
         Path to the titles-only sanitized JSON (built by the pipeline's
@@ -261,6 +262,21 @@ function Update-ReportIssue {
     return Invoke-RestMethod -Method PATCH -Uri $uri -Headers $Headers -Body $payload -ContentType 'application/json'
 }
 
+function Set-AzdoOutputVariable {
+    # Emit ##vso[task.setvariable variable=NAME]VALUE so any subsequent step
+    # in the same job can read the value in `condition:` expressions as
+    # `variables['NAME']` and in scripts as `$(NAME)`. Same-job consumption
+    # does NOT require isOutput=true (per the official conditions doc); the
+    # simpler form avoids the `stepName.varName` reference convention and
+    # keeps fetch.yml's condition expressions readable. Outside AzDO this
+    # marker is just text in stdout.
+    param(
+        [Parameter(Mandatory)] [string] $Name,
+        [Parameter()] [AllowEmptyString()] [string] $Value = ''
+    )
+    Write-Host "##vso[task.setvariable variable=$Name]$Value"
+}
+
 function Invoke-Post {
     param(
         [string] $CandidatesFile,
@@ -305,12 +321,14 @@ function Invoke-Post {
 
     if ($candidates.Count -eq 0) {
         Write-Host 'No candidates in the lookback window. Skipping issue creation.'
+        Set-AzdoOutputVariable -Name 'issueNumber' -Value ''
         return
     }
 
     if ($DryRun) {
         Write-Host "DRY RUN: would create issue with title:`n  $title"
         Write-Host "DRY RUN body:`n$body"
+        Set-AzdoOutputVariable -Name 'issueNumber' -Value ''
         return
     }
 
@@ -331,6 +349,7 @@ function Invoke-Post {
             -Body $body `
             -Headers $headers
         Write-Host "Updated $($r.html_url)."
+        Set-AzdoOutputVariable -Name 'issueNumber' -Value ([string] $existing.number)
     } else {
         Write-Host 'Creating new weekly report issue.'
         $r = New-ReportIssue `
@@ -342,6 +361,7 @@ function Invoke-Post {
             -Assignees @($Config.github.defaultAssignee) `
             -Headers $headers
         Write-Host "Created $($r.html_url)."
+        Set-AzdoOutputVariable -Name 'issueNumber' -Value ([string] $r.number)
     }
 }
 
@@ -439,6 +459,9 @@ function Invoke-SelfTest {
     # crash with "The property 'Count' cannot be found on this object".
     # Regression for the case the FeedbackTicket-only filter hits constantly:
     # a typical week has 0 open DC items in the lookback window.
+    # ALSO asserts that the no-candidates path still emits an empty
+    # issueNumber output variable -- the downstream Analyze block in
+    # fetch.yml gates on this being empty to skip cleanly.
     $tmpRoot = Join-Path ([IO.Path]::GetTempPath()) ("post-empty-{0}" -f ([Guid]::NewGuid().ToString('N')))
     New-Item -ItemType Directory -Force -Path $tmpRoot | Out-Null
     try {
@@ -447,14 +470,29 @@ function Invoke-SelfTest {
         $cfgPath = Join-Path $PSScriptRoot 'config.json'
         $cfg = Get-TriageConfig -Path $cfgPath
         try {
-            # -DryRun avoids the GitHub call. If Invoke-Post crashes on
-            # $candidates.Count, this throws and gets caught below.
-            Invoke-Post -CandidatesFile $emptyFile -LookbackDays 7 -RunUrl 'https://example/run/x' -Config $cfg -DryRun
+            # Capture stdout to assert the AzDO output-variable marker is emitted
+            # on the empty-candidates path.
+            $out = Invoke-Post -CandidatesFile $emptyFile -LookbackDays 7 -RunUrl 'https://example/run/x' -Config $cfg -DryRun *>&1 | Out-String
+            if ($out -notmatch '##vso\[task\.setvariable variable=issueNumber\]') {
+                Write-Error "Invoke-Post on empty candidates did not emit the issueNumber output marker. Captured:`n$out"; $errors++
+            }
         } catch {
             Write-Error "Invoke-Post crashed on empty `[]` input: $($_.Exception.Message)"; $errors++
         }
     } finally {
         if (Test-Path -LiteralPath $tmpRoot) { Remove-Item -LiteralPath $tmpRoot -Recurse -Force -ErrorAction SilentlyContinue }
+    }
+
+    # Set-AzdoOutputVariable format: emits the exact marker AzDO parses.
+    # Same-job consumption (variables['NAME'] in conditions, $(NAME) in
+    # scripts) does not require isOutput=true.
+    $out = Set-AzdoOutputVariable -Name 'foo' -Value 'bar-baz' *>&1 | Out-String
+    if ($out.Trim() -ne '##vso[task.setvariable variable=foo]bar-baz') {
+        Write-Error "Set-AzdoOutputVariable wrong format: '$($out.Trim())'"; $errors++
+    }
+    $outEmpty = Set-AzdoOutputVariable -Name 'foo' -Value '' *>&1 | Out-String
+    if ($outEmpty.Trim() -ne '##vso[task.setvariable variable=foo]') {
+        Write-Error "Set-AzdoOutputVariable empty-value wrong format: '$($outEmpty.Trim())'"; $errors++
     }
 
     # Find-ExistingReportIssue: uses the read-your-writes-consistent
