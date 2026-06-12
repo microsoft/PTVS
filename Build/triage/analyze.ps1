@@ -251,6 +251,59 @@ function Find-LeakedTokenFingerprints {
     return ,$found.ToArray()
 }
 
+function Get-AnalysisFromCopilotStdOut {
+    # Strips the Copilot CLI's non-interactive "trace" preamble from raw
+    # stdout, returning just the model's published analysis with the
+    # idempotency marker as the first line.
+    #
+    # Copilot CLI's non-interactive mode (`-p`) writes per-tool-call
+    # trace lines to stdout BEFORE the model's actual reply, e.g.:
+    #     ● Search (grep)
+    #       │ "ReturnCode" in **/*.cs
+    #       └ 3 files found
+    #     ● Check duplicate issue details (shell)
+    #       │ gh issue view 7249 ...
+    #       └ 2 lines...
+    #     Now I have enough context to write the triage analysis.
+    #     <!-- ptvs-triage-analyze:N -->
+    #     ### Triage analysis for [AzDO #N](...)
+    #     ...
+    # That preamble is meant for an interactive terminal, not a public
+    # GitHub issue comment. Strategy: find the LAST occurrence of the
+    # mandated heading `### Triage analysis for [AzDO #<Id>]` and
+    # discard everything before it. The heading shape is dictated by
+    # the prompt template and is structurally distinct from any tool-
+    # trace line, so anchoring on it is safe. We use the LAST occurrence
+    # in case the trace preamble itself happened to quote the heading.
+    #
+    # The function then prepends the idempotency marker — Copilot is
+    # told to emit the marker BEFORE the heading, but we sliced from the
+    # heading onward, so we always re-add it. Re-prepending unconditionally
+    # also covers the rare case where the model omitted the marker entirely.
+    #
+    # If the heading is not found at all (model ignored the template),
+    # return the raw stdout with the marker prepended and emit a warning;
+    # let the maintainer notice the formatting drift on the posted issue.
+    param(
+        [Parameter(Mandatory)] [AllowEmptyString()] [string] $RawStdOut,
+        [Parameter(Mandatory)] [int]                         $Id
+    )
+    $marker = "<!-- ptvs-triage-analyze:$Id -->"
+    if ([string]::IsNullOrWhiteSpace($RawStdOut)) {
+        return $marker
+    }
+    $headingRegex = [regex] ('(?m)^[ \t]*###[ \t]+Triage analysis for \[AzDO #' + [regex]::Escape([string] $Id) + '\]')
+    $headingHits  = $headingRegex.Matches($RawStdOut)
+    if ($headingHits.Count -gt 0) {
+        $lastHit = $headingHits[$headingHits.Count - 1]
+        $body    = $RawStdOut.Substring($lastHit.Index).TrimEnd()
+    } else {
+        Write-Warning "Heading '### Triage analysis for [AzDO #$Id]' not found in Copilot output for #${Id}; posting raw stdout."
+        $body = $RawStdOut.TrimEnd()
+    }
+    return "$marker`n" + $body.TrimStart()
+}
+
 function Invoke-CopilotOnce {
     # Runs `copilot -p <prompt> --add-dir <repo> --allow-all-tools --no-color`
     # with a per-invocation wall-clock timeout. Returns a hashtable:
@@ -493,15 +546,10 @@ function Invoke-Analyze {
             $failCount++
             continue
         }
-        # Defense: every analysis we publish MUST carry the idempotency marker
-        # comment as its first non-whitespace line. If the model strayed from
-        # the template, prepend the marker so post-analyses.ps1 can still
-        # detect repeats.
-        $output = ([string] $r.StdOut).TrimStart()
-        $marker = "<!-- ptvs-triage-analyze:$id -->"
-        if (-not $output.StartsWith($marker)) {
-            $output = "$marker`n" + $output
-        }
+        # Strip the Copilot CLI's non-interactive trace preamble (tool-call
+        # bullets, box-drawing chars, mid-stream commentary). See
+        # Get-AnalysisFromCopilotStdOut for full rationale.
+        $output = Get-AnalysisFromCopilotStdOut -RawStdOut ([string] $r.StdOut) -Id $id
 
         # Defense against prompt-injection-induced token leakage: if the
         # model's output contains the literal value of any token we passed
@@ -736,6 +784,97 @@ function Invoke-SelfTest {
         Write-Error "Regression: Find-LeakedTokenFingerprints accepting scalar -Tokens, .Count threw: $($_.Exception.Message)"; $errors++
     }
 
+    # 5f. Get-AnalysisFromCopilotStdOut: trace-preamble strip and marker
+    #     normalization. Production build 14364772 posted Copilot CLI's
+    #     interactive trace lines (`● Search (grep)`, `│`, `└`, mid-stream
+    #     commentary like "Now I have enough context...") to public GitHub
+    #     issues because the analysis emitter only checked for a marker
+    #     at the start of stdout, not for the actual heading. This unit-
+    #     tests the helper directly so the contract is verified on Windows
+    #     too (the full E2E only runs on Linux/macOS).
+    $bulletChar = [char] 0x25CF
+    $boxV       = [char] 0x2502
+    $boxL       = [char] 0x2514
+    # Case A: heading present after a typical trace preamble.
+    $rawA = @"
+$bulletChar Search (grep)
+  $boxV "ReturnCode" in **/*.cs
+  $boxL 3 files found
+
+$bulletChar Check duplicate issue details (shell)
+  $boxV gh issue view 7249 --repo microsoft/PTVS
+  $boxL 24 lines...
+
+Now I have enough context to write the triage analysis.
+
+<!-- ptvs-triage-analyze:42 -->
+### Triage analysis for [AzDO #42](https://example/42)
+
+**Root cause category:** PTVS
+**Confidence:** Medium
+
+body text
+"@
+    $cleanA = Get-AnalysisFromCopilotStdOut -RawStdOut $rawA -Id 42
+    if (-not $cleanA.StartsWith('<!-- ptvs-triage-analyze:42 -->'))               { Write-Error "Strip A: marker not at start. Got: $cleanA"; $errors++ }
+    if ($cleanA.Contains($bulletChar))                                            { Write-Error "Strip A: bullet '$bulletChar' survived. Got: $cleanA"; $errors++ }
+    if ($cleanA.Contains($boxV))                                                  { Write-Error "Strip A: box-V '$boxV' survived. Got: $cleanA"; $errors++ }
+    if ($cleanA.Contains('Now I have enough context'))                            { Write-Error "Strip A: mid-stream commentary survived. Got: $cleanA"; $errors++ }
+    if ($cleanA.Contains('gh issue view 7249'))                                   { Write-Error "Strip A: shell command leaked. Got: $cleanA"; $errors++ }
+    if (([regex]::Matches($cleanA, '<!-- ptvs-triage-analyze:42 -->')).Count -ne 1) {
+        Write-Error "Strip A: marker should appear exactly once. Got: $cleanA"; $errors++
+    }
+    if ($cleanA -notmatch '<!-- ptvs-triage-analyze:42 -->\s*\n###\s+Triage analysis for') {
+        Write-Error "Strip A: marker not immediately followed by heading. Got: $cleanA"; $errors++
+    }
+    if (-not $cleanA.Contains('body text'))                                       { Write-Error "Strip A: body text lost. Got: $cleanA"; $errors++ }
+
+    # Case B: heading absent (model ignored template). Should fall back to
+    # raw stdout with the marker prepended, plus a warning. Capture the
+    # warning so it doesn't pollute the test output.
+    $warnB = $null
+    $cleanB = Get-AnalysisFromCopilotStdOut -RawStdOut "just random text with no heading" -Id 99 -WarningVariable warnB -WarningAction SilentlyContinue
+    if ($cleanB -notmatch '\A<!-- ptvs-triage-analyze:99 -->\s*\njust random text') {
+        Write-Error "Strip B: heading-absent fallback wrong. Got: $cleanB"; $errors++
+    }
+    if (-not $warnB)                                                              { Write-Error "Strip B: expected a warning when heading is missing."; $errors++ }
+
+    # Case C: empty / whitespace-only stdout — return just the marker
+    # (don't crash, don't emit a no-content false analysis).
+    $cleanC = Get-AnalysisFromCopilotStdOut -RawStdOut '' -Id 5
+    if ($cleanC -ne '<!-- ptvs-triage-analyze:5 -->')                             { Write-Error "Strip C: empty stdout should return bare marker. Got: $cleanC"; $errors++ }
+    $cleanC2 = Get-AnalysisFromCopilotStdOut -RawStdOut "   `n  `t  `n" -Id 5
+    if ($cleanC2 -ne '<!-- ptvs-triage-analyze:5 -->')                            { Write-Error "Strip C2: whitespace-only stdout should return bare marker. Got: $cleanC2"; $errors++ }
+
+    # Case D: multiple `### Triage analysis for [AzDO #N]` lines in stdout
+    # (e.g., trace preamble quoted the heading while showing the prompt).
+    # The LAST one is the model's real reply; earlier ones are decoy.
+    $rawD = @"
+$bulletChar Read prompt (shell)
+  $boxV cat /tmp/prompt.txt
+  $boxL ### Triage analysis for [AzDO #77]   <- inside the trace, NOT the analysis
+
+<!-- ptvs-triage-analyze:77 -->
+### Triage analysis for [AzDO #77](https://example/77)
+REAL body
+"@
+    $cleanD = Get-AnalysisFromCopilotStdOut -RawStdOut $rawD -Id 77
+    if (-not $cleanD.Contains('REAL body'))                                       { Write-Error "Strip D: real body lost. Got: $cleanD"; $errors++ }
+    if ($cleanD.Contains('inside the trace'))                                     { Write-Error "Strip D: decoy heading not stripped — should have picked LAST occurrence. Got: $cleanD"; $errors++ }
+    if (([regex]::Matches($cleanD, '###\s+Triage analysis')).Count -ne 1)         { Write-Error "Strip D: heading should appear exactly once. Got: $cleanD"; $errors++ }
+
+    # Case E: heading for a DIFFERENT id is not the anchor. If model wrote
+    # `### Triage analysis for [AzDO #999]` (wrong id) but we asked for id=5,
+    # the strip should fall back to the raw-stdout path (with warning) so
+    # the maintainer sees the obvious drift instead of silently posting a
+    # truncated or wrongly-attributed analysis.
+    $warnE = $null
+    $rawE = "### Triage analysis for [AzDO #999](u)`nwrong-id body"
+    $cleanE = Get-AnalysisFromCopilotStdOut -RawStdOut $rawE -Id 5 -WarningVariable warnE -WarningAction SilentlyContinue
+    if ($cleanE -notmatch '\A<!-- ptvs-triage-analyze:5 -->')                     { Write-Error "Strip E: marker for asked id missing. Got: $cleanE"; $errors++ }
+    if (-not $cleanE.Contains('### Triage analysis for [AzDO #999]'))             { Write-Error "Strip E: heading text should still be preserved for visibility. Got: $cleanE"; $errors++ }
+    if (-not $warnE)                                                              { Write-Error "Strip E: expected warning when id mismatch."; $errors++ }
+
     # 5d. Substring-token scrub ordering: when two tokens overlap (one is
     #     a substring prefix of the other), replacing the SHORTER first
     #     would mutate the longer mid-text and leave a partial leak.
@@ -777,6 +916,11 @@ function Invoke-SelfTest {
             # bug in production build 14364610 — Copilot CLI rejected `-->\``
             # because the prompt was tokenised on whitespace).
             $argvDumpPath = Join-Path $tmp 'argv-dump.txt'
+            # The stub emulates the real Copilot CLI's non-interactive output:
+            # a multi-line "trace" preamble (tool calls with `●` / box-drawing
+            # chars) BEFORE the actual analysis. analyze.ps1 must strip that
+            # preamble — production build 14364772 posted the trace to public
+            # GitHub issues, which is the bug this E2E now guards against.
             $stubScript = @"
 #!/usr/bin/env bash
 DUMP="`${COPILOT_ARGV_DUMP:-/dev/null}"
@@ -786,10 +930,24 @@ for a in "`$@"; do
   printf 'ARG[%d]:::%s:::END\n' "`$i" "`$a" >> "`$DUMP"
   i=`$((i+1))
 done
+# === Begin emulated Copilot CLI non-interactive trace preamble ===
+printf '\xe2\x97\x8f Search (grep)\n'
+printf '  \xe2\x94\x82 "ReturnCode" in **/*.cs\n'
+printf '  \xe2\x94\x94 3 files found\n'
+printf '\n'
+printf '\xe2\x97\x8f Check duplicate issue details (shell)\n'
+printf '  \xe2\x94\x82 gh issue view 7249 --repo microsoft/PTVS\n'
+printf '  \xe2\x94\x94 24 lines...\n'
+printf '\n'
+printf 'Now I have enough context to write the triage analysis.\n'
+printf '\n'
+# === End preamble. Below this line is what the model actually emitted. ===
 echo '<!-- ptvs-triage-analyze:7 -->'
 echo '### Triage analysis for [AzDO #7](https://example/7)'
+echo ''
 echo '**Root cause category:** PTVS'
 echo '**Confidence:** Low'
+echo ''
 echo 'stub analysis body'
 "@
             $stubPath = Join-Path $binDir 'copilot'
@@ -820,6 +978,24 @@ echo 'stub analysis body'
                 if ($text -notmatch 'stub analysis body')                      { Write-Error "E2E: stub body missing. Got: $text"; $errors++ }
                 if ($text -match     'Automated triage failed')                { Write-Error "E2E: failure stub written despite stub copilot exiting 0. Got: $text"; $errors++ }
                 if ($text -notmatch '\*\*Root cause category:\*\* PTVS')       { Write-Error "E2E: category missing. Got: $text"; $errors++ }
+                # Trace-preamble strip (build 14364772 regression): every
+                # `●` / `│` / `└` line emitted before the heading must be
+                # gone from the posted analysis, and the marker must appear
+                # EXACTLY once.
+                $bulletChar = [char] 0x25CF   # ● — the trace-line bullet
+                if ($text.Contains($bulletChar))                              { Write-Error "E2E: trace preamble bullet '$bulletChar' survived strip. Got: $text"; $errors++ }
+                if ($text -match     'Now I have enough context')              { Write-Error "E2E: trace-tail commentary survived strip. Got: $text"; $errors++ }
+                if ($text -match     'gh issue view 7249')                     { Write-Error "E2E: tool-trace shell command leaked into posted analysis. Got: $text"; $errors++ }
+                $markerCount = ([regex]::Matches($text, '<!-- ptvs-triage-analyze:7 -->')).Count
+                if ($markerCount -ne 1)                                        { Write-Error "E2E: marker should appear exactly once after strip, got ${markerCount}. Got: $text"; $errors++ }
+                # The marker MUST be the first non-whitespace line so
+                # post-analyses.ps1's regex still matches.
+                if ($text -notmatch '\A\s*<!-- ptvs-triage-analyze:7 -->')     { Write-Error "E2E: marker is not the first line after strip. Got: $text"; $errors++ }
+                # The heading must be immediately after the marker (no
+                # blank line or stray content between them).
+                if ($text -notmatch '<!-- ptvs-triage-analyze:7 -->\s*\n###\s+Triage analysis for') {
+                    Write-Error "E2E: marker not immediately followed by heading. Got: $text"; $errors++
+                }
             }
 
             # 6b. Argv-preservation regression (build 14364610): the prompt
