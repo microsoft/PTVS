@@ -86,6 +86,11 @@ function Get-Marker {
 
 function Get-AnalysisFiles {
     # Returns array of [pscustomobject] @{ Path; Id }, sorted by id.
+    # ALWAYS returns an [object[]] via `,(...)` — without the unary comma,
+    # the function-return pipeline would unwrap a 0-element collection to
+    # $null and a 1-element collection to the scalar PSCustomObject. The
+    # call site relies on `.Count -eq 0` and `foreach` semantics that work
+    # only on a real array.
     param([Parameter(Mandatory)] [string] $Dir)
     if (-not (Test-Path -LiteralPath $Dir)) {
         throw "AnalysisDir not found: $Dir"
@@ -99,7 +104,7 @@ function Get-AnalysisFiles {
             Id   = [int] $m.Groups[1].Value
         }) | Out-Null
     }
-    return @($items | Sort-Object Id)
+    return ,@($items.ToArray() | Sort-Object Id)
 }
 
 function Get-ExistingMarkers {
@@ -137,7 +142,11 @@ function Get-ExistingMarkers {
             break
         }
     }
-    return $seen
+    # Unary comma prevents the PowerShell return pipeline from enumerating
+    # the HashSet — without this, an empty HashSet returns as $null and a
+    # non-empty one collapses to a [string[]] / scalar, breaking `.Count`
+    # at the call site under StrictMode.
+    return ,$seen
 }
 
 function Add-IssueComment {
@@ -198,7 +207,12 @@ function Invoke-Post {
     }
     $issueInt = [int] $IssueNumber
 
-    $files = @(Get-AnalysisFiles -Dir $AnalysisDir)
+    # NOTE: Do NOT wrap Get-AnalysisFiles in @(...) — it returns a typed
+    # [object[]] via `return ,(...)` (unary comma) so its shape is already
+    # guaranteed. Wrapping in @(...) here would produce a 1-element Object[]
+    # containing the inner array (because @() only enumerates the outer
+    # layer), which would then bypass the "no files" check and crash later.
+    $files = Get-AnalysisFiles -Dir $AnalysisDir
     if ($files.Count -eq 0) {
         Write-Warning "No analysis-*.md files in $AnalysisDir. Nothing to post."
         return
@@ -290,10 +304,32 @@ function Invoke-SelfTest {
         Set-Content -LiteralPath (Join-Path $tmp 'analysis-100.md') -Value 'x'
         Set-Content -LiteralPath (Join-Path $tmp 'notes.md')       -Value 'x'
         Set-Content -LiteralPath (Join-Path $tmp 'analysis-abc.md') -Value 'x'
-        $files = @(Get-AnalysisFiles -Dir $tmp)
+        # Get-AnalysisFiles returns a typed [object[]] via `,(...)` so do
+        # not wrap in @(...) at the call site (would produce 1-elem Object[]
+        # wrapping the inner array).
+        $files = Get-AnalysisFiles -Dir $tmp
         if ($files.Count -ne 3) { Write-Error "Expected 3 numeric analyses, got $($files.Count)"; $errors++ }
         if ($files[0].Id -ne 9 -or $files[1].Id -ne 10 -or $files[2].Id -ne 100) {
             Write-Error "Numeric sort broken: $($files.Id -join ',')"; $errors++
+        }
+        # Empty-dir case: must return a real empty array (Count==0), NOT $null
+        # (which would crash StrictMode `.Count`) and NOT a 1-element array
+        # containing $null (which would bypass the Count==0 check and crash
+        # later on `$f.Id`).
+        $emptyDir = Join-Path ([IO.Path]::GetTempPath()) ("post-analyses-empty-{0}" -f ([Guid]::NewGuid().ToString('N')))
+        New-Item -ItemType Directory -Force -Path $emptyDir | Out-Null
+        try {
+            $emptyFiles = Get-AnalysisFiles -Dir $emptyDir
+            if ($null -eq $emptyFiles)                  { Write-Error "Get-AnalysisFiles on empty dir returned `$null"; $errors++ }
+            elseif ($emptyFiles.Count -ne 0)            { Write-Error "Get-AnalysisFiles on empty dir returned Count=$($emptyFiles.Count), expected 0"; $errors++ }
+            # Single-file case: must return Object[1], not collapsed scalar
+            Set-Content -LiteralPath (Join-Path $emptyDir 'analysis-42.md') -Value 'x'
+            $singleFiles = Get-AnalysisFiles -Dir $emptyDir
+            if ($null -eq $singleFiles)                 { Write-Error "Get-AnalysisFiles on 1-file dir returned `$null"; $errors++ }
+            elseif ($singleFiles.Count -ne 1)           { Write-Error "Get-AnalysisFiles on 1-file dir returned Count=$($singleFiles.Count), expected 1"; $errors++ }
+            elseif ($singleFiles[0].Id -ne 42)          { Write-Error "Get-AnalysisFiles single-file Id mismatch: $($singleFiles[0].Id)"; $errors++ }
+        } finally {
+            Remove-Item -LiteralPath $emptyDir -Recurse -Force -ErrorAction SilentlyContinue
         }
     } finally {
         Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue
@@ -352,6 +388,29 @@ function Invoke-SelfTest {
     } finally {
         Remove-Item Function:script:Invoke-RestMethod -ErrorAction SilentlyContinue
         $script:__page = 0
+    }
+
+    # 3b. Get-ExistingMarkers: empty-page case must return an empty HashSet
+    #     (not $null), so the caller's `.Count` and `.Contains()` work.
+    #     Regression guard: the PowerShell return pipeline can enumerate an
+    #     IEnumerable HashSet and collapse it to $null for 0 elements.
+    function script:Invoke-RestMethod {
+        param([string] $Method, [string] $Uri, [hashtable] $Headers)
+        return @()
+    }
+    try {
+        $emptyMarkers = Get-ExistingMarkers -Headers @{} -Owner 'o' -Repo 'r' -IssueNumber 1
+        if ($null -eq $emptyMarkers) {
+            Write-Error "Get-ExistingMarkers returned `$null on empty pages; must return empty HashSet."; $errors++
+        }
+        elseif ($emptyMarkers.GetType().Name -notlike 'HashSet*') {
+            Write-Error "Get-ExistingMarkers returned $($emptyMarkers.GetType().Name), expected HashSet."; $errors++
+        }
+        elseif ($emptyMarkers.Count -ne 0) {
+            Write-Error "Get-ExistingMarkers on empty pages: Count=$($emptyMarkers.Count), expected 0."; $errors++
+        }
+    } finally {
+        Remove-Item Function:script:Invoke-RestMethod -ErrorAction SilentlyContinue
     }
 
     # 4. Build-SummaryComment: contains counts, marker, footer link.

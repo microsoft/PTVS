@@ -118,16 +118,20 @@ function Get-CandidatePairs {
     # Returns an array of [pscustomobject] with WiFile, DiagFile (may be $null),
     # Id (int), Wi (parsed object), Diag (parsed object or $null), Aborted (bool).
     # Sorted by id ascending so analyses post in a stable order on the issue.
+    # Always returns a typed array (not $null, not a scalar) via the unary
+    # comma operator — the PowerShell function-return pipeline would
+    # otherwise unwrap a 0-element collection to $null or a 1-element
+    # collection to the scalar element, breaking StrictMode `.Count`.
     param([Parameter(Mandatory)] [string] $Root)
 
     if (-not (Test-Path -LiteralPath $Root)) {
         throw "SanitizedDir not found: $Root"
     }
 
-    $wiFiles = Get-ChildItem -LiteralPath $Root -Filter 'wi-*.json' -File -ErrorAction SilentlyContinue |
-               Sort-Object { try { [int] (($_.BaseName -split '-')[1]) } catch { 0 } }
-    if (-not $wiFiles -or @($wiFiles).Count -eq 0) {
-        return @()
+    $wiFiles = @(Get-ChildItem -LiteralPath $Root -Filter 'wi-*.json' -File -ErrorAction SilentlyContinue |
+                 Sort-Object { try { [int] (($_.BaseName -split '-')[1]) } catch { 0 } })
+    if ($wiFiles.Count -eq 0) {
+        return ,([object[]] @())
     }
 
     $pairs = New-Object System.Collections.Generic.List[object]
@@ -166,7 +170,7 @@ function Get-CandidatePairs {
             Aborted  = $aborted
         }) | Out-Null
     }
-    return $pairs.ToArray()
+    return ,$pairs.ToArray()
 }
 
 function Get-FailureStub {
@@ -224,7 +228,7 @@ function Find-LeakedTokenFingerprints {
         [Parameter(Mandatory)] [AllowEmptyString()] [string] $Text,
         [Parameter()]          [string[]] $Tokens = @()
     )
-    if ([string]::IsNullOrEmpty($Text) -or -not $Tokens) { return @() }
+    if ([string]::IsNullOrEmpty($Text) -or -not $Tokens) { return ,([string[]] @()) }
     $found = New-Object System.Collections.Generic.List[string]
     foreach ($t in $Tokens) {
         if ([string]::IsNullOrEmpty($t)) { continue }
@@ -236,7 +240,15 @@ function Find-LeakedTokenFingerprints {
             $found.Add(("<token len={0} head={1}***>" -f $t.Length, $t.Substring(0, 1))) | Out-Null
         }
     }
-    return @($found)
+    # Return a typed [string[]] array. The PowerShell return pipeline will
+    # unwrap an [string[]] cleanly to the call site WITHOUT collapsing 0/1
+    # element collections to $null / scalar (which IS what `List<T>` would
+    # have done if returned directly via `$found`). Call sites should still
+    # NOT wrap this in `@(...)` because `@(<array>)` only enumerates the
+    # outermost layer and would produce a 1-element Object[] containing the
+    # typed array. Pattern: `$x = Find-LeakedTokenFingerprints ...; $x.Count`
+    # is safe (Count works on [string[]] of any length including 0).
+    return ,$found.ToArray()
 }
 
 function Invoke-CopilotOnce {
@@ -350,24 +362,31 @@ function Invoke-Analyze {
     $logDir = Join-Path $OutDir '.logs'
     New-Item -ItemType Directory -Force -Path $logDir | Out-Null
 
+    # Get-CandidatePairs returns a typed array via `,(...)` (unary comma)
+    # so its shape is guaranteed — do NOT wrap in @() here (which would
+    # produce a 1-element Object[] wrapping the inner array).
     $pairs = Get-CandidatePairs -Root $SanitizedDir
-    if (-not $pairs -or @($pairs).Count -eq 0) {
+    if ($pairs.Count -eq 0) {
         Write-Warning "No wi-*.json files found under $SanitizedDir. Nothing to analyze."
         return
     }
 
     # Filter aborted items (belt-and-suspenders; Fetch already drops these).
+    # @(...) wrap defends against the 0-or-1-result Where-Object collapse:
+    # PowerShell would otherwise unwrap a 1-element pipeline output to a
+    # scalar, breaking `.Count` and the `Select-Object -First $MaxItems`
+    # path under StrictMode.
     $eligible = @($pairs | Where-Object { -not $_.Aborted })
     $skipped  = @($pairs | Where-Object { $_.Aborted })
     foreach ($s in $skipped) {
         Write-Warning "Skipping AzDO #$($s.Id): sanitization_aborted=true (should have been dropped upstream)."
     }
-    if ($MaxItems -gt 0 -and @($eligible).Count -gt $MaxItems) {
-        Write-Host "Truncating eligible set to -MaxItems=$MaxItems (was $(@($eligible).Count))."
-        $eligible = $eligible | Select-Object -First $MaxItems
+    if ($MaxItems -gt 0 -and $eligible.Count -gt $MaxItems) {
+        Write-Host "Truncating eligible set to -MaxItems=$MaxItems (was $($eligible.Count))."
+        $eligible = @($eligible | Select-Object -First $MaxItems)
     }
 
-    Write-Host "Analyzing $(@($eligible).Count) item(s); $(@($skipped).Count) skipped as aborted."
+    Write-Host "Analyzing $($eligible.Count) item(s); $($skipped.Count) skipped as aborted."
     $okCount = 0; $failCount = 0
     # BuildId is propagated into failure-stub markers so re-runs that
     # succeed are NOT blocked by an earlier run's failure-stub comment.
@@ -394,7 +413,7 @@ function Invoke-Analyze {
         $logPath      = Join-Path $logDir ("copilot-{0}.log"  -f $id)
 
         Write-Host ""
-        Write-Host "==> [$($okCount + $failCount + 1)/$(@($eligible).Count)] Analyzing AzDO #$id (timeout ${PerItemTimeoutSeconds}s)..."
+        Write-Host "==> [$($okCount + $failCount + 1)/$($eligible.Count)] Analyzing AzDO #$id (timeout ${PerItemTimeoutSeconds}s)..."
         $start = Get-Date
         $r = $null
         try {
@@ -416,9 +435,15 @@ function Invoke-Analyze {
         # the .logs/ dir ships in the public-internal audit artifact.
         if ($r.StdErr) {
             $errText = [string] $r.StdErr
-            $envTokensErr = @($env:COPILOT_GITHUB_TOKEN, $env:GH_TOKEN, $env:GITHUB_TOKEN) |
-                            Where-Object { -not [string]::IsNullOrEmpty($_) -and $_.Length -ge 30 } |
-                            Sort-Object Length -Descending
+            # @(...) forces array shape: a `Where | Sort` pipeline yielding
+            # a single match would otherwise collapse to a scalar string
+            # under StrictMode, and `.Count` on a string throws.
+            $envTokensErr = @(@($env:COPILOT_GITHUB_TOKEN, $env:GH_TOKEN, $env:GITHUB_TOKEN) |
+                              Where-Object { -not [string]::IsNullOrEmpty($_) -and $_.Length -ge 30 } |
+                              Sort-Object Length -Descending)
+            # Note: Find-LeakedTokenFingerprints returns a typed [string[]]
+            # via `return ,$arr.ToArray()` — DO NOT wrap in @(...) here, or
+            # the typed array becomes a 1-element Object[] wrapping it.
             $errLeak = Find-LeakedTokenFingerprints -Text $errText -Tokens $envTokensErr
             if ($errLeak.Count -gt 0) {
                 Write-Warning "  SECURITY: stderr for #${id} contained leaked token(s) $($errLeak -join ', '); redacting before write."
@@ -469,9 +494,13 @@ function Invoke-Analyze {
         # contains a shorter one as a substring is fully redacted before
         # the shorter-token iteration runs (otherwise the substring scrub
         # would mutate the longer token mid-text and leave a partial leak).
-        $envTokens = @($env:COPILOT_GITHUB_TOKEN, $env:GH_TOKEN, $env:GITHUB_TOKEN) |
-                     Where-Object { -not [string]::IsNullOrEmpty($_) -and $_.Length -ge 30 } |
-                     Sort-Object Length -Descending
+        # @(...) wraps force array shape: a 0-element or 1-element pipeline
+        # result would otherwise unwrap to $null / scalar under StrictMode
+        # and crash on the next `.Count` access.
+        $envTokens = @(@($env:COPILOT_GITHUB_TOKEN, $env:GH_TOKEN, $env:GITHUB_TOKEN) |
+                       Where-Object { -not [string]::IsNullOrEmpty($_) -and $_.Length -ge 30 } |
+                       Sort-Object Length -Descending)
+        # Note: DO NOT wrap in @(...) — see analogous comment in stderr scrub.
         $leakedFingerprints = Find-LeakedTokenFingerprints -Text $output -Tokens $envTokens
         if ($leakedFingerprints.Count -gt 0) {
             Write-Warning "  SECURITY: analysis for #${id} contained leaked token(s) $($leakedFingerprints -join ', '); redacting before write."
@@ -486,7 +515,7 @@ function Invoke-Analyze {
     }
 
     Write-Host ""
-    Write-Host "Analyses complete: $okCount succeeded, $failCount failed, $(@($skipped).Count) skipped-aborted."
+    Write-Host "Analyses complete: $okCount succeeded, $failCount failed, $($skipped.Count) skipped-aborted."
     if ($okCount -eq 0 -and $failCount -gt 0) {
         # Total wipeout is worth signaling loudly — likely auth, quota, or
         # binary issue. But don't fail the step; the analyses artifact still
@@ -512,6 +541,8 @@ function Invoke-SelfTest {
 
     # 2. Get-CandidatePairs: walks dir, parses JSON, sorts by id, marks
     #    aborted items, attaches diag when present, no diag → property = $null.
+    #    Returns a typed [object[]] via `,(...)` — call sites must NOT wrap
+    #    in @(...) (would produce 1-elem array wrapping the inner array).
     $tmp = Join-Path ([IO.Path]::GetTempPath()) ("analyze-test-{0}" -f ([Guid]::NewGuid().ToString('N')))
     New-Item -ItemType Directory -Force -Path $tmp | Out-Null
     try {
@@ -522,7 +553,7 @@ function Invoke-SelfTest {
         @{ id = 2; title = 'two';   url = 'u2' } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $tmp 'wi-2.json') -Encoding UTF8
         # No diag for #2 — exercises the missing-diag path.
 
-        $pairs = @(Get-CandidatePairs -Root $tmp)
+        $pairs = Get-CandidatePairs -Root $tmp
         if ($pairs.Count -ne 3) { Write-Error "Expected 3 pairs, got $($pairs.Count)"; $errors++ }
         if ($pairs[0].Id -ne 1 -or $pairs[1].Id -ne 2 -or $pairs[2].Id -ne 3) {
             Write-Error "Pairs not sorted by id: $($pairs.Id -join ',')"; $errors++
@@ -533,6 +564,25 @@ function Invoke-SelfTest {
         if ($pairs[1].Diag -ne $null) { Write-Error "Diag for wi-2 should be `$null (no diag file present)."; $errors++ }
     } finally {
         Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue
+    }
+
+    # 2b. Get-CandidatePairs shape regression: empty-dir and 1-item cases
+    #     must return real arrays whose .Count works under StrictMode (not
+    #     $null and not collapsed scalar).
+    $emptyDir = Join-Path ([IO.Path]::GetTempPath()) ("analyze-empty-{0}" -f ([Guid]::NewGuid().ToString('N')))
+    New-Item -ItemType Directory -Force -Path $emptyDir | Out-Null
+    try {
+        $emptyPairs = Get-CandidatePairs -Root $emptyDir
+        if ($null -eq $emptyPairs)         { Write-Error "Get-CandidatePairs on empty dir returned `$null"; $errors++ }
+        elseif ($emptyPairs.Count -ne 0)   { Write-Error "Get-CandidatePairs on empty dir Count=$($emptyPairs.Count), expected 0"; $errors++ }
+        # Single-item: must NOT collapse to scalar PSCustomObject.
+        @{ id = 99; title = 'solo'; url = 'u99' } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $emptyDir 'wi-99.json') -Encoding UTF8
+        $solo = Get-CandidatePairs -Root $emptyDir
+        if ($null -eq $solo)               { Write-Error "Get-CandidatePairs on 1-item dir returned `$null"; $errors++ }
+        elseif ($solo.Count -ne 1)         { Write-Error "Get-CandidatePairs on 1-item dir Count=$($solo.Count), expected 1"; $errors++ }
+        elseif ($solo[0].Id -ne 99)        { Write-Error "Get-CandidatePairs 1-item Id mismatch: $($solo[0].Id)"; $errors++ }
+    } finally {
+        Remove-Item -LiteralPath $emptyDir -Recurse -Force -ErrorAction SilentlyContinue
     }
 
     # 3. Get-FailureStub: marker comment is the FIRST line and INCLUDES
@@ -611,12 +661,15 @@ function Invoke-SelfTest {
     # 5c. Find-LeakedTokenFingerprints: returns fingerprints (never the raw
     #     token value) when output contains a token. Ignores tokens that
     #     are too short to be real secrets. Empty / no-tokens => empty.
+    #     The function returns a typed [string[]] via `return ,$arr.ToArray()`
+    #     so call sites can use `.Count` directly without an @(...) wrap
+    #     (which would produce a 1-element Object[] containing the array).
     $realLookingToken = 'ghp_' + ('A' * 36)   # 40 chars, matches PAT shape, >=30 floor
     $textClean        = 'This analysis mentions no secrets.'
     $textLeak         = "Token starts with: $realLookingToken"
-    $fpClean = @(Find-LeakedTokenFingerprints -Text $textClean -Tokens @($realLookingToken))
+    $fpClean = Find-LeakedTokenFingerprints -Text $textClean -Tokens @($realLookingToken)
     if ($fpClean.Count -ne 0) { Write-Error "Clean text reported leak: $($fpClean -join ',')"; $errors++ }
-    $fpLeak = @(Find-LeakedTokenFingerprints -Text $textLeak -Tokens @($realLookingToken))
+    $fpLeak = Find-LeakedTokenFingerprints -Text $textLeak -Tokens @($realLookingToken)
     if ($fpLeak.Count -ne 1) { Write-Error "Leaking text should report exactly one fingerprint; got $($fpLeak.Count)"; $errors++ }
     if ($fpLeak.Count -gt 0 -and $fpLeak[0] -match [regex]::Escape($realLookingToken)) {
         Write-Error "Fingerprint MUST NOT echo the token value: $($fpLeak[0])"; $errors++
@@ -625,12 +678,45 @@ function Invoke-SelfTest {
         Write-Error "Fingerprint should include length; got: $($fpLeak[0])"; $errors++
     }
     # Short / empty / null inputs ignored
-    $fpShort = @(Find-LeakedTokenFingerprints -Text 'shortvalue' -Tokens @('short'))
+    $fpShort = Find-LeakedTokenFingerprints -Text 'shortvalue' -Tokens @('short')
     if ($fpShort.Count -ne 0) { Write-Error "Short tokens (<30 chars) should be ignored to avoid false-positives"; $errors++ }
-    $fpEmptyInput = @(Find-LeakedTokenFingerprints -Text '' -Tokens @($realLookingToken))
+    $fpEmptyInput = Find-LeakedTokenFingerprints -Text '' -Tokens @($realLookingToken)
     if ($fpEmptyInput.Count -ne 0) { Write-Error "Empty text should not report leaks"; $errors++ }
-    $fpNoTokens = @(Find-LeakedTokenFingerprints -Text $textLeak -Tokens @())
+    $fpNoTokens = Find-LeakedTokenFingerprints -Text $textLeak -Tokens @()
     if ($fpNoTokens.Count -ne 0) { Write-Error "Empty token list should not report leaks"; $errors++ }
+
+    # 5e. Regression: pipeline-collapse scenario.
+    #     A `@(a,b,c) | Where | Sort-Object` pipeline collapses to a SCALAR
+    #     string when only ONE element survives the filter. Under StrictMode,
+    #     `.Count` on a string throws and any caller that doesn't defend
+    #     against this crashes. This reproduces production failure 14364420
+    #     where COPILOT_GITHUB_TOKEN was the only env token long enough to
+    #     pass the 30-char floor.
+    $longTokForCollapse = 'github_pat_' + ('Z' * 80)
+    $collapsed = @($longTokForCollapse, $null, '') |
+                 Where-Object { -not [string]::IsNullOrEmpty($_) -and $_.Length -ge 30 } |
+                 Sort-Object Length -Descending
+    # The pipeline produces a scalar string; the @(...) wrap MUST repair
+    # the array shape before any downstream .Count or foreach.
+    $wrapped = @($collapsed)
+    if ($wrapped.Count -ne 1) {
+        Write-Error "Pipeline-collapse repair: expected 1, got $($wrapped.Count)"; $errors++
+    }
+    # Find-LeakedTokenFingerprints must accept a (possibly scalar) -Tokens
+    # arg and return a typed [string[]] whose .Count never throws.
+    $fpRegression = Find-LeakedTokenFingerprints -Text 'no leak here' -Tokens $wrapped
+    try {
+        $null = $fpRegression.Count
+    } catch {
+        Write-Error "Regression: Find-LeakedTokenFingerprints return value .Count threw: $($_.Exception.Message)"; $errors++
+    }
+    # Same test for the scalar-passed-directly case (caller forgot @()):
+    $fpRegression2 = Find-LeakedTokenFingerprints -Text 'no leak here' -Tokens $collapsed
+    try {
+        $null = $fpRegression2.Count
+    } catch {
+        Write-Error "Regression: Find-LeakedTokenFingerprints accepting scalar -Tokens, .Count threw: $($_.Exception.Message)"; $errors++
+    }
 
     # 5d. Substring-token scrub ordering: when two tokens overlap (one is
     #     a substring prefix of the other), replacing the SHORTER first
@@ -674,7 +760,12 @@ function Invoke-SelfTest {
 
             $origToken = $env:COPILOT_GITHUB_TOKEN
             try {
-                $env:COPILOT_GITHUB_TOKEN = 'ghs_stub'
+                # Use a token long enough to exercise the leak-scrub path
+                # (>=30 chars). This guards against the production regression
+                # in build 14364420: when only ONE env token had length>=30,
+                # the `$envTokens` pipeline collapsed to a scalar string and
+                # `.Count` threw under StrictMode.
+                $env:COPILOT_GITHUB_TOKEN = 'github_pat_' + ('S' * 80)
                 Invoke-Analyze -SanitizedDir $sanDir -PtvsRepo $tmp -OutDir $outDir -PromptTemplate $PromptTemplate -CopilotPath $stubPath -PerItemTimeoutSeconds 30
             } finally { $env:COPILOT_GITHUB_TOKEN = $origToken }
 
