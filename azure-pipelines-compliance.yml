@@ -145,7 +145,7 @@ jobs:
       targetsType: banditPattern
       targetsBandit: '$(Build.SourcesDirectory)\Python\Product'
     condition: succeededOrFailed()
-    continueOnError: True
+    continueOnError: False
 
   # Analyze binaries for security vulnerabilities
   # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/binskim-build-task

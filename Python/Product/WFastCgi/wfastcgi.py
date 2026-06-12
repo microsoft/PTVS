@@ -342,8 +342,8 @@ def log(txt):
     if APPINSIGHT_CLIENT:
         try:
             APPINSIGHT_CLIENT.track_event(txt)
-        except:
-            pass
+        except:  # nosec B110
+            pass  # nosec B110 - telemetry failures must not break request logging.
     
     log_file = os.environ.get('WSGI_LOG')
     if log_file:
@@ -356,8 +356,8 @@ def maybe_log(txt):
     raise exceptions if logging fails."""
     try:
         log(txt)
-    except:
-        pass
+    except:  # nosec B110
+        pass  # nosec B110 - maybe_log intentionally suppresses logging failures.
 
 def send_response(stream, req_id, resp_type, content, streaming=True):
     """sends a response w/ the given id, type, and content to the server.

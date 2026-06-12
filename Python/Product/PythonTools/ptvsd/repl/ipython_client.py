@@ -25,12 +25,12 @@ from ptvsd.repl import BasicReplBackend, ReplBackend, UnsupportedReplException, 
 from ptvsd.util import to_bytes
 try:
     import thread
-except:
+except:  # nosec B110
     import _thread as thread    # Renamed as Py3k
 
 try:
     from base64 import decodestring
-except:
+except:  # nosec B110
     from base64 import decodebytes as decodestring # Deprecated in 3.9
 
 try:
@@ -191,8 +191,8 @@ class VsIOPubChannel(DefaultHandler, IOPubChannel):
                 self._vs_backend.write_xaml(str(decodestring(output_xaml)))
                 self._vs_backend.write_stdout('\n') 
                 return
-            except:
-                pass
+            except:  # nosec B110
+                pass  # nosec B110 - fall through to other display formats.
         
         output_png = data.get('image/png', None)
         if output_png is not None:
@@ -202,8 +202,8 @@ class VsIOPubChannel(DefaultHandler, IOPubChannel):
                 self._vs_backend.write_png(str(decodestring(output_png)))
                 self._vs_backend.write_stdout('\n') 
                 return
-            except:
-                pass
+            except:  # nosec B110
+                pass  # nosec B110 - fall through to text/plain display.
             
         output_str = data.get('text/plain', None)
         if output_str is not None:

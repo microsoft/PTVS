@@ -115,7 +115,8 @@ def enable_attach(secret, address=('0.0.0.0', ptvsd.DEFAULT_PORT), certfile=None
             try:
                 client, addr = server.accept()
                 if certfile:
-                    client = ssl.wrap_socket(client, server_side = True, ssl_version = ssl.PROTOCOL_TLSv1, certfile = certfile, keyfile = keyfile)
+                    protocol = getattr(ssl, 'PROTOCOL_TLS', ssl.PROTOCOL_SSLv23)
+                    client = ssl.wrap_socket(client, server_side = True, ssl_version = protocol, certfile = certfile, keyfile = keyfile)
 
                 connection = AttachLoop(client, secret, redirect_output, None)
                 connection.send_event(

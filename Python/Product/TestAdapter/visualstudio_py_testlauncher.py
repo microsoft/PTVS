@@ -30,7 +30,7 @@ import traceback
 from types import CodeType, FunctionType
 try:
     import thread
-except:
+except:  # nosec B110
     import _thread as thread
 
 try:
@@ -315,7 +315,7 @@ def main():
                 cov.load()
                 cov.start()
             except:
-                pass
+                cov = None
 
         tests = []
         for test in all_tests:

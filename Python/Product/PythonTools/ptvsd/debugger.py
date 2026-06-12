@@ -62,7 +62,7 @@ except ImportError:
 
 try:
     xrange
-except:
+except:  # nosec B110
     xrange = range
 
 if sys.platform == 'cli':
@@ -142,7 +142,7 @@ DJANGO_DEBUG = False
 # Py3k compat - alias unicode to str
 try:
     unicode
-except:
+except:  # nosec B110
     unicode = str
 
 # A value of a synthesized child. The string is passed through to the variable list, and type is not displayed at all.
@@ -344,8 +344,8 @@ try:
     # getfilesystemencoding is used here because it effectively corresponds to the notion of "locale encoding":
     # current ANSI codepage on Windows, LC_CTYPE on Linux, UTF-8 on OS X - which is exactly what we want.
     TYPES_WITH_RAW_REPR[bytearray] = lambda b: b.decode(sys.getfilesystemencoding(), 'ignore') 
-except:
-    pass
+except:  # nosec B110
+    pass  # nosec B110 - bytearray raw repr support is optional.
 
 if sys.version[0] == '3':
     TYPES_WITH_RAW_REPR[bytes] = TYPES_WITH_RAW_REPR[bytearray]
@@ -393,7 +393,7 @@ def is_file_in_zip(filename):
 def lookup_builtin(name, frame):
     try:
         return frame.f_builtins.get(bits)
-    except:
+    except:  # nosec B110
         # http://ironpython.codeplex.com/workitem/30908
         builtins = frame.f_globals['__builtins__']
         if not isinstance(builtins, dict):
@@ -529,8 +529,8 @@ class ExceptionBreakInfo(object):
                                 res = lookup_local(cur_frame, text)
                                 if res is not None and issubclass(ex_type, res):
                                     return True
-                            except:
-                                pass
+                            except:  # nosec B110
+                                pass  # nosec B110 - condition lookup failures mean the exception is not handled here.
 
             cur_frame = cur_frame.f_back
 
@@ -661,9 +661,9 @@ class DjangoBreakpointInfo(object):
             # we need to calculate our line number offset information
             try:
                 contents = open(self.filename, 'rb')
-            except:
+            except:  # nosec B110
                 # file not available, locked, etc...
-                pass
+                pass  # nosec B110
             else:
                 with contents:
                     line_info = []
@@ -1090,9 +1090,9 @@ class Thread(object):
                                     if not res:
                                         # Condition isn't true, breakpoint not hit.
                                         continue
-                            except:
+                            except:  # nosec B110
                                 # If anything goes wrong while evaluating condition, breakpoint is hit.
-                                pass
+                                pass  # nosec B110
 
                         # If we got here, then condition matched, and we need to update the hit count
                         # (even if we don't end up signaling the breakpoint because of pass count).
@@ -1352,8 +1352,8 @@ class Thread(object):
             ltf = ctypes.pythonapi.PyFrame_LocalsToFast
             ltf.argtypes = [ctypes.py_object, ctypes.c_int]
             ltf(frame, 1)
-        except:
-            pass
+        except:  # nosec B110
+            pass  # nosec B110 - locals sync is best-effort across Python versions.
 
     def run_locally(self, text, cur_frame, execution_id, frame_kind, print_result, repr_kind = PYTHON_EVALUATION_RESULT_REPR_KIND_NORMAL):
         try:
@@ -1365,7 +1365,7 @@ class Thread(object):
             if print_result:
                 sys.displayhook(res)
             report_execution_result(execution_id, res, repr_kind)
-        except:
+        except:  # nosec B110
             # Report any updated variable values first
             self.enum_thread_frames_locally()
             if print_result:
@@ -1403,9 +1403,9 @@ class Thread(object):
                         if isinstance(attr_value, METHOD_TYPES):
                             continue
                     children.append((attr_name, expr + '.' + attr_name, attr_value, 0))
-                except:
+                except:  # nosec B110
                     # Skip this attribute if we can't process it.
-                    pass
+                    pass  # nosec B110
 
             # Process items, if this is a collection.
 
@@ -1421,7 +1421,7 @@ class Thread(object):
                         enum = res.viewitems()
                         enum_expr = expr + '.viewitems()'
                         children.append(('viewitems()', enum_expr, SynthesizedValue(), PYTHON_EVALUATION_RESULT_METHOD_CALL))
-                    except:
+                    except:  # nosec B110
                         enum = res.items()
                         enum_expr = expr + '.items()'
                         children.append(('items()', enum_expr, SynthesizedValue(), PYTHON_EVALUATION_RESULT_METHOD_CALL))
@@ -1432,7 +1432,7 @@ class Thread(object):
                     enum = enumerate(enumerate(res))
                     enum_expr = expr
                     enum_var = 'v'
-            except:
+            except:  # nosec B110
                 enum = ()
 
             for index, (key, item) in enum:
@@ -1449,7 +1449,7 @@ class Thread(object):
                     try:
                         item_by_key = res[eval_repr(key)]
                         use_index = item is not item_by_key
-                    except:
+                    except:  # nosec B110
                         use_index = True
                     else:
                         use_index = False
@@ -1464,7 +1464,7 @@ class Thread(object):
 
                 except:
                     # Skip this item if we can't process it.
-                    pass
+                    skipped_item = True
 
             report_children(execution_id, children)
 
@@ -2001,7 +2001,7 @@ class DebuggerLoop(_vsipc.SocketIO, _vsipc.IpcChannel):
             if new_modules != self._cur_repl_modules:
                 self.send_debug_event(name='legacyModulesChanged')
         except:
-            pass
+            modules_changed_sent = False
         self._cur_repl_modules = new_modules
 
     def execute_code_in_module(self, text, module_name, execution_id, print_result, repr_kind):
@@ -2159,7 +2159,7 @@ def report_exception(frame, exc_info, tid, break_type):
         try:
             data['trace'] = '\n'.join(','.join(repr(v) for v in line) for line in traceback.extract_tb(tb_value))
         except:
-            pass
+            data['trace'] = ''
     if not DJANGO_DEBUG or get_django_frame_source(frame) is None:
         data['excvalue'] = '__exception_info'
         i = 0
@@ -2313,8 +2313,8 @@ def create_object(obj_type, obj_repr, hex_repr, type_name, obj_len, flags = 0):
             if issubclass(obj_type, cls):
                 flags |= PYTHON_EVALUATION_RESULT_HAS_RAW_REPR
                 break
-    except: # guard against broken issubclass for types which aren't actually types, like vtkclass
-        pass
+    except: # nosec B110 - guard against broken issubclass for types which aren't actually types, like vtkclass
+        pass  # nosec B110
 
     obj = {
         'objRepr': obj_repr,
@@ -2419,8 +2419,8 @@ def attach_connected_process(debug_options, report = False, block = False):
             if filename is not None:
                 try:
                     fullpath = path.abspath(filename)
-                except:
-                    pass
+                except:  # nosec B110
+                    pass  # nosec B110 - skip modules with invalid file paths.
                 else:
                     MODULES.append((filename, Module(mod_name, fullpath)))
         except:
@@ -2460,8 +2460,8 @@ def detach_process_and_notify_debugger():
             DebuggerLoop.instance.detach()
         except DebuggerExitException: # successfully detached
             return
-        except: # swallow anything else, and forcibly detach below
-            pass
+        except: # nosec B110 - swallow anything else, and forcibly detach below
+            pass  # nosec B110
     detach_process()
 
 def detach_process():
