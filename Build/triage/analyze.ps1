@@ -256,15 +256,24 @@ function Invoke-CopilotOnce {
     # with a per-invocation wall-clock timeout. Returns a hashtable:
     #   @{ ExitCode = int; StdOut = string; StdErr = string; TimedOut = bool }
     #
-    # Why we use Start-Process + WaitForExit(timeout) instead of `&`:
-    # `&` and `Invoke-Expression` don't expose a portable timeout; on long
-    # runs we'd be stuck on a single bad prompt and starve the rest of the
-    # batch. Start-Process gives us a hard kill.
+    # IMPORTANT: do NOT use `Start-Process -ArgumentList` here. PowerShell's
+    # Start-Process serializes ArgumentList back to a single
+    # ProcessStartInfo.Arguments string, and on Linux the receiving process
+    # re-splits that string on whitespace — so any argument that contains
+    # spaces or special chars gets mangled. Production build 14364610 had
+    # all 12 items fail with:
+    #     error: unknown option '-->`'
+    # because the prompt contained the marker `<!-- ptvs-triage-analyze:N -->`
+    # immediately followed by a backtick, and the split-on-space behaviour
+    # treated `-->\`` as a CLI option name.
     #
-    # Why we redirect to temp files instead of -RedirectStandardOutput
-    # directly to in-memory: capturing megabytes of model output via
-    # streams under StrictMode + pwsh-on-linux occasionally truncates; the
-    # file path is bulletproof and trivially readable post-mortem.
+    # ProcessStartInfo.ArgumentList (a Collection<string> on .NET Core 3.0+)
+    # passes each entry through to execve without round-tripping through
+    # the Arguments string. This is the only safe way to pass multi-word /
+    # special-character arguments cross-platform from pwsh.
+    #
+    # See https://github.com/PowerShell/PowerShell/issues/13089 for the
+    # underlying PowerShell behaviour.
     param(
         [Parameter(Mandatory)] [string]   $CopilotPath,
         [Parameter(Mandatory)] [string]   $Prompt,
@@ -274,43 +283,52 @@ function Invoke-CopilotOnce {
         [Parameter(Mandatory)] [int]      $TimeoutSeconds
     )
 
-    $outFile = [IO.Path]::GetTempFileName()
-    $errFile = [IO.Path]::GetTempFileName()
-    $argsList = @(
-        '-p', $Prompt
-        '--add-dir', $AddDir
-        '--allow-all-tools'
-        '--no-color'
-    )
-    if ($ExtraArgs -and $ExtraArgs.Count -gt 0) { $argsList += $ExtraArgs }
-
-    # MUST be a hashtable (not [pscustomobject]) for `@psi` splatting to
-    # bind parameter names correctly; with pscustomobject the entire object
-    # gets passed as the FilePath positional argument and Start-Process
-    # blows up with "system cannot find the file specified".
-    $psi = @{
-        FilePath               = $CopilotPath
-        ArgumentList           = $argsList
-        WorkingDirectory       = $WorkDir
-        RedirectStandardOutput = $outFile
-        RedirectStandardError  = $errFile
-        NoNewWindow            = $true
-        PassThru               = $true
+    $psi = [System.Diagnostics.ProcessStartInfo]::new()
+    $psi.FileName               = $CopilotPath
+    $psi.WorkingDirectory       = $WorkDir
+    $psi.UseShellExecute        = $false
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError  = $true
+    $psi.CreateNoWindow         = $true
+    [void] $psi.ArgumentList.Add('-p')
+    [void] $psi.ArgumentList.Add($Prompt)
+    [void] $psi.ArgumentList.Add('--add-dir')
+    [void] $psi.ArgumentList.Add($AddDir)
+    [void] $psi.ArgumentList.Add('--allow-all-tools')
+    [void] $psi.ArgumentList.Add('--no-color')
+    if ($ExtraArgs) {
+        foreach ($a in $ExtraArgs) {
+            if ($null -ne $a) { [void] $psi.ArgumentList.Add([string] $a) }
+        }
     }
-    $proc = Start-Process @psi
-    $timedOut = $false
-    if (-not $proc.WaitForExit($TimeoutSeconds * 1000)) {
-        $timedOut = $true
+
+    $proc = [System.Diagnostics.Process]::new()
+    $proc.StartInfo = $psi
+    [void] $proc.Start()
+
+    # Read stdout/stderr asynchronously: if the child writes more than the
+    # pipe buffer (~64KB on Linux) and we don't drain it, the child will
+    # block on write and we'll hit our timeout instead of getting a real
+    # exit. Kicking off ReadToEndAsync BEFORE WaitForExit guarantees both
+    # streams drain in parallel with the child running.
+    $stdoutTask = $proc.StandardOutput.ReadToEndAsync()
+    $stderrTask = $proc.StandardError.ReadToEndAsync()
+
+    $exited   = $proc.WaitForExit($TimeoutSeconds * 1000)
+    $timedOut = -not $exited
+    if ($timedOut) {
         try { $proc.Kill($true) } catch { try { $proc.Kill() } catch { } }
         try { $proc.WaitForExit(5000) | Out-Null } catch { }
     }
-    $code = if ($timedOut) { 124 } else { [int] $proc.ExitCode }
+
     $stdout = ''
     $stderr = ''
-    try { $stdout = Get-Content -LiteralPath $outFile -Raw -ErrorAction SilentlyContinue } catch { }
-    try { $stderr = Get-Content -LiteralPath $errFile -Raw -ErrorAction SilentlyContinue } catch { }
-    Remove-Item -LiteralPath $outFile -Force -ErrorAction SilentlyContinue
-    Remove-Item -LiteralPath $errFile -Force -ErrorAction SilentlyContinue
+    try { $stdout = $stdoutTask.GetAwaiter().GetResult() } catch { $stdout = '' }
+    try { $stderr = $stderrTask.GetAwaiter().GetResult() } catch { $stderr = '' }
+
+    $code = if ($timedOut) { 124 } else { [int] $proc.ExitCode }
+    $proc.Dispose()
+
     return @{
         ExitCode = $code
         StdOut   = ([string] $stdout)
@@ -753,12 +771,33 @@ function Invoke-SelfTest {
             @{ id = 7; title = 'seven'; url = 'https://example/7' } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $sanDir 'wi-7.json') -Encoding UTF8
             @{ work_item = @{ id = 7; title = 'seven' } } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $sanDir 'diag-7.json') -Encoding UTF8
 
-            $stubScript = "#!/usr/bin/env bash`necho '<!-- ptvs-triage-analyze:7 -->'`necho '### Triage analysis for [AzDO #7](https://example/7)'`necho '**Root cause category:** PTVS'`necho '**Confidence:** Low'`necho 'stub analysis body'`n"
+            # The stub ALSO dumps its received argv to $COPILOT_ARGV_DUMP so
+            # the test below can verify that every argument arrived as a
+            # single token (regression guard for the Start-Process word-split
+            # bug in production build 14364610 — Copilot CLI rejected `-->\``
+            # because the prompt was tokenised on whitespace).
+            $argvDumpPath = Join-Path $tmp 'argv-dump.txt'
+            $stubScript = @"
+#!/usr/bin/env bash
+DUMP="`${COPILOT_ARGV_DUMP:-/dev/null}"
+echo "ARGC=`$#" > "`$DUMP"
+i=0
+for a in "`$@"; do
+  printf 'ARG[%d]:::%s:::END\n' "`$i" "`$a" >> "`$DUMP"
+  i=`$((i+1))
+done
+echo '<!-- ptvs-triage-analyze:7 -->'
+echo '### Triage analysis for [AzDO #7](https://example/7)'
+echo '**Root cause category:** PTVS'
+echo '**Confidence:** Low'
+echo 'stub analysis body'
+"@
             $stubPath = Join-Path $binDir 'copilot'
             Set-Content -LiteralPath $stubPath -Value $stubScript -Encoding UTF8
             & chmod +x $stubPath 2>$null
 
-            $origToken = $env:COPILOT_GITHUB_TOKEN
+            $origToken    = $env:COPILOT_GITHUB_TOKEN
+            $origArgvDump = $env:COPILOT_ARGV_DUMP
             try {
                 # Use a token long enough to exercise the leak-scrub path
                 # (>=30 chars). This guards against the production regression
@@ -766,8 +805,12 @@ function Invoke-SelfTest {
                 # the `$envTokens` pipeline collapsed to a scalar string and
                 # `.Count` threw under StrictMode.
                 $env:COPILOT_GITHUB_TOKEN = 'github_pat_' + ('S' * 80)
+                $env:COPILOT_ARGV_DUMP    = $argvDumpPath
                 Invoke-Analyze -SanitizedDir $sanDir -PtvsRepo $tmp -OutDir $outDir -PromptTemplate $PromptTemplate -CopilotPath $stubPath -PerItemTimeoutSeconds 30
-            } finally { $env:COPILOT_GITHUB_TOKEN = $origToken }
+            } finally {
+                $env:COPILOT_GITHUB_TOKEN = $origToken
+                $env:COPILOT_ARGV_DUMP    = $origArgvDump
+            }
 
             $out = Join-Path $outDir 'analysis-7.md'
             if (-not (Test-Path -LiteralPath $out)) { Write-Error "E2E: analysis-7.md not created."; $errors++ }
@@ -777,6 +820,34 @@ function Invoke-SelfTest {
                 if ($text -notmatch 'stub analysis body')                      { Write-Error "E2E: stub body missing. Got: $text"; $errors++ }
                 if ($text -match     'Automated triage failed')                { Write-Error "E2E: failure stub written despite stub copilot exiting 0. Got: $text"; $errors++ }
                 if ($text -notmatch '\*\*Root cause category:\*\* PTVS')       { Write-Error "E2E: category missing. Got: $text"; $errors++ }
+            }
+
+            # 6b. Argv-preservation regression (build 14364610): the prompt
+            # MUST arrive as a single argv entry — Start-Process used to
+            # split it on whitespace and Copilot rejected the resulting
+            # `-->\`` token. Assert ARGC == 6 (-p, $Prompt, --add-dir,
+            # $AddDir, --allow-all-tools, --no-color) and that the prompt
+            # arg contains the marker comment intact (the `-->` from the
+            # template line `<!-- ptvs-triage-analyze:{WI_ID} -->`).
+            if (-not (Test-Path -LiteralPath $argvDumpPath)) {
+                Write-Error "Argv-preservation: stub never wrote argv dump (did it run?)."; $errors++
+            } else {
+                $argv = Get-Content -LiteralPath $argvDumpPath -Raw
+                if ($argv -notmatch '^ARGC=6\b') {
+                    Write-Error "Argv-preservation REGRESSION: prompt was word-split. Expected ARGC=6, got:`n$argv"; $errors++
+                }
+                if ($argv -notmatch [regex]::Escape('ARG[0]:::-p:::END')) { Write-Error "Argv: -p not at index 0. Got:`n$argv"; $errors++ }
+                if ($argv -notmatch [regex]::Escape('ARG[2]:::--add-dir:::END')) { Write-Error "Argv: --add-dir not at index 2. Got:`n$argv"; $errors++ }
+                # The prompt arg at index 1 must contain the marker comment
+                # complete with `-->` followed by a literal backtick — the
+                # exact sequence that broke production.
+                if ($argv -notmatch [regex]::Escape('-->`')) {
+                    Write-Error "Argv: prompt did not contain the literal '-->\`' sequence (template line 16's code-spanned marker)."; $errors++
+                }
+                # The literal `-->\`` MUST NOT appear as its own argv entry.
+                if ($argv -match 'ARG\[\d+\]:::-->`?:::END') {
+                    Write-Error "Argv REGRESSION: '-->' arrived as its own argv element — Start-Process is back."; $errors++
+                }
             }
         } finally {
             Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue
