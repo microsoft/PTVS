@@ -21,9 +21,8 @@
 # The summary issue body contains NO sanitized content — only public-safe
 # titles + AzDO URLs. The full sanitized JSON lives only in the AzDO build
 # artifact, which never leaves the devdiv tenant. The per-item analyses
-# Copilot produces ARE posted publicly as issue comments — they are
-# generated from already-sanitized JSON, but operators should still review
-# (the post step is gated on dryRun).
+# Copilot produces ARE posted publicly as issue comments; they're generated
+# from already-sanitized JSON, but operators should still spot-check.
 #
 # Setup prerequisites (one-time):
 #   1. Create variable group `PTVS-Triage-Bridge` in devdiv/DevDiv with two
@@ -32,10 +31,9 @@
 #                        with Issues: Read+Write (post the weekly summary
 #                        issue AND comment per-item analyses on it).
 #        - COPILOT_PAT = fine-grained GitHub PAT with the `Copilot Requests`
-#                        Account permission (account-scoped, not repo-scoped).
-#                        Authenticates the Copilot CLI step. Microsoft's
-#                        `aka.ms/goodbye-msft-pats` policy applies to AzDO
-#                        PATs only — GitHub PATs are unaffected.
+#                        Account permission. Authenticates the Copilot CLI
+#                        step. Microsoft's PAT-allowlist policy applies to
+#                        AzDO PATs only — GitHub PATs are unaffected.
 #      Both PATs expire after at most ~90 days — set a calendar reminder and
 #      rotate by overwriting the variable group value before expiry.
 #   2. Grant the project Build Service identity `View work items in this
@@ -143,9 +141,7 @@ pool:
 jobs:
 - job: Fetch
   displayName: Fetch + sanitize + analyze + post summary issue
-  # 25 items * 180s worst-case copilot + ~10 min Fetch overhead + slack.
-  # The per-item PerItemTimeoutSeconds default in analyze.ps1 (180s) was
-  # picked so the worst-case loop fits inside this budget.
+  # 25 items * 180s per-item Copilot timeout + Fetch overhead + slack.
   timeoutInMinutes: 120
   steps:
   - checkout: self
@@ -303,21 +299,16 @@ jobs:
   #
   # Gated on TWO conditions:
   #   (a) `runAnalyze` pipeline parameter is true (checkbox-controlled at
-  #       Run-pipeline time; defaults to true so cron-triggered runs
-  #       always include the analysis).
-  #   (b) `issueNumber` job variable is non-empty -- post-report-issue.ps1
-  #       emits it on the create/update path and emits empty on the
-  #       dryRun and no-candidates paths.
-  # If either is false the whole Analyze block skips cleanly with zero
-  # Copilot AI credit spend; the Fetch portion of the pipeline still
-  # completes normally and publishes the sanitized artifact.
+  #       Run-pipeline time; defaults to true).
+  #   (b) `issueNumber` job variable is non-empty (post-report-issue.ps1
+  #       emits it on the create/update path and empty on dryRun /
+  #       no-candidates paths).
+  # If either is false, the whole Analyze block skips cleanly with no
+  # Copilot AI credit spend; the Fetch portion still completes normally.
   #
-  # Auth: $(COPILOT_PAT) — a GitHub fine-grained PAT with the `Copilot
-  # Requests` Account permission, stored as a SECRET in the
-  # PTVS-Triage-Bridge variable group. analyze.ps1 detects both an
-  # unset COPILOT_PAT variable and the unresolved-macro fingerprint
-  # `$(COPILOT_PAT)` left behind when the variable group is unlinked,
-  # and throws a clear error in both cases.
+  # Auth: $(COPILOT_PAT). analyze.ps1 detects both an unset variable and
+  # the unresolved-macro fingerprint `$(COPILOT_PAT)` left behind when
+  # the variable group is unlinked.
 
   - task: NodeTool@0
     displayName: 'Install Node.js 22 (for Copilot CLI)'
@@ -341,11 +332,9 @@ jobs:
     displayName: 'analyze.ps1 — Copilot per-item triage'
     condition: and(succeeded(), eq(variables['RUN_ANALYZE'], 'True'), ne(variables['issueNumber'], ''))
     env:
-      # COPILOT_PAT = fine-grained GitHub PAT, `Copilot Requests` Account
-      # permission. Authenticates Copilot CLI for inference.
-      # GH_TOKEN here lets the agentic `gh issue list` / `gh pr list`
-      # calls Copilot makes against microsoft/PTVS authenticate without
-      # re-prompting. Same Issues:Read+Write PAT we already use to post.
+      # COPILOT_GITHUB_TOKEN authenticates the Copilot CLI for inference.
+      # GH_TOKEN lets agentic `gh issue list` / `gh pr list` calls Copilot
+      # makes against microsoft/PTVS authenticate without re-prompting.
       COPILOT_GITHUB_TOKEN: $(COPILOT_PAT)
       GH_TOKEN:             $(GH_PAT)
     inputs:
@@ -360,12 +349,9 @@ jobs:
   - publish: $(Agent.TempDirectory)/analyses
     displayName: 'Publish analyses artifact (audit trail, devdiv-internal)'
     artifact: analyses-$(Build.BuildId)
-    # `succeeded()` (not `succeededOrFailed()`): if analyze.ps1 threw
-    # before reaching its `New-Item -Path $OutDir` call (e.g., missing
-    # COPILOT_PAT), the dir does not exist and `publish:` would error
-    # trying to read it. When analyze.ps1 succeeds with per-item stubs
-    # (the common partial-failure case) it still exits 0, so the
-    # artifact still uploads.
+    # `succeeded()` (not `succeededOrFailed()`): if analyze.ps1 threw before
+    # creating $OutDir, `publish:` would error trying to read a missing dir.
+    # Per-item stub failures still exit 0, so the artifact still uploads.
     condition: and(succeeded(), eq(variables['RUN_ANALYZE'], 'True'), ne(variables['issueNumber'], ''))
 
   - task: PowerShell@2

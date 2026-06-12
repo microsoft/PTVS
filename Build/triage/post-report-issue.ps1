@@ -263,13 +263,10 @@ function Update-ReportIssue {
 }
 
 function Set-AzdoOutputVariable {
-    # Emit ##vso[task.setvariable variable=NAME]VALUE so any subsequent step
-    # in the same job can read the value in `condition:` expressions as
-    # `variables['NAME']` and in scripts as `$(NAME)`. Same-job consumption
-    # does NOT require isOutput=true (per the official conditions doc); the
-    # simpler form avoids the `stepName.varName` reference convention and
-    # keeps fetch.yml's condition expressions readable. Outside AzDO this
-    # marker is just text in stdout.
+    # Emit `##vso[task.setvariable variable=NAME]VALUE` so subsequent steps
+    # in the same job can read it as `variables['NAME']` in conditions or
+    # `$(NAME)` in scripts. Same-job consumption doesn't need isOutput=true.
+    # Outside AzDO this marker is just text in stdout.
     param(
         [Parameter(Mandatory)] [string] $Name,
         [Parameter()] [AllowEmptyString()] [string] $Value = ''
@@ -459,9 +456,8 @@ function Invoke-SelfTest {
     # crash with "The property 'Count' cannot be found on this object".
     # Regression for the case the FeedbackTicket-only filter hits constantly:
     # a typical week has 0 open DC items in the lookback window.
-    # ALSO asserts that the no-candidates path still emits an empty
-    # issueNumber output variable -- the downstream Analyze block in
-    # fetch.yml gates on this being empty to skip cleanly.
+    # Also asserts that the no-candidates path still emits an empty
+    # issueNumber output variable — the Analyze block gates on this.
     $tmpRoot = Join-Path ([IO.Path]::GetTempPath()) ("post-empty-{0}" -f ([Guid]::NewGuid().ToString('N')))
     New-Item -ItemType Directory -Force -Path $tmpRoot | Out-Null
     try {
@@ -470,8 +466,7 @@ function Invoke-SelfTest {
         $cfgPath = Join-Path $PSScriptRoot 'config.json'
         $cfg = Get-TriageConfig -Path $cfgPath
         try {
-            # Capture stdout to assert the AzDO output-variable marker is emitted
-            # on the empty-candidates path.
+            # Capture stdout to assert the AzDO output-variable marker is emitted.
             $out = Invoke-Post -CandidatesFile $emptyFile -LookbackDays 7 -RunUrl 'https://example/run/x' -Config $cfg -DryRun *>&1 | Out-String
             if ($out -notmatch '##vso\[task\.setvariable variable=issueNumber\]') {
                 Write-Error "Invoke-Post on empty candidates did not emit the issueNumber output marker. Captured:`n$out"; $errors++
@@ -484,8 +479,6 @@ function Invoke-SelfTest {
     }
 
     # Set-AzdoOutputVariable format: emits the exact marker AzDO parses.
-    # Same-job consumption (variables['NAME'] in conditions, $(NAME) in
-    # scripts) does not require isOutput=true.
     $out = Set-AzdoOutputVariable -Name 'foo' -Value 'bar-baz' *>&1 | Out-String
     if ($out.Trim() -ne '##vso[task.setvariable variable=foo]bar-baz') {
         Write-Error "Set-AzdoOutputVariable wrong format: '$($out.Trim())'"; $errors++

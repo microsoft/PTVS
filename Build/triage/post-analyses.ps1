@@ -85,12 +85,8 @@ function Get-Marker {
 }
 
 function Get-AnalysisFiles {
-    # Returns array of [pscustomobject] @{ Path; Id }, sorted by id.
-    # ALWAYS returns an [object[]] via `,(...)` — without the unary comma,
-    # the function-return pipeline would unwrap a 0-element collection to
-    # $null and a 1-element collection to the scalar PSCustomObject. The
-    # call site relies on `.Count -eq 0` and `foreach` semantics that work
-    # only on a real array.
+    # Returns [pscustomobject[]] of @{ Path; Id }, sorted by id. Unary
+    # comma on return preserves array shape (StrictMode-safe).
     param([Parameter(Mandatory)] [string] $Dir)
     if (-not (Test-Path -LiteralPath $Dir)) {
         throw "AnalysisDir not found: $Dir"
@@ -108,10 +104,9 @@ function Get-AnalysisFiles {
 }
 
 function Get-ExistingMarkers {
-    # Returns a HashSet[string] of marker comment strings already present on
-    # the target issue. Paginates the comments endpoint defensively (the
-    # default per_page is 30; weekly triage issues may have >30 comments
-    # accumulated over re-runs).
+    # Returns a HashSet[string] of marker comments already on the issue.
+    # Paginates defensively (per_page=100; weekly issues may accumulate
+    # >30 comments across re-runs).
     param(
         [Parameter(Mandatory)] [hashtable] $Headers,
         [Parameter(Mandatory)] [string]    $Owner,
@@ -130,8 +125,8 @@ function Get-ExistingMarkers {
             $body = [string] (& { if ($c.PSObject.Properties['body']) { $c.body } else { '' } })
             foreach ($m in [regex]::Matches($body, '<!--\s*ptvs-triage-analyze:(\d+)\s*-->')) {
                 $seen.Add($m.Value.Trim()) | Out-Null
-                # Also normalize whitespace-insensitively so a model-emitted
-                # extra space inside the comment doesn't fool us.
+                # Also add the normalized form so model-emitted extra
+                # whitespace inside the marker doesn't fool us.
                 $seen.Add(("<!-- ptvs-triage-analyze:{0} -->" -f $m.Groups[1].Value)) | Out-Null
             }
         }
@@ -142,10 +137,9 @@ function Get-ExistingMarkers {
             break
         }
     }
-    # Unary comma prevents the PowerShell return pipeline from enumerating
-    # the HashSet — without this, an empty HashSet returns as $null and a
-    # non-empty one collapses to a [string[]] / scalar, breaking `.Count`
-    # at the call site under StrictMode.
+    # Unary comma prevents the return pipeline from enumerating the HashSet
+    # (which would unwrap 0 elements to $null and break `.Count` at the
+    # call site under StrictMode).
     return ,$seen
 }
 
@@ -207,11 +201,6 @@ function Invoke-Post {
     }
     $issueInt = [int] $IssueNumber
 
-    # NOTE: Do NOT wrap Get-AnalysisFiles in @(...) — it returns a typed
-    # [object[]] via `return ,(...)` (unary comma) so its shape is already
-    # guaranteed. Wrapping in @(...) here would produce a 1-element Object[]
-    # containing the inner array (because @() only enumerates the outer
-    # layer), which would then bypass the "no files" check and crash later.
     $files = Get-AnalysisFiles -Dir $AnalysisDir
     if ($files.Count -eq 0) {
         Write-Warning "No analysis-*.md files in $AnalysisDir. Nothing to post."
@@ -219,10 +208,9 @@ function Invoke-Post {
     }
     Write-Host "Found $($files.Count) analysis file(s); target issue: $Owner/$Repo#$issueInt"
 
-    # Pre-initialize. Avoid `$x = if (...) { [HashSet]::new() }` form: PowerShell
-    # can enumerate an IEnumerable that's the sole if-expression value and
-    # collapse an empty HashSet to $null, which then trips StrictMode on
-    # `.Count`. Explicit assignment side-steps the enumeration entirely.
+    # Pre-initialize to a real empty HashSet; the if-expression form
+    # (`$x = if (...) { [HashSet]::new() }`) can enumerate and collapse
+    # an empty set to $null, which trips StrictMode on `.Count`.
     $existingMarkers = [System.Collections.Generic.HashSet[string]]::new()
     $headers         = $null
     if (-not $DryRun) {
@@ -263,10 +251,9 @@ function Invoke-Post {
         }
     }
 
-    # Final summary. The summary marker is run-id-scoped so successive runs
-    # produce distinct summaries (operators want to see what each re-run did).
-    # AzDO sets $env:BUILD_BUILDID; GitHub Actions sets $env:GITHUB_RUN_ID;
-    # fall back to a GUID for local dev so the function never errors.
+    # Final summary. Marker is run-id-scoped so successive runs produce
+    # distinct summaries. AzDO sets $env:BUILD_BUILDID; fall back to a
+    # GUID for local dev.
     $runId = if ($env:BUILD_BUILDID) { $env:BUILD_BUILDID }
              elseif ($env:GITHUB_RUN_ID) { $env:GITHUB_RUN_ID }
              else { [Guid]::NewGuid().ToString('N') }
@@ -304,18 +291,13 @@ function Invoke-SelfTest {
         Set-Content -LiteralPath (Join-Path $tmp 'analysis-100.md') -Value 'x'
         Set-Content -LiteralPath (Join-Path $tmp 'notes.md')       -Value 'x'
         Set-Content -LiteralPath (Join-Path $tmp 'analysis-abc.md') -Value 'x'
-        # Get-AnalysisFiles returns a typed [object[]] via `,(...)` so do
-        # not wrap in @(...) at the call site (would produce 1-elem Object[]
-        # wrapping the inner array).
         $files = Get-AnalysisFiles -Dir $tmp
         if ($files.Count -ne 3) { Write-Error "Expected 3 numeric analyses, got $($files.Count)"; $errors++ }
         if ($files[0].Id -ne 9 -or $files[1].Id -ne 10 -or $files[2].Id -ne 100) {
             Write-Error "Numeric sort broken: $($files.Id -join ',')"; $errors++
         }
-        # Empty-dir case: must return a real empty array (Count==0), NOT $null
-        # (which would crash StrictMode `.Count`) and NOT a 1-element array
-        # containing $null (which would bypass the Count==0 check and crash
-        # later on `$f.Id`).
+        # Shape regression: empty / single-file dirs must return real
+        # arrays (.Count works under StrictMode).
         $emptyDir = Join-Path ([IO.Path]::GetTempPath()) ("post-analyses-empty-{0}" -f ([Guid]::NewGuid().ToString('N')))
         New-Item -ItemType Directory -Force -Path $emptyDir | Out-Null
         try {
@@ -336,10 +318,9 @@ function Invoke-SelfTest {
     }
 
     # 3. Get-ExistingMarkers: parses markers out of comment bodies, normalizes
-    #    whitespace variants, and follows pagination boundaries. CRITICAL:
-    #    must NOT match failure-stub markers `<!-- ptvs-triage-analyze:N:failed:BID -->`
-    #    -- those carry a BuildId suffix so successful retries are not blocked
-    #    by an earlier run's failure-stub comment.
+    #    whitespace variants, follows pagination. CRITICAL: must NOT match
+    #    failure-stub markers `<!-- ptvs-triage-analyze:N:failed:BID -->` —
+    #    those carry a BuildId suffix so successful retries aren't blocked.
     $script:__page = 0
     function script:Invoke-RestMethod {
         param([string] $Method, [string] $Uri, [hashtable] $Headers)
@@ -348,9 +329,9 @@ function Invoke-SelfTest {
             1 { return @(
                   [pscustomobject] @{ body = "<!-- ptvs-triage-analyze:1 -->`nhi" },
                   [pscustomobject] @{ body = '<!--   ptvs-triage-analyze:2   --> spaced' },
-                  # Failure stub from a previous run; MUST be ignored by the regex
-                  # so a successful retry for item 5 lands a new (real) comment.
-                  [pscustomobject] @{ body = "<!-- ptvs-triage-analyze:5:failed:14400000 -->`nstub" }
+                  # Failure stub from a previous run; MUST be ignored by the
+                  # regex so a successful retry for item 5 lands a real comment.
+                  [pscustomobject] @{ body = "<!-- ptvs-triage-analyze:5:failed:abc123 -->`nstub" }
                 ) }
             2 { return @(
                   [pscustomobject] @{ body = '<!-- ptvs-triage-analyze:3 -->' },
@@ -360,12 +341,8 @@ function Invoke-SelfTest {
         }
     }
     try {
-        # Force-pretend first call returns >=100 so a second page is fetched.
-        # Simpler: monkey-patch to always return small pages, but treat first
-        # response's "items.Count -lt 100" check as the loop exit. Our shadow
-        # returns 2 items on page 1, which is < 100, so the loop exits after
-        # page 1. To exercise multi-page we'd need 100+ items; instead verify
-        # the marker normalization on a single page works.
+        # Single-page run: shadow returns 2 items on page 1, < 100, so the
+        # loop exits after page 1. Verifies marker normalization works.
         $markers = Get-ExistingMarkers -Headers @{} -Owner 'o' -Repo 'r' -IssueNumber 1
         if (-not $markers.Contains('<!-- ptvs-triage-analyze:1 -->')) {
             Write-Error "Marker 1 missing; got: $($markers -join '|')"; $errors++
@@ -374,9 +351,8 @@ function Invoke-SelfTest {
         if (-not $markers.Contains('<!-- ptvs-triage-analyze:2 -->')) {
             Write-Error "Normalized marker 2 missing; got: $($markers -join '|')"; $errors++
         }
-        # Failure stub MUST NOT appear in the marker set. If it did, a
-        # successful retry for item 5 in a later run would be incorrectly
-        # treated as "already posted" and silently skipped.
+        # Failure stub MUST NOT appear in the marker set, else a successful
+        # retry for item 5 in a later run would be incorrectly skipped.
         if ($markers.Contains('<!-- ptvs-triage-analyze:5 -->')) {
             Write-Error "Failure-stub for item 5 leaked into the success-marker set — successful retries would be blocked."; $errors++
         }
@@ -391,9 +367,7 @@ function Invoke-SelfTest {
     }
 
     # 3b. Get-ExistingMarkers: empty-page case must return an empty HashSet
-    #     (not $null), so the caller's `.Count` and `.Contains()` work.
-    #     Regression guard: the PowerShell return pipeline can enumerate an
-    #     IEnumerable HashSet and collapse it to $null for 0 elements.
+    #     (not $null) so the caller's `.Count` and `.Contains()` work.
     function script:Invoke-RestMethod {
         param([string] $Method, [string] $Uri, [hashtable] $Headers)
         return @()

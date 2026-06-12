@@ -115,13 +115,9 @@ function Build-Prompt {
 }
 
 function Get-CandidatePairs {
-    # Returns an array of [pscustomobject] with WiFile, DiagFile (may be $null),
-    # Id (int), Wi (parsed object), Diag (parsed object or $null), Aborted (bool).
-    # Sorted by id ascending so analyses post in a stable order on the issue.
-    # Always returns a typed array (not $null, not a scalar) via the unary
-    # comma operator — the PowerShell function-return pipeline would
-    # otherwise unwrap a 0-element collection to $null or a 1-element
-    # collection to the scalar element, breaking StrictMode `.Count`.
+    # Returns [pscustomobject[]] of WiFile, DiagFile, Id, Wi, Diag, Aborted,
+    # sorted by id ascending. Unary comma on return preserves array shape
+    # (StrictMode-safe for 0/1 element cases).
     param([Parameter(Mandatory)] [string] $Root)
 
     if (-not (Test-Path -LiteralPath $Root)) {
@@ -174,16 +170,10 @@ function Get-CandidatePairs {
 }
 
 function Get-FailureStub {
-    # Markdown body written when Copilot CLI failed for an item.
-    #
-    # The marker comment intentionally INCLUDES the BuildId after the id
-    # (e.g. `<!-- ptvs-triage-analyze:5:failed:14400000 -->`) so it does
-    # NOT collide with post-analyses.ps1's idempotency regex (which only
-    # matches `<!-- ptvs-triage-analyze:\d+ -->`). Consequence: a
-    # successful retry in a later run is NEVER blocked by a previous run's
-    # failure-stub comment. The trade-off is that re-runs accumulate
-    # distinct failure-stub comments on the issue — operator can manually
-    # delete stale ones if the issue gets noisy.
+    # Markdown body for items where Copilot CLI failed. The marker comment
+    # carries a BuildId suffix (`...:failed:<id>`) so it doesn't collide
+    # with post-analyses.ps1's success-marker regex — successful retries
+    # in later runs are never blocked by a previous failure-stub comment.
     param(
         [Parameter(Mandatory)] [int]    $Id,
         [Parameter(Mandatory)] [string] $WiUrl,
@@ -211,19 +201,12 @@ maintainer can re-run the PTVS-Triage-Fetch pipeline to retry.
 }
 
 function Find-LeakedTokenFingerprints {
-    # Defense-in-depth against prompt-injection-induced secret leakage.
-    # Scans the model's output for the LITERAL value of any token we passed
-    # into the Copilot CLI invocation env. If a customer feedback ticket
-    # contains a prompt-injection asking the model to dump env vars, the
-    # model could in principle echo COPILOT_GITHUB_TOKEN or GH_TOKEN into
-    # its stdout — which would then be posted as a public GitHub comment.
-    # AzDO's automatic secret-masking applies to live job logs only, NOT to
-    # files / artifact uploads / outbound REST calls, so we must scrub here.
-    #
-    # Returns an array of opaque fingerprints (`<token len=N head=X***>`)
-    # for any tokens found in $Text. The function never returns the actual
-    # secret value (or any substring long enough to reconstruct it) — the
-    # fingerprint is for log-warning purposes only.
+    # Defense against prompt-injection-induced secret leakage. Scans $Text
+    # for the literal value of any token in $Tokens; returns opaque
+    # fingerprints (`<token len=N head=X***>`) for matches. NEVER returns
+    # the secret value or any reconstructible substring. AzDO's automatic
+    # secret-masking only covers live job logs, not file writes / artifacts
+    # / outbound REST, so we must scrub before any of those happen.
     param(
         [Parameter(Mandatory)] [AllowEmptyString()] [string] $Text,
         [Parameter()]          [string[]] $Tokens = @()
@@ -232,58 +215,31 @@ function Find-LeakedTokenFingerprints {
     $found = New-Object System.Collections.Generic.List[string]
     foreach ($t in $Tokens) {
         if ([string]::IsNullOrEmpty($t)) { continue }
-        # Ignore short / placeholder values: a real fine-grained PAT is ≥80
-        # chars; an unresolved macro is 14 chars; the 30-char floor catches
-        # only realistic tokens without false-positiving on every Foo / Bar.
+        # 30-char floor: real fine-grained PAT is ≥80 chars; unresolved AzDO
+        # macros are 14 chars. Catches realistic tokens without false-
+        # positiving on every Foo / Bar.
         if ($t.Length -lt 30) { continue }
         if ($Text.Contains($t)) {
             $found.Add(("<token len={0} head={1}***>" -f $t.Length, $t.Substring(0, 1))) | Out-Null
         }
     }
-    # Return a typed [string[]] array. The PowerShell return pipeline will
-    # unwrap an [string[]] cleanly to the call site WITHOUT collapsing 0/1
-    # element collections to $null / scalar (which IS what `List<T>` would
-    # have done if returned directly via `$found`). Call sites should still
-    # NOT wrap this in `@(...)` because `@(<array>)` only enumerates the
-    # outermost layer and would produce a 1-element Object[] containing the
-    # typed array. Pattern: `$x = Find-LeakedTokenFingerprints ...; $x.Count`
-    # is safe (Count works on [string[]] of any length including 0).
+    # Unary comma preserves typed [string[]] shape across the return
+    # pipeline. Call sites must NOT wrap in @(...) — that would produce
+    # a 1-element Object[] containing the inner array.
     return ,$found.ToArray()
 }
 
 function Get-AnalysisFromCopilotStdOut {
-    # Strips the Copilot CLI's non-interactive "trace" preamble from raw
-    # stdout, returning just the model's published analysis with the
-    # idempotency marker as the first line.
+    # Strips Copilot CLI's non-interactive trace preamble (tool-call bullets,
+    # box-drawing chars, mid-stream commentary) from raw stdout and returns
+    # just the published analysis with the idempotency marker as line 1.
     #
-    # Copilot CLI's non-interactive mode (`-p`) writes per-tool-call
-    # trace lines to stdout BEFORE the model's actual reply, e.g.:
-    #     ● Search (grep)
-    #       │ "ReturnCode" in **/*.cs
-    #       └ 3 files found
-    #     ● Check duplicate issue details (shell)
-    #       │ gh issue view 7249 ...
-    #       └ 2 lines...
-    #     Now I have enough context to write the triage analysis.
-    #     <!-- ptvs-triage-analyze:N -->
-    #     ### Triage analysis for [AzDO #N](...)
-    #     ...
-    # That preamble is meant for an interactive terminal, not a public
-    # GitHub issue comment. Strategy: find the LAST occurrence of the
-    # mandated heading `### Triage analysis for [AzDO #<Id>]` and
-    # discard everything before it. The heading shape is dictated by
-    # the prompt template and is structurally distinct from any tool-
-    # trace line, so anchoring on it is safe. We use the LAST occurrence
-    # in case the trace preamble itself happened to quote the heading.
-    #
-    # The function then prepends the idempotency marker — Copilot is
-    # told to emit the marker BEFORE the heading, but we sliced from the
-    # heading onward, so we always re-add it. Re-prepending unconditionally
-    # also covers the rare case where the model omitted the marker entirely.
-    #
-    # If the heading is not found at all (model ignored the template),
-    # return the raw stdout with the marker prepended and emit a warning;
-    # let the maintainer notice the formatting drift on the posted issue.
+    # Strategy: anchor on the LAST occurrence of the prompt-mandated heading
+    # `### Triage analysis for [AzDO #<Id>]` and discard everything before
+    # it, then prepend the marker. LAST occurrence guards against the trace
+    # quoting the heading while echoing the prompt. If the heading is
+    # absent, fall back to raw stdout with a warning so the maintainer
+    # notices the formatting drift.
     param(
         [Parameter(Mandatory)] [AllowEmptyString()] [string] $RawStdOut,
         [Parameter(Mandatory)] [int]                         $Id
@@ -306,27 +262,16 @@ function Get-AnalysisFromCopilotStdOut {
 
 function Invoke-CopilotOnce {
     # Runs `copilot -p <prompt> --add-dir <repo> --allow-all-tools --no-color`
-    # with a per-invocation wall-clock timeout. Returns a hashtable:
+    # with a per-invocation wall-clock timeout. Returns:
     #   @{ ExitCode = int; StdOut = string; StdErr = string; TimedOut = bool }
     #
-    # IMPORTANT: do NOT use `Start-Process -ArgumentList` here. PowerShell's
-    # Start-Process serializes ArgumentList back to a single
-    # ProcessStartInfo.Arguments string, and on Linux the receiving process
-    # re-splits that string on whitespace — so any argument that contains
-    # spaces or special chars gets mangled. Production build 14364610 had
-    # all 12 items fail with:
-    #     error: unknown option '-->`'
-    # because the prompt contained the marker `<!-- ptvs-triage-analyze:N -->`
-    # immediately followed by a backtick, and the split-on-space behaviour
-    # treated `-->\`` as a CLI option name.
-    #
-    # ProcessStartInfo.ArgumentList (a Collection<string> on .NET Core 3.0+)
-    # passes each entry through to execve without round-tripping through
-    # the Arguments string. This is the only safe way to pass multi-word /
-    # special-character arguments cross-platform from pwsh.
-    #
-    # See https://github.com/PowerShell/PowerShell/issues/13089 for the
-    # underlying PowerShell behaviour.
+    # Uses [ProcessStartInfo]::new() + ArgumentList.Add() directly instead
+    # of `Start-Process -ArgumentList`. Start-Process serializes args back
+    # to a single Arguments string which Linux then re-splits on whitespace,
+    # mangling any arg with spaces or special chars (e.g. the prompt's
+    # `<!-- ... -->` markup). ProcessStartInfo.ArgumentList passes each
+    # entry through to execve unmodified.
+    # See https://github.com/PowerShell/PowerShell/issues/13089
     param(
         [Parameter(Mandatory)] [string]   $CopilotPath,
         [Parameter(Mandatory)] [string]   $Prompt,
@@ -359,11 +304,9 @@ function Invoke-CopilotOnce {
     $proc.StartInfo = $psi
     [void] $proc.Start()
 
-    # Read stdout/stderr asynchronously: if the child writes more than the
-    # pipe buffer (~64KB on Linux) and we don't drain it, the child will
-    # block on write and we'll hit our timeout instead of getting a real
-    # exit. Kicking off ReadToEndAsync BEFORE WaitForExit guarantees both
-    # streams drain in parallel with the child running.
+    # Read stdout/stderr async: kicking off ReadToEndAsync BEFORE WaitForExit
+    # drains both pipes in parallel with the child, so a child writing more
+    # than ~64KB doesn't block on a full pipe and trip our timeout.
     $stdoutTask = $proc.StandardOutput.ReadToEndAsync()
     $stderrTask = $proc.StandardError.ReadToEndAsync()
 
@@ -403,10 +346,9 @@ function Invoke-Analyze {
     )
 
     # AzDO leaves the literal `$(VarName)` in the env var when the named
-    # variable doesn't exist in any visible scope (variable group not linked,
-    # name typo, etc). A null-or-whitespace check alone treats the 14-char
-    # placeholder as a real value and silently 401s downstream. Same
-    # fingerprint detection as the smoke step used.
+    # variable isn't in scope (variable group unlinked, name typo). The
+    # 14-char macro fingerprint would pass a null-check and silently 401
+    # downstream, so detect it explicitly.
     $token = $env:COPILOT_GITHUB_TOKEN
     $isUnresolvedMacro = ($token -and ($token -match '^\$\([A-Za-z_][A-Za-z0-9_.]*\)$'))
     if ([string]::IsNullOrWhiteSpace($token) -or $isUnresolvedMacro) {
@@ -433,20 +375,14 @@ function Invoke-Analyze {
     $logDir = Join-Path $OutDir '.logs'
     New-Item -ItemType Directory -Force -Path $logDir | Out-Null
 
-    # Get-CandidatePairs returns a typed array via `,(...)` (unary comma)
-    # so its shape is guaranteed — do NOT wrap in @() here (which would
-    # produce a 1-element Object[] wrapping the inner array).
     $pairs = Get-CandidatePairs -Root $SanitizedDir
     if ($pairs.Count -eq 0) {
         Write-Warning "No wi-*.json files found under $SanitizedDir. Nothing to analyze."
         return
     }
 
-    # Filter aborted items (belt-and-suspenders; Fetch already drops these).
-    # @(...) wrap defends against the 0-or-1-result Where-Object collapse:
-    # PowerShell would otherwise unwrap a 1-element pipeline output to a
-    # scalar, breaking `.Count` and the `Select-Object -First $MaxItems`
-    # path under StrictMode.
+    # Belt-and-suspenders: Fetch already drops aborted items. @(...) keeps
+    # array shape if Where-Object yields a single match.
     $eligible = @($pairs | Where-Object { -not $_.Aborted })
     $skipped  = @($pairs | Where-Object { $_.Aborted })
     foreach ($s in $skipped) {
@@ -459,19 +395,16 @@ function Invoke-Analyze {
 
     Write-Host "Analyzing $($eligible.Count) item(s); $($skipped.Count) skipped as aborted."
     $okCount = 0; $failCount = 0
-    # BuildId is propagated into failure-stub markers so re-runs that
-    # succeed are NOT blocked by an earlier run's failure-stub comment.
-    # Use AzDO's BUILD_BUILDID; fall back to a process-unique value so
-    # local dev still produces distinct stubs across invocations.
+    # BuildId in failure-stub markers prevents successful retries from being
+    # blocked by an earlier run's failure stub. Fall back to a process-unique
+    # value for local dev.
     $buildId = if ($env:BUILD_BUILDID) { $env:BUILD_BUILDID } else { ([Guid]::NewGuid().ToString('N')).Substring(0, 8) }
     foreach ($p in $eligible) {
         $id     = $p.Id
         $wiUrl  = [string] (Get-OptionalProp -Object $p.Wi -Name 'url' -Default '')
         $wiJson = ($p.Wi   | ConvertTo-Json -Depth 25)
-        # diag-<id>.json is optional — when none was emitted (shouldn't happen
-        # in the current Fetch pipeline, but the schema allows it), embed an
-        # explicit "no diagnostics" marker so the model knows the data is
-        # missing, not just empty.
+        # diag-<id>.json is optional. Embed an explicit marker when absent
+        # so the model knows the data is missing, not just empty.
         $diagJson = if ($p.Diag) { $p.Diag | ConvertTo-Json -Depth 25 } else { '{"note":"no diag-*.json was emitted for this work item"}' }
 
         $prompt = Build-Prompt -Template $template `
@@ -500,21 +433,14 @@ function Invoke-Analyze {
         }
         $dur = [int] ((Get-Date) - $start).TotalSeconds
 
-        # Always write the stderr log for post-mortem regardless of success.
-        # Run the same leak scrub as on the analysis output: Copilot CLI
-        # itself could in principle echo a token in an error message, and
-        # the .logs/ dir ships in the public-internal audit artifact.
+        # Always write stderr for post-mortem; scrub for env-token leaks
+        # before write since the .logs/ dir ships in the audit artifact.
         if ($r.StdErr) {
             $errText = [string] $r.StdErr
-            # @(...) forces array shape: a `Where | Sort` pipeline yielding
-            # a single match would otherwise collapse to a scalar string
-            # under StrictMode, and `.Count` on a string throws.
+            # @(...) keeps array shape if Where|Sort yields a single match.
             $envTokensErr = @(@($env:COPILOT_GITHUB_TOKEN, $env:GH_TOKEN, $env:GITHUB_TOKEN) |
                               Where-Object { -not [string]::IsNullOrEmpty($_) -and $_.Length -ge 30 } |
                               Sort-Object Length -Descending)
-            # Note: Find-LeakedTokenFingerprints returns a typed [string[]]
-            # via `return ,$arr.ToArray()` — DO NOT wrap in @(...) here, or
-            # the typed array becomes a 1-element Object[] wrapping it.
             $errLeak = Find-LeakedTokenFingerprints -Text $errText -Tokens $envTokensErr
             if ($errLeak.Count -gt 0) {
                 Write-Warning "  SECURITY: stderr for #${id} contained leaked token(s) $($errLeak -join ', '); redacting before write."
@@ -546,27 +472,16 @@ function Invoke-Analyze {
             $failCount++
             continue
         }
-        # Strip the Copilot CLI's non-interactive trace preamble (tool-call
-        # bullets, box-drawing chars, mid-stream commentary). See
-        # Get-AnalysisFromCopilotStdOut for full rationale.
+        # Strip Copilot CLI's non-interactive trace preamble.
         $output = Get-AnalysisFromCopilotStdOut -RawStdOut ([string] $r.StdOut) -Id $id
 
-        # Defense against prompt-injection-induced token leakage: if the
-        # model's output contains the literal value of any token we passed
-        # in via env, redact it before the analysis ever touches disk (and
-        # therefore before it can be uploaded as an artifact or posted as
-        # a public GitHub comment). See Find-LeakedTokenFingerprints.
-        # Tokens sorted by length DESCENDING so a longer token that
-        # contains a shorter one as a substring is fully redacted before
-        # the shorter-token iteration runs (otherwise the substring scrub
-        # would mutate the longer token mid-text and leave a partial leak).
-        # @(...) wraps force array shape: a 0-element or 1-element pipeline
-        # result would otherwise unwrap to $null / scalar under StrictMode
-        # and crash on the next `.Count` access.
+        # Scrub any env-var token value that the model echoed back in its
+        # output. Tokens sorted by length DESCENDING so a longer token is
+        # fully redacted before a shorter substring iteration would mutate
+        # it mid-text. See Find-LeakedTokenFingerprints.
         $envTokens = @(@($env:COPILOT_GITHUB_TOKEN, $env:GH_TOKEN, $env:GITHUB_TOKEN) |
                        Where-Object { -not [string]::IsNullOrEmpty($_) -and $_.Length -ge 30 } |
                        Sort-Object Length -Descending)
-        # Note: DO NOT wrap in @(...) — see analogous comment in stderr scrub.
         $leakedFingerprints = Find-LeakedTokenFingerprints -Text $output -Tokens $envTokens
         if ($leakedFingerprints.Count -gt 0) {
             Write-Warning "  SECURITY: analysis for #${id} contained leaked token(s) $($leakedFingerprints -join ', '); redacting before write."
@@ -583,9 +498,8 @@ function Invoke-Analyze {
     Write-Host ""
     Write-Host "Analyses complete: $okCount succeeded, $failCount failed, $($skipped.Count) skipped-aborted."
     if ($okCount -eq 0 -and $failCount -gt 0) {
-        # Total wipeout is worth signaling loudly — likely auth, quota, or
-        # binary issue. But don't fail the step; the analyses artifact still
-        # carries useful triage stubs for the operator.
+        # Zero successes is worth signaling loudly — usually auth, quota, or
+        # binary. Don't fail the step; the artifact still carries the stubs.
         Write-Warning "Zero successful analyses in this run. Check .logs/copilot-*.log for the failure pattern (auth? quota? network?)."
     }
 }
@@ -606,9 +520,7 @@ function Invoke-SelfTest {
     if ($p -notmatch [regex]::Escape('{"d":null}')) { Write-Error "Build-Prompt didn't include diag JSON. Got: $p"; $errors++ }
 
     # 2. Get-CandidatePairs: walks dir, parses JSON, sorts by id, marks
-    #    aborted items, attaches diag when present, no diag → property = $null.
-    #    Returns a typed [object[]] via `,(...)` — call sites must NOT wrap
-    #    in @(...) (would produce 1-elem array wrapping the inner array).
+    #    aborted items, attaches diag when present, no diag => $null.
     $tmp = Join-Path ([IO.Path]::GetTempPath()) ("analyze-test-{0}" -f ([Guid]::NewGuid().ToString('N')))
     New-Item -ItemType Directory -Force -Path $tmp | Out-Null
     try {
@@ -632,9 +544,8 @@ function Invoke-SelfTest {
         Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue
     }
 
-    # 2b. Get-CandidatePairs shape regression: empty-dir and 1-item cases
-    #     must return real arrays whose .Count works under StrictMode (not
-    #     $null and not collapsed scalar).
+    # 2b. Shape regression: empty-dir and 1-item cases must return real
+    #     arrays whose .Count works under StrictMode (not $null, not scalar).
     $emptyDir = Join-Path ([IO.Path]::GetTempPath()) ("analyze-empty-{0}" -f ([Guid]::NewGuid().ToString('N')))
     New-Item -ItemType Directory -Force -Path $emptyDir | Out-Null
     try {
@@ -652,12 +563,11 @@ function Invoke-SelfTest {
     }
 
     # 3. Get-FailureStub: marker comment is the FIRST line and INCLUDES
-    #    the BuildId so it does not collide with the success-marker
-    #    regex used by post-analyses.ps1 for idempotency. A successful
-    #    retry must never be blocked by a previous run's failure stub.
-    $stub = Get-FailureStub -Id 999 -WiUrl 'https://example/999' -Reason 'quota exhausted' -BuildId '14400000'
+    #    the BuildId so it does not collide with the success-marker regex
+    #    used by post-analyses.ps1 for idempotency.
+    $stub = Get-FailureStub -Id 999 -WiUrl 'https://example/999' -Reason 'quota exhausted' -BuildId 'abc123'
     $firstLine = ($stub -split "`r?`n")[0]
-    if ($firstLine -ne '<!-- ptvs-triage-analyze:999:failed:14400000 -->') {
+    if ($firstLine -ne '<!-- ptvs-triage-analyze:999:failed:abc123 -->') {
         Write-Error "Failure stub first line should be the BuildId-suffixed marker; got: $firstLine"; $errors++
     }
     if ($stub -notmatch 'quota exhausted') { Write-Error "Failure stub should embed the reason."; $errors++ }
@@ -699,9 +609,8 @@ function Invoke-SelfTest {
     }
 
     # 5b. Invoke-Analyze guard: refuses to run when COPILOT_GITHUB_TOKEN is
-    #     either missing or the literal AzDO macro `$(COPILOT_PAT)` (which
-    #     means the variable group is not linked / variable not present).
-    #     This is the same fingerprint detection the smoke step proved out.
+    #     either missing or the literal AzDO macro `$(COPILOT_PAT)` (means
+    #     the variable group is not linked / variable not present).
     $tmpSan = Join-Path ([IO.Path]::GetTempPath()) ("analyze-tok-{0}" -f ([Guid]::NewGuid().ToString('N')))
     New-Item -ItemType Directory -Force -Path $tmpSan | Out-Null
     try {
@@ -727,9 +636,6 @@ function Invoke-SelfTest {
     # 5c. Find-LeakedTokenFingerprints: returns fingerprints (never the raw
     #     token value) when output contains a token. Ignores tokens that
     #     are too short to be real secrets. Empty / no-tokens => empty.
-    #     The function returns a typed [string[]] via `return ,$arr.ToArray()`
-    #     so call sites can use `.Count` directly without an @(...) wrap
-    #     (which would produce a 1-element Object[] containing the array).
     $realLookingToken = 'ghp_' + ('A' * 36)   # 40 chars, matches PAT shape, >=30 floor
     $textClean        = 'This analysis mentions no secrets.'
     $textLeak         = "Token starts with: $realLookingToken"
@@ -751,19 +657,16 @@ function Invoke-SelfTest {
     $fpNoTokens = Find-LeakedTokenFingerprints -Text $textLeak -Tokens @()
     if ($fpNoTokens.Count -ne 0) { Write-Error "Empty token list should not report leaks"; $errors++ }
 
-    # 5e. Regression: pipeline-collapse scenario.
-    #     A `@(a,b,c) | Where | Sort-Object` pipeline collapses to a SCALAR
-    #     string when only ONE element survives the filter. Under StrictMode,
-    #     `.Count` on a string throws and any caller that doesn't defend
-    #     against this crashes. This reproduces production failure 14364420
-    #     where COPILOT_GITHUB_TOKEN was the only env token long enough to
-    #     pass the 30-char floor.
+    # 5e. Pipeline-collapse regression: a `@(a,b,c) | Where | Sort-Object`
+    #     pipeline collapses to a scalar string when only ONE element
+    #     survives the filter. Under StrictMode, `.Count` on a string throws
+    #     and any caller that doesn't defend against this crashes.
     $longTokForCollapse = 'github_pat_' + ('Z' * 80)
     $collapsed = @($longTokForCollapse, $null, '') |
                  Where-Object { -not [string]::IsNullOrEmpty($_) -and $_.Length -ge 30 } |
                  Sort-Object Length -Descending
-    # The pipeline produces a scalar string; the @(...) wrap MUST repair
-    # the array shape before any downstream .Count or foreach.
+    # The pipeline produces a scalar string; the @(...) wrap repairs the
+    # array shape before any downstream .Count or foreach.
     $wrapped = @($collapsed)
     if ($wrapped.Count -ne 1) {
         Write-Error "Pipeline-collapse repair: expected 1, got $($wrapped.Count)"; $errors++
@@ -785,13 +688,8 @@ function Invoke-SelfTest {
     }
 
     # 5f. Get-AnalysisFromCopilotStdOut: trace-preamble strip and marker
-    #     normalization. Production build 14364772 posted Copilot CLI's
-    #     interactive trace lines (`● Search (grep)`, `│`, `└`, mid-stream
-    #     commentary like "Now I have enough context...") to public GitHub
-    #     issues because the analysis emitter only checked for a marker
-    #     at the start of stdout, not for the actual heading. This unit-
-    #     tests the helper directly so the contract is verified on Windows
-    #     too (the full E2E only runs on Linux/macOS).
+    #     normalization. Unit-tests the helper directly so the contract is
+    #     verified on Windows too (the full E2E only runs on Linux/macOS).
     $bulletChar = [char] 0x25CF
     $boxV       = [char] 0x2502
     $boxL       = [char] 0x2514
@@ -910,17 +808,13 @@ REAL body
             @{ id = 7; title = 'seven'; url = 'https://example/7' } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $sanDir 'wi-7.json') -Encoding UTF8
             @{ work_item = @{ id = 7; title = 'seven' } } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $sanDir 'diag-7.json') -Encoding UTF8
 
-            # The stub ALSO dumps its received argv to $COPILOT_ARGV_DUMP so
-            # the test below can verify that every argument arrived as a
-            # single token (regression guard for the Start-Process word-split
-            # bug in production build 14364610 — Copilot CLI rejected `-->\``
-            # because the prompt was tokenised on whitespace).
+            # The stub also dumps its received argv to $COPILOT_ARGV_DUMP so
+            # the test below can verify every argument arrived as a single
+            # token (regression guard for the Start-Process word-split bug).
             $argvDumpPath = Join-Path $tmp 'argv-dump.txt'
             # The stub emulates the real Copilot CLI's non-interactive output:
-            # a multi-line "trace" preamble (tool calls with `●` / box-drawing
-            # chars) BEFORE the actual analysis. analyze.ps1 must strip that
-            # preamble — production build 14364772 posted the trace to public
-            # GitHub issues, which is the bug this E2E now guards against.
+            # a multi-line trace preamble (tool calls with `●` / box-drawing
+            # chars) BEFORE the actual analysis. analyze.ps1 must strip it.
             $stubScript = @"
 #!/usr/bin/env bash
 DUMP="`${COPILOT_ARGV_DUMP:-/dev/null}"
@@ -957,11 +851,9 @@ echo 'stub analysis body'
             $origToken    = $env:COPILOT_GITHUB_TOKEN
             $origArgvDump = $env:COPILOT_ARGV_DUMP
             try {
-                # Use a token long enough to exercise the leak-scrub path
-                # (>=30 chars). This guards against the production regression
-                # in build 14364420: when only ONE env token had length>=30,
-                # the `$envTokens` pipeline collapsed to a scalar string and
-                # `.Count` threw under StrictMode.
+                # Use a token long enough (>=30 chars) to exercise the
+                # leak-scrub path. Regression guard against the scalar-
+                # collapse bug when only one env token survives the filter.
                 $env:COPILOT_GITHUB_TOKEN = 'github_pat_' + ('S' * 80)
                 $env:COPILOT_ARGV_DUMP    = $argvDumpPath
                 Invoke-Analyze -SanitizedDir $sanDir -PtvsRepo $tmp -OutDir $outDir -PromptTemplate $PromptTemplate -CopilotPath $stubPath -PerItemTimeoutSeconds 30
@@ -978,10 +870,9 @@ echo 'stub analysis body'
                 if ($text -notmatch 'stub analysis body')                      { Write-Error "E2E: stub body missing. Got: $text"; $errors++ }
                 if ($text -match     'Automated triage failed')                { Write-Error "E2E: failure stub written despite stub copilot exiting 0. Got: $text"; $errors++ }
                 if ($text -notmatch '\*\*Root cause category:\*\* PTVS')       { Write-Error "E2E: category missing. Got: $text"; $errors++ }
-                # Trace-preamble strip (build 14364772 regression): every
-                # `●` / `│` / `└` line emitted before the heading must be
-                # gone from the posted analysis, and the marker must appear
-                # EXACTLY once.
+                # Trace-preamble strip regression: every `●` / `│` / `└` line
+                # emitted before the heading must be gone from the posted
+                # analysis, and the marker must appear EXACTLY once.
                 $bulletChar = [char] 0x25CF   # ● — the trace-line bullet
                 if ($text.Contains($bulletChar))                              { Write-Error "E2E: trace preamble bullet '$bulletChar' survived strip. Got: $text"; $errors++ }
                 if ($text -match     'Now I have enough context')              { Write-Error "E2E: trace-tail commentary survived strip. Got: $text"; $errors++ }
@@ -991,20 +882,18 @@ echo 'stub analysis body'
                 # The marker MUST be the first non-whitespace line so
                 # post-analyses.ps1's regex still matches.
                 if ($text -notmatch '\A\s*<!-- ptvs-triage-analyze:7 -->')     { Write-Error "E2E: marker is not the first line after strip. Got: $text"; $errors++ }
-                # The heading must be immediately after the marker (no
-                # blank line or stray content between them).
+                # The heading must be immediately after the marker.
                 if ($text -notmatch '<!-- ptvs-triage-analyze:7 -->\s*\n###\s+Triage analysis for') {
                     Write-Error "E2E: marker not immediately followed by heading. Got: $text"; $errors++
                 }
             }
 
-            # 6b. Argv-preservation regression (build 14364610): the prompt
-            # MUST arrive as a single argv entry — Start-Process used to
-            # split it on whitespace and Copilot rejected the resulting
-            # `-->\`` token. Assert ARGC == 6 (-p, $Prompt, --add-dir,
-            # $AddDir, --allow-all-tools, --no-color) and that the prompt
-            # arg contains the marker comment intact (the `-->` from the
-            # template line `<!-- ptvs-triage-analyze:{WI_ID} -->`).
+            # 6b. Argv-preservation regression: the prompt MUST arrive as a
+            # single argv entry. Start-Process used to split it on whitespace
+            # and Copilot rejected the resulting `-->\`` token. Assert
+            # ARGC == 6 (-p, $Prompt, --add-dir, $AddDir, --allow-all-tools,
+            # --no-color) and that the prompt arg contains the marker
+            # comment intact.
             if (-not (Test-Path -LiteralPath $argvDumpPath)) {
                 Write-Error "Argv-preservation: stub never wrote argv dump (did it run?)."; $errors++
             } else {
@@ -1014,11 +903,11 @@ echo 'stub analysis body'
                 }
                 if ($argv -notmatch [regex]::Escape('ARG[0]:::-p:::END')) { Write-Error "Argv: -p not at index 0. Got:`n$argv"; $errors++ }
                 if ($argv -notmatch [regex]::Escape('ARG[2]:::--add-dir:::END')) { Write-Error "Argv: --add-dir not at index 2. Got:`n$argv"; $errors++ }
-                # The prompt arg at index 1 must contain the marker comment
-                # complete with `-->` followed by a literal backtick — the
-                # exact sequence that broke production.
+                # The prompt arg at index 1 must contain `-->` followed by
+                # a literal backtick — the exact sequence that historically
+                # tripped the word-split bug.
                 if ($argv -notmatch [regex]::Escape('-->`')) {
-                    Write-Error "Argv: prompt did not contain the literal '-->\`' sequence (template line 16's code-spanned marker)."; $errors++
+                    Write-Error "Argv: prompt did not contain the literal '-->\`' sequence."; $errors++
                 }
                 # The literal `-->\`` MUST NOT appear as its own argv entry.
                 if ($argv -match 'ARG\[\d+\]:::-->`?:::END') {
@@ -1029,16 +918,9 @@ echo 'stub analysis body'
             Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue
         }
     } else {
-        # Windows path: directly validate Invoke-CopilotOnce's Start-Process
-        # plumbing. Uses pwsh itself as the "binary" (a real .exe — no cmd
-        # shim, no metacharacter mangling). We can't usefully test the
-        # timeout branch on pwsh because the implicit `-p` / `--add-dir`
-        # arguments Invoke-CopilotOnce always appends make pwsh exit fast
-        # on argument parsing (before `-Command` ever runs). The basic
-        # invocation regression-tests the bug we actually hit: passing a
-        # [pscustomobject] to `Start-Process @psi` instead of a hashtable
-        # broke parameter binding and started the process with the entire
-        # object printed as the file path.
+        # Windows path: directly validate Invoke-CopilotOnce's process
+        # plumbing using pwsh itself as the "binary". The Linux E2E with a
+        # bash stub doesn't run on Windows, so this is the best we can do.
         $pwshPath = (Get-Command pwsh -ErrorAction SilentlyContinue).Source
         if (-not $pwshPath) { Write-Warning 'pwsh not on PATH; skipping Windows Invoke-CopilotOnce smoke.' }
         else {
@@ -1057,9 +939,8 @@ echo 'stub analysis body'
 
     # 7. End-to-end leak scrub: when COPILOT_GITHUB_TOKEN contains a real-
     #    looking PAT (>=30 chars) AND the stubbed copilot echoes that exact
-    #    value, Invoke-Analyze MUST redact it from the analysis file on
-    #    disk before publishing. Catches a regression where the scrub
-    #    code path is bypassed (e.g., wrong if-branch, ordering bug).
+    #    value, Invoke-Analyze MUST redact it from the analysis file on disk
+    #    before publishing.
     if ($IsLinux -or $IsMacOS) {
         $tmp = Join-Path ([IO.Path]::GetTempPath()) ("analyze-scrub-{0}" -f ([Guid]::NewGuid().ToString('N')))
         $sanDir = Join-Path $tmp 'san'
@@ -1069,10 +950,8 @@ echo 'stub analysis body'
         try {
             @{ id = 99; title = 'leak-test'; url = 'https://example/99' } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $sanDir 'wi-99.json') -Encoding UTF8
 
-            # Simulate a prompt-injection-induced env-var leak: the stub
-            # echoes the value of COPILOT_GITHUB_TOKEN. Real Copilot CLI
-            # would only do this if a customer ticket told it to and the
-            # model complied; we model the worst case.
+            # Simulate a prompt-injection-induced env-var leak: stub echoes
+            # the value of COPILOT_GITHUB_TOKEN. Models the worst case.
             $stubScript = "#!/usr/bin/env bash`necho '<!-- ptvs-triage-analyze:99 -->'`necho '### Triage analysis for [AzDO #99](https://example/99)'`necho ''`necho 'BTW the env var I was given starts with:' `$COPILOT_GITHUB_TOKEN`n"
             $stubPath = Join-Path $binDir 'copilot'
             Set-Content -LiteralPath $stubPath -Value $stubScript -Encoding UTF8
