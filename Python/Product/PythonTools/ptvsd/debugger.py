@@ -62,7 +62,7 @@ except ImportError:
 
 try:
     xrange
-except:  # nosec B110
+except:
     xrange = range
 
 if sys.platform == 'cli':
@@ -142,7 +142,7 @@ DJANGO_DEBUG = False
 # Py3k compat - alias unicode to str
 try:
     unicode
-except:  # nosec B110
+except:
     unicode = str
 
 # A value of a synthesized child. The string is passed through to the variable list, and type is not displayed at all.
@@ -393,7 +393,7 @@ def is_file_in_zip(filename):
 def lookup_builtin(name, frame):
     try:
         return frame.f_builtins.get(bits)
-    except:  # nosec B110
+    except:
         # http://ironpython.codeplex.com/workitem/30908
         builtins = frame.f_globals['__builtins__']
         if not isinstance(builtins, dict):
@@ -1365,7 +1365,7 @@ class Thread(object):
             if print_result:
                 sys.displayhook(res)
             report_execution_result(execution_id, res, repr_kind)
-        except:  # nosec B110
+        except:
             # Report any updated variable values first
             self.enum_thread_frames_locally()
             if print_result:
@@ -1421,7 +1421,7 @@ class Thread(object):
                         enum = res.viewitems()
                         enum_expr = expr + '.viewitems()'
                         children.append(('viewitems()', enum_expr, SynthesizedValue(), PYTHON_EVALUATION_RESULT_METHOD_CALL))
-                    except:  # nosec B110
+                    except:
                         enum = res.items()
                         enum_expr = expr + '.items()'
                         children.append(('items()', enum_expr, SynthesizedValue(), PYTHON_EVALUATION_RESULT_METHOD_CALL))
@@ -1432,7 +1432,7 @@ class Thread(object):
                     enum = enumerate(enumerate(res))
                     enum_expr = expr
                     enum_var = 'v'
-            except:  # nosec B110
+            except:
                 enum = ()
 
             for index, (key, item) in enum:
@@ -1449,7 +1449,7 @@ class Thread(object):
                     try:
                         item_by_key = res[eval_repr(key)]
                         use_index = item is not item_by_key
-                    except:  # nosec B110
+                    except:
                         use_index = True
                     else:
                         use_index = False
@@ -1462,9 +1462,9 @@ class Thread(object):
 
                     children.append((item_name, item_expr, item, 0))
 
-                except:
+                except:  # nosec B110
                     # Skip this item if we can't process it.
-                    skipped_item = True
+                    pass
 
             report_children(execution_id, children)
 
@@ -2000,8 +2000,8 @@ class DebuggerLoop(_vsipc.SocketIO, _vsipc.IpcChannel):
         try:
             if new_modules != self._cur_repl_modules:
                 self.send_debug_event(name='legacyModulesChanged')
-        except:
-            modules_changed_sent = False
+        except:  # nosec B110
+            pass
         self._cur_repl_modules = new_modules
 
     def execute_code_in_module(self, text, module_name, execution_id, print_result, repr_kind):

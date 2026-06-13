@@ -42,11 +42,11 @@ from encodings import utf_8, ascii
 # Py3k compat - alias unicode to str, and xrange to range
 try:
     unicode
-except:  # nosec B110
+except:
     unicode = str
 try:
     xrange
-except:  # nosec B110
+except:
     xrange = range
 
 
@@ -246,7 +246,7 @@ class SafeRepr(object):
     def __call__(self, obj):
         try:
             return ''.join(self._repr(obj, 0))
-        except:  # nosec B110
+        except:
             try:
                 return 'An exception was raised: %r' % sys.exc_info()[1]
             except:

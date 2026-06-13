@@ -31,7 +31,7 @@ except ImportError:
     import _thread as thread
 try:
     from ssl import SSLError
-except:  # nosec B110
+except:
     SSLError = None
 
 import sys
@@ -226,7 +226,7 @@ actual inspection and introspection."""
                 cmd = ReplBackend._COMMANDS.get(inp)
                 if cmd is not None:
                     cmd(self)
-        except:  # nosec B110
+        except:
             _debug_write('error in repl loop')
             _debug_write(traceback.format_exc())
             self.exit_process()
@@ -262,7 +262,7 @@ actual inspection and introspection."""
         expression = read_string(self.conn)
         try:
             resp = self.get_members(expression)
-        except:  # nosec B110
+        except:
             with self.send_lock:
                 write_bytes(self.conn, ReplBackend._MERR)
             _debug_write('error in eval')
@@ -289,7 +289,7 @@ actual inspection and introspection."""
         expression = read_string(self.conn)
         try:
             resp = self.get_signatures(expression)
-        except:  # nosec B110
+        except:
             with self.send_lock:
                 write_bytes(self.conn, ReplBackend._SERR)
             _debug_write('error in eval')
@@ -662,8 +662,8 @@ due to the exec, so we do it here"""
             try:
                 if new_modules != cur_modules:
                     self.send_modules_changed()
-            except:
-                modules_changed_sent = False
+            except:  # nosec B110
+                pass
             cur_modules = new_modules
 
             self.execute_item_lock.acquire()
@@ -744,7 +744,7 @@ due to the exec, so we do it here"""
         try:
             cur_ps1 = sys.ps1
             cur_ps2 = sys.ps2
-        except:  # nosec B110
+        except:
             # CPython/IronPython don't set sys.ps1 for non-interactive sessions, Jython and PyPy do
             sys.ps1 = cur_ps1 = '>>> '
             sys.ps2 = cur_ps2 = '... '
@@ -977,7 +977,7 @@ due to the exec, so we do it here"""
                 val = getattr_func(type(inst), name)
             mem_t_name = BasicReplBackend.get_type_name(val)
             return mem_t_name
-        except:  # nosec B110
+        except:
             if not from_dict:
                 try:
                     return BasicReplBackend.get_type_name(getattr_func(inst, name))
@@ -996,8 +996,8 @@ def get_cur_module_set():
         for name in sys.modules:
             try:
                 res.add(name)
-            except:
-                skipped_module = True
+            except:  # nosec B110
+                pass
         return res
 
 def get_module_names():
@@ -1014,8 +1014,8 @@ def get_module_names():
                         filename = None
                     res.append((name, filename))
 
-        except:
-            namespace_enumerated = False
+        except:  # nosec B110
+            pass
     return res
 
 def get_namespaces(basename, namespace, names):
@@ -1027,8 +1027,8 @@ def get_namespaces(basename, namespace, names):
 
             if type(new_namespace) is NamespaceType:
                 get_namespaces(new_name, new_namespace, names)
-    except:
-        namespace_enumerated = False
+    except:  # nosec B110
+        pass
 
 def print_exception_frames(exc_type, exc_value, exc_tb):
     exc_next = skip_internal_frames(exc_tb)

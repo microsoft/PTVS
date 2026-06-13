@@ -80,7 +80,7 @@ def load_debugger(secret, port, mixed_mode):
                     break
                 sleep(0.1)
 
-    except:  # nosec B110
+    except:
         traceback.print_exc()
         print('''
 Internal error detected. Please copy the above traceback and report at

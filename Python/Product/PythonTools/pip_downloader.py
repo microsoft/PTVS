@@ -172,7 +172,7 @@ def main():
         try:
             install_from_ensurepip(ensurepip)
             return
-        except Exception:  # nosec B110
+        except Exception:
             if sys.platform == 'cli':
                 print('\nFailed to upgrade pip, which is probably because of IronPython. Leaving the earlier version.')
                 return

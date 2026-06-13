@@ -30,7 +30,7 @@ import traceback
 from types import CodeType, FunctionType
 try:
     import thread
-except:  # nosec B110
+except:
     import _thread as thread
 
 try:

@@ -25,12 +25,12 @@ from ptvsd.repl import BasicReplBackend, ReplBackend, UnsupportedReplException, 
 from ptvsd.util import to_bytes
 try:
     import thread
-except:  # nosec B110
+except:
     import _thread as thread    # Renamed as Py3k
 
 try:
     from base64 import decodestring
-except:  # nosec B110
+except:
     from base64 import decodebytes as decodestring # Deprecated in 3.9
 
 try:

@@ -144,6 +144,7 @@ jobs:
     inputs:
       targetsType: banditPattern
       targetsBandit: '$(Build.SourcesDirectory)\Python\Product'
+      ruleset: 'guardian'
     condition: succeededOrFailed()
     continueOnError: False
 
