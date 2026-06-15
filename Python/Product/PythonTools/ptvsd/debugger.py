@@ -1463,8 +1463,7 @@ class Thread(object):
                     children.append((item_name, item_expr, item, 0))
 
                 except:  # nosec B110
-                    # Skip this item if we can't process it.
-                    pass
+                    pass  # nosec B110 - skip items that cannot be processed.
 
             report_children(execution_id, children)
 
@@ -2001,7 +2000,7 @@ class DebuggerLoop(_vsipc.SocketIO, _vsipc.IpcChannel):
             if new_modules != self._cur_repl_modules:
                 self.send_debug_event(name='legacyModulesChanged')
         except:  # nosec B110
-            pass
+            pass  # nosec B110 - REPL module change notification is best-effort.
         self._cur_repl_modules = new_modules
 
     def execute_code_in_module(self, text, module_name, execution_id, print_result, repr_kind):

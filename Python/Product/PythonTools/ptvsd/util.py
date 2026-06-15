@@ -312,7 +312,7 @@ class SafeRepr(object):
                 if module in ('numpy', 'scipy'):
                     return False
             except:
-                module = None
+                pass  # nosec B110 - module probe is best-effort.
 
             # Iterables that nest too deep are considered long.
             if level >= len(self.maxcollection):
