@@ -107,59 +107,13 @@ jobs:
     condition: succeededOrFailed()
     continueOnError: True
 
-  # Anti-Malware Scan of build sources and/or artifacts
-  # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/antimalware-scan-build-task
-  - task: AntiMalware@4
-    displayName: 'Run Antivirus on Source'
+  # Run Microsoft Security DevOps tools, including Bandit, ESLint, BinSkim,
+  # Checkov, Terrascan, Template Analyzer, Trivy, and AntiMalware.
+  - task: MicrosoftSecurityDevOps@1
+    displayName: "Run Microsoft Security DevOps"
     inputs:
-      FileDirPath: $(Build.SourcesDirectory)
-    condition: succeededOrFailed()
-    continueOnError: True
-  - task: AntiMalware@4
-    displayName: Run Antivirus on Binaries
-    inputs:
-      FileDirPath: $(Build.BinariesDirectory)
-    condition: succeededOrFailed()
-    continueOnError: True
-
-  # Copy files for Scanning
-  - task: CopyFiles@2
-    displayName: 'Copy Files for Scanning'
-    inputs:
-      SourceFolder: $(Build.BinariesDirectory)
-      Contents: |
-        layout\Microsoft.CookiecutterTools\Microsoft.CookiecutterTools.*
-        layout\Microsoft.PythonTools.Core\Microsoft.PythonTools.*
-        layout\Microsoft.PythonTools.Core\PyDebugAttach*.*
-        layout\Microsoft.PythonTools.Debugger.VCLauncher\Microsoft.PythonTools.*
-        layout\Microsoft.PythonTools.Django\Microsoft.PythonTools.*
-        layout\Microsoft.PythonTools.Profiling\Microsoft.PythonTools.*
-        layout\Microsoft.PythonTools.Profiling\VsPyProf*.*
-      TargetFolder: $(Agent.TempDirectory)\FilesToScan
-
-  # Analyze python files for common vulnerabilities
-  # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/bandit-build-task
-  - task: Bandit@1
-    displayName: 'Run Bandit'
-    inputs:
-      targetsType: banditPattern
-      targetsBandit: '$(Build.SourcesDirectory)\Python\Product'
-      ruleset: 'guardian'
-    condition: succeededOrFailed()
-    continueOnError: False
-
-  # Analyze binaries for security vulnerabilities
-  # See https://eng.ms/docs/security-compliance-identity-and-management-scim/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/sdl-azdo-extension/binskim-build-task
-  - task: BinSkim@4
-    displayName: Run BinSkim
-    inputs:
-      # Use the same files copied for ApiScan
-      TargetPattern: binskimPattern
-      AnalyzeTargetBinskim: |
-        $(Agent.TempDirectory)\FilesToScan\*.dll 
-        $(Agent.TempDirectory)\FilesToScan\*.exe
-    condition: succeededOrFailed()
-    continueOnError: True
+      break: true
+      publish: true
 
   # Run component governance detection
   # See http://aka.ms/cgdocs for more info
