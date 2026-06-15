@@ -2459,7 +2459,7 @@ def detach_process_and_notify_debugger():
             DebuggerLoop.instance.detach()
         except DebuggerExitException: # successfully detached
             return
-        except BaseException: # nosec B110 - swallow anything else, and forcibly detach below
+        except Exception: # nosec B110 - swallow detach failures, and forcibly detach below
             pass  # nosec B110
     detach_process()
 
