@@ -1999,7 +1999,7 @@ class DebuggerLoop(_vsipc.SocketIO, _vsipc.IpcChannel):
         try:
             if new_modules != self._cur_repl_modules:
                 self.send_debug_event(name='legacyModulesChanged')
-        except:  # nosec B110
+        except Exception:  # nosec B110
             pass  # nosec B110 - REPL module change notification is best-effort.
         self._cur_repl_modules = new_modules
 
@@ -2312,7 +2312,7 @@ def create_object(obj_type, obj_repr, hex_repr, type_name, obj_len, flags = 0):
             if issubclass(obj_type, cls):
                 flags |= PYTHON_EVALUATION_RESULT_HAS_RAW_REPR
                 break
-    except: # nosec B110 - guard against broken issubclass for types which aren't actually types, like vtkclass
+    except TypeError: # nosec B110 - guard against broken issubclass for types which aren't actually types, like vtkclass
         pass  # nosec B110
 
     obj = {
@@ -2418,7 +2418,7 @@ def attach_connected_process(debug_options, report = False, block = False):
             if filename is not None:
                 try:
                     fullpath = path.abspath(filename)
-                except:  # nosec B110
+                except Exception:  # nosec B110
                     pass  # nosec B110 - skip modules with invalid file paths.
                 else:
                     MODULES.append((filename, Module(mod_name, fullpath)))
@@ -2459,7 +2459,7 @@ def detach_process_and_notify_debugger():
             DebuggerLoop.instance.detach()
         except DebuggerExitException: # successfully detached
             return
-        except: # nosec B110 - swallow anything else, and forcibly detach below
+        except BaseException: # nosec B110 - swallow anything else, and forcibly detach below
             pass  # nosec B110
     detach_process()
 
