@@ -2157,8 +2157,8 @@ def report_exception(frame, exc_info, tid, break_type):
     if tb_value:
         try:
             data['trace'] = '\n'.join(','.join(repr(v) for v in line) for line in traceback.extract_tb(tb_value))
-        except:
-            data['trace'] = ''
+        except:  # nosec B110
+            pass  # nosec B110 - trace formatting is best-effort.
     if not DJANGO_DEBUG or get_django_frame_source(frame) is None:
         data['excvalue'] = '__exception_info'
         i = 0
