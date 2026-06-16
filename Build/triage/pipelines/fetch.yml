@@ -306,31 +306,42 @@ jobs:
   # If either is false, the whole Analyze block skips cleanly with no
   # Copilot AI credit spend; the Fetch portion still completes normally.
   #
+  # Casing note: `${{ parameters.runAnalyze }}` expands the boolean param
+  # at template time; the exact string casing AzDO emits has historically
+  # varied ('True' vs 'true'). We wrap in `lower(...)` so the gate works
+  # regardless and matches the repo's lowercase 'true' convention
+  # (see Build/templates/run_tests.yml RUN_GLASS / SETUP_GLASS gates).
+  #
   # Auth: $(COPILOT_PAT). analyze.ps1 detects both an unset variable and
   # the unresolved-macro fingerprint `$(COPILOT_PAT)` left behind when
   # the variable group is unlinked.
 
   - task: NodeTool@0
     displayName: 'Install Node.js 22 (for Copilot CLI)'
-    condition: and(succeeded(), eq(variables['RUN_ANALYZE'], 'True'), ne(variables['issueNumber'], ''))
+    condition: and(succeeded(), eq(lower(variables['RUN_ANALYZE']), 'true'), ne(variables['issueNumber'], ''))
     inputs:
       versionSpec: '22.x'
 
   - task: PowerShell@2
     displayName: 'Install GitHub Copilot CLI'
-    condition: and(succeeded(), eq(variables['RUN_ANALYZE'], 'True'), ne(variables['issueNumber'], ''))
+    condition: and(succeeded(), eq(lower(variables['RUN_ANALYZE']), 'true'), ne(variables['issueNumber'], ''))
     inputs:
       pwsh: true
       targetType: inline
       script: |
         Set-StrictMode -Version Latest
         $ErrorActionPreference = 'Stop'
+        # @latest is intentional: Copilot CLI is rapidly evolving and the
+        # triage value comes from the newest available model + features.
+        # `copilot --version` below is the forensic anchor — every run
+        # logs the exact resolved version so a failed run can be
+        # correlated to a specific CLI release in the build logs.
         sudo npm install -g '@github/copilot@latest'
         copilot --version
 
   - task: PowerShell@2
     displayName: 'analyze.ps1 — Copilot per-item triage'
-    condition: and(succeeded(), eq(variables['RUN_ANALYZE'], 'True'), ne(variables['issueNumber'], ''))
+    condition: and(succeeded(), eq(lower(variables['RUN_ANALYZE']), 'true'), ne(variables['issueNumber'], ''))
     env:
       # COPILOT_GITHUB_TOKEN authenticates the Copilot CLI for inference.
       # GH_TOKEN lets agentic `gh issue list` / `gh pr list` calls Copilot
@@ -352,11 +363,11 @@ jobs:
     # `succeeded()` (not `succeededOrFailed()`): if analyze.ps1 threw before
     # creating $OutDir, `publish:` would error trying to read a missing dir.
     # Per-item stub failures still exit 0, so the artifact still uploads.
-    condition: and(succeeded(), eq(variables['RUN_ANALYZE'], 'True'), ne(variables['issueNumber'], ''))
+    condition: and(succeeded(), eq(lower(variables['RUN_ANALYZE']), 'true'), ne(variables['issueNumber'], ''))
 
   - task: PowerShell@2
     displayName: 'post-analyses.ps1 — comment per-item analyses on the triage issue'
-    condition: and(succeeded(), eq(variables['RUN_ANALYZE'], 'True'), ne(variables['issueNumber'], ''))
+    condition: and(succeeded(), eq(lower(variables['RUN_ANALYZE']), 'true'), ne(variables['issueNumber'], ''))
     env:
       GH_TOKEN: $(GH_PAT)
     inputs:

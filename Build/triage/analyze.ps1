@@ -433,8 +433,11 @@ function Invoke-Analyze {
         }
         $dur = [int] ((Get-Date) - $start).TotalSeconds
 
-        # Always write stderr for post-mortem; scrub for env-token leaks
-        # before write since the .logs/ dir ships in the audit artifact.
+        # Always write the log file (even if stderr is empty) so failure
+        # stubs that reference .logs/copilot-<id>.log are never misleading
+        # and so the audit artifact has a stub-line for every item. Scrub
+        # for env-token leaks before write since .logs/ ships in the
+        # audit artifact.
         if ($r.StdErr) {
             $errText = [string] $r.StdErr
             # @(...) keeps array shape if Where|Sort yields a single match.
@@ -449,6 +452,8 @@ function Invoke-Analyze {
                 }
             }
             Set-Content -LiteralPath $logPath -Value $errText -Encoding UTF8
+        } else {
+            Set-Content -LiteralPath $logPath -Value "(no stderr captured from Copilot CLI for AzDO #$id; exit=$($r.ExitCode), timedOut=$($r.TimedOut))" -Encoding UTF8
         }
 
         if ($r.TimedOut) {
