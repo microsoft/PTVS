@@ -510,21 +510,21 @@ struct MemoryBuffer {
 class ConnectionInfo {
 public:
     HANDLE FileMapping;
-    MemoryBuffer *Buffer;
+    MemoryBuffer *SharedMemory;
     bool Succeeded;
 
     ConnectionInfo() : 
-        Succeeded(false), Buffer(nullptr), FileMapping(nullptr) {
+        Succeeded(false), SharedMemory(nullptr), FileMapping(nullptr) {
     }
 
     ConnectionInfo(MemoryBuffer *memoryBuffer, HANDLE fileMapping) :
-        Succeeded(true), Buffer(memoryBuffer), FileMapping(fileMapping) {
+        Succeeded(true), SharedMemory(memoryBuffer), FileMapping(fileMapping) {
     }
 
     // Reports an error while we're initially setting up the attach.  These errors can all be 
     // reported quickly and are reported across the shared memory buffer.
     void ReportError(int errorNum) {
-        Buffer->ErrorNumber = errorNum;
+        SharedMemory->ErrorNumber = errorNum;
     }
 
     // Reports an error after we've started the attach via our socket.  These are errors which
@@ -543,16 +543,16 @@ public:
 
                 serveraddr.sin_family = AF_INET;
                 serveraddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-                serveraddr.sin_port = htons(static_cast<u_short>(Buffer->PortNumber));
+                serveraddr.sin_port = htons(static_cast<u_short>(SharedMemory->PortNumber));
 
                 // connect to our DebugConnectionListener and report the error.
                 if (connect(sock, (sockaddr*)&serveraddr, sizeof(sockaddr_in)) == 0) {
                     // send our debug ID as an ASCII string.  
                     send(sock, "A", 1, 0);
-                    int len = (int)strlen(Buffer->DebugId);
+                    int len = (int)strlen(SharedMemory->DebugId);
                     unsigned long long lenBE64 = _byteswap_uint64(len);
                     send(sock, (const char*)&lenBE64, sizeof(lenBE64), 0);
-                    send(sock, Buffer->DebugId, (int)len, 0);
+                    send(sock, SharedMemory->DebugId, (int)len, 0);
 
                     // send our error number
                     unsigned long long errorNumBE64 = _byteswap_uint64(errorNum);
@@ -563,15 +563,15 @@ public:
     }
 
     void SetVersion(PythonVersion version) {
-        Buffer->VersionNumber = version;
+        SharedMemory->VersionNumber = version;
     }
 
     ~ConnectionInfo() {
         if (Succeeded) {
-            CloseHandle(Buffer->AttachStartingEvent);
+            CloseHandle(SharedMemory->AttachStartingEvent);
 
-            auto attachDoneEvent = Buffer->AttachDoneEvent;
-            UnmapViewOfFile(Buffer);
+            auto attachDoneEvent = SharedMemory->AttachDoneEvent;
+            UnmapViewOfFile(SharedMemory);
             CloseHandle(FileMapping);
 
             // we may set this multiple times, but that doesn't matter...
@@ -838,7 +838,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
 
         // we know everything we need for VS to continue the attach.
         connInfo.ReportError(ConnError_None);
-        SetEvent(connInfo.Buffer->AttachStartingEvent);
+        SetEvent(connInfo.SharedMemory->AttachStartingEvent);
 
         if (!threadsInited()) {
             int saveIntervalCheck;
@@ -960,14 +960,14 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                 if (addedPendingCall) {
                     // we've added our call to initialize multi-threading, we can now wait
                     // until Python code actually starts running.
-                    SetEvent(connInfo.Buffer->AttachDoneEvent);
+                    SetEvent(connInfo.SharedMemory->AttachDoneEvent);
                     ::WaitForSingleObject(g_initedEvent, INFINITE);
                 } else {
                     connInfo.ReportError(ConnError_TimeOut);
                     return false;
                 }
             } else {
-                SetEvent(connInfo.Buffer->AttachDoneEvent);
+                SetEvent(connInfo.SharedMemory->AttachDoneEvent);
             }
 
             if (intervalCheck != nullptr) {
@@ -976,7 +976,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                 setSwitchInterval(saveLongIntervalCheck);
             }
         } else {
-            SetEvent(connInfo.Buffer->AttachDoneEvent);
+            SetEvent(connInfo.SharedMemory->AttachDoneEvent);
         }
 
         if (g_heap != nullptr) {
@@ -1024,9 +1024,9 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
             return false;
         }
 
-        auto pyPortNum = PyObjectHolder(isDebug, intFromLong(connInfo.Buffer->PortNumber));
-        auto debugId = PyObjectHolder(isDebug, strFromString(connInfo.Buffer->DebugId));
-        auto debugOptions = PyObjectHolder(isDebug, strFromString(connInfo.Buffer->DebugOptions));
+        auto pyPortNum = PyObjectHolder(isDebug, intFromLong(connInfo.SharedMemory->PortNumber));
+        auto debugId = PyObjectHolder(isDebug, strFromString(connInfo.SharedMemory->DebugId));
+        auto debugOptions = PyObjectHolder(isDebug, strFromString(connInfo.SharedMemory->DebugOptions));
         DecRef(call(attach_process.ToPython(), pyPortNum.ToPython(), debugId.ToPython(), debugOptions.ToPython(), pyTrue, pyFalse, NULL), isDebug);
         if (auto err = errOccurred()) {
             PyObject *type, *value, *traceback;
@@ -1264,14 +1264,14 @@ DWORD __stdcall AttachWorker(LPVOID arg) {
         }
 
         if (!attached) {
-            if (connInfo.Buffer->ErrorNumber == 0) {
+            if (connInfo.SharedMemory->ErrorNumber == 0) {
                 if (!pythonFound) {
                     connInfo.ReportError(ConnError_PythonNotFound);
                 } else {
                     connInfo.ReportError(ConnError_InterpreterNotInitialized);
                 }
             }
-            SetEvent(connInfo.Buffer->AttachStartingEvent);
+            SetEvent(connInfo.SharedMemory->AttachStartingEvent);
         }
     }
 

@@ -96,8 +96,9 @@ variables:
     value: false
   - name: TrackFileAccess
     value: false
-  - name: Packaging.EnableSBOMSigning
-    value: false # disabled for now because of known issue
+  - ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+    - name: Packaging.EnableSBOMSigning
+      value: false
   - name: RefreshGlassCache
     value: ${{ parameters.refreshGlassCache }}
   - name: PublishNugetPackageAsBuildArtifact
