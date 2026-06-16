@@ -110,7 +110,7 @@ namespace Microsoft.PythonTools.Core {
         void CalculateGuid() {
             // Maintain a stable attribute guid in every build, when assembly info is the same.
             // Logic is the same as used in ProvideCodeBaseAttribute class.
-            using (var sha2 = SHA256.Create()) {
+            using (var sha2 = new SHA256Cng()) {
                 var strongName = $"{AssemblyName},{PublicKeyToken},{Culture},{Version}";
                 var strongNameBytes = Encoding.UTF8.GetBytes(strongName);
                 var fullHash = sha2.ComputeHash(strongNameBytes);

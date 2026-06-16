@@ -323,7 +323,7 @@ namespace Microsoft.PythonTools.Common.Core.Extensions {
         /// </summary>
         public static string GetHashString(this string input) {
             // File name depends on the content so we can distinguish between different versions.
-            using (var hash = SHA256.Create()) {
+            using (var hash = new SHA256Cng()) {
                 return Convert
                     .ToBase64String(hash.ComputeHash(new UTF8Encoding(encoderShouldEmitUTF8Identifier: false).GetBytes(input)))
                     .Replace('/', '_').Replace('+', '-');
