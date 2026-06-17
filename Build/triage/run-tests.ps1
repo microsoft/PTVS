@@ -18,7 +18,9 @@ $scripts = @(
     'query-azdo.ps1',
     'sanitize.ps1',
     'post-report-issue.ps1',
-    'parse-diagnostics.ps1'
+    'parse-diagnostics.ps1',
+    'analyze.ps1',
+    'post-analyses.ps1'
 )
 
 $failed = New-Object System.Collections.Generic.List[string]
