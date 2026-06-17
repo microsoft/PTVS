@@ -77,6 +77,11 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+# Shared scrubbing helpers (Get-LeakageTokens / Find-LeakedTokenFingerprints /
+# Remove-LeakedTokens) are loaded from a sibling file so post-analyses.ps1 can
+# reuse them at egress without duplication.
+. (Join-Path $PSScriptRoot 'scrub.ps1')
+
 function Get-OptionalProp {
     param([object] $Object, [string] $Name, $Default = $null)
     if ($null -eq $Object) { return $Default }
@@ -200,35 +205,6 @@ maintainer can re-run the PTVS-Triage-Fetch pipeline to retry.
 "@
 }
 
-function Find-LeakedTokenFingerprints {
-    # Defense against prompt-injection-induced secret leakage. Scans $Text
-    # for the literal value of any token in $Tokens; returns opaque
-    # fingerprints (`<token len=N head=X***>`) for matches. NEVER returns
-    # the secret value or any reconstructible substring. AzDO's automatic
-    # secret-masking only covers live job logs, not file writes / artifacts
-    # / outbound REST, so we must scrub before any of those happen.
-    param(
-        [Parameter(Mandatory)] [AllowEmptyString()] [string] $Text,
-        [Parameter()]          [string[]] $Tokens = @()
-    )
-    if ([string]::IsNullOrEmpty($Text) -or -not $Tokens) { return ,([string[]] @()) }
-    $found = New-Object System.Collections.Generic.List[string]
-    foreach ($t in $Tokens) {
-        if ([string]::IsNullOrEmpty($t)) { continue }
-        # 30-char floor: real fine-grained PAT is ≥80 chars; unresolved AzDO
-        # macros are 14 chars. Catches realistic tokens without false-
-        # positiving on every Foo / Bar.
-        if ($t.Length -lt 30) { continue }
-        if ($Text.Contains($t)) {
-            $found.Add(("<token len={0} head={1}***>" -f $t.Length, $t.Substring(0, 1))) | Out-Null
-        }
-    }
-    # Unary comma preserves typed [string[]] shape across the return
-    # pipeline. Call sites must NOT wrap in @(...) — that would produce
-    # a 1-element Object[] containing the inner array.
-    return ,$found.ToArray()
-}
-
 function Get-AnalysisFromCopilotStdOut {
     # Strips Copilot CLI's non-interactive trace preamble (tool-call bullets,
     # box-drawing chars, mid-stream commentary) from raw stdout and returns
@@ -237,9 +213,16 @@ function Get-AnalysisFromCopilotStdOut {
     # Strategy: anchor on the LAST occurrence of the prompt-mandated heading
     # `### Triage analysis for [AzDO #<Id>]` and discard everything before
     # it, then prepend the marker. LAST occurrence guards against the trace
-    # quoting the heading while echoing the prompt. If the heading is
-    # absent, fall back to raw stdout with a warning so the maintainer
-    # notices the formatting drift.
+    # quoting the heading while echoing the prompt.
+    #
+    # SAFETY: when the expected heading is absent (e.g. model ignored the
+    # template, or a future Copilot CLI release changes its output format
+    # enough to bury the heading), this function THROWS. Callers must catch
+    # and write a failure stub via Get-FailureStub. The previous behavior
+    # (post raw stdout with a warning) was unsafe: raw stdout contains
+    # tool-call traces, shell commands, and any chatter the model emits --
+    # we cannot allow that to land on a public GitHub issue when the
+    # contract was violated.
     param(
         [Parameter(Mandatory)] [AllowEmptyString()] [string] $RawStdOut,
         [Parameter(Mandatory)] [int]                         $Id
@@ -250,13 +233,11 @@ function Get-AnalysisFromCopilotStdOut {
     }
     $headingRegex = [regex] ('(?m)^[ \t]*###[ \t]+Triage analysis for \[AzDO #' + [regex]::Escape([string] $Id) + '\]')
     $headingHits  = $headingRegex.Matches($RawStdOut)
-    if ($headingHits.Count -gt 0) {
-        $lastHit = $headingHits[$headingHits.Count - 1]
-        $body    = $RawStdOut.Substring($lastHit.Index).TrimEnd()
-    } else {
-        Write-Warning "Heading '### Triage analysis for [AzDO #$Id]' not found in Copilot output for #${Id}; posting raw stdout."
-        $body = $RawStdOut.TrimEnd()
+    if ($headingHits.Count -eq 0) {
+        throw "Copilot output for #${Id} missing required heading '### Triage analysis for [AzDO #${Id}]'. Refusing to post raw stdout to a public issue."
     }
+    $lastHit = $headingHits[$headingHits.Count - 1]
+    $body    = $RawStdOut.Substring($lastHit.Index).TrimEnd()
     return "$marker`n" + $body.TrimStart()
 }
 
@@ -438,20 +419,13 @@ function Invoke-Analyze {
         # and so the audit artifact has a stub-line for every item. Scrub
         # for env-token leaks before write since .logs/ ships in the
         # audit artifact.
+        $envTokens = Get-LeakageTokens
         if ($r.StdErr) {
-            $errText = [string] $r.StdErr
-            # @(...) keeps array shape if Where|Sort yields a single match.
-            $envTokensErr = @(@($env:COPILOT_GITHUB_TOKEN, $env:GH_TOKEN, $env:GITHUB_TOKEN) |
-                              Where-Object { -not [string]::IsNullOrEmpty($_) -and $_.Length -ge 30 } |
-                              Sort-Object Length -Descending)
-            $errLeak = Find-LeakedTokenFingerprints -Text $errText -Tokens $envTokensErr
-            if ($errLeak.Count -gt 0) {
-                Write-Warning "  SECURITY: stderr for #${id} contained leaked token(s) $($errLeak -join ', '); redacting before write."
-                foreach ($tok in $envTokensErr) {
-                    $errText = $errText.Replace($tok, '<redacted-leaked-secret>')
-                }
+            $errScrub = Remove-LeakedTokens -Text ([string] $r.StdErr) -Tokens $envTokens
+            if ($errScrub.Fingerprints.Count -gt 0) {
+                Write-Warning "  SECURITY: stderr for #${id} contained leaked token(s) $($errScrub.Fingerprints -join ', '); redacting before write."
             }
-            Set-Content -LiteralPath $logPath -Value $errText -Encoding UTF8
+            Set-Content -LiteralPath $logPath -Value $errScrub.Text -Encoding UTF8
         } else {
             Set-Content -LiteralPath $logPath -Value "(no stderr captured from Copilot CLI for AzDO #$id; exit=$($r.ExitCode), timedOut=$($r.TimedOut))" -Encoding UTF8
         }
@@ -477,25 +451,31 @@ function Invoke-Analyze {
             $failCount++
             continue
         }
-        # Strip Copilot CLI's non-interactive trace preamble.
-        $output = Get-AnalysisFromCopilotStdOut -RawStdOut ([string] $r.StdOut) -Id $id
-
-        # Scrub any env-var token value that the model echoed back in its
-        # output. Tokens sorted by length DESCENDING so a longer token is
-        # fully redacted before a shorter substring iteration would mutate
-        # it mid-text. See Find-LeakedTokenFingerprints.
-        $envTokens = @(@($env:COPILOT_GITHUB_TOKEN, $env:GH_TOKEN, $env:GITHUB_TOKEN) |
-                       Where-Object { -not [string]::IsNullOrEmpty($_) -and $_.Length -ge 30 } |
-                       Sort-Object Length -Descending)
-        $leakedFingerprints = Find-LeakedTokenFingerprints -Text $output -Tokens $envTokens
-        if ($leakedFingerprints.Count -gt 0) {
-            Write-Warning "  SECURITY: analysis for #${id} contained leaked token(s) $($leakedFingerprints -join ', '); redacting before write."
-            foreach ($tok in $envTokens) {
-                $output = $output.Replace($tok, '<redacted-leaked-secret>')
-            }
+        # Strip Copilot CLI's non-interactive trace preamble. If the model
+        # omitted the required heading (or a future CLI release changes
+        # the output format), Get-AnalysisFromCopilotStdOut throws -- we
+        # write a failure stub rather than posting raw stdout to the
+        # public issue.
+        try {
+            $output = Get-AnalysisFromCopilotStdOut -RawStdOut ([string] $r.StdOut) -Id $id
+        } catch {
+            $reason = "Copilot output for #${id} did not contain the required heading. Refusing to post raw stdout to a public GitHub issue. Re-run after the operator inspects .logs/copilot-$id.log."
+            Set-Content -LiteralPath $analysisPath -Value (Get-FailureStub -Id $id -WiUrl $wiUrl -Reason $reason -BuildId $buildId) -Encoding UTF8
+            Write-Warning "  MALFORMED OUTPUT after ${dur}s: $($_.Exception.Message)"
+            $failCount++
+            continue
         }
 
-        Set-Content -LiteralPath $analysisPath -Value $output -Encoding UTF8
+        # Scrub any env-var token value that the model echoed back. The
+        # whitespace-normalized match in Find-LeakedTokenFingerprints
+        # catches simple `abcd efgh` style injections; base64 / encoding
+        # bypasses are NOT covered (see scrub.ps1 header).
+        $outScrub = Remove-LeakedTokens -Text $output -Tokens $envTokens
+        if ($outScrub.Fingerprints.Count -gt 0) {
+            Write-Warning "  SECURITY: analysis for #${id} contained leaked token(s) $($outScrub.Fingerprints -join ', '); redacting before write."
+        }
+
+        Set-Content -LiteralPath $analysisPath -Value $outScrub.Text -Encoding UTF8
         Write-Host "  OK in ${dur}s -> $analysisPath"
         $okCount++
     }
@@ -639,8 +619,10 @@ function Invoke-SelfTest {
     }
 
     # 5c. Find-LeakedTokenFingerprints: returns fingerprints (never the raw
-    #     token value) when output contains a token. Ignores tokens that
-    #     are too short to be real secrets. Empty / no-tokens => empty.
+    #     token value, never the first character, never the exact length)
+    #     when output contains a token. Ignores tokens too short to be
+    #     real secrets. Empty / no-tokens => empty. Also catches the
+    #     `abcd efgh` whitespace-injection bypass.
     $realLookingToken = 'ghp_' + ('A' * 36)   # 40 chars, matches PAT shape, >=30 floor
     $textClean        = 'This analysis mentions no secrets.'
     $textLeak         = "Token starts with: $realLookingToken"
@@ -651,8 +633,34 @@ function Invoke-SelfTest {
     if ($fpLeak.Count -gt 0 -and $fpLeak[0] -match [regex]::Escape($realLookingToken)) {
         Write-Error "Fingerprint MUST NOT echo the token value: $($fpLeak[0])"; $errors++
     }
-    if ($fpLeak.Count -gt 0 -and $fpLeak[0] -notmatch 'len=40') {
-        Write-Error "Fingerprint should include length; got: $($fpLeak[0])"; $errors++
+    # CONTRACT: fingerprint must NOT include the first character of the
+    # token or the exact length. Both would help an attacker / observer
+    # narrow down which secret leaked.
+    if ($fpLeak.Count -gt 0 -and $fpLeak[0] -match 'head=') {
+        Write-Error "Fingerprint MUST NOT include token head character; got: $($fpLeak[0])"; $errors++
+    }
+    if ($fpLeak.Count -gt 0 -and $fpLeak[0] -match 'len=40') {
+        Write-Error "Fingerprint MUST NOT include exact token length; got: $($fpLeak[0])"; $errors++
+    }
+    if ($fpLeak.Count -gt 0 -and $fpLeak[0] -notmatch 'bucket=\d') {
+        Write-Error "Fingerprint should include a length bucket; got: $($fpLeak[0])"; $errors++
+    }
+    # 40-char token => bucket=40x (floor(40/10)*10 = 40).
+    if ($fpLeak.Count -gt 0 -and $fpLeak[0] -ne '<token leak: bucket=40x>') {
+        Write-Error "Fingerprint exact-shape: expected '<token leak: bucket=40x>'; got: $($fpLeak[0])"; $errors++
+    }
+    # 100+ tokens collapse to a single 'bucket=100+' (don't leak length).
+    $hugeTok    = 'ghp_' + ('B' * 120)        # 124 chars
+    $fpHuge     = Find-LeakedTokenFingerprints -Text "x $hugeTok y" -Tokens @($hugeTok)
+    if ($fpHuge.Count -gt 0 -and $fpHuge[0] -ne '<token leak: bucket=100+>') {
+        Write-Error "Fingerprint 100+ bucket wrong; got: $($fpHuge[0])"; $errors++
+    }
+    # CONTRACT: whitespace-split injection (`abcd efgh` for a token
+    # `abcdefgh`) must still trigger the fingerprint.
+    $splitText = "head: $($realLookingToken.Substring(0,20)) $($realLookingToken.Substring(20)) tail"
+    $fpSplit = Find-LeakedTokenFingerprints -Text $splitText -Tokens @($realLookingToken)
+    if ($fpSplit.Count -ne 1) {
+        Write-Error "Whitespace-split bypass NOT caught (expected 1 fingerprint); got $($fpSplit.Count) for: $splitText"; $errors++
     }
     # Short / empty / null inputs ignored
     $fpShort = Find-LeakedTokenFingerprints -Text 'shortvalue' -Tokens @('short')
@@ -661,6 +669,31 @@ function Invoke-SelfTest {
     if ($fpEmptyInput.Count -ne 0) { Write-Error "Empty text should not report leaks"; $errors++ }
     $fpNoTokens = Find-LeakedTokenFingerprints -Text $textLeak -Tokens @()
     if ($fpNoTokens.Count -ne 0) { Write-Error "Empty token list should not report leaks"; $errors++ }
+
+    # 5c2. Remove-LeakedTokens: returns @{Text;Fingerprints}; redacts verbatim
+    #      matches; Fingerprints array signals detection even when literal
+    #      .Replace() can't catch a whitespace-split occurrence.
+    $rmClean = Remove-LeakedTokens -Text $textClean -Tokens @($realLookingToken)
+    if ($rmClean.Fingerprints.Count -ne 0) { Write-Error "Remove-LeakedTokens reported leak on clean text."; $errors++ }
+    if ($rmClean.Text -ne $textClean)      { Write-Error "Remove-LeakedTokens mutated clean text."; $errors++ }
+    $rmLeak = Remove-LeakedTokens -Text $textLeak -Tokens @($realLookingToken)
+    if ($rmLeak.Fingerprints.Count -ne 1)  { Write-Error "Remove-LeakedTokens did not report verbatim leak."; $errors++ }
+    if ($rmLeak.Text.Contains($realLookingToken)) {
+        Write-Error "Remove-LeakedTokens left verbatim token in output: $($rmLeak.Text)"; $errors++
+    }
+    if (-not $rmLeak.Text.Contains('<redacted-leaked-secret>')) {
+        Write-Error "Remove-LeakedTokens did not insert the redaction marker; got: $($rmLeak.Text)"; $errors++
+    }
+    # Get-LeakageTokens returns a real array even with no tokens set.
+    $origToks = $env:COPILOT_GITHUB_TOKEN, $env:GH_TOKEN, $env:GITHUB_TOKEN
+    try {
+        $env:COPILOT_GITHUB_TOKEN = $null; $env:GH_TOKEN = $null; $env:GITHUB_TOKEN = $null
+        $emptyToks = Get-LeakageTokens
+        if ($null -eq $emptyToks)      { Write-Error "Get-LeakageTokens returned `$null when env empty."; $errors++ }
+        elseif ($emptyToks.Count -ne 0) { Write-Error "Get-LeakageTokens Count=$($emptyToks.Count) on empty env, expected 0."; $errors++ }
+    } finally {
+        $env:COPILOT_GITHUB_TOKEN, $env:GH_TOKEN, $env:GITHUB_TOKEN = $origToks
+    }
 
     # 5e. Pipeline-collapse regression: a `@(a,b,c) | Where | Sort-Object`
     #     pipeline collapses to a scalar string when only ONE element
@@ -732,18 +765,20 @@ body text
     }
     if (-not $cleanA.Contains('body text'))                                       { Write-Error "Strip A: body text lost. Got: $cleanA"; $errors++ }
 
-    # Case B: heading absent (model ignored template). Should fall back to
-    # raw stdout with the marker prepended, plus a warning. Capture the
-    # warning so it doesn't pollute the test output.
-    $warnB = $null
-    $cleanB = Get-AnalysisFromCopilotStdOut -RawStdOut "just random text with no heading" -Id 99 -WarningVariable warnB -WarningAction SilentlyContinue
-    if ($cleanB -notmatch '\A<!-- ptvs-triage-analyze:99 -->\s*\njust random text') {
-        Write-Error "Strip B: heading-absent fallback wrong. Got: $cleanB"; $errors++
-    }
-    if (-not $warnB)                                                              { Write-Error "Strip B: expected a warning when heading is missing."; $errors++ }
+    # Case B: heading absent (model ignored template) -- now THROWS rather
+    # than posting raw stdout. The caller (Invoke-Analyze) catches and
+    # writes a failure stub, so a malformed Copilot output never lands
+    # on a public GitHub issue.
+    $threwB = $false; $msgB = ''
+    try { Get-AnalysisFromCopilotStdOut -RawStdOut "just random text with no heading" -Id 99 | Out-Null }
+    catch { $threwB = $true; $msgB = $_.Exception.Message }
+    if (-not $threwB)                                                              { Write-Error "Strip B: heading-absent case must throw (was fallback). Public-egress safety regression."; $errors++ }
+    elseif ($msgB -notmatch 'missing required heading')                            { Write-Error "Strip B throw should explain why; got: $msgB"; $errors++ }
 
-    # Case C: empty / whitespace-only stdout — return just the marker
-    # (don't crash, don't emit a no-content false analysis).
+    # Case C: empty / whitespace-only stdout -- return just the marker
+    # (don't crash, don't emit a no-content false analysis). The
+    # higher-level flow already catches IsNullOrWhiteSpace before
+    # calling us, so this only protects the helper as a unit.
     $cleanC = Get-AnalysisFromCopilotStdOut -RawStdOut '' -Id 5
     if ($cleanC -ne '<!-- ptvs-triage-analyze:5 -->')                             { Write-Error "Strip C: empty stdout should return bare marker. Got: $cleanC"; $errors++ }
     $cleanC2 = Get-AnalysisFromCopilotStdOut -RawStdOut "   `n  `t  `n" -Id 5
@@ -766,17 +801,15 @@ REAL body
     if ($cleanD.Contains('inside the trace'))                                     { Write-Error "Strip D: decoy heading not stripped — should have picked LAST occurrence. Got: $cleanD"; $errors++ }
     if (([regex]::Matches($cleanD, '###\s+Triage analysis')).Count -ne 1)         { Write-Error "Strip D: heading should appear exactly once. Got: $cleanD"; $errors++ }
 
-    # Case E: heading for a DIFFERENT id is not the anchor. If model wrote
-    # `### Triage analysis for [AzDO #999]` (wrong id) but we asked for id=5,
-    # the strip should fall back to the raw-stdout path (with warning) so
-    # the maintainer sees the obvious drift instead of silently posting a
-    # truncated or wrongly-attributed analysis.
-    $warnE = $null
+    # Case E: heading for a DIFFERENT id is NOT the anchor. Must throw so
+    # the caller writes a failure stub -- we cannot post the model's reply
+    # for the wrong work item.
+    $threwE = $false; $msgE = ''
     $rawE = "### Triage analysis for [AzDO #999](u)`nwrong-id body"
-    $cleanE = Get-AnalysisFromCopilotStdOut -RawStdOut $rawE -Id 5 -WarningVariable warnE -WarningAction SilentlyContinue
-    if ($cleanE -notmatch '\A<!-- ptvs-triage-analyze:5 -->')                     { Write-Error "Strip E: marker for asked id missing. Got: $cleanE"; $errors++ }
-    if (-not $cleanE.Contains('### Triage analysis for [AzDO #999]'))             { Write-Error "Strip E: heading text should still be preserved for visibility. Got: $cleanE"; $errors++ }
-    if (-not $warnE)                                                              { Write-Error "Strip E: expected warning when id mismatch."; $errors++ }
+    try { Get-AnalysisFromCopilotStdOut -RawStdOut $rawE -Id 5 | Out-Null }
+    catch { $threwE = $true; $msgE = $_.Exception.Message }
+    if (-not $threwE)                                                              { Write-Error "Strip E: wrong-id heading must throw, not fall back."; $errors++ }
+    elseif ($msgE -notmatch 'missing required heading')                            { Write-Error "Strip E throw should explain why; got: $msgE"; $errors++ }
 
     # 5d. Substring-token scrub ordering: when two tokens overlap (one is
     #     a substring prefix of the other), replacing the SHORTER first
@@ -977,6 +1010,54 @@ echo 'stub analysis body'
             }
             if ($diskText -notmatch '<redacted-leaked-secret>') {
                 Write-Error "LEAK SCRUB: expected '<redacted-leaked-secret>' marker in scrubbed output. Got: $diskText"; $errors++
+            }
+        } finally {
+            Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    }
+
+    # 8. End-to-end malformed-output safety: when the stub produces output
+    #    WITHOUT the required `### Triage analysis for [AzDO #N]` heading,
+    #    Invoke-Analyze must write a failure stub (NOT post the raw stdout).
+    #    Guards the public-egress safety property the K reviewer flagged.
+    if ($IsLinux -or $IsMacOS) {
+        $tmp = Join-Path ([IO.Path]::GetTempPath()) ("analyze-malformed-{0}" -f ([Guid]::NewGuid().ToString('N')))
+        $sanDir = Join-Path $tmp 'san'
+        $outDir = Join-Path $tmp 'out'
+        $binDir = Join-Path $tmp 'bin'
+        New-Item -ItemType Directory -Force -Path $sanDir,$outDir,$binDir | Out-Null
+        try {
+            @{ id = 13; title = 'malformed'; url = 'https://example/13' } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $sanDir 'wi-13.json') -Encoding UTF8
+
+            # Stub emits chatter only -- no required heading. Models a future
+            # Copilot CLI release with changed output format, or the model
+            # ignoring the template.
+            $stubScript = "#!/usr/bin/env bash`necho 'Sure, here are some thoughts on the work item.'`necho 'It might be an issue with reset state. Try restarting VS.'`n"
+            $stubPath = Join-Path $binDir 'copilot'
+            Set-Content -LiteralPath $stubPath -Value $stubScript -Encoding UTF8
+            & chmod +x $stubPath 2>$null
+
+            $origTok = $env:COPILOT_GITHUB_TOKEN
+            try {
+                $env:COPILOT_GITHUB_TOKEN = 'github_pat_' + ('M' * 80)
+                Invoke-Analyze -SanitizedDir $sanDir -PtvsRepo $tmp -OutDir $outDir `
+                               -PromptTemplate (Join-Path $PSScriptRoot 'prompts/triage-prompt.md') `
+                               -CopilotPath $stubPath -PerItemTimeoutSeconds 30 *>$null
+            } finally { $env:COPILOT_GITHUB_TOKEN = $origTok }
+
+            $diskText = Get-Content -LiteralPath (Join-Path $outDir 'analysis-13.md') -Raw
+            # Should be a FAILURE STUB, not the raw model chatter.
+            if (-not $diskText.Contains('Automated triage failed')) {
+                Write-Error "MALFORMED-OUTPUT SAFETY: missing-heading stdout was NOT converted to a failure stub. PUBLIC-EGRESS REGRESSION. Got: $diskText"; $errors++
+            }
+            if ($diskText.Contains('It might be an issue with reset state')) {
+                Write-Error "MALFORMED-OUTPUT SAFETY: raw model chatter leaked into would-be-posted analysis. PUBLIC-EGRESS REGRESSION. Got: $diskText"; $errors++
+            }
+            # Failure-stub marker (with :failed: suffix) must be the first line
+            # so post-analyses.ps1's success-marker regex doesn't match it.
+            $firstLine = ($diskText -split "`r?`n")[0]
+            if ($firstLine -notmatch '^<!--\s*ptvs-triage-analyze:13:failed:') {
+                Write-Error "MALFORMED-OUTPUT SAFETY: failure stub missing BuildId-suffixed marker on first line; retries would be silently skipped. Got: $firstLine"; $errors++
             }
         } finally {
             Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue

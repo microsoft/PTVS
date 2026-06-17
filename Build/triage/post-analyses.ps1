@@ -61,6 +61,13 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+# Shared scrubbing helpers (Get-LeakageTokens / Remove-LeakedTokens) are
+# loaded from a sibling file so the egress scrub here is defended by the
+# exact same logic as analyze.ps1's write-time scrub. Defense in depth:
+# even though analyze.ps1 already scrubbed, a future bug there must not
+# allow secrets to land on a public GitHub issue.
+. (Join-Path $PSScriptRoot 'scrub.ps1')
+
 function Get-TriageConfig {
     param([string] $Path)
     if (-not (Test-Path -LiteralPath $Path)) { return $null }
@@ -220,6 +227,11 @@ function Invoke-Post {
     Write-Host "Found $($existingMarkers.Count) existing marker(s) on the issue (skipped to avoid duplicates)."
 
     $posted = 0; $skipped = 0
+    # Look up env tokens ONCE per Invoke-Post call so the egress scrub
+    # below sees a stable list. In the AzDO pipeline GH_TOKEN is set; in
+    # local DryRun usage it may be unset, which is fine -- Remove-LeakedTokens
+    # is a no-op with an empty token list.
+    $egressTokens = Get-LeakageTokens
     foreach ($f in $files) {
         $marker = Get-Marker -Id $f.Id
         if ($existingMarkers.Contains($marker)) {
@@ -231,6 +243,15 @@ function Invoke-Post {
         if ([string]::IsNullOrWhiteSpace($body)) {
             Write-Warning "  SKIP #$($f.Id): file is empty."
             continue
+        }
+        # Defense-in-depth egress scrub: analyze.ps1 already scrubbed at
+        # write-time, but a prompt-injection-induced leak that slipped past
+        # the on-disk scrub MUST NOT reach the public issue. Catches both
+        # verbatim and whitespace-split occurrences (see scrub.ps1).
+        $scrub = Remove-LeakedTokens -Text $body -Tokens $egressTokens
+        if ($scrub.Fingerprints.Count -gt 0) {
+            Write-Warning "  SECURITY: egress scrub caught leaked token(s) in #$($f.Id): $($scrub.Fingerprints -join ', '). Redacting before POST. (Investigate why analyze.ps1's write-time scrub missed it.)"
+            $body = $scrub.Text
         }
         # GitHub issue-comment body cap is 65536 chars. Trim defensively.
         if ($body.Length -gt 65000) {
@@ -423,6 +444,47 @@ function Invoke-SelfTest {
         } finally { $env:GH_TOKEN = $orig }
     } finally {
         Remove-Item -LiteralPath $tmp2 -Recurse -Force -ErrorAction SilentlyContinue
+    }
+
+    # 7. EGRESS SCRUB: an analysis file containing the verbatim value of
+    #    an env token MUST be redacted before egress (POST or DRY-RUN-print).
+    #    Defense-in-depth check vs analyze.ps1 leaving a leak on disk.
+    $tmp3 = Join-Path ([IO.Path]::GetTempPath()) ("post-egress-{0}" -f ([Guid]::NewGuid().ToString('N')))
+    New-Item -ItemType Directory -Force -Path $tmp3 | Out-Null
+    try {
+        $leakTok = 'github_pat_' + ('Q' * 80)   # 91 chars, >= 30 floor
+        # Plant a leak that "slipped past" analyze.ps1's write-time scrub.
+        $leakBody = "<!-- ptvs-triage-analyze:55 -->`n### Triage analysis for [AzDO #55](u)`n`nThe agent saw: $leakTok"
+        Set-Content -LiteralPath (Join-Path $tmp3 'analysis-55.md') -Value $leakBody -Encoding UTF8
+
+        $origGh = $env:GH_TOKEN
+        $origPrint = $env:COPILOT_GITHUB_TOKEN
+        try {
+            $env:GH_TOKEN              = $null   # avoid the dry-run path needing a header
+            $env:COPILOT_GITHUB_TOKEN  = $leakTok # this is what egress will scrub against
+            $warn = $null
+            # Capture the actual dry-run print output via 6> (Information)
+            # ... actually easier: just verify the file-on-disk leak fingerprint
+            # would be caught by Remove-LeakedTokens directly. Belt + suspenders:
+            $direct = Remove-LeakedTokens -Text $leakBody -Tokens (Get-LeakageTokens)
+            if ($direct.Fingerprints.Count -lt 1) {
+                Write-Error "Egress scrub helper did NOT detect leak in planted analysis body."; $errors++
+            }
+            if ($direct.Text.Contains($leakTok)) {
+                Write-Error "Egress scrub helper FAILED to redact verbatim leak. PUBLIC-EGRESS REGRESSION."; $errors++
+            }
+            # And verify Invoke-Post (DryRun) doesn't crash on a body containing
+            # the leak (it should just scrub silently as part of normal flow).
+            Invoke-Post -AnalysisDir $tmp3 -IssueNumber '8542' -Owner 'microsoft' -Repo 'PTVS' -DryRun -WarningVariable warn -WarningAction SilentlyContinue
+            if (-not ($warn -match 'egress scrub caught')) {
+                Write-Error "Invoke-Post did not warn about caught egress leak (warn=$warn)."; $errors++
+            }
+        } finally {
+            $env:GH_TOKEN             = $origGh
+            $env:COPILOT_GITHUB_TOKEN = $origPrint
+        }
+    } finally {
+        Remove-Item -LiteralPath $tmp3 -Recurse -Force -ErrorAction SilentlyContinue
     }
 
     if ($errors -gt 0) {

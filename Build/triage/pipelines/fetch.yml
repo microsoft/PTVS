@@ -344,10 +344,25 @@ jobs:
     condition: and(succeeded(), eq(lower(variables['RUN_ANALYZE']), 'true'), ne(variables['issueNumber'], ''))
     env:
       # COPILOT_GITHUB_TOKEN authenticates the Copilot CLI for inference.
-      # GH_TOKEN lets agentic `gh issue list` / `gh pr list` calls Copilot
-      # makes against microsoft/PTVS authenticate without re-prompting.
+      # This PAT carries ONLY the `Copilot Requests` permission -- it
+      # cannot read or write microsoft/PTVS issues, code, or any other
+      # repo data even if a prompt-injection escapes the agent's tool
+      # boundary.
+      #
+      # SECURITY: we deliberately do NOT pass $(GH_PAT) (the
+      # Issues:Read+Write PAT used by post-analyses.ps1). Copilot CLI is
+      # invoked with `--allow-all-tools`, so any agentic `gh` calls it
+      # spawns would inherit GH_PAT's write scope if we passed it here,
+      # giving a prompt-injection attack a path to post arbitrary
+      # comments to the public repo. Without GH_TOKEN, the agent's `gh`
+      # subprocess runs unauthenticated -- read-only against the public
+      # microsoft/PTVS repo (rate-limited to 60 req/hr), write-disabled
+      # by 401. Duplicate-detection via `gh issue list --search` still
+      # works for public-repo reads within that budget.
+      #
+      # The artifact upload + comment post still need GH_PAT; both
+      # happen in later steps where the agent is no longer running.
       COPILOT_GITHUB_TOKEN: $(COPILOT_PAT)
-      GH_TOKEN:             $(GH_PAT)
     inputs:
       pwsh: true
       targetType: inline
@@ -355,11 +370,20 @@ jobs:
         & "$(Build.SourcesDirectory)/Build/triage/analyze.ps1" `
             -SanitizedDir "$(Agent.TempDirectory)/sanitized" `
             -PtvsRepo     "$(Build.SourcesDirectory)" `
-            -OutDir       "$(Agent.TempDirectory)/analyses"
+            -OutDir       "$(Agent.TempDirectory)/analyses" `
+            -MaxItems     ([int] '$(MAX_CANDIDATES)')
 
   - publish: $(Agent.TempDirectory)/analyses
-    displayName: 'Publish analyses artifact (audit trail, devdiv-internal)'
+    displayName: 'Publish analyses artifact (audit trail; devdiv project Build Read)'
     artifact: analyses-$(Build.BuildId)
+    # Scope note: AzDO pipeline artifacts in devdiv/DevDiv are readable
+    # by anyone with the project's Build (Read) permission. That's
+    # broader than the original "devdiv-internal" wording implied --
+    # treat the artifact as Microsoft-internal-distribution, NOT as
+    # private-to-the-pipeline-author. The artifact contains the
+    # per-item Copilot analyses + .logs/copilot-<id>.log stderr
+    # captures. Both go through the token-leak scrubber before write.
+    #
     # `succeeded()` (not `succeededOrFailed()`): if analyze.ps1 threw before
     # creating $OutDir, `publish:` would error trying to read a missing dir.
     # Per-item stub failures still exit 0, so the artifact still uploads.
