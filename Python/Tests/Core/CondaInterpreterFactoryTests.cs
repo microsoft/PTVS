@@ -15,8 +15,11 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Threading;
@@ -74,6 +77,63 @@ namespace PythonToolsTests {
             };
 
             TestTriggerDiscovery(userProfileFolder, triggerDiscovery);
+        }
+
+        [TestMethod, Priority(UnitTestPriority.P0)]
+        [TestCategory("10s")]
+        public void CondaActivationTimesOut() {
+            var condaRoot = TestData.GetTempPath();
+            try {
+                var scripts = Path.Combine(condaRoot, "scripts");
+                Directory.CreateDirectory(scripts);
+
+                var condaExe = Path.Combine(scripts, "conda.exe");
+                File.WriteAllText(condaExe, string.Empty);
+                File.WriteAllText(Path.Combine(scripts, "activate.bat"), "@echo off\r\n:wait\r\ngoto wait\r\n");
+
+                var sw = Stopwatch.StartNew();
+                var env = CondaUtils.GetActivationEnvironmentVariablesForPrefixAsync(condaExe, null, TimeSpan.FromMilliseconds(100)).WaitAndUnwrapExceptions();
+                sw.Stop();
+
+                Assert.AreEqual(0, env.Count());
+                Assert.IsTrue(sw.Elapsed < TimeSpan.FromSeconds(5), "Conda activation did not honor the timeout.");
+            } finally {
+                try {
+                    Directory.Delete(condaRoot, true);
+                } catch (IOException) {
+                } catch (UnauthorizedAccessException) {
+                }
+            }
+        }
+
+        [TestMethod, Priority(UnitTestPriority.P0)]
+        [TestCategory("10s")]
+        public void CondaActivationTimeoutIsNotCached() {
+            var condaRoot = TestData.GetTempPath();
+            try {
+                var scripts = Path.Combine(condaRoot, "scripts");
+                Directory.CreateDirectory(scripts);
+
+                var condaExe = Path.Combine(scripts, "conda.exe");
+                var activateBat = Path.Combine(scripts, "activate.bat");
+                File.WriteAllText(condaExe, string.Empty);
+                File.WriteAllText(activateBat, "@echo off\r\n:wait\r\ngoto wait\r\n");
+
+                var timedOutEnv = CondaUtils.GetActivationEnvironmentVariablesForPrefixAsync(condaExe, null, TimeSpan.FromMilliseconds(100)).WaitAndUnwrapExceptions();
+                Assert.AreEqual(0, timedOutEnv.Count());
+
+                File.WriteAllText(activateBat, "@echo off\r\necho !!!ENVIRONMENT MARKER!!!\r\necho {\"PTVS_TEST_ENV\":\"success\"}\r\n");
+
+                var env = CondaUtils.GetActivationEnvironmentVariablesForPrefixAsync(condaExe, null, TimeSpan.FromSeconds(5)).WaitAndUnwrapExceptions();
+
+                Assert.AreEqual("success", env.Single(kv => kv.Key == "PTVS_TEST_ENV").Value);
+            } finally {
+                try {
+                    Directory.Delete(condaRoot, true);
+                } catch (IOException) {
+                } catch (UnauthorizedAccessException) {
+                }
+            }
         }
 
         private static void TestTriggerDiscovery(string userProfileFolder, Action triggerDiscovery) {
