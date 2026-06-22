@@ -22,6 +22,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Logging;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Newtonsoft.Json;
 
@@ -95,7 +96,15 @@ namespace Microsoft.PythonTools.Interpreter {
             return await GetActivationEnvironmentVariablesForPrefixAsync(condaPath, prefixPath, ActivationTimeout).ConfigureAwait(false);
         }
 
+        internal static async Task<IEnumerable<KeyValuePair<string, string>>> GetActivationEnvironmentVariablesForPrefixAsync(string condaPath, string prefixPath, IPythonToolsLogger logger) {
+            return await GetActivationEnvironmentVariablesForPrefixAsync(condaPath, prefixPath, ActivationTimeout, logger).ConfigureAwait(false);
+        }
+
         internal static async Task<IEnumerable<KeyValuePair<string, string>>> GetActivationEnvironmentVariablesForPrefixAsync(string condaPath, string prefixPath, TimeSpan timeout) {
+            return await GetActivationEnvironmentVariablesForPrefixAsync(condaPath, prefixPath, timeout, null).ConfigureAwait(false);
+        }
+
+        internal static async Task<IEnumerable<KeyValuePair<string, string>>> GetActivationEnvironmentVariablesForPrefixAsync(string condaPath, string prefixPath, TimeSpan timeout, IPythonToolsLogger logger) {
             var condaKey = new CondaCacheKey(condaPath, prefixPath);
 
             using (await _activationCacheLock.LockAsync(CancellationToken.None).ConfigureAwait(false)) {
@@ -108,7 +117,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
             }
 
-            var uncachedActivation = await GetActivationEnvironmentVariablesForPrefixUncachedAsync(condaPath, prefixPath, timeout).ConfigureAwait(false);
+            var uncachedActivation = await GetActivationEnvironmentVariablesForPrefixUncachedAsync(condaPath, prefixPath, timeout, logger).ConfigureAwait(false);
 
             using (await _activationCacheLock.LockAsync(CancellationToken.None).ConfigureAwait(false)) {
                 if (!_activationCache.TryGetValue(condaKey, out KeyValuePair<string, string>[] activationVariables)) {
@@ -121,7 +130,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private static async Task<ActivationResult> GetActivationEnvironmentVariablesForPrefixUncachedAsync(string condaPath, string prefixPath, TimeSpan timeout) {
+        private static async Task<ActivationResult> GetActivationEnvironmentVariablesForPrefixUncachedAsync(string condaPath, string prefixPath, TimeSpan timeout, IPythonToolsLogger logger) {
             var activationVariables = new KeyValuePair<string, string>[0];
 
             var activateBat = Path.Combine(Path.GetDirectoryName(condaPath), "activate.bat");
@@ -134,6 +143,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     var exited = await Task.Run(() => proc.Wait(timeout)).ConfigureAwait(false);
                     if (!exited) {
                         Trace.TraceWarning("Conda activation timed out: " + proc.Arguments);
+                        LogActivationTimeout(logger, prefixPath, timeout);
                         try {
                             proc.Kill();
                         } catch (InvalidOperationException) {
@@ -149,6 +159,18 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             return new ActivationResult(activationVariables, true);
+        }
+
+        private static void LogActivationTimeout(IPythonToolsLogger logger, string prefixPath, TimeSpan timeout) {
+            logger?.LogEvent(
+                "CondaActivationTimeout",
+                new Dictionary<string, object> {
+                    { "VS.Python.CondaActivation.IsRootEnvironment", prefixPath == null },
+                },
+                new Dictionary<string, double> {
+                    { "VS.Python.CondaActivation.TimeoutMilliseconds", timeout.TotalMilliseconds },
+                }
+            );
         }
 
         private static IEnumerable<KeyValuePair<string, string>> ParseEnvironmentVariables(ProcessOutput proc) {
