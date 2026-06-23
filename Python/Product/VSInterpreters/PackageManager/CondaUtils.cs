@@ -142,7 +142,13 @@ namespace Microsoft.PythonTools.Interpreter {
                 using (var proc = ProcessOutput.RunHiddenAndCapture(activateBat, args)) {
                     var exited = await Task.Run(() => proc.Wait(timeout)).ConfigureAwait(false);
                     if (!exited) {
-                        Trace.TraceWarning("Conda activation timed out: " + proc.Arguments);
+                        Trace.TraceWarning(
+                            "Conda activation timed out after {0} ms. Activate script: {1}. Prefix: {2}. PID: {3}.",
+                            timeout.TotalMilliseconds,
+                            activateBat,
+                            prefixPath ?? "<root>",
+                            proc.ProcessId
+                        );
                         LogActivationTimeout(logger, prefixPath, timeout);
                         try {
                             proc.Kill();

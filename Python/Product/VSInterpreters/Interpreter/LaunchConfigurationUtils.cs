@@ -50,9 +50,9 @@ namespace Microsoft.PythonTools.Interpreter {
             }
             baseEnv[pathVar] = string.Empty;
 
-            if (CondaUtils.IsCondaEnvironment(config.Interpreter.GetPrefixPath())) {
+            var prefixPath = config.Interpreter?.GetPrefixPath();
+            if (prefixPath != null && CondaUtils.IsCondaEnvironment(prefixPath)) {
                 var condaExe = CondaUtils.GetRootCondaExecutablePath(serviceProvider);
-                var prefixPath = config.Interpreter.GetPrefixPath();
                 if (File.Exists(condaExe) && Directory.Exists(prefixPath)) {
                     var condaEnv = Task.Run(() => CondaUtils.GetActivationEnvironmentVariablesForPrefixAsync(condaExe, prefixPath, logger)).WaitAndUnwrapExceptions();
                     baseEnv = PathUtils.MergeEnvironments(baseEnv.AsEnumerable<string, string>(), condaEnv, "Path", pathVar);
