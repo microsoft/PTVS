@@ -30,6 +30,7 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public static Dictionary<string, string> GetFullEnvironment(LaunchConfiguration config, IServiceProvider serviceProvider, UIThreadBase uiThread, IPythonToolsLogger logger) {
+            // uiThread is retained for API compatibility; conda activation no longer marshals to the UI thread.
             if (config.Interpreter == null && config.InterpreterPath == null) {
                 throw new ArgumentException("Interpreter was invalid");
             }

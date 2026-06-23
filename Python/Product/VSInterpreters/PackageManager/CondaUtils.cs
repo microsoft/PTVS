@@ -156,6 +156,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         return new ActivationResult(activationVariables, false);
                     }
 
+                    proc.Wait();
                     if (proc.ExitCode == 0) {
                         activationVariables = ParseEnvironmentVariables(proc).ToArray();
                     }

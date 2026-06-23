@@ -152,11 +152,14 @@ namespace PythonToolsTests {
                 var timedOutEnv = CondaUtils.GetActivationEnvironmentVariablesForPrefixAsync(condaExe, null, TimeSpan.FromMilliseconds(100)).WaitAndUnwrapExceptions();
                 Assert.AreEqual(0, timedOutEnv.Count());
 
-                File.WriteAllText(activateBat, "@echo off\r\necho !!!ENVIRONMENT MARKER!!!\r\necho {\"PTVS_TEST_ENV\":\"success\"}\r\n");
+                var emitEnv = Path.Combine(scripts, "emit-env.ps1");
+                File.WriteAllText(emitEnv, "$payload = 'x' * 65536\r\nWrite-Output '!!!ENVIRONMENT MARKER!!!'\r\nWrite-Output ('{\"PTVS_TEST_ENV\":\"success\",\"PTVS_TEST_PAYLOAD\":\"' + $payload + '\"}')\r\n");
+                File.WriteAllText(activateBat, "@echo off\r\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File \"%~dp0emit-env.ps1\"\r\n");
 
                 var env = CondaUtils.GetActivationEnvironmentVariablesForPrefixAsync(condaExe, null, TimeSpan.FromSeconds(5)).WaitAndUnwrapExceptions();
 
                 Assert.AreEqual("success", env.Single(kv => kv.Key == "PTVS_TEST_ENV").Value);
+                Assert.AreEqual(65536, env.Single(kv => kv.Key == "PTVS_TEST_PAYLOAD").Value.Length);
             } finally {
                 try {
                     Directory.Delete(condaRoot, true);
