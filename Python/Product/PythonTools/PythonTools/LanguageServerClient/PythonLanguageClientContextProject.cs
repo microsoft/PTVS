@@ -36,12 +36,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             _disposables = new DisposableBag(GetType().Name);
 
             _project.LanguageServerInterpreterChanged += OnInterpreterChanged;
-            _project.InterpreterFactoriesChanged += OnInterpreterChanged;
             _project.LanguageServerSearchPathsChanged += OnSearchPathsChanged;
             _project.ReanalyzeProject_Notify += OnReanalyzeProject;
             _disposables.Add(() => {
                 _project.LanguageServerInterpreterChanged -= OnInterpreterChanged;
-                _project.InterpreterFactoriesChanged -= OnInterpreterChanged;
                 _project.LanguageServerSearchPathsChanged -= OnSearchPathsChanged;
                 _project.ReanalyzeProject_Notify -= OnReanalyzeProject;
             });

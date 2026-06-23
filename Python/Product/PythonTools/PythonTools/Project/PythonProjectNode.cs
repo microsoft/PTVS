@@ -205,10 +205,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void OnInterpreterFactoriesChanged(object sender, EventArgs e) {
-            Site.GetUIThread().Invoke(() => {
-                RefreshInterpreters();
-                InterpreterFactoriesChanged?.Invoke(this, EventArgs.Empty);
-            });
+            Site.GetUIThread().Invoke(() => RefreshInterpreters());
         }
 
         // Called once all async interpreter factories have finished discovering interpreters
