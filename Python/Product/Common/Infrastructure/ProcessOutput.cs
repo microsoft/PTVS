@@ -720,7 +720,6 @@ namespace Microsoft.PythonTools.Infrastructure {
             if (_process != null) {
                 bool exited = _process.WaitForExit((int)timeout.TotalMilliseconds);
                 if (exited) {
-                    _process.WaitForExit();
                     // Should have already been called, in which case this is a no-op
                     OnExited(this, EventArgs.Empty);
                 }
