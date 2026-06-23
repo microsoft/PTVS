@@ -205,7 +205,24 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void OnInterpreterFactoriesChanged(object sender, EventArgs e) {
-            Site.GetUIThread().Invoke(() => RefreshInterpreters());
+            Site.GetUIThread().Invoke(() => {
+                var oldFactory = ActiveInterpreter;
+                var activeInterpreterChanged = false;
+                EventHandler activeInterpreterChangedHandler = (s, args) => activeInterpreterChanged = true;
+
+                ActiveInterpreterChanged += activeInterpreterChangedHandler;
+                try {
+                    RefreshInterpreters();
+                } finally {
+                    ActiveInterpreterChanged -= activeInterpreterChangedHandler;
+                }
+
+                var newFactory = ActiveInterpreter;
+                if (!activeInterpreterChanged &&
+                    !string.Equals(oldFactory?.Configuration.Id, newFactory?.Configuration.Id, StringComparison.OrdinalIgnoreCase)) {
+                    ActiveInterpreterChanged?.Invoke(this, EventArgs.Empty);
+                }
+            });
         }
 
         // Called once all async interpreter factories have finished discovering interpreters
