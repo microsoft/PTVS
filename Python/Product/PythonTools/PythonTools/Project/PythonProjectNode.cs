@@ -205,24 +205,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void OnInterpreterFactoriesChanged(object sender, EventArgs e) {
-            Site.GetUIThread().Invoke(() => {
-                var oldFactory = ActiveInterpreter;
-                var activeInterpreterChanged = false;
-                EventHandler activeInterpreterChangedHandler = (s, args) => activeInterpreterChanged = true;
-
-                ActiveInterpreterChanged += activeInterpreterChangedHandler;
-                try {
-                    RefreshInterpreters();
-                } finally {
-                    ActiveInterpreterChanged -= activeInterpreterChangedHandler;
-                }
-
-                var newFactory = ActiveInterpreter;
-                if (!activeInterpreterChanged &&
-                    !string.Equals(oldFactory?.Configuration.Id, newFactory?.Configuration.Id, StringComparison.OrdinalIgnoreCase)) {
-                    ActiveInterpreterChanged?.Invoke(this, EventArgs.Empty);
-                }
-            });
+            Site.GetUIThread().Invoke(() => RefreshInterpreters());
         }
 
         // Called once all async interpreter factories have finished discovering interpreters
@@ -1085,6 +1068,7 @@ namespace Microsoft.PythonTools.Project {
 
                 InterpreterOptions.DefaultInterpreterChanged -= GlobalDefaultInterpreterChanged;
                 InterpreterRegistry.InterpretersChanged -= OnInterpreterRegistryChanged;
+                InterpreterRegistry.CondaInterpreterDiscoveryCompleted -= OnInterpreterDiscoveryCompleted;
 
                 _searchPaths.Dispose();
 
