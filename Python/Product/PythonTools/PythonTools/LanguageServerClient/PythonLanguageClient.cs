@@ -215,7 +215,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             // Client context cannot be created here since the is no workspace yet
             // and hence we don't know if this is workspace or a loose files case.
             _server = new LanguageServer(Site, JoinableTaskContext, this.OnSendToServer);
-            InitializationOptions = null;
+
+            InitializationOptions = new { disablePullDiagnostics = true };
 
             var customTarget = new PythonLanguageClientCustomTarget(Site, JoinableTaskContext);
             CustomMessageTarget = customTarget;
