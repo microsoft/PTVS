@@ -48,15 +48,19 @@ namespace PythonToolsUITests {
                 var completionTask = new TaskCompletionSource<IAsyncCompletionSession>();
                 var executableTask = new TaskCompletionSource<IEnumerable<CompletionItem>>();
                 IEnumerable<CompletionItem> items = Array.Empty<CompletionItem>();
+                Action<IEnumerable<CompletionItem>> updateItems = newItems => {
+                    items = newItems.ToArray();
+                    if (items.Any(i => i.InsertText == "executable")) {
+                        executableTask.TrySetResult(items);
+                    }
+                };
                 handler = (s, e) => {
                     session = e.CompletionSession;
                     itemsUpdatedHandler = (sender, args) => {
-                        items = args.Items.Items.ToArray();
-                        if (items.Any(i => i.InsertText == "executable")) {
-                            executableTask.TrySetResult(items);
-                        }
+                        updateItems(args.Items.Items);
                     };
                     session.ItemsUpdated += itemsUpdatedHandler;
+                    updateItems(session.GetComputedItems(CancellationToken.None).Items);
                     completionTask.TrySetResult(session);
                 };
                 doc.AsyncCompletionBroker.CompletionTriggered += handler;

@@ -490,7 +490,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private void OnSettingsChanged(object sender, EventArgs e) {
-            TriggerWorkspaceUpdateConfig().DoNotWait();
+            try {
+                TriggerWorkspaceUpdateConfig().DoNotWait();
+            } catch (NullReferenceException) {
+            } catch (ObjectDisposedException) {
+            }
         }
 
         private void OnAnalysisComplete(object sender, EventArgs e) {
