@@ -112,7 +112,7 @@ def run(testRunner, coverage_file, test_file, args):
                 cov.load()
                 cov.start()
             except:
-                pass
+                cov = None
 
         if testRunner == 'pytest':
             import pytest

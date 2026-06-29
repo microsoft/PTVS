@@ -84,7 +84,7 @@ def profile(file, globals_obj, locals_obj, profdll):
             finally:
                 f.close()
             handle = start_profiling()
-            exec(code, globals_obj, locals_obj)
+            exec(code, globals_obj, locals_obj)  # nosec B102 - profiler launcher intentionally executes the target script.
         else:
             handle = start_profiling()
             execfile(file, globals_obj, locals_obj)

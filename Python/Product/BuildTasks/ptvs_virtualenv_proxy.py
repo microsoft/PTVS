@@ -31,7 +31,7 @@ if sys.version_info[0] == 3:
         with open(path, 'r') as f:
             code = f.read()
         code = code.replace('\r\n', '\n') + '\n'
-        exec(code, global_dict)
+        exec(code, global_dict)  # nosec B102 - virtualenv activation script must execute in this scope.
 else:
     def to_str(value):
         return value.encode(sys.getfilesystemencoding())

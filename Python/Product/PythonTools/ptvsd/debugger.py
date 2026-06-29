@@ -344,8 +344,8 @@ try:
     # getfilesystemencoding is used here because it effectively corresponds to the notion of "locale encoding":
     # current ANSI codepage on Windows, LC_CTYPE on Linux, UTF-8 on OS X - which is exactly what we want.
     TYPES_WITH_RAW_REPR[bytearray] = lambda b: b.decode(sys.getfilesystemencoding(), 'ignore') 
-except:
-    pass
+except:  # nosec B110
+    pass  # nosec B110 - bytearray raw repr support is optional.
 
 if sys.version[0] == '3':
     TYPES_WITH_RAW_REPR[bytes] = TYPES_WITH_RAW_REPR[bytearray]
@@ -529,8 +529,8 @@ class ExceptionBreakInfo(object):
                                 res = lookup_local(cur_frame, text)
                                 if res is not None and issubclass(ex_type, res):
                                     return True
-                            except:
-                                pass
+                            except:  # nosec B110
+                                pass  # nosec B110 - condition lookup failures mean the exception is not handled here.
 
             cur_frame = cur_frame.f_back
 
@@ -661,9 +661,9 @@ class DjangoBreakpointInfo(object):
             # we need to calculate our line number offset information
             try:
                 contents = open(self.filename, 'rb')
-            except:
+            except:  # nosec B110
                 # file not available, locked, etc...
-                pass
+                pass  # nosec B110
             else:
                 with contents:
                     line_info = []
@@ -1090,9 +1090,9 @@ class Thread(object):
                                     if not res:
                                         # Condition isn't true, breakpoint not hit.
                                         continue
-                            except:
+                            except:  # nosec B110
                                 # If anything goes wrong while evaluating condition, breakpoint is hit.
-                                pass
+                                pass  # nosec B110
 
                         # If we got here, then condition matched, and we need to update the hit count
                         # (even if we don't end up signaling the breakpoint because of pass count).
@@ -1352,8 +1352,8 @@ class Thread(object):
             ltf = ctypes.pythonapi.PyFrame_LocalsToFast
             ltf.argtypes = [ctypes.py_object, ctypes.c_int]
             ltf(frame, 1)
-        except:
-            pass
+        except:  # nosec B110
+            pass  # nosec B110 - locals sync is best-effort across Python versions.
 
     def run_locally(self, text, cur_frame, execution_id, frame_kind, print_result, repr_kind = PYTHON_EVALUATION_RESULT_REPR_KIND_NORMAL):
         try:
@@ -1403,9 +1403,9 @@ class Thread(object):
                         if isinstance(attr_value, METHOD_TYPES):
                             continue
                     children.append((attr_name, expr + '.' + attr_name, attr_value, 0))
-                except:
+                except:  # nosec B110
                     # Skip this attribute if we can't process it.
-                    pass
+                    pass  # nosec B110
 
             # Process items, if this is a collection.
 
@@ -1462,9 +1462,8 @@ class Thread(object):
 
                     children.append((item_name, item_expr, item, 0))
 
-                except:
-                    # Skip this item if we can't process it.
-                    pass
+                except:  # nosec B110
+                    pass  # nosec B110 - skip items that cannot be processed.
 
             report_children(execution_id, children)
 
@@ -2000,8 +1999,8 @@ class DebuggerLoop(_vsipc.SocketIO, _vsipc.IpcChannel):
         try:
             if new_modules != self._cur_repl_modules:
                 self.send_debug_event(name='legacyModulesChanged')
-        except:
-            pass
+        except Exception:  # nosec B110
+            pass  # nosec B110 - REPL module change notification is best-effort.
         self._cur_repl_modules = new_modules
 
     def execute_code_in_module(self, text, module_name, execution_id, print_result, repr_kind):
@@ -2158,8 +2157,8 @@ def report_exception(frame, exc_info, tid, break_type):
     if tb_value:
         try:
             data['trace'] = '\n'.join(','.join(repr(v) for v in line) for line in traceback.extract_tb(tb_value))
-        except:
-            pass
+        except:  # nosec B110
+            pass  # nosec B110 - trace formatting is best-effort.
     if not DJANGO_DEBUG or get_django_frame_source(frame) is None:
         data['excvalue'] = '__exception_info'
         i = 0
@@ -2313,8 +2312,8 @@ def create_object(obj_type, obj_repr, hex_repr, type_name, obj_len, flags = 0):
             if issubclass(obj_type, cls):
                 flags |= PYTHON_EVALUATION_RESULT_HAS_RAW_REPR
                 break
-    except: # guard against broken issubclass for types which aren't actually types, like vtkclass
-        pass
+    except TypeError: # nosec B110 - guard against broken issubclass for types which aren't actually types, like vtkclass
+        pass  # nosec B110
 
     obj = {
         'objRepr': obj_repr,
@@ -2419,8 +2418,8 @@ def attach_connected_process(debug_options, report = False, block = False):
             if filename is not None:
                 try:
                     fullpath = path.abspath(filename)
-                except:
-                    pass
+                except Exception:  # nosec B110
+                    pass  # nosec B110 - skip modules with invalid file paths.
                 else:
                     MODULES.append((filename, Module(mod_name, fullpath)))
         except:
@@ -2460,8 +2459,8 @@ def detach_process_and_notify_debugger():
             DebuggerLoop.instance.detach()
         except DebuggerExitException: # successfully detached
             return
-        except: # swallow anything else, and forcibly detach below
-            pass
+        except Exception: # nosec B110 - swallow detach failures, and forcibly detach below
+            pass  # nosec B110
     detach_process()
 
 def detach_process():

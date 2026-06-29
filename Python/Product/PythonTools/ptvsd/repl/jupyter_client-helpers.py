@@ -99,7 +99,7 @@ def __ptvs_repl_exec_script(filename, args, globals, locals):
             if isinstance(filename, unicode):
                 filename = filename.encode(sys.getfilesystemencoding(), 'ignore')
         code = compile(content, filename, 'exec')
-        exec(code, globals, locals)
+        exec(code, globals, locals)  # nosec B102 - Jupyter helper intentionally executes user code.
     finally:
         globals['__name__'] = orig_name
         globals['__file__'] = orig_file

@@ -95,8 +95,8 @@ def report_unittest_discovered(suites, parents, pretty=False, simple=False,
                         'source' : test.source
                         }
                     testList.append(testdata)
-            except:
-                pass
+            except:  # nosec B110
+                pass  # nosec B110 - tolerate suites without unittest internals.
             if testList:
                 root = {
                     'tests': testList
