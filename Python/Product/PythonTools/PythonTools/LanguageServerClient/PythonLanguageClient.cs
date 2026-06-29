@@ -99,12 +99,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private FileWatcher.Listener _fileListener;
         private static TaskCompletionSource<int> _readyTcs = new TaskCompletionSource<int>();
         private bool _loaded = false;
-        private Timer _deferredSettingsChangedTimer;
-        // Set by the dispose action before any other cleanup; consulted by the
-        // deferred timer callback, TriggerWorkspaceUpdateConfig and GetSettings so
-        // a timer tick scheduled before disposal cannot dereference cleared state.
+        // Set by the dispose action before any other cleanup; consulted by
+        // TriggerWorkspaceUpdateConfig and GetSettings so teardown cannot
+        // dereference cleared state.
         private volatile bool _disposed;
-        private const int _defaultSettingsDelayMS = 5000;
 
         public PythonLanguageClient() {
             _disposables = new Common.Core.Disposables.DisposableBag(GetType().Name);
@@ -140,19 +138,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             await JoinableTaskContext.Factory.SwitchToMainThreadAsync();
             CreateClientContexts();
 
-            _deferredSettingsChangedTimer = new Timer(state => {
-                // Guard the callback body: a tick scheduled before disposal can fire
-                // after the language client has been torn down.
-                if (_disposed) {
-                    return;
-                }
-                try {
-                    TriggerWorkspaceUpdateConfig();
-                } catch (NullReferenceException) {
-                    // Field was nulled or service disappeared during teardown.
-                } catch (ObjectDisposedException) {
-                }
-            }, state: null, Timeout.Infinite, Timeout.Infinite);
             _analysisOptions = Site.GetPythonToolsService().AnalysisOptions;
             _advancedEditorOptions = Site.GetPythonToolsService().AdvancedEditorOptions;
             _analysisOptions.Changed += OnSettingsChanged;
@@ -168,13 +153,9 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             WorkspaceService.OnActiveWorkspaceChanged += OnWorkspaceOpening;
 
             _disposables.Add(() => {
-                // Mark disposed and stop the timer FIRST so any in-flight tick bails
-                // out and no new ticks are scheduled while we tear down fields.
+                // Mark disposed FIRST so settings notifications bail out while we
+                // tear down fields.
                 _disposed = true;
-                try {
-                    _deferredSettingsChangedTimer.Change(Timeout.Infinite, Timeout.Infinite);
-                } catch (ObjectDisposedException) {
-                }
 
                 _clientContexts.ForEach(c => {
                     c.InterpreterChanged -= OnInterpreterChanged;
@@ -197,7 +178,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 solutionEvents.ProjectRemoved -= OnProjectRemoved;
                 solutionEvents.BeforeClosing -= OnSolutionClosing;
                 WorkspaceService.OnActiveWorkspaceChanged -= OnWorkspaceOpening;
-                _deferredSettingsChangedTimer.Dispose();
             });
 
             return await _server.ActivateAsync();
@@ -384,8 +364,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
 
         private async Task<R> InvokeWithParametersAsync<R>(string request, object parameters, CancellationToken t) where R : class {
-            await _readyTcs.Task.ConfigureAwait(false);
-
             var rpc = _rpc;
             if (rpc == null) {
                 return null;
@@ -405,8 +383,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private async Task NotifyWithParametersAsync(string request, object parameters) {
-            await _readyTcs.Task.ConfigureAwait(false);
-
             var rpc = _rpc;
             if (rpc == null) {
                 return;
@@ -515,8 +491,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         private void OnSettingsChanged(object sender, EventArgs e) {
             try {
-                System.Diagnostics.Debug.WriteLine("Settings Changed");
-                _deferredSettingsChangedTimer.Change(_defaultSettingsDelayMS, Timeout.Infinite);
+                TriggerWorkspaceUpdateConfig().DoNotWait();
+            } catch (NullReferenceException) {
             } catch (ObjectDisposedException) {
             }
         }
@@ -539,8 +515,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     didChangeParams.Changes = new FileEvent[] { createEvent };
                     NotifyWithParametersAsync(Methods.WorkspaceDidChangeWatchedFiles.Name, didChangeParams).DoNotWait();
                 });
-               
-                
+
+
             } catch (ObjectDisposedException) {
             }
         }
@@ -633,7 +609,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                                     _sentInitialWorkspaceFolders = true;
                                     _workspaceFoldersSupported = true;
                                 }
-                                
+
                                 // Root path and root URI should not be sent. They're deprecated and will
                                 // just confuse pylance with respect to what is the root folder. 
                                 // https://microsoft.github.io/language-server-protocol/specifications/specification-current/#initialize

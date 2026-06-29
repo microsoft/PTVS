@@ -19,6 +19,8 @@ namespace PythonToolsUITests {
 
         public void AutoComplete(PythonVisualStudioApp app) {
             EventHandler<CompletionTriggeredEventArgs> handler = null;
+            EventHandler<ComputedCompletionItemsEventArgs> itemsUpdatedHandler = null;
+            IAsyncCompletionSession session = null;
             var languageName = PythonVisualStudioApp.TemplateLanguageName;
             var slnPath = PrepareProject(app);
 
@@ -44,8 +46,22 @@ namespace PythonToolsUITests {
                 // Bring up auto complete
                 Assert.IsTrue(doc.AsyncCompletionBroker.IsCompletionSupported(doc.TextView.TextBuffer.ContentType));
                 var completionTask = new TaskCompletionSource<IAsyncCompletionSession>();
+                var executableTask = new TaskCompletionSource<IEnumerable<CompletionItem>>();
+                IEnumerable<CompletionItem> items = Array.Empty<CompletionItem>();
+                Action<IEnumerable<CompletionItem>> updateItems = newItems => {
+                    items = newItems.ToArray();
+                    if (items.Any(i => i.InsertText == "executable")) {
+                        executableTask.TrySetResult(items);
+                    }
+                };
                 handler = (s, e) => {
-                    completionTask.TrySetResult(e.CompletionSession);
+                    session = e.CompletionSession;
+                    itemsUpdatedHandler = (sender, args) => {
+                        updateItems(args.Items.Items);
+                    };
+                    session.ItemsUpdated += itemsUpdatedHandler;
+                    updateItems(session.GetComputedItems(CancellationToken.None).Items);
+                    completionTask.TrySetResult(session);
                 };
                 doc.AsyncCompletionBroker.CompletionTriggered += handler;
                 doc.Invoke(() => {
@@ -59,11 +75,15 @@ namespace PythonToolsUITests {
                 // Wait for it to show
                 Assert.IsTrue(completionTask.Task.Wait(60000), "Completion session did not show");
                 Assert.IsNotNull(completionTask.Task.Result, "Completion not triggerable");
-                var items = completionTask.Task.Result.GetComputedItems(CancellationToken.None);
-                Assert.IsTrue(items.Items.Any(i => i.InsertText == "executable"), "Executable member of sys not found");
+                Assert.IsTrue(
+                    executableTask.Task.Wait(60000),
+                    $"Executable member of sys not found. Items: {string.Join(", ", items.Take(20).Select(i => i.InsertText))}");
 
             } finally {
                 app.Dte.Solution.Close(false);
+                if (itemsUpdatedHandler != null && session != null) {
+                    session.ItemsUpdated -= itemsUpdatedHandler;
+                }
                 if (handler != null && doc != null && doc.AsyncCompletionBroker != null) {
                     doc.AsyncCompletionBroker.CompletionTriggered -= handler;
                 }

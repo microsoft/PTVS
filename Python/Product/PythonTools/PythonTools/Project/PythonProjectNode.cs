@@ -1068,6 +1068,7 @@ namespace Microsoft.PythonTools.Project {
 
                 InterpreterOptions.DefaultInterpreterChanged -= GlobalDefaultInterpreterChanged;
                 InterpreterRegistry.InterpretersChanged -= OnInterpreterRegistryChanged;
+                InterpreterRegistry.CondaInterpreterDiscoveryCompleted -= OnInterpreterDiscoveryCompleted;
 
                 _searchPaths.Dispose();
 
