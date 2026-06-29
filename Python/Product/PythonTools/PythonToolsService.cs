@@ -401,7 +401,7 @@ namespace Microsoft.PythonTools {
         #endregion
 
         internal Dictionary<string, string> GetFullEnvironment(LaunchConfiguration config)
-            => LaunchConfigurationUtils.GetFullEnvironment(config, _container, UIThread);
+            => LaunchConfigurationUtils.GetFullEnvironment(config, _container, UIThread, Logger);
 
         internal IEnumerable<string> GetGlobalPythonSearchPaths(InterpreterConfiguration interpreter) {
             if (!GeneralOptions.ClearGlobalPythonPath && interpreter != null) {
