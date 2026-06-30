@@ -49,6 +49,9 @@
     <ManagedFiles Include="
         Microsoft.PythonTools.Debugger.VCLauncher.dll;
         " Condition="$(IncludeVCDebugLauncher)" />
+    <ManagedFiles Include="Newtonsoft.Json.dll">
+      <SkipStrongName>true</SkipStrongName>
+    </ManagedFiles>
 
     <UnmanagedFiles Include="
         Microsoft.PythonTools.Debugger.Helper.x64.dll;
@@ -107,10 +110,7 @@
   <Target Name="_AddTemplateFiles" BeforeTargets="_PreserveUnsigned;ListFiles">
     <ItemGroup>
       <TemplateFilesToSign Include="$(BinariesOutputPath)templates\**\*.js;$(BinariesOutputPath)templates\**\*.ttf" />
-      <!-- Drop zero-byte files (e.g. the empty 'Add New Item -> JavaScript' template placeholder).
-           signtool cannot map a 0-byte file (CreateFileMapping fails with ERROR_FILE_INVALID 0x3EE),
-           which would otherwise break the signing step. -->
-      <TemplateFilesToSign Remove="@(TemplateFilesToSign)"
+      <_EmptyTemplateFiles Include="@(TemplateFilesToSign)"
                            Condition="'$([System.IO.File]::ReadAllText(%(TemplateFilesToSign.FullPath)))' == ''" />
       <FilesToSign Include="@(TemplateFilesToSign)">
         <Authenticode>3PartyScriptsSHA2</Authenticode>
@@ -119,6 +119,8 @@
         <UnsignedPath>$(UnsignedOutputPath)templates\%(RecursiveDir)%(Filename)%(Extension)</UnsignedPath>
       </FilesToSign>
     </ItemGroup>
+    <Error Condition="'@(_EmptyTemplateFiles)' != ''"
+           Text="Template JS/TTF files must not be empty because signtool cannot sign zero-byte files and unsigned files fail VS insertion SignCheck: @(_EmptyTemplateFiles)" />
   </Target>
 
   <Target Name="_PreserveUnsigned" Inputs="%(FilesToSign.FullPath)" Outputs="%(FilesToSign.UnsignedPath)" BeforeTargets="SignFiles">
@@ -161,9 +163,22 @@
           OverwriteReadOnlyFiles="true" />
   </Target>
 
+  <Target Name="_ValidateSignedTemplateFiles"
+          Condition="'$(SignType)' == 'Real' or '$(SignType)' == 'real' or '$(SignType)' == 'Test' or '$(SignType)' == 'test'">
+    <ItemGroup>
+      <_TemplateFilesToValidate Include="$(BinariesOutputPath)templates\**\*.js;$(BinariesOutputPath)templates\**\*.ttf" />
+    </ItemGroup>
+    <Error Condition="'@(_TemplateFilesToValidate)' == ''"
+           Text="No template JS/TTF files were staged for signing." />
+    <WriteLinesToFile File="$(IntermediateOutputPath)template-files-to-validate.txt"
+                      Lines="@(_TemplateFilesToValidate->'%(FullPath)')"
+                      Overwrite="true" />
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;$files = Get-Content -LiteralPath '$(IntermediateOutputPath)template-files-to-validate.txt'; $unsigned = @($files | Where-Object { -not (Get-AuthenticodeSignature -LiteralPath $_).SignerCertificate }); if ($unsigned.Count -gt 0) { Write-Error ('Template files were not signed: ' + ($unsigned -join '; ')); exit 1 }&quot;" />
+  </Target>
+
 
   <Target Name="_UpdateLayoutWithSignedBinaries"
-          DependsOnTargets="_GetBinariesInLayout;_GetJsFilesInLayout;_CopySignedTemplateFiles"
+          DependsOnTargets="_GetBinariesInLayout;_GetJsFilesInLayout;_ValidateSignedTemplateFiles;_CopySignedTemplateFiles"
           AfterTargets="SignFiles">
     <Copy SourceFiles="%(_BinariesToCopy.FullPath)" DestinationFiles="%(_BinariesToCopy.TargetPath)" />
   </Target>

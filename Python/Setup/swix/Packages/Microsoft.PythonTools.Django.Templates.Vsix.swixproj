@@ -8,10 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageSearchPaths Include="$(BinariesOutputPath)templates\Django" />
     <PackageSearchPaths Include="$(SourcePath)" />
     <Dependency Include="Microsoft.PythonTools.Django.Vsix" />
   </ItemGroup>
 
   <Import Project="SetupProjectAfter.settings" />
 </Project>
-
