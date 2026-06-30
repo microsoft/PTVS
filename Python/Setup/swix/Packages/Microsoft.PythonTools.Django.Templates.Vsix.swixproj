@@ -3,12 +3,11 @@
   <Import Project="SetupProjectBefore.settings" />
 
   <PropertyGroup>
-    <SourcePath>$(BuildRoot)\Python\Templates\Django</SourcePath>
+    <SourcePath>$(BinariesOutputPath)templates\Django</SourcePath>
     <BaseInstall>InstallDir:\Common7\IDE</BaseInstall>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageSearchPaths Include="$(BinariesOutputPath)templates\Django" />
     <PackageSearchPaths Include="$(SourcePath)" />
     <Dependency Include="Microsoft.PythonTools.Django.Vsix" />
   </ItemGroup>

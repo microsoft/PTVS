@@ -110,8 +110,6 @@
   <Target Name="_AddTemplateFiles" BeforeTargets="_PreserveUnsigned;ListFiles">
     <ItemGroup>
       <TemplateFilesToSign Include="$(BinariesOutputPath)templates\**\*.js;$(BinariesOutputPath)templates\**\*.ttf" />
-      <_EmptyTemplateFiles Include="@(TemplateFilesToSign)"
-                           Condition="'$([System.IO.File]::ReadAllText(%(TemplateFilesToSign.FullPath)))' == ''" />
       <FilesToSign Include="@(TemplateFilesToSign)">
         <Authenticode>3PartyScriptsSHA2</Authenticode>
         <StrongName></StrongName>
@@ -119,8 +117,11 @@
         <UnsignedPath>$(UnsignedOutputPath)templates\%(RecursiveDir)%(Filename)%(Extension)</UnsignedPath>
       </FilesToSign>
     </ItemGroup>
-    <Error Condition="'@(_EmptyTemplateFiles)' != ''"
-           Text="Template JS/TTF files must not be empty because signtool cannot sign zero-byte files and unsigned files fail VS insertion SignCheck: @(_EmptyTemplateFiles)" />
+    <WriteLinesToFile File="$(IntermediateOutputPath)template-files-to-sign.txt"
+                      Lines="@(TemplateFilesToSign->'%(FullPath)')"
+                      Overwrite="true" />
+    <Exec Condition="'@(TemplateFilesToSign)' != ''"
+          Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;$files = Get-Content -LiteralPath '$(IntermediateOutputPath)template-files-to-sign.txt'; $empty = @($files | Where-Object { (Get-Item -LiteralPath $_).Length -eq 0 }); if ($empty.Count -gt 0) { Write-Error ('Template JS/TTF files must not be empty because signtool cannot sign zero-byte files and unsigned files fail VS insertion SignCheck: ' + ($empty -join '; ')); exit 1 }&quot;" />
   </Target>
 
   <Target Name="_PreserveUnsigned" Inputs="%(FilesToSign.FullPath)" Outputs="%(FilesToSign.UnsignedPath)" BeforeTargets="SignFiles">
@@ -165,15 +166,24 @@
 
   <Target Name="_ValidateSignedTemplateFiles"
           Condition="'$(SignType)' == 'Real' or '$(SignType)' == 'real' or '$(SignType)' == 'Test' or '$(SignType)' == 'test'">
+    <PropertyGroup>
+      <_SignToolCommand Condition="'$(_SignToolCommand)' == '' and '$(WindowsSdkBinPath)' != ''">$(WindowsSdkBinPath)signtool.exe</_SignToolCommand>
+      <_SignToolCommand Condition="'$(_SignToolCommand)' == ''">signtool</_SignToolCommand>
+    </PropertyGroup>
     <ItemGroup>
-      <_TemplateFilesToValidate Include="$(BinariesOutputPath)templates\**\*.js;$(BinariesOutputPath)templates\**\*.ttf" />
+      <_ScriptTemplateFilesToValidate Include="$(BinariesOutputPath)templates\**\*.js" />
+      <_FontTemplateFilesToValidate Include="$(BinariesOutputPath)templates\**\*.ttf" />
+      <_TemplateFilesToValidate Include="@(_ScriptTemplateFilesToValidate);@(_FontTemplateFilesToValidate)" />
     </ItemGroup>
     <Error Condition="'@(_TemplateFilesToValidate)' == ''"
            Text="No template JS/TTF files were staged for signing." />
-    <WriteLinesToFile File="$(IntermediateOutputPath)template-files-to-validate.txt"
-                      Lines="@(_TemplateFilesToValidate->'%(FullPath)')"
+    <WriteLinesToFile File="$(IntermediateOutputPath)script-template-files-to-validate.txt"
+                      Lines="@(_ScriptTemplateFilesToValidate->'%(FullPath)')"
                       Overwrite="true" />
-    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;$files = Get-Content -LiteralPath '$(IntermediateOutputPath)template-files-to-validate.txt'; $unsigned = @($files | Where-Object { -not (Get-AuthenticodeSignature -LiteralPath $_).SignerCertificate }); if ($unsigned.Count -gt 0) { Write-Error ('Template files were not signed: ' + ($unsigned -join '; ')); exit 1 }&quot;" />
+    <Exec Condition="'@(_ScriptTemplateFilesToValidate)' != ''"
+          Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;$files = Get-Content -LiteralPath '$(IntermediateOutputPath)script-template-files-to-validate.txt'; $invalid = @($files | Where-Object { (Get-AuthenticodeSignature -LiteralPath $_).Status -ne 'Valid' }); if ($invalid.Count -gt 0) { Write-Error ('Template JS files were not validly signed: ' + ($invalid -join '; ')); exit 1 }&quot;" />
+    <Exec Condition="'@(_FontTemplateFilesToValidate)' != ''"
+          Command="&quot;$(_SignToolCommand)&quot; verify /pa /all @(_FontTemplateFilesToValidate->'&quot;%(FullPath)&quot;', ' ')" />
   </Target>
 
 

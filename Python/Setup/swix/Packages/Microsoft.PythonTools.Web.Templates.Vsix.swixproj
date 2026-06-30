@@ -3,12 +3,11 @@
   <Import Project="SetupProjectBefore.settings" />
 
   <PropertyGroup>
-    <SourcePath>$(BuildRoot)\Python\Templates\Web</SourcePath>
+    <SourcePath>$(BinariesOutputPath)templates\Web</SourcePath>
     <BaseInstall>InstallDir:\Common7\IDE</BaseInstall>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageSearchPaths Include="$(BinariesOutputPath)templates\Web" />
     <PackageSearchPaths Include="$(SourcePath)" />
     <Dependency Include="Microsoft.PythonTools.Core.Vsix" />
   </ItemGroup>
