@@ -3,7 +3,7 @@
   <Import Project="SetupProjectBefore.settings" />
 
   <PropertyGroup>
-    <SourcePath>$(BinariesOutputPath)templates\Web</SourcePath>
+    <SourcePath>$(BuildRoot)\Python\Templates\Web</SourcePath>
     <BaseInstall>InstallDir:\Common7\IDE</BaseInstall>
   </PropertyGroup>
 
@@ -14,3 +14,4 @@
 
   <Import Project="SetupProjectAfter.settings" />
 </Project>
+

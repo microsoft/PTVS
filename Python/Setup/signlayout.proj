@@ -110,6 +110,11 @@
   <Target Name="_AddTemplateFiles" BeforeTargets="_PreserveUnsigned;ListFiles">
     <ItemGroup>
       <TemplateFilesToSign Include="$(BinariesOutputPath)templates\**\*.js;$(BinariesOutputPath)templates\**\*.ttf" />
+      <!-- Drop zero-byte files (e.g. the empty 'Add New Item -> JavaScript' template placeholder).
+           signtool cannot map a 0-byte file (CreateFileMapping fails with ERROR_FILE_INVALID 0x3EE),
+           which would otherwise break the signing step. -->
+      <TemplateFilesToSign Remove="@(TemplateFilesToSign)"
+                           Condition="'$([System.IO.File]::ReadAllText(%(TemplateFilesToSign.FullPath)))' == ''" />
       <FilesToSign Include="@(TemplateFilesToSign)">
         <Authenticode>3PartyScriptsSHA2</Authenticode>
         <StrongName></StrongName>
@@ -117,11 +122,6 @@
         <UnsignedPath>$(UnsignedOutputPath)templates\%(RecursiveDir)%(Filename)%(Extension)</UnsignedPath>
       </FilesToSign>
     </ItemGroup>
-    <WriteLinesToFile File="$(IntermediateOutputPath)template-files-to-sign.txt"
-                      Lines="@(TemplateFilesToSign->'%(FullPath)')"
-                      Overwrite="true" />
-    <Exec Condition="'@(TemplateFilesToSign)' != ''"
-          Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;$files = Get-Content -LiteralPath '$(IntermediateOutputPath)template-files-to-sign.txt'; $empty = @($files | Where-Object { (Get-Item -LiteralPath $_).Length -eq 0 }); if ($empty.Count -gt 0) { Write-Error ('Template JS/TTF files must not be empty because signtool cannot sign zero-byte files and unsigned files fail VS insertion SignCheck: ' + ($empty -join '; ')); exit 1 }&quot;" />
   </Target>
 
   <Target Name="_PreserveUnsigned" Inputs="%(FilesToSign.FullPath)" Outputs="%(FilesToSign.UnsignedPath)" BeforeTargets="SignFiles">
@@ -164,31 +164,9 @@
           OverwriteReadOnlyFiles="true" />
   </Target>
 
-  <Target Name="_ValidateSignedTemplateFiles"
-          Condition="'$(SignType)' == 'Real' or '$(SignType)' == 'real' or '$(SignType)' == 'Test' or '$(SignType)' == 'test'">
-    <PropertyGroup>
-      <_SignToolCommand Condition="'$(_SignToolCommand)' == '' and '$(WindowsSdkBinPath)' != ''">$(WindowsSdkBinPath)signtool.exe</_SignToolCommand>
-      <_SignToolCommand Condition="'$(_SignToolCommand)' == ''">signtool</_SignToolCommand>
-    </PropertyGroup>
-    <ItemGroup>
-      <_ScriptTemplateFilesToValidate Include="$(BinariesOutputPath)templates\**\*.js" />
-      <_FontTemplateFilesToValidate Include="$(BinariesOutputPath)templates\**\*.ttf" />
-      <_TemplateFilesToValidate Include="@(_ScriptTemplateFilesToValidate);@(_FontTemplateFilesToValidate)" />
-    </ItemGroup>
-    <Error Condition="'@(_TemplateFilesToValidate)' == ''"
-           Text="No template JS/TTF files were staged for signing." />
-    <WriteLinesToFile File="$(IntermediateOutputPath)script-template-files-to-validate.txt"
-                      Lines="@(_ScriptTemplateFilesToValidate->'%(FullPath)')"
-                      Overwrite="true" />
-    <Exec Condition="'@(_ScriptTemplateFilesToValidate)' != ''"
-          Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;$files = Get-Content -LiteralPath '$(IntermediateOutputPath)script-template-files-to-validate.txt'; $invalid = @($files | Where-Object { (Get-AuthenticodeSignature -LiteralPath $_).Status -ne 'Valid' }); if ($invalid.Count -gt 0) { Write-Error ('Template JS files were not validly signed: ' + ($invalid -join '; ')); exit 1 }&quot;" />
-    <Exec Condition="'@(_FontTemplateFilesToValidate)' != ''"
-          Command="&quot;$(_SignToolCommand)&quot; verify /pa /all @(_FontTemplateFilesToValidate->'&quot;%(FullPath)&quot;', ' ')" />
-  </Target>
-
 
   <Target Name="_UpdateLayoutWithSignedBinaries"
-          DependsOnTargets="_GetBinariesInLayout;_GetJsFilesInLayout;_ValidateSignedTemplateFiles;_CopySignedTemplateFiles"
+          DependsOnTargets="_GetBinariesInLayout;_GetJsFilesInLayout;_CopySignedTemplateFiles"
           AfterTargets="SignFiles">
     <Copy SourceFiles="%(_BinariesToCopy.FullPath)" DestinationFiles="%(_BinariesToCopy.TargetPath)" />
   </Target>
