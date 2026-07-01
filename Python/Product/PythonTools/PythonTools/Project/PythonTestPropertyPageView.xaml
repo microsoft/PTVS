@@ -183,54 +183,54 @@
     </UserControl.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-    <StackPanel Grid.IsSharedSizeScope="True">
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" SharedSizeGroup="LabelSizeGroup"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition/>
-                <RowDefinition/>
-            </Grid.RowDefinitions>
-            <Label
-                Name="FrameworkLabel"
-                Grid.Row="0"
-                Grid.Column="0"
-                Content="{x:Static common:Strings.PythonTestPropertyPageFrameworkLabel}"/>
-            <ComboBox
-                Grid.Row="0"
-                Grid.Column="1"
-                MinWidth="100"
-                HorizontalAlignment="Left"
-                ItemsSource="{Binding Path=Frameworks}"
-                SelectedItem="{Binding Path=SelectedFramework}"
-                AutomationProperties.LabeledBy="{Binding ElementName=FrameworkLabel}"
-                AutomationProperties.HelpText="{x:Static common:Strings.PythonTestPropertyPageFrameworkHelpText}"/>
-        </Grid>
+        <StackPanel Grid.IsSharedSizeScope="True">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="LabelSizeGroup"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Label
+                    Name="FrameworkLabel"
+                    Grid.Row="0"
+                    Grid.Column="0"
+                    Content="{x:Static common:Strings.PythonTestPropertyPageFrameworkLabel}"/>
+                <ComboBox
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    MinWidth="100"
+                    HorizontalAlignment="Left"
+                    ItemsSource="{Binding Path=Frameworks}"
+                    SelectedItem="{Binding Path=SelectedFramework}"
+                    AutomationProperties.LabeledBy="{Binding ElementName=FrameworkLabel}"
+                    AutomationProperties.HelpText="{x:Static common:Strings.PythonTestPropertyPageFrameworkHelpText}"/>
+            </Grid>
 
-        <ContentControl
-            Margin="0"
-            Content="{Binding}"
-            IsTabStop="False"
-            Focusable="False"
-            Background="{DynamicResource {x:Static vsui:EnvironmentColors.ToolWindowBackgroundBrushKey}}">
-            <ContentControl.Style>
-                <Style TargetType="ContentControl">
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding SelectedFramework}" Value="none">
-                            <Setter Property="ContentTemplate" Value="{StaticResource FrameworkNone}"/>
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding SelectedFramework}" Value="unittest">
-                            <Setter Property="ContentTemplate" Value="{StaticResource FrameworkUnittest}"/>
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding SelectedFramework}" Value="pytest">
-                            <Setter Property="ContentTemplate" Value="{StaticResource FrameworkPytest}"/>
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </ContentControl.Style>
-        </ContentControl>
-    </StackPanel>
+            <ContentControl
+                Margin="0"
+                Content="{Binding}"
+                IsTabStop="False"
+                Focusable="False"
+                Background="{DynamicResource {x:Static vsui:EnvironmentColors.ToolWindowBackgroundBrushKey}}">
+                <ContentControl.Style>
+                    <Style TargetType="ContentControl">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedFramework}" Value="none">
+                                <Setter Property="ContentTemplate" Value="{StaticResource FrameworkNone}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding SelectedFramework}" Value="unittest">
+                                <Setter Property="ContentTemplate" Value="{StaticResource FrameworkUnittest}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding SelectedFramework}" Value="pytest">
+                                <Setter Property="ContentTemplate" Value="{StaticResource FrameworkPytest}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ContentControl.Style>
+            </ContentControl>
+        </StackPanel>
     </ScrollViewer>
 </UserControl>
