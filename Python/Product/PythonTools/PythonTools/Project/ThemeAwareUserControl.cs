@@ -41,6 +41,14 @@ namespace Microsoft.PythonTools.Project {
             base.Dispose(disposing);
         }
 
+        protected override void OnHandleCreated(EventArgs e) {
+            base.OnHandleCreated(e);
+
+            // Apply the VS environment font once the control is realized so its text
+            // resizes with the OS "Text size" accessibility setting (MAS 1.4.4).
+            VsShellFontHelper.ApplyEnvironmentFont(this);
+        }
+
         // Fix the event handler signature to match what VSColorTheme.ThemeChanged expects
         private void OnThemeChanged(ThemeChangedEventArgs e) {
             ApplyThemeColors();
