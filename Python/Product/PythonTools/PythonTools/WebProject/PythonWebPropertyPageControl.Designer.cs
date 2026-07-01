@@ -138,6 +138,7 @@ namespace Microsoft.PythonTools.Project.Web {
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScroll = true;
             this.Controls.Add(tableLayoutPanel1);
             this.Name = "PythonWebPropertyPageControl";
             tableLayoutPanel2.ResumeLayout(false);

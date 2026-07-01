@@ -182,6 +182,7 @@
         </ResourceDictionary>
     </UserControl.Resources>
 
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <StackPanel Grid.IsSharedSizeScope="True">
         <Grid>
             <Grid.ColumnDefinitions>
@@ -231,4 +232,5 @@
             </ContentControl.Style>
         </ContentControl>
     </StackPanel>
+    </ScrollViewer>
 </UserControl>

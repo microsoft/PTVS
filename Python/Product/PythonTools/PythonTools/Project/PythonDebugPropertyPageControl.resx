@@ -187,13 +187,19 @@
     <value>1</value>
   </data>
   <data name="tableLayout.AutoScroll" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="tableLayout.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
+  </data>
+  <data name="tableLayout.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
+    <value>GrowAndShrink</value>
   </data>
   <data name="tableLayout.ColumnCount" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
   <data name="tableLayout.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
+    <value>Top</value>
   </data>
   <data name="tableLayout.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
