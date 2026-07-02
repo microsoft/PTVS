@@ -49,6 +49,9 @@
     <ManagedFiles Include="
         Microsoft.PythonTools.Debugger.VCLauncher.dll;
         " Condition="$(IncludeVCDebugLauncher)" />
+    <ManagedFiles Include="Newtonsoft.Json.dll">
+      <SkipStrongName>true</SkipStrongName>
+    </ManagedFiles>
 
     <UnmanagedFiles Include="
         Microsoft.PythonTools.Debugger.Helper.x64.dll;
