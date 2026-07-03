@@ -9,6 +9,7 @@
   <PropertyGroup>
     <OutputPath>$(BinariesOutputPath)</OutputPath>
     <OutDir>$(BinariesOutputPath)</OutDir>
+    <SignedTemplateSentinelPath>$(BinariesOutputPath)templates\SignedTemplateFiles.marker</SignedTemplateSentinelPath>
   </PropertyGroup>
   
   <ItemDefinitionGroup>
@@ -116,13 +117,22 @@
   <Target Name="_AddTemplateFiles" BeforeTargets="_PreserveUnsigned;ListFiles">
     <ItemGroup>
       <!-- Only sign file types that SignCheck validates inside the final template VSIX payloads. -->
-      <TemplateFilesToSign Include="$(BinariesOutputPath)templates\**\*.js;$(BinariesOutputPath)templates\**\*.ttf" />
+      <TemplateScriptFilesToSign Include="$(BinariesOutputPath)templates\**\*.js" />
+      <TemplateFontFilesToSign Include="$(BinariesOutputPath)templates\**\*.ttf" />
       <!-- Drop zero-byte files (e.g. the empty 'Add New Item -> JavaScript' template placeholder).
            signtool cannot map a 0-byte file (CreateFileMapping fails with ERROR_FILE_INVALID 0x3EE),
            which would otherwise break the signing step. -->
-      <TemplateFilesToSign Remove="@(TemplateFilesToSign)"
-                           Condition="'$([System.IO.File]::ReadAllText(%(TemplateFilesToSign.FullPath)))' == ''" />
-      <FilesToSign Include="@(TemplateFilesToSign)">
+      <TemplateScriptFilesToSign Remove="@(TemplateScriptFilesToSign)"
+                                Condition="'$([System.IO.File]::ReadAllText(%(TemplateScriptFilesToSign.FullPath)))' == ''" />
+      <TemplateFontFilesToSign Remove="@(TemplateFontFilesToSign)"
+                               Condition="'$([System.IO.File]::ReadAllText(%(TemplateFontFilesToSign.FullPath)))' == ''" />
+      <FilesToSign Include="@(TemplateScriptFilesToSign)">
+        <Authenticode>3PartyScriptsSHA2</Authenticode>
+        <StrongName></StrongName>
+        <SignedPath>$(BinariesOutputPath)templates\%(RecursiveDir)%(Filename)%(Extension)</SignedPath>
+        <UnsignedPath>$(UnsignedOutputPath)templates\%(RecursiveDir)%(Filename)%(Extension)</UnsignedPath>
+      </FilesToSign>
+      <FilesToSign Include="@(TemplateFontFilesToSign)">
         <Authenticode>3PartyScriptsSHA2</Authenticode>
         <StrongName></StrongName>
         <SignedPath>$(BinariesOutputPath)templates\%(RecursiveDir)%(Filename)%(Extension)</SignedPath>
@@ -176,6 +186,7 @@
           DependsOnTargets="_GetBinariesInLayout;_GetJsFilesInLayout;_CopySignedTemplateFiles"
           AfterTargets="SignFiles">
     <Copy SourceFiles="%(_BinariesToCopy.FullPath)" DestinationFiles="%(_BinariesToCopy.TargetPath)" />
+    <Touch Files="$(SignedTemplateSentinelPath)" AlwaysCreate="true" />
   </Target>
 
   <Import Project="$(TargetsPath)\MicroBuild.targets" />
