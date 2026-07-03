@@ -3,7 +3,9 @@
   <Import Project="SetupProjectBefore.settings" />
 
   <PropertyGroup>
-    <SourcePath>$(BuildRoot)\Python\Templates\Django</SourcePath>
+    <!-- Prefer the staged template tree created by signlayout.proj so packaged VSIX contents use signed files. -->
+    <SourcePath Condition="'$(SourcePath)' == '' and Exists('$(BinariesOutputPath)templates\Django')">$(BinariesOutputPath)templates\Django</SourcePath>
+    <SourcePath Condition="'$(SourcePath)' == ''">$(BuildRoot)\Python\Templates\Django</SourcePath>
     <BaseInstall>InstallDir:\Common7\IDE</BaseInstall>
   </PropertyGroup>
 

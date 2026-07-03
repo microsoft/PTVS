@@ -101,14 +101,21 @@
 
   <Target Name="_StageTemplateFiles" BeforeTargets="_AddTemplateFiles">
     <ItemGroup>
-      <!-- Glob from Python\Templates\ so RecursiveDir preserves Django\ and Web\ subdirectory structure -->
-      <_TemplateSourceFiles Include="$(BuildRoot)\Python\Templates\**\*.js;$(BuildRoot)\Python\Templates\**\*.ttf" />
+      <!-- Stage full Web/Django package trees so those template VSIX packages can use signed staged files. -->
+      <_TemplatePackageSourceFiles Include="$(BuildRoot)\Python\Templates\**\*"
+                                   Exclude="$(BuildRoot)\Python\Templates\Core\**\*;$(BuildRoot)\Python\Templates\NativeDevelopment\**\*" />
+      <!-- Stage signable files from the remaining template trees. Glob from Python\Templates\ so RecursiveDir preserves subdirectories. -->
+      <_TemplateSignableSourceFiles Include="$(BuildRoot)\Python\Templates\**\*.js;$(BuildRoot)\Python\Templates\**\*.ttf"
+                                    Exclude="$(BuildRoot)\Python\Templates\Django\**\*;$(BuildRoot)\Python\Templates\Web\**\*" />
     </ItemGroup>
-    <Copy SourceFiles="@(_TemplateSourceFiles)"
-          DestinationFiles="@(_TemplateSourceFiles->'$(BinariesOutputPath)templates\%(RecursiveDir)%(Filename)%(Extension)')" />
+    <Copy SourceFiles="@(_TemplatePackageSourceFiles)"
+          DestinationFiles="@(_TemplatePackageSourceFiles->'$(BinariesOutputPath)templates\%(RecursiveDir)%(Filename)%(Extension)')" />
+    <Copy SourceFiles="@(_TemplateSignableSourceFiles)"
+          DestinationFiles="@(_TemplateSignableSourceFiles->'$(BinariesOutputPath)templates\%(RecursiveDir)%(Filename)%(Extension)')" />
   </Target>
   <Target Name="_AddTemplateFiles" BeforeTargets="_PreserveUnsigned;ListFiles">
     <ItemGroup>
+      <!-- Only sign file types that SignCheck validates inside the final template VSIX payloads. -->
       <TemplateFilesToSign Include="$(BinariesOutputPath)templates\**\*.js;$(BinariesOutputPath)templates\**\*.ttf" />
       <!-- Drop zero-byte files (e.g. the empty 'Add New Item -> JavaScript' template placeholder).
            signtool cannot map a 0-byte file (CreateFileMapping fails with ERROR_FILE_INVALID 0x3EE),
