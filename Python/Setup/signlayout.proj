@@ -9,6 +9,7 @@
   <PropertyGroup>
     <OutputPath>$(BinariesOutputPath)</OutputPath>
     <OutDir>$(BinariesOutputPath)</OutDir>
+    <SignedTemplateSentinelPath>$(BinariesOutputPath)templates\SignedTemplateFiles.marker</SignedTemplateSentinelPath>
   </PropertyGroup>
   
   <ItemDefinitionGroup>
@@ -123,6 +124,8 @@
            which would otherwise break the signing step. -->
       <TemplateScriptFilesToSign Remove="@(TemplateScriptFilesToSign)"
                                 Condition="'$([System.IO.File]::ReadAllText(%(TemplateScriptFilesToSign.FullPath)))' == ''" />
+      <TemplateFontFilesToSign Remove="@(TemplateFontFilesToSign)"
+                               Condition="'$([System.IO.File]::ReadAllText(%(TemplateFontFilesToSign.FullPath)))' == ''" />
       <FilesToSign Include="@(TemplateScriptFilesToSign)">
         <Authenticode>3PartyScriptsSHA2</Authenticode>
         <StrongName></StrongName>
@@ -183,6 +186,7 @@
           DependsOnTargets="_GetBinariesInLayout;_GetJsFilesInLayout;_CopySignedTemplateFiles"
           AfterTargets="SignFiles">
     <Copy SourceFiles="%(_BinariesToCopy.FullPath)" DestinationFiles="%(_BinariesToCopy.TargetPath)" />
+    <Touch Files="$(SignedTemplateSentinelPath)" AlwaysCreate="true" />
   </Target>
 
   <Import Project="$(TargetsPath)\MicroBuild.targets" />
