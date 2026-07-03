@@ -4,8 +4,9 @@
 
   <PropertyGroup>
     <!-- Prefer the staged template tree created by signlayout.proj so packaged VSIX contents use signed files. -->
-    <SourcePath Condition="'$(SourcePath)' == '' and Exists('$(BinariesOutputPath)templates\Web')">$(BinariesOutputPath)templates\Web</SourcePath>
-    <SourcePath Condition="'$(SourcePath)' == ''">$(BuildRoot)\Python\Templates\Web</SourcePath>
+    <SignedTemplateSourcePath>$(BinariesOutputPath)templates\Web</SignedTemplateSourcePath>
+    <SourcePath Condition="'$(SourcePath)' == '' and Exists('$(SignedTemplateSourcePath)')">$(SignedTemplateSourcePath)</SourcePath>
+    <SourcePath Condition="'$(SourcePath)' == '' and '$(SignType)' != 'Real' and '$(SignType)' != 'Test'">$(BuildRoot)\Python\Templates\Web</SourcePath>
     <BaseInstall>InstallDir:\Common7\IDE</BaseInstall>
   </PropertyGroup>
 
@@ -14,6 +15,12 @@
     <Dependency Include="Microsoft.PythonTools.Core.Vsix" />
   </ItemGroup>
 
+  <Target Name="_RequireSignedTemplateSource" BeforeTargets="_GeneratePackage" Condition="'$(SignType)' == 'Real' or '$(SignType)' == 'Test'">
+    <Error Text="Signed template source path '$(SignedTemplateSourcePath)' was not found. Build signlayout.proj before packaging Microsoft.PythonTools.Web.Templates.Vsix."
+           Condition="!Exists('$(SignedTemplateSourcePath)')" />
+    <Error Text="Signed builds must package Microsoft.PythonTools.Web.Templates.Vsix from '$(SignedTemplateSourcePath)', not '$(SourcePath)'."
+           Condition="'$(SourcePath)' != '$(SignedTemplateSourcePath)'" />
+  </Target>
+
   <Import Project="SetupProjectAfter.settings" />
 </Project>
-
