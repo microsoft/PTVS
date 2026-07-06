@@ -10,6 +10,13 @@
     <OutputPath>$(BinariesOutputPath)</OutputPath>
     <OutDir>$(BinariesOutputPath)</OutDir>
     <SignedTemplateSentinelPath>$(BinariesOutputPath)templates\SignedTemplateFiles.marker</SignedTemplateSentinelPath>
+    <WindowsKitsRoot Condition="'$(WindowsKitsRoot)' == ''">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Kits\Installed Roots', 'KitsRoot10', null, RegistryView.Registry32, RegistryView.Default))</WindowsKitsRoot>
+    <MakeCatExe Condition="'$(MakeCatExe)' == '' and '$(WindowsSdkVerBinPath)' != '' and Exists('$(WindowsSdkVerBinPath)x86\makecat.exe')">$(WindowsSdkVerBinPath)x86\makecat.exe</MakeCatExe>
+    <MakeCatExe Condition="'$(MakeCatExe)' == '' and '$(WindowsKitsRoot)' != '' and '$(TargetPlatformSdkVersion)' != '' and Exists('$(WindowsKitsRoot)bin\$(TargetPlatformSdkVersion)\x86\makecat.exe')">$(WindowsKitsRoot)bin\$(TargetPlatformSdkVersion)\x86\makecat.exe</MakeCatExe>
+    <MakeCatExe Condition="'$(MakeCatExe)' == '' and '$(WindowsKitsRoot)' != '' and Exists('$(WindowsKitsRoot)bin\10.0.26100.0\x86\makecat.exe')">$(WindowsKitsRoot)bin\10.0.26100.0\x86\makecat.exe</MakeCatExe>
+    <MakeCatExe Condition="'$(MakeCatExe)' == ''">makecat.exe</MakeCatExe>
+    <DjangoTemplateFontCatalogPath>$(BinariesOutputPath)templates\Django\Microsoft.PythonTools.Django.Templates.Fonts.cat</DjangoTemplateFontCatalogPath>
+    <WebTemplateFontCatalogPath>$(BinariesOutputPath)templates\Web\Microsoft.PythonTools.Web.Templates.Fonts.cat</WebTemplateFontCatalogPath>
   </PropertyGroup>
   
   <ItemDefinitionGroup>
@@ -114,29 +121,58 @@
     <Copy SourceFiles="@(_TemplateSignableSourceFiles)"
           DestinationFiles="@(_TemplateSignableSourceFiles->'$(BinariesOutputPath)templates\%(RecursiveDir)%(Filename)%(Extension)')" />
   </Target>
+
+  <Target Name="_GenerateTemplateFontCatalogs"
+          DependsOnTargets="_StageTemplateFiles"
+          BeforeTargets="_AddTemplateFiles"
+          Condition="'$(SignType)' == 'Real' or '$(SignType)' == 'Test'">
+    <PropertyGroup>
+      <DjangoTemplateFontCatalogCdfPath>$(IntermediateOutputPath)Microsoft.PythonTools.Django.Templates.Fonts.cdf</DjangoTemplateFontCatalogCdfPath>
+      <WebTemplateFontCatalogCdfPath>$(IntermediateOutputPath)Microsoft.PythonTools.Web.Templates.Fonts.cdf</WebTemplateFontCatalogCdfPath>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_DjangoTemplateFontCatalogFile Include="$(BinariesOutputPath)templates\Django\**\glyphicons-halflings-regular.ttf" />
+      <_WebTemplateFontCatalogFile Include="$(BinariesOutputPath)templates\Web\**\glyphicons-halflings-regular.ttf" />
+    </ItemGroup>
+
+    <MakeDir Directories="$(IntermediateOutputPath)" />
+    <Delete Files="$(DjangoTemplateFontCatalogPath);$(WebTemplateFontCatalogPath);$(DjangoTemplateFontCatalogCdfPath);$(WebTemplateFontCatalogCdfPath)" />
+
+    <WriteLinesToFile File="$(DjangoTemplateFontCatalogCdfPath)" Lines="[CatalogHeader]" Overwrite="true" Encoding="ASCII" Condition="'@(_DjangoTemplateFontCatalogFile)' != ''" />
+    <WriteLinesToFile File="$(DjangoTemplateFontCatalogCdfPath)" Lines="Name=$([System.IO.Path]::GetFileName('$(DjangoTemplateFontCatalogPath)'));ResultDir=$([System.IO.Path]::GetDirectoryName('$(DjangoTemplateFontCatalogPath)'));CatalogVersion=2;HashAlgorithms=SHA256;;[CatalogFiles]" Overwrite="false" Encoding="ASCII" Condition="'@(_DjangoTemplateFontCatalogFile)' != ''" />
+    <WriteLinesToFile File="$(DjangoTemplateFontCatalogCdfPath)" Lines="@(_DjangoTemplateFontCatalogFile->'&lt;hash&gt;Django_%(RecursiveDir)%(Filename)%(Extension)=%(FullPath)')" Overwrite="false" Encoding="ASCII" Condition="'@(_DjangoTemplateFontCatalogFile)' != ''" />
+    <Message Importance="high" Text="Generating template font catalog $(DjangoTemplateFontCatalogPath) for @(_DjangoTemplateFontCatalogFile->'%(FullPath)', ', ')" Condition="'@(_DjangoTemplateFontCatalogFile)' != ''" />
+    <Exec Command="&quot;$(MakeCatExe)&quot; &quot;$(DjangoTemplateFontCatalogCdfPath)&quot;" StandardOutputImportance="High" Condition="'@(_DjangoTemplateFontCatalogFile)' != ''" />
+
+    <WriteLinesToFile File="$(WebTemplateFontCatalogCdfPath)" Lines="[CatalogHeader]" Overwrite="true" Encoding="ASCII" Condition="'@(_WebTemplateFontCatalogFile)' != ''" />
+    <WriteLinesToFile File="$(WebTemplateFontCatalogCdfPath)" Lines="Name=$([System.IO.Path]::GetFileName('$(WebTemplateFontCatalogPath)'));ResultDir=$([System.IO.Path]::GetDirectoryName('$(WebTemplateFontCatalogPath)'));CatalogVersion=2;HashAlgorithms=SHA256;;[CatalogFiles]" Overwrite="false" Encoding="ASCII" Condition="'@(_WebTemplateFontCatalogFile)' != ''" />
+    <WriteLinesToFile File="$(WebTemplateFontCatalogCdfPath)" Lines="@(_WebTemplateFontCatalogFile->'&lt;hash&gt;Web_%(RecursiveDir)%(Filename)%(Extension)=%(FullPath)')" Overwrite="false" Encoding="ASCII" Condition="'@(_WebTemplateFontCatalogFile)' != ''" />
+    <Message Importance="high" Text="Generating template font catalog $(WebTemplateFontCatalogPath) for @(_WebTemplateFontCatalogFile->'%(FullPath)', ', ')" Condition="'@(_WebTemplateFontCatalogFile)' != ''" />
+    <Exec Command="&quot;$(MakeCatExe)&quot; &quot;$(WebTemplateFontCatalogCdfPath)&quot;" StandardOutputImportance="High" Condition="'@(_WebTemplateFontCatalogFile)' != ''" />
+  </Target>
+
   <Target Name="_AddTemplateFiles" BeforeTargets="_PreserveUnsigned;ListFiles">
     <ItemGroup>
-      <!-- Only sign file types that SignCheck validates inside the final template VSIX payloads. -->
+      <!-- Sign template scripts directly. Template fonts are covered by signed catalogs. -->
       <TemplateScriptFilesToSign Include="$(BinariesOutputPath)templates\**\*.js" />
-      <TemplateFontFilesToSign Include="$(BinariesOutputPath)templates\**\*.ttf" />
+      <TemplateFontCatalogFilesToSign Include="$(DjangoTemplateFontCatalogPath);$(WebTemplateFontCatalogPath)" />
       <!-- Drop zero-byte files (e.g. the empty 'Add New Item -> JavaScript' template placeholder).
            signtool cannot map a 0-byte file (CreateFileMapping fails with ERROR_FILE_INVALID 0x3EE),
            which would otherwise break the signing step. -->
       <TemplateScriptFilesToSign Remove="@(TemplateScriptFilesToSign)"
                                 Condition="'$([System.IO.File]::ReadAllText(%(TemplateScriptFilesToSign.FullPath)))' == ''" />
-      <TemplateFontFilesToSign Remove="@(TemplateFontFilesToSign)"
-                               Condition="'$([System.IO.File]::ReadAllText(%(TemplateFontFilesToSign.FullPath)))' == ''" />
       <FilesToSign Include="@(TemplateScriptFilesToSign)">
         <Authenticode>3PartyScriptsSHA2</Authenticode>
         <StrongName></StrongName>
         <SignedPath>$(BinariesOutputPath)templates\%(RecursiveDir)%(Filename)%(Extension)</SignedPath>
         <UnsignedPath>$(UnsignedOutputPath)templates\%(RecursiveDir)%(Filename)%(Extension)</UnsignedPath>
       </FilesToSign>
-      <FilesToSign Include="@(TemplateFontFilesToSign)">
-        <Authenticode>3PartyScriptsSHA2</Authenticode>
+      <FilesToSign Include="@(TemplateFontCatalogFilesToSign)" Condition="Exists('%(FullPath)')">
+        <Authenticode>Microsoft400</Authenticode>
         <StrongName></StrongName>
-        <SignedPath>$(BinariesOutputPath)templates\%(RecursiveDir)%(Filename)%(Extension)</SignedPath>
-        <UnsignedPath>$(UnsignedOutputPath)templates\%(RecursiveDir)%(Filename)%(Extension)</UnsignedPath>
+        <SignedPath>%(FullPath)</SignedPath>
+        <UnsignedPath>$(UnsignedOutputPath)templates\catalogs\%(Filename)%(Extension)</UnsignedPath>
       </FilesToSign>
     </ItemGroup>
   </Target>
