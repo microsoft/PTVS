@@ -365,8 +365,9 @@ namespace PythonToolsUITests {
                 list.InitializeEnvironments(interpreters, service);
 
                 var expected = new HashSet<string>(
-                    PythonPaths.Versions
-                        .Select(v => v.InterpreterPath),
+                    interpreters.Configurations
+                        .Where(c => c.IsUIVisible() && c.Id.StartsWith("Global|PythonCore|"))
+                        .Select(c => c.InterpreterPath),
                     StringComparer.OrdinalIgnoreCase
                 );
                 var actual = wpf.Invoke(() => new HashSet<string>(
