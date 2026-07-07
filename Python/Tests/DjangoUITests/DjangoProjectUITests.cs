@@ -74,7 +74,8 @@ namespace DjangoUITests {
             using (var console = app.GetInteractiveWindow("Django Management Console - " + project.Name)) {
                 Assert.IsNotNull(console);
 
-                console.WaitForTextEnd("The interactive Python process has exited.", ">");
+                console.WaitForAnyLineContainsText("0 static files copied");
+                console.WaitForTextEnd(">");
 
                 Assert.IsTrue(console.TextView.TextSnapshot.GetText().Contains("0 static files copied"));
             }
@@ -170,7 +171,8 @@ namespace DjangoUITests {
 
             using (var console = app.GetInteractiveWindow("Django Management Console - " + project.Name)) {
                 Assert.IsNotNull(console);
-                console.WaitForTextEnd("The interactive Python process has exited.", ">");
+                console.WaitForAnyLineContainsText("System check identified no issues (0 silenced).");
+                console.WaitForTextEnd(">");
 
                 var consoleText = console.TextView.TextSnapshot.GetText();
                 AssertUtil.Contains(consoleText, "Executing manage.py check");
