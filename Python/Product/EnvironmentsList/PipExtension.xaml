@@ -202,7 +202,6 @@
                 <Setter Property="Padding" Value="2" />
                 <Setter Property="IsEnabled" Value="{Binding IsPipInstalled,Mode=OneWay}" />
                 <Setter Property="Text" Value="{Binding SearchQuery,UpdateSourceTrigger=PropertyChanged}" />
-                <Setter Property="AutomationProperties.Name" Value="{Binding SearchWatermark,Mode=OneWay}" />
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate>
@@ -250,20 +249,6 @@
                                             </ControlTemplate>
                                         </Button.Template>
                                     </Button>
-                                    <TextBlock x:Name="Watermark"
-                                               HorizontalAlignment="Left"
-                                               VerticalAlignment="Center"
-                                               Margin="8 2"
-                                               IsHitTestVisible="False"
-                                               Foreground="{DynamicResource {x:Static wpf:Controls.GrayTextKey}}"
-                                               Text="{Binding SearchWatermark,Mode=OneWay}">
-                                        <TextBlock.Visibility>
-                                            <MultiBinding Converter="{StaticResource VisibilityIfAll}">
-                                                <Binding Path="IsPipInstalled" Mode="OneWay"  />
-                                                <Binding ElementName="SearchQueryText" Path="Text.IsEmpty" />
-                                            </MultiBinding>
-                                        </TextBlock.Visibility>
-                                    </TextBlock>
                                 </Grid>
                             </Border>
                         </ControlTemplate>
@@ -289,7 +274,15 @@
             </Style>
         </Grid.Resources>
 
-        <TextBox x:Name="SearchQueryText" Style="{StaticResource SearchBox}" />
+        <StackPanel Grid.Row="0" Orientation="Vertical">
+            <Label x:Name="SearchLabel"
+                   Padding="2 2 2 0"
+                   Target="{Binding ElementName=SearchQueryText}"
+                   Content="{Binding SearchWatermark,Mode=OneWay}" />
+            <TextBox x:Name="SearchQueryText"
+                     Style="{StaticResource SearchBox}"
+                     AutomationProperties.LabeledBy="{Binding ElementName=SearchLabel}" />
+        </StackPanel>
 
         <Grid Grid.Row="1" 
               Style="{StaticResource InfoPanel}"

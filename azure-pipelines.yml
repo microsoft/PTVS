@@ -4,44 +4,43 @@
 # The pipeline extends v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates from 1esPipelines repository defined in resources section.
 
 parameters:
+  - name: pylanceVersion
+    displayName: Pylance Version
+    type: string
+    default: latest
 
-- name: pylanceVersion
-  displayName: Pylance Version
-  type: string
-  default: latest
+  - name: pylanceReleaseType
+    displayName: Pylance Release Type
+    type: string
+    default: stable
+    values:
+      - stable
+      - preview
 
-- name: pylanceReleaseType
-  displayName: Pylance Release Type
-  type: string
-  default: stable
-  values:
-    - stable
-    - preview
+  - name: debugpyVersion
+    displayName: Debugpy Version
+    type: string
+    default: latest
 
-- name: debugpyVersion
-  displayName: Debugpy Version
-  type: string
-  default: latest
+  - name: PublishNugetPackageAsBuildArtifact
+    displayName: Publish Nuget Package As Build Artifact
+    type: boolean
+    default: false
 
-- name: PublishNugetPackageAsBuildArtifact
-  displayName: Publish Nuget Package As Build Artifact
-  type: boolean
-  default: false
+  # This is the version that the PTVS package currently being built will have.
+  # If this value is set to 'currentBuildNumber' will default to $(Build.BuildNumber).
+  # But this parameter can be used to overwrite the version number if needed.
+  - name: ptvsPackageVersion
+    displayName: PTVS Package Version
+    type: string
+    default: currentBuildNumber
 
-# This is the version that the PTVS package currently being built will have.
-# If this value is set to 'currentBuildNumber' will default to $(Build.BuildNumber).
-# But this parameter can be used to overwrite the version number if needed.
-- name: ptvsPackageVersion
-  displayName: PTVS Package Version
-  type: string
-  default: currentBuildNumber
+  - name: refreshGlassCache
+    displayName: Refresh Glass Cache
+    type: boolean
+    default: false
 
-- name: skipGlassCache
-  displayName: Skip Glass Cache
-  type: boolean
-  default: false
-
-# build number format 
+# build number format
 name: $(date:yy)$(DayOfYear)$(rev:.r)
 
 # Trigger ci builds for commits into master and any release branches
@@ -53,7 +52,7 @@ trigger:
       - release/*
   paths:
     exclude:
-      - 'azure-pipelines-*.yml'
+      - "azure-pipelines-*.yml"
 
 # Trigger pr builds for commits into master and any release branches
 # Ignore changes to other yml files, since they are for different pipelines
@@ -65,19 +64,19 @@ pr:
       - release/*
   paths:
     exclude:
-      - 'azure-pipelines-*.yml'
+      - "azure-pipelines-*.yml"
   drafts: false
 
 # Trigger builds on a nightly schedule
 # Always run, even if there are no PTVS changes, because we want the latest changes from all dependencies
 # such as pylance, debugpy, and the latest VS int-preview bits pulled into our bootstrapper.
 schedules:
-- cron: "0 8 * * *"
-  displayName: Nightly build
-  branches:
-    include:
-    - main
-  always: true
+  - cron: "0 8 * * *"
+    displayName: Nightly build
+    branches:
+      include:
+        - main
+    always: true
 
 # Build variables
 # None of these are settable at build queue time. To do that, remove the variable from this list,
@@ -86,7 +85,7 @@ variables:
   - name: DropRoot
     value: \\cpvsbuild\Drops\DSTools\PTVS\$(Build.SourceBranchName)\$(Build.BuildNumber)\
   - name: FileVersionPrefix
-    value: 17.0
+    value: 18.0
   - name: IncludeDjangoHtmlExtensions
     value: true
   - name: IncludeMiniconda
@@ -97,10 +96,11 @@ variables:
     value: false
   - name: TrackFileAccess
     value: false
-  - name: Packaging.EnableSBOMSigning
-    value: false  # disabled for now because of known issue
-  - name: SkipGlassCache
-    value: ${{ parameters.skipGlassCache }}
+  - ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+    - name: Packaging.EnableSBOMSigning
+      value: false
+  - name: RefreshGlassCache
+    value: ${{ parameters.refreshGlassCache }}
   - name: PublishNugetPackageAsBuildArtifact
     value: ${{ parameters.PublishNugetPackageAsBuildArtifact }}
 
@@ -110,7 +110,7 @@ variables:
       value: preview
     ${{ else }}:
       value: ${{ parameters.pylanceReleaseType }}
-  
+
   # If the vs package version is not specified, use the build number
   - name: ptvsPackageVersionVar
     ${{ if eq(parameters.ptvsPackageVersion, 'currentBuildNumber') }}:
@@ -119,150 +119,163 @@ variables:
       value: ${{ parameters.ptvsPackageVersion }}
 
   # Import variables from PTVS-Dev18 variable group
-  - group: PTVS-Dev17
+  - group: PTVS-Dev18
 
 # The `resources` specify the location and version of the 1ES PT.
 # The ref of the repository is set to release tag which is intended to be used by most pipelines.
 resources:
   repositories:
-  - repository: 1ESPipelineTemplates
-    type: git
-    name: 1ESPipelineTemplates/1ESPipelineTemplates
-    ref: refs/tags/release
+    - repository: 1ESPipelineTemplates
+      type: git
+      name: 1ESPipelineTemplates/1ESPipelineTemplates
+      ref: refs/tags/release
 
 extends:
   template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
   parameters:
-    # The pool includes the name of your 1ES hosted pool and a VM image in that pool. Also, use os to 
-    # specify the image type. Here are the allowed values: windows, linux, or macOS. The default value is windows. 
+    # The pool includes the name of your 1ES hosted pool and a VM image in that pool. Also, use os to
+    # specify the image type. Here are the allowed values: windows, linux, or macOS. The default value is windows.
     # Hence, this property must be specified for linux and macOS.
     pool:
-      name: VSEngSS-MicroBuild2022-1ES
+      name: VSEng-MicroBuildVSStable
       os: windows
+    featureFlags:
+      # Consolidate SDL pre-check tasks into a single step to reduce pipeline overhead
+      useOptimizedSDLTasks: true
     settings:
       skipBuildTagsForGitHubPullRequests: true
     stages:
-    - stage: build
-      displayName: Build
-      jobs:
-      - job: build
-        # Set pipeline timeout to 2 hours (120 minutes)
-        timeoutInMinutes: 120
+      - stage: build
         displayName: Build
-        # If the pipeline publishes artifacts, use `templateContext` to define the artifacts.
-        # This will enable 1ES PT to run SDL analysis tools on the artifacts and then upload them.
-        templateContext:
-          # Disable code signing validation because we don't ship ANY of the artifacts that we publish.
-          # The only released artifacts are uploaded via the 1ES.MicroBuildVstsDrop@1 below.
-          sdl:
-            codeSignValidation:
-              enabled: false
-          outputs:
-          - output: pipelineArtifact
-            displayName: 'Publish build artifact: binaries'
-            targetPath: '$(Build.BinariesDirectory)/raw/binaries'
-            artifactName: Binaries
-          - output: pipelineArtifact
-            displayName: 'Publish build artifact: raw'
-            condition: failed()
-            targetPath: '$(Build.BinariesDirectory)\raw'
-            artifactName: raw
-          - output: pipelineArtifact
-            displayName: 'Publish build artifact: logs'
-            condition: succeededOrFailed()
-            targetPath: '$(Build.SourcesDirectory)\logs'
-            artifactName: Logs
-          - output: pipelineArtifact
-            displayName: 'Publish build artifact: TestData'
-            targetPath: '$(Build.ArtifactStagingDirectory)/TestDataFolder/TestData.zip'
-            sbomBuildDropPath: '$(Build.ArtifactStagingDirectory)/TestDataFolder'
-            artifactName: 'TestData'
-          - output: pipelineArtifact
-            displayName: 'Publish build artifact: RunSettings'
-            targetPath: '$(Build.SourcesDirectory)/Python/Tests/TestData/default.runsettings'
-            sbomBuildDropPath: '$(Build.SourcesDirectory)/Python/Tests/TestData'
-            artifactName: 'RunSettings'
-          - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
-            - output: pipelineArtifact
-              displayName: 'Publish build artifact: BoM'
-              targetPath: '$(Build.BinariesDirectory)\layout'
-              artifactName: SBOM
-          - ${{ if or(notin(variables['Build.Reason'], 'PullRequest'), eq(variables['PublishNugetPackageAsBuildArtifact'], true)) }}:
-            - output: pipelineArtifact
-              displayName: 'Publish build artifact: NuGet Package'
-              targetPath: '$(Build.ArtifactStagingDirectory)\pkg'
-              artifactName: pkg
+        jobs:
+          - job: build
+            # Set pipeline timeout to 2 hours (120 minutes)
+            timeoutInMinutes: 120
+            displayName: Build
+            # If the pipeline publishes artifacts, use `templateContext` to define the artifacts.
+            # This will enable 1ES PT to run SDL analysis tools on the artifacts and then upload them.
+            templateContext:
+              # Disable code signing validation because we don't ship ANY of the artifacts that we publish.
+              # The only released artifacts are uploaded via the 1ES.MicroBuildVstsDrop@1 below.
+              sdl:
+                codeSignValidation:
+                  enabled: false
+                # Suppress known BinSkim findings for binaries with odbccp32.lib and third-party debugpy
+                suppression:
+                  suppressionFile: $(Build.SourcesDirectory)\.gdn\.gdnsuppress
+                  suppressionSet: default
+                # Only scan changed binaries compared to previous runs
+                binaryAnalysis:
+                  incremental: true
+              outputs:
+                - output: pipelineArtifact
+                  displayName: "Publish build artifact: binaries"
+                  targetPath: "$(Build.BinariesDirectory)/raw/binaries"
+                  artifactName: Binaries
+                  sbomEnabled: false
+                - output: pipelineArtifact
+                  displayName: "Publish build artifact: raw"
+                  condition: failed()
+                  targetPath: '$(Build.BinariesDirectory)\raw'
+                  artifactName: raw
+                - output: pipelineArtifact
+                  displayName: "Publish build artifact: logs"
+                  condition: succeededOrFailed()
+                  targetPath: '$(Build.SourcesDirectory)\logs'
+                  artifactName: Logs
+                  sbomEnabled: false
+                - output: pipelineArtifact
+                  displayName: "Publish build artifact: TestData"
+                  targetPath: "$(Build.ArtifactStagingDirectory)/TestDataFolder/TestData.zip"
+                  artifactName: "TestData"
+                  sbomEnabled: false
+                - output: pipelineArtifact
+                  displayName: "Publish build artifact: RunSettings"
+                  targetPath: "$(Build.SourcesDirectory)/Python/Tests/TestData/default.runsettings"
+                  artifactName: "RunSettings"
+                  sbomEnabled: false
+                - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
+                    - output: pipelineArtifact
+                      displayName: "Publish build artifact: BoM"
+                      targetPath: '$(Build.BinariesDirectory)\layout'
+                      artifactName: SBOM
+                - ${{ if or(notin(variables['Build.Reason'], 'PullRequest'), eq(variables['PublishNugetPackageAsBuildArtifact'], true)) }}:
+                    - output: pipelineArtifact
+                      displayName: "Publish build artifact: NuGet Package"
+                      targetPath: '$(Build.ArtifactStagingDirectory)\pkg'
+                      artifactName: pkg
 
-        steps:
+            steps:
+              # check out code clean from source control
+              - checkout: self
+                clean: true
+                fetchDepth: 1
+              # Non-PR steps
+              - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
+                  # add VSTarget build tag
+                  - powershell: 'Write-Host "##vso[build.addbuildtag]$env:VSTarget"'
+                    displayName: "Add vstarget build tag"
 
-        # check out code clean from source control
-        - checkout: self
-          clean: true
+                  # install microbuild plugins used for swixproj/vsmanproj, signing, and localization
+                  - template: /Build/templates/install_microbuild_plugins.yml@self
 
-        # Non-PR steps  
-        - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
+              # Restore packages and install dependencies (pylance, debugpy)
+              - template: /Build/templates/restore_packages.yml@self
+                parameters:
+                  pylanceVersion: ${{ parameters.pylanceVersion }}
+                  pylanceReleaseType: ${{ variables.pylanceReleaseTypeVar }}
+                  debugpyVersion: ${{ parameters.debugpyVersion }}
 
-          # add VSTarget build tag
-          - powershell: 'Write-Host "##vso[build.addbuildtag]$env:VSTarget"'
-            displayName: 'Add vstarget build tag'
+              # Build and publish logs
+              - template: /Build/templates/build.yml@self
+                parameters:
+                  ptvsPackageVersion: ${{ variables.ptvsPackageVersionVar }}
 
-          # install microbuild plugins used for swixproj/vsmanproj, signing, and localization
-          - template: /Build/templates/install_microbuild_plugins.yml@self
+              # Non-PR steps
+              - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
+                  # Create VS bootstrapper for testing
+                  - template: Build/templates/create_vs_bootstrapper.yml@self
 
-        # Restore packages and install dependencies (pylance, debugpy)  
-        - template: /Build/templates/restore_packages.yml@self
-          parameters:
-            pylanceVersion: ${{ parameters.pylanceVersion }}
-            pylanceReleaseType: ${{ variables.pylanceReleaseTypeVar }}
-            debugpyVersion: ${{ parameters.debugpyVersion }}
-        
-        # Build and publish logs    
-        - template: /Build/templates/build.yml@self
-          parameters:
-            ptvsPackageVersion: ${{ variables.ptvsPackageVersionVar }}
-        
-        # Non-PR steps
-        - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
+                  # Upload vsts drop used by Visual Studio insertions
+                  # For more info, see https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/1es-pipeline-templates/features/outputs/microbuild-vsts-drop
+                  - task: 1ES.MicroBuildVstsDrop@1
+                    displayName: "Upload vsts drop"
+                    inputs:
+                      dropFolder: '$(Build.StagingDirectory)\release'
+                      dropServiceUri: "https://devdiv.artifacts.visualstudio.com/DefaultCollection"
+                      vsDropServiceUri: "https://vsdrop.corp.microsoft.com/file/v1"
+                      accessToken: "$(System.AccessToken)"
+                      dropRetentionDays: 183
 
-          # Create VS bootstrapper for testing
-          - template: Build/templates/create_vs_bootstrapper.yml@self
+                  # publish symbols
+                  - template: /Build/templates/publish_symbols.yml@self
 
-          # Upload vsts drop used by Visual Studio insertions
-          # For more info, see https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/1es-pipeline-templates/features/outputs/microbuild-vsts-drop
-          - task: 1ES.MicroBuildVstsDrop@1
-            displayName: 'Upload vsts drop'
-            inputs:
-              dropFolder: '$(Build.StagingDirectory)\release'
-              dropServiceUri: 'https://devdiv.artifacts.visualstudio.com/DefaultCollection'
-              vsDropServiceUri: 'https://vsdrop.corp.microsoft.com/file/v1'
-              accessToken: '$(System.AccessToken)'
-              dropRetentionDays: 183
+                  # Build and publish nuget package used by VS
+                  - template: /Build/templates/build_nuget_package.yml@self
+                    parameters:
+                      ptvsPackageVersion: ${{ variables.ptvsPackageVersionVar }}
 
-          # publish symbols
-          - template: /Build/templates/publish_symbols.yml@self
+              # MicroBuild cleanup
+              - task: MicroBuildCleanup@1
+                displayName: "Execute cleanup tasks"
+                condition: succeededOrFailed()
 
-          # Build and publish nuget package used by VS
-          - template: /Build/templates/build_nuget_package.yml@self
-            parameters:
-              ptvsPackageVersion: ${{ variables.ptvsPackageVersionVar }}
+              # Publish test data
+              - template: /Build/templates/publish_test_data.yml@self
 
-        # MicroBuild cleanup
-        - task: MicroBuildCleanup@1
-          displayName: 'Execute cleanup tasks'
-          condition: succeededOrFailed()
+            # Run tests on mixed mode debugger
+          - job: test
+            displayName: Test
+            dependsOn: build
+            condition: or(eq(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'), eq(variables['RefreshGlassCache'], 'true'))
+            continueOnError: true
+            pool:
+              name: VSEng-MicroBuildVSStable
+            steps:
+              - checkout: self
+                clean: true
+                fetchDepth: 1
 
-        # Publish test data
-        - template: /Build/templates/publish_test_data.yml@self
-
-        # Run tests on mixed mode debugger but only for PR builds
-      # - ${{ if or(eq(variables['Build.Reason'], 'PullRequest'), eq(variables['SkipGlassCache'], true)) }}:
-      #   - job: test
-      #     displayName: Test
-      #     steps:
-      #     - template: /Build/templates/run_tests.yml@self
-      #       parameters:
-      #         skipGlassCache: ${{ parameters.skipGlassCache }}
-
-
-
-
+              - template: /Build/templates/run_tests.yml@self
+                parameters:
+                  refreshGlassCache: ${{ parameters.refreshGlassCache }}

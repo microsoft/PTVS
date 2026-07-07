@@ -18,13 +18,19 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Logging;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Interpreter {
     public class LaunchConfigurationUtils {
         public static Dictionary<string, string> GetFullEnvironment(LaunchConfiguration config, IServiceProvider serviceProvider, UIThreadBase uiThread) {
+            return GetFullEnvironment(config, serviceProvider, uiThread, null);
+        }
+
+        public static Dictionary<string, string> GetFullEnvironment(LaunchConfiguration config, IServiceProvider serviceProvider, UIThreadBase uiThread, IPythonToolsLogger logger) {
+            // uiThread is retained for API compatibility; conda activation no longer marshals to the UI thread.
             if (config.Interpreter == null && config.InterpreterPath == null) {
                 throw new ArgumentException("Interpreter was invalid");
             }
@@ -45,11 +51,11 @@ namespace Microsoft.PythonTools.Interpreter {
             }
             baseEnv[pathVar] = string.Empty;
 
-            if (CondaUtils.IsCondaEnvironment(config.Interpreter.GetPrefixPath())) {
+            var prefixPath = config.Interpreter?.GetPrefixPath();
+            if (prefixPath != null && CondaUtils.IsCondaEnvironment(prefixPath)) {
                 var condaExe = CondaUtils.GetRootCondaExecutablePath(serviceProvider);
-                var prefixPath = config.Interpreter.GetPrefixPath();
                 if (File.Exists(condaExe) && Directory.Exists(prefixPath)) {
-                    var condaEnv = uiThread.InvokeTaskSync(() => CondaUtils.GetActivationEnvironmentVariablesForPrefixAsync(condaExe, prefixPath), CancellationToken.None);
+                    var condaEnv = Task.Run(() => CondaUtils.GetActivationEnvironmentVariablesForPrefixAsync(condaExe, prefixPath, logger)).WaitAndUnwrapExceptions();
                     baseEnv = PathUtils.MergeEnvironments(baseEnv.AsEnumerable<string, string>(), condaEnv, "Path", pathVar);
                 }
             }

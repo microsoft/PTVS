@@ -17,9 +17,48 @@ parameters:
 
 steps:
 
+  # Point NuGet HTTP cache to a pipeline-controlled location so we can cache it between runs.
+  # packages.config restores don't use the global-packages folder, but they do use the HTTP cache
+  # to avoid re-downloading packages from the feed.
+  - powershell: |
+      $cachePath = Join-Path "$(Pipeline.Workspace)" "nuget-http-cache"
+      Write-Host "##vso[task.setvariable variable=NUGET_HTTP_CACHE_PATH]$cachePath"
+    displayName: 'Set NuGet cache path'
+
+  # Restore NuGet HTTP cache from previous runs (key = packages.config content hash)
+  - task: Cache@2
+    displayName: 'Cache NuGet HTTP cache'
+    inputs:
+      key: 'nuget | "$(Agent.OS)" | Build/$(VSTarget)/packages.config'
+      restoreKeys: |
+        nuget | "$(Agent.OS)"
+      path: '$(Pipeline.Workspace)/nuget-http-cache'
+
   # nuget authenticate so we can restore from azure artifacts
   - task: NuGetAuthenticate@1
     displayName: 'NuGet Authenticate'
+
+  # Warm the packages folder using the cached NuGet HTTP cache so the subsequent
+  # restore in PreBuild.ps1 is largely a no-op.
+  - task: PowerShell@2
+    displayName: 'NuGet restore (warm packages)'
+    env:
+      NUGET_HTTP_CACHE_PATH: $(NUGET_HTTP_CACHE_PATH)
+    inputs:
+      targetType: inline
+      workingDirectory: '$(Build.SourcesDirectory)/Build'
+      script: |
+        Write-Host "NuGet version:"
+        .\nuget.exe help | Select-Object -First 1
+
+        Write-Host "NuGet HTTP cache path: $env:NUGET_HTTP_CACHE_PATH"
+        try {
+          .\nuget.exe locals http-cache -list
+        } catch {
+          Write-Host "(Unable to query NuGet http-cache location: $($_.Exception.Message))"
+        }
+
+        .\nuget.exe restore "$(VSTarget)\packages.config" -OutputDirectory "$(Build.BinariesDirectory)" -Config nuget.config -NonInteractive
 
   # npm authenticate so we can restore from azure artifacts
   - task: npmAuthenticate@0
@@ -27,9 +66,53 @@ steps:
     inputs:
       workingFile: .npmrc
 
+  # Cache node_modules to avoid re-installing Pylance dependencies every run.
+  # PreBuild.ps1 will be instructed to preserve node_modules when running in CI.
+  - task: Cache@2
+    displayName: 'Cache node_modules'
+    inputs:
+      key: 'node_modules | "$(Agent.OS)" | package.json | ${{ parameters.pylanceVersion }} | ${{ parameters.pylanceReleaseType }}'
+      restoreKeys: |
+        node_modules | "$(Agent.OS)" | package.json
+        node_modules | "$(Agent.OS)"
+      path: '$(Build.SourcesDirectory)\\node_modules'
+
+  # Cache npm downloads to speed up Pylance install (PreBuild.ps1 runs `npm install`)
+  - task: Cache@2
+    displayName: 'Cache npm'
+    inputs:
+      key: 'npm | "$(Agent.OS)" | package.json | ${{ parameters.pylanceVersion }} | ${{ parameters.pylanceReleaseType }}'
+      restoreKeys: |
+        npm | "$(Agent.OS)" | package.json
+        npm | "$(Agent.OS)"
+      path: '$(Pipeline.Workspace)\\npm-cache'
+
+  # Cache PyPI wheel downloads used by install_pypi_package.py (debugpy/etwtrace)
+  - task: Cache@2
+    displayName: 'Cache PyPI wheels'
+    inputs:
+      key: 'pypi-wheels | "$(Agent.OS)" | ${{ parameters.debugpyVersion }}'
+      restoreKeys: |
+        pypi-wheels | "$(Agent.OS)"
+      path: '$(Pipeline.Workspace)\\pypi-wheel-cache'
+
   # Restore packages and install dependencies (pylance, debugpy)
   - task: PowerShell@1
     displayName: 'Restore packages'
+    env:
+      # Ensure nuget.exe (spawned by PreBuild.ps1) inherits the pipeline-controlled HTTP cache path.
+      # This makes cache usage explicit even if task variable->env propagation changes.
+      NUGET_HTTP_CACHE_PATH: $(NUGET_HTTP_CACHE_PATH)
+
+      # Speed up npm install for Pylance by reusing cached downloads.
+      npm_config_cache: $(Pipeline.Workspace)\\npm-cache
+      npm_config_prefer_offline: 'true'
+      npm_config_audit: 'false'
+      npm_config_fund: 'false'
+      npm_config_progress: 'false'
+
+      # Speed up debugpy/etwtrace installs by caching downloaded wheels.
+      PTVS_PYPI_WHEEL_CACHE_DIR: $(Pipeline.Workspace)\\pypi-wheel-cache
     inputs:
       scriptName: Build/PreBuild.ps1
-      arguments: '-vstarget $(VSTarget) -pylanceVersion ${{ parameters.pylanceVersion }} -pylanceReleaseType ${{ parameters.pylanceReleaseType }} -debugpyVersion ${{ parameters.debugpyVersion }}'
+      arguments: '-vstarget $(VSTarget) -pylanceVersion ${{ parameters.pylanceVersion }} -pylanceReleaseType ${{ parameters.pylanceReleaseType }} -debugpyVersion ${{ parameters.debugpyVersion }} -preserveNodeModules'

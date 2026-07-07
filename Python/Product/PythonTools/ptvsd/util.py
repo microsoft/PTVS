@@ -98,7 +98,7 @@ def exec_code(code, file, global_variables):
     else:
         sys.path[0] = os.path.split(file)[0]
     code_obj = compile(code, file, 'exec')
-    exec(code_obj, global_variables)
+    exec(code_obj, global_variables)  # nosec B102 - debugger helper intentionally executes the target script.
 
 def exec_file(file, global_variables):
     '''Executes the provided script as if it were the original script provided
@@ -227,16 +227,16 @@ class SafeRepr(object):
     try:
         from collections import deque
         collection_types.append((deque, 'deque([', '])', False))
-    except:
-        pass
+    except:  # nosec B110
+        pass  # nosec B110 - deque support is optional.
 
     # type, prefix string, suffix string, item prefix string, item key/value separator, item suffix string
     dict_types = [(dict, '{', '}', '', ': ', '')]
     try:
         from collections import OrderedDict
         dict_types.append((OrderedDict, 'OrderedDict([', '])', '(', ', ', ')'))
-    except:
-        pass
+    except:  # nosec B110
+        pass  # nosec B110 - OrderedDict support is optional.
 
     # All other types are treated identically to strings, but using
     # different limits.
@@ -312,7 +312,7 @@ class SafeRepr(object):
                 if module in ('numpy', 'scipy'):
                     return False
             except:
-                pass
+                pass  # nosec B110 - module probe is best-effort.
 
             # Iterables that nest too deep are considered long.
             if level >= len(self.maxcollection):

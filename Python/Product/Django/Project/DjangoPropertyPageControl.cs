@@ -40,6 +40,14 @@ namespace Microsoft.PythonTools.Django.Project {
             _properties = properties;
         }
 
+        protected override void OnHandleCreated(EventArgs e) {
+            base.OnHandleCreated(e);
+
+            // Apply the VS environment font once the control is realized so its text
+            // resizes with the OS "Text size" accessibility setting (MAS 1.4.4).
+            VsShellFontHelper.ApplyEnvironmentFont(this);
+        }
+
         public string SettingsModule {
             get { return _settingsModule.Text; }
             set { _settingsModule.Text = value; }

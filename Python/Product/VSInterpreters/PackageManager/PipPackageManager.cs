@@ -753,25 +753,42 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private void OnRenamed(object sender, RenamedEventArgs e) {
-            if (Directory.Exists(e.FullPath) ||
-                ModulePath.IsPythonFile(e.FullPath, false, true, false) ||
-                ModulePath.IsPythonFile(e.OldFullPath, false, true, false)) {
-                try {
-                    _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
-                } catch (ObjectDisposedException) {
+            // RenamedEventArgs lazily builds and normalizes the full paths on demand,
+            // and on .NET Framework that normalization enforces MAX_PATH (260) and
+            // can throw PathTooLongException - even just reading the properties.
+            // The Directory.Exists / ModulePath.IsPythonFile checks below call into
+            // the same Win32 path APIs and can throw for the same reason, so wrap
+            // the whole inspection. Watch sites use IncludeSubdirectories under
+            // site-packages so deeply vendored packages routinely exceed 260 chars.
+            try {
+                if (Directory.Exists(e.FullPath) ||
+                    ModulePath.IsPythonFile(e.FullPath, false, true, false) ||
+                    ModulePath.IsPythonFile(e.OldFullPath, false, true, false)) {
+                    try {
+                        _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
+                    } catch (ObjectDisposedException) {
+                    }
                 }
+            } catch (PathTooLongException) {
             }
         }
 
         private void OnChanged(object sender, FileSystemEventArgs e) {
-            if ((Directory.Exists(e.FullPath) && 
-                !PathUtils.GetFileOrDirectoryName(e.FullPath).Equals("__pycache__", StringComparison.OrdinalIgnoreCase)) ||
-                ModulePath.IsPythonFile(e.FullPath, false, true, false)
-            ) {
-                try {
-                    _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
-                } catch (ObjectDisposedException) {
+            // FileSystemEventArgs lazily normalizes FullPath and can throw
+            // PathTooLongException on .NET Framework MAX_PATH overflow. The
+            // Directory.Exists / IsPythonFile / GetFileOrDirectoryName calls below
+            // hit the same path-normalization code, so wrap the whole inspection.
+            try {
+                if ((Directory.Exists(e.FullPath) &&
+                    !PathUtils.GetFileOrDirectoryName(e.FullPath).Equals("__pycache__", StringComparison.OrdinalIgnoreCase)) ||
+                    ModulePath.IsPythonFile(e.FullPath, false, true, false)
+                ) {
+                    try {
+                        _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
+                    } catch (ObjectDisposedException) {
+                    }
                 }
+            } catch (PathTooLongException) {
             }
         }
     }

@@ -315,7 +315,7 @@ def main():
                 cov.load()
                 cov.start()
             except:
-                pass
+                cov = None
 
         tests = []
         for test in all_tests:

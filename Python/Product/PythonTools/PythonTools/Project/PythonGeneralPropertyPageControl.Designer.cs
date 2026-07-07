@@ -115,6 +115,7 @@ namespace Microsoft.PythonTools.Project {
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScroll = true;
             this.Controls.Add(this.tableLayoutPanel1);
             this.Name = "PythonGeneralPropertyPageControl";
             this._applicationGroup.ResumeLayout(false);

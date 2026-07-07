@@ -3,6 +3,7 @@
   <Import Project="$(TargetsPath)\Common.Build.VSSDK.targets" Condition="$(UseVSSDK) or $(UseVSSDKTemplateOnly)" />
   <Import Project="$(TargetsPath)\Common.Build.Cpp.targets" Condition="'$(Language)' == 'C++'" />
   <Import Project="$(TargetsPath)\MicroBuild.targets" />
+  <Import Project="$(TargetsPath)\SourceLink.targets" />
 
   <ItemGroup>
     <CodeAnalysisDictionary Include="$(BuildRoot)\Build\CustomDictionary.xml" />

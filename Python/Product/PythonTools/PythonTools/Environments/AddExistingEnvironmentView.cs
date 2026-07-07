@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.Environments {
             "3.11",
             "3.12",
             "3.13",
-            //todo: add 3.14 when it is released
+            "3.14",
         };
         public static readonly DependencyProperty InterpretersProperty =
             DependencyProperty.Register(nameof(Interpreters), typeof(ObservableCollection<InterpreterView>), typeof(AddExistingEnvironmentView), new PropertyMetadata());

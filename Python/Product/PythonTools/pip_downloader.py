@@ -161,8 +161,8 @@ def install_from_ensurepip(ensurepip):
 def main():
     try:
         install_from_local_source()
-    except Exception:
-        pass
+    except Exception:  # nosec B110
+        pass  # nosec B110 - fall through to the next installer strategy.
     
     try:
         import ensurepip
@@ -206,8 +206,8 @@ def main():
 
     try:
         install_from_pip('https://go.microsoft.com/fwlink/?LinkId=616663')
-    except Exception:
-        pass
+    except Exception:  # nosec B110
+        pass  # nosec B110 - fall through to direct source download.
     else:
         return
 

@@ -1,0 +1,405 @@
+# PTVS-Triage-Fetch — weekly AzDO triage fetch + analyze + summary issue
+#
+# Runs inside devdiv/DevDiv (where $(System.AccessToken) has native AzDO REST
+# auth — the same call from a GitHub-hosted runner is bare-401'd by the
+# DevDiv security gateway).
+#
+# End to end (6 phases):
+#   1. Query AzDO for open work items under DevDiv\Python and AI Tools\**
+#      that changed in the last 7 days (cap 25).
+#   2. Download + parse any PythonToolsDiagnostics_*.log attachments.
+#   3. Sanitize all of it (PII redaction; drop items that hit secret patterns).
+#   4. Publish the sanitized data as an AzDO build artifact (devdiv-internal
+#      audit trail) AND post a weekly summary issue in microsoft/PTVS with
+#      bullet points (work item title + link) for every non-aborted item.
+#   5. Install GitHub Copilot CLI on the agent and run an agentic per-item
+#      triage analysis against the PTVS source tree (this pipeline's checkout).
+#   6. Post each Copilot analysis as a threaded comment on the weekly issue
+#      from step 4. Phases 5–6 skip cleanly when no issue was created (dryRun
+#      mode or no candidates).
+#
+# The summary issue body contains NO sanitized content — only public-safe
+# titles + AzDO URLs. The full sanitized JSON lives only in the AzDO build
+# artifact, which never leaves the devdiv tenant. The per-item analyses
+# Copilot produces ARE posted publicly as issue comments; they're generated
+# from already-sanitized JSON, but operators should still spot-check.
+#
+# Setup prerequisites (one-time):
+#   1. Create variable group `PTVS-Triage-Bridge` in devdiv/DevDiv with two
+#      SECRET variables:
+#        - GH_PAT      = fine-grained GitHub PAT scoped to microsoft/PTVS
+#                        with Issues: Read+Write (post the weekly summary
+#                        issue AND comment per-item analyses on it).
+#        - COPILOT_PAT = fine-grained GitHub PAT with the `Copilot Requests`
+#                        Account permission. Authenticates the Copilot CLI
+#                        step. Microsoft's PAT-allowlist policy applies to
+#                        AzDO PATs only — GitHub PATs are unaffected.
+#      Both PATs expire after at most ~90 days — set a calendar reminder and
+#      rotate by overwriting the variable group value before expiry.
+#   2. Grant the project Build Service identity `View work items in this
+#      node` on area path `DevDiv\Python and AI Tools`. NOTE: this is
+#      NOT granted by default. The very first pipeline run typically
+#      fails on `query-azdo.ps1` with a 401 (the failed run is what
+#      provisions the Build Service identity in AzDO permissions);
+#      grant the permission, then re-run manually.
+#   3. Create the AzDO Pipeline in devdiv/DevDiv pointing at this file on
+#      the `main` branch of `microsoft/PTVS`. Name it `PTVS-Triage-Fetch`.
+#   4. Create the GitHub issue label once (the script does NOT auto-create
+#      labels):
+#        gh label create azdo-triage-report \
+#          --color 0e8a16 \
+#          --description 'Weekly AzDO triage report from PTVS-Triage-Fetch' \
+#          --repo microsoft/PTVS
+#      Idempotent — safe to re-run; fails with "already exists" if so.
+#
+# Local dry-run (run end-to-end against AzDO without posting to GitHub):
+#   $env:GITHUB_TOKEN     = '<fine-grained PAT scoped to microsoft/PTVS>'
+#   $env:AZDO_ACCESS_TOKEN = (az account get-access-token `
+#     --resource 499b84ac-1321-427f-aa17-267ca6975798 `
+#     --query accessToken -o tsv)
+#   pwsh -File Build/triage/query-azdo.ps1         -OutFile cands.json
+#   pwsh -File Build/triage/parse-diagnostics.ps1  -CandidatesFile cands.json -OutDir diag
+#   pwsh -File Build/triage/sanitize.ps1           -InFile cands.json -DiagDir diag -OutDir san
+#   pwsh -File Build/triage/post-report-issue.ps1  -CandidatesFile <titles-only.json> -DryRun
+#
+# Audit / operational notes:
+#   - Every pipeline run uploads a `sanitized-<BuildId>` artifact containing
+#     the full sanitized wi-*.json + diag-*.json. AzDO retention applies.
+#     The public summary issue contains only titles + AzDO links; no
+#     sanitized content is mirrored to GitHub.
+#   - Idempotency: post-report-issue.ps1 searches for an OPEN issue with
+#     the same weekly title and updates the body in place. If the operator
+#     closed the previous report, a new issue is filed so the latest list
+#     surfaces in the feed.
+#   - Manual re-runs: Pipelines → PTVS-Triage-Fetch → Run pipeline. You
+#     can override the branch on a manual run to test changes from a
+#     non-main branch in microsoft/PTVS.
+#   - PR safety: `trigger: none` AND `pr: none` below — the pipeline must
+#     NEVER run on PRs, because it would execute untrusted PR-modified
+#     scripts with $(System.AccessToken) + the bridge PAT.
+
+trigger: none    # do not run on every PTVS push; manual-only for now
+                 # (cron schedule is commented out below — re-enable when ready).
+pr: none         # NEVER run for PRs — would execute untrusted modified
+                 # scripts with $(System.AccessToken) and the bridge PAT.
+
+# The schedule is intentionally disabled for now — the pipeline is manual-only
+# while we verify the end-to-end run in production. To re-enable the weekly
+# cron, uncomment the `schedules:` block below.
+#
+# Notes for when re-enabling:
+#   - `always: true` is REQUIRED for a fetch pipeline whose data source (AzDO
+#     work items) is independent of repo state — without it, AzDO skips the
+#     scheduled run when no commits landed since the last successful run.
+#
+# schedules:
+# - cron: "0 8 * * 1"
+#   displayName: Weekly Monday triage fetch (08:00 UTC)
+#   branches:
+#     include:
+#     - main
+#   always: true
+
+parameters:
+- name: lookbackDays
+  displayName: How many days back to scan
+  type: number
+  default: 7
+- name: maxCandidates
+  displayName: Hard cap on candidates per run (cost-safety)
+  type: number
+  default: 25
+- name: workitemId
+  displayName: (optional) Triage only this single AzDO work item ID
+  type: string
+  default: ' '
+- name: dryRun
+  displayName: Dry-run (print issue body to logs; do not post)
+  type: boolean
+  default: false
+- name: runAnalyze
+  displayName: Run Copilot per-item triage analysis (uncheck to skip phases 5-6)
+  type: boolean
+  default: true
+
+variables:
+- group: PTVS-Triage-Bridge   # provides $(GH_PAT) and $(COPILOT_PAT)
+- name: LOOKBACK_DAYS
+  value: ${{ parameters.lookbackDays }}
+- name: MAX_CANDIDATES
+  value: ${{ parameters.maxCandidates }}
+- name: WORKITEM_ID
+  value: ${{ parameters.workitemId }}
+- name: DRY_RUN
+  value: ${{ parameters.dryRun }}
+- name: RUN_ANALYZE
+  value: ${{ parameters.runAnalyze }}
+
+pool:
+  vmImage: ubuntu-latest
+
+jobs:
+- job: Fetch
+  displayName: Fetch + sanitize + analyze + post summary issue
+  # 25 items * 180s per-item Copilot timeout + Fetch overhead + slack.
+  timeoutInMinutes: 120
+  steps:
+  - checkout: self
+    displayName: Checkout PTVS scripts
+    persistCredentials: false
+
+  - task: PowerShell@2
+    displayName: 'query-azdo.ps1 — WIQL + workitemsbatch'
+    env:
+      # $(System.AccessToken) is the per-pipeline bearer token for the
+      # Build Service identity. Bare reference to it from script blocks
+      # is NOT auto-injected; map explicitly via env: like this.
+      AZDO_ACCESS_TOKEN: $(System.AccessToken)
+      LOOKBACK_DAYS:     $(LOOKBACK_DAYS)
+      MAX_CANDIDATES:    $(MAX_CANDIDATES)
+      WORKITEM_ID:       $(WORKITEM_ID)
+    inputs:
+      pwsh: true
+      targetType: inline
+      script: |
+        $extra = @{}
+        if ($env:WORKITEM_ID -and $env:WORKITEM_ID.Trim()) {
+            $extra['WorkItemId'] = $env:WORKITEM_ID.Trim()
+        }
+        & "$(Build.SourcesDirectory)/Build/triage/query-azdo.ps1" `
+            -OutFile        "$(Agent.TempDirectory)/candidates.json" `
+            -LookbackDays   ([int] $env:LOOKBACK_DAYS) `
+            -MaxCandidates  ([int] $env:MAX_CANDIDATES) `
+            @extra
+
+  - task: PowerShell@2
+    displayName: 'parse-diagnostics.ps1 — download + parse log attachments'
+    env:
+      AZDO_ACCESS_TOKEN: $(System.AccessToken)
+    inputs:
+      pwsh: true
+      targetType: inline
+      script: |
+        & "$(Build.SourcesDirectory)/Build/triage/parse-diagnostics.ps1" `
+            -CandidatesFile "$(Agent.TempDirectory)/candidates.json" `
+            -OutDir         "$(Agent.TempDirectory)/diag-raw"
+
+  - task: PowerShell@2
+    displayName: 'sanitize.ps1 (full) — PII redaction → sanitized/wi-*.json + diag-*.json'
+    inputs:
+      pwsh: true
+      targetType: inline
+      script: |
+        & "$(Build.SourcesDirectory)/Build/triage/sanitize.ps1" `
+            -InFile  "$(Agent.TempDirectory)/candidates.json" `
+            -DiagDir "$(Agent.TempDirectory)/diag-raw" `
+            -OutDir  "$(Agent.TempDirectory)/sanitized"
+
+  - task: PowerShell@2
+    displayName: 'Drop sanitization-aborted items and emit titles-only manifest for issue body'
+    inputs:
+      pwsh: true
+      targetType: inline
+      script: |
+        # SECURITY: items whose `sanitization_aborted == true` are DROPPED from
+        # BOTH downstream outputs (artifact upload + public bullets).
+        # sanitize.ps1 sets that flag when it detects a secret pattern (PAT,
+        # JWT, AWS key, private-key PEM, etc.) anywhere in the work-item
+        # content. We delete the corresponding wi-/diag- files from disk so
+        # they're excluded from the artifact upload below, and skip them when
+        # building the titles-only manifest used by post-report-issue.ps1.
+        Set-StrictMode -Version Latest
+        $ErrorActionPreference = 'Stop'
+
+        $sanDir = "$(Agent.TempDirectory)/sanitized"
+        if (-not (Test-Path -LiteralPath $sanDir)) {
+            throw "Sanitized output directory not found: $sanDir"
+        }
+
+        $titles  = New-Object System.Collections.Generic.List[object]
+        $aborted = New-Object System.Collections.Generic.List[int]
+        foreach ($f in Get-ChildItem -LiteralPath $sanDir -Filter 'wi-*.json' -File | Sort-Object Name) {
+            $wi = Get-Content -LiteralPath $f.FullName -Raw | ConvertFrom-Json
+
+            if ($wi.sanitization_aborted) {
+                Write-Warning "Dropping AzDO #$($wi.id) — sanitization aborted (secret pattern hit: $(($wi.secret_hits) -join ', '))"
+                $aborted.Add([int] $wi.id) | Out-Null
+                Remove-Item -LiteralPath $f.FullName -Force
+                $diagToo = Join-Path $sanDir ("diag-{0}.json" -f $wi.id)
+                if (Test-Path -LiteralPath $diagToo) { Remove-Item -LiteralPath $diagToo -Force }
+                continue
+            }
+
+            $titles.Add([pscustomobject] @{
+                id             = $wi.id
+                title          = $wi.title
+                url            = $wi.url
+                area_path      = $wi.area_path
+                created_date   = $wi.created_date
+                state          = $wi.state
+                work_item_type = $wi.work_item_type
+            }) | Out-Null
+        }
+
+        $titlesDst = "$(Agent.TempDirectory)/candidates-titles-only.json"
+        # Pass the List directly (do NOT wrap in @()). PowerShell 7.5's
+        # ConvertTo-Json parameter binder errors with "Argument types do
+        # not match" when given @() around a List[object].
+        $json = ConvertTo-Json -Compress -Depth 10 -InputObject $titles
+        Set-Content -LiteralPath $titlesDst -Value $json -Encoding UTF8
+
+        Write-Host "Wrote titles manifest: $($titles.Count) item(s). Dropped $($aborted.Count) sanitization-aborted item(s)."
+
+  - publish: $(Agent.TempDirectory)/sanitized
+    displayName: 'Publish sanitized data as AzDO build artifact (audit trail, devdiv-internal)'
+    artifact: sanitized-$(Build.BuildId)
+
+  - task: PowerShell@2
+    displayName: 'post-report-issue.ps1 — create/update weekly issue in microsoft/PTVS'
+    env:
+      # GH_PAT is a fine-grained GitHub PAT in the PTVS-Triage-Bridge
+      # variable group, scoped to microsoft/PTVS with:
+      #   - Issues: Read+Write   (post the weekly summary issue)
+      #   - Metadata: Read       (implicit)
+      # post-report-issue.ps1 reads $env:GITHUB_TOKEN.
+      GITHUB_TOKEN:  $(GH_PAT)
+      LOOKBACK_DAYS: $(LOOKBACK_DAYS)
+      DRY_RUN:       $(DRY_RUN)
+    inputs:
+      pwsh: true
+      targetType: inline
+      script: |
+        Set-StrictMode -Version Latest
+        $ErrorActionPreference = 'Stop'
+
+        # Sanity check: GH_PAT must be present and look like a real token.
+        # Don't compare to a literal '$(GH_PAT)' placeholder here — AzDO
+        # substitutes that macro at YAML processing time (yes, even for
+        # secrets, even inside PowerShell single-quoted strings), so any
+        # literal comparison silently becomes a self-comparison.
+        if (-not $env:GITHUB_TOKEN -or $env:GITHUB_TOKEN.Trim().Length -lt 20) {
+            throw "GITHUB_TOKEN env var is missing or looks too short. Confirm the 'PTVS-Triage-Bridge' variable group exists with a secret variable 'GH_PAT' (value pasted + saved), and that this pipeline is authorized to use it."
+        }
+
+        $runUrl = '$(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)'
+        # Use HASHTABLE splatting (not array splatting). When you call a .ps1
+        # via @arrayName, PowerShell binds positionally — the '-Name' tokens
+        # are taken as values, not parameter names — so the wrong values end
+        # up on the wrong parameters. Hashtable splatting binds by name.
+        $scriptArgs = @{
+            CandidatesFile = "$(Agent.TempDirectory)/candidates-titles-only.json"
+            LookbackDays   = [int] $env:LOOKBACK_DAYS
+            RunUrl         = $runUrl
+        }
+        if ([bool]::Parse(($env:DRY_RUN ?? 'false'))) { $scriptArgs['DryRun'] = $true }
+        & "$(Build.SourcesDirectory)/Build/triage/post-report-issue.ps1" @scriptArgs
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Phases 5–6: agentic per-item triage via GitHub Copilot CLI.
+  #
+  # Gated on TWO conditions:
+  #   (a) `runAnalyze` pipeline parameter is true (checkbox-controlled at
+  #       Run-pipeline time; defaults to true).
+  #   (b) `issueNumber` job variable is non-empty (post-report-issue.ps1
+  #       emits it on the create/update path and empty on dryRun /
+  #       no-candidates paths).
+  # If either is false, the whole Analyze block skips cleanly with no
+  # Copilot AI credit spend; the Fetch portion still completes normally.
+  #
+  # Casing note: `${{ parameters.runAnalyze }}` expands the boolean param
+  # at template time; the exact string casing AzDO emits has historically
+  # varied ('True' vs 'true'). We wrap in `lower(...)` so the gate works
+  # regardless and matches the repo's lowercase 'true' convention
+  # (see Build/templates/run_tests.yml RUN_GLASS / SETUP_GLASS gates).
+  #
+  # Auth: $(COPILOT_PAT). analyze.ps1 detects both an unset variable and
+  # the unresolved-macro fingerprint `$(COPILOT_PAT)` left behind when
+  # the variable group is unlinked.
+
+  - task: NodeTool@0
+    displayName: 'Install Node.js 22 (for Copilot CLI)'
+    condition: and(succeeded(), eq(lower(variables['RUN_ANALYZE']), 'true'), ne(variables['issueNumber'], ''))
+    inputs:
+      versionSpec: '22.x'
+
+  - task: PowerShell@2
+    displayName: 'Install GitHub Copilot CLI'
+    condition: and(succeeded(), eq(lower(variables['RUN_ANALYZE']), 'true'), ne(variables['issueNumber'], ''))
+    inputs:
+      pwsh: true
+      targetType: inline
+      script: |
+        Set-StrictMode -Version Latest
+        $ErrorActionPreference = 'Stop'
+        # @latest is intentional: Copilot CLI is rapidly evolving and the
+        # triage value comes from the newest available model + features.
+        # `copilot --version` below is the forensic anchor — every run
+        # logs the exact resolved version so a failed run can be
+        # correlated to a specific CLI release in the build logs.
+        sudo npm install -g '@github/copilot@latest'
+        copilot --version
+
+  - task: PowerShell@2
+    displayName: 'analyze.ps1 — Copilot per-item triage'
+    condition: and(succeeded(), eq(lower(variables['RUN_ANALYZE']), 'true'), ne(variables['issueNumber'], ''))
+    env:
+      # COPILOT_GITHUB_TOKEN authenticates the Copilot CLI for inference.
+      # This PAT carries ONLY the `Copilot Requests` permission -- it
+      # cannot read or write microsoft/PTVS issues, code, or any other
+      # repo data even if a prompt-injection escapes the agent's tool
+      # boundary.
+      #
+      # SECURITY: we deliberately do NOT pass $(GH_PAT) (the
+      # Issues:Read+Write PAT used by post-analyses.ps1). Copilot CLI is
+      # invoked with `--allow-all-tools`, so any agentic `gh` calls it
+      # spawns would inherit GH_PAT's write scope if we passed it here,
+      # giving a prompt-injection attack a path to post arbitrary
+      # comments to the public repo. Without GH_TOKEN, the agent's `gh`
+      # subprocess runs unauthenticated -- read-only against the public
+      # microsoft/PTVS repo (rate-limited to 60 req/hr), write-disabled
+      # by 401. Duplicate-detection via `gh issue list --search` still
+      # works for public-repo reads within that budget.
+      #
+      # The artifact upload + comment post still need GH_PAT; both
+      # happen in later steps where the agent is no longer running.
+      COPILOT_GITHUB_TOKEN: $(COPILOT_PAT)
+    inputs:
+      pwsh: true
+      targetType: inline
+      script: |
+        & "$(Build.SourcesDirectory)/Build/triage/analyze.ps1" `
+            -SanitizedDir "$(Agent.TempDirectory)/sanitized" `
+            -PtvsRepo     "$(Build.SourcesDirectory)" `
+            -OutDir       "$(Agent.TempDirectory)/analyses" `
+            -MaxItems     ([int] '$(MAX_CANDIDATES)')
+
+  - publish: $(Agent.TempDirectory)/analyses
+    displayName: 'Publish analyses artifact (audit trail; devdiv project Build Read)'
+    artifact: analyses-$(Build.BuildId)
+    # Scope note: AzDO pipeline artifacts in devdiv/DevDiv are readable
+    # by anyone with the project's Build (Read) permission. That's
+    # broader than the original "devdiv-internal" wording implied --
+    # treat the artifact as Microsoft-internal-distribution, NOT as
+    # private-to-the-pipeline-author. The artifact contains the
+    # per-item Copilot analyses + .logs/copilot-<id>.log stderr
+    # captures. Both go through the token-leak scrubber before write.
+    #
+    # `succeeded()` (not `succeededOrFailed()`): if analyze.ps1 threw before
+    # creating $OutDir, `publish:` would error trying to read a missing dir.
+    # Per-item stub failures still exit 0, so the artifact still uploads.
+    condition: and(succeeded(), eq(lower(variables['RUN_ANALYZE']), 'true'), ne(variables['issueNumber'], ''))
+
+  - task: PowerShell@2
+    displayName: 'post-analyses.ps1 — comment per-item analyses on the triage issue'
+    condition: and(succeeded(), eq(lower(variables['RUN_ANALYZE']), 'true'), ne(variables['issueNumber'], ''))
+    env:
+      GH_TOKEN: $(GH_PAT)
+    inputs:
+      pwsh: true
+      targetType: inline
+      script: |
+        $runUrl = '$(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)'
+        & "$(Build.SourcesDirectory)/Build/triage/post-analyses.ps1" `
+            -AnalysisDir "$(Agent.TempDirectory)/analyses" `
+            -IssueNumber '$(issueNumber)' `
+            -RunUrl      $runUrl

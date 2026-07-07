@@ -137,6 +137,13 @@
   <data name="_environment.AccessibleName" xml:space="preserve">
     <value>Environment</value>
   </data>
+  <data name="_environment.AccessibleDescription" xml:space="preserve">
+    <value>Environment. Tooltip: Specifies environment variables to be set in the spawned process in the form:
+
+NAME1=value1
+NAME2=value2
+...</value>
+  </data>
   <data name="_environment.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left, Right</value>
   </data>
@@ -187,6 +194,9 @@ NAME2=value2
   <data name="_searchPaths.AccessibleName" xml:space="preserve">
     <value>Search Paths</value>
   </data>
+  <data name="_searchPaths.AccessibleDescription" xml:space="preserve">
+    <value>Search Paths. Tooltip: Semicolon separated list of import directories to be added to sys.path.</value>
+  </data>
   <data name="_searchPaths.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left, Right</value>
   </data>
@@ -222,6 +232,9 @@ NAME2=value2
   </data>
   <data name="_arguments.AccessibleName" xml:space="preserve">
     <value>Script Arguments</value>
+  </data>
+  <data name="_arguments.AccessibleDescription" xml:space="preserve">
+    <value>Script Arguments. Tooltip: Specifies arguments which are passed to the script and available via sys.argv.</value>
   </data>
   <data name="_arguments.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left, Right</value>
@@ -259,6 +272,9 @@ NAME2=value2
   <data name="_interpArgs.AccessibleName" xml:space="preserve">
     <value>Interpreter Arguments</value>
   </data>
+  <data name="_interpArgs.AccessibleDescription" xml:space="preserve">
+    <value>Interpreter Arguments. Tooltip: Specifies arguments for the interpreter before the script (for example, -Wall, -O or -B)</value>
+  </data>
   <data name="_interpArgs.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left, Right</value>
   </data>
@@ -295,6 +311,9 @@ NAME2=value2
   <data name="_interpreterPath.AccessibleName" xml:space="preserve">
     <value>Interpreter Path</value>
   </data>
+  <data name="_interpreterPath.AccessibleDescription" xml:space="preserve">
+    <value>Interpreter Path. Tooltip: Overrides the path of the interpreter to use when launching the project.</value>
+  </data>
   <data name="_interpreterPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left, Right</value>
   </data>
@@ -329,7 +348,7 @@ NAME2=value2
     <value>4</value>
   </data>
   <data name="_interpArgsLabel.AccessibleName" xml:space="preserve">
-    <value>Specifies arguments for the interpreter before the script (for example, -Wall, -O or -B)</value>
+    <value>Interpreter Arguments</value>
   </data>
   <data name="_interpArgsLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left</value>
@@ -355,9 +374,6 @@ NAME2=value2
   <data name="_interpArgsLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleLeft</value>
   </data>
-  <data name="_interpArgsLabel.ToolTip" xml:space="preserve">
-    <value>Specifies arguments for the interpreter before the script (for example, -Wall, -O or -B)</value>
-  </data>
   <data name="&gt;&gt;_interpArgsLabel.Name" xml:space="preserve">
     <value>_interpArgsLabel</value>
   </data>
@@ -371,7 +387,7 @@ NAME2=value2
     <value>5</value>
   </data>
   <data name="_argumentsLabel.AccessibleName" xml:space="preserve">
-    <value>Specifies arguments which are passed to the script and available via sys.argv.</value>
+    <value>Script Arguments</value>
   </data>
   <data name="_argumentsLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left</value>
@@ -397,9 +413,6 @@ NAME2=value2
   <data name="_argumentsLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleLeft</value>
   </data>
-  <data name="_argumentsLabel.ToolTip" xml:space="preserve">
-    <value>Specifies arguments which are passed to the script and available via sys.argv.</value>
-  </data>
   <data name="&gt;&gt;_argumentsLabel.Name" xml:space="preserve">
     <value>_argumentsLabel</value>
   </data>
@@ -413,7 +426,7 @@ NAME2=value2
     <value>6</value>
   </data>
   <data name="_searchPathLabel.AccessibleName" xml:space="preserve">
-    <value>Semicolon separated list of import directories to be added to sys.path.</value>
+    <value>Search Paths</value>
   </data>
   <data name="_searchPathLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left</value>
@@ -439,9 +452,6 @@ NAME2=value2
   <data name="_searchPathLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleLeft</value>
   </data>
-  <data name="_searchPathLabel.ToolTip" xml:space="preserve">
-    <value>Semicolon separated list of import directories to be added to sys.path.</value>
-  </data>
   <data name="&gt;&gt;_searchPathLabel.Name" xml:space="preserve">
     <value>_searchPathLabel</value>
   </data>
@@ -455,7 +465,7 @@ NAME2=value2
     <value>7</value>
   </data>
   <data name="_portNumberLabel.AccessibleName" xml:space="preserve">
-    <value>The port on which the development server should listen. When not specified a random free port will be used. The SERVER_PORT environment variable is set to this value.</value>
+    <value>Port Number</value>
   </data>
   <data name="_portNumberLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left</value>
@@ -481,9 +491,6 @@ NAME2=value2
   <data name="_portNumberLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleLeft</value>
   </data>
-  <data name="_portNumberLabel.ToolTip" xml:space="preserve">
-    <value>The port on which the development server should listen. When not specified a random free port will be used. The SERVER_PORT environment variable is set to this value.</value>
-  </data>
   <data name="&gt;&gt;_portNumberLabel.Name" xml:space="preserve">
     <value>_portNumberLabel</value>
   </data>
@@ -498,6 +505,9 @@ NAME2=value2
   </data>
   <data name="_portNumber.AccessibleName" xml:space="preserve">
     <value>Port Number</value>
+  </data>
+  <data name="_portNumber.AccessibleDescription" xml:space="preserve">
+    <value>Port Number. Tooltip: The port on which the development server should listen. When not specified a random free port will be used. The SERVER_PORT environment variable is set to this value.</value>
   </data>
   <data name="_portNumber.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left, Right</value>
@@ -532,6 +542,9 @@ NAME2=value2
   <data name="_launchUrl.AccessibleName" xml:space="preserve">
     <value>Launch URL</value>
   </data>
+  <data name="_launchUrl.AccessibleDescription" xml:space="preserve">
+    <value>Launch URL. Tooltip: The URL to open in the browser when starting the development server. When not specified http://localhost will be launched.</value>
+  </data>
   <data name="_launchUrl.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left, Right</value>
   </data>
@@ -563,7 +576,7 @@ NAME2=value2
     <value>10</value>
   </data>
   <data name="_launchUrlLabel.AccessibleName" xml:space="preserve">
-    <value>The URL to open in the browser when starting the development server. When not specified http://localhost will be launched.</value>
+    <value>Launch URL</value>
   </data>
   <data name="_launchUrlLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left</value>
@@ -586,9 +599,6 @@ NAME2=value2
   <data name="_launchUrlLabel.Text" xml:space="preserve">
     <value>Launch &amp;URL:</value>
   </data>
-  <data name="_launchUrlLabel.ToolTip" xml:space="preserve">
-    <value>The URL to open in the browser when starting the development server. When not specified http://localhost will be launched.</value>
-  </data>
   <data name="&gt;&gt;_launchUrlLabel.Name" xml:space="preserve">
     <value>_launchUrlLabel</value>
   </data>
@@ -602,11 +612,7 @@ NAME2=value2
     <value>11</value>
   </data>
   <data name="_environmentLabel.AccessibleName" xml:space="preserve">
-    <value>Specifies environment variables to be set in the spawned process in the form:
-
-NAME1=value1
-NAME2=value2
-...</value>
+    <value>Environment</value>
   </data>
   <data name="_environmentLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left</value>
@@ -632,13 +638,6 @@ NAME2=value2
   <data name="_environmentLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleLeft</value>
   </data>
-  <data name="_environmentLabel.ToolTip" xml:space="preserve">
-    <value>Specifies environment variables to be set in the spawned process in the form:
-
-NAME1=value1
-NAME2=value2
-...</value>
-  </data>
   <data name="&gt;&gt;_environmentLabel.Name" xml:space="preserve">
     <value>_environmentLabel</value>
   </data>
@@ -652,7 +651,7 @@ NAME2=value2
     <value>12</value>
   </data>
   <data name="_interpreterPathLabel.AccessibleName" xml:space="preserve">
-    <value>Overrides the path of the interpreter to use when launching the project.</value>
+    <value>Interpreter Path</value>
   </data>
   <data name="_interpreterPathLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left</value>
@@ -677,9 +676,6 @@ NAME2=value2
   </data>
   <data name="_interpreterPathLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleLeft</value>
-  </data>
-  <data name="_interpreterPathLabel.ToolTip" xml:space="preserve">
-    <value>Overrides the path of the interpreter to use when launching the project.</value>
   </data>
   <data name="&gt;&gt;_interpreterPathLabel.Name" xml:space="preserve">
     <value>_interpreterPathLabel</value>
@@ -759,6 +755,9 @@ NAME2=value2
   <data name="_debugServerTarget.AccessibleName" xml:space="preserve">
     <value>Command</value>
   </data>
+  <data name="_debugServerTarget.AccessibleDescription" xml:space="preserve">
+    <value>Command. Tooltip: The command to run when pressing F5 or the "Start debug server" command. This may be a script, module, or a single line of Python code. By default, the current startup script is used.</value>
+  </data>
   <data name="_debugServerTarget.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left, Right</value>
   </data>
@@ -795,6 +794,9 @@ NAME2=value2
   <data name="_debugServerArguments.AccessibleName" xml:space="preserve">
     <value>Arguments</value>
   </data>
+  <data name="_debugServerArguments.AccessibleDescription" xml:space="preserve">
+    <value>Arguments. Tooltip: Any command line arguments to provide. This is ignored if the command type is "code".</value>
+  </data>
   <data name="_debugServerArguments.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left, Right</value>
   </data>
@@ -809,6 +811,9 @@ NAME2=value2
   </data>
   <data name="_debugServerEnvironment.AccessibleName" xml:space="preserve">
     <value>Environment</value>
+  </data>
+  <data name="_debugServerEnvironment.AccessibleDescription" xml:space="preserve">
+    <value>Environment. Tooltip: Environment variables to set before starting the server. Each value should appear on its own line in "KEY=VALUE" format. By default, SERVER_HOST and SERVER_PORT are set.</value>
   </data>
   <data name="_debugServerEnvironment.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left, Right</value>
@@ -850,7 +855,7 @@ NAME2=value2
     <value>2</value>
   </data>
   <data name="_debugServerEnvironmentLabel.AccessibleName" xml:space="preserve">
-    <value>Environment variables to set before starting the server. Each value should appear on its own line in "KEY=VALUE" format. By default, SERVER_HOST and SERVER_PORT are set.</value>
+    <value>Environment</value>
   </data>
   <data name="_debugServerEnvironmentLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left</value>
@@ -876,9 +881,6 @@ NAME2=value2
   <data name="_debugServerEnvironmentLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleLeft</value>
   </data>
-  <data name="_debugServerEnvironmentLabel.ToolTip" xml:space="preserve">
-    <value>Environment variables to set before starting the server. Each value should appear on its own line in "KEY=VALUE" format. By default, SERVER_HOST and SERVER_PORT are set.</value>
-  </data>
   <data name="&gt;&gt;_debugServerEnvironmentLabel.Name" xml:space="preserve">
     <value>_debugServerEnvironmentLabel</value>
   </data>
@@ -892,7 +894,7 @@ NAME2=value2
     <value>3</value>
   </data>
   <data name="_debugServerArgumentsLabel.AccessibleName" xml:space="preserve">
-    <value>Any command line arguments to provide. This is ignored if the command type is "code".</value>
+    <value>Arguments</value>
   </data>
   <data name="_debugServerArgumentsLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left</value>
@@ -918,9 +920,6 @@ NAME2=value2
   <data name="_debugServerArgumentsLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleLeft</value>
   </data>
-  <data name="_debugServerArgumentsLabel.ToolTip" xml:space="preserve">
-    <value>Any command line arguments to provide. This is ignored if the command type is "code".</value>
-  </data>
   <data name="&gt;&gt;_debugServerArgumentsLabel.Name" xml:space="preserve">
     <value>_debugServerArgumentsLabel</value>
   </data>
@@ -934,7 +933,7 @@ NAME2=value2
     <value>4</value>
   </data>
   <data name="_debugServerTargetLabel.AccessibleName" xml:space="preserve">
-    <value>The command to run when pressing F5 or the "Start debug server" command. This may be a script, module, or a single line of Python code. By default, the current startup script is used.</value>
+    <value>Command</value>
   </data>
   <data name="_debugServerTargetLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left</value>
@@ -960,9 +959,6 @@ NAME2=value2
   <data name="_debugServerTargetLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleLeft</value>
   </data>
-  <data name="_debugServerTargetLabel.ToolTip" xml:space="preserve">
-    <value>The command to run when pressing F5 or the "Start debug server" command. This may be a script, module, or a single line of Python code. By default, the current startup script is used.</value>
-  </data>
   <data name="&gt;&gt;_debugServerTargetLabel.Name" xml:space="preserve">
     <value>_debugServerTargetLabel</value>
   </data>
@@ -977,6 +973,9 @@ NAME2=value2
   </data>
   <data name="_debugServerTargetType.AccessibleName" xml:space="preserve">
     <value>The type of the command. Default is "script".</value>
+  </data>
+  <data name="_debugServerTargetType.AccessibleDescription" xml:space="preserve">
+    <value>Tooltip: The type of the command. Default is "script".</value>
   </data>
   <data name="_debugServerTargetType.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
@@ -1083,6 +1082,9 @@ NAME2=value2
   <data name="_runServerTarget.AccessibleName" xml:space="preserve">
     <value>Command</value>
   </data>
+  <data name="_runServerTarget.AccessibleDescription" xml:space="preserve">
+    <value>Command. Tooltip: The command to run when pressing Ctrl+F5 or the "Start server" command. This may be a script, module, or a single line of Python code. By default, the current startup script is used.</value>
+  </data>
   <data name="_runServerTarget.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left, Right</value>
   </data>
@@ -1119,6 +1121,9 @@ NAME2=value2
   <data name="_runServerArguments.AccessibleName" xml:space="preserve">
     <value>Arguments</value>
   </data>
+  <data name="_runServerArguments.AccessibleDescription" xml:space="preserve">
+    <value>Arguments. Tooltip: Any command line arguments to provide. This is ignored if the command type is "code".</value>
+  </data>
   <data name="_runServerArguments.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left, Right</value>
   </data>
@@ -1133,6 +1138,9 @@ NAME2=value2
   </data>
   <data name="_runServerEnvironment.AccessibleName" xml:space="preserve">
     <value>Environment</value>
+  </data>
+  <data name="_runServerEnvironment.AccessibleDescription" xml:space="preserve">
+    <value>Environment. Tooltip: Environment variables to set before starting the server. Each value should appear on its own line in "KEY=VALUE" format. By default, SERVER_HOST and SERVER_PORT are set.</value>
   </data>
   <data name="_runServerEnvironment.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left, Right</value>
@@ -1174,7 +1182,7 @@ NAME2=value2
     <value>2</value>
   </data>
   <data name="_runServerEnvironmentLabel.AccessibleName" xml:space="preserve">
-    <value>Environment variables to set before starting the server. Each value should appear on its own line in "KEY=VALUE" format. By default, SERVER_HOST and SERVER_PORT are set.</value>
+    <value>Environment</value>
   </data>
   <data name="_runServerEnvironmentLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left</value>
@@ -1200,9 +1208,6 @@ NAME2=value2
   <data name="_runServerEnvironmentLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleLeft</value>
   </data>
-  <data name="_runServerEnvironmentLabel.ToolTip" xml:space="preserve">
-    <value>Environment variables to set before starting the server. Each value should appear on its own line in "KEY=VALUE" format. By default, SERVER_HOST and SERVER_PORT are set.</value>
-  </data>
   <data name="&gt;&gt;_runServerEnvironmentLabel.Name" xml:space="preserve">
     <value>_runServerEnvironmentLabel</value>
   </data>
@@ -1216,7 +1221,7 @@ NAME2=value2
     <value>3</value>
   </data>
   <data name="_runServerArgumentsLabel.AccessibleName" xml:space="preserve">
-    <value>Any command line arguments to provide. This is ignored if the command type is "code".</value>
+    <value>Arguments</value>
   </data>
   <data name="_runServerArgumentsLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left</value>
@@ -1242,9 +1247,6 @@ NAME2=value2
   <data name="_runServerArgumentsLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleLeft</value>
   </data>
-  <data name="_runServerArgumentsLabel.ToolTip" xml:space="preserve">
-    <value>Any command line arguments to provide. This is ignored if the command type is "code".</value>
-  </data>
   <data name="&gt;&gt;_runServerArgumentsLabel.Name" xml:space="preserve">
     <value>_runServerArgumentsLabel</value>
   </data>
@@ -1258,7 +1260,7 @@ NAME2=value2
     <value>4</value>
   </data>
   <data name="_runServerTargetLabel.AccessibleName" xml:space="preserve">
-    <value>The command to run when pressing Ctrl+F5 or the "Start server" command. This may be a script, module, or a single line of Python code. By default, the current startup script is used.</value>
+    <value>Command</value>
   </data>
   <data name="_runServerTargetLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left</value>
@@ -1284,9 +1286,6 @@ NAME2=value2
   <data name="_runServerTargetLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleLeft</value>
   </data>
-  <data name="_runServerTargetLabel.ToolTip" xml:space="preserve">
-    <value>The command to run when pressing Ctrl+F5 or the "Start server" command. This may be a script, module, or a single line of Python code. By default, the current startup script is used.</value>
-  </data>
   <data name="&gt;&gt;_runServerTargetLabel.Name" xml:space="preserve">
     <value>_runServerTargetLabel</value>
   </data>
@@ -1301,6 +1300,9 @@ NAME2=value2
   </data>
   <data name="_runServerTargetType.AccessibleName" xml:space="preserve">
     <value>The type of the command. Default is "script".</value>
+  </data>
+  <data name="_runServerTargetType.AccessibleDescription" xml:space="preserve">
+    <value>Tooltip: The type of the command. Default is "script".</value>
   </data>
   <data name="_runServerTargetType.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>

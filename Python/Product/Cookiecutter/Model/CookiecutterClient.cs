@@ -65,15 +65,13 @@ namespace Microsoft.CookiecutterTools.Model {
         }
 
         public async Task CreateCookiecutterEnv() {
-
-            // Create a virtual environment using the global interpreter
-            try {
-                await CreateVenvWithoutPipThenInstallPip();
-            } catch (ProcessException ex) {
-                // critical exception is needed for EnsureCookiecutterIsInstalledAsync() to fail properly
-                var errMsg = Strings.InstallingCookiecutterCreateEnvFailed.FormatUI(_expectedEnvFolderPath);
-                throw new CriticalException(errMsg, ex);
-            }
+            // Failures from the underlying install steps now surface as
+            // InvalidOperationException via WaitForCookiecutterInstallOutput
+            // EnsureCookiecutterIsInstalledAsync's outer
+            // catch handles any non-critical Exception, so we no longer need
+            // to re-wrap ProcessException as a CriticalException (which used
+            // to escape the outer catch and crash VS).
+            await CreateVenvWithoutPipThenInstallPip();
         }
 
         // Checks if the specified path has been redirected by python
@@ -164,7 +162,7 @@ namespace Microsoft.CookiecutterTools.Model {
                 false,
                 _redirector
             );
-            await WaitForOutput(_interpreter.InterpreterExecutablePath, output);
+            await WaitForCookiecutterInstallOutput(_interpreter.InterpreterExecutablePath, output);
 
             // If we get here, the environment was created successfully.
             // Check for redirection again, overwriting the existing value if there is
@@ -181,7 +179,7 @@ namespace Microsoft.CookiecutterTools.Model {
                 false,
                 _redirector
             );
-            await WaitForOutput(_interpreter.InterpreterExecutablePath, output);
+            await WaitForCookiecutterInstallOutput(_interpreter.InterpreterExecutablePath, output);
         }
 
         private void RemoveExistingVenv(string envPath) {
@@ -209,7 +207,7 @@ namespace Microsoft.CookiecutterTools.Model {
                 _redirector
             );
 
-            await WaitForOutput(_envInterpreterPath, output);
+            await WaitForCookiecutterInstallOutput(_envInterpreterPath, output);
         }
 
         public async Task<TemplateContext> LoadUnrenderedContextAsync(string localTemplateFolder, string userConfigFilePath) {
@@ -693,6 +691,23 @@ namespace Microsoft.CookiecutterTools.Model {
                 }
 
                 return r;
+            }
+        }
+
+        // Helper used by the cookiecutter venv/pip install paths to convert a
+        // non-zero subprocess exit into a typed, user-visible failure instead
+        // of letting the raw ProcessException tear down VS.
+        private async Task<ProcessOutputResult> WaitForCookiecutterInstallOutput(string interpreterPath, ProcessOutput output) {
+            try {
+                return await WaitForOutput(interpreterPath, output);
+            } catch (ProcessException ex) {
+                _redirector.WriteErrorLine(Strings.CookiecutterInstallFailed.FormatUI(ex.Result.ExitCode));
+                if (ex.Result.StandardErrorLines != null) {
+                    foreach (var line in ex.Result.StandardErrorLines) {
+                        _redirector.WriteErrorLine(line);
+                    }
+                }
+                throw new InvalidOperationException(Strings.CookiecutterInstallFailed.FormatUI(ex.Result.ExitCode), ex);
             }
         }
 

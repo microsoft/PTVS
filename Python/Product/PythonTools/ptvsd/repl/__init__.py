@@ -101,8 +101,8 @@ class SafeSendLock(object):
         except KeyboardInterrupt:
             try:
                 self.lock.release()
-            except:
-                pass
+            except:  # nosec B110
+                pass  # nosec B110 - lock may already be released.
             raise
 
     def release(self):
@@ -619,7 +619,7 @@ class BasicReplBackend(ReplBackend):
                 real_file = filename.encode(sys.getfilesystemencoding())
             code = compile(contents, real_file, 'exec')
             self.code_flags |= (code.co_flags & BasicReplBackend.future_bits)
-            exec(code, self.exec_mod.__dict__, self.exec_mod.__dict__) 
+            exec(code, self.exec_mod.__dict__, self.exec_mod.__dict__)  # nosec B102 - REPL intentionally executes user code.
 
     def python_executor(self, code):
         """we can't close over unbound variables in execute_code_work_item 
@@ -649,7 +649,7 @@ due to the exec, so we do it here"""
             else:
                 code = compile(self.current_code, '<stdin>', 'single', self.code_flags)
                 self.code_flags |= (code.co_flags & BasicReplBackend.future_bits)
-                exec(code, self.exec_mod.__dict__, self.exec_mod.__dict__)
+                exec(code, self.exec_mod.__dict__, self.exec_mod.__dict__)  # nosec B102 - REPL intentionally executes user code.
         self.current_code = None
 
     def run_one_command(self, cur_modules, cur_ps1, cur_ps2):
@@ -662,7 +662,7 @@ due to the exec, so we do it here"""
             try:
                 if new_modules != cur_modules:
                     self.send_modules_changed()
-            except:
+            except:  # nosec B110
                 pass
             cur_modules = new_modules
 
@@ -692,13 +692,13 @@ due to the exec, so we do it here"""
 
                     cur_ps1 = new_ps1
                     cur_ps2 = new_ps2
-            except Exception:
-                pass
+            except Exception:  # nosec B110
+                pass  # nosec B110 - prompt update is best-effort.
             try:
                 if cur_cwd != os.getcwd():
                     self.send_cwd()
-            except Exception:
-                pass
+            except Exception:  # nosec B110
+                pass  # nosec B110 - cwd update is best-effort.
         except SystemExit:
             self.send_error()
             self.send_exit()
@@ -816,8 +816,8 @@ due to the exec, so we do it here"""
         self.execute_item = exit_work_item
         try:
             self.execute_item_lock.release()
-        except:
-            pass
+        except:  # nosec B110
+            pass  # nosec B110 - release may be redundant during exit.
         sys.exit(0)
 
     def get_members(self, expression):
@@ -861,8 +861,8 @@ due to the exec, so we do it here"""
                     mem_t = self._get_member_type(val, mem_name, True, getattr_func)
                     if mem_t is not None:
                         inst_members[mem_name] = mem_t
-            except:
-                pass
+            except:  # nosec B110
+                pass  # nosec B110 - skip objects that cannot expose instance members.
 
         # collect the type members
 
@@ -963,8 +963,8 @@ due to the exec, so we do it here"""
             mem_t = type(val)
             mem_t_name = mem_t.__module__ + '.' + mem_t.__name__
             return mem_t_name
-        except:
-            pass                
+        except:  # nosec B110
+            pass  # nosec B110 - type-name lookup is best-effort.
 
     @staticmethod
     def _get_member_type(inst, name, from_dict, getattr_func = None):
@@ -981,8 +981,8 @@ due to the exec, so we do it here"""
             if not from_dict:
                 try:
                     return BasicReplBackend.get_type_name(getattr_func(inst, name))
-                except:
-                    pass
+                except:  # nosec B110
+                    pass  # nosec B110 - member fallback is best-effort.
             return
 
 def get_cur_module_set():
@@ -996,7 +996,7 @@ def get_cur_module_set():
         for name in sys.modules:
             try:
                 res.add(name)
-            except:
+            except:  # nosec B110
                 pass
         return res
 
@@ -1014,7 +1014,7 @@ def get_module_names():
                         filename = None
                     res.append((name, filename))
 
-        except:
+        except:  # nosec B110
             pass
     return res
 
@@ -1027,7 +1027,7 @@ def get_namespaces(basename, namespace, names):
 
             if type(new_namespace) is NamespaceType:
                 get_namespaces(new_name, new_namespace, names)
-    except:
+    except:  # nosec B110
         pass
 
 def print_exception_frames(exc_type, exc_value, exc_tb):
@@ -1325,4 +1325,3 @@ if sys.platform == 'cli':
             return System.Text.Encoding.UTF8
 
 BACKEND = None
-

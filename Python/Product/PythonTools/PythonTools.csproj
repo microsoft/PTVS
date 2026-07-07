@@ -664,6 +664,7 @@
     <Compile Include="PythonTools\Project\ThemeAwareUserControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="PythonTools\Project\VsShellFontHelper.cs" />
     <Compile Include="PythonTools\Project\PythonGeneralPropertyPageControl.cs">
       <SubType>UserControl</SubType>
     </Compile>

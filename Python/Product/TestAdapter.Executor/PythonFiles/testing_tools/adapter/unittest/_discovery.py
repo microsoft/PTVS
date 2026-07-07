@@ -62,10 +62,10 @@ def discover(pytestargs=None, hidestdio=False,
 
                             _, lineno = inspect.getsourcelines(obj)
                             setattr(test, 'lineno', lineno)
-                    except:
-                        pass
-            except:
-                pass
+                    except:  # nosec B110
+                        pass  # nosec B110 - source metadata is optional.
+            except:  # nosec B110
+                pass  # nosec B110 - source metadata is optional.
     return (
             {},
             suites,

@@ -104,6 +104,7 @@ namespace Microsoft.PythonTools.Django.Project {
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScroll = true;
             this.Controls.Add(tableLayoutPanel1);
             this.Name = "DjangoPropertyPageControl";
             tableLayoutPanel2.ResumeLayout(false);

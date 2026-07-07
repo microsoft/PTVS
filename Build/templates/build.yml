@@ -32,9 +32,10 @@ steps:
         PackageVersion: '$(VSTarget)'
       continueOnError: true
 
-  # Build the tests
+  # Build the tests (skip for PR builds since tests are not run in this pipeline)
   - task: MSBuild@1
     displayName: 'Build tests'
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
     inputs:
       solution: $(Build.SourcesDirectory)/Python/Tests/dirs.proj
       msbuildVersion: $(MsBuildVersion)
@@ -44,9 +45,10 @@ steps:
                           /p:BuildNumber=${{ parameters.ptvsPackageVersion }} 
                           /bl:$(Build.SourcesDirectory)\logs\BuildTests.binlog'
 
-  # Build the installer
+  # Build the installer (skip for PR builds since no VstsDrop upload is needed)
   - task: MSBuild@1
     displayName: 'Build installer'
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
     inputs:
       solution: $(Build.SourcesDirectory)/Python/Setup/dirs.proj
       msbuildVersion: $(MsBuildVersion)

@@ -1,0 +1,107 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<LCX SchemaVersion="6.0" Name="D:\a\_work\1\b\raw\binaries\VCTargets\Win32\ImportAfter\Microsoft.PythonTools.Debugger.VCDebugLauncher.xaml" PsrId="22" SrcCul="en-US" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx" TgtCul="ja-JP">
+  <OwnedComments>
+    <Cmt Name="Dev" />
+    <Cmt Name="LcxAdmin" />
+    <Cmt Name="Rccx" />
+  </OwnedComments>
+  <Item ItemId=";&lt;BoolProperty&gt;" ItemType="0" PsrId="210" Leaf="false">
+    <Disp Icon="Str" Disp="true" LocTbl="false" />
+    <Item ItemId="0;localdebuggermergeenvironment@BoolProperty@Description" ItemType="47;XML:Attr:Description" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[Merge specified environment variables with existing environment.]]></Val>
+      </Str>
+      <Disp Icon="Str" Order="27" />
+    </Item>
+    <Item ItemId="0;localdebuggermergeenvironment@BoolProperty@DisplayName" ItemType="47;XML:Attr:DisplayName" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[Merge Environment]]></Val>
+      </Str>
+      <Disp Icon="Str" Order="25" />
+    </Item>
+  </Item>
+  <Item ItemId=";&lt;Rule&gt;" ItemType="0" PsrId="210" Leaf="false">
+    <Disp Icon="Str" Disp="true" LocTbl="false" />
+    <Item ItemId="0;pythondebuglaunchprovider@Rule@Description" ItemType="47;XML:Attr:Description" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[Python/Native debugging options]]></Val>
+      </Str>
+      <Disp Icon="Str" Order="3" />
+    </Item>
+    <Item ItemId="0;pythondebuglaunchprovider@Rule@DisplayName" ItemType="47;XML:Attr:DisplayName" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[Python/Native Debugging]]></Val>
+      </Str>
+      <Disp Icon="Str" Order="1" />
+    </Item>
+  </Item>
+  <Item ItemId=";&lt;StringListProperty&gt;" ItemType="0" PsrId="210" Leaf="false">
+    <Disp Icon="Str" Disp="true" LocTbl="false" />
+    <Item ItemId="0;localdebuggerenvironment@StringListProperty@Description" ItemType="47;XML:Attr:Description" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[Specifies the environment for the debugee, or variables to merge with existing environment.]]></Val>
+      </Str>
+      <Disp Icon="Str" Order="23" />
+    </Item>
+    <Item ItemId="0;localdebuggerenvironment@StringListProperty@DisplayName" ItemType="47;XML:Attr:DisplayName" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[Environment]]></Val>
+      </Str>
+      <Disp Icon="Str" Order="21" />
+    </Item>
+  </Item>
+  <Item ItemId=";&lt;StringProperty&gt;" ItemType="0" PsrId="210" Leaf="false">
+    <Disp Icon="Str" Disp="true" LocTbl="false" />
+    <Item ItemId="0;localdebuggercommand@StringProperty@Description" ItemType="47;XML:Attr:Description" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[The debug command to execute.]]></Val>
+      </Str>
+      <Disp Icon="Str" Order="7" />
+    </Item>
+    <Item ItemId="0;localdebuggercommandarguments@StringProperty@Description" ItemType="47;XML:Attr:Description" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[The command line arguments to pass to the application.]]></Val>
+      </Str>
+      <Disp Icon="Str" Order="15" />
+    </Item>
+    <Item ItemId="0;localdebuggerworkingdirectory@StringProperty@Description" ItemType="47;XML:Attr:Description" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[The application's working directory. By default, the directory containing the project file.]]></Val>
+      </Str>
+      <Disp Icon="Str" Order="19" />
+    </Item>
+    <Item ItemId="0;localdebuggercommand@StringProperty@DisplayName" ItemType="47;XML:Attr:DisplayName" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[Command]]></Val>
+      </Str>
+      <Disp Icon="Str" Order="5" />
+    </Item>
+    <Item ItemId="0;localdebuggercommandarguments@StringProperty@DisplayName" ItemType="47;XML:Attr:DisplayName" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[Command Arguments]]></Val>
+      </Str>
+      <Disp Icon="Str" Order="13" />
+    </Item>
+    <Item ItemId="0;localdebuggerworkingdirectory@StringProperty@DisplayName" ItemType="47;XML:Attr:DisplayName" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[Working Directory]]></Val>
+      </Str>
+      <Disp Icon="Str" Order="17" />
+    </Item>
+  </Item>
+  <Item ItemId=";&lt;ValueEditor&gt;" ItemType="0" PsrId="210" Leaf="false">
+    <Disp Icon="Str" Disp="true" LocTbl="false" />
+    <Item ItemId="0;5a88dad82b4127d481f86820c9fcbf98" ItemType="47;XML:Attr:DisplayName" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[<Edit...>]]></Val>
+      </Str>
+      <Disp Icon="Str" Order="9" />
+    </Item>
+    <Item ItemId="0;b66ab1d4354799e0066c0af0ab39211f" ItemType="47;XML:Attr:DisplayName" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[<Browse...>]]></Val>
+      </Str>
+      <Disp Icon="Str" Order="11" />
+    </Item>
+  </Item>
+<Settings Name="@SettingsPath@\default.lss" Type="Lss" /></LCX>
