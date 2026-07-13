@@ -32,6 +32,32 @@ EXCLUDED_PLATFORMS = ("manylinux", "macosx")
 AZURE_ARTIFACTS_HOST = "pkgs.dev.azure.com"
 PACKAGE_NAME_NORMALIZER = re.compile(r"[-_.]+")
 
+# Public feeds must never be used, even indirectly through a redirect.
+FORBIDDEN_HOSTS = frozenset({
+    "pypi.org",
+    "pypi.python.org",
+    "files.pythonhosted.org",
+    "upload.pypi.org",
+    "pypi.nvidia.com",
+})
+
+
+def _is_forbidden_host(hostname):
+    if not hostname:
+        return False
+    hostname = hostname.lower()
+    return any(hostname == denied or hostname.endswith("." + denied) for denied in FORBIDDEN_HOSTS)
+
+
+class _SfiRedirectHandler(url_lib.HTTPRedirectHandler):
+    # Azure Artifacts responds with a 303 pointing at a SAS-signed blob URL;
+    # refuse to follow any redirect that leaves Microsoft-owned infrastructure.
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        new_host = urllib.parse.urlsplit(newurl).hostname
+        if _is_forbidden_host(new_host):
+            raise RuntimeError(f"Refusing to follow redirect to {new_host}.")
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
 
 class SimpleIndexParser(HTMLParser):
     def __init__(self):
@@ -82,14 +108,18 @@ def get_feed_configuration():
 def read_authenticated_url(url, authorization):
     parsed_url = urllib.parse.urlsplit(url)
     if parsed_url.scheme != "https" or parsed_url.hostname != AZURE_ARTIFACTS_HOST:
-        raise RuntimeError(f"Refusing to download Python package content from {parsed_url.hostname or url}.")
+        raise RuntimeError(f"Refusing to initiate a download from {parsed_url.hostname or url}.")
 
     request_url = urllib.parse.urlunsplit(
         (parsed_url.scheme, parsed_url.netloc, parsed_url.path, parsed_url.query, "")
     )
-    request = url_lib.Request(request_url, headers={"Authorization": authorization})
+    request = url_lib.Request(request_url)
+    # add_unredirected_header ensures the Basic credential is NOT resent when
+    # Azure Artifacts redirects to its SAS-signed blob storage backend.
+    request.add_unredirected_header("Authorization", authorization)
     context = ssl.create_default_context(cafile=certifi.where())
-    with url_lib.urlopen(request, context=context) as response:
+    opener = url_lib.build_opener(url_lib.HTTPSHandler(context=context), _SfiRedirectHandler())
+    with opener.open(request) as response:
         return response.read()
 
 
