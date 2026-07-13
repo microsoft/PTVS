@@ -38,6 +38,13 @@ steps:
   - task: NuGetAuthenticate@1
     displayName: 'NuGet Authenticate'
 
+  # Route all Python package downloads through the team's Azure Artifacts feed.
+  - task: PipAuthenticate@1
+    displayName: 'Pip Authenticate'
+    inputs:
+      artifactFeeds: 'DevDiv/Pylance_PublicPackages'
+      onlyAddExtraIndex: false
+
   # Warm the packages folder using the cached NuGet HTTP cache so the subsequent
   # restore in PreBuild.ps1 is largely a no-op.
   - task: PowerShell@2
