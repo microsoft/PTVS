@@ -29,7 +29,7 @@ PYTHON_VERSIONS = ("cp38", "cp39", "cp310", "cp311", "cp312", "cp313")
 # don't install wheels for these platforms
 EXCLUDED_PLATFORMS = ("manylinux", "macosx")
 
-AZURE_ARTIFACTS_HOST = "pkgs.dev.azure.com"
+AZURE_ARTIFACTS_HOSTS = ("pkgs.dev.azure.com", ".pkgs.visualstudio.com")
 PACKAGE_NAME_NORMALIZER = re.compile(r"[-_.]+")
 
 # Public feeds must never be used, even indirectly through a redirect.
@@ -47,6 +47,19 @@ def _is_forbidden_host(hostname):
         return False
     hostname = hostname.lower()
     return any(hostname == denied or hostname.endswith("." + denied) for denied in FORBIDDEN_HOSTS)
+
+
+def _is_azure_artifacts_host(hostname):
+    if not hostname:
+        return False
+    hostname = hostname.lower()
+    for allowed in AZURE_ARTIFACTS_HOSTS:
+        if allowed.startswith("."):
+            if hostname.endswith(allowed):
+                return True
+        elif hostname == allowed:
+            return True
+    return False
 
 
 class _SfiRedirectHandler(url_lib.HTTPRedirectHandler):
@@ -90,8 +103,10 @@ def get_feed_configuration():
         raise RuntimeError("PIP_EXTRA_INDEX_URL is not allowed because Python packages must use a single internal feed.")
 
     parsed_url = urllib.parse.urlsplit(index_url)
-    if parsed_url.scheme != "https" or parsed_url.hostname != AZURE_ARTIFACTS_HOST:
-        raise RuntimeError(f"PIP_INDEX_URL must use https://{AZURE_ARTIFACTS_HOST}/.")
+    if parsed_url.scheme != "https" or not _is_azure_artifacts_host(parsed_url.hostname):
+        raise RuntimeError(
+            "PIP_INDEX_URL must use https://pkgs.dev.azure.com/ or https://<org>.pkgs.visualstudio.com/."
+        )
 
     if not parsed_url.username or not parsed_url.password:
         raise RuntimeError("PIP_INDEX_URL must contain credentials supplied by PipAuthenticate@1.")
@@ -107,7 +122,7 @@ def get_feed_configuration():
 
 def read_authenticated_url(url, authorization):
     parsed_url = urllib.parse.urlsplit(url)
-    if parsed_url.scheme != "https" or parsed_url.hostname != AZURE_ARTIFACTS_HOST:
+    if parsed_url.scheme != "https" or not _is_azure_artifacts_host(parsed_url.hostname):
         raise RuntimeError(f"Refusing to initiate a download from {parsed_url.hostname or url}.")
 
     request_url = urllib.parse.urlunsplit(
