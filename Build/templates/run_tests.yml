@@ -4,6 +4,13 @@ parameters:
   default: false
 
 steps:
+  # Glass test setup scripts invoke pip; keep those downloads on the internal feed.
+  - task: PipAuthenticate@1
+    displayName: 'Pip Authenticate'
+    inputs:
+      artifactFeeds: 'DevDiv/Pylance_PublicPackages'
+      onlyAddExtraIndex: false
+
   # Install different python versions
   - template: ./install_python.yml
     parameters:
