@@ -152,6 +152,8 @@ jobs:
   - task: BinSkim@4
     displayName: Run BinSkim
     inputs:
+      toolVersion: Exact
+      exactToolVersion: '4.4.9'
       # Use the same files copied for ApiScan
       TargetPattern: binskimPattern
       AnalyzeTargetBinskim: |
