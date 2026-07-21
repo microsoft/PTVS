@@ -86,6 +86,9 @@ namespace Microsoft.PythonTools.Debugger.Concord {
     }
 
     internal class PythonRuntimeInfo : DkmDataItem {
+        private bool _debugOffsetsProbed;
+        private Proxies.Structs.PyDebugOffsets _debugOffsets;
+
         public PythonLanguageVersion LanguageVersion { get; set; }
 
         public PythonDLLs DLLs { get; private set; }
@@ -99,6 +102,21 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 return null;
             }
             return DLLs.Python.GetStaticVariable<PyRuntimeState>("_PyRuntime");
+        }
+
+        /// <summary>
+        /// The self-describing <c>_Py_DebugOffsets</c> table exposed by CPython 3.13+ at the start of
+        /// <c>_PyRuntime</c>, or null when the interpreter does not provide one (or it fails to validate).
+        /// Read lazily once and cached, since it never changes for the lifetime of the process.
+        /// </summary>
+        public Proxies.Structs.PyDebugOffsets DebugOffsets {
+            get {
+                if (!_debugOffsetsProbed) {
+                    _debugOffsetsProbed = true;
+                    _debugOffsets = Proxies.Structs.PyDebugOffsets.TryRead(DLLs.Python?.Process, DLLs.Python);
+                }
+                return _debugOffsets;
+            }
         }
     }
 
