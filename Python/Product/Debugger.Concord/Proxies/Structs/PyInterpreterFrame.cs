@@ -35,6 +35,13 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             public StructField<PointerProxy<PyInterpreterFrame>> previous;
             public StructField<ArrayProxy<PointerProxy<PyObject>>> localsplus;
             public StructField<CharProxy> owner;
+            // Pointer to the current bytecode instruction. Renamed from prev_instr to
+            // instr_ptr in 3.13 (and it now points at the current instruction rather
+            // than the previous one), but the offset math for the line table is identical.
+            [FieldProxy(MaxVersion = PythonLanguageVersion.V312)]
+            public StructField<PointerProxy> prev_instr;
+            [FieldProxy(MinVersion = PythonLanguageVersion.V313)]
+            public StructField<PointerProxy> instr_ptr;
         }
 
         private const int FRAME_OWNED_BY_THREAD = 0;
@@ -76,6 +83,55 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         }
 
         public PointerProxy<PyInterpreterFrame> previous => GetFieldProxy(_fields.previous);
+
+        /// <summary>
+        /// Computes the current source line number for this frame without executing any
+        /// code in the debuggee. This mirrors CPython's <c>_PyInterpreterFrame_GetLine</c>
+        /// (<c>PyCode_Addr2Line</c>): it finds the current bytecode offset from the frame's
+        /// instruction pointer and decodes the code object's line table (PEP 626).
+        /// Returns 0 if the line number cannot be determined (caller should fall back).
+        /// </summary>
+        public int ComputeLineNumber() {
+            if (Process.GetPythonRuntimeInfo().LanguageVersion < PythonLanguageVersion.V311) {
+                return 0;
+            }
+
+            var code = f_code.TryRead() as PyCodeObject311;
+            if (code == null) {
+                return 0;
+            }
+
+            // _PyCode_CODE(co) == &co->co_code_adaptive[0] - the start of the bytecode.
+            ulong codeStart = code.co_code_adaptive.Address;
+
+            // The current instruction pointer: prev_instr (3.11/3.12) or instr_ptr (3.13+).
+            ulong instrPtr = _fields.instr_ptr.Process != null
+                ? GetFieldProxy(_fields.instr_ptr).Read()
+                : GetFieldProxy(_fields.prev_instr).Read();
+            if (instrPtr == 0) {
+                return 0;
+            }
+
+            int firstLineNo = code.co_firstlineno.Read();
+
+            // Byte offset into the bytecode (addrq passed to PyCode_Addr2Line). On a freshly
+            // created 3.11/3.12 frame, prev_instr points one _Py_CODEUNIT before the first
+            // instruction, so the offset is negative. CPython's PyCode_Addr2Line maps a
+            // negative offset to co_firstlineno; handle it here (before reading the line
+            // table) so we don't fall back to the func-eval this whole path avoids.
+            long addrq = (long)instrPtr - (long)codeStart;
+            if (addrq < 0) {
+                return firstLineNo;
+            }
+
+            byte[] lineTable = code.co_linetable.TryRead()?.ToBytes();
+            if (lineTable == null || lineTable.Length == 0) {
+                return 0;
+            }
+
+            int line = PyLineTable.Addr2Line(lineTable, firstLineNo, (int)addrq);
+            return line > 0 ? line : 0;
+        }
 
         private bool OwnedByThread() {
             if (Process.GetPythonRuntimeInfo().LanguageVersion <= PythonLanguageVersion.V310) {

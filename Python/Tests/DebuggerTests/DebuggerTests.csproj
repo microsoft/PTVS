@@ -69,6 +69,7 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PyLineTableTests.cs" />
     <Compile Include="TaskExtensions.cs" />
     <Compile Include="MiniDumpWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -81,6 +82,10 @@
     <ProjectReference Include="..\..\Product\Debugger\Debugger.csproj">
       <Project>{DECC7971-FA58-4DB0-9561-BFFADD393BBD}</Project>
       <Name>Debugger</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Product\Debugger.Concord\Debugger.Concord.csproj">
+      <Project>{515F701E-336D-4D58-AF4B-E976BC33C957}</Project>
+      <Name>Debugger.Concord</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\..\Common\Tests\Utilities\TestUtilities.csproj">
       <Project>{D092D54E-FF29-4D32-9AEE-4EF704C92F67}</Project>
