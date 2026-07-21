@@ -68,5 +68,10 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         public override ArrayProxy<PointerProxy<PyObject>> f_localsplus => GetFrame().f_localsplus;
         public override Int32Proxy f_lineno => GetFieldProxy(_fields.f_lineno);
 
+        protected override int TryComputeLineNumberFromInstruction() {
+            var interpreterFrame = f_frame.TryRead();
+            return interpreterFrame != null ? interpreterFrame.ComputeLineNumber() : 0;
+        }
+
     }
 }

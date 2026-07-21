@@ -77,12 +77,29 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
 
         public int ComputeLineNumber(DkmInspectionSession inspectionSession, DkmStackWalkFrame frame, DkmEvaluationFlags flags) {
             var setLineNumber = f_lineno.Read();
-            if (setLineNumber == 0 && flags != DkmEvaluationFlags.None) {
-                // We need to use the CppExpressionEvaluator to compute the line number from
-                // our frame object. This function here: https://github.com/python/cpython/blob/46710ca5f263936a2e36fa5d0f140cf9f50b2618/Objects/frameobject.c#L40-L41
-                //
-                // However only do this when stopped at a breakpoint and evaluating the frame. Otherwise we it will fail and cause stepping
-                // to think the frame we eval is where we should stop.
+            if (setLineNumber != 0) {
+                // The frame already has a valid (cached) line number, use it directly.
+                return setLineNumber;
+            }
+
+            // Compute the line number entirely from debuggee memory: the frame's current
+            // instruction offset decoded against the code object's line table. This mirrors
+            // CPython's PyFrame_GetLineNumber (return f_lineno if set, else compute from the
+            // interpreter frame) and avoids a func-eval per frame. The old approach evaluated
+            // PyFrame_GetLineNumber in the debuggee for every Python frame every time execution
+            // stopped, which is slow and can hang or crash the debugger - especially for GUI
+            // apps that pump messages - on Python 3.11+ where f_lineno is 0 while executing.
+            var computedLineNumber = TryComputeLineNumberFromInstruction();
+            if (computedLineNumber > 0) {
+                return computedLineNumber;
+            }
+
+            if (flags != DkmEvaluationFlags.None) {
+                // Fallback only: ask the interpreter to compute the line number. This runs
+                // code in the debuggee (func-eval), so only do it when stopped at a breakpoint
+                // and evaluating the frame. Otherwise it will fail and cause stepping to think
+                // the frame we eval is where we should stop.
+                // https://github.com/python/cpython/blob/46710ca5f263936a2e36fa5d0f140cf9f50b2618/Objects/frameobject.c#L40-L41
                 var evaluator = new CppExpressionEvaluator(inspectionSession, 10, frame, DkmEvaluationFlags.TreatAsExpression);
                 var funcAddr = Process.GetPythonRuntimeInfo().DLLs.Python.GetFunctionAddress("PyFrame_GetLineNumber");
                 var frameAddr = Address;
@@ -95,6 +112,15 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             }
 
             return setLineNumber;
+        }
+
+        /// <summary>
+        /// Attempts to compute the current line number without executing any code in the
+        /// debuggee. Returns 0 when unavailable (e.g. Python &lt; 3.11), in which case the
+        /// caller falls back to evaluating PyFrame_GetLineNumber in the debuggee.
+        /// </summary>
+        protected virtual int TryComputeLineNumberFromInstruction() {
+            return 0;
         }
 
         public abstract ArrayProxy<PointerProxy<PyObject>> f_localsplus { get; }
