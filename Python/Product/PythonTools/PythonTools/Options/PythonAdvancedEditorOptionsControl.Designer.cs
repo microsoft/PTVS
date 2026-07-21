@@ -27,6 +27,7 @@ namespace Microsoft.PythonTools.Options {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PythonAdvancedEditorOptionsControl));
             this._completeFunctionParens = new System.Windows.Forms.CheckBox();
             this._autoImportCompletions = new System.Windows.Forms.CheckBox();
+            this._parameterInformation = new System.Windows.Forms.CheckBox();
             tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
@@ -36,6 +37,7 @@ namespace Microsoft.PythonTools.Options {
             resources.ApplyResources(tableLayoutPanel1, "tableLayoutPanel1");
             tableLayoutPanel1.Controls.Add(this._autoImportCompletions, 0, 0);
             tableLayoutPanel1.Controls.Add(this._completeFunctionParens, 0, 1);
+            tableLayoutPanel1.Controls.Add(this._parameterInformation, 0, 2);
             tableLayoutPanel1.Name = "tableLayoutPanel1";
             // 
             // _completeFunctionParens
@@ -52,6 +54,13 @@ namespace Microsoft.PythonTools.Options {
             tableLayoutPanel1.SetColumnSpan(this._autoImportCompletions, 2);
             this._autoImportCompletions.Name = "_autoImportCompletions";
             this._autoImportCompletions.UseVisualStyleBackColor = true;
+            //
+            // _parameterInformation
+            //
+            resources.ApplyResources(this._parameterInformation, "_parameterInformation");
+            tableLayoutPanel1.SetColumnSpan(this._parameterInformation, 2);
+            this._parameterInformation.Name = "_parameterInformation";
+            this._parameterInformation.UseVisualStyleBackColor = true;
             // 
             // PythonAdvancedEditorOptionsControl
             // 
@@ -69,5 +78,6 @@ namespace Microsoft.PythonTools.Options {
         #endregion
         private System.Windows.Forms.CheckBox _autoImportCompletions;
         private System.Windows.Forms.CheckBox _completeFunctionParens;
+        private System.Windows.Forms.CheckBox _parameterInformation;
     }
 }
