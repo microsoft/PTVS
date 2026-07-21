@@ -22,9 +22,12 @@ namespace Microsoft.PythonTools.Options {
             InitializeComponent();
         }
 
-        internal void SyncControlWithPageSettings(PythonToolsService pyService) {
+        internal bool ParameterInformation => _parameterInformation.Checked;
+
+        internal void SyncControlWithPageSettings(PythonToolsService pyService, bool parameterInformation) {
             _autoImportCompletions.Checked = pyService.AdvancedEditorOptions.AutoImportCompletions;
             _completeFunctionParens.Checked = pyService.AdvancedEditorOptions.CompleteFunctionParens;
+            _parameterInformation.Checked = parameterInformation;
         }
 
         internal void SyncPageWithControlSettings(PythonToolsService pyService) {

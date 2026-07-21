@@ -98,6 +98,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private List<WorkspaceFolder> _workspaceFolders = new List<WorkspaceFolder>();
         private FileWatcher.Listener _fileListener;
         private static TaskCompletionSource<int> _readyTcs = new TaskCompletionSource<int>();
+        private readonly PythonSignatureHelpMiddleLayer _signatureHelpMiddleLayer;
         private bool _loaded = false;
         // Set by the dispose action before any other cleanup; consulted by
         // TriggerWorkspaceUpdateConfig and GetSettings so teardown cannot
@@ -106,6 +107,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         public PythonLanguageClient() {
             _disposables = new Common.Core.Disposables.DisposableBag(GetType().Name);
+            _signatureHelpMiddleLayer = new PythonSignatureHelpMiddleLayer();
         }
 
         public string ContentTypeName => PythonCoreConstants.ContentType;
@@ -118,7 +120,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public object InitializationOptions { get; private set; }
 
         public IEnumerable<string> FilesToWatch => null;
-        public object MiddleLayer => null;
+        public object MiddleLayer => _signatureHelpMiddleLayer;
         public object CustomMessageTarget { get; private set; }
         public bool IsInitialized { get; private set; }
         public bool Loaded => this._loaded;
@@ -187,7 +189,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             await JoinableTaskContext.Factory.SwitchToMainThreadAsync();
             // Force the package to load, since this is a MEF component,
             // there is no guarantee it has been loaded.
-            Site.GetPythonToolsService();
+            var pyService = Site.GetPythonToolsService();
+            _signatureHelpMiddleLayer.Initialize(await pyService.GetLangPrefsAsync());
 
             // Indicate to python tools service we've loaded.
             _loaded = true;

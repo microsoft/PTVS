@@ -25,6 +25,7 @@ namespace Microsoft.PythonTools.Editor {
         private readonly IVsTextManager _textMgr;
         private readonly uint _cookie;
         private LANGPREFERENCES _preferences;
+        private volatile bool _autoListParams;
         private bool _isDisposed;
 
         public LanguagePreferences(IServiceProvider site, Guid languageGuid) {
@@ -41,6 +42,7 @@ namespace Microsoft.PythonTools.Editor {
             langPrefs[0].fLineNumbers = 1;
             ErrorHandler.ThrowOnFailure(_textMgr.SetUserPreferences(null, null, langPrefs, null));
             _preferences = langPrefs[0];
+            _autoListParams = _preferences.fAutoListParams != 0;
 
             var guid = typeof(IVsTextManagerEvents2).GUID;
             IConnectionPoint connectionPoint = null;
@@ -103,6 +105,7 @@ namespace Microsoft.PythonTools.Editor {
                 _preferences.IndentStyle = langPrefs[0].IndentStyle;
                 _preferences.fAutoListMembers = langPrefs[0].fAutoListMembers;
                 _preferences.fAutoListParams = langPrefs[0].fAutoListParams;
+                _autoListParams = langPrefs[0].fAutoListParams != 0;
                 _preferences.fHideAdvancedAutoListMembers = langPrefs[0].fHideAdvancedAutoListMembers;
                 _preferences.fDropdownBar = langPrefs[0].fDropdownBar;
                 _preferences.fLineNumbers = langPrefs[0].fLineNumbers;
@@ -122,7 +125,7 @@ namespace Microsoft.PythonTools.Editor {
 
         public bool AutoListMembers => _preferences.fAutoListMembers != 0;
 
-        public bool AutoListParams => _preferences.fAutoListParams != 0;
+        public bool AutoListParams => _autoListParams;
 
         #endregion
     }
