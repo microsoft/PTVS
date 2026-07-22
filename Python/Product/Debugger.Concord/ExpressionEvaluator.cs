@@ -377,6 +377,17 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             var f_code = pythonFrame.f_code.Read();
             var f_localsplus = pythonFrame.f_localsplus;
 
+            // In CPython 3.14, the frame's localsplus slots (locals, cells, and free vars) are
+            // _PyStackRef values rather than plain PyObject*. Their low bits carry a deferred/immortal
+            // reference tag (Py_TAG_BITS), so strip them to recover the real object pointer; this
+            // mirrors CPython's own PyStackRef_AsPyObjectBorrow. Without this, any local holding a
+            // deferred object (None, booleans, small ints, interned strings, ...) reads at a
+            // misaligned address and throws, which aborts the entire locals enumeration. Object
+            // pointers are 8-byte aligned, so the mask is a no-op for untagged slots; it is 0 for
+            // versions before 3.14, leaving their behavior byte-for-byte identical.
+            ulong localsPlusTagMask =
+                pythonFrame.Process.GetPythonRuntimeInfo().LanguageVersion >= PythonLanguageVersion.V314 ? 0x3ul : 0ul;
+
             // Process cellvars and freevars first, because function arguments can appear in both cellvars and varnames if the argument is captured by a closure,
             // in which case we want to use the cellvar because the regular var slot will then be unused by Python (and in Python 3.4+, nulled out).
             var namesSeen = new HashSet<string>();
@@ -384,7 +395,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             var cellSlots = f_localsplus.Skip(f_code.co_nlocals.Read());
             foreach (var pair in cellNames.Zip(cellSlots, (nameObj, cellSlot) => new { nameObj, cellSlot = cellSlot })) {
                 var nameObj = pair.nameObj;
-                var cellSlot = pair.cellSlot;
+                var cellSlot = pair.cellSlot.WithTagMask(localsPlusTagMask);
 
                 var name = (nameObj.Read() as IPyBaseStringObject).ToStringOrNull();
                 if (name == null) {
@@ -413,7 +424,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             PyTupleObject co_varnames = f_code.co_varnames.Read();
             foreach (var pair in co_varnames.ReadElements().Zip(f_localsplus, (nameObj, varSlot) => new { nameObj, cellSlot = varSlot })) {
                 var nameObj = pair.nameObj;
-                var varSlot = pair.cellSlot;
+                var varSlot = pair.cellSlot.WithTagMask(localsPlusTagMask);
 
                 var name = (nameObj.Read() as IPyBaseStringObject).ToStringOrNull();
                 if (name == null) {
