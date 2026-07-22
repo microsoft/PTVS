@@ -403,22 +403,30 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 }
                 namesSeen.Add(name);
 
-                if (cellSlot.IsNull) {
-                    continue;
-                }
+                try {
+                    if (cellSlot.IsNull) {
+                        continue;
+                    }
 
-                var cell = cellSlot.Read() as PyCellObject;
-                if (cell == null) {
-                    continue;
-                }
+                    var cell = cellSlot.Read() as PyCellObject;
+                    if (cell == null) {
+                        continue;
+                    }
 
-                var localPtr = cell.ob_ref;
-                if (localPtr.IsNull) {
-                    continue;
-                }
+                    var localPtr = cell.ob_ref;
+                    if (localPtr.IsNull) {
+                        continue;
+                    }
 
-                var evalResult = CreatePyObjectEvaluationResult(inspectionContext, stackFrame, null, new PythonEvaluationResult(localPtr, name), cppEval);
-                evalResults.Add(evalResult);
+                    var evalResult = CreatePyObjectEvaluationResult(inspectionContext, stackFrame, null, new PythonEvaluationResult(localPtr, name), cppEval);
+                    evalResults.Add(evalResult);
+                } catch (Exception ex) {
+                    // A single unreadable local must never blank out the entire Locals window.
+                    // Surface it as a failed entry (which also aids diagnosis) and keep going.
+                    evalResults.Add(DkmFailedEvaluationResult.Create(
+                        inspectionContext, stackFrame, name, name,
+                        ex.Message, DkmEvaluationResultFlags.Invalid, null));
+                }
             }
 
             PyTupleObject co_varnames = f_code.co_varnames.Read();
@@ -436,12 +444,19 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                     continue;
                 }
 
-                if (varSlot.IsNull) {
-                    continue;
-                }
+                try {
+                    if (varSlot.IsNull) {
+                        continue;
+                    }
 
-                var evalResult = CreatePyObjectEvaluationResult(inspectionContext, stackFrame, null, new PythonEvaluationResult(varSlot, name), cppEval);
-                evalResults.Add(evalResult);
+                    var evalResult = CreatePyObjectEvaluationResult(inspectionContext, stackFrame, null, new PythonEvaluationResult(varSlot, name), cppEval);
+                    evalResults.Add(evalResult);
+                } catch (Exception ex) {
+                    // A single unreadable local must never blank out the entire Locals window.
+                    evalResults.Add(DkmFailedEvaluationResult.Create(
+                        inspectionContext, stackFrame, name, name,
+                        ex.Message, DkmEvaluationResultFlags.Invalid, null));
+                }
             }
 
             var globals = pythonFrame.f_globals.TryRead();
