@@ -226,7 +226,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         /// Attempts to locate and parse the <c>_Py_DebugOffsets</c> table out of a live debuggee.
         /// Resolves the exported <c>_PyRuntime</c> symbol from <paramref name="pythonDll"/> (no PDB
         /// required), reads the table bytes from process memory and parses them. Returns null if the
-        /// symbol is absent (pre-3.13 interpreters) or the table does not validate.
+        /// symbol is absent (pre-3.14 interpreters) or the table does not validate.
         /// </summary>
         public static PyDebugOffsets TryRead(DkmProcess process, DkmNativeModuleInstance pythonDll) {
             if (process == null || pythonDll == null) {

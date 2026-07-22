@@ -70,8 +70,8 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
 
                 var executable = GetFieldProxy(_fields.f_executable);
                 if (Process.GetPythonRuntimeInfo().LanguageVersion >= PythonLanguageVersion.V314) {
-                    // In 3.14, f_executable is a _PyStackRef rather than a plain PyObject*. Its low
-                    // bits are a tag (Py_TAG_BITS == 3 for the default build; set for deferred/
+                    // In 3.14, f_executable is a _PyStackRef rather than a plain PyObject*. Its two
+                    // low bits are a reference tag (Py_TAG_BITS, i.e. mask 0x3; set for deferred/
                     // immortal references such as frozen-module code objects), so strip them to
                     // recover the PyCodeObject pointer. This mirrors CPython's own out-of-process
                     // reader (CLEAR_PTR_TAG in _remote_debugging_module.c).

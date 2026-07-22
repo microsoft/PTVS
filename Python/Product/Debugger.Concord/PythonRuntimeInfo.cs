@@ -107,7 +107,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         }
 
         /// <summary>
-        /// The self-describing <c>_Py_DebugOffsets</c> table exposed by CPython 3.13+ at the start of
+        /// The self-describing <c>_Py_DebugOffsets</c> table exposed by CPython 3.14+ at the start of
         /// <c>_PyRuntime</c>, or null when the interpreter does not provide one (or it fails to validate).
         /// Read lazily once and cached, since it never changes for the lifetime of the process.
         /// </summary>
