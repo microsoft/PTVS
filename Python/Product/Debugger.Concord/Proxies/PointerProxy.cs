@@ -73,16 +73,36 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies {
 
         private readonly bool _polymorphic;
 
+        // Low bits to strip from the stored pointer value before dereferencing. Used for CPython
+        // 3.14 _PyStackRef fields (e.g. _PyInterpreterFrame.f_executable), whose low bits carry a
+        // tag (Py_TAG_BITS). Zero (the default) leaves the pointer untouched, so every existing
+        // construction is unaffected. Masking aligned pointers is a no-op, so it is always safe.
+        private readonly ulong _tagMask;
+
         public PointerProxy(DkmProcess process, ulong address)
             : this(process, address, true) {
         }
 
         public PointerProxy(DkmProcess process, ulong address, bool polymorphic)
+            : this(process, address, polymorphic, 0) {
+        }
+
+        private PointerProxy(DkmProcess process, ulong address, bool polymorphic, ulong tagMask)
             : this() {
             Debug.Assert(process != null && address != 0);
             Process = process;
             Address = address;
             _polymorphic = polymorphic;
+            _tagMask = tagMask;
+        }
+
+        /// <summary>
+        /// Returns a copy of this pointer that strips <paramref name="tagMask"/> from the stored
+        /// value before dereferencing. Used to read CPython 3.14 <c>_PyStackRef</c> fields, whose
+        /// low bits are a tag rather than part of the object address.
+        /// </summary>
+        public PointerProxy<TProxy> WithTagMask(ulong tagMask) {
+            return new PointerProxy<TProxy>(Process, Address, _polymorphic, tagMask);
         }
 
         public long ObjectSize {
@@ -90,7 +110,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies {
         }
 
         public bool IsNull {
-            get { return Raw.IsNull; }
+            get { return ReadTarget() == 0; }
         }
 
         /// <summary>
@@ -100,13 +120,18 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies {
             get { return new PointerProxy(Process, Address); }
         }
 
+        // The pointer value stored at Address, with any tag bits stripped.
+        private ulong ReadTarget() {
+            return Raw.Read() & ~_tagMask;
+        }
+
         public TProxy Read() {
-            if (IsNull) {
+            var ptr = ReadTarget();
+            if (ptr == 0) {
                 Debug.Fail("Trying to dereference a null PointerProxy.");
                 throw new InvalidOperationException();
             }
 
-            var ptr = Raw.Read();
             return DataProxy.Create<TProxy>(Process, ptr, _polymorphic);
         }
 
@@ -114,11 +139,11 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies {
         /// Like <see cref="Read"/>, but returns default(<see cref="TProxy"/>) if pointer is null.
         /// </summary>
         public TProxy TryRead() {
-            if (IsNull) {
+            var ptr = ReadTarget();
+            if (ptr == 0) {
                 return default(TProxy);
             }
 
-            var ptr = Raw.Read();
             return DataProxy.Create<TProxy>(Process, ptr, _polymorphic);
         }
 

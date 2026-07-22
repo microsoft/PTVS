@@ -490,6 +490,11 @@ static void TraceLine(void* frame) {
         // the f_code object.
         void* f_frame = ReadField<void*>(frame, fieldOffsets.PyFrameObject.f_frame);
         void* f_code = ReadField<void*>(f_frame, fieldOffsets.PyFrameObject.f_code);
+        // In 3.14, f_code (f_executable) is a _PyStackRef whose low bits are a tag (Py_TAG_BITS),
+        // set for deferred/immortal references such as frozen-module code objects. Strip them to
+        // recover the PyCodeObject pointer. Object pointers are always at least 8-byte aligned, so
+        // this is a no-op on older versions where f_code is already a plain pointer.
+        f_code = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(f_code) & ~static_cast<uintptr_t>(3));
         co_filename = ReadField<void*>(f_code, fieldOffsets.PyCodeObject.co_filename);
     }
     if (co_filename == nullptr) {

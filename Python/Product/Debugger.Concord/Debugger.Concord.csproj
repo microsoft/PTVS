@@ -127,6 +127,7 @@
     <Compile Include="Proxies\Structs\PyFrameObject311.cs" />
     <Compile Include="Proxies\Structs\PyFunctionObject.cs" />
     <Compile Include="Proxies\Structs\PyDebugOffsets.cs" />
+    <Compile Include="Proxies\Structs\DebugOffsetsFieldProvider.cs" />
     <Compile Include="Proxies\Structs\PyInterpreterFrame.cs" />
     <Compile Include="Proxies\Structs\PyLineTable.cs" />
     <Compile Include="Proxies\Structs\PyRuntimeState.cs" />
