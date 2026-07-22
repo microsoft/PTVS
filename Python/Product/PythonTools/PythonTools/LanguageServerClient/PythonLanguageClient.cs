@@ -258,8 +258,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             Debug.WriteLine("Settings Changed");
             return InvokeDidChangeConfigurationAsync(new LSP.DidChangeConfigurationParams() {
                 // Pylance will ask us for per workspace configuration settings. We can send
-                // default workspace settings here.
-                Settings = GetSettings()
+                // section-keyed default settings here for clients without configuration support.
+                Settings = new { python = GetSettings() }
             });
         }
 

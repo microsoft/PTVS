@@ -53,91 +53,91 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 /// <summary>
                 /// Paths to look for typeshed modules.
                 /// </summary>
-                public string[] typeshedPaths;
+                public string[] typeshedPaths { get; set; }
 
                 /// <summary>
                 /// Path to directory containing custom type stub files.
                 /// </summary>
-                public string stubPath;
+                public string stubPath { get; set; }
 
                 /// <summary>
                 /// Allows a user to override the severity levels for individual diagnostics.
                 /// Typically specified in mspythonconfig.json.
                 /// </summary>
-                public Dictionary<string, string> diagnosticSeverityOverrides;
+                public Dictionary<string, string> diagnosticSeverityOverrides { get; set; }
 
                 /// <summary>
                 /// Analyzes and reports errors on only open files or the entire workspace.
                 /// "enum": ["openFilesOnly", "workspace"]
                 /// </summary>
-                public string diagnosticMode;
+                public string diagnosticMode { get; set; }
 
                 /// <summary>
                 /// Specifies the level of logging for the Output panel.
                 /// "enum": ["Error", "Warning", "Information", "Trace"]
                 /// </summary>
-                public string logLevel;
+                public string logLevel { get; set; }
 
                 /// <summary>
                 /// Automatically add common search paths like 'src'.
                 /// </summary>
-                public bool? autoSearchPaths;
+                public bool? autoSearchPaths { get; set; }
 
                 /// <summary>
                 /// Defines the default rule set for type checking.
                 /// </summary>
-                public string typeCheckingMode;
+                public string typeCheckingMode { get; set; }
 
                 /// <summary>
                 /// Use library implementations to extract type information when type stub is not present.
                 /// </summary>
-                public bool? useLibraryCodeForTypes;
+                public bool? useLibraryCodeForTypes { get; set; }
 
                 /// <summary>
                 /// Additional import search resolution paths.
                 /// </summary>
-                public string[] extraPaths;
+                public string[] extraPaths { get; set; }
 
                 /// <summary>
                 /// Automatically add brackets for functions.
                 /// </summary>
-                public bool completeFunctionParens;
+                public bool completeFunctionParens { get; set; }
 
                 /// <summary>
                 /// Offer auto-import completions.
                 /// </summary>
-                public bool autoImportCompletions;
+                public bool autoImportCompletions { get; set; }
 
                 /// <summary>
                 /// Index installed third party libraries and user files for language features such as auto-import, add import, workspace symbols and etc.
                 /// </summary>
-                public bool? indexing;
+                public bool? indexing { get; set; }
 
                 /// <summary>
                 /// Allow using '.', '(' as commit characters when applicable.
                 /// </summary>
-                public bool? extraCommitChars;
+                public bool? extraCommitChars { get; set; }
 
-                public PythonAnalysisInlayHintsSettings inlayHints;
+                public PythonAnalysisInlayHintsSettings inlayHints { get; set; }
 
-                public string importFormat;
+                public string importFormat { get; set; }
 
                 /// <summary>
                 /// Tokens that identify comments that should show up in the task list pane
                 /// </summary>
-                public TaskListToken[] taskListTokens;
+                public TaskListToken[] taskListTokens { get; set; }
 
                 public class PythonAnalysisInlayHintsSettings {
 
                     /// <summary>
                     /// Enable/disable inlay hints for variable types:\n```python\nfoo ' :list[str] ' = [\"a\"]\n \n```\n
                     /// </summary>
-                    public bool variableTypes;
+                    public bool variableTypes { get; set; }
 
                     /// <summary>
                     /// Enable/disable inlay hints for function return types:\n```python\ndef foo(x:int) ' -> int ':\n\treturn x\n```\n"
                     /// </summary>
-                    public bool functionReturnTypes;
+                    public bool functionReturnTypes { get; set; }
                 }
 
                 public class TaskListToken {
@@ -145,34 +145,34 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     /// <summary>
                     /// The text of the token.
                     /// </summary>
-                    public string text;
+                    public string text { get; set; }
 
                     /// <summary>
                     /// The priority of the token.
                     /// This comes from the CommentTaskPriority enum in Microsoft.VisualStudio.Shell
                     /// </summary>
-                    public string priority;
+                    public string priority { get; set; }
                 }
 
             }
             /// <summary>
             /// Analysis settings.
             /// </summary>
-            public PythonAnalysisSettings analysis;
+            public PythonAnalysisSettings analysis { get; set; }
 
             /// <summary>
             /// Path to Python, you can use a custom version of Python.
             /// </summary>
-            public string pythonPath;
+            public string pythonPath { get; set; }
 
             /// <summary>
             /// Path to folder with a list of Virtual Environments.
             /// </summary>
-            public string venvPath;
+            public string venvPath { get; set; }
         }
         /// <summary>
         /// Python section.
         /// </summary>
-        public PythonSettings python;
+        public PythonSettings python { get; set; }
     }
 }
