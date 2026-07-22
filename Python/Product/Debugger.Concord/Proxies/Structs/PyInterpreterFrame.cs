@@ -49,6 +49,11 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         private const int FRAME_OWNED_BY_FRAME_OBJECT = 2;
         private const int FRAME_OWNED_BY_CSTACK = 3;
 
+        // CPython 3.14 _PyStackRef tag bits (Py_TAG_BITS). Object pointers are always at least
+        // 8-byte aligned, so the low bits are free to carry the reference tag; strip them to get
+        // the real PyObject* back.
+        private const ulong StackRefTagMask = 0x3;
+
         private readonly Fields _fields;
 
         public PyInterpreterFrame(DkmProcess process, ulong address)
@@ -62,7 +67,17 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
                 if (_fields.f_code.Process != null) {
                     return GetFieldProxy(_fields.f_code);
                 }
-                return GetFieldProxy(_fields.f_executable);
+
+                var executable = GetFieldProxy(_fields.f_executable);
+                if (Process.GetPythonRuntimeInfo().LanguageVersion >= PythonLanguageVersion.V314) {
+                    // In 3.14, f_executable is a _PyStackRef rather than a plain PyObject*. Its two
+                    // low bits are a reference tag (Py_TAG_BITS, i.e. mask 0x3; set for deferred/
+                    // immortal references such as frozen-module code objects), so strip them to
+                    // recover the PyCodeObject pointer. This mirrors CPython's own out-of-process
+                    // reader (CLEAR_PTR_TAG in _remote_debugging_module.c).
+                    executable = executable.WithTagMask(StackRefTagMask);
+                }
+                return executable;
             }
         }
 

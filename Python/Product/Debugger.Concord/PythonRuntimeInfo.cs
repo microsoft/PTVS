@@ -86,6 +86,11 @@ namespace Microsoft.PythonTools.Debugger.Concord {
     }
 
     internal class PythonRuntimeInfo : DkmDataItem {
+        private bool _debugOffsetsProbed;
+        private Proxies.Structs.PyDebugOffsets _debugOffsets;
+        private bool _offsetProviderProbed;
+        private Proxies.Structs.IStructFieldOffsetProvider _offsetProvider;
+
         public PythonLanguageVersion LanguageVersion { get; set; }
 
         public PythonDLLs DLLs { get; private set; }
@@ -99,6 +104,41 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 return null;
             }
             return DLLs.Python.GetStaticVariable<PyRuntimeState>("_PyRuntime");
+        }
+
+        /// <summary>
+        /// The self-describing <c>_Py_DebugOffsets</c> table exposed by CPython 3.14+ at the start of
+        /// <c>_PyRuntime</c>, or null when the interpreter does not provide one (or it fails to validate).
+        /// Read lazily once and cached, since it never changes for the lifetime of the process.
+        /// </summary>
+        public Proxies.Structs.PyDebugOffsets DebugOffsets {
+            get {
+                if (!_debugOffsetsProbed) {
+                    _debugOffsetsProbed = true;
+                    _debugOffsets = Proxies.Structs.PyDebugOffsets.TryRead(DLLs.Python?.Process, DLLs.Python);
+                }
+                return _debugOffsets;
+            }
+        }
+
+        /// <summary>
+        /// Offset source that <see cref="Proxies.StructProxy"/> consults before falling back to the
+        /// interpreter PDB. Non-null only for CPython 3.14, where the <c>_Py_DebugOffsets</c> table
+        /// authoritatively describes the (potentially free-threaded-shifted) layout of the mixed-mode
+        /// hot-path structs. Older interpreters return null and resolve every field via the PDB exactly
+        /// as before, so this cannot regress them.
+        /// </summary>
+        public Proxies.Structs.IStructFieldOffsetProvider StructFieldOffsetProvider {
+            get {
+                if (!_offsetProviderProbed) {
+                    _offsetProviderProbed = true;
+                    var offsets = DebugOffsets;
+                    if (offsets != null && offsets.Is314) {
+                        _offsetProvider = new Proxies.Structs.DebugOffsetsFieldProvider(offsets);
+                    }
+                }
+                return _offsetProvider;
+            }
         }
     }
 

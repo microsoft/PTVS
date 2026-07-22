@@ -195,7 +195,9 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies {
                 return (TFields)metadata.Fields;
             }
 
-            var pyVersion = metadata.Process.GetPythonRuntimeInfo().LanguageVersion;
+            var pyrtInfo = metadata.Process.GetPythonRuntimeInfo();
+            var pyVersion = pyrtInfo.LanguageVersion;
+            var offsetProvider = pyrtInfo.StructFieldOffsetProvider;
 
             var fields = new TFields();
             foreach (var fieldInfo in typeof(TFields).GetFields()) {
@@ -208,7 +210,15 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies {
                         continue;
                     }
 
-                    long offset = metadata.Symbol.GetFieldOffset(name);
+                    // Prefer an authoritative offset from the interpreter's self-describing table
+                    // (CPython 3.14 _Py_DebugOffsets, hot-path fields only) when one is available;
+                    // otherwise fall back to the PDB. The provider is null for every other version,
+                    // so this path is byte-for-byte identical to before there.
+                    long offset;
+                    if (offsetProvider == null || !offsetProvider.TryGetFieldOffset(metadata.Name, name, out offset)) {
+                        offset = metadata.Symbol.GetFieldOffset(name);
+                    }
+
                     var field = (IStructField)Activator.CreateInstance(fieldType);
                     field.Process = metadata.Process;
                     field.Offset = offset;

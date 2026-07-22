@@ -162,6 +162,19 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             return moduleInstance.BaseAddress + addr.RVA;
         }
 
+        /// <summary>
+        /// Like <see cref="GetExportedStaticVariableAddress"/>, but returns 0 instead of throwing
+        /// when the export is not present. Useful for optional symbols (e.g. <c>_PyRuntime</c>)
+        /// that we want to probe for without a PDB and without asserting when absent.
+        /// </summary>
+        public static ulong TryGetExportedStaticVariableAddress(this DkmNativeModuleInstance moduleInstance, string name) {
+            var addr = moduleInstance.FindExportName(name, false);
+            if (addr == null) {
+                return 0;
+            }
+            return moduleInstance.BaseAddress + addr.RVA;
+        }
+
         public static TProxy GetExportedStaticVariable<TProxy>(this DkmNativeModuleInstance moduleInstance, string name)
             where TProxy : IDataProxy {
             ulong address = GetExportedStaticVariableAddress(moduleInstance, name);

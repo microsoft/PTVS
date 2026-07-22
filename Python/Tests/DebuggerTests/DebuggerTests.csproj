@@ -69,6 +69,8 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PyDebugOffsetsTests.cs" />
+    <Compile Include="PyDebugOffsetsProviderTests.cs" />
     <Compile Include="PyLineTableTests.cs" />
     <Compile Include="TaskExtensions.cs" />
     <Compile Include="MiniDumpWriter.cs" />
