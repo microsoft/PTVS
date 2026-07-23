@@ -137,8 +137,8 @@ try {
         "Pylance version = $pylanceVersion"
         "Pylance release type = $pylanceReleaseType"
 
-        # Get all the versions in the feed in descending order
-        $versions = npm view @pylance/pylance versions --json | ConvertFrom-Json
+        # CI prefers cached data for installs, but "latest" must refresh registry metadata.
+        $versions = npm view @pylance/pylance versions --json --prefer-offline=false --prefer-online=true | ConvertFrom-Json
         [array]::Reverse($versions)
 
         # Find the highest version with an appropriate patch number.
