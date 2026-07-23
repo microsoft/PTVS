@@ -17,6 +17,12 @@ parameters:
 
 steps:
 
+  # Pylance releases require Node.js 24 or newer.
+  - task: NodeTool@0
+    displayName: 'Use Node.js 24'
+    inputs:
+      versionSpec: '24.x'
+
   # Point NuGet HTTP cache to a pipeline-controlled location so we can cache it between runs.
   # packages.config restores don't use the global-packages folder, but they do use the HTTP cache
   # to avoid re-downloading packages from the feed.
@@ -78,9 +84,9 @@ steps:
   - task: Cache@2
     displayName: 'Cache node_modules'
     inputs:
-      key: 'node_modules | "$(Agent.OS)" | package.json | ${{ parameters.pylanceVersion }} | ${{ parameters.pylanceReleaseType }}'
+      key: 'node_modules | "$(Agent.OS)" | "${{ parameters.pylanceVersion }}" | "${{ parameters.pylanceReleaseType }}" | package.json'
       restoreKeys: |
-        node_modules | "$(Agent.OS)" | package.json
+        node_modules | "$(Agent.OS)" | "${{ parameters.pylanceVersion }}" | "${{ parameters.pylanceReleaseType }}"
         node_modules | "$(Agent.OS)"
       path: '$(Build.SourcesDirectory)\\node_modules'
 
@@ -88,9 +94,9 @@ steps:
   - task: Cache@2
     displayName: 'Cache npm'
     inputs:
-      key: 'npm | "$(Agent.OS)" | package.json | ${{ parameters.pylanceVersion }} | ${{ parameters.pylanceReleaseType }}'
+      key: 'npm | "$(Agent.OS)" | "${{ parameters.pylanceVersion }}" | "${{ parameters.pylanceReleaseType }}" | package.json'
       restoreKeys: |
-        npm | "$(Agent.OS)" | package.json
+        npm | "$(Agent.OS)" | "${{ parameters.pylanceVersion }}" | "${{ parameters.pylanceReleaseType }}"
         npm | "$(Agent.OS)"
       path: '$(Pipeline.Workspace)\\npm-cache'
 
@@ -98,7 +104,7 @@ steps:
   - task: Cache@2
     displayName: 'Cache PyPI wheels'
     inputs:
-      key: 'pypi-wheels | "$(Agent.OS)" | ${{ parameters.debugpyVersion }}'
+      key: 'pypi-wheels | "$(Agent.OS)" | "${{ parameters.debugpyVersion }}"'
       restoreKeys: |
         pypi-wheels | "$(Agent.OS)"
       path: '$(Pipeline.Workspace)\\pypi-wheel-cache'
