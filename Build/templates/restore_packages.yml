@@ -17,6 +17,12 @@ parameters:
 
 steps:
 
+  # Pylance releases require Node.js 24 or newer.
+  - task: NodeTool@0
+    displayName: 'Use Node.js 24'
+    inputs:
+      versionSpec: '24.x'
+
   # Point NuGet HTTP cache to a pipeline-controlled location so we can cache it between runs.
   # packages.config restores don't use the global-packages folder, but they do use the HTTP cache
   # to avoid re-downloading packages from the feed.
