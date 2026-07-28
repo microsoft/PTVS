@@ -36,6 +36,44 @@ namespace ProfilingTests {
             AssertListener.Initialize();
         }
 
+        [TestMethod, Priority(UnitTestPriority.P1)]
+        public async Task DiagnosticsHubProfileBootstrap() {
+            var python = PythonPaths.Python39_x64 ??
+                PythonPaths.Python39 ??
+                PythonPaths.LatestVersion;
+            if (python == null) {
+                Assert.Inconclusive("Python 3.9 or later is required.");
+            }
+
+            var productDirectory = Path.GetDirectoryName(typeof(IPythonProfiling).Assembly.Location);
+            var bootstrap = Path.Combine(productDirectory, "diaghub_profile.py");
+            var tests = Path.Combine(
+                Path.GetDirectoryName(typeof(ProfilingTests).Assembly.Location),
+                "diaghub_profile_tests.py"
+            );
+
+            Assert.IsTrue(File.Exists(bootstrap), "Did not find " + bootstrap);
+            Assert.IsTrue(File.Exists(tests), "Did not find " + tests);
+
+            using (var process = ProcessOutput.Run(
+                python.InterpreterPath,
+                new[] { tests, bootstrap },
+                Environment.CurrentDirectory,
+                Enumerable.Empty<KeyValuePair<string, string>>(),
+                false,
+                null
+            )) {
+                var exitCode = await process;
+                foreach (var line in process.StandardErrorLines) {
+                    Trace.TraceError("STDERR: " + line);
+                }
+                foreach (var line in process.StandardOutputLines) {
+                    Trace.TraceInformation("STDOUT: " + line);
+                }
+                Assert.AreEqual(0, exitCode);
+            }
+        }
+
         // Update the test from version 3.1/3.4 to 3.5-3.7. 
         /*
         [TestMethod, Priority(UnitTestPriority.P1)]
