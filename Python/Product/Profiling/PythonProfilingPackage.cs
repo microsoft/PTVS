@@ -64,6 +64,9 @@ namespace Microsoft.PythonTools.Profiling {
           DefaultName = "PythonPerfSession")]
     [ProvideAutomationObject("PythonProfiling")]
     [ProvideService(typeof(PythonProfilingPackage), IsAsyncQueryable = true)]
+#if DEV18
+    [ProvidePythonProfilingFeatureFlag]
+#endif
     internal sealed class PythonProfilingPackage : AsyncPackage {
         internal static PythonProfilingPackage Instance;
         private static ProfiledProcess _profilingProcess;   // process currently being profiled
@@ -193,12 +196,14 @@ namespace Microsoft.PythonTools.Profiling {
                 return;
             }
 
-            // Used for manually testing the user input service.
-            //MessageBox.Show("Test starts");
-            //var tempUserInputService = new PythonProfilerCommandService();
-            //var tempResult = tempUserInputService.GetCommandArgsFromUserInput();
-            //MessageBox.Show("Test ends");
-
+#if DEV18
+            try {
+                var dte = (EnvDTE.DTE)GetService(typeof(EnvDTE.DTE));
+                dte.ExecuteCommand("Debug.DiagnosticsHub.Launch");
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                MessageBox.Show(Strings.ProfilingSupportMissingError, Strings.ProductTitle);
+            }
+#else
             var targetView = new ProfilingTargetView(this);
             var dialog = new LaunchProfiling(this, targetView);
             var res = dialog.ShowModal() ?? false;
@@ -208,6 +213,7 @@ namespace Microsoft.PythonTools.Profiling {
                     ProfileTarget(target);
                 }
             }
+#endif
         }
 
         internal SessionNode ProfileTarget(ProfilingTarget target, bool openReport = true) {

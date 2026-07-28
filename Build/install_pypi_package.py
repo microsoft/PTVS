@@ -24,7 +24,7 @@ from packaging.utils import canonicalize_name, parse_wheel_filename
 from packaging.version import parse as version_parser
 
 # only install wheels for these python versions
-PYTHON_VERSIONS = ("cp38", "cp39", "cp310", "cp311", "cp312", "cp313")
+PYTHON_VERSIONS = ("cp38", "cp39", "cp310", "cp311", "cp312", "cp313", "cp314")
 
 # don't install wheels for these platforms
 EXCLUDED_PLATFORMS = ("manylinux", "macosx")

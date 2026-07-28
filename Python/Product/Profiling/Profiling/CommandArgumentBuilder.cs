@@ -24,34 +24,22 @@ namespace Microsoft.PythonTools.Profiling {
     using System.Windows;
     using Microsoft.PythonTools.Infrastructure;
     using Microsoft.PythonTools.Interpreter;
+    using Microsoft.VisualStudio.Shell;
+    using Microsoft.VisualStudio.Shell.Interop;
 
     internal class CommandArgumentBuilder {
 
         /// <summary>
         /// Constructs a <see cref="PythonProfilingCommandArgs"/> based on the provided profiling target.
         /// </summary>
-        public PythonProfilingCommandArgs BuildCommandArgsFromTarget(ProfilingTarget target, PythonProfilingPackage pythonProfilingPackage) {
+        public PythonProfilingCommandArgs BuildCommandArgsFromTarget(ProfilingTarget target, IServiceProvider serviceProvider) {
             if (target == null) {
                 return null;
             }
 
             try {
-                var joinableTaskFactory = pythonProfilingPackage.JoinableTaskFactory;
-
-                PythonProfilingCommandArgs command = null;
-
-                joinableTaskFactory.Run(async () => {
-                    await joinableTaskFactory.SwitchToMainThreadAsync();
-
-                    var name = target.GetProfilingName(pythonProfilingPackage, out var save);
-                    var explorer = await pythonProfilingPackage.ShowPerformanceExplorerAsync();
-                    var session = explorer.Sessions.AddTarget(target, name, save);
-
-                    command = SelectBuilder(target, session, pythonProfilingPackage);
-
-                });
-
-                return command;
+                ThreadHelper.ThrowIfNotOnUIThread();
+                return SelectBuilder(target, serviceProvider);
             } catch (Exception ex) {
                 Debug.Fail($"Error building command: {ex.Message}");
                 throw;
@@ -61,24 +49,24 @@ namespace Microsoft.PythonTools.Profiling {
         /// <summary>
         /// Select the appropriate builder based on the provided profiling target.
         /// </summary>
-        private PythonProfilingCommandArgs SelectBuilder(ProfilingTarget target, SessionNode session, PythonProfilingPackage pythonProfilingPackage) {
+        private PythonProfilingCommandArgs SelectBuilder(ProfilingTarget target, IServiceProvider serviceProvider) {
             var projectTarget = target.ProjectTarget;
             var standaloneTarget = target.StandaloneTarget;
 
             if (projectTarget != null) {
-                return BuildProjectCommandArgs(projectTarget, session, pythonProfilingPackage);
+                return BuildProjectCommandArgs(projectTarget, serviceProvider);
             } else if (standaloneTarget != null) {
-                return BuildStandaloneCommandArgs(standaloneTarget, session);
+                return BuildStandaloneCommandArgs(standaloneTarget, serviceProvider);
             }
             return null;
         }
 
-        private PythonProfilingCommandArgs BuildProjectCommandArgs(ProjectTarget projectTarget, SessionNode session, PythonProfilingPackage pythonProfilingPackage) {
-            if (pythonProfilingPackage == null) {
+        private PythonProfilingCommandArgs BuildProjectCommandArgs(ProjectTarget projectTarget, IServiceProvider serviceProvider) {
+            if (serviceProvider == null) {
                 return null;
             }
 
-            var solution = pythonProfilingPackage.Solution;
+            var solution = serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
             if (solution == null) { 
                 return null;
             }
@@ -94,7 +82,7 @@ namespace Microsoft.PythonTools.Profiling {
             try {
                 config = project?.GetLaunchConfigurationOrThrow();
             } catch (NoInterpretersException ex) {
-                PythonToolsPackage.OpenNoInterpretersHelpPage(session._serviceProvider, ex.HelpPage);
+                PythonToolsPackage.OpenNoInterpretersHelpPage(serviceProvider, ex.HelpPage);
                 return null;
             } catch (MissingInterpreterException ex) {
                 MessageBox.Show(ex.Message, Strings.ProductTitle);
@@ -120,23 +108,11 @@ namespace Microsoft.PythonTools.Profiling {
                 }
             }
 
-            var pythonExePath = config.GetInterpreterPath();
-            var scriptPath = string.Join(" ", ProcessOutput.QuoteSingleArgument(config.ScriptName), config.ScriptArguments);
-            var workingDir = config.WorkingDirectory;
-            var envVars = session._serviceProvider.GetPythonToolsService().GetFullEnvironment(config);
-
-            var command = new PythonProfilingCommandArgs {
-                PythonExePath = pythonExePath,
-                ScriptPath = scriptPath,
-                WorkingDir = workingDir,
-                Args = Array.Empty<string>(),
-                EnvVars = envVars
-            };
-            return command;
+            return BuildDiagnosticsHubCommand(config, serviceProvider);
         }
 
-        private PythonProfilingCommandArgs BuildStandaloneCommandArgs(StandaloneTarget standaloneTarget, SessionNode session) {
-            if (standaloneTarget == null) {
+        private PythonProfilingCommandArgs BuildStandaloneCommandArgs(StandaloneTarget standaloneTarget, IServiceProvider serviceProvider) {
+            if (standaloneTarget == null || serviceProvider == null) {
                 return null;
             }
 
@@ -147,7 +123,7 @@ namespace Microsoft.PythonTools.Profiling {
             }
 
             if (standaloneTarget.PythonInterpreter != null) {
-                var registry = session._serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
+                var registry = serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
                 var interpreter = registry.FindConfiguration(standaloneTarget.PythonInterpreter.Id);
                 if (interpreter == null) {
                     return null;
@@ -161,22 +137,24 @@ namespace Microsoft.PythonTools.Profiling {
             config.ScriptArguments = standaloneTarget.Arguments;
             config.WorkingDirectory = standaloneTarget.WorkingDirectory;
 
-            var argsInput = standaloneTarget.Arguments;
-            var parsedArgs = string.IsNullOrWhiteSpace(argsInput)
-                        ? Array.Empty<string>()
-                        : argsInput.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            return BuildDiagnosticsHubCommand(config, serviceProvider);
+        }
 
-            var envVars = session._serviceProvider.GetPythonToolsService().GetFullEnvironment(config);
+        private static PythonProfilingCommandArgs BuildDiagnosticsHubCommand(LaunchConfiguration config, IServiceProvider serviceProvider) {
+            var targetCommandLine = ProcessOutput.QuoteSingleArgument(config.ScriptName);
+            if (!string.IsNullOrWhiteSpace(config.ScriptArguments)) {
+                targetCommandLine = string.Join(" ", targetCommandLine, config.ScriptArguments);
+            }
 
             return new PythonProfilingCommandArgs {
                 PythonExePath = config.GetInterpreterPath(),
-                WorkingDir = standaloneTarget.WorkingDirectory,
-                ScriptPath = standaloneTarget.Script,
-                Args = parsedArgs,
-                EnvVars = envVars
+                WorkingDir = config.WorkingDirectory,
+                ScriptPath = PythonToolsInstallPath.GetFile("diaghub_profile.py", typeof(CommandArgumentBuilder).Assembly),
+                // DiagnosticsHub joins this array into the interpreter command line.
+                // Keep the user's original argument string intact after the quoted script.
+                Args = new[] { targetCommandLine },
+                EnvVars = serviceProvider.GetPythonToolsService().GetFullEnvironment(config)
             };
         }
     }
 }
-
-

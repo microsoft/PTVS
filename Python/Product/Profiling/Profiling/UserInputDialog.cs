@@ -15,9 +15,11 @@
 // permissions and limitations under the License.
 
 namespace Microsoft.PythonTools.Profiling {
+    using System;
+
     internal class UserInputDialog {
-        public bool ShowDialog(ProfilingTargetView targetView, PythonProfilingPackage pythonProfilingPackage) {
-            var dialog = new LaunchProfiling(pythonProfilingPackage, targetView);
+        public bool ShowDialog(ProfilingTargetView targetView, IServiceProvider serviceProvider) {
+            var dialog = new LaunchProfiling(serviceProvider, targetView);
             return dialog.ShowModal() ?? false;
         }
     }
