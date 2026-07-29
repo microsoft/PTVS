@@ -73,6 +73,7 @@
     <Compile Include="Profiling\PythonInterpreterView.cs" />
     <Compile Include="Profiling\ProjectTargetView.cs" />
     <Compile Include="Guids.cs" />
+    <Compile Include="ProvidePythonProfilingFeatureFlagAttribute.cs" />
     <Compile Include="Profiling\BaseHierarchyNode.cs" />
     <Compile Include="Profiling\LaunchProfiling.xaml.cs">
       <DependentUpon>LaunchProfiling.xaml</DependentUpon>
@@ -131,6 +132,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="proflaun.py">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="diaghub_profile.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -195,8 +200,15 @@
         <VSIXSubPath>etwtrace\%(RecursiveDir)</VSIXSubPath>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </EtwTraceFiles>
-      <Content Include="@(EtwTraceFiles)" />
-      <FileWrites Include="@(EtwTraceFiles)" />
+      <EtwTraceLegacyFiles Include="$(PackagesPath)etwtrace-legacy\etwtrace\**\*" />
+      <EtwTraceLegacyFiles>
+        <IncludeInVSIX>true</IncludeInVSIX>
+        <Link>etwtrace_legacy\etwtrace\%(RecursiveDir)%(Filename)%(Extension)</Link>
+        <VSIXSubPath>etwtrace_legacy\etwtrace\%(RecursiveDir)</VSIXSubPath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </EtwTraceLegacyFiles>
+      <Content Include="@(EtwTraceFiles);@(EtwTraceLegacyFiles)" />
+      <FileWrites Include="@(EtwTraceFiles);@(EtwTraceLegacyFiles)" />
     </ItemGroup>
   </Target>
   <Import Project="..\ProjectAfter.settings" />
