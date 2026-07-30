@@ -127,6 +127,9 @@ namespace Microsoft.PythonTools.Profiling {
                         : null;
                     return Version.TryParse(versionText, out version) ? version : null;
                 }
+            } catch (ArgumentException ex) {
+                Debug.WriteLine($"Failed to query Python version: {ex.Message}");
+                return null;
             } catch (Win32Exception ex) {
                 Debug.WriteLine($"Failed to query Python version: {ex.Message}");
                 return null;
