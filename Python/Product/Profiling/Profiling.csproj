@@ -200,15 +200,8 @@
         <VSIXSubPath>etwtrace\%(RecursiveDir)</VSIXSubPath>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </EtwTraceFiles>
-      <EtwTraceLegacyFiles Include="$(PackagesPath)etwtrace-legacy\etwtrace\**\*" />
-      <EtwTraceLegacyFiles>
-        <IncludeInVSIX>true</IncludeInVSIX>
-        <Link>etwtrace_legacy\etwtrace\%(RecursiveDir)%(Filename)%(Extension)</Link>
-        <VSIXSubPath>etwtrace_legacy\etwtrace\%(RecursiveDir)</VSIXSubPath>
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </EtwTraceLegacyFiles>
-      <Content Include="@(EtwTraceFiles);@(EtwTraceLegacyFiles)" />
-      <FileWrites Include="@(EtwTraceFiles);@(EtwTraceLegacyFiles)" />
+      <Content Include="@(EtwTraceFiles)" />
+      <FileWrites Include="@(EtwTraceFiles)" />
     </ItemGroup>
   </Target>
   <Import Project="..\ProjectAfter.settings" />

@@ -34,10 +34,6 @@ param (
     # The etwtrace release that includes Python 3.12 through 3.14 wheels.
     [Parameter()]
     [string] $etwtraceVersion = "0.1b9",
-
-    # The last etwtrace release that includes Python 3.9 through 3.11 wheels.
-    [Parameter()]
-    [string] $etwtraceLegacyVersion = "0.1b8",
     
     # Run in interactive mode for azure feed authentication, defaults to false
     [Parameter()]
@@ -55,21 +51,16 @@ function Install-Package {
     param(
         [string] $packageName,
         [string] $version,
-        [string] $outdir,
-        [string] $installDir
+        [string] $outdir
     )
 
     Write-Host "Installing $packageName $version"
 
-    if (-not $installDir) {
-        $installDir = $outdir
-    }
-
-    $argList = "install_pypi_package.py", $packageName, $version, "`"$installDir`""
+    $argList = "install_pypi_package.py", $packageName, $version, "`"$outdir`""
     Start-Process -Wait -NoNewWindow "$outdir\python\tools\python.exe" -ErrorAction Stop -ArgumentList $argList | Write-Host
 
     $installedVersion = ""
-    $versionPyFile = Join-Path $installDir "$packageName\_version.py"
+    $versionPyFile = Join-Path $outdir "$packageName\_version.py"
     foreach ($line in Get-Content $versionPyFile) {
         if ($line.Trim().StartsWith("`"version`"")) {
             $installedVersion = $line.split(":")[1].Trim(" `"") # trim spaces and double quotes
@@ -286,26 +277,13 @@ try {
     }
 
     "-----"
-    # Install a coherent legacy payload for Python 3.9 through 3.11. Newer
-    # etwtrace releases only publish wheels for currently supported Pythons.
-    $legacyEtwTraceOutDir = Join-Path $outdir "etwtrace-legacy"
-    if (Test-Path -Path $legacyEtwTraceOutDir) {
-        Remove-Item -Recurse -Force -Path $legacyEtwTraceOutDir
-    }
-    Install-Package "etwtrace" $etwtraceLegacyVersion $outdir $legacyEtwTraceOutDir | Out-Null
-
-    # Install the current payload for Python 3.12 and later.
+    # Install etwtrace for the supported Python versions.
     Install-Package "etwtrace" $etwtraceVersion $outdir | Out-Null
 
     # Delete an unsigned file from etwtrace that shouldn't be there.
-    $filesToDelete = @(
-        "$outdir\etwtrace\test\DiagnosticsHub.InstrumentationCollector.dll",
-        "$legacyEtwTraceOutDir\etwtrace\test\DiagnosticsHub.InstrumentationCollector.dll"
-    )
-    foreach ($fileToDelete in $filesToDelete) {
-        if (Test-Path -Path $fileToDelete) {
-            Remove-Item -Path $fileToDelete | Out-Null
-        }
+    $fileToDelete = "$outdir\etwtrace\test\DiagnosticsHub.InstrumentationCollector.dll"
+    if (Test-Path -Path $fileToDelete) {
+        Remove-Item -Path $fileToDelete | Out-Null
     }
 
 } finally {

@@ -12,35 +12,8 @@ _CHILD_MARKER = "PTVS_DIAGHUB_PROFILE_CHILD"
 _TARGET_ARGUMENTS = "PTVS_DIAGHUB_TARGET_ARGUMENTS"
 
 
-def _load_legacy_collector():
-    import ctypes
-
-    collector_root = os.getenv("DIAGHUB_INSTR_COLLECTOR_ROOT")
-    runtime_name = os.getenv("DIAGHUB_INSTR_RUNTIME_NAME")
-    if not collector_root or not runtime_name:
-        raise RuntimeError(
-            "Python profiling must be launched from the Visual Studio "
-            "Performance Profiler."
-        )
-
-    if sys.winver.endswith("-32"):
-        architecture = "x86"
-    elif sys.winver.endswith("-arm64"):
-        architecture = "arm64"
-    else:
-        architecture = "amd64"
-
-    collector_path = os.path.join(collector_root, architecture, runtime_name)
-    collector = ctypes.WinDLL(collector_path)
-    collector.ChildAttach.argtypes = []
-    collector.ChildAttach.restype = ctypes.c_int
-    if not collector.ChildAttach():
-        raise RuntimeError("Failed to attach Python to the profiling session.")
-    return collector
-
-
 def _is_supported_version(version):
-    return (3, 9) <= tuple(version[:2]) <= (3, 14)
+    return (3, 12) <= tuple(version[:2]) <= (3, 14)
 
 
 def _has_valid_target(arguments):
@@ -82,7 +55,7 @@ def _run_target(arguments):
 def main():
     if not _is_supported_version(sys.version_info):
         print(
-            "Visual Studio Python profiling supports Python 3.9 through 3.14.",
+            "Visual Studio Python profiling supports Python 3.12 through 3.14.",
             file=sys.stderr,
         )
         return 2
@@ -96,16 +69,9 @@ def main():
     if not is_child:
         return _run_profiled_child(arguments)
 
-    package_root = os.path.dirname(os.path.abspath(__file__))
-    is_legacy = sys.version_info[:2] <= (3, 11)
-    if is_legacy:
-        package_root = os.path.join(package_root, "etwtrace_legacy")
-    sys.path.insert(0, package_root)
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
     try:
-        # etwtrace 0.1b8 expects Visual Studio to load and attach the collector.
-        # Keep this reference alive while the extension uses the collector.
-        collector = _load_legacy_collector() if is_legacy else None
         from etwtrace import DiagnosticsHubTracer
         tracer = DiagnosticsHubTracer()
     except (ImportError, OSError, RuntimeError, AttributeError) as exc:
@@ -122,14 +88,7 @@ def main():
         arguments[0] = os.path.abspath(arguments[0])
         sys.path[0] = os.path.dirname(arguments[0])
 
-    if not hasattr(tracer, "_data"):
-        # etwtrace 0.1b8 only initializes this field for its test collector.
-        tracer._data = []
     tracer.ignore(os.path.abspath(__file__))
-    # Keep profiling and the compatibility collector alive until interpreter
-    # shutdown. Worker threads may retain native profile callbacks after the
-    # top-level script returns.
-    tracer._collector_keepalive = collector
     tracer.enable()
     _run_target(arguments)
     return 0

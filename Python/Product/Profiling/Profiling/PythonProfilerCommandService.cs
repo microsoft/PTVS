@@ -16,10 +16,13 @@
 
 namespace Microsoft.PythonTools.Profiling {
     using System;
+    using System.ComponentModel;
     using System.ComponentModel.Composition;
     using System.Diagnostics;
+    using System.Linq;
     using System.Threading.Tasks;
     using System.Windows;
+    using Microsoft.PythonTools.Infrastructure;
     using Microsoft.VisualStudio.Shell;
 
     /// <summary>
@@ -28,6 +31,10 @@ namespace Microsoft.PythonTools.Profiling {
     [Export(typeof(IPythonProfilerCommandService))]
     [PartCreationPolicy(CreationPolicy.Shared)]
     public sealed class PythonProfilerCommandService : IPythonProfilerCommandService {
+        private const int MinimumSupportedPythonMinorVersion = 12;
+        private const int MaximumSupportedPythonMinorVersion = 14;
+        private static readonly TimeSpan InterpreterVersionTimeout = TimeSpan.FromSeconds(10);
+
         private readonly CommandArgumentBuilder _commandArgumentBuilder;
         private readonly IServiceProvider _serviceProvider;
         private readonly UserInputDialog _userInputDialog;
@@ -54,7 +61,38 @@ namespace Microsoft.PythonTools.Profiling {
 
                 if (_userInputDialog.ShowDialog(targetView, _serviceProvider)) {
                     var target = targetView.GetTarget();
-                    return _commandArgumentBuilder.BuildCommandArgsFromTarget(target, _serviceProvider);
+                    var commandArgs = _commandArgumentBuilder.BuildCommandArgsFromTarget(target, _serviceProvider);
+                    if (commandArgs == null) {
+                        return null;
+                    }
+
+                    var pythonVersion = await GetPythonVersionAsync(commandArgs.PythonExePath);
+                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+                    if (pythonVersion == null) {
+                        MessageBox.Show(
+                            Strings.ProfilingInterpreterVersionUnavailable.FormatUI(commandArgs.PythonExePath),
+                            Strings.ProductTitle,
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Error
+                        );
+                        return null;
+                    }
+
+                    if (!IsSupportedPythonVersion(pythonVersion)) {
+                        MessageBox.Show(
+                            Strings.ProfilingUnsupportedPythonVersion.FormatUI(
+                                pythonVersion.Major,
+                                pythonVersion.Minor
+                            ),
+                            Strings.ProductTitle,
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning
+                        );
+                        return null;
+                    }
+
+                    return commandArgs;
                 }
             } catch (Exception ex) {
                 Debug.Fail($"Error displaying user input dialog: {ex.Message}");
@@ -62,6 +100,43 @@ namespace Microsoft.PythonTools.Profiling {
             }
 
             return null;
+        }
+
+        private static bool IsSupportedPythonVersion(Version version) {
+            return version.Major == 3 &&
+                version.Minor >= MinimumSupportedPythonMinorVersion &&
+                version.Minor <= MaximumSupportedPythonMinorVersion;
+        }
+
+        private static async Task<Version> GetPythonVersionAsync(string interpreterPath) {
+            try {
+                using (var output = ProcessOutput.RunHiddenAndCapture(
+                    interpreterPath,
+                    "-c",
+                    "import sys; print('{}.{}'.format(sys.version_info[0], sys.version_info[1]))"
+                )) {
+                    var exited = await Task.Run(() => output.Wait(InterpreterVersionTimeout));
+                    if (!exited) {
+                        output.Kill();
+                        return null;
+                    }
+
+                    Version version;
+                    var versionText = output.ExitCode == 0
+                        ? output.StandardOutputLines.FirstOrDefault()
+                        : null;
+                    return Version.TryParse(versionText, out version) ? version : null;
+                }
+            } catch (ArgumentException ex) {
+                Debug.WriteLine($"Failed to query Python version: {ex.Message}");
+                return null;
+            } catch (Win32Exception ex) {
+                Debug.WriteLine($"Failed to query Python version: {ex.Message}");
+                return null;
+            } catch (InvalidOperationException ex) {
+                Debug.WriteLine($"Failed to query Python version: {ex.Message}");
+                return null;
+            }
         }
     }
 }

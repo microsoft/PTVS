@@ -197,6 +197,12 @@ Error:
   <data name="ProfilingSupportMissingError" xml:space="preserve">
     <value>Profiling support seems to be missing or corrupt. Try repairing your Visual Studio installation.</value>
   </data>
+  <data name="ProfilingInterpreterVersionUnavailable" xml:space="preserve">
+    <value>Visual Studio could not determine the version of the selected Python interpreter '{0}'. Verify that it is a valid Python interpreter and try again.</value>
+  </data>
+  <data name="ProfilingUnsupportedPythonVersion" xml:space="preserve">
+    <value>Python {0}.{1} is not supported for profiling. Visual Studio Python profiling supports Python 3.12 through 3.14. Select a supported interpreter and try again.</value>
+  </data>
   <data name="ProfilingSessionNotConfigured" xml:space="preserve">
     <value>Profiling session has not been configured. Configure now and launch?</value>
   </data>
