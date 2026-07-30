@@ -470,6 +470,15 @@ namespace Microsoft.PythonTools.Profiling {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Visual Studio could not determine the version of the selected Python interpreter &apos;{0}&apos;. Verify that it is a valid Python interpreter and try again..
+        /// </summary>
+        public static string ProfilingInterpreterVersionUnavailable {
+            get {
+                return ResourceManager.GetString("ProfilingInterpreterVersionUnavailable", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Profiling session has not been configured. Configure now and launch?.
         /// </summary>
         public static string ProfilingSessionNotConfigured {
@@ -487,6 +496,15 @@ namespace Microsoft.PythonTools.Profiling {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to Python {0}.{1} is not supported for profiling. Visual Studio Python profiling supports Python 3.12 through 3.14. Select a supported interpreter and try again..
+        /// </summary>
+        public static string ProfilingUnsupportedPythonVersion {
+            get {
+                return ResourceManager.GetString("ProfilingUnsupportedPythonVersion", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Could not find interpreter for project {0}.
         /// </summary>
