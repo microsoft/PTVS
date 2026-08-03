@@ -48,6 +48,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         public InterpreterConfiguration InterpreterConfiguration => _pythonWorkspace.CurrentFactory?.Configuration;
+
+        internal IPythonWorkspaceContext Workspace => _pythonWorkspace;
         
         public string RootPath => CommonUtils.NormalizeDirectoryPath(_pythonWorkspace.Location);
         public IEnumerable<string> SearchPaths => _pythonWorkspace.GetAbsoluteSearchPaths();
