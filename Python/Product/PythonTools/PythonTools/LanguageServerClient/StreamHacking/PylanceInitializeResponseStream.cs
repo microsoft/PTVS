@@ -150,12 +150,13 @@ namespace Microsoft.PythonTools.LanguageServerClient.StreamHacking {
             var contentLength = ParseContentLength(frame, headerEnd);
             var messageJson = Encoding.UTF8.GetString(frame, headerEnd + 4, contentLength);
             var message = JObject.Parse(messageJson);
-            if (message["id"] == null || (message["result"] == null && message["error"] == null)) {
+            var capabilities = message["result"]?["capabilities"] as JObject;
+            if (message["id"] == null || capabilities == null) {
                 return frame;
             }
 
             _initializeResponseProcessed = true;
-            var textDocumentSync = message["result"]?["capabilities"]?["textDocumentSync"];
+            var textDocumentSync = capabilities["textDocumentSync"];
             if (textDocumentSync?.Type != JTokenType.Integer) {
                 return frame;
             }
