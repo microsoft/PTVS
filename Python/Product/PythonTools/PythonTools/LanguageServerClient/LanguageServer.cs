@@ -95,9 +95,14 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 }
 
                 if (!process.HasExited) {
-                    // Create a connection where we wrap the stdin stream so that we can intercept all messages
+                    // Intercept outgoing messages and, on Dev18, normalize the Pylance initialize response.
+#if DEV18
+                    var serverOutput = new PylanceInitializeResponseStream(process.StandardOutput.BaseStream);
+#else
+                    var serverOutput = process.StandardOutput.BaseStream;
+#endif
                     return new Connection(
-                        process.StandardOutput.BaseStream,
+                        serverOutput,
                         new StreamIntercepter(process.StandardInput.BaseStream, _serverSendHandler, (a) => { }));
                 }
             }
