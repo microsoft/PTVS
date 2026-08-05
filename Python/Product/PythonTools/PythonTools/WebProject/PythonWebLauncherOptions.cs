@@ -72,6 +72,18 @@ namespace Microsoft.PythonTools.Project.Web {
             _properties = properties;
         }
 
+        protected override void OnHandleCreated(EventArgs e) {
+            base.OnHandleCreated(e);
+
+            // Apply the Visual Studio environment font so this launcher's text resizes with
+            // the OS "Text size" accessibility setting (MAS 1.4.4 Resize Text). This control is
+            // hosted inside the Debug property page but is a separate UserControl (not a
+            // ThemeAwareUserControl), so it must opt in to the environment font explicitly.
+            // Used by the Web and Django (Flask) launchers, whose taller layout previously
+            // clipped and rendered at the fixed design-time font size.
+            VsShellFontHelper.ApplyEnvironmentFont(this);
+        }
+
         #region ILauncherOptions Members
 
         public void SaveSettings() {
