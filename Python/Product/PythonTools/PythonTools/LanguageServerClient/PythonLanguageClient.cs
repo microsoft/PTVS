@@ -86,7 +86,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public static Task ReadyTask => _readyTcs.Task;
 
         private readonly Common.Core.Disposables.DisposableBag _disposables;
-        private List<IPythonLanguageClientContext> _clientContexts = new List<IPythonLanguageClientContext>();
+        private readonly object _clientContextsLock = new object();
+        private readonly List<IPythonLanguageClientContext> _clientContexts = new List<IPythonLanguageClientContext>();
         private PythonAnalysisOptions _analysisOptions;
         private PythonAdvancedEditorOptions _advancedEditorOptions;
         private ITaskList _taskListService;
@@ -100,6 +101,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private static TaskCompletionSource<int> _readyTcs = new TaskCompletionSource<int>();
         private readonly PythonSignatureHelpMiddleLayer _signatureHelpMiddleLayer;
         private bool _loaded = false;
+        private bool _solutionClosing;
         // Set by the dispose action before any other cleanup; consulted by
         // TriggerWorkspaceUpdateConfig and GetSettings so teardown cannot
         // dereference cleared state.
@@ -138,6 +140,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 return null;
             }
             await JoinableTaskContext.Factory.SwitchToMainThreadAsync();
+
+            ProjectContextProvider.ProjectsChanged += OnProjectsChanged;
+            PythonWorkspaceContextProvider.WorkspaceOpening += OnPythonWorkspaceOpening;
+            PythonWorkspaceContextProvider.WorkspaceInitialized += OnPythonWorkspaceInitialized;
+            PythonWorkspaceContextProvider.WorkspaceClosed += OnPythonWorkspaceClosed;
             CreateClientContexts();
 
             _analysisOptions = Site.GetPythonToolsService().AnalysisOptions;
@@ -159,11 +166,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 // tear down fields.
                 _disposed = true;
 
-                _clientContexts.ForEach(c => {
-                    c.InterpreterChanged -= OnInterpreterChanged;
-                    c.SearchPathsChanged -= OnSettingsChanged;
-                    c.ReanalyzeChanged -= OnReanalyzeChanged;
-                });
+                ProjectContextProvider.ProjectsChanged -= OnProjectsChanged;
+                PythonWorkspaceContextProvider.WorkspaceOpening -= OnPythonWorkspaceOpening;
+                PythonWorkspaceContextProvider.WorkspaceInitialized -= OnPythonWorkspaceInitialized;
+                PythonWorkspaceContextProvider.WorkspaceClosed -= OnPythonWorkspaceClosed;
                 _analysisOptions.Changed -= OnSettingsChanged;
                 _advancedEditorOptions.Changed -= OnSettingsChanged;
 
@@ -173,8 +179,9 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 } catch (ServiceUnavailableException) {
                 }
 
-                _clientContexts.ForEach(c => c.Dispose());
-                _clientContexts.Clear();
+                foreach (var context in GetClientContextsSnapshot()) {
+                    RemoveClientContext(context);
+                }
                 solutionEvents.Opened -= OnSolutionOpened;
                 solutionEvents.ProjectAdded -= OnProjectAdded;
                 solutionEvents.ProjectRemoved -= OnProjectRemoved;
@@ -221,19 +228,19 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
             // Return the matching results
             foreach (var item in args.requestParams.items) {
-
                 var pythonSetting = GetSettings(item.scopeUri);
+                object itemResult = null;
 
-                if (pythonSetting == null) {
-                    continue;
+                if (pythonSetting != null) {
+                    // Add to our results based on the section asked for
+                    if (item.section == "python") {
+                        itemResult = pythonSetting;
+                    } else if (item.section == "python.analysis") {
+                        itemResult = pythonSetting.analysis;
+                    }
                 }
 
-                // Add to our results based on the section asked for
-                if (item.section == "python") {
-                    result.Add(pythonSetting);
-                } else if (item.section == "python.analysis") {
-                    result.Add(pythonSetting.analysis);
-                }
+                result.Add(itemResult);
             }
 
             // Convert into an array for serialization
@@ -320,10 +327,40 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public void Dispose() => _disposables.TryDispose();
 
         public void AddClientContext(IPythonLanguageClientContext context) {
-            _clientContexts.Add(context);
-            context.InterpreterChanged += OnInterpreterChanged;
-            context.SearchPathsChanged += OnSettingsChanged;
-            context.ReanalyzeChanged += OnReanalyzeChanged;
+            var disposeContext = false;
+            lock (_clientContextsLock) {
+                if (_disposed) {
+                    disposeContext = true;
+                } else if (!_clientContexts.Contains(context)) {
+                    _clientContexts.Add(context);
+                    context.InterpreterChanged += OnInterpreterChanged;
+                    context.SearchPathsChanged += OnSettingsChanged;
+                    context.ReanalyzeChanged += OnReanalyzeChanged;
+                }
+            }
+
+            if (disposeContext) {
+                context.Dispose();
+            }
+        }
+
+        private void RemoveClientContext(IPythonLanguageClientContext context) {
+            lock (_clientContextsLock) {
+                if (!_clientContexts.Remove(context)) {
+                    return;
+                }
+            }
+
+            context.InterpreterChanged -= OnInterpreterChanged;
+            context.SearchPathsChanged -= OnSettingsChanged;
+            context.ReanalyzeChanged -= OnReanalyzeChanged;
+            context.Dispose();
+        }
+
+        private IPythonLanguageClientContext[] GetClientContextsSnapshot() {
+            lock (_clientContextsLock) {
+                return _clientContexts.ToArray();
+            }
         }
 
         public Task InvokeTextDocumentDidOpenAsync(LSP.DidOpenTextDocumentParams request)
@@ -401,28 +438,25 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private LanguageServerSettings.PythonSettings GetSettings(Uri scopeUri = null) {
+            var clientContexts = GetClientContextsSnapshot();
+
             // guard on shutdown - either we're being disposed or essential state
             // hasn't been wired up yet.
-            if (_disposed || _analysisOptions == null || _advancedEditorOptions == null || _clientContexts.Count() == 0) {
+            if (_disposed || _analysisOptions == null || _advancedEditorOptions == null || clientContexts.Length == 0) {
                 return null;
             }
             IPythonLanguageClientContext context = null;
             if (scopeUri == null) {
                 // REPL context has null RootPath 
-                context = _clientContexts.Find(c => c.RootPath == null);
+                context = clientContexts.FirstOrDefault(c => c.RootPath == null);
                 if (context == null) {
                     // use first clientcontext as default
-                    try {
-                        context = _clientContexts.FirstOrDefault();
-                    } catch (InvalidOperationException) {
-                        // no client context
-                        return null;
-                    }
+                    context = clientContexts.FirstOrDefault();
                 }
             } else {
                 var pathFromScopeUri = CommonUtils.NormalizeDirectoryPath(scopeUri.LocalPath).ToLower().TrimStart('\\');
                 // Find the matching context for the item, but ignore interactive window where "RootPath" is null.
-                context = _clientContexts.Find(c => scopeUri != null && c.RootPath != null && PathUtils.IsSamePath(c.RootPath.ToLower(), pathFromScopeUri));
+                context = clientContexts.FirstOrDefault(c => c.RootPath != null && PathUtils.IsSamePath(c.RootPath.ToLower(), pathFromScopeUri));
             }
 
             if (context == null || context.InterpreterConfiguration == null) {
@@ -511,14 +545,19 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 Debug.WriteLine("Reanalyze Changed");
 
                 // Packages have changes, so send a workspace/didChangeWatchedFiles for the env directory.
-                this._clientContexts.ForEach(context => {
+                foreach (var context in GetClientContextsSnapshot()) {
+                    var interpreterPath = context.InterpreterConfiguration?.InterpreterPath;
+                    if (string.IsNullOrEmpty(interpreterPath)) {
+                        continue;
+                    }
+
                     var createEvent = new FileEvent();
                     createEvent.FileChangeType = FileChangeType.Changed;
-                    createEvent.Uri = new Uri(CommonUtils.GetParent(context.InterpreterConfiguration.InterpreterPath));
+                    createEvent.Uri = new Uri(CommonUtils.GetParent(interpreterPath));
                     var didChangeParams = new DidChangeWatchedFilesParams();
                     didChangeParams.Changes = new FileEvent[] { createEvent };
                     NotifyWithParametersAsync(Methods.WorkspaceDidChangeWatchedFiles.Name, didChangeParams).DoNotWait();
-                });
+                }
 
 
             } catch (ObjectDisposedException) {
@@ -576,14 +615,113 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
 
         private void CreateClientContexts() {
-            if (PythonWorkspaceContextProvider.Workspace != null) {
-                AddClientContext(new PythonLanguageClientContextWorkspace(PythonWorkspaceContextProvider.Workspace));
-            } else {
-                var nodes = from n in ProjectContextProvider.ProjectNodes
-                            select new PythonLanguageClientContextProject(n);
-                foreach (var n in nodes) {
-                    AddClientContext(n);
+            SynchronizeClientContexts();
+        }
+
+        private bool SynchronizeClientContexts() {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            if (_disposed) {
+                return false;
+            }
+
+            var changed = false;
+            var workspace = PythonWorkspaceContextProvider.Workspace;
+            changed |= SynchronizeWorkspaceContext(workspace);
+
+            var projectNodes = workspace == null && !_solutionClosing
+                ? new HashSet<PythonProjectNode>(ProjectContextProvider.ProjectNodes)
+                : new HashSet<PythonProjectNode>();
+            var existingProjects = new HashSet<PythonProjectNode>();
+            foreach (var context in GetClientContextsSnapshot().OfType<PythonLanguageClientContextProject>()) {
+                if (!projectNodes.Contains(context.Project) || !existingProjects.Add(context.Project)) {
+                    RemoveClientContext(context);
+                    changed = true;
                 }
+            }
+
+            foreach (var project in projectNodes.Where(p => !existingProjects.Contains(p))) {
+                AddClientContext(new PythonLanguageClientContextProject(project));
+                changed = true;
+            }
+
+            return changed;
+        }
+
+        private bool SynchronizeWorkspaceContext(IPythonWorkspaceContext workspace) {
+            var changed = false;
+            var found = false;
+            var workspaceContexts = GetClientContextsSnapshot().OfType<PythonLanguageClientContextWorkspace>().ToArray();
+            foreach (var context in workspaceContexts) {
+                if (ReferenceEquals(context.Workspace, workspace) && !found) {
+                    found = true;
+                } else {
+                    RemoveClientContext(context);
+                    changed = true;
+                }
+            }
+
+            if (workspace != null && !found) {
+                AddClientContext(new PythonLanguageClientContextWorkspace(workspace));
+                changed = true;
+            }
+
+            if (workspace != null) {
+                foreach (var context in GetClientContextsSnapshot().OfType<PythonLanguageClientContextProject>()) {
+                    RemoveClientContext(context);
+                    changed = true;
+                }
+            }
+
+            return changed;
+        }
+
+        private void QueueSynchronizeClientContexts() {
+            if (_disposed) {
+                return;
+            }
+
+            JoinableTaskContext.Factory.RunAsync(async () => {
+                await JoinableTaskContext.Factory.SwitchToMainThreadAsync();
+                if (_disposed) {
+                    return;
+                }
+
+                if (SynchronizeClientContexts() && IsInitialized) {
+                    await TriggerWorkspaceUpdateConfig();
+                }
+            }).Task.DoNotWait();
+        }
+
+        private void OnProjectsChanged(object sender, EventArgs e) {
+            QueueSynchronizeClientContexts();
+        }
+
+        private void OnPythonWorkspaceOpening(object sender, PythonWorkspaceContextEventArgs e) {
+            ThreadHelper.ThrowIfNotOnUIThread();
+            if (_disposed) {
+                return;
+            }
+
+            SynchronizeWorkspaceContext(e.Workspace);
+        }
+
+        private void OnPythonWorkspaceInitialized(object sender, PythonWorkspaceContextEventArgs e) {
+            OnPythonWorkspaceOpening(sender, e);
+            if (IsInitialized) {
+                TriggerWorkspaceUpdateConfig().DoNotWait();
+            }
+        }
+
+        private void OnPythonWorkspaceClosed(object sender, PythonWorkspaceContextEventArgs e) {
+            ThreadHelper.ThrowIfNotOnUIThread();
+            if (_disposed) {
+                return;
+            }
+
+            foreach (var context in GetClientContextsSnapshot().OfType<PythonLanguageClientContextWorkspace>()
+                .Where(c => ReferenceEquals(c.Workspace, e.Workspace))) {
+                RemoveClientContext(context);
             }
         }
 
@@ -672,7 +810,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         // Note this is called for both openFolder and openProject modes
         private void OnSolutionClosing() {
-            this._clientContexts.Clear();
+            _solutionClosing = true;
+            foreach (var context in GetClientContextsSnapshot().OfType<PythonLanguageClientContextProject>()) {
+                RemoveClientContext(context);
+            }
             if (_workspaceFoldersSupported && IsInitialized && _sentInitialWorkspaceFolders) {
                 JoinableTaskContext.Factory.RunAsync(async () => {
                     // If workspace folders are supported, then send our workspace folders
@@ -689,6 +830,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private void OnSolutionOpened() {
+            _solutionClosing = false;
+            QueueSynchronizeClientContexts();
             if (_workspaceFoldersSupported && IsInitialized && !_sentInitialWorkspaceFolders) {
                 _sentInitialWorkspaceFolders = true;
                 JoinableTaskContext.Factory.RunAsync(async () => {
@@ -703,6 +846,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private void OnProjectAdded(EnvDTE.Project project) {
+            QueueSynchronizeClientContexts();
             if (_workspaceFoldersSupported) {
                 JoinableTaskContext.Factory.RunAsync(async () => {
                     var pythonProject = project.GetPythonProject() as PythonProjectNode;
@@ -716,6 +860,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private void OnProjectRemoved(EnvDTE.Project project) {
+            QueueSynchronizeClientContexts();
             if (_workspaceFoldersSupported) {
                 JoinableTaskContext.Factory.RunAsync(async () => {
                     var pythonProject = project.GetPythonProject() as PythonProjectNode;

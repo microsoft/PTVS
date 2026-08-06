@@ -49,6 +49,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         public InterpreterConfiguration InterpreterConfiguration => _project.ActiveInterpreter?.Configuration;
 
+        internal PythonProjectNode Project => _project;
+
         // Normalize to maintain trailing folder slashes
         public string RootPath => CommonUtils.NormalizeDirectoryPath(_project.ProjectHome);
         public IEnumerable<string> SearchPaths => _project._searchPaths.GetAbsoluteSearchPaths();
