@@ -1,0 +1,195 @@
+{
+  "properties": {
+    "helpUri": "https://eng.ms/docs/microsoft-security/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/microsoft-guardian/general/baselines"
+  },
+  "version": "1.0.0",
+  "baselines": {
+    "default": {
+      "name": "default",
+      "createdDate": "2026-08-05 00:11:09Z",
+      "lastUpdatedDate": "2026-08-05 00:11:09Z"
+    }
+  },
+  "results": {
+    "2a3c6cfd611be3298ffd56f121437817a7cc43323022be6b9f6d18d4648dc173": {
+      "signature": "2a3c6cfd611be3298ffd56f121437817a7cc43323022be6b9f6d18d4648dc173",
+      "alternativeSignatures": [
+        "8a05945848837b5e8d660dd05ede259d4da365a27b58bd9fc80fe7cacb2fd2d6",
+        "a60811970cb2bf94e339a92f93eb0fe34c5db7c96cd8e233b06f61f09753c781",
+        "61f80916a9231068aff510b37c8ba48a84f8f6d50d4ba3573a725b29a2d3a9fc"
+      ],
+      "target": "MicroBuild/Plugins/MicroBuild.Plugins.SwixBuild.1.1.87/tools/CheckHyperVHost.exe",
+      "uriBaseId": "file:///D:/a/_work/1/a/",
+      "memberOf": [
+        "default"
+      ],
+      "tool": "binskim",
+      "ruleId": "BA2008",
+      "createdDate": "2026-08-05 00:11:09Z",
+      "expirationDate": "2027-01-22 00:13:27Z",
+      "justification": "This error is baselined with an expiration date of 180 days from 2026-08-05 00:13:27Z"
+    },
+    "d8de2372ccd0071af3fe06e0cdebc36cda72acc4d2890ee80f87f4190f731032": {
+      "signature": "d8de2372ccd0071af3fe06e0cdebc36cda72acc4d2890ee80f87f4190f731032",
+      "alternativeSignatures": [
+        "0f02d37fa21a4d1401dddd73342905d66eab7dc9f01856877bbb7551fc2a152e",
+        "7bb91b682065ff7f8c9ccd08d5a9cd3c00ede4354beae79ff929bbe8eda94b08",
+        "a760ae2c245b1434c61693cb0be81615cd179ff92a2d1dc8db019a4e49c4bfb2"
+      ],
+      "target": "MicroBuild/Plugins/MicroBuild.Plugins.SwixBuild.1.1.87/tools/handle.exe",
+      "uriBaseId": "file:///D:/a/_work/1/a/",
+      "memberOf": [
+        "default"
+      ],
+      "tool": "binskim",
+      "ruleId": "BA2009",
+      "createdDate": "2026-08-05 00:11:09Z",
+      "expirationDate": "2027-01-22 00:13:27Z",
+      "justification": "This error is baselined with an expiration date of 180 days from 2026-08-05 00:13:27Z"
+    },
+    "c516ea21bd7ea89fc22b17f31a96b466f3b9fbca888236ff5b18833d4110aa89": {
+      "signature": "c516ea21bd7ea89fc22b17f31a96b466f3b9fbca888236ff5b18833d4110aa89",
+      "alternativeSignatures": [
+        "c0c239085b70664efc8b7ea8c017354675f34be2ae50836187daaf2f4438b7e6",
+        "5d1ad8f9710dce65c305dcf89010a80b2bf43e623c5adbc63658182f8b5fab6b",
+        "cd9c99ecd12f06ebc263ccf7960b1480943432781d19b25864c876d43378a865"
+      ],
+      "target": "MicroBuild/Plugins/MicroBuild.Plugins.SwixBuild.1.1.87/tools/Setup.exe",
+      "uriBaseId": "file:///D:/a/_work/1/a/",
+      "memberOf": [
+        "default"
+      ],
+      "tool": "binskim",
+      "ruleId": "BA2008",
+      "createdDate": "2026-08-05 00:11:09Z",
+      "expirationDate": "2027-01-22 00:13:27Z",
+      "justification": "This error is baselined with an expiration date of 180 days from 2026-08-05 00:13:27Z"
+    },
+    "464ac61718699d86206b54ea1ee431d36f4916e61ddcea7ea6495e80f3456b3c": {
+      "signature": "464ac61718699d86206b54ea1ee431d36f4916e61ddcea7ea6495e80f3456b3c",
+      "alternativeSignatures": [
+        "9528162fb070d6d93bc9f5b394f06e9f60e1fca5074b4fc4f90beca4547b615b",
+        "eb99ca5aac37ac66aeea0c1c3a129d0c8c2a9ba53c4217a6bcd787873db47e62",
+        "841a7511afd8308cc4f4e0959dc6792cd57c6d24a0441c12455e0f0341567b49"
+      ],
+      "target": "MicroBuild/Plugins/MicroBuild.Plugins.SwixBuild.1.1.87/tools/bin/mergemod.dll",
+      "uriBaseId": "file:///D:/a/_work/1/a/",
+      "memberOf": [
+        "default"
+      ],
+      "tool": "binskim",
+      "ruleId": "BA2010",
+      "createdDate": "2026-08-05 00:11:09Z",
+      "expirationDate": "2027-01-22 00:13:27Z",
+      "justification": "This error is baselined with an expiration date of 180 days from 2026-08-05 00:13:27Z"
+    },
+    "dcab94b9c54076e9ff8a390a200cde2ebf488004ef9dfba363996beb9b0e06ed": {
+      "signature": "dcab94b9c54076e9ff8a390a200cde2ebf488004ef9dfba363996beb9b0e06ed",
+      "alternativeSignatures": [
+        "8e7e516042ef14cbc8f8f75d01c9d5a928ddb0000778e6c0ea023df18df78066",
+        "2131ce5e6e0ef80cac2a8cec4d4652b85c5a34432a5b7fc6bd185472147a0a61",
+        "d1b0bff0d9da7076c3ef56599dcbe5eada34ce3d5999438929b9a80b561f03a2"
+      ],
+      "target": "MicroBuild/Plugins/MicroBuild.Plugins.SwixBuild.1.1.87/tools/bin/mspatchc.dll",
+      "uriBaseId": "file:///D:/a/_work/1/a/",
+      "memberOf": [
+        "default"
+      ],
+      "tool": "binskim",
+      "ruleId": "BA2010",
+      "createdDate": "2026-08-05 00:11:09Z",
+      "expirationDate": "2027-01-22 00:13:27Z",
+      "justification": "This error is baselined with an expiration date of 180 days from 2026-08-05 00:13:27Z"
+    },
+    "578f95610b54b827d46b1e4430db3568e66403786caa360afb1a8e6fe52d3e55": {
+      "signature": "578f95610b54b827d46b1e4430db3568e66403786caa360afb1a8e6fe52d3e55",
+      "alternativeSignatures": [
+        "ec3fa9e4c45f4bc07ab0c471fde9ad7c04e1573c5132f6fc11318b28f2bd8c61",
+        "fa92aeecae288bed3dd3b89d3b609a6e4a866b1fe2d65d7ad84d22fa1ab4a659",
+        "85ceff7dd5bc42d29eae6ecd88b289e0f337703fa393d5826ab032bc518543a1"
+      ],
+      "target": "MicroBuild/Plugins/MicroBuild.Plugins.SwixBuild.1.1.87/tools/bin/ThmViewer.exe",
+      "uriBaseId": "file:///D:/a/_work/1/a/",
+      "memberOf": [
+        "default"
+      ],
+      "tool": "binskim",
+      "ruleId": "BA2008",
+      "createdDate": "2026-08-05 00:11:09Z",
+      "expirationDate": "2027-01-22 00:13:27Z",
+      "justification": "This error is baselined with an expiration date of 180 days from 2026-08-05 00:13:27Z"
+    },
+    "b7efe93cb49072d40e0833d930d295d3df4e8ad1d897ba13b9b8d83437b13e3e": {
+      "signature": "b7efe93cb49072d40e0833d930d295d3df4e8ad1d897ba13b9b8d83437b13e3e",
+      "alternativeSignatures": [
+        "2f78af4973e0a74752b32079c347f40b4848fb95401af5cd22892b4c4f6e2afe",
+        "ed9f176068b98c0d28a30e86c9ab74b0e7222f7bb45ab0b99e944f35099b2b6b",
+        "b8b193a368adab7b41c81cc824f539fd0e81912271a984ce6b48f52c1785c729"
+      ],
+      "target": "MicroBuild/Plugins/MicroBuild.Plugins.SwixBuild.1.1.87/tools/bin/winterop.dll",
+      "uriBaseId": "file:///D:/a/_work/1/a/",
+      "memberOf": [
+        "default"
+      ],
+      "tool": "binskim",
+      "ruleId": "BA2008",
+      "createdDate": "2026-08-05 00:11:09Z",
+      "expirationDate": "2027-01-22 00:13:27Z",
+      "justification": "This error is baselined with an expiration date of 180 days from 2026-08-05 00:13:27Z"
+    },
+    "1e9df46dd15dbb45ffa5f4acdf37966534cc3709809c447b62a0ec94f9e21ba9": {
+      "signature": "1e9df46dd15dbb45ffa5f4acdf37966534cc3709809c447b62a0ec94f9e21ba9",
+      "alternativeSignatures": [
+        "486e6a3edfa92d28432372675168ec3fe95f3e1476479f14d86632d7e0c0bfae",
+        "29d01ad8920bcf9dc792e5856962809dc6df1142aded880b227400fa67709893",
+        "abd8203f6b3ded6585ed39e502bc0caf93aa9e189e7d8f15cfa380f50fd85a18"
+      ],
+      "target": "MicroBuild/Plugins/MicroBuild.Plugins.SwixBuild.1.1.87/tools/bin/WixToolset.BlockDeflateStream.dll",
+      "uriBaseId": "file:///D:/a/_work/1/a/",
+      "memberOf": [
+        "default"
+      ],
+      "tool": "binskim",
+      "ruleId": "BA2018",
+      "createdDate": "2026-08-05 00:11:09Z",
+      "expirationDate": "2027-01-22 00:13:27Z",
+      "justification": "This error is baselined with an expiration date of 180 days from 2026-08-05 00:13:27Z"
+    },
+    "71859b85d1dd77825cee04a3af162d1c43c932f1438989b69f1b55bb1d310e9c": {
+      "signature": "71859b85d1dd77825cee04a3af162d1c43c932f1438989b69f1b55bb1d310e9c",
+      "alternativeSignatures": [
+        "83c1f9b758084275dbee5c329e8dd4b5e4de6be43f9b13b4c49c9d0274259aeb",
+        "e6072bc33229b97cddfc47f422eddd698a696d5017cd52c13d337241c121e375",
+        "7de51e6a08f3dcb654cdf0fe77efb08f99433edac63c4417c4e0d1afc2105238"
+      ],
+      "target": "MicroBuild/Plugins/MicroBuild.Plugins.SwixBuild.1.1.87/tools/bin/sdk/x64/sfxca.dll",
+      "uriBaseId": "file:///D:/a/_work/1/a/",
+      "memberOf": [
+        "default"
+      ],
+      "tool": "binskim",
+      "ruleId": "BA2008",
+      "createdDate": "2026-08-05 00:11:09Z",
+      "expirationDate": "2027-01-22 00:13:27Z",
+      "justification": "This error is baselined with an expiration date of 180 days from 2026-08-05 00:13:27Z"
+    },
+    "2910944f0c64b5d5ba4c64f0b395af51231431162b1f1ecebfebcfea13a09a53": {
+      "signature": "2910944f0c64b5d5ba4c64f0b395af51231431162b1f1ecebfebcfea13a09a53",
+      "alternativeSignatures": [
+        "64f667e9f530faef1e3f54d0e8e94f6e13168590c99ad99e29fe94e6903278bd",
+        "02a6cb8aab0ccc6d5247e83455c0a6617e63c7a989dd63044aa2859d30a7b5a7",
+        "6bb77abb09d364bfcbc6e85353400fe13dfe1ae336e7a07b612aeda4faa8fbf5"
+      ],
+      "target": "MicroBuild/Plugins/MicroBuild.Plugins.SwixBuild.1.1.87/tools/bin/sdk/x86/sfxca.dll",
+      "uriBaseId": "file:///D:/a/_work/1/a/",
+      "memberOf": [
+        "default"
+      ],
+      "tool": "binskim",
+      "ruleId": "BA2008",
+      "createdDate": "2026-08-05 00:11:09Z",
+      "expirationDate": "2027-01-22 00:13:27Z",
+      "justification": "This error is baselined with an expiration date of 180 days from 2026-08-05 00:13:27Z"
+    }
+  }
+}
