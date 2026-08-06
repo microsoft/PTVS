@@ -33,6 +33,16 @@ namespace Microsoft.PythonTools.Project {
             _mixedMode.Visible = true;
         }
 
+        protected override void OnHandleCreated(EventArgs e) {
+            base.OnHandleCreated(e);
+
+            // Apply the Visual Studio environment font so this launcher's text resizes with
+            // the OS "Text size" accessibility setting (MAS 1.4.4 Resize Text). This control is
+            // hosted inside the Debug property page but is a separate UserControl (not a
+            // ThemeAwareUserControl), so it must opt in to the environment font explicitly.
+            VsShellFontHelper.ApplyEnvironmentFont(this);
+        }
+
         #region ILauncherOptionsControl Members
 
         public void SaveSettings() {
