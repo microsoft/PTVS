@@ -33,11 +33,13 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
     }
 
     /// <summary>
-    /// Resolves a curated set of hot-path struct fields from CPython 3.14's <c>_Py_DebugOffsets</c>
-    /// table (see <see cref="PyDebugOffsets"/>) instead of the PDB. Coverage is intentionally limited
-    /// to the frame / code-object / thread-state fields that the mixed-mode stack walk and in-process
-    /// line-number computation depend on; every other field still resolves via the PDB. This is what
-    /// automatically tracks the free-threaded build's shifted object layouts.
+    /// Resolves a curated set of hot-path struct fields from CPython's <c>_Py_DebugOffsets</c>
+    /// table (see <see cref="PyDebugOffsets"/>) instead of the PDB, for the interpreter versions the
+    /// reader understands (currently 3.14 and 3.15). Coverage is intentionally limited to the frame /
+    /// code-object / thread-state fields that the mixed-mode stack walk and in-process line-number
+    /// computation depend on; every other field still resolves via the PDB. This is what
+    /// automatically tracks the free-threaded build's shifted object layouts. Every group/field this
+    /// map references exists in both the 3.14 and 3.15 layouts, so no per-version map is needed.
     ///
     /// The map keys are CPython struct/field names (matching <see cref="StructProxy"/>'s field names
     /// and each proxy's <c>StructName</c>); the values are the corresponding

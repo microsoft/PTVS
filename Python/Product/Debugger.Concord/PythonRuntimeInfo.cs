@@ -24,7 +24,7 @@ using Microsoft.VisualStudio.Debugger.Native;
 namespace Microsoft.PythonTools.Debugger.Concord {
 
     internal class PythonDLLs {
-        private static readonly Regex pythonName = new Regex(@"^python(3\d+)(?:_d)?\.dll$");
+        private static readonly Regex pythonName = new Regex(@"^python(3\d+)(t)?(?:_d)?\.dll$");
 
         public static readonly string[] DebuggerHelperNames = {
             "Microsoft.PythonTools.Debugger.Helper.x86.dll",
@@ -60,28 +60,38 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         public DkmNativeModuleInstance CTypes { get; set; }
 
         public static PythonLanguageVersion GetPythonLanguageVersion(DkmNativeModuleInstance moduleInstance) {
-            var m = pythonName.Match(moduleInstance.Name);
+            return GetPythonLanguageVersion(moduleInstance.Name);
+        }
+
+        internal static PythonLanguageVersion GetPythonLanguageVersion(string moduleName) {
+            var m = pythonName.Match(moduleName);
             if (!m.Success) {
                 return PythonLanguageVersion.None;
             }
 
             var ver = m.Groups[1].Value;
+            PythonLanguageVersion version;
             switch (ver) {
-                case "27": return PythonLanguageVersion.V27;
-                case "33": return PythonLanguageVersion.V33;
-                case "34": return PythonLanguageVersion.V34;
-                case "35": return PythonLanguageVersion.V35;
-                case "36": return PythonLanguageVersion.V36;
-                case "37": return PythonLanguageVersion.V37;
-                case "38": return PythonLanguageVersion.V38;
-                case "39": return PythonLanguageVersion.V39;
-                case "310": return PythonLanguageVersion.V310;
-                case "311": return PythonLanguageVersion.V311;
-                case "312": return PythonLanguageVersion.V312;
-                case "313": return PythonLanguageVersion.V313;
-                case "314": return PythonLanguageVersion.V314;
+                case "27": version = PythonLanguageVersion.V27; break;
+                case "33": version = PythonLanguageVersion.V33; break;
+                case "34": version = PythonLanguageVersion.V34; break;
+                case "35": version = PythonLanguageVersion.V35; break;
+                case "36": version = PythonLanguageVersion.V36; break;
+                case "37": version = PythonLanguageVersion.V37; break;
+                case "38": version = PythonLanguageVersion.V38; break;
+                case "39": version = PythonLanguageVersion.V39; break;
+                case "310": version = PythonLanguageVersion.V310; break;
+                case "311": version = PythonLanguageVersion.V311; break;
+                case "312": version = PythonLanguageVersion.V312; break;
+                case "313": version = PythonLanguageVersion.V313; break;
+                case "314": version = PythonLanguageVersion.V314; break;
+                case "315": version = PythonLanguageVersion.V315; break;
                 default: return PythonLanguageVersion.None;
             }
+
+            return !m.Groups[2].Success || version >= PythonLanguageVersion.V313
+                ? version
+                : PythonLanguageVersion.None;
         }
     }
 
@@ -123,17 +133,18 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
         /// <summary>
         /// Offset source that <see cref="Proxies.StructProxy"/> consults before falling back to the
-        /// interpreter PDB. Non-null only for CPython 3.14, where the <c>_Py_DebugOffsets</c> table
-        /// authoritatively describes the (potentially free-threaded-shifted) layout of the mixed-mode
-        /// hot-path structs. Older interpreters return null and resolve every field via the PDB exactly
-        /// as before, so this cannot regress them.
+        /// interpreter PDB. Non-null only for CPython versions whose <c>_Py_DebugOffsets</c> layout this
+        /// reader understands (3.14 and 3.15), where the table authoritatively describes the (potentially
+        /// free-threaded-shifted) layout of the mixed-mode hot-path structs. Older interpreters, and any
+        /// newer version this reader hasn't been taught yet, return null and resolve every field via the
+        /// PDB exactly as before, so this cannot regress them.
         /// </summary>
         public Proxies.Structs.IStructFieldOffsetProvider StructFieldOffsetProvider {
             get {
                 if (!_offsetProviderProbed) {
                     _offsetProviderProbed = true;
                     var offsets = DebugOffsets;
-                    if (offsets != null && offsets.Is314) {
+                    if (offsets != null && offsets.IsSupported) {
                         _offsetProvider = new Proxies.Structs.DebugOffsetsFieldProvider(offsets);
                     }
                 }

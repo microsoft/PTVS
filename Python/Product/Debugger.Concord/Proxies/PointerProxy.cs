@@ -62,6 +62,10 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies {
             where TProxy : IDataProxy {
             return new PointerProxy<TProxy>(Process, Address, polymorphic);
         }
+
+        internal static ulong RemoveTagBits(ulong value, ulong tagMask) {
+            return value & ~tagMask;
+        }
     }
 
     [DebuggerDisplay("& {TryRead()}")]
@@ -122,7 +126,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies {
 
         // The pointer value stored at Address, with any tag bits stripped.
         private ulong ReadTarget() {
-            return Raw.Read() & ~_tagMask;
+            return PointerProxy.RemoveTagBits(Raw.Read(), _tagMask);
         }
 
         public TProxy Read() {
