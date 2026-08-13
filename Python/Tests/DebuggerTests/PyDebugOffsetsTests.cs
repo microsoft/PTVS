@@ -189,7 +189,7 @@ namespace DebuggerTests {
             Assert.IsFalse(PyDebugOffsets.TryParse(null, out result, out error));
 
             // A valid header but a buffer too short for the full 3.14 layout is rejected.
-            var truncated = new byte[PyDebugOffsets.TableSize - 1];
+            var truncated = new byte[PyDebugOffsets.TableSizeFor(3, 14) - 1];
             var full = FromHex(RawV314);
             Array.Copy(full, truncated, truncated.Length);
             Assert.IsFalse(PyDebugOffsets.TryParse(truncated, out result, out error));
@@ -197,8 +197,127 @@ namespace DebuggerTests {
 
         [TestMethod, Priority(0)]
         public void TableSize_MatchesRecordedVectorLength() {
-            Assert.AreEqual(FromHex(RawV314).Length, PyDebugOffsets.TableSize);
-            Assert.AreEqual(FromHex(RawV314T).Length, PyDebugOffsets.TableSize);
+            Assert.AreEqual(FromHex(RawV314).Length, PyDebugOffsets.TableSizeFor(3, 14));
+            Assert.AreEqual(FromHex(RawV314T).Length, PyDebugOffsets.TableSizeFor(3, 14));
+        }
+
+        // ------------------------------------------------------------------
+        // CPython 3.15 layout.
+        //
+        // No real 3.15 interpreter is available to record from yet, so these tests build a synthetic
+        // _Py_DebugOffsets blob whose field i simply holds the value i (i = 0..N-1). That lets us
+        // assert the reader places each group/field at the exact ordinal the CPython 3.15 header
+        // dictates (Include/internal/pycore_debug_offsets.h @ branch 3.15). The expected ordinals are
+        // derived independently from that header's group/field order, so the assertions are not
+        // circular with the reader's own field lists:
+        //   runtime_state       3   [0..2]
+        //   interpreter_state  16   [3..18]
+        //   thread_state       16   [19..34]   (+3 after current_frame, +4 appended vs 3.14)
+        //   err_stackitem       1   [35]       (new in 3.15)
+        //   interpreter_frame   8   [36..43]
+        //   code_object        11   [44..54]
+        //   pyobject            2   [55..56]
+        //   type_object         6   [57..62]   (+tp_basicsize, +tp_dictoffset vs 3.14)
+        //   heap_type_object    2   [63..64]   (new in 3.15)
+        //   ... remaining groups follow ...    (108 fields total => 888 bytes)
+        private static byte[] BuildSynthetic315() {
+            int size = PyDebugOffsets.TableSizeFor(3, 15);
+            Assert.AreEqual(888, size, "3.15 layout should be 24-byte header + 108 uint64 fields");
+            var data = new byte[size];
+
+            for (int i = 0; i < 8; i++) {
+                data[i] = (byte)"xdebugpy"[i];
+            }
+            // PY_VERSION_HEX for 3.15.1: major=3, minor=15, micro=1.
+            Array.Copy(BitConverter.GetBytes(0x030f0100UL), 0, data, 8, 8);
+            // free_threaded = 0 (standard build).
+            Array.Copy(BitConverter.GetBytes(0UL), 0, data, 16, 8);
+
+            int fieldCount = (size - 24) / 8;
+            for (int i = 0; i < fieldCount; i++) {
+                Array.Copy(BitConverter.GetBytes((ulong)i), 0, data, 24 + i * 8, 8);
+            }
+            return data;
+        }
+
+        [TestMethod, Priority(0)]
+        public void TryParse_Parses315Header() {
+            PyDebugOffsets result;
+            string error;
+            Assert.IsTrue(PyDebugOffsets.TryParse(BuildSynthetic315(), out result, out error), error);
+            Assert.AreEqual(3, result.Major);
+            Assert.AreEqual(15, result.Minor);
+            Assert.AreEqual(1, result.Micro);
+            Assert.IsFalse(result.Is314);
+            Assert.IsTrue(result.Is315);
+            Assert.IsTrue(result.IsSupported);
+            Assert.IsFalse(result.FreeThreaded);
+        }
+
+        [TestMethod, Priority(0)]
+        public void TryParse_Places315GroupsAtHeaderOrdinals() {
+            PyDebugOffsets result;
+            string error;
+            Assert.IsTrue(PyDebugOffsets.TryParse(BuildSynthetic315(), out result, out error), error);
+
+            // thread_state gained fields in 3.15; current_frame stays at ordinal 23 but the appended
+            // fields (holds_gil..exc_state) land after the inserted profiling fields.
+            Assert.AreEqual(23UL, result.Offset("thread_state", "current_frame"));
+            Assert.AreEqual(24UL, result.Offset("thread_state", "base_frame"));
+            Assert.AreEqual(27UL, result.Offset("thread_state", "thread_id"));
+            Assert.AreEqual(34UL, result.Offset("thread_state", "exc_state"));
+
+            // err_stackitem is a new group inserted between thread_state and interpreter_frame.
+            Assert.AreEqual(35UL, result.Offset("err_stackitem", "exc_value"));
+
+            // interpreter_frame shifts by the 3.15 insertions but keeps its internal order.
+            Assert.AreEqual(38UL, result.Offset("interpreter_frame", "executable"));
+            Assert.AreEqual(39UL, result.Offset("interpreter_frame", "instr_ptr"));
+            Assert.AreEqual(40UL, result.Offset("interpreter_frame", "localsplus"));
+            Assert.AreEqual(41UL, result.Offset("interpreter_frame", "owner"));
+
+            // code_object: the hot-path fields the in-process line decoder consumes.
+            Assert.AreEqual(48UL, result.Offset("code_object", "linetable"));
+            Assert.AreEqual(49UL, result.Offset("code_object", "firstlineno"));
+            Assert.AreEqual(53UL, result.Offset("code_object", "co_code_adaptive"));
+
+            // type_object gained fields; heap_type_object is a new group right after it.
+            Assert.AreEqual(61UL, result.Offset("type_object", "tp_basicsize"));
+            Assert.AreEqual(62UL, result.Offset("type_object", "tp_dictoffset"));
+            Assert.AreEqual(64UL, result.Offset("heap_type_object", "ht_cached_keys"));
+        }
+
+        [TestMethod, Priority(0)]
+        public void TryParse_Rejects315BufferTooShortForLayout() {
+            var full = BuildSynthetic315();
+            var truncated = new byte[full.Length - 1];
+            Array.Copy(full, truncated, truncated.Length);
+            PyDebugOffsets result;
+            string error;
+            Assert.IsFalse(PyDebugOffsets.TryParse(truncated, out result, out error));
+            Assert.IsNull(result);
+            Assert.IsNotNull(error);
+        }
+
+        [TestMethod, Priority(0)]
+        public void TryParse_RejectsUnknownVersion() {
+            // A well-formed header advertising an unknown version (e.g. a future 3.16) is rejected so
+            // callers fall back to the PDB rather than mis-parsing an unknown layout.
+            var data = BuildSynthetic315();
+            Array.Copy(BitConverter.GetBytes(0x03100000UL), 0, data, 8, 8); // 3.16.0
+            PyDebugOffsets result;
+            string error;
+            Assert.IsFalse(PyDebugOffsets.TryParse(data, out result, out error));
+            Assert.IsNull(result);
+            Assert.IsNotNull(error);
+        }
+
+        [TestMethod, Priority(0)]
+        public void TableSizeFor_UnknownVersionIsZero() {
+            Assert.AreEqual(0, PyDebugOffsets.TableSizeFor(3, 13));
+            Assert.AreEqual(0, PyDebugOffsets.TableSizeFor(3, 16));
+            Assert.AreEqual(760, PyDebugOffsets.TableSizeFor(3, 14));
+            Assert.AreEqual(888, PyDebugOffsets.TableSizeFor(3, 15));
         }
     }
 }

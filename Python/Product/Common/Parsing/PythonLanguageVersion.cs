@@ -46,6 +46,7 @@ namespace Microsoft.PythonTools.Common.Parsing {
         V312 = 0x030c,
         V313 = 0x030d,
         V314 = 0x030e, // Added for Python 3.14 support
+        V315 = 0x030f, // Added for Python 3.15 support
     }
 
     public static class PythonLanguageVersionExtensions {

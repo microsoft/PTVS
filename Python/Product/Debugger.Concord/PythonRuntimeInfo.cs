@@ -80,6 +80,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 case "312": return PythonLanguageVersion.V312;
                 case "313": return PythonLanguageVersion.V313;
                 case "314": return PythonLanguageVersion.V314;
+                case "315": return PythonLanguageVersion.V315;
                 default: return PythonLanguageVersion.None;
             }
         }
@@ -123,17 +124,18 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
         /// <summary>
         /// Offset source that <see cref="Proxies.StructProxy"/> consults before falling back to the
-        /// interpreter PDB. Non-null only for CPython 3.14, where the <c>_Py_DebugOffsets</c> table
-        /// authoritatively describes the (potentially free-threaded-shifted) layout of the mixed-mode
-        /// hot-path structs. Older interpreters return null and resolve every field via the PDB exactly
-        /// as before, so this cannot regress them.
+        /// interpreter PDB. Non-null only for CPython versions whose <c>_Py_DebugOffsets</c> layout this
+        /// reader understands (3.14 and 3.15), where the table authoritatively describes the (potentially
+        /// free-threaded-shifted) layout of the mixed-mode hot-path structs. Older interpreters, and any
+        /// newer version this reader hasn't been taught yet, return null and resolve every field via the
+        /// PDB exactly as before, so this cannot regress them.
         /// </summary>
         public Proxies.Structs.IStructFieldOffsetProvider StructFieldOffsetProvider {
             get {
                 if (!_offsetProviderProbed) {
                     _offsetProviderProbed = true;
                     var offsets = DebugOffsets;
-                    if (offsets != null && offsets.Is314) {
+                    if (offsets != null && offsets.IsSupported) {
                         _offsetProvider = new Proxies.Structs.DebugOffsetsFieldProvider(offsets);
                     }
                 }

@@ -21,10 +21,11 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace DebuggerTests {
     /// <summary>
     /// Verifies the hot-path offset provider (<see cref="DebugOffsetsFieldProvider"/>) that lets
-    /// <c>StructProxy</c> source CPython 3.14 frame / code-object / thread-state field offsets from the
-    /// self-describing <c>_Py_DebugOffsets</c> table instead of the PDB. Everything is exercised against
-    /// the same real 3.14.6 vectors used by <see cref="PyDebugOffsetsTests"/>, mapping the CPython
-    /// struct/field names that <c>StructProxy</c> passes in to the values the table reports.
+    /// <c>StructProxy</c> source CPython frame / code-object / thread-state field offsets from the
+    /// self-describing <c>_Py_DebugOffsets</c> table instead of the PDB. The 3.14 cases run against the
+    /// real 3.14.6 vectors used by <see cref="PyDebugOffsetsTests"/>; a synthetic 3.15 blob confirms the
+    /// same mapping resolves against the (grown) 3.15 layout. Each case maps the CPython struct/field
+    /// names that <c>StructProxy</c> passes in to the values the table reports.
     /// </summary>
     [TestClass]
     public class DebugOffsetsFieldProviderTests {
@@ -116,6 +117,50 @@ namespace DebuggerTests {
             Assert.IsFalse(provider.TryGetFieldOffset("_ts", "not_a_field", out offset));
             Assert.IsFalse(provider.TryGetFieldOffset(null, "next", out offset));
             Assert.IsFalse(provider.TryGetFieldOffset("_ts", null, out offset));
+        }
+
+        // Builds a provider over a synthetic 3.15 table where field i holds value i, so the hot-path
+        // mappings must resolve to each field's ordinal in the 3.15 layout (see PyDebugOffsetsTests for
+        // how the ordinals are derived from the CPython 3.15 header).
+        private static DebugOffsetsFieldProvider Synthetic315Provider() {
+            int size = PyDebugOffsets.TableSizeFor(3, 15);
+            var data = new byte[size];
+            for (int i = 0; i < 8; i++) {
+                data[i] = (byte)"xdebugpy"[i];
+            }
+            Array.Copy(BitConverter.GetBytes(0x030f0100UL), 0, data, 8, 8); // 3.15.1
+            int fieldCount = (size - 24) / 8;
+            for (int i = 0; i < fieldCount; i++) {
+                Array.Copy(BitConverter.GetBytes((ulong)i), 0, data, 24 + i * 8, 8);
+            }
+            PyDebugOffsets offsets;
+            string error;
+            Assert.IsTrue(PyDebugOffsets.TryParse(data, out offsets, out error), error);
+            Assert.IsTrue(offsets.Is315);
+            return new DebugOffsetsFieldProvider(offsets);
+        }
+
+        [TestMethod, Priority(0)]
+        public void Synthetic315_MapsHotPathAgainstGrownLayout() {
+            var provider = Synthetic315Provider();
+
+            // interpreter_frame hot path (ordinals shifted by the 3.15 insertions).
+            Assert.AreEqual(37L, Offset(provider, "_PyInterpreterFrame", "previous"));
+            Assert.AreEqual(38L, Offset(provider, "_PyInterpreterFrame", "f_executable"));
+            Assert.AreEqual(39L, Offset(provider, "_PyInterpreterFrame", "instr_ptr"));
+            Assert.AreEqual(40L, Offset(provider, "_PyInterpreterFrame", "localsplus"));
+            Assert.AreEqual(41L, Offset(provider, "_PyInterpreterFrame", "owner"));
+
+            // code_object hot path.
+            Assert.AreEqual(48L, Offset(provider, "PyCodeObject", "co_linetable"));
+            Assert.AreEqual(49L, Offset(provider, "PyCodeObject", "co_firstlineno"));
+            Assert.AreEqual(53L, Offset(provider, "PyCodeObject", "co_code_adaptive"));
+
+            // thread_state hot path (current_frame keeps ordinal 23; interp/next precede it).
+            Assert.AreEqual(21L, Offset(provider, "_ts", "next"));
+            Assert.AreEqual(22L, Offset(provider, "_ts", "interp"));
+            Assert.AreEqual(23L, Offset(provider, "_ts", "current_frame"));
+            Assert.AreEqual(27L, Offset(provider, "_ts", "thread_id"));
         }
     }
 }
