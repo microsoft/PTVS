@@ -22,10 +22,11 @@ namespace DebuggerTests {
     /// <summary>
     /// Verifies the hot-path offset provider (<see cref="DebugOffsetsFieldProvider"/>) that lets
     /// <c>StructProxy</c> source CPython frame / code-object / thread-state field offsets from the
-    /// self-describing <c>_Py_DebugOffsets</c> table instead of the PDB. The 3.14 cases run against the
-    /// real 3.14.6 vectors used by <see cref="PyDebugOffsetsTests"/>; a synthetic 3.15 blob confirms the
-    /// same mapping resolves against the (grown) 3.15 layout. Each case maps the CPython struct/field
-    /// names that <c>StructProxy</c> passes in to the values the table reports.
+    /// self-describing <c>_Py_DebugOffsets</c> table instead of the PDB. The cases run against the real
+    /// 3.14.6 and 3.15.0rc1 vectors used by <see cref="PyDebugOffsetsTests"/> (standard and free-threaded),
+    /// plus a synthetic 3.15 blob that pins the mapping to the exact ordinals of the (grown) 3.15 layout.
+    /// Each case maps the CPython struct/field names that <c>StructProxy</c> passes in to the values the
+    /// table reports.
     /// </summary>
     [TestClass]
     public class DebugOffsetsFieldProviderTests {
@@ -117,6 +118,55 @@ namespace DebuggerTests {
             Assert.IsFalse(provider.TryGetFieldOffset("_ts", "not_a_field", out offset));
             Assert.IsFalse(provider.TryGetFieldOffset(null, "next", out offset));
             Assert.IsFalse(provider.TryGetFieldOffset("_ts", null, out offset));
+        }
+
+        [TestMethod, Priority(0)]
+        public void Standard315_MapsInterpreterFrameHotPath() {
+            var provider = Provider(PyDebugOffsetsTests.RawV315);
+            Assert.AreEqual(8L, Offset(provider, "_PyInterpreterFrame", "previous"));
+            Assert.AreEqual(0L, Offset(provider, "_PyInterpreterFrame", "f_executable"));
+            Assert.AreEqual(56L, Offset(provider, "_PyInterpreterFrame", "instr_ptr"));
+            Assert.AreEqual(80L, Offset(provider, "_PyInterpreterFrame", "localsplus"));
+            Assert.AreEqual(74L, Offset(provider, "_PyInterpreterFrame", "owner"));
+        }
+
+        [TestMethod, Priority(0)]
+        public void Standard315_MapsCodeObjectHotPath() {
+            var provider = Provider(PyDebugOffsetsTests.RawV315);
+            Assert.AreEqual(112L, Offset(provider, "PyCodeObject", "co_filename"));
+            Assert.AreEqual(120L, Offset(provider, "PyCodeObject", "co_name"));
+            Assert.AreEqual(68L, Offset(provider, "PyCodeObject", "co_firstlineno"));
+            Assert.AreEqual(96L, Offset(provider, "PyCodeObject", "co_localsplusnames"));
+            Assert.AreEqual(104L, Offset(provider, "PyCodeObject", "co_localspluskinds"));
+            Assert.AreEqual(208L, Offset(provider, "PyCodeObject", "co_code_adaptive"));
+            Assert.AreEqual(136L, Offset(provider, "PyCodeObject", "co_linetable"));
+        }
+
+        [TestMethod, Priority(0)]
+        public void Standard315_MapsThreadStateHotPath() {
+            var provider = Provider(PyDebugOffsetsTests.RawV315);
+            Assert.AreEqual(8L, Offset(provider, "_ts", "next"));
+            Assert.AreEqual(16L, Offset(provider, "_ts", "interp"));
+            Assert.AreEqual(176L, Offset(provider, "_ts", "thread_id"));
+            Assert.AreEqual(72L, Offset(provider, "_ts", "current_frame"));
+        }
+
+        [TestMethod, Priority(0)]
+        public void FreeThreaded315_TracksShiftedLayout() {
+            var standard = Provider(PyDebugOffsetsTests.RawV315);
+            var freeThreaded = Provider(PyDebugOffsetsTests.RawV315T);
+
+            // Same story as 3.14: the free-threaded build shifts these code-object fields and the
+            // provider surfaces the shifted offsets with no code change (co_linetable 136->152,
+            // co_firstlineno 68->84).
+            Assert.AreEqual(136L, Offset(standard, "PyCodeObject", "co_linetable"));
+            Assert.AreEqual(152L, Offset(freeThreaded, "PyCodeObject", "co_linetable"));
+            Assert.AreEqual(68L, Offset(standard, "PyCodeObject", "co_firstlineno"));
+            Assert.AreEqual(84L, Offset(freeThreaded, "PyCodeObject", "co_firstlineno"));
+
+            // Fields that don't move stay put across builds.
+            Assert.AreEqual(56L, Offset(freeThreaded, "_PyInterpreterFrame", "instr_ptr"));
+            Assert.AreEqual(72L, Offset(freeThreaded, "_ts", "current_frame"));
         }
 
         // Builds a provider over a synthetic 3.15 table where field i holds value i, so the hot-path

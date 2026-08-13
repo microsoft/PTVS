@@ -62,6 +62,42 @@ namespace DebuggerTests {
             "00000000b000000000000000280000000000000058000000000000005300000000000000000000000000000008000000000000001800000000000000" +
             "2801000000000000f81e000000000000000000000000000004000000000000000002000000000000";
 
+        // Recorded _Py_DebugOffsets bytes from CPython 3.15.0rc1 (standard, GIL-enabled build).
+        internal const string RawV315 =
+            "7864656275677079c1000f03000000000000000000000000a0440500000000009003000000000000a803000000000000f872030000000000681c0000" +
+            "00000000601c000000000000a01c000000000000b01c000000000000e01c000000000000a01d000000000000901d000000000000981d000000000000" +
+            "1000000000000000281e0000000000000000000000000000381e000000000000301e000000000000601e000000000000000000000000000070030000" +
+            "000000000000000000000000080000000000000010000000000000004800000000000000500000000000000058000000000000006000000000000000" +
+            "b000000000000000b400000000000000f800000000000000200000000000000024000000000000002800000000000000880000000000000018010000" +
+            "000000000000000000000000580000000000000008000000000000000000000000000000380000000000000050000000000000004a00000000000000" +
+            "40000000000000000000000000000000d800000000000000700000000000000078000000000000008000000000000000880000000000000044000000" +
+            "00000000340000000000000060000000000000006800000000000000d000000000000000000000000000000010000000000000000800000000000000" +
+            "a80100000000000018000000000000005800000000000000a80000000000000020000000000000002001000000000000b00300000000000078030000" +
+            "00000000280000000000000020000000000000001000000000000000280000000000000018000000000000001000000000000000c800000000000000" +
+            "180000000000000028000000000000002000000000000000300000000000000020000000000000002800000000000000180000000000000010000000" +
+            "000000002000000000000000100000000000000018000000000000002800000000000000100000000000000020000000000000004000000000000000" +
+            "2000000000000000100000000000000028000000000000003800000000000000b0000000000000007000000000000000780000000000000058040000" +
+            "000000006800000000000000a00000000000000018000000000000004800000000000000430000000000000000000000000000000800000000000000" +
+            "18000000000000005001000000000000b01e000000000000000000000000000004000000000000000002000000000000";
+
+        // Recorded _Py_DebugOffsets bytes from CPython 3.15.0rc1 free-threaded build (python3.15t).
+        internal const string RawV315T =
+            "7864656275677079c1000f03000000000100000000000000002d0600000000009003000000000000a80300000000000080c4030000000000681c0000" +
+            "00000000601c000000000000a01c000000000000b01c000000000000e01c000000000000a01d000000000000901d000000000000981d000000000000" +
+            "1000000000000000301e0000000000000000000000000000401e000000000000381e000000000000681e0000000000001c4400000000000070030000" +
+            "000000000000000000000000080000000000000010000000000000004800000000000000500000000000000058000000000000006000000000000000" +
+            "b000000000000000b400000000000000f800000000000000200000000000000024000000000000002800000000000000880000000000000018010000" +
+            "000000000000000000000000580000000000000008000000000000000000000000000000380000000000000050000000000000004e00000000000000" +
+            "40000000000000004800000000000000f000000000000000800000000000000088000000000000009000000000000000980000000000000054000000" +
+            "00000000440000000000000070000000000000007800000000000000e800000000000000e00000000000000020000000000000001800000000000000" +
+            "b80100000000000028000000000000006800000000000000b80000000000000030000000000000003001000000000000c80300000000000088030000" +
+            "00000000380000000000000030000000000000002000000000000000380000000000000028000000000000002000000000000000d800000000000000" +
+            "280000000000000038000000000000003000000000000000400000000000000030000000000000003800000000000000280000000000000020000000" +
+            "000000003000000000000000200000000000000028000000000000003800000000000000200000000000000030000000000000005000000000000000" +
+            "3000000000000000200000000000000038000000000000004800000000000000b00000000000000070000000000000007800000000000000d8000000" +
+            "000000006800000000000000b00000000000000028000000000000005800000000000000530000000000000000000000000000000800000000000000" +
+            "18000000000000005001000000000000b81e000000000000000000000000000004000000000000000002000000000000";
+
         // Full expected offsets for the standard 3.14.6 build (every field in the table).
         private static readonly Tuple<string, string, ulong>[] ExpectedV314 = {
             T("runtime_state", "size", 315600), T("runtime_state", "finalizing", 784), T("runtime_state", "interpreters_head", 808),
@@ -97,6 +133,31 @@ namespace DebuggerTests {
             T("debugger_support", "eval_breaker", 24), T("debugger_support", "remote_debugger_support", 296),
             T("debugger_support", "remote_debugging_enabled", 7904), T("debugger_support", "debugger_pending_call", 0),
             T("debugger_support", "debugger_script_path", 4), T("debugger_support", "debugger_script_path_size", 512),
+        };
+
+        // Full expected offsets for the standard 3.15.0rc1 build (every field in the table).
+        private static readonly Tuple<string, string, ulong>[] ExpectedV315 = {
+            T("runtime_state", "size", 345248), T("runtime_state", "finalizing", 912), T("runtime_state", "interpreters_head", 936),
+            T("interpreter_state", "size", 226040), T("interpreter_state", "id", 7272), T("interpreter_state", "next", 7264), T("interpreter_state", "threads_head", 7328), T("interpreter_state", "threads_main", 7344), T("interpreter_state", "gc", 7392), T("interpreter_state", "imports_modules", 7584), T("interpreter_state", "sysdict", 7568), T("interpreter_state", "builtins", 7576), T("interpreter_state", "ceval_gil", 16), T("interpreter_state", "gil_runtime_state", 7720), T("interpreter_state", "gil_runtime_state_enabled", 0), T("interpreter_state", "gil_runtime_state_locked", 7736), T("interpreter_state", "gil_runtime_state_holder", 7728), T("interpreter_state", "code_object_generation", 7776), T("interpreter_state", "tlbc_generation", 0),
+            T("thread_state", "size", 880), T("thread_state", "prev", 0), T("thread_state", "next", 8), T("thread_state", "interp", 16), T("thread_state", "current_frame", 72), T("thread_state", "base_frame", 80), T("thread_state", "last_profiled_frame", 88), T("thread_state", "last_profiled_frame_seq", 96), T("thread_state", "thread_id", 176), T("thread_state", "native_thread_id", 180), T("thread_state", "datastack_chunk", 248), T("thread_state", "status", 32), T("thread_state", "holds_gil", 36), T("thread_state", "gil_requested", 40), T("thread_state", "current_exception", 136), T("thread_state", "exc_state", 280),
+            T("err_stackitem", "exc_value", 0),
+            T("interpreter_frame", "size", 88), T("interpreter_frame", "previous", 8), T("interpreter_frame", "executable", 0), T("interpreter_frame", "instr_ptr", 56), T("interpreter_frame", "localsplus", 80), T("interpreter_frame", "owner", 74), T("interpreter_frame", "stackpointer", 64), T("interpreter_frame", "tlbc_index", 0),
+            T("code_object", "size", 216), T("code_object", "filename", 112), T("code_object", "name", 120), T("code_object", "qualname", 128), T("code_object", "linetable", 136), T("code_object", "firstlineno", 68), T("code_object", "argcount", 52), T("code_object", "localsplusnames", 96), T("code_object", "localspluskinds", 104), T("code_object", "co_code_adaptive", 208), T("code_object", "co_tlbc", 0),
+            T("pyobject", "size", 16), T("pyobject", "ob_type", 8),
+            T("type_object", "size", 424), T("type_object", "tp_name", 24), T("type_object", "tp_repr", 88), T("type_object", "tp_flags", 168), T("type_object", "tp_basicsize", 32), T("type_object", "tp_dictoffset", 288),
+            T("heap_type_object", "size", 944), T("heap_type_object", "ht_cached_keys", 888),
+            T("tuple_object", "size", 40), T("tuple_object", "ob_item", 32), T("tuple_object", "ob_size", 16),
+            T("list_object", "size", 40), T("list_object", "ob_item", 24), T("list_object", "ob_size", 16),
+            T("set_object", "size", 200), T("set_object", "used", 24), T("set_object", "table", 40), T("set_object", "mask", 32),
+            T("dict_object", "size", 48), T("dict_object", "ma_keys", 32), T("dict_object", "ma_values", 40),
+            T("float_object", "size", 24), T("float_object", "ob_fval", 16),
+            T("long_object", "size", 32), T("long_object", "lv_tag", 16), T("long_object", "ob_digit", 24),
+            T("bytes_object", "size", 40), T("bytes_object", "ob_size", 16), T("bytes_object", "ob_sval", 32),
+            T("unicode_object", "size", 64), T("unicode_object", "state", 32), T("unicode_object", "length", 16), T("unicode_object", "asciiobject_size", 40), T("unicode_object", "compactunicodeobject_size", 56),
+            T("gc", "size", 176), T("gc", "collecting", 112), T("gc", "frame", 120), T("gc", "generation_stats_size", 1112), T("gc", "generation_stats", 104),
+            T("gen_object", "size", 160), T("gen_object", "gi_name", 24), T("gen_object", "gi_iframe", 72), T("gen_object", "gi_frame_state", 67),
+            T("llist_node", "next", 0), T("llist_node", "prev", 8),
+            T("debugger_support", "eval_breaker", 24), T("debugger_support", "remote_debugger_support", 336), T("debugger_support", "remote_debugging_enabled", 7856), T("debugger_support", "debugger_pending_call", 0), T("debugger_support", "debugger_script_path", 4), T("debugger_support", "debugger_script_path_size", 512),
         };
 
         private static Tuple<string, string, ulong> T(string group, string field, ulong value) {
@@ -199,17 +260,20 @@ namespace DebuggerTests {
         public void TableSize_MatchesRecordedVectorLength() {
             Assert.AreEqual(FromHex(RawV314).Length, PyDebugOffsets.TableSizeFor(3, 14));
             Assert.AreEqual(FromHex(RawV314T).Length, PyDebugOffsets.TableSizeFor(3, 14));
+            Assert.AreEqual(FromHex(RawV315).Length, PyDebugOffsets.TableSizeFor(3, 15));
+            Assert.AreEqual(FromHex(RawV315T).Length, PyDebugOffsets.TableSizeFor(3, 15));
         }
 
         // ------------------------------------------------------------------
         // CPython 3.15 layout.
         //
-        // No real 3.15 interpreter is available to record from yet, so these tests build a synthetic
-        // _Py_DebugOffsets blob whose field i simply holds the value i (i = 0..N-1). That lets us
-        // assert the reader places each group/field at the exact ordinal the CPython 3.15 header
-        // dictates (Include/internal/pycore_debug_offsets.h @ branch 3.15). The expected ordinals are
-        // derived independently from that header's group/field order, so the assertions are not
-        // circular with the reader's own field lists:
+        // RawV315 / RawV315T are real _Py_DebugOffsets tables recorded in-process from CPython
+        // 3.15.0rc1 (standard and free-threaded builds). BuildSynthetic315 additionally builds a blob
+        // whose field i simply holds the value i (i = 0..N-1) so we can assert the reader places each
+        // group/field at the exact ordinal the CPython 3.15 header dictates
+        // (Include/internal/pycore_debug_offsets.h @ branch 3.15). The expected ordinals are derived
+        // independently from that header's group/field order, so the assertions are not circular with
+        // the reader's own field lists:
         //   runtime_state       3   [0..2]
         //   interpreter_state  16   [3..18]
         //   thread_state       16   [19..34]   (+3 after current_frame, +4 appended vs 3.14)
@@ -241,7 +305,68 @@ namespace DebuggerTests {
         }
 
         [TestMethod, Priority(0)]
-        public void TryParse_Parses315Header() {
+        public void TryParse_ParsesStandard315Header() {
+            PyDebugOffsets result;
+            string error;
+            Assert.IsTrue(PyDebugOffsets.TryParse(FromHex(RawV315), out result, out error), error);
+            Assert.AreEqual(3, result.Major);
+            Assert.AreEqual(15, result.Minor);
+            Assert.AreEqual(0, result.Micro);
+            Assert.AreEqual(0x30f00c1UL, result.Version);
+            Assert.IsFalse(result.Is314);
+            Assert.IsTrue(result.Is315);
+            Assert.IsTrue(result.IsSupported);
+            Assert.IsFalse(result.FreeThreaded);
+        }
+
+        [TestMethod, Priority(0)]
+        public void TryParse_ReadsEveryStandard315Offset() {
+            PyDebugOffsets result;
+            string error;
+            Assert.IsTrue(PyDebugOffsets.TryParse(FromHex(RawV315), out result, out error), error);
+            foreach (var expected in ExpectedV315) {
+                ulong actual = result.Offset(expected.Item1, expected.Item2);
+                Assert.AreEqual(expected.Item3, actual, expected.Item1 + "." + expected.Item2);
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void TryParse_ParsesFreeThreaded315() {
+            PyDebugOffsets result;
+            string error;
+            Assert.IsTrue(PyDebugOffsets.TryParse(FromHex(RawV315T), out result, out error), error);
+            Assert.IsTrue(result.Is315);
+            Assert.IsTrue(result.FreeThreaded);
+
+            // instr_ptr / current_frame land at the same place as the standard 3.15 build...
+            Assert.AreEqual(56UL, result.Offset("interpreter_frame", "instr_ptr"));
+            Assert.AreEqual(72UL, result.Offset("thread_state", "current_frame"));
+
+            // ...but the free-threaded build inserts extra fields, so object layouts shift. This is
+            // precisely why reading the table beats hard-coding offsets: linetable/firstlineno move
+            // within PyCodeObject and ob_type moves within PyObject (all +16 vs the standard build).
+            Assert.AreEqual(152UL, result.Offset("code_object", "linetable"));
+            Assert.AreEqual(84UL, result.Offset("code_object", "firstlineno"));
+            Assert.AreEqual(24UL, result.Offset("pyobject", "ob_type"));
+
+            // The TLBC (thread-local bytecode) fields are only non-zero in the free-threaded build.
+            Assert.AreEqual(72UL, result.Offset("interpreter_frame", "tlbc_index"));
+            Assert.AreEqual(224UL, result.Offset("code_object", "co_tlbc"));
+            Assert.AreEqual(17436UL, result.Offset("interpreter_state", "tlbc_generation"));
+        }
+
+        [TestMethod, Priority(0)]
+        public void TryParse_TlbcFieldsZeroInStandard315Build() {
+            PyDebugOffsets result;
+            string error;
+            Assert.IsTrue(PyDebugOffsets.TryParse(FromHex(RawV315), out result, out error), error);
+            Assert.AreEqual(0UL, result.Offset("interpreter_frame", "tlbc_index"));
+            Assert.AreEqual(0UL, result.Offset("code_object", "co_tlbc"));
+            Assert.AreEqual(0UL, result.Offset("interpreter_state", "tlbc_generation"));
+        }
+
+        [TestMethod, Priority(0)]
+        public void TryParse_Parses315SyntheticHeader() {
             PyDebugOffsets result;
             string error;
             Assert.IsTrue(PyDebugOffsets.TryParse(BuildSynthetic315(), out result, out error), error);
