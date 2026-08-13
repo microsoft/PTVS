@@ -219,7 +219,15 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         // Largest table across all known layouts. TryRead reads this many bytes before it knows the
         // version, which is safe because the table is only the first member of the much larger
         // _PyRuntime global; TryParse then consumes only the matching layout's TableSize.
-        private static readonly int MaxTableSize = Math.Max(Layout314.TableSize, Layout315.TableSize);
+        private static readonly int MaxTableSize = GetMaxTableSize();
+
+        private static int GetMaxTableSize() {
+            int maxTableSize = 0;
+            foreach (var layout in KnownLayouts) {
+                maxTableSize = Math.Max(maxTableSize, layout.TableSize);
+            }
+            return maxTableSize;
+        }
 
         private static Layout GetLayout(int major, int minor) {
             foreach (var layout in KnownLayouts) {

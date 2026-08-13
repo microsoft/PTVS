@@ -284,7 +284,7 @@ namespace DebuggerTests {
         //   type_object         6   [57..62]   (+tp_basicsize, +tp_dictoffset vs 3.14)
         //   heap_type_object    2   [63..64]   (new in 3.15)
         //   ... remaining groups follow ...    (108 fields total => 888 bytes)
-        private static byte[] BuildSynthetic315() {
+        internal static byte[] BuildSynthetic315() {
             int size = PyDebugOffsets.TableSizeFor(3, 15);
             Assert.AreEqual(888, size, "3.15 layout should be 24-byte header + 108 uint64 fields");
             var data = new byte[size];

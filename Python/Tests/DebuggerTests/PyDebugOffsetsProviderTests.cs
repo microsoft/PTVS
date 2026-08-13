@@ -173,19 +173,9 @@ namespace DebuggerTests {
         // mappings must resolve to each field's ordinal in the 3.15 layout (see PyDebugOffsetsTests for
         // how the ordinals are derived from the CPython 3.15 header).
         private static DebugOffsetsFieldProvider Synthetic315Provider() {
-            int size = PyDebugOffsets.TableSizeFor(3, 15);
-            var data = new byte[size];
-            for (int i = 0; i < 8; i++) {
-                data[i] = (byte)"xdebugpy"[i];
-            }
-            Array.Copy(BitConverter.GetBytes(0x030f0100UL), 0, data, 8, 8); // 3.15.1
-            int fieldCount = (size - 24) / 8;
-            for (int i = 0; i < fieldCount; i++) {
-                Array.Copy(BitConverter.GetBytes((ulong)i), 0, data, 24 + i * 8, 8);
-            }
             PyDebugOffsets offsets;
             string error;
-            Assert.IsTrue(PyDebugOffsets.TryParse(data, out offsets, out error), error);
+            Assert.IsTrue(PyDebugOffsets.TryParse(PyDebugOffsetsTests.BuildSynthetic315(), out offsets, out error), error);
             Assert.IsTrue(offsets.Is315);
             return new DebugOffsetsFieldProvider(offsets);
         }
