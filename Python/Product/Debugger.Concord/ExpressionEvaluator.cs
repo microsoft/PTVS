@@ -385,8 +385,8 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             // misaligned address and throws, which aborts the entire locals enumeration. Object
             // pointers are 8-byte aligned, so the mask is a no-op for untagged slots; it is 0 for
             // versions before 3.14, leaving their behavior byte-for-byte identical.
-            ulong localsPlusTagMask =
-                pythonFrame.Process.GetPythonRuntimeInfo().LanguageVersion >= PythonLanguageVersion.V314 ? 0x3ul : 0ul;
+            ulong localsPlusTagMask = PyInterpreterFrame.GetStackReferenceTagMask(
+                pythonFrame.Process.GetPythonRuntimeInfo().LanguageVersion);
 
             // Process cellvars and freevars first, because function arguments can appear in both cellvars and varnames if the argument is captured by a closure,
             // in which case we want to use the cellvar because the regular var slot will then be unused by Python (and in Python 3.4+, nulled out).

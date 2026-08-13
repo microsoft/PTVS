@@ -16,6 +16,8 @@
 
 using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.PythonTools.Debugger.Concord;
+using Microsoft.PythonTools.Debugger.Concord.Proxies;
+using Microsoft.PythonTools.Debugger.Concord.Proxies.Structs;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DebuggerTests {
@@ -33,8 +35,22 @@ namespace DebuggerTests {
             foreach (var moduleName in moduleNames) {
                 var version = PythonDLLs.GetPythonLanguageVersion(moduleName);
                 Assert.AreEqual(PythonLanguageVersion.V315, version, moduleName);
-                Assert.IsTrue(version >= PythonLanguageVersion.V314, moduleName);
             }
+        }
+
+        [TestMethod, Priority(0)]
+        public void StackReferenceHelpersClearTagBitsByVersion() {
+            const ulong taggedExecutable = 0x1234567BUL;
+
+            Assert.AreEqual(taggedExecutable,
+                PointerProxy.RemoveTagBits(taggedExecutable,
+                    PyInterpreterFrame.GetStackReferenceTagMask(PythonLanguageVersion.V313)));
+            Assert.AreEqual(0x12345678UL,
+                PointerProxy.RemoveTagBits(taggedExecutable,
+                    PyInterpreterFrame.GetStackReferenceTagMask(PythonLanguageVersion.V314)));
+            Assert.AreEqual(0x12345678UL,
+                PointerProxy.RemoveTagBits(taggedExecutable,
+                    PyInterpreterFrame.GetStackReferenceTagMask(PythonLanguageVersion.V315)));
         }
 
         [TestMethod, Priority(0)]
