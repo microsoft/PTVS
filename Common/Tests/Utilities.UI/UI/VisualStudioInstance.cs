@@ -182,6 +182,13 @@ namespace TestUtilities.UI {
             var item = SolutionExplorer.WaitForItem(SolutionNodeText);
             Assert.IsNotNull(item, "Failed to find {0}", SolutionNodeText);
             SolutionExplorer.CenterInView(item);
+            try {
+                AutomationWrapper.Select(item);
+                return;
+            } catch (InvalidOperationException) {
+                // Fall back to mouse input for controls that do not support UIA selection.
+            }
+
             var boundingRect = item.Current.BoundingRectangle;
             if (!boundingRect.IsEmpty)
             {

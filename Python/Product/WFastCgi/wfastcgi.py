@@ -337,8 +337,32 @@ REQUEST_PROCESSORS = {
 
 APPINSIGHT_CLIENT = None
 
+_REDACTED_VALUE = '<redacted>'
+_AUTHORIZATION_HEADER_RE = re.compile(r'(\bAuthorization\s*:\s*)([^\r\n]+)', re.I | re.M)
+_URI_USER_INFO_RE = re.compile(r'\b([a-z][a-z0-9+.-]*://)([^/\s:@]+(?::[^/\s@]*)?@)', re.I)
+_SECRET_KEY_VALUE_RE = re.compile(
+    r"\b(password|passwd|pwd|token|access[_-]?token|refresh[_-]?token|secret|client[_-]?secret|"
+    r"api[_-]?key|subscription[_-]?key|credential|authorization|connection\s*string|connectionstring|"
+    r"sharedaccesssignature|sig|key)\b(\s*[:=]\s*)(['\"]?)([^'\";\s,&]+)(['\"]?)",
+    re.I
+)
+
+def _sanitize_log_text(txt):
+    if not txt:
+        return txt
+
+    txt = _AUTHORIZATION_HEADER_RE.sub(r'\1' + _REDACTED_VALUE, txt)
+    txt = _URI_USER_INFO_RE.sub(r'\1' + _REDACTED_VALUE + '@', txt)
+
+    def replace_secret(match):
+        return ''.join((match.group(1), match.group(2), match.group(3), _REDACTED_VALUE, match.group(5)))
+
+    return _SECRET_KEY_VALUE_RE.sub(replace_secret, txt)
+
 def log(txt):
     """Logs messages to a log file if WSGI_LOG env var is defined."""
+    txt = _sanitize_log_text(txt)
+
     if APPINSIGHT_CLIENT:
         try:
             APPINSIGHT_CLIENT.track_event(txt)
