@@ -17,7 +17,7 @@ jobs:
     steps:
       - name: Find last assigned
         id: assigned
-        uses: actions/github-script@v6.3.3
+        uses: actions/github-script@d556feaca394842dc55e4734bf3bb9f685482fa0 # v6.3.3
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           result-encoding: string
@@ -32,7 +32,7 @@ jobs:
         env:
           LAST_ASSIGNED: ${{ steps.assigned.outputs.result }}
         run: echo "$LAST_ASSIGNED"
-      - uses: lee-dohm/team-rotation@v1
+      - uses: lee-dohm/team-rotation@24c846902a8e49e0e0d4f4674af81227fa621a47 # v1.1.4
         with:
           last: ${{ steps.assigned.outputs.result }}
           include: bschnurr heejaechang StellaHuang95 rchiodo
@@ -42,7 +42,7 @@ jobs:
           NEXT_ROTATION: ${{ steps.rotation.outputs.next }}
         run: echo "$NEXT_ROTATION"        
       - name: Assign to next person
-        uses: actions/github-script@v6.3.3
+        uses: actions/github-script@d556feaca394842dc55e4734bf3bb9f685482fa0 # v6.3.3
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
@@ -53,7 +53,7 @@ jobs:
               assignees: ['${{ steps.rotation.outputs.next }}']
             })
       - name: Give it the label 'needs repro'
-        uses: actions/github-script@v6.3.3
+        uses: actions/github-script@d556feaca394842dc55e4734bf3bb9f685482fa0 # v6.3.3
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
@@ -64,7 +64,7 @@ jobs:
               labels: ['needs repro']
             })
       - name: Save assignment to state
-        uses: actions/github-script@v6.3.3
+        uses: actions/github-script@d556feaca394842dc55e4734bf3bb9f685482fa0 # v6.3.3
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
