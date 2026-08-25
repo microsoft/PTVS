@@ -40,9 +40,14 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
                 return false;
             }
 
-            var addressMatch = frame.InstructionAddress.IsInSameFunction(process.CreateNativeInstructionAddress(addr));
-            var nameMatch = frame.BasicSymbolInfo.MethodName == name;
-            return addressMatch || nameMatch;
+            if (frame.InstructionAddress.IsInSameFunction(process.CreateNativeInstructionAddress(addr))) {
+                return true;
+            }
+
+            // BasicSymbolInfo is null for frames that have no symbol information available
+            // (e.g. frames in modules without symbols, or synthesized/unwound frames), so it
+            // must not be dereferenced unconditionally.
+            return frame.BasicSymbolInfo?.MethodName == name;
         }
 
         public static unsafe PyFrameObject TryCreate(DkmStackWalkFrame frame, int? previousFrameCount) {
