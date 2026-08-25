@@ -27,15 +27,27 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         }
 
 
+        /// <summary>
+        /// Returns the name of the CPython frame evaluation function for the given language version.
+        /// </summary>
+        internal static string GetEvalFrameFunctionName(PythonLanguageVersion version) {
+            return version > PythonLanguageVersion.V35 ? "_PyEval_EvalFrameDefault" : "PyEval_EvalFrameEx";
+        }
+
+        /// <summary>
+        /// Determines whether a frame's method name identifies the CPython frame evaluation
+        /// function. <paramref name="methodName"/> is null when the frame has no symbol
+        /// information available, in which case this returns false rather than throwing.
+        /// </summary>
+        internal static bool IsEvalFrameName(string methodName, PythonLanguageVersion version) {
+            return methodName != null && methodName == GetEvalFrameFunctionName(version);
+        }
+
         private static bool IsInEvalFrame(DkmStackWalkFrame frame) {
             var process = frame.Process;
             var pythonInfo = process.GetPythonRuntimeInfo();
-            var name = "PyEval_EvalFrameEx";
-            ulong addr = 0;
-            if (pythonInfo.LanguageVersion > PythonLanguageVersion.V35) {
-                name = "_PyEval_EvalFrameDefault";
-            }
-            addr = pythonInfo.DLLs.Python.GetFunctionAddress(name);
+            var name = GetEvalFrameFunctionName(pythonInfo.LanguageVersion);
+            var addr = pythonInfo.DLLs.Python.GetFunctionAddress(name);
             if (addr == 0) {
                 return false;
             }
@@ -47,7 +59,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             // BasicSymbolInfo is null for frames that have no symbol information available
             // (e.g. frames in modules without symbols, or synthesized/unwound frames), so it
             // must not be dereferenced unconditionally.
-            return frame.BasicSymbolInfo?.MethodName == name;
+            return IsEvalFrameName(frame.BasicSymbolInfo?.MethodName, pythonInfo.LanguageVersion);
         }
 
         public static unsafe PyFrameObject TryCreate(DkmStackWalkFrame frame, int? previousFrameCount) {

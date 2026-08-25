@@ -63,5 +63,37 @@ namespace DebuggerTests {
             Assert.AreEqual(PythonLanguageVersion.None,
                 PythonDLLs.GetPythonLanguageVersion("python399999999999999999999999t.dll"));
         }
+
+        [TestMethod, Priority(0)]
+        public void EvalFrameFunctionNameDependsOnLanguageVersion() {
+            Assert.AreEqual("PyEval_EvalFrameEx", PyFrameObject.GetEvalFrameFunctionName(PythonLanguageVersion.V27));
+            Assert.AreEqual("PyEval_EvalFrameEx", PyFrameObject.GetEvalFrameFunctionName(PythonLanguageVersion.V35));
+            Assert.AreEqual("_PyEval_EvalFrameDefault", PyFrameObject.GetEvalFrameFunctionName(PythonLanguageVersion.V36));
+            Assert.AreEqual("_PyEval_EvalFrameDefault", PyFrameObject.GetEvalFrameFunctionName(PythonLanguageVersion.V313));
+        }
+
+        [TestMethod, Priority(0)]
+        public void IsEvalFrameNameMatchesEvalFrameFunction() {
+            Assert.IsTrue(PyFrameObject.IsEvalFrameName("PyEval_EvalFrameEx", PythonLanguageVersion.V35));
+            Assert.IsTrue(PyFrameObject.IsEvalFrameName("_PyEval_EvalFrameDefault", PythonLanguageVersion.V313));
+
+            // The eval frame function is version specific, so the name for one version must not
+            // match a different version.
+            Assert.IsFalse(PyFrameObject.IsEvalFrameName("_PyEval_EvalFrameDefault", PythonLanguageVersion.V35));
+            Assert.IsFalse(PyFrameObject.IsEvalFrameName("PyEval_EvalFrameEx", PythonLanguageVersion.V313));
+
+            Assert.IsFalse(PyFrameObject.IsEvalFrameName("PyRun_StringFlags", PythonLanguageVersion.V313));
+            Assert.IsFalse(PyFrameObject.IsEvalFrameName("", PythonLanguageVersion.V313));
+        }
+
+        [TestMethod, Priority(0)]
+        public void IsEvalFrameNameHandlesFramesWithoutSymbols() {
+            // DkmStackWalkFrame.BasicSymbolInfo is null for frames with no symbol information
+            // available, so a null method name must return false rather than throw. Regression
+            // test for a NullReferenceException that crashed Visual Studio during stack walks.
+            Assert.IsFalse(PyFrameObject.IsEvalFrameName(null, PythonLanguageVersion.V313));
+            Assert.IsFalse(PyFrameObject.IsEvalFrameName(null, PythonLanguageVersion.V35));
+            Assert.IsFalse(PyFrameObject.IsEvalFrameName(null, PythonLanguageVersion.None));
+        }
     }
 }
