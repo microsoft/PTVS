@@ -76,6 +76,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ContextItemViewModelComparer.cs" />
+    <Compile Include="CookiecutterOptionPageTests.cs" />
     <Compile Include="GitHubClientTests.cs" />
     <Compile Include="GitClientTests.cs" />
     <Compile Include="GitHubDiscoveryTests.cs" />

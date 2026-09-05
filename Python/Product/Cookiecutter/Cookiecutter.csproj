@@ -236,6 +236,11 @@
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
+    <Content Include="UnifiedSettings\Cookiecutter.registration.json" Condition="'$(VSTarget)' == '18.0'">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>UnifiedSettings</VSIXSubPath>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <VSCTCompile Include="Cookiecutter.vsct">
@@ -361,6 +366,16 @@
     <UseCodebase>true</UseCodebase>
   </PropertyGroup>
   <Import Project="..\ProjectAfter.settings" />
+  <Target Name="ValidateCookiecutterUnifiedSettingsPackaging"
+          AfterTargets="GetVSIXSourceItems"
+          Condition="'$(VSTarget)' == '18.0'">
+    <ItemGroup>
+      <_CookiecutterUnifiedSettingsVsixItem Include="@(VSIXSourceItem)"
+        Condition="'%(VSIXSourceItem.VSIXSubPath)%(VSIXSourceItem.Filename)%(VSIXSourceItem.Extension)' == 'UnifiedSettings\Cookiecutter.registration.json'" />
+    </ItemGroup>
+    <Error Condition="'@(_CookiecutterUnifiedSettingsVsixItem)' == ''"
+           Text="UnifiedSettings\Cookiecutter.registration.json must be packaged at the path registered by CookiecutterPackage." />
+  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
