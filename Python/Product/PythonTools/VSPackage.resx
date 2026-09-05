@@ -553,6 +553,15 @@ This file should normally be deployed in your /static folder. See https://aka.ms
   <data name="132" xml:space="preserve">
     <value>Conda</value>
   </data>
+  <data name="133" xml:space="preserve">
+    <value>Conda executable path</value>
+  </data>
+  <data name="134" xml:space="preserve">
+    <value>Path to the conda executable to use to manage conda environments.</value>
+  </data>
+  <data name="135" xml:space="preserve">
+    <value>This setting is stored in your Visual Studio user settings.</value>
+  </data>
   <data name="3019" xml:space="preserve">
     <value>Python type checker configuration file</value>
   </data>

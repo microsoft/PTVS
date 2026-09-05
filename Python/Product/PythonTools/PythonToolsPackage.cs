@@ -77,7 +77,23 @@ namespace Microsoft.PythonTools {
     [ProvideOptionPage(typeof(PythonGeneralOptionsPage), "Python Tools", "General", 115, 120, true)]
     [ProvideOptionPage(typeof(PythonAnalysisOptionsPage), "Python Tools", "Analysis", 115, 129, true)]
     [ProvideOptionPage(typeof(PythonDebuggingOptionsPage), "Python Tools", "Debugging", 115, 125, true)]
+#if DEV18
+    [ProvideOptionPage(
+        typeof(PythonCondaOptionsPage),
+        "Python Tools",
+        "Conda",
+        115,
+        132,
+        true,
+        IsInUnifiedSettings = true,
+        UnifiedSettingsCategoryMoniker = "pythonTools.conda",
+        ShouldShowUnifiedSettingsPlaceholder = false
+    )]
+    [ProvideSettingsManifest(PackageRelativeManifestFile = @"UnifiedSettings\PythonTools.registration.json")]
+    [ProvideService(typeof(PythonCondaUnifiedSettingsProvider), IsAsyncQueryable = true)]
+#else
     [ProvideOptionPage(typeof(PythonCondaOptionsPage), "Python Tools", "Conda", 115, 132, true)]
+#endif
     [Guid(CommonGuidList.guidPythonToolsPkgString)]              // our packages GUID
     [ProvideLanguageService(typeof(PythonLanguageInfo), PythonConstants.LanguageName, 106, RequestStockColors = true, EnableLineNumbers = true, ShowSmartIndent = true, ShowCompletion = false, DefaultToInsertSpaces = true, HideAdvancedMembersByDefault = true, EnableAdvancedMembersOption = true, ShowDropDownOptions = false)]
     [ProvideLanguageExtension(typeof(PythonLanguageInfo), PythonConstants.FileExtension)]
@@ -432,6 +448,14 @@ namespace Microsoft.PythonTools {
             AddService<IPythonToolsLogger>(PythonToolsLogger.CreateService, promote: true);
             AddService<PythonToolsService>(PythonToolsService.CreateService, promote: true);
             AddService<IPythonDebugOptionsService>((container, serviceType) => new PythonDebugOptionsService(this), promote: true);
+#if DEV18
+            AddService<PythonCondaUnifiedSettingsProvider>(
+                (container, serviceType) => new PythonCondaUnifiedSettingsProvider(
+                    (PythonToolsService)container.GetService(typeof(PythonToolsService))
+                ),
+                promote: false
+            );
+#endif
 
             var solutionEventListener = new SolutionEventsListener(this);
             solutionEventListener.StartListeningForChanges();
