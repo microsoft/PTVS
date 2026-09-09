@@ -75,6 +75,11 @@
     <Reference Include="System.Web" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="..\..\Product\Cookiecutter\UnifiedSettings\Cookiecutter.registration.json"
+             Condition="'$(VSTarget)' == '18.0'">
+      <Link>UnifiedSettings\Cookiecutter.registration.json</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Compile Include="ContextItemViewModelComparer.cs" />
     <Compile Include="CookiecutterOptionPageTests.cs" />
     <Compile Include="GitHubClientTests.cs" />

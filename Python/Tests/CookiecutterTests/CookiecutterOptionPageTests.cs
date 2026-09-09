@@ -15,8 +15,14 @@
 // permissions and limitations under the License.
 
 #if DEV18
+using System;
 using System.ComponentModel;
+using System.Globalization;
+using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Resources;
+using System.Text.RegularExpressions;
 using Microsoft.CookiecutterTools;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -38,6 +44,69 @@ namespace CookiecutterTests {
                 nameof(CookiecutterOptionPage.CheckForTemplateUpdate),
                 CookiecutterSettings.DefaultCheckForTemplateUpdate,
                 CookiecutterSettings.CheckForTemplateUpdateMoniker);
+        }
+
+        [TestMethod]
+        public void UnifiedSettingsResourceTokensResolveFromPackageResources() {
+            string manifest = ReadRegistrationManifest();
+            MatchCollection tokens = Regex.Matches(
+                manifest,
+                @"@(?<id>\d+);\{(?<provider>[0-9A-Fa-f-]+)\}");
+            var resources = new ResourceManager(
+                "Microsoft.VSPackage",
+                typeof(CookiecutterPackage).Assembly);
+
+            Assert.AreEqual(8, tokens.Count, "Every localized manifest value must be covered.");
+            foreach (Match token in tokens) {
+                Assert.AreEqual(
+                    PackageGuids.guidCookiecutterPkgString,
+                    token.Groups["provider"].Value,
+                    true,
+                    CultureInfo.InvariantCulture);
+
+                string value = resources.GetString(token.Groups["id"].Value, CultureInfo.InvariantCulture);
+                Assert.IsFalse(
+                    string.IsNullOrWhiteSpace(value) || value.StartsWith("@", StringComparison.Ordinal),
+                    $"Resource token {token.Value} did not resolve to text.");
+            }
+        }
+
+        [TestMethod]
+        public void UnifiedSettingsRegistrationSuppressesLegacyPlaceholder() {
+            var expectedPageId = new Guid("BDB4E0B1-4869-4A6F-AD55-5230B768261D");
+            ProvideOptionPageAttribute[] optionPages = typeof(CookiecutterPackage)
+                .GetCustomAttributes<ProvideOptionPageAttribute>()
+                .Where(attribute => attribute.PageType == typeof(CookiecutterOptionPage))
+                .ToArray();
+
+            Assert.AreEqual(1, optionPages.Length, "Expected one Cookiecutter > General option-page registration.");
+            Assert.AreEqual(expectedPageId, optionPages[0].PageType.GUID);
+            Assert.IsTrue(optionPages[0].IsInUnifiedSettings);
+
+            string manifest = ReadRegistrationManifest();
+            Assert.AreEqual(1, Regex.Matches(manifest, @"""cookiecutter\.general""\s*:").Count);
+            Match legacyPageId = Regex.Match(
+                manifest,
+                @"""legacyOptionPageId""\s*:\s*""(?<id>[0-9A-Fa-f-]+)""");
+            Assert.IsTrue(legacyPageId.Success);
+            Assert.AreEqual(
+                expectedPageId.ToString("D"),
+                legacyPageId.Groups["id"].Value,
+                true,
+                CultureInfo.InvariantCulture);
+
+            ProvideOptionPageAttribute[] placeholders = optionPages
+                .Where(attribute => !attribute.IsInUnifiedSettings && attribute.ShouldShowUnifiedSettingsPlaceholder)
+                .ToArray();
+            Assert.AreEqual(0, placeholders.Length, "Onboarded option pages must be excluded before placeholder creation.");
+        }
+
+        private static string ReadRegistrationManifest() {
+            string manifestPath = Path.Combine(
+                Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
+                "UnifiedSettings",
+                "Cookiecutter.registration.json");
+            return File.ReadAllText(manifestPath);
         }
 
         private static void AssertSetting(string propertyName, object expectedDefault, string expectedMoniker) {
