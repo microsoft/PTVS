@@ -720,6 +720,103 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         }
 
         /// <summary>
+        /// Asynchronously waits until the process exits, the timeout expires,
+        /// or the caller cancels the wait.
+        /// </summary>
+        /// <remarks>
+        /// Unlike <see cref="GetAwaiter"/>, this method does not tie up a
+        /// thread pool thread on <see cref="Process.WaitForExit()"/>; it
+        /// completes via the <see cref="Exited"/> event. Prefer this overload
+        /// in test code and any other caller that needs to bound the wait so
+        /// that a hung child process cannot wedge the caller indefinitely.
+        /// </remarks>
+        /// <param name="timeout">
+        /// The maximum time to wait. Use <see cref="Timeout.InfiniteTimeSpan"/>
+        /// to wait indefinitely (subject only to <paramref name="cancellationToken"/>).
+        /// </param>
+        /// <param name="cancellationToken">Token used to cancel the wait.</param>
+        /// <returns>
+        /// True if the process exited before the timeout expired; false if the
+        /// timeout expired before the process exited.
+        /// </returns>
+        /// <exception cref="OperationCanceledException">
+        /// The wait was cancelled via <paramref name="cancellationToken"/>.
+        /// </exception>
+        public async Task<bool> WaitAsync(TimeSpan timeout, CancellationToken cancellationToken = default(CancellationToken)) {
+            if (_process == null) {
+                return true;
+            }
+
+            // Fast path: already exited.
+            if (_process.HasExited) {
+                // Should have already been called, in which case this is a no-op
+                OnExited(this, EventArgs.Empty);
+                return true;
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            // Bridge our Exited event (which fires after output streams are
+            // drained and _haveRaisedExitedEvent is set) to a TaskCompletionSource.
+            // This avoids burning a thread pool thread the way GetAwaiter() does
+            // today via Task.Run(Wait).
+            var exitedTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            EventHandler onExited = null;
+            onExited = (s, e) => {
+                Exited -= onExited;
+                exitedTcs.TrySetResult(true);
+            };
+            Exited += onExited;
+
+            try {
+                // Race guard: the process may have already exited (and our
+                // Exited event may have already fired) between the HasExited
+                // check above and the event subscription. Force completion if
+                // so; TrySetResult is a no-op after the first winner.
+                if (_haveRaisedExitedEvent) {
+                    exitedTcs.TrySetResult(true);
+                } else if (_process.HasExited) {
+                    OnExited(this, EventArgs.Empty);
+                    exitedTcs.TrySetResult(true);
+                }
+
+                var exitedTask = exitedTcs.Task;
+
+                // No timeout and no cancellation: just wait for exit.
+                if (timeout == Timeout.InfiniteTimeSpan && !cancellationToken.CanBeCanceled) {
+                    await exitedTask.ConfigureAwait(false);
+                    return true;
+                }
+
+                using (var delayCts = new CancellationTokenSource())
+                using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, delayCts.Token)) {
+                    // Task.Delay accepts Timeout.InfiniteTimeSpan (-1 ms) as
+                    // "no timeout", which lets a caller pass only a cancellation
+                    // token without an artificial timeout.
+                    var delayTask = Task.Delay(timeout, linkedCts.Token);
+                    var completed = await Task.WhenAny(exitedTask, delayTask).ConfigureAwait(false);
+
+                    if (completed == exitedTask) {
+                        // Cancel the pending Task.Delay so its timer is released.
+                        delayCts.Cancel();
+                        return true;
+                    }
+
+                    // The delay task completed first. Distinguish caller
+                    // cancellation from timeout so callers can react
+                    // appropriately (e.g., propagate OperationCanceledException
+                    // vs. Kill() the process on timeout).
+                    cancellationToken.ThrowIfCancellationRequested();
+                    return false;
+                }
+            } finally {
+                // Ensure we don't leak the event subscription on any exit path.
+                Exited -= onExited;
+            }
+        }
+
+        /// <summary>
         /// Enables using 'await' on this object.
         /// </summary>
         public TaskAwaiter<int> GetAwaiter() {

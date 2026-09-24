@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.Infrastructure {
                 EnableHyperlinks = true,
                 CollapsedControlText = Strings.ShowDetails,
                 ExpandedControlText = Strings.HideDetails,
-                ExpandedInformation = "```{0}Build: {2}{0}{0}{1}{0}```".FormatUI(Environment.NewLine, exception, AssemblyVersionInfo.Version)
+                ExpandedInformation = SensitiveDataRedactor.Sanitize("```{0}Build: {2}{0}{0}{1}{0}```".FormatUI(Environment.NewLine, exception, AssemblyVersionInfo.Version))
             };
             td.Buttons.Add(TaskDialogButton.Close);
             if (!string.IsNullOrEmpty(issueTrackerUrl)) {
@@ -96,10 +96,10 @@ namespace Microsoft.PythonTools.Infrastructure {
                     var td = new TaskDialog(provider) {
                         Title = title,
                         MainInstruction = failedText,
-                        Content = ex.Message,
+                        Content = SensitiveDataRedactor.Sanitize(ex.Message),
                         CollapsedControlText = expandControlText,
                         ExpandedControlText = expandControlText,
-                        ExpandedInformation = ex.ToString()
+                        ExpandedInformation = SensitiveDataRedactor.Sanitize(ex.ToString())
                     };
                     var retry = new TaskDialogButton(retryButtonText);
                     td.Buttons.Add(retry);
@@ -136,10 +136,10 @@ namespace Microsoft.PythonTools.Infrastructure {
                     var td = new TaskDialog(provider) {
                         Title = title,
                         MainInstruction = failedText,
-                        Content = ex.Message,
+                        Content = SensitiveDataRedactor.Sanitize(ex.Message),
                         CollapsedControlText = expandControlText,
                         ExpandedControlText = expandControlText,
-                        ExpandedInformation = ex.ToString()
+                        ExpandedInformation = SensitiveDataRedactor.Sanitize(ex.ToString())
                     };
                     var retry = new TaskDialogButton(retryButtonText);
                     var cancel = new TaskDialogButton(cancelButtonText);

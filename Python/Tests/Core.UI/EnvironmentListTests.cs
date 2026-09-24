@@ -365,8 +365,9 @@ namespace PythonToolsUITests {
                 list.InitializeEnvironments(interpreters, service);
 
                 var expected = new HashSet<string>(
-                    PythonPaths.Versions
-                        .Select(v => v.InterpreterPath),
+                    interpreters.Configurations
+                        .Where(c => c.IsUIVisible() && c.Id.StartsWith("Global|PythonCore|"))
+                        .Select(c => c.InterpreterPath),
                     StringComparer.OrdinalIgnoreCase
                 );
                 var actual = wpf.Invoke(() => new HashSet<string>(
@@ -388,6 +389,11 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         public void AddUpdateRemoveConfigurableFactory() {
+            // Clean up any orphan GUID-named entries left over from previously
+            // failed runs of this test, otherwise the test will not observe a
+            // change in the environment list.
+            CleanUpOrphanConfigurableInterpreters();
+
             using (var wpf = new WpfProxy())
             using (var list = new EnvironmentListProxy(wpf)) {
                 var container = CreateCompositionContainer();
@@ -415,7 +421,7 @@ namespace PythonToolsUITests {
                             )
                         );
                     } catch (Exception ex) when (!ex.IsCriticalException()) {
-                        Registry.CurrentUser.DeleteSubKeyTree("Software\\Python\\VisualStudio\\" + id);
+                        Registry.CurrentUser.DeleteSubKeyTree("Software\\Python\\VisualStudio\\" + id, false);
                         throw;
                     }
                 }
@@ -1113,6 +1119,33 @@ namespace PythonToolsUITests {
             sp.Services[typeof(SVsSettingsManager).GUID] = settings;
 
             return InterpreterCatalog.CreateContainer(typeof(IInterpreterRegistryService), typeof(IInterpreterOptionsService));
+        }
+
+        /// <summary>
+        /// Removes any GUID-named subkeys under HKCU\Software\Python\VisualStudio.
+        /// These are only ever created by AddUpdateRemoveConfigurableFactory (which
+        /// uses <see cref="Guid.NewGuid"/> as the interpreter name) and may be left
+        /// behind if a prior run of the test failed before the cleanup code ran.
+        /// </summary>
+        private static void CleanUpOrphanConfigurableInterpreters() {
+            try {
+                using (var key = Registry.CurrentUser.OpenSubKey("Software\\Python\\VisualStudio", writable: true)) {
+                    if (key == null) {
+                        return;
+                    }
+                    foreach (var subKeyName in key.GetSubKeyNames()) {
+                        if (Guid.TryParse(subKeyName, out _)) {
+                            try {
+                                key.DeleteSubKeyTree(subKeyName, throwOnMissingSubKey: false);
+                            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                                // Best-effort cleanup; ignore failures.
+                            }
+                        }
+                    }
+                }
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                // Best-effort cleanup; ignore failures.
+            }
         }
 
         sealed class AssertInterpretersChanged : IDisposable {

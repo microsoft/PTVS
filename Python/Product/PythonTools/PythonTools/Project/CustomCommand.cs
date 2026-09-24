@@ -179,7 +179,7 @@ namespace Microsoft.PythonTools.Project {
                 var rm = new System.Resources.ResourceManager(ns, asm);
                 return rm.GetString(key, CultureInfo.CurrentUICulture) ?? key;
             } catch (Exception ex) {
-                CommonUtils.ActivityLogError(Strings.ProductTitle, Strings.FailedToReadResource.FormatUI(assembly, ns, key, ex));
+                CommonUtils.ActivityLogError(Strings.ProductTitle, SensitiveDataRedactor.Sanitize(Strings.FailedToReadResource.FormatUI(assembly, ns, key, ex)));
                 return key;
             }
         }
@@ -293,7 +293,7 @@ namespace Microsoft.PythonTools.Project {
                     }
 
                     // Log error to the ActivityLog.
-                    CommonUtils.ActivityLogError(Strings.ProductTitle, Strings.ErrorRunningCustomCommand.FormatUI(_target, ex));
+                    CommonUtils.ActivityLogError(Strings.ProductTitle, SensitiveDataRedactor.Sanitize(Strings.ErrorRunningCustomCommand.FormatUI(_target, ex)));
                 }
             });
 
