@@ -1,0 +1,32 @@
+{
+  "properties": {
+    "pythonTools.conda.externalSettings": {
+      "type": "external",
+      "title": "@132;{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}",
+      "backingStoreDescription": "@135;{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}",
+      "callback": {
+        "packageId": "6dbd7c1e-1f1b-496d-ac7c-c55dae66c783",
+        "serviceId": "D23A9D09-7587-4F64-B22A-65CF5B0C51EF"
+      },
+      "realtimeNotifications": true,
+      "properties": {
+        "customCondaExecutablePath": {
+          "type": "string",
+          "format": "path",
+          "pathKind": "file",
+          "title": "@133;{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}",
+          "description": "@134;{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}"
+        }
+      }
+    }
+  },
+  "categories": {
+    "pythonTools": {
+      "title": "@115;{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}"
+    },
+    "pythonTools.conda": {
+      "title": "@132;{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}",
+      "legacyOptionPageId": "E73E8E2B-74DC-3834-B015-E56CB1FDADBA"
+    }
+  }
+}
