@@ -54,7 +54,12 @@ namespace Microsoft.CookiecutterTools {
     // This attribute is needed to let the shell know that this package exposes some menus.
     [ProvideMenuResource("Menus.ctmenu", 1)]
     [ProvideToolWindow(typeof(CookiecutterToolWindow), Style = VsDockStyle.Linked, Window = ToolWindowGuids80.ServerExplorer)]
+#if DEV18
+    [ProvideOptionPage(typeof(CookiecutterOptionPage), "Cookiecutter", "General", 113, 114, true, IsInUnifiedSettings = true)]
+    [ProvideSettingsManifest(PackageRelativeManifestFile = CookiecutterSettings.ManifestPath)]
+#else
     [ProvideOptionPage(typeof(CookiecutterOptionPage), "Cookiecutter", "General", 113, 114, true)]
+#endif
     [ProvideProfile(typeof(CookiecutterOptionPage), "Cookiecutter", "General", 113, 114, isToolsOptionPage: true, DescriptionResourceID = 115)]
     [Guid(PackageGuids.guidCookiecutterPkgString)]
     public sealed class CookiecutterPackage : AsyncPackage, IOleCommandTarget {
