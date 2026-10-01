@@ -24,7 +24,6 @@ using Microsoft.PythonTools.LanguageServerClient.StreamHacking;
 using Microsoft.PythonTools.Utility;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.LanguageServer.Client;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Threading;
 using Task = System.Threading.Tasks.Task;
 
@@ -65,17 +64,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 return null;
             }
 
-            await _joinableTaskContext.Factory.SwitchToMainThreadAsync();
-            IVsOutputWindowPane outputPane = null;
-            try {
-                outputPane = OutputWindowRedirector.GetGeneral(_site).Pane;
-                if (outputPane == null) {
-                    Trace.TraceError("Unable to get the output pane for Pylance stderr.");
-                }
-            } catch (Exception ex) when (ex is InvalidOperationException || ex is COMException || ex is InvalidComObjectException) {
-                Trace.TraceError("Unable to initialize Pylance stderr output: {0}", ex);
-            }
-
             // Switch to a background thread before starting the process
             await TaskScheduler.Default;
 
@@ -95,25 +83,17 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             var process = new Process {
                 StartInfo = info
             };
+            Task pendingOutput = Task.CompletedTask;
             process.ErrorDataReceived += (sender, e) => {
                 if (e.Data == null) {
                     return;
                 }
 
-                if (outputPane != null) {
-                    try {
-                        var hr = outputPane.OutputStringThreadSafe(e.Data + Environment.NewLine);
-                        if (ErrorHandler.Succeeded(hr)) {
-                            Debug.WriteLine(e.Data, "Output Window");
-                            return;
-                        }
-                        Trace.TraceError("Unable to write Pylance stderr to the output pane: 0x{0:X8}.", hr);
-                    } catch (Exception ex) when (ex is InvalidOperationException || ex is COMException || ex is InvalidComObjectException) {
-                        Trace.TraceError("Unable to write Pylance stderr to the output pane: {0}", ex);
-                    }
-                }
-
-                Trace.WriteLine(e.Data, "Pylance stderr");
+                pendingOutput = pendingOutput.ContinueWith(
+                    _ => _joinableTaskContext.Factory.RunAsync(() => WriteErrorOutputAsync(e.Data)).Task,
+                    TaskScheduler.Default
+                ).Unwrap().HandleAllExceptions(null, GetType(), allowUI: false);
+                pendingOutput.DoNotWait();
             };
 
             if (process.Start()) {
@@ -137,6 +117,27 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 }
             }
             return null;
+        }
+
+        private async Task WriteErrorOutputAsync(string text) {
+            try {
+                await _joinableTaskContext.Factory.SwitchToMainThreadAsync();
+                var outputPane = OutputWindowRedirector.GetGeneral(_site).Pane;
+                if (outputPane != null) {
+                    var hr = outputPane.OutputStringThreadSafe(text + Environment.NewLine);
+                    if (ErrorHandler.Succeeded(hr)) {
+                        Debug.WriteLine(text, "Output Window");
+                        return;
+                    }
+                    Trace.TraceError("Unable to write Pylance stderr to the output pane: 0x{0:X8}.", hr);
+                } else {
+                    Trace.TraceError("Unable to get the output pane for Pylance stderr.");
+                }
+            } catch (Exception ex) when (ex is InvalidOperationException || ex is COMException || ex is InvalidComObjectException || ex is OperationCanceledException) {
+                Trace.TraceError("Unable to write Pylance stderr to the output pane: {0}", ex);
+            }
+
+            Trace.WriteLine(text, "Pylance stderr");
         }
 
         public static bool IsDebugging() {
