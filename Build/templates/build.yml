@@ -60,3 +60,11 @@ steps:
                           /p:BUILD_BINARIESDIRECTORY=$(Build.BinariesDirectory)
                           /p:BUILD_STAGINGDIRECTORY=$(Build.StagingDirectory) 
                           /bl:$(Build.SourcesDirectory)\logs\BuildInstaller.binlog'
+
+  - task: PowerShell@2
+    displayName: 'Verify packaged template font signatures'
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    inputs:
+      targetType: filePath
+      filePath: '$(Build.SourcesDirectory)\Build\VerifyTemplateFontSignatures.ps1'
+      arguments: '-SetupPath "$(Build.BinariesDirectory)\raw\setup\swix"'
