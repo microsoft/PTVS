@@ -45,17 +45,17 @@ namespace Microsoft.PythonTools.Infrastructure {
             }
 
             try {
-                return string.Format(
+                return SensitiveDataRedactor.Sanitize(string.Format(
                     Strings.UnhandledException,
                     ex,
                     callerFile ?? String.Empty,
                     callerLineNumber,
                     callerName
-                );
+                ));
             } catch (Exception ex2) {
                 // Never throw out of this function.
                 try {
-                    return ex2.ToString();
+                    return SensitiveDataRedactor.Sanitize(ex2.ToString());
                 } catch (Exception) {
                     // Never -- NEVER -- throw out of this function.
                     return "Unhandled exception constructing exception message.";

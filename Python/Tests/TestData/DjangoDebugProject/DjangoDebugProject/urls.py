@@ -1,4 +1,7 @@
-from django.conf.urls import include, url
+try:
+    from django.urls import include, re_path as url
+except ImportError:
+    from django.conf.urls import include, url
 import TestApp.views
 
 # Uncomment the next two lines to enable the admin:

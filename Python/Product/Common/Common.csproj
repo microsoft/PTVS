@@ -142,6 +142,7 @@
     <Compile Include="Infrastructure\NativeMethods.cs" />
     <Compile Include="Infrastructure\ObservableCollectionExtensions.cs" />
     <Compile Include="Infrastructure\PathUtils.cs" />
+    <Compile Include="Infrastructure\SensitiveDataRedactor.cs" />
     <Compile Include="Infrastructure\EnumerableExtensions.cs" />
     <Compile Include="Infrastructure\ExceptionExtensions.cs" />
     <Compile Include="Infrastructure\NativeMethods.COM.cs" />
