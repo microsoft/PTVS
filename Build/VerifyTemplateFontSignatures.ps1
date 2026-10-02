@@ -1,6 +1,10 @@
 param(
     [Parameter(Mandatory = $true)]
     [string]$SetupPath,
+    [Parameter(Mandatory = $true)]
+    [string]$TemplatePath,
+    [Parameter(Mandatory = $true)]
+    [string]$UnsignedTemplatePath,
     [string]$SignToolPath
 )
 
@@ -25,8 +29,8 @@ if (!(Test-Path -LiteralPath $SignToolPath -PathType Leaf)) {
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $packages = @(
-    @{ Name = 'Microsoft.PythonTools.Django.Templates'; FontCount = 1 },
-    @{ Name = 'Microsoft.PythonTools.Web.Templates'; FontCount = 3 }
+    @{ Name = 'Microsoft.PythonTools.Django.Templates'; TemplateKind = 'Django'; FontCount = 1 },
+    @{ Name = 'Microsoft.PythonTools.Web.Templates'; TemplateKind = 'Web'; FontCount = 3 }
 )
 $temporaryPath = Join-Path ([IO.Path]::GetTempPath()) ('PTVS-FontVerification-' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $temporaryPath | Out-Null
@@ -51,6 +55,29 @@ try {
                 $fontPath = Join-Path $temporaryPath ("$($package.Name)-$index.ttf")
                 [IO.Compression.ZipFileExtensions]::ExtractToFile($font, $fontPath)
                 Write-Host "Verifying embedded font: $packagePath -> $($font.FullName)"
+                $entryPath = $font.FullName.Replace('\', '/')
+                $prefix = 'Contents/Common7/IDE/'
+                if (!$entryPath.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase)) {
+                    throw "Unexpected font payload path '$entryPath'; cannot resolve its signing input."
+                }
+                $relativePath = $entryPath.Substring($prefix.Length).Replace('/', '\')
+                if (@($relativePath.Split('\') | Where-Object { $_ -eq '..' -or $_ -eq '.' }).Count -gt 0) {
+                    throw "Invalid font payload path '$entryPath'."
+                }
+                $stagedPath = Join-Path (Join-Path $TemplatePath $package.TemplateKind) $relativePath
+                $unsignedPath = Join-Path (Join-Path $UnsignedTemplatePath $package.TemplateKind) $relativePath
+                $packagedHash = (Get-FileHash -LiteralPath $fontPath -Algorithm SHA256).Hash
+                $stagedHash = (Get-FileHash -LiteralPath $stagedPath -Algorithm SHA256).Hash
+                $unsignedHash = (Get-FileHash -LiteralPath $unsignedPath -Algorithm SHA256).Hash
+                Write-Host "Packaged SHA256: $packagedHash"
+                Write-Host "Staged SHA256:   $stagedHash ($stagedPath)"
+                Write-Host "Unsigned SHA256: $unsignedHash ($unsignedPath)"
+                if ($packagedHash -ne $stagedHash) {
+                    throw "Packaging mismatch: '$($font.FullName)' does not contain the staged signing output."
+                }
+                if ($stagedHash -eq $unsignedHash) {
+                    throw "Signing did not change '$stagedPath': packaged and staged bytes match the preserved unsigned input."
+                }
                 & $SignToolPath verify /pa /all /v $fontPath
                 if ($LASTEXITCODE -ne 0) {
                     throw "Signature verification failed for '$($font.FullName)' in '$packagePath' (SignTool exit code $LASTEXITCODE)."

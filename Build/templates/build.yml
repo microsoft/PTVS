@@ -67,4 +67,4 @@ steps:
     inputs:
       targetType: filePath
       filePath: '$(Build.SourcesDirectory)\Build\VerifyTemplateFontSignatures.ps1'
-      arguments: '-SetupPath "$(Build.BinariesDirectory)\raw\setup\swix"'
+      arguments: '-SetupPath "$(Build.BinariesDirectory)\raw\setup\swix" -TemplatePath "$(Build.BinariesDirectory)\raw\binaries\templates" -UnsignedTemplatePath "$(Build.BinariesDirectory)\raw\unsigned\templates"'
