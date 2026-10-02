@@ -17,10 +17,12 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.LanguageServerClient.StreamHacking;
 using Microsoft.PythonTools.Utility;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Threading;
 using Task = System.Threading.Tasks.Task;
@@ -81,9 +83,17 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             var process = new Process {
                 StartInfo = info
             };
+            Task pendingOutput = Task.CompletedTask;
             process.ErrorDataReceived += (sender, e) => {
-                var outputWindow = OutputWindowRedirector.GetGeneral(_site);
-                outputWindow.WriteLine(e.Data);
+                if (e.Data == null) {
+                    return;
+                }
+
+                pendingOutput = pendingOutput.ContinueWith(
+                    _ => _joinableTaskContext.Factory.RunAsync(() => WriteErrorOutputAsync(e.Data)).Task,
+                    TaskScheduler.Default
+                ).Unwrap().HandleAllExceptions(null, GetType(), allowUI: false);
+                pendingOutput.DoNotWait();
             };
 
             if (process.Start()) {
@@ -107,6 +117,27 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 }
             }
             return null;
+        }
+
+        private async Task WriteErrorOutputAsync(string text) {
+            try {
+                await _joinableTaskContext.Factory.SwitchToMainThreadAsync();
+                var outputPane = OutputWindowRedirector.GetGeneral(_site).Pane;
+                if (outputPane != null) {
+                    var hr = outputPane.OutputStringThreadSafe(text + Environment.NewLine);
+                    if (ErrorHandler.Succeeded(hr)) {
+                        Debug.WriteLine(text, "Output Window");
+                        return;
+                    }
+                    Trace.TraceError("Unable to write Pylance stderr to the output pane: 0x{0:X8}.", hr);
+                } else {
+                    Trace.TraceError("Unable to get the output pane for Pylance stderr.");
+                }
+            } catch (Exception ex) when (ex is InvalidOperationException || ex is COMException || ex is InvalidComObjectException || ex is OperationCanceledException) {
+                Trace.TraceError("Unable to write Pylance stderr to the output pane: {0}", ex);
+            }
+
+            Trace.WriteLine(text, "Pylance stderr");
         }
 
         public static bool IsDebugging() {
