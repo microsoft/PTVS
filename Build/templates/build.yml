@@ -60,3 +60,28 @@ steps:
                           /p:BUILD_BINARIESDIRECTORY=$(Build.BinariesDirectory)
                           /p:BUILD_STAGINGDIRECTORY=$(Build.StagingDirectory) 
                           /bl:$(Build.SourcesDirectory)\logs\BuildInstaller.binlog'
+
+  - task: PowerShell@2
+    displayName: 'Check packaged template fonts against signing output'
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    inputs:
+      targetType: filePath
+      filePath: '$(Build.SourcesDirectory)\Build\PrepareTemplateFontVerification.ps1'
+      arguments: '-SetupPath "$(Build.BinariesDirectory)\raw\setup\swix" -TemplatePath "$(Build.BinariesDirectory)\raw\binaries\templates" -UnsignedTemplatePath "$(Build.BinariesDirectory)\raw\unsigned\templates" -VerificationPath "$(Agent.TempDirectory)\PTVS-TemplateFontVerification-$(Build.BuildId)"'
+
+  - task: MicroBuildCodesignVerify@3
+    displayName: 'Verify packaged template font signatures'
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    inputs:
+      TargetFolders: '$(Agent.TempDirectory)\PTVS-TemplateFontVerification-$(Build.BuildId)'
+
+  - task: PowerShell@2
+    displayName: 'Clean up extracted template fonts'
+    condition: and(always(), ne(variables['Build.Reason'], 'PullRequest'))
+    inputs:
+      targetType: inline
+      script: |
+        $path = '$(Agent.TempDirectory)\PTVS-TemplateFontVerification-$(Build.BuildId)'
+        if (Test-Path -LiteralPath $path) {
+            Remove-Item -LiteralPath $path -Recurse -Force
+        }

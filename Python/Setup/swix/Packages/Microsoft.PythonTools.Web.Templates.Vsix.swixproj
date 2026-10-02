@@ -6,7 +6,6 @@
     <!-- Prefer the staged template tree created by signlayout.proj so packaged VSIX contents use signed files. -->
     <SignedTemplateSourcePath>$(BinariesOutputPath)templates\Web</SignedTemplateSourcePath>
     <SignedTemplateSentinelPath>$(BinariesOutputPath)templates\SignedTemplateFiles.marker</SignedTemplateSentinelPath>
-    <SignedTemplateFontCatalogPath>$(SignedTemplateSourcePath)\Microsoft.PythonTools.Web.Templates.Fonts.cat</SignedTemplateFontCatalogPath>
     <SourcePath Condition="'$(SourcePath)' == '' and Exists('$(SignedTemplateSourcePath)')">$(SignedTemplateSourcePath)</SourcePath>
     <SourcePath Condition="'$(SourcePath)' == '' and '$(SignType)' != 'Real' and '$(SignType)' != 'Test'">$(BuildRoot)\Python\Templates\Web</SourcePath>
     <BaseInstall>InstallDir:\Common7\IDE</BaseInstall>
@@ -23,8 +22,6 @@
            Condition="!Exists('$(SignedTemplateSourcePath)')" />
     <Error Text="Signed template sentinel '$(SignedTemplateSentinelPath)' was not found. Build signlayout.proj through SignFiles before packaging Microsoft.PythonTools.Web.Templates.Vsix."
            Condition="!Exists('$(SignedTemplateSentinelPath)')" />
-    <Error Text="Signed template font catalog '$(SignedTemplateFontCatalogPath)' was not found. Build signlayout.proj through template catalog generation before packaging Microsoft.PythonTools.Web.Templates.Vsix."
-           Condition="!Exists('$(SignedTemplateFontCatalogPath)')" />
     <Error Text="Signed builds must package Microsoft.PythonTools.Web.Templates.Vsix from '$(SignedTemplateSourcePath)', not '$(SourcePath)'."
            Condition="'$(SourcePath)' != '$(SignedTemplateSourcePath)'" />
   </Target>
