@@ -5,35 +5,20 @@ param(
     [string]$TemplatePath,
     [Parameter(Mandatory = $true)]
     [string]$UnsignedTemplatePath,
-    [string]$SignToolPath
+    [Parameter(Mandatory = $true)]
+    [string]$VerificationPath
 )
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
-
-if (!$SignToolPath) {
-    $sdkBinPath = Join-Path ${env:ProgramFiles(x86)} 'Windows Kits\10\bin'
-    $signTools = @(Get-ChildItem -LiteralPath $sdkBinPath -Directory |
-        Where-Object { $_.Name -match '^\d+\.\d+\.\d+\.\d+$' } |
-        Sort-Object { [version]$_.Name } -Descending |
-        ForEach-Object { Join-Path $_.FullName 'x64\signtool.exe' } |
-        Where-Object { Test-Path -LiteralPath $_ -PathType Leaf })
-    if ($signTools.Count -eq 0) {
-        throw "Cannot find Windows SDK x64 signtool.exe under '$sdkBinPath'."
-    }
-    $SignToolPath = $signTools[0]
-}
-if (!(Test-Path -LiteralPath $SignToolPath -PathType Leaf)) {
-    throw "SignTool was not found at '$SignToolPath'."
-}
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $packages = @(
     @{ Name = 'Microsoft.PythonTools.Django.Templates'; TemplateKind = 'Django'; FontCount = 1 },
     @{ Name = 'Microsoft.PythonTools.Web.Templates'; TemplateKind = 'Web'; FontCount = 3 }
 )
-$temporaryPath = Join-Path ([IO.Path]::GetTempPath()) ('PTVS-FontVerification-' + [guid]::NewGuid().ToString('N'))
-New-Item -ItemType Directory -Path $temporaryPath | Out-Null
+$payloadsPrepared = $false
+New-Item -ItemType Directory -Path $VerificationPath | Out-Null
 try {
     foreach ($package in $packages) {
         $packagePattern = '^' + [regex]::Escape($package.Name) + '(\.Vsix)?\.vsix$'
@@ -51,10 +36,10 @@ try {
             }
             for ($index = 0; $index -lt $fonts.Count; $index++) {
                 $font = $fonts[$index]
-                # Use generated names so archive paths cannot escape the temporary directory.
-                $fontPath = Join-Path $temporaryPath ("$($package.Name)-$index.ttf")
+                # Use generated names so archive paths cannot escape the verification directory.
+                $fontPath = Join-Path $VerificationPath ("$($package.Name)-$index.ttf")
                 [IO.Compression.ZipFileExtensions]::ExtractToFile($font, $fontPath)
-                Write-Host "Verifying embedded font: $packagePath -> $($font.FullName)"
+                Write-Host "Checking embedded font: $packagePath -> $($font.FullName)"
                 $entryPath = $font.FullName.Replace('\', '/')
                 $prefix = 'Contents/Common7/IDE/'
                 if (!$entryPath.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase)) {
@@ -78,18 +63,17 @@ try {
                 if ($stagedHash -eq $unsignedHash) {
                     throw "Signing did not change '$stagedPath': packaged and staged bytes match the preserved unsigned input."
                 }
-                & $SignToolPath verify /pa /all /v $fontPath
-                if ($LASTEXITCODE -ne 0) {
-                    throw "Signature verification failed for '$($font.FullName)' in '$packagePath' (SignTool exit code $LASTEXITCODE)."
-                }
             }
         }
         finally {
             $archive.Dispose()
         }
     }
-    Write-Host 'All four packaged template font signatures verified successfully.'
+    $payloadsPrepared = $true
+    Write-Host "All four packaged fonts match the modified signing output. Extracted payloads in '$VerificationPath' require MicroBuild signature verification."
 }
 finally {
-    Remove-Item -LiteralPath $temporaryPath -Recurse -Force
+    if (!$payloadsPrepared) {
+        Remove-Item -LiteralPath $VerificationPath -Recurse -Force
+    }
 }
