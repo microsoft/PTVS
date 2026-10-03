@@ -71,6 +71,7 @@ try {
     }
     $payloadsPrepared = $true
     Write-Host "All four packaged fonts match the modified signing output. Extracted payloads in '$VerificationPath' require MicroBuild signature verification."
+    Write-Host "##vso[task.setvariable variable=TemplateFontsPrepared]true"
 }
 finally {
     if (!$payloadsPrepared) {
