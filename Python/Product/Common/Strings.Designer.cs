@@ -1633,6 +1633,15 @@ namespace Microsoft.PythonTools {
                 return ResourceManager.GetString("CondaExecutableFilter", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown Conda setting..
+        /// </summary>
+        public static string CondaUnifiedSettingsUnknownSetting {
+            get {
+                return ResourceManager.GetString("CondaUnifiedSettingsUnknownSetting", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to ----- Failed to export &apos;{0}&apos; -----

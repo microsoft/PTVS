@@ -19,10 +19,11 @@ using System;
 namespace Microsoft.PythonTools.Options {
     public sealed class PythonCondaOptions {
         private readonly PythonToolsService _service;
+        private string _persistedCustomCondaExecutablePath;
 
-        private const string Category = "Conda";
+        internal const string Category = "Conda";
 
-        private const string CustomCondaExecutablePathSetting = "CustomCondaExecutablePath";
+        internal const string CustomCondaExecutablePathSetting = "CustomCondaExecutablePath";
 
         internal PythonCondaOptions(PythonToolsService service) {
             _service = service;
@@ -30,13 +31,31 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public void Load() {
-            CustomCondaExecutablePath = _service.LoadString(CustomCondaExecutablePathSetting, Category) ?? "";
+            var customCondaExecutablePath = _service.LoadString(CustomCondaExecutablePathSetting, Category) ?? "";
+            var persistedValueChanged = !string.Equals(
+                _persistedCustomCondaExecutablePath,
+                customCondaExecutablePath,
+                StringComparison.Ordinal
+            );
+            _persistedCustomCondaExecutablePath = customCondaExecutablePath;
+            CustomCondaExecutablePath = customCondaExecutablePath;
             Changed?.Invoke(this, EventArgs.Empty);
+            if (persistedValueChanged) {
+                PersistedChanged?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         public void Save() {
-            _service.SaveString(CustomCondaExecutablePathSetting, Category, CustomCondaExecutablePath);
+            var persistedValueChanged = _service.SaveString(
+                CustomCondaExecutablePathSetting,
+                Category,
+                CustomCondaExecutablePath
+            );
+            _persistedCustomCondaExecutablePath = CustomCondaExecutablePath;
             Changed?.Invoke(this, EventArgs.Empty);
+            if (persistedValueChanged) {
+                PersistedChanged?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         public void Reset() {
@@ -45,6 +64,17 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public event EventHandler Changed;
+
+        internal event EventHandler PersistedChanged;
+
+        internal void RefreshFromStorage() {
+            var customCondaExecutablePath = _service.LoadString(CustomCondaExecutablePathSetting, Category) ?? "";
+            _persistedCustomCondaExecutablePath = customCondaExecutablePath;
+            if (!string.Equals(CustomCondaExecutablePath, customCondaExecutablePath, StringComparison.Ordinal)) {
+                CustomCondaExecutablePath = customCondaExecutablePath;
+                Changed?.Invoke(this, EventArgs.Empty);
+            }
+        }
 
         /// <summary>
         /// Path to the conda executable to use to manage conda environments.
