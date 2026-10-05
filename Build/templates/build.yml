@@ -74,6 +74,8 @@ steps:
     condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
     inputs:
       TargetFolders: '$(Agent.TempDirectory)\PTVS-TemplateFontVerification-$(Build.BuildId)'
+      # Match insertion SignCheck's BinInspect /3p policy instead of warning on non-Microsoft signatures.
+      FailOnMissing1PSignature: true
 
   - task: PowerShell@2
     displayName: 'Clean up extracted template fonts'
