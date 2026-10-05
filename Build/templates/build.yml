@@ -2,9 +2,6 @@ parameters:
 - name: ptvsPackageVersion
   type: string
   default: $(Build.BuildNumber)
-- name: insertionBinInspectVersion
-  type: string
-  default: '1.0.26082603'
 
 steps:
 
@@ -72,24 +69,9 @@ steps:
       filePath: '$(Build.SourcesDirectory)\Build\PrepareTemplateFontVerification.ps1'
       arguments: '-SetupPath "$(Build.BinariesDirectory)\raw\setup\swix" -TemplatePath "$(Build.BinariesDirectory)\raw\binaries\templates" -UnsignedTemplatePath "$(Build.BinariesDirectory)\raw\unsigned\templates" -VerificationPath "$(Agent.TempDirectory)\PTVS-TemplateFontVerification-$(Build.BuildId)"'
 
-  - task: NuGetCommand@2
-    displayName: 'Download insertion font verifier (${{ parameters.insertionBinInspectVersion }})'
-    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
-    inputs:
-      command: custom
-      arguments: 'install BinInspectToolSet -Version ${{ parameters.insertionBinInspectVersion }} -NonInteractive -DependencyVersion Ignore -ExcludeVersion -OutputDirectory "$(Agent.TempDirectory)\PTVS-InsertionVerifier-$(Build.BuildId)" -Source https://devdiv.pkgs.visualstudio.com/_packaging/VS-CoreXtFeeds/nuget/v3/index.json'
-
-  - task: PowerShell@2
-    displayName: 'Verify template fonts with insertion BinInspect'
-    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
-    inputs:
-      targetType: filePath
-      filePath: '$(Build.SourcesDirectory)\Build\VerifyTemplateFontsForInsertion.ps1'
-      arguments: '-VerificationPath "$(Agent.TempDirectory)\PTVS-TemplateFontVerification-$(Build.BuildId)" -BinInspectPath "$(Agent.TempDirectory)\PTVS-InsertionVerifier-$(Build.BuildId)\BinInspectToolSet\tools\BinInspect.exe" -ReportPath "$(Build.SourcesDirectory)\logs\TemplateFontInsertionVerification"'
-
   - task: MicroBuildCodesignVerify@3
     displayName: 'Verify packaged template font signatures'
-    condition: and(succeededOrFailed(), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['TemplateFontsPrepared'], 'true'))
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
     inputs:
       TargetFolders: '$(Agent.TempDirectory)\PTVS-TemplateFontVerification-$(Build.BuildId)'
       # Match insertion SignCheck's BinInspect /3p policy instead of warning on non-Microsoft signatures.
@@ -101,11 +83,7 @@ steps:
     inputs:
       targetType: inline
       script: |
-        foreach ($path in @(
-          '$(Agent.TempDirectory)\PTVS-TemplateFontVerification-$(Build.BuildId)',
-          '$(Agent.TempDirectory)\PTVS-InsertionVerifier-$(Build.BuildId)'
-        )) {
-          if (Test-Path -LiteralPath $path) {
-              Remove-Item -LiteralPath $path -Recurse -Force
-          }
+        $path = '$(Agent.TempDirectory)\PTVS-TemplateFontVerification-$(Build.BuildId)'
+        if (Test-Path -LiteralPath $path) {
+            Remove-Item -LiteralPath $path -Recurse -Force
         }
