@@ -133,7 +133,7 @@
         <UnsignedPath>$(UnsignedOutputPath)templates\%(RecursiveDir)%(Filename)%(Extension)</UnsignedPath>
       </FilesToSign>
       <FilesToSign Include="@(TemplateFontFilesToSign)">
-        <Authenticode>3PartyScriptsSHA2</Authenticode>
+        <Authenticode>Microsoft400</Authenticode>
         <StrongName></StrongName>
         <SignedPath>$(BinariesOutputPath)templates\%(RecursiveDir)%(Filename)%(Extension)</SignedPath>
         <UnsignedPath>$(UnsignedOutputPath)templates\%(RecursiveDir)%(Filename)%(Extension)</UnsignedPath>

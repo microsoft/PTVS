@@ -69,6 +69,18 @@ steps:
       filePath: '$(Build.SourcesDirectory)\Build\PrepareTemplateFontVerification.ps1'
       arguments: '-SetupPath "$(Build.BinariesDirectory)\raw\setup\swix" -TemplatePath "$(Build.BinariesDirectory)\raw\binaries\templates" -UnsignedTemplatePath "$(Build.BinariesDirectory)\raw\unsigned\templates" -VerificationPath "$(Agent.TempDirectory)\PTVS-TemplateFontVerification-$(Build.BuildId)"'
 
+  - task: PowerShell@2
+    displayName: 'Preserve Microsoft400 font signing diagnostic inputs'
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    inputs:
+      targetType: inline
+      script: |
+        $ErrorActionPreference = 'Stop'
+        $diagnosticPath = '$(Build.SourcesDirectory)\logs\TemplateFontSigningDiagnostic'
+        New-Item -ItemType Directory -Path $diagnosticPath | Out-Null
+        Get-ChildItem -LiteralPath '$(Agent.TempDirectory)\PTVS-TemplateFontVerification-$(Build.BuildId)' -Filter '*.ttf' -File |
+            Copy-Item -Destination $diagnosticPath
+
   - task: MicroBuildCodesignVerify@3
     displayName: 'Verify packaged template font signatures'
     condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
