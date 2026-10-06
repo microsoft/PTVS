@@ -236,6 +236,11 @@
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
+    <Content Include="UnifiedSettings\Cookiecutter.registration.json" Condition="'$(VSTarget)' == '18.0'">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>UnifiedSettings</VSIXSubPath>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <VSCTCompile Include="Cookiecutter.vsct">
@@ -361,6 +366,37 @@
     <UseCodebase>true</UseCodebase>
   </PropertyGroup>
   <Import Project="..\ProjectAfter.settings" />
+  <Target Name="ValidateCookiecutterUnifiedSettingsPackaging"
+          AfterTargets="GetVSIXSourceItems"
+          Condition="'$(VSTarget)' == '18.0'">
+    <ItemGroup>
+      <_CookiecutterUnifiedSettingsVsixItem Include="@(VSIXSourceItem)"
+        Condition="'%(VSIXSourceItem.VSIXSubPath)%(VSIXSourceItem.Filename)%(VSIXSourceItem.Extension)' == 'UnifiedSettings\Cookiecutter.registration.json'" />
+      <_CookiecutterPkgdefVsixItem Include="@(VSIXSourceItem)"
+        Condition="'%(VSIXSourceItem.Filename)%(VSIXSourceItem.Extension)' == 'Microsoft.CookiecutterTools.pkgdef'" />
+    </ItemGroup>
+    <Error Condition="'@(_CookiecutterUnifiedSettingsVsixItem)' == ''"
+           Text="UnifiedSettings\Cookiecutter.registration.json must be packaged at the path registered by CookiecutterPackage." />
+    <Error Condition="'@(_CookiecutterPkgdefVsixItem)' == ''"
+           Text="Microsoft.CookiecutterTools.pkgdef must be packaged in the Cookiecutter VSIX." />
+    <ReadLinesFromFile File="@(_CookiecutterPkgdefVsixItem)">
+      <Output TaskParameter="Lines" ItemName="_CookiecutterPkgdefLine" />
+    </ReadLinesFromFile>
+    <ItemGroup>
+      <_CookiecutterToolsOptionsPageKey Include="@(_CookiecutterPkgdefLine)"
+        Condition="'%(Identity)' == '[$RootKey$\ToolsOptionsPages\Cookiecutter\General]'" />
+      <_CookiecutterToolsOptionsPageGuid Include="@(_CookiecutterPkgdefLine)"
+        Condition="'%(Identity)' == '&quot;Page&quot;=&quot;{bdb4e0b1-4869-4a6f-ad55-5230b768261d}&quot;'" />
+      <_CookiecutterToolsOptionsPageOnboarded Include="@(_CookiecutterPkgdefLine)"
+        Condition="'%(Identity)' == '&quot;IsInUnifiedSettings&quot;=dword:00000001'" />
+    </ItemGroup>
+    <Error Condition="'@(_CookiecutterToolsOptionsPageKey)' == ''"
+           Text="Cookiecutter &gt; General must be present in the effective ToolsOptionsPages registration." />
+    <Error Condition="'@(_CookiecutterToolsOptionsPageGuid)' == ''"
+           Text="Cookiecutter &gt; General must register page {BDB4E0B1-4869-4A6F-AD55-5230B768261D}." />
+    <Error Condition="'@(_CookiecutterToolsOptionsPageOnboarded)' == ''"
+           Text="Cookiecutter &gt; General must register IsInUnifiedSettings=1 to suppress its legacy placeholder." />
+  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

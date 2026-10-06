@@ -1,0 +1,59 @@
+{
+  "$schema": "https://aka.ms/unified-settings-experience/registration/schema",
+  "properties": {
+    "cookiecutter.general.showHelp": {
+      "type": "boolean",
+      "default": true,
+      "title": "@116;{8261E28A-54EC-44D2-ADED-8F9366B9196B}",
+      "description": "@117;{8261E28A-54EC-44D2-ADED-8F9366B9196B}",
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "DialogPage\\Microsoft.CookiecutterTools.CookiecutterOptionPage\\ShowHelp"
+          },
+          "mode": "full"
+        }
+      }
+    },
+    "cookiecutter.general.feedUrl": {
+      "type": "string",
+      "default": "https://go.microsoft.com/fwlink/?LinkID=823051",
+      "title": "@118;{8261E28A-54EC-44D2-ADED-8F9366B9196B}",
+      "description": "@119;{8261E28A-54EC-44D2-ADED-8F9366B9196B}",
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "DialogPage\\Microsoft.CookiecutterTools.CookiecutterOptionPage\\FeedUrl"
+          },
+          "mode": "full"
+        }
+      }
+    },
+    "cookiecutter.general.checkForTemplateUpdate": {
+      "type": "boolean",
+      "default": true,
+      "title": "@120;{8261E28A-54EC-44D2-ADED-8F9366B9196B}",
+      "description": "@121;{8261E28A-54EC-44D2-ADED-8F9366B9196B}",
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "DialogPage\\Microsoft.CookiecutterTools.CookiecutterOptionPage\\CheckForTemplateUpdate"
+          },
+          "mode": "full"
+        }
+      }
+    }
+  },
+  "categories": {
+    "cookiecutter": {
+      "title": "@113;{8261E28A-54EC-44D2-ADED-8F9366B9196B}"
+    },
+    "cookiecutter.general": {
+      "title": "@114;{8261E28A-54EC-44D2-ADED-8F9366B9196B}",
+      "legacyOptionPageId": "BDB4E0B1-4869-4A6F-AD55-5230B768261D"
+    }
+  }
+}
