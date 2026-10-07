@@ -86,7 +86,7 @@ steps:
     inputs:
       targetType: filePath
       filePath: '$(Build.SourcesDirectory)\Build\VerifyTemplateFontsForInsertion.ps1'
-      arguments: '-VerificationPath "$(Agent.TempDirectory)\PTVS-TemplateFontVerification-$(Build.BuildId)" -BinInspectPath "$(Agent.TempDirectory)\PTVS-CatalogDiagnosticVerifier-$(Build.BuildId)\BinInspectToolSet\tools\BinInspect.exe" -ReportPath "$(Build.SourcesDirectory)\logs\TemplateFontInsertionVerification" -CompareWithoutCatalogs'
+      arguments: '-VerificationPath "$(Agent.TempDirectory)\PTVS-TemplateFontVerification-$(Build.BuildId)" -BinInspectPath "$(Agent.TempDirectory)\PTVS-CatalogDiagnosticVerifier-$(Build.BuildId)\BinInspectToolSet\tools\BinInspect.exe" -ReportPath "$(Build.SourcesDirectory)\logs\TemplateFontInsertionVerification"'
 
   - task: MicroBuildCodesignVerify@3
     displayName: 'Verify packaged template font signatures'
