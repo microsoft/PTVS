@@ -1,0 +1,131 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <IntermediateOutputPathSuffix>signfontcatalogs\</IntermediateOutputPathSuffix>
+  </PropertyGroup>
+
+  <Import Project="SetupProjectBefore.settings" />
+  <Import Project="$(TargetsPath)\Common.Shim.targets" />
+
+  <PropertyGroup>
+    <SignedTemplateDjangoPath>$(BinariesOutputPath)templates\Django</SignedTemplateDjangoPath>
+    <SignedTemplateWebPath>$(BinariesOutputPath)templates\Web</SignedTemplateWebPath>
+    <SignedTemplateFontCatalogSentinelPath>$(BinariesOutputPath)templates\SignedTemplateFontCatalogs.marker</SignedTemplateFontCatalogSentinelPath>
+    <OutputPath>$(BinariesOutputPath)templates\</OutputPath>
+    <OutDir>$(BinariesOutputPath)templates\</OutDir>
+    <WindowsKitsRoot Condition="'$(WindowsKitsRoot)' == ''">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Kits\Installed Roots', 'KitsRoot10', null, RegistryView.Registry32, RegistryView.Default))</WindowsKitsRoot>
+    <MakeCatExe Condition="'$(MakeCatExe)' == '' and '$(WindowsSdkVerBinPath)' != '' and Exists('$(WindowsSdkVerBinPath)x86\makecat.exe')">$(WindowsSdkVerBinPath)x86\makecat.exe</MakeCatExe>
+    <MakeCatExe Condition="'$(MakeCatExe)' == '' and '$(WindowsKitsRoot)' != '' and '$(TargetPlatformSdkVersion)' != '' and Exists('$(WindowsKitsRoot)bin\$(TargetPlatformSdkVersion)\x86\makecat.exe')">$(WindowsKitsRoot)bin\$(TargetPlatformSdkVersion)\x86\makecat.exe</MakeCatExe>
+    <MakeCatExe Condition="'$(MakeCatExe)' == '' and '$(WindowsKitsRoot)' != '' and Exists('$(WindowsKitsRoot)bin\10.0.26100.0\x86\makecat.exe')">$(WindowsKitsRoot)bin\10.0.26100.0\x86\makecat.exe</MakeCatExe>
+    <MakeCatExe Condition="'$(MakeCatExe)' == ''">makecat.exe</MakeCatExe>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <DjangoTemplateFontFiles Include="$(SignedTemplateDjangoPath)\**\*.ttf" />
+    <WebTemplateFontFiles Include="$(SignedTemplateWebPath)\**\*.ttf" />
+
+  </ItemGroup>
+
+  <Target Name="_ValidateDjangoTemplateFontCatalogInputs"
+          Condition="'$(SignType)' == 'Real' or '$(SignType)' == 'Test'">
+    <Error Condition="'$(SignedTemplateDjangoPath)' == ''" Text="SignedTemplateDjangoPath is required." />
+    <Error Condition="!Exists('$(SignedTemplateDjangoPath)')" Text="Signed template path '$(SignedTemplateDjangoPath)' was not found. Build signlayout.proj before packaging Django template catalogs." />
+    <Error Condition="'@(DjangoTemplateFontFiles->Count())' != '1'" Text="Expected exactly one signed Django template font in '$(SignedTemplateDjangoPath)', found '@(DjangoTemplateFontFiles->Count())'." />
+    <Error Condition="'%(DjangoTemplateFontFiles.Filename)%(DjangoTemplateFontFiles.Extension)' != 'glyphicons-halflings-regular.ttf'" Text="Unexpected Django template font name." />
+    <Error Condition="'$(MakeCatExe)' != 'makecat.exe' and !Exists('$(MakeCatExe)')" Text="makecat.exe was not found at '$(MakeCatExe)'." />
+  </Target>
+
+  <Target Name="_ValidateWebTemplateFontCatalogInputs"
+          Condition="'$(SignType)' == 'Real' or '$(SignType)' == 'Test'">
+    <Error Condition="'$(SignedTemplateWebPath)' == ''" Text="SignedTemplateWebPath is required." />
+    <Error Condition="!Exists('$(SignedTemplateWebPath)')" Text="Signed template path '$(SignedTemplateWebPath)' was not found. Build signlayout.proj before packaging Web template catalogs." />
+    <Error Condition="'@(WebTemplateFontFiles->Count())' != '3'" Text="Expected exactly three signed Web template fonts in '$(SignedTemplateWebPath)', found '@(WebTemplateFontFiles->Count())'." />
+    <Error Condition="'%(WebTemplateFontFiles.Filename)%(WebTemplateFontFiles.Extension)' != 'glyphicons-halflings-regular.ttf'" Text="Unexpected Web template font name." />
+    <Error Condition="'$(MakeCatExe)' != 'makecat.exe' and !Exists('$(MakeCatExe)')" Text="makecat.exe was not found at '$(MakeCatExe)'." />
+  </Target>
+
+  <Target Name="_CaptureSignedFontHashes"
+          DependsOnTargets="_ValidateDjangoTemplateFontCatalogInputs;_ValidateWebTemplateFontCatalogInputs"
+          Condition="'$(SignType)' == 'Real' or '$(SignType)' == 'Test'">
+    <Error Condition="!Exists('$(BinariesOutputPath)templates\SignedTemplateFiles.marker')" Text="Embedded font signing must complete before catalog generation." />
+    <GetFileHash Files="@(DjangoTemplateFontFiles);@(WebTemplateFontFiles)" Algorithm="SHA256">
+      <Output TaskParameter="Items" ItemName="_OriginalFontHashes" />
+    </GetFileHash>
+    <ItemGroup>
+      <_OriginalFontHashes>
+        <OriginalHash>%(_OriginalFontHashes.FileHash)</OriginalHash>
+      </_OriginalFontHashes>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_GenerateTemplateFontCatalogs"
+          DependsOnTargets="_CaptureSignedFontHashes"
+          BeforeTargets="_PreserveUnsigned;ListFiles;SignFiles"
+          Condition="'$(SignType)' == 'Real' or '$(SignType)' == 'Test'">
+    <MakeDir Directories="$(IntermediateOutputPath)" />
+    <Delete Files="$(SignedTemplateDjangoPath)\Microsoft.PythonTools.Django.Templates.Fonts.cat;$(IntermediateOutputPath)Microsoft.PythonTools.Django.Templates.Fonts.cdf;$(UnsignedOutputPath)templates\catalogs\Microsoft.PythonTools.Django.Templates.Fonts.cat;$(SignedTemplateFontCatalogSentinelPath)" />
+
+    <WriteLinesToFile File="$(IntermediateOutputPath)Microsoft.PythonTools.Django.Templates.Fonts.cdf"
+                      Lines="[CatalogHeader]"
+                      Overwrite="true"
+                      Encoding="ASCII" />
+    <WriteLinesToFile File="$(IntermediateOutputPath)Microsoft.PythonTools.Django.Templates.Fonts.cdf"
+                      Lines="Name=Microsoft.PythonTools.Django.Templates.Fonts.cat;ResultDir=$(SignedTemplateDjangoPath);CatalogVersion=2;HashAlgorithms=SHA256;;[CatalogFiles]"
+                      Overwrite="false"
+                      Encoding="ASCII" />
+    <WriteLinesToFile File="$(IntermediateOutputPath)Microsoft.PythonTools.Django.Templates.Fonts.cdf"
+                      Lines="@(DjangoTemplateFontFiles->'&lt;hash&gt;Django\%(RecursiveDir)%(Filename)=%(FullPath)')"
+                      Overwrite="false"
+                      Encoding="ASCII" />
+    <Message Importance="high" Text="Generating Django template font catalog $(SignedTemplateDjangoPath)\Microsoft.PythonTools.Django.Templates.Fonts.cat for @(DjangoTemplateFontFiles->'%(FullPath)', ', ')" />
+    <Exec Command="&quot;$(MakeCatExe)&quot; &quot;$(IntermediateOutputPath)Microsoft.PythonTools.Django.Templates.Fonts.cdf&quot;" StandardOutputImportance="High" />
+    <Delete Files="$(SignedTemplateWebPath)\Microsoft.PythonTools.Web.Templates.Fonts.cat;$(IntermediateOutputPath)Microsoft.PythonTools.Web.Templates.Fonts.cdf;$(UnsignedOutputPath)templates\catalogs\Microsoft.PythonTools.Web.Templates.Fonts.cat;$(SignedTemplateFontCatalogSentinelPath)" />
+
+    <WriteLinesToFile File="$(IntermediateOutputPath)Microsoft.PythonTools.Web.Templates.Fonts.cdf"
+                      Lines="[CatalogHeader]"
+                      Overwrite="true"
+                      Encoding="ASCII" />
+    <WriteLinesToFile File="$(IntermediateOutputPath)Microsoft.PythonTools.Web.Templates.Fonts.cdf"
+                      Lines="Name=Microsoft.PythonTools.Web.Templates.Fonts.cat;ResultDir=$(SignedTemplateWebPath);CatalogVersion=2;HashAlgorithms=SHA256;;[CatalogFiles]"
+                      Overwrite="false"
+                      Encoding="ASCII" />
+    <WriteLinesToFile File="$(IntermediateOutputPath)Microsoft.PythonTools.Web.Templates.Fonts.cdf"
+                      Lines="@(WebTemplateFontFiles->'&lt;hash&gt;Web\%(RecursiveDir)%(Filename)=%(FullPath)')"
+                      Overwrite="false"
+                      Encoding="ASCII" />
+    <Message Importance="high" Text="Generating Web template font catalog $(SignedTemplateWebPath)\Microsoft.PythonTools.Web.Templates.Fonts.cat for @(WebTemplateFontFiles->'%(FullPath)', ', ')" />
+    <Exec Command="&quot;$(MakeCatExe)&quot; &quot;$(IntermediateOutputPath)Microsoft.PythonTools.Web.Templates.Fonts.cdf&quot;" StandardOutputImportance="High" />
+    <ItemGroup>
+      <FilesToSign Include="$(SignedTemplateDjangoPath)\Microsoft.PythonTools.Django.Templates.Fonts.cat">
+        <Authenticode>Microsoft400</Authenticode>
+        <SignedPath>$(SignedTemplateDjangoPath)\Microsoft.PythonTools.Django.Templates.Fonts.cat</SignedPath>
+        <UnsignedPath>$(UnsignedOutputPath)templates\catalogs\Microsoft.PythonTools.Django.Templates.Fonts.cat</UnsignedPath>
+      </FilesToSign>
+      <FilesToSign Include="$(SignedTemplateWebPath)\Microsoft.PythonTools.Web.Templates.Fonts.cat">
+        <Authenticode>Microsoft400</Authenticode>
+        <SignedPath>$(SignedTemplateWebPath)\Microsoft.PythonTools.Web.Templates.Fonts.cat</SignedPath>
+        <UnsignedPath>$(UnsignedOutputPath)templates\catalogs\Microsoft.PythonTools.Web.Templates.Fonts.cat</UnsignedPath>
+      </FilesToSign>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_PreserveUnsigned" Inputs="%(FilesToSign.FullPath)" Outputs="%(FilesToSign.UnsignedPath)" BeforeTargets="SignFiles">
+    <Copy SourceFiles="%(FilesToSign.FullPath)" DestinationFiles="%(FilesToSign.UnsignedPath)" />
+  </Target>
+
+  <Target Name="_MarkSignedTemplateFontCatalogs"
+          AfterTargets="SignFiles"
+          Condition="'$(SignType)' == 'Real' or '$(SignType)' == 'Test'">
+    <GetFileHash Files="@(_OriginalFontHashes)" Algorithm="SHA256">
+      <Output TaskParameter="Items" ItemName="_FinalFontHashes" />
+    </GetFileHash>
+    <Error Condition="'%(_FinalFontHashes.OriginalHash)' != '%(_FinalFontHashes.FileHash)'" Text="Catalog generation or signing changed embedded-signed font '%(_FinalFontHashes.Identity)'." />
+    <Touch Files="$(SignedTemplateFontCatalogSentinelPath)" AlwaysCreate="true" />
+  </Target>
+
+  <Target Name="ListFiles">
+    <Message Text="@(FilesToSign->'%(Identity) (%(Authenticode)) - %(SignedPath)', '
+')" Importance="high" />
+  </Target>
+
+  <Import Project="$(TargetsPath)\MicroBuild.targets" />
+</Project>

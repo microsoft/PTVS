@@ -2,11 +2,10 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$VerificationPath,
     [Parameter(Mandatory = $true)]
-    [string]$OriginalFontPath,
-    [Parameter(Mandatory = $true)]
     [string]$BinInspectPath,
     [Parameter(Mandatory = $true)]
-    [string]$ReportPath
+    [string]$ReportPath,
+    [switch]$CompareWithoutCatalogs
 )
 
 $ErrorActionPreference = 'Stop'
@@ -21,6 +20,10 @@ $expectedFontNames = @(
     'Microsoft.PythonTools.Web.Templates-0.ttf',
     'Microsoft.PythonTools.Web.Templates-1.ttf',
     'Microsoft.PythonTools.Web.Templates-2.ttf'
+)
+$expectedCatalogNames = @(
+    'Microsoft.PythonTools.Django.Templates.Fonts.cat',
+    'Microsoft.PythonTools.Web.Templates.Fonts.cat'
 )
 
 if (!(Test-Path -LiteralPath $VerificationPath -PathType Container)) {
@@ -40,8 +43,8 @@ $binInspectExe = (Resolve-Path -LiteralPath $BinInspectPath).Path
 Write-Host "BinInspect executable: $binInspectExe"
 
 $inputFiles = @(Get-ChildItem -LiteralPath $VerificationPath -File)
-if ($inputFiles.Count -ne 5) {
-    throw "Expected exactly four template fonts and one catalog in '$VerificationPath', found $($inputFiles.Count) files."
+if ($inputFiles.Count -ne 6) {
+    throw "Expected exactly four template fonts and two catalogs in '$VerificationPath', found $($inputFiles.Count) files."
 }
 
 $unexpectedFiles = @($inputFiles | Where-Object { $_.Extension -notin @('.ttf', '.cat') })
@@ -54,8 +57,8 @@ $catFiles = @($inputFiles | Where-Object { $_.Extension -ieq '.cat' })
 if ($fontFiles.Count -ne 4) {
     throw "Expected exactly four TTF files in '$VerificationPath', found $($fontFiles.Count)."
 }
-if ($catFiles.Count -ne 1) {
-    throw "Expected exactly one CAT file in '$VerificationPath', found $($catFiles.Count)."
+if ($catFiles.Count -ne 2) {
+    throw "Expected exactly two CAT files in '$VerificationPath', found $($catFiles.Count)."
 }
 
 $actualFontNames = @($fontFiles.Name | Sort-Object)
@@ -65,11 +68,9 @@ if ($null -ne $fontInputDiff) {
     throw "Template font filenames in '$VerificationPath' do not match the expected set: $(@($expectedFontNamesSorted) -join ', ')."
 }
 
-foreach ($font in $fontFiles) {
-    $original = Join-Path $OriginalFontPath $font.Name
-    if ((Get-FileHash -LiteralPath $original).Hash -ne (Get-FileHash -LiteralPath $font.FullName).Hash) {
-        throw "Catalog generation or signing changed packaged font '$($font.Name)'."
-    }
+$expectedCatalogNamesSorted = @($expectedCatalogNames | Sort-Object)
+if ($null -ne (Compare-Object -ReferenceObject $expectedCatalogNamesSorted -DifferenceObject @($catFiles.Name | Sort-Object))) {
+    throw "Packaged catalog filenames do not match the expected set."
 }
 
 $inputSnapshot = @()
@@ -85,6 +86,34 @@ foreach ($file in $inputFiles) {
 }
 
 $inputSnapshot | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $inputReportPath 'manifest.json') -Encoding UTF8
+
+if ($CompareWithoutCatalogs) {
+    $baselineInputPath = Join-Path $ReportPath 'without-catalogs-inputs'
+    $baselineReportPath = Join-Path $ReportPath 'without-catalogs'
+    New-Item -ItemType Directory -Path $baselineInputPath | Out-Null
+    New-Item -ItemType Directory -Path $baselineReportPath | Out-Null
+    $fontFiles | Copy-Item -Destination $baselineInputPath
+    & $binInspectExe /a /v /3p /o $baselineReportPath $baselineInputPath
+    $baselineResultsPath = Join-Path $baselineReportPath 'FullSignResults.xml'
+    if (!(Test-Path -LiteralPath $baselineResultsPath)) {
+        throw "Font-only control produced no native signature report."
+    }
+    [xml]$baselineResults = Get-Content -LiteralPath $baselineResultsPath -Raw
+    $baselineRows = @($baselineResults.SelectNodes('/DATA/ROW') | Where-Object { $_.Type -ieq 'Certificate' })
+    if ($baselineRows.Count -ne 4) {
+        throw "Font-only control did not produce exactly four certificate rows."
+    }
+    $baselineNames = @($baselineRows | ForEach-Object { [IO.Path]::GetFileName([string]$_.File) } | Sort-Object)
+    if ($null -ne (Compare-Object $expectedFontNamesSorted $baselineNames)) {
+        throw "Font-only control scanned unexpected files."
+    }
+    foreach ($row in $baselineRows) {
+        if ($row.Pass -ne 'False' -or $row.Err -notmatch '0x80096010') {
+            throw "Font-only control did not reproduce the insertion digest failure; catalog causality is unproven."
+        }
+    }
+    Write-Host "Font-only control reproduced 0x80096010 for all four fonts."
+}
 
 Write-Host "Running insertion verifier: `"$binInspectExe`" /a /v /3p /o `"$nativeReportPath`" `"$VerificationPath`""
 & $binInspectExe /a /v /3p /o $nativeReportPath $VerificationPath
@@ -121,8 +150,8 @@ function Get-RowLeafName {
 }
 
 $certificateRows = @($rows | Where-Object { $_.Type -ieq 'Certificate' })
-if ($certificateRows.Count -ne 5) {
-    throw "Expected exactly five certificate rows for four fonts and their catalog."
+if ($certificateRows.Count -ne 6) {
+    throw "Expected exactly six certificate rows for four fonts and their catalogs."
 }
 foreach ($row in $certificateRows) {
     $path = [IO.Path]::GetFullPath([string]$row.File)
@@ -131,7 +160,7 @@ foreach ($row in $certificateRows) {
     }
 }
 $fontRows = @($certificateRows | Where-Object { [System.IO.Path]::GetExtension((Get-RowLeafName $_)) -ieq '.ttf' })
-$catRows = @($certificateRows | Where-Object { (Get-RowLeafName $_) -ieq $catFiles[0].Name })
+$catRows = @($certificateRows | Where-Object { [IO.Path]::GetExtension((Get-RowLeafName $_)) -ieq '.cat' })
 
 $fontNamesFromResults = @($fontRows | ForEach-Object { Get-RowLeafName $_ } | Sort-Object)
 $fontResultDiff = Compare-Object -ReferenceObject $expectedFontNamesSorted -DifferenceObject $fontNamesFromResults
@@ -145,13 +174,13 @@ if (@($fontRows | Group-Object { Get-RowLeafName $_ } | Where-Object { $_.Count 
     throw "Expected exactly one certificate row for each template font in '$resultsPath'."
 }
 
-if ($catRows.Count -ne 1) {
-    throw "Expected exactly one certificate row for the catalog '$($catFiles[0].Name)' in '$resultsPath'."
+if ($catRows.Count -ne 2) {
+    throw "Expected exactly two certificate rows for the packaged catalogs in '$resultsPath'."
 }
-$catNamesFromResults = @($catRows | ForEach-Object { Get-RowLeafName $_ } | Sort-Object -Unique)
-$catResultDiff = Compare-Object -ReferenceObject @($catFiles[0].Name) -DifferenceObject $catNamesFromResults
+$catNamesFromResults = @($catRows | ForEach-Object { Get-RowLeafName $_ } | Sort-Object)
+$catResultDiff = Compare-Object -ReferenceObject $expectedCatalogNamesSorted -DifferenceObject $catNamesFromResults
 if ($null -ne $catResultDiff) {
-    throw "Expected certificate rows only for catalog '$($catFiles[0].Name)' in '$resultsPath', found: $(@($catNamesFromResults) -join ', ')."
+    throw "Catalog certificate results do not match the two packaged catalogs."
 }
 
 $failures = @()
@@ -177,4 +206,4 @@ if ($verifierExitCode -ne 0) {
     throw "Insertion verifier exited with code $verifierExitCode. See '$resultsPath'."
 }
 
-Write-Host "Insertion verification passed for four template fonts and the signed catalog."
+Write-Host "Insertion verification passed for four packaged template fonts and both signed catalogs."

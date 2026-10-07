@@ -69,48 +69,31 @@ steps:
       filePath: '$(Build.SourcesDirectory)\Build\PrepareTemplateFontVerification.ps1'
       arguments: '-SetupPath "$(Build.BinariesDirectory)\raw\setup\swix" -TemplatePath "$(Build.BinariesDirectory)\raw\binaries\templates" -UnsignedTemplatePath "$(Build.BinariesDirectory)\raw\unsigned\templates" -VerificationPath "$(Agent.TempDirectory)\PTVS-TemplateFontVerification-$(Build.BuildId)"'
 
-  - task: MicroBuildCodesignVerify@3
-    displayName: 'Verify packaged template font signatures'
-    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
-    inputs:
-      TargetFolders: '$(Agent.TempDirectory)\PTVS-TemplateFontVerification-$(Build.BuildId)'
-      # Match insertion SignCheck's BinInspect /3p policy instead of warning on non-Microsoft signatures.
-      FailOnMissing1PSignature: true
-
   - task: NuGetAuthenticate@1
     displayName: 'NuGet Authenticate (BinInspect)'
     condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
 
   - task: NuGetCommand@2
-    displayName: 'Install BinInspectToolSet 1.0.26082603'
+    displayName: 'Download insertion font verifier (1.0.26082603)'
     condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
     inputs:
       command: custom
       arguments: 'install BinInspectToolSet -Version 1.0.26082603 -DependencyVersion Ignore -ExcludeVersion -Source "https://devdiv.pkgs.visualstudio.com/_packaging/VS-CoreXtFeeds/nuget/v3/index.json" -OutputDirectory "$(Agent.TempDirectory)\PTVS-CatalogDiagnosticVerifier-$(Build.BuildId)" -NonInteractive'
 
-  - task: MSBuild@1
-    displayName: 'Generate diagnostic template font catalog'
-    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
-    inputs:
-      solution: $(Build.SourcesDirectory)\Python\Setup\signfontcatalogdiagnostic.proj
-      msbuildVersion: $(MsBuildVersion)
-      platform: $(Platform)
-      configuration: $(BuildConfiguration)
-      msbuildArguments: ' /p:VSTarget=$(VSTarget)
-                          /p:BuildNumber=${{ parameters.ptvsPackageVersion }}
-                          /p:BUILD_BINARIESDIRECTORY=$(Build.BinariesDirectory)
-                          /p:BUILD_STAGINGDIRECTORY=$(Build.StagingDirectory)
-                          /p:TemplateFontVerificationPath=$(Agent.TempDirectory)\PTVS-TemplateFontVerification-$(Build.BuildId)
-                          /p:TemplateFontOriginalPath=$(Build.SourcesDirectory)\logs\TemplateFontCatalogDiagnostic\packaged-fonts
-                          /bl:$(Build.SourcesDirectory)\logs\BuildTemplateFontCatalogDiagnostic.binlog'
-
   - task: PowerShell@2
-    displayName: 'Test template font catalog insertion'
+    displayName: 'Verify packaged template fonts with insertion BinInspect'
     condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
     inputs:
       targetType: filePath
-      filePath: '$(Build.SourcesDirectory)\Build\TestTemplateFontCatalogForInsertion.ps1'
-      arguments: '-VerificationPath "$(Agent.TempDirectory)\PTVS-TemplateFontVerification-$(Build.BuildId)" -OriginalFontPath "$(Build.SourcesDirectory)\logs\TemplateFontCatalogDiagnostic\packaged-fonts" -BinInspectPath "$(Agent.TempDirectory)\PTVS-CatalogDiagnosticVerifier-$(Build.BuildId)\BinInspectToolSet\tools\BinInspect.exe" -ReportPath "$(Build.SourcesDirectory)\logs\TemplateFontCatalogDiagnostic"'
+      filePath: '$(Build.SourcesDirectory)\Build\VerifyTemplateFontsForInsertion.ps1'
+      arguments: '-VerificationPath "$(Agent.TempDirectory)\PTVS-TemplateFontVerification-$(Build.BuildId)" -BinInspectPath "$(Agent.TempDirectory)\PTVS-CatalogDiagnosticVerifier-$(Build.BuildId)\BinInspectToolSet\tools\BinInspect.exe" -ReportPath "$(Build.SourcesDirectory)\logs\TemplateFontInsertionVerification" -CompareWithoutCatalogs'
+
+  - task: MicroBuildCodesignVerify@3
+    displayName: 'Verify packaged template font signatures'
+    condition: and(succeededOrFailed(), ne(variables['Build.Reason'], 'PullRequest'), eq(variables['TemplateFontPayloadsPrepared'], 'true'))
+    inputs:
+      TargetFolders: '$(Agent.TempDirectory)\PTVS-TemplateFontVerification-$(Build.BuildId)'
+      FailOnMissing1PSignature: true
 
   - task: PowerShell@2
     displayName: 'Clean up extracted template fonts'
