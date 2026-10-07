@@ -106,7 +106,7 @@
       <_TemplatePackageSourceFiles Include="$(BuildRoot)\Python\Templates\**\*"
                                    Exclude="$(BuildRoot)\Python\Templates\Core\**\*;$(BuildRoot)\Python\Templates\NativeDevelopment\**\*" />
       <!-- Stage signable files from the remaining template trees. Glob from Python\Templates\ so RecursiveDir preserves subdirectories. -->
-      <_TemplateSignableSourceFiles Include="$(BuildRoot)\Python\Templates\**\*.js;$(BuildRoot)\Python\Templates\**\*.ttf"
+      <_TemplateSignableSourceFiles Include="$(BuildRoot)\Python\Templates\**\*.js"
                                     Exclude="$(BuildRoot)\Python\Templates\Django\**\*;$(BuildRoot)\Python\Templates\Web\**\*" />
     </ItemGroup>
     <Copy SourceFiles="@(_TemplatePackageSourceFiles)"
@@ -118,21 +118,12 @@
   <Target Name="_AddTemplateFiles" BeforeTargets="_PreserveUnsigned;ListFiles">
     <ItemGroup>
       <TemplateScriptFilesToSign Include="$(BinariesOutputPath)templates\**\*.js" />
-      <TemplateFontFilesToSign Include="$(BinariesOutputPath)templates\**\*.ttf" />
       <!-- Drop zero-byte files (e.g. the empty 'Add New Item -> JavaScript' template placeholder).
            signtool cannot map a 0-byte file (CreateFileMapping fails with ERROR_FILE_INVALID 0x3EE),
            which would otherwise break the signing step. -->
       <TemplateScriptFilesToSign Remove="@(TemplateScriptFilesToSign)"
                                 Condition="'$([System.IO.File]::ReadAllText(%(TemplateScriptFilesToSign.FullPath)))' == ''" />
-      <TemplateFontFilesToSign Remove="@(TemplateFontFilesToSign)"
-                               Condition="'$([System.IO.File]::ReadAllText(%(TemplateFontFilesToSign.FullPath)))' == ''" />
       <FilesToSign Include="@(TemplateScriptFilesToSign)">
-        <Authenticode>3PartyScriptsSHA2</Authenticode>
-        <StrongName></StrongName>
-        <SignedPath>$(BinariesOutputPath)templates\%(RecursiveDir)%(Filename)%(Extension)</SignedPath>
-        <UnsignedPath>$(UnsignedOutputPath)templates\%(RecursiveDir)%(Filename)%(Extension)</UnsignedPath>
-      </FilesToSign>
-      <FilesToSign Include="@(TemplateFontFilesToSign)">
         <Authenticode>3PartyScriptsSHA2</Authenticode>
         <StrongName></StrongName>
         <SignedPath>$(BinariesOutputPath)templates\%(RecursiveDir)%(Filename)%(Extension)</SignedPath>
@@ -174,7 +165,7 @@
 
   <Target Name="_CopySignedTemplateFiles">
     <ItemGroup>
-      <_SignedTemplateFiles Include="$(BinariesOutputPath)templates\**\*.js;$(BinariesOutputPath)templates\**\*.ttf" />
+      <_SignedTemplateFiles Include="$(BinariesOutputPath)templates\**\*.js" />
     </ItemGroup>
     <Copy SourceFiles="@(_SignedTemplateFiles)"
           DestinationFiles="@(_SignedTemplateFiles->'$(BuildRoot)\Python\Templates\%(RecursiveDir)%(Filename)%(Extension)')"

@@ -26,7 +26,6 @@
         <Folder Name="fonts">
           <ProjectItem>glyphicons-halflings-regular.eot</ProjectItem>
           <ProjectItem>glyphicons-halflings-regular.svg</ProjectItem>
-          <ProjectItem>glyphicons-halflings-regular.ttf</ProjectItem>
           <ProjectItem>glyphicons-halflings-regular.woff</ProjectItem>
         </Folder>
         <Folder Name="scripts">
