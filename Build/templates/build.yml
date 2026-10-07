@@ -5,6 +5,13 @@ parameters:
 
 steps:
 
+  - task: PowerShell@2
+    displayName: 'Validate template assets'
+    inputs:
+      targetType: filePath
+      filePath: '$(Build.SourcesDirectory)\Build\ValidateTemplateAssets.ps1'
+      arguments: '-TemplateRoot "$(Build.SourcesDirectory)\Python\Templates" -DocumentationPath "$(Build.SourcesDirectory)\Python\Templates\README.md"'
+
   # Build the product
   - task: MSBuild@1
     displayName: 'Build product'
