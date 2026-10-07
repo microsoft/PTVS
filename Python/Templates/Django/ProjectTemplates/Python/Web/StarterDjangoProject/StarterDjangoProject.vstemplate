@@ -33,7 +33,6 @@
       <ProjectItem TargetFileName="app\static\app\content\site.css">site.css</ProjectItem>
       <ProjectItem TargetFileName="app\static\app\fonts\glyphicons-halflings-regular.eot">glyphicons-halflings-regular.eot</ProjectItem>
       <ProjectItem TargetFileName="app\static\app\fonts\glyphicons-halflings-regular.svg">glyphicons-halflings-regular.svg</ProjectItem>
-      <ProjectItem TargetFileName="app\static\app\fonts\glyphicons-halflings-regular.ttf">glyphicons-halflings-regular.ttf</ProjectItem>
       <ProjectItem TargetFileName="app\static\app\fonts\glyphicons-halflings-regular.woff">glyphicons-halflings-regular.woff</ProjectItem>
       <ProjectItem TargetFileName="app\static\app\scripts\_references.js">_references.js</ProjectItem>
       <ProjectItem TargetFileName="app\static\app\scripts\bootstrap.js">bootstrap.js</ProjectItem>

@@ -44,7 +44,6 @@
     <Content Include="$safeprojectname$\static\content\site.css" />
     <Content Include="$safeprojectname$\static\fonts\glyphicons-halflings-regular.eot" />
     <Content Include="$safeprojectname$\static\fonts\glyphicons-halflings-regular.svg" />
-    <Content Include="$safeprojectname$\static\fonts\glyphicons-halflings-regular.ttf" />
     <Content Include="$safeprojectname$\static\fonts\glyphicons-halflings-regular.woff" />
     <Content Include="$safeprojectname$\static\scripts\bootstrap.js" />
     <Content Include="$safeprojectname$\static\scripts\bootstrap.min.js" />
