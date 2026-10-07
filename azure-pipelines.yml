@@ -143,6 +143,7 @@ extends:
       # Consolidate SDL pre-check tasks into a single step to reduce pipeline overhead
       useOptimizedSDLTasks: true
     settings:
+      networkIsolationPolicy: DefaultDeny
       skipBuildTagsForGitHubPullRequests: true
     stages:
       - stage: build
