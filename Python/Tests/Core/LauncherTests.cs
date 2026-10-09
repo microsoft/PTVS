@@ -72,7 +72,7 @@ namespace PythonToolsTests {
             try {
                 DebugLaunchHelper.ThrowIfPythonVersionNotSupportedForDebugging(new Version(3, 9, 99));
             } catch (NotSupportedException ex) {
-                Assert.AreEqual(Strings.DebuggerPythonVersionNotSupported, ex.Message);
+                Assert.AreEqual("Debugging is not supported for Python 3.9 and earlier.", ex.Message);
                 return;
             }
 
