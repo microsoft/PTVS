@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project.Web;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -54,6 +55,28 @@ namespace PythonToolsTests {
                     url.AbsoluteUri
                 );
             }
+        }
+
+        [TestMethod, Priority(UnitTestPriority.P0)]
+        public void PythonVersionSupportForDebugging() {
+            Assert.IsTrue(DebugLaunchHelper.IsPythonVersionSupportedForDebugging(new Version(0, 0)));
+            Assert.IsFalse(DebugLaunchHelper.IsPythonVersionSupportedForDebugging(new Version(2, 7)));
+            Assert.IsFalse(DebugLaunchHelper.IsPythonVersionSupportedForDebugging(new Version(3, 9)));
+            Assert.IsFalse(DebugLaunchHelper.IsPythonVersionSupportedForDebugging(new Version(3, 9, 99)));
+            Assert.IsTrue(DebugLaunchHelper.IsPythonVersionSupportedForDebugging(new Version(3, 10)));
+            Assert.IsTrue(DebugLaunchHelper.IsPythonVersionSupportedForDebugging(new Version(3, 15)));
+        }
+
+        [TestMethod, Priority(UnitTestPriority.P0)]
+        public void UnsupportedPythonVersionDebugMessage() {
+            try {
+                DebugLaunchHelper.ThrowIfPythonVersionNotSupportedForDebugging(new Version(3, 9, 99));
+            } catch (NotSupportedException ex) {
+                Assert.AreEqual(Strings.DebuggerPythonVersionNotSupported, ex.Message);
+                return;
+            }
+
+            Assert.Fail("Expected Python 3.9 debugging to be rejected.");
         }
     }
 }

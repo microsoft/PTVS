@@ -33,6 +33,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Debugger {
     static class DebugLaunchHelper {
+        private static readonly Version MinimumSupportedPythonVersion = new Version(3, 10);
         private static readonly Regex SubstitutionPattern = new Regex(@"\%([\w_]+)\%");
 
         private static IEnumerable<string> GetGlobalDebuggerOptions(
@@ -172,10 +173,7 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         public static unsafe DebugTargetInfo CreateDebugTargetInfo(IServiceProvider provider, LaunchConfiguration config) {
-            if (config.Interpreter.Version < new Version(3, 0) && config.Interpreter.Version > new Version(0, 0)) {
-                // We no longer support Python 2.x.
-                throw new NotSupportedException(Strings.DebuggerPythonVersionNotSupported);
-            }
+            ThrowIfPythonVersionNotSupportedForDebugging(config.Interpreter.Version);
 
             var dti = new DebugTargetInfo(provider);
 
@@ -229,6 +227,16 @@ namespace Microsoft.PythonTools.Debugger {
                 if (dti != null) {
                     dti.Dispose();
                 }
+            }
+        }
+
+        internal static bool IsPythonVersionSupportedForDebugging(Version version) {
+            return version == new Version(0, 0) || version >= MinimumSupportedPythonVersion;
+        }
+
+        internal static void ThrowIfPythonVersionNotSupportedForDebugging(Version version) {
+            if (!IsPythonVersionSupportedForDebugging(version)) {
+                throw new NotSupportedException(Strings.DebuggerPythonVersionNotSupported);
             }
         }
 
