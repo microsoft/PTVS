@@ -1950,7 +1950,7 @@ Expand selection to the full expression?</value>
     <value>Debugger operation is in progress...</value>
   </data>
   <data name="DebuggerPythonVersionNotSupported" xml:space="preserve">
-    <value>Debugging is not supported for Python 2.5 and earlier.</value>
+    <value>Debugging is not supported for Python 3.9 and earlier.</value>
   </data>
   <data name="Analyzer_Analyzing" xml:space="preserve">
     <value>Analyzing {0}</value>

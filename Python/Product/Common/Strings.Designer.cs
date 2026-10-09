@@ -2717,7 +2717,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Debugging is not supported for Python 2.5 and earlier..
+        ///   Looks up a localized string similar to Debugging is not supported for Python 3.9 and earlier..
         /// </summary>
         public static string DebuggerPythonVersionNotSupported {
             get {
