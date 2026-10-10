@@ -4871,7 +4871,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Toggle inlay hints for function return types.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Abilitare/disabilitare gli hint di inlay per i tipi restituiti di funzione.]]></Val>
+            <Val><![CDATA[Attiva/disattiva i suggerimenti per l'inlay per i tipi restituiti di funzione.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -4880,7 +4880,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Toggle inlay hints for variable types.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Abilitare/disabilitare gli hint di inlay per i tipi di variabile.]]></Val>
+            <Val><![CDATA[Attiva/disattiva i suggerimenti per l'inlay per i tipi di variabile.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -8690,7 +8690,7 @@
         <Str Cat="Text">
           <Val><![CDATA[An environment reference could not be upgraded. Please review the Python Environments item in Solution Explorer to select an environment for your project.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Non è stato possibile aggiornare un riferimento dell'ambiente. Controllare l'elemento Ambienti Python in Esplora soluzioni per selezionare un ambiente per il progetto.]]></Val>
+            <Val><![CDATA[Non è stato possibile aggiornare un riferimento dell'ambiente. Controlla l'elemento Ambienti Python in Esplora soluzioni per selezionare un ambiente per il progetto.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
