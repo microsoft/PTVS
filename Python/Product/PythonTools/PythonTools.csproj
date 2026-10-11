@@ -367,6 +367,7 @@
     <Compile Include="PythonTools\Options\PythonAdvancedEditorOptions.cs" />
     <Compile Include="PythonTools\PythonLanguageInfo.cs" />
     <Compile Include="PythonTools\Options\PythonCondaOptions.cs" />
+    <Compile Include="PythonTools\Options\PythonCondaUnifiedSettingsProvider.cs" />
     <Compile Include="PythonTools\Options\PythonCondaOptionsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -970,6 +971,11 @@
     </ItemGroup>
   </Target> -->
   <ItemGroup>
+    <Content Include="UnifiedSettings\PythonTools.registration.json" Condition="'$(VSTarget)' == '18.0'">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>UnifiedSettings</VSIXSubPath>
+    </Content>
     <Content Include="$(PackagesPath)Microsoft.Extensions.FileSystemGlobbing\lib\netstandard2.0\Microsoft.Extensions.FileSystemGlobbing.dll">
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>

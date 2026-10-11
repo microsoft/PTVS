@@ -17,6 +17,7 @@
 using System.Runtime.InteropServices;
 
 namespace Microsoft.PythonTools.Options {
+    [Guid("E73E8E2B-74DC-3834-B015-E56CB1FDADBA")]
     [ComVisible(true)]
     public class PythonCondaOptionsPage : PythonDialogPage {
         private PythonCondaOptionsControl _window;
