@@ -3333,10 +3333,13 @@
       </Item>
       <Item ItemId=";DebuggerPythonVersionNotSupported" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Debugging is not supported for Python 2.5 and earlier.]]></Val>
+          <Val><![CDATA[Debugging is not supported for Python 3.9 and earlier.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Python 2.5 y las versiones anteriores no admiten la depuración.]]></Val>
+            <Val><![CDATA[La depuración no se admite para Python 3.9 y versiones anteriores.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Debugging is not supported for Python 2.5 and earlier.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -4871,7 +4874,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Toggle inlay hints for function return types.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Alterne las sugerencias de incrustación para los tipos de valor devuelto de función.]]></Val>
+            <Val><![CDATA[Alterne las Indicaciones incrustadas para los tipos de valor devuelto de función.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -4880,7 +4883,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Toggle inlay hints for variable types.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Alternar sugerencias de incrustación para tipos de variables.]]></Val>
+            <Val><![CDATA[Alternar Indicaciones incrustadas para tipos de variables.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
