@@ -17,6 +17,8 @@
 
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
     /// <summary>
@@ -39,13 +41,56 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
         Delete = 4
     }
 
+    [JsonConverter(typeof(GlobPatternConverter))]
+    public sealed class GlobPattern {
+        public GlobPattern(string pattern, Uri baseUri = null) {
+            Pattern = pattern;
+            BaseUri = baseUri;
+        }
+
+        public string Pattern { get; }
+        public Uri BaseUri { get; }
+    }
+
+    internal sealed class GlobPatternConverter : JsonConverter {
+        public override bool CanConvert(Type objectType) => objectType == typeof(GlobPattern);
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
+            var token = JToken.Load(reader);
+            if (token.Type == JTokenType.String) {
+                return CreatePattern(token.Value<string>(), null);
+            }
+
+            if (token is JObject relativePattern) {
+                var baseUriToken = relativePattern["baseUri"];
+                var baseUriValue = baseUriToken?.Type == JTokenType.String
+                    ? baseUriToken.Value<string>()
+                    : (baseUriToken as JObject)?["uri"]?.Value<string>();
+                if (!Uri.TryCreate(baseUriValue, UriKind.Absolute, out var baseUri)) {
+                    return null;
+                }
+                return CreatePattern(relativePattern.Value<string>("pattern"), baseUri);
+            }
+
+            return null;
+        }
+
+        private static GlobPattern CreatePattern(string pattern, Uri baseUri) =>
+            string.IsNullOrEmpty(pattern) ? null : new GlobPattern(pattern, baseUri);
+
+        public override bool CanWrite => false;
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) =>
+            throw new NotSupportedException();
+    }
+
     [DataContract]
     public class FileSystemWatcher {
         /// <summary>
         /// Gets or sets the glob pattern to watch.
         /// </summary>
         [DataMember]
-        public string GlobPattern {
+        public GlobPattern GlobPattern {
             [CompilerGenerated]
             get;
             [CompilerGenerated]

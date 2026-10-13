@@ -15,10 +15,13 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.FileSystemGlobbing;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.Workspace;
 using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
@@ -29,7 +32,13 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
         private JsonRpc _rpc;
         private readonly IFileWatcherService _WorkspaceFileWatcher;
         private System.IO.FileSystemWatcher _solutionWatcher;
-        private Matcher _matcher = new Matcher(StringComparison.OrdinalIgnoreCase);
+        private readonly object _watchersLock = new object();
+        private readonly Dictionary<string, Matcher> _matchers = new Dictionary<string, Matcher>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, System.IO.FileSystemWatcher> _externalWatchers =
+            new Dictionary<string, System.IO.FileSystemWatcher>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, FileSystemWatcher[]> _registrations =
+            new Dictionary<string, FileSystemWatcher[]>(StringComparer.Ordinal);
+        private readonly List<FileSystemWatcher> _excludes = new List<FileSystemWatcher>();
         private bool disposedValue;
         private string _root;
 
@@ -37,43 +46,36 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
             this._rpc = rpc;
             this._rpc.Disconnected += _rpc_Disconnected;
 
-            // Ignore some common directories
-            _matcher.AddExclude("**/.vs/**/*.*");
-
-            // Ignore files that end with ~ or TMP
-            _matcher.AddExclude("**/*~");
-            _matcher.AddExclude("**/~*");
-            _matcher.AddExclude("**/*TMP");
-            _matcher.AddExclude("**/__pycache__");
-            
             _WorkspaceFileWatcher = null;
             // Depending upon if this is a workspace or a solution, listen to different change events.
             if (workspaceService?.CurrentWorkspace != null) {
                 _WorkspaceFileWatcher = workspaceService.CurrentWorkspace.GetService<IFileWatcherService>();
-                _WorkspaceFileWatcher.OnFileSystemChanged += OnFileChanged;
-                _root = workspaceService.CurrentWorkspace.Location;
+                _root = PathUtils.NormalizeDirectoryPath(workspaceService.CurrentWorkspace.Location);
+                if (!string.IsNullOrEmpty(_root)) {
+                    _matchers[_root] = CreateMatcher();
+                }
+                if (_WorkspaceFileWatcher != null) {
+                    _WorkspaceFileWatcher.OnFileSystemChanged += OnFileChanged;
+                }
             } else {
                 var path = GetSolutionDirectory(site);
                 if (path != null) {
-                    _solutionWatcher = new System.IO.FileSystemWatcher();
-                    _solutionWatcher.Path = path;
-                    _solutionWatcher.IncludeSubdirectories = true;
-                    _solutionWatcher.NotifyFilter = 
-                        NotifyFilters.LastWrite | NotifyFilters.CreationTime | 
-                        NotifyFilters.DirectoryName | NotifyFilters.FileName | NotifyFilters.Size;
-                    _solutionWatcher.Changed += OnFileChanged_Sync;
-                    _solutionWatcher.Created += OnFileChanged_Sync;
-                    _solutionWatcher.Deleted += OnFileChanged_Sync;
-                    _solutionWatcher.Renamed += OnFileChanged_Sync;
-                    _solutionWatcher.EnableRaisingEvents = true;
-                    _root = _solutionWatcher.Path;
+                    _root = PathUtils.NormalizeDirectoryPath(path);
+                    if (!string.IsNullOrEmpty(_root)) {
+                        _matchers[_root] = CreateMatcher();
+                        _solutionWatcher = CreateFileSystemWatcher(_root);
+                    }
                 }
             }
         }
 
         private void _rpc_Disconnected(object sender, JsonRpcDisconnectedEventArgs e) {
-            _rpc.Disconnected -= _rpc_Disconnected;
-            _rpc = null;
+            lock (_watchersLock) {
+                if (_rpc != null) {
+                    _rpc.Disconnected -= _rpc_Disconnected;
+                    _rpc = null;
+                }
+            }
         }
 
         private string GetSolutionDirectory(IServiceProvider site) {
@@ -88,18 +90,197 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
 
         }
 
-        public void AddPatterns(FileSystemWatcher[] patterns) {
-            Array.ForEach(patterns, p => AddPattern(p));
+        public void RegisterPatterns(string registrationId, FileSystemWatcher[] patterns) {
+            System.IO.FileSystemWatcher[] obsoleteWatchers;
+            lock (_watchersLock) {
+                if (disposedValue) {
+                    return;
+                }
+
+                _registrations[registrationId ?? string.Empty] = patterns ?? Array.Empty<FileSystemWatcher>();
+                obsoleteWatchers = RebuildMatchers();
+            }
+            DisposeWatchers(obsoleteWatchers);
+        }
+
+        public void UnregisterPatterns(string registrationId) {
+            System.IO.FileSystemWatcher[] obsoleteWatchers;
+            lock (_watchersLock) {
+                if (disposedValue || !_registrations.Remove(registrationId ?? string.Empty)) {
+                    return;
+                }
+
+                obsoleteWatchers = RebuildMatchers();
+            }
+            DisposeWatchers(obsoleteWatchers);
         }
 
         public void AddExclude(FileSystemWatcher pattern) {
-            _matcher.AddExclude(pattern.GlobPattern);
-        }
-        private void AddPattern(FileSystemWatcher pattern) {
-            // Add to our matcher
-            _matcher.AddInclude(pattern.GlobPattern);
+            System.IO.FileSystemWatcher[] obsoleteWatchers;
+            lock (_watchersLock) {
+                if (disposedValue || pattern == null) {
+                    return;
+                }
 
-            // Ignoring kind for now. Just tell about everything.
+                _excludes.Add(pattern);
+                obsoleteWatchers = RebuildMatchers();
+            }
+            DisposeWatchers(obsoleteWatchers);
+        }
+
+        private System.IO.FileSystemWatcher[] RebuildMatchers() {
+            _matchers.Clear();
+            if (!string.IsNullOrEmpty(_root)) {
+                _matchers[_root] = CreateMatcher();
+            }
+
+            var externalRoots = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var pattern in _excludes) {
+                AddPattern(pattern, include: false, externalRoots);
+            }
+            foreach (var patterns in _registrations.Values) {
+                foreach (var pattern in patterns) {
+                    AddPattern(pattern, include: true, externalRoots);
+                }
+            }
+
+            var obsoleteWatchers = _externalWatchers
+                .Where(entry => !externalRoots.Contains(entry.Key))
+                .ToArray();
+            foreach (var entry in obsoleteWatchers) {
+                _externalWatchers.Remove(entry.Key);
+            }
+            foreach (var root in externalRoots.Where(root => !_externalWatchers.ContainsKey(root))) {
+                TryCreateExternalWatcher(root);
+            }
+
+            return obsoleteWatchers.Select(entry => entry.Value).ToArray();
+        }
+
+        private void AddPattern(FileSystemWatcher pattern, bool include, HashSet<string> externalRoots) {
+            var root = GetPatternRoot(pattern?.GlobPattern);
+            if (root != null) {
+                var matcher = GetOrCreateMatcher(root);
+                if (include) {
+                    matcher.AddInclude(pattern.GlobPattern.Pattern);
+                } else {
+                    matcher.AddExclude(pattern.GlobPattern.Pattern);
+                }
+                if (!IsDirectoryUnderRoot(root, _root) && Directory.Exists(root)) {
+                    externalRoots.Add(root);
+                }
+            }
+        }
+
+        private string GetPatternRoot(GlobPattern globPattern) {
+            if (string.IsNullOrEmpty(globPattern?.Pattern)) {
+                return null;
+            }
+            if (globPattern.BaseUri == null) {
+                return _root;
+            }
+            if (!globPattern.BaseUri.IsFile) {
+                return null;
+            }
+
+            var path = globPattern.BaseUri.LocalPath;
+            if (path.Length >= 3 &&
+                (path[0] == Path.DirectorySeparatorChar || path[0] == Path.AltDirectorySeparatorChar) &&
+                char.IsLetter(path[1]) &&
+                path[2] == ':') {
+                path = path.Substring(1);
+            }
+            return PathUtils.NormalizeDirectoryPath(path);
+        }
+
+        private Matcher GetOrCreateMatcher(string root) {
+            if (!_matchers.TryGetValue(root, out var matcher)) {
+                matcher = CreateMatcher();
+                _matchers[root] = matcher;
+            }
+            return matcher;
+        }
+
+        private static Matcher CreateMatcher() {
+            var matcher = new Matcher(StringComparison.OrdinalIgnoreCase);
+            matcher.AddExclude("**/.vs/**/*.*");
+            matcher.AddExclude("**/*~");
+            matcher.AddExclude("**/~*");
+            matcher.AddExclude("**/*TMP");
+            matcher.AddExclude("**/__pycache__");
+            return matcher;
+        }
+
+        private void TryCreateExternalWatcher(string root) {
+            try {
+                _externalWatchers[root] = CreateFileSystemWatcher(root);
+            } catch (ArgumentException ex) {
+                Trace.TraceWarning("Unable to watch Pylance path '{0}': {1}", root, ex);
+            } catch (IOException ex) {
+                Trace.TraceWarning("Unable to watch Pylance path '{0}': {1}", root, ex);
+            } catch (UnauthorizedAccessException ex) {
+                Trace.TraceWarning("Unable to watch Pylance path '{0}': {1}", root, ex);
+            }
+        }
+
+        private static void DisposeWatchers(System.IO.FileSystemWatcher[] watchers) {
+            Array.ForEach(watchers, watcher => watcher.Dispose());
+        }
+
+        private System.IO.FileSystemWatcher CreateFileSystemWatcher(string root) {
+            var watcher = new System.IO.FileSystemWatcher {
+                Path = root,
+                IncludeSubdirectories = true,
+                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.CreationTime |
+                    NotifyFilters.DirectoryName | NotifyFilters.FileName | NotifyFilters.Size
+            };
+            watcher.Changed += OnFileChanged_Sync;
+            watcher.Created += OnFileChanged_Sync;
+            watcher.Deleted += OnFileChanged_Sync;
+            watcher.Renamed += OnFileChanged_Sync;
+            watcher.EnableRaisingEvents = true;
+            return watcher;
+        }
+
+        private static bool IsDirectoryUnderRoot(string path, string root) {
+            if (string.IsNullOrEmpty(path) || string.IsNullOrEmpty(root)) {
+                return false;
+            }
+
+            var relativePath = PathUtils.GetRelativeDirectoryPath(root, path);
+            return IsRelativePathUnderRoot(relativePath);
+        }
+
+        private static bool IsFileUnderRoot(string path, string root) {
+            if (string.IsNullOrEmpty(path) || string.IsNullOrEmpty(root)) {
+                return false;
+            }
+
+            return IsRelativePathUnderRoot(PathUtils.GetRelativeFilePath(root, path));
+        }
+
+        private static bool IsRelativePathUnderRoot(string relativePath) {
+            return string.IsNullOrEmpty(relativePath) ||
+                (!Path.IsPathRooted(relativePath) &&
+                 !relativePath.Equals("..", StringComparison.Ordinal) &&
+                 !relativePath.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal));
+        }
+
+        private bool MatchesPattern(string fullPath) {
+            lock (_watchersLock) {
+                foreach (var entry in _matchers) {
+                    if (!IsFileUnderRoot(fullPath, entry.Key)) {
+                        continue;
+                    }
+
+                    var item = new InMemoryDirectoryInfo(entry.Key, new[] { fullPath });
+                    if (entry.Value.Execute(item).HasMatches) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         private bool Equals(System.IO.FileSystemWatcher l, System.IO.FileSystemWatcher r) {
@@ -119,18 +300,21 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
 
             // Snapshot _rpc into a local. The field is nulled by _rpc_Disconnected
             // (or by Dispose) and can race with this thread-pool handler.
-            var rpc = _rpc;
+            JsonRpc rpc;
+            lock (_watchersLock) {
+                if (disposedValue) {
+                    return;
+                }
+                rpc = _rpc;
+            }
 
             // Skip directory change events
             if (e.IsDirectoryChanged() || rpc == null) {
                 return;
             }
 
-            // Create something to match with
-            var item = new InMemoryDirectoryInfo(_root, new string[] { e.FullPath });
-
             // See if this matches one of our patterns.
-            if (_matcher.Execute(item).HasMatches) {
+            if (MatchesPattern(e.FullPath)) {
                 // Send out the event to the language server
                 var renamedArgs = e as System.IO.RenamedEventArgs;
                 var didChangeParams = new DidChangeWatchedFilesParams();
@@ -185,24 +369,42 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
         }
 
         protected virtual void Dispose(bool disposing) {
-            if (!disposedValue) {
-                if (disposing) {
-                    _solutionWatcher?.Dispose();
+            if (!disposing) {
+                lock (_watchersLock) {
+                    disposedValue = true;
+                }
+                return;
+            }
 
-                    // Depending upon if this is a workspace or a solution, listen to different change events.
-                    if (_WorkspaceFileWatcher != null) {
-                        _WorkspaceFileWatcher.OnFileSystemChanged -= OnFileChanged;                        
-                    }
-
-                    if (_rpc != null) {
-                        _rpc.Disconnected -= _rpc_Disconnected;
-                        _rpc = null;
-                    }
+            System.IO.FileSystemWatcher solutionWatcher;
+            System.IO.FileSystemWatcher[] externalWatchers;
+            JsonRpc rpc;
+            lock (_watchersLock) {
+                if (disposedValue) {
+                    return;
                 }
 
-                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
-                // TODO: set large fields to null
                 disposedValue = true;
+                solutionWatcher = _solutionWatcher;
+                _solutionWatcher = null;
+                externalWatchers = _externalWatchers.Values.ToArray();
+                _externalWatchers.Clear();
+                _registrations.Clear();
+                _excludes.Clear();
+                _matchers.Clear();
+                rpc = _rpc;
+                _rpc = null;
+            }
+
+            solutionWatcher?.Dispose();
+            DisposeWatchers(externalWatchers);
+
+            if (_WorkspaceFileWatcher != null) {
+                _WorkspaceFileWatcher.OnFileSystemChanged -= OnFileChanged;
+            }
+
+            if (rpc != null) {
+                rpc.Disconnected -= _rpc_Disconnected;
             }
         }
 

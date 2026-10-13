@@ -61,6 +61,17 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             public override string StackTrace => _stackTrace;
         }
 
+        private sealed class UnregistrationParamsCompat {
+            [JsonProperty("unregisterations")]
+            public VisualStudio.LanguageServer.Protocol.Unregistration[] LegacyUnregistrations { get; set; }
+
+            [JsonProperty("unregistrations")]
+            public VisualStudio.LanguageServer.Protocol.Unregistration[] Unregistrations { get; set; }
+
+            public VisualStudio.LanguageServer.Protocol.Unregistration[] GetUnregistrations() =>
+                LegacyUnregistrations ?? Unregistrations;
+        }
+
         public PythonLanguageClientCustomTarget(IServiceProvider site, JoinableTaskContext joinableTaskContext) {
             _site = site ?? throw new ArgumentNullException(nameof(site));
             _joinableTaskContext = joinableTaskContext;
@@ -78,6 +89,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         /// Has to be internal so JsonRpc doesn't register this as a method.
         /// </summary>
         internal event EventHandler<DidChangeWatchedFilesRegistrationOptions> WatchedFilesRegistered;
+
+        internal event EventHandler<DidChangeWatchedFilesUnregistrationEventArgs> WatchedFilesUnregistered;
 
         /// <summary>
         /// Event fired when telemetry for analysis complete is sent.
@@ -162,8 +175,25 @@ AnalysisComplete?.Invoke(this, EventArgs.Empty);
             if (watchedFilesReg?.RegisterOptions is JObject optionsObj) {
                 var options = optionsObj.ToObject<DidChangeWatchedFilesRegistrationOptions>();
                 if (options != null) {
+                    options.RegistrationId = watchedFilesReg.Id;
                     _joinableTaskContext.Factory.RunAsync(async () => this.WatchedFilesRegistered.Invoke(this, options));
                 }
+            }
+        }
+
+        [JsonRpcMethod("client/unregisterCapability", UseSingleObjectParameterDeserialization = true)]
+        public void OnUnregisterCapability(object arg) {
+            var unregParams = Deserialize<UnregistrationParamsCompat>(arg);
+            var watchedFilesRegistrations = unregParams?.GetUnregistrations()?
+                .Where(p => p.Method == "workspace/didChangeWatchedFiles")
+                .ToArray();
+            if (watchedFilesRegistrations == null) {
+                return;
+            }
+
+            foreach (var registration in watchedFilesRegistrations) {
+                var eventArgs = new DidChangeWatchedFilesUnregistrationEventArgs(registration.Id);
+                _joinableTaskContext.Factory.RunAsync(async () => this.WatchedFilesUnregistered.Invoke(this, eventArgs));
             }
         }
 

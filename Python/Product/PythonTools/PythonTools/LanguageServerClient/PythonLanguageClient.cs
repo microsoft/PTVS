@@ -211,6 +211,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             var customTarget = new PythonLanguageClientCustomTarget(Site, JoinableTaskContext);
             CustomMessageTarget = customTarget;
             customTarget.WatchedFilesRegistered += WatchedFilesRegistered;
+            customTarget.WatchedFilesUnregistered += WatchedFilesUnregistered;
             customTarget.WorkspaceFolderChangeRegistered += OnWorkspaceFolderWatched;
             customTarget.AnalysisComplete += OnAnalysisComplete;
             customTarget.WorkspaceConfiguration += OnWorkspaceConfiguration;
@@ -607,9 +608,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private void WatchedFilesRegistered(object sender, DidChangeWatchedFilesRegistrationOptions e) {
-            // Add the file globs to our listener. It will listen to the globs
-            _fileListener?.AddPatterns(e.Watchers);
+            _fileListener?.RegisterPatterns(e.RegistrationId, e.Watchers);
+        }
 
+        private void WatchedFilesUnregistered(object sender, DidChangeWatchedFilesUnregistrationEventArgs e) {
+            _fileListener?.UnregisterPatterns(e.RegistrationId);
         }
 
 
