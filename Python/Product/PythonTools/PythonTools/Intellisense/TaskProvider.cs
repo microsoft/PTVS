@@ -91,23 +91,30 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public bool ShowSquiggle => _squiggle && !string.IsNullOrEmpty(ErrorType);
 
-        public void CreateSquiggleSpan(SimpleTagger<ErrorTag> tagger) {
+        private ITrackingSpan CreateTrackingSpan() {
             if (_rawSpan.Start >= _rawSpan.End || _spanTranslator == null) {
-                return;
+                return null;
             }
 
             var snapshot = _spanTranslator.TextBuffer.CurrentSnapshot;
             var target = _spanTranslator.Translate(_rawSpan, _fromVersion, snapshot);
 
             if (target.Length <= 0) {
-                return;
+                return null;
             }
 
-            var tagSpan = snapshot.CreateTrackingSpan(
+            return snapshot.CreateTrackingSpan(
                 target.Start,
                 target.Length,
-                SpanTrackingMode.EdgeInclusive
+                SpanTrackingMode.EdgeExclusive
             );
+        }
+
+        public void CreateSquiggleSpan(SimpleTagger<ErrorTag> tagger) {
+            var tagSpan = CreateTrackingSpan();
+            if (tagSpan == null) {
+                return;
+            }
 
             tagger.CreateTagSpan(tagSpan, new ErrorTagWithMoniker(ErrorType, _message, _moniker));
         }
@@ -119,7 +126,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 _serviceProvider,
                 _rawSpan,
                 _message,
-                key.FilePath ?? string.Empty
+                key.FilePath ?? string.Empty,
+                CreateTrackingSpan()
             ) {
                 Priority = _priority,
                 Category = _category
@@ -775,15 +783,19 @@ namespace Microsoft.PythonTools.Intellisense {
 
     class ErrorTaskItem : IVsTaskItem, IVsErrorItem {
         private readonly IServiceProvider _serviceProvider;
+        private readonly SourceSpan _rawSpan;
+        private readonly ITrackingSpan _trackingSpan;
 
         public ErrorTaskItem(
             IServiceProvider serviceProvider,
             SourceSpan span,
             string message,
-            string sourceFile
+            string sourceFile,
+            ITrackingSpan trackingSpan = null
         ) {
             _serviceProvider = serviceProvider;
-            Span = span;
+            _rawSpan = span;
+            _trackingSpan = trackingSpan;
             Message = message;
             SourceFile = sourceFile;
             Category = VSTASKCATEGORY.CAT_BUILDCOMPILE;
@@ -794,7 +806,13 @@ namespace Microsoft.PythonTools.Intellisense {
             PriorityIsReadOnly = true;
         }
 
-        public SourceSpan Span { get; private set; }
+        public SourceSpan Span {
+            get {
+                return _trackingSpan != null
+                    ? _trackingSpan.GetSpan(_trackingSpan.TextBuffer.CurrentSnapshot).ToSourceSpan()
+                    : _rawSpan;
+            }
+        }
         public string Message { get; set; }
         public string SourceFile { get; }
         public VSTASKCATEGORY Category { get; set; }
@@ -819,12 +837,13 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public int Column(out int piCol) {
-            if (Span.Start.Line == 1 && Span.Start.Column == 1) {
+            var span = Span;
+            if (span.Start.Line == 1 && span.Start.Column == 1) {
                 // we don't have the column number calculated
                 piCol = 0;
                 return VSConstants.E_FAIL;
             }
-            piCol = Span.Start.Column - 1;
+            piCol = span.Start.Column - 1;
             return VSConstants.S_OK;
         }
 
@@ -870,18 +889,20 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public int Line(out int piLine) {
-            if (Span.Start.Line == 1 && Span.Start.Column == 1) {
+            var span = Span;
+            if (span.Start.Line == 1 && span.Start.Column == 1) {
                 // we don't have the line number calculated
                 piLine = 0;
                 return VSConstants.E_FAIL;
             }
-            piLine = Span.Start.Line - 1;
+            piLine = span.Start.Line - 1;
             return VSConstants.S_OK;
         }
 
         public int NavigateTo() {
             try {
-                PythonToolsPackage.NavigateTo(_serviceProvider, SourceFile, Guid.Empty, Span.Start.Line - 1, Span.Start.Column - 1);
+                var span = Span;
+                PythonToolsPackage.NavigateTo(_serviceProvider, SourceFile, Guid.Empty, span.Start.Line - 1, span.Start.Column - 1);
                 return VSConstants.S_OK;
             } catch (DirectoryNotFoundException) {
                 // This may happen when the error was in a file that's located inside a .zip archive.
