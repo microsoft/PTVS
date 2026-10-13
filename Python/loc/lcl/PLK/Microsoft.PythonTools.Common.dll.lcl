@@ -3333,10 +3333,13 @@
       </Item>
       <Item ItemId=";DebuggerPythonVersionNotSupported" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Debugging is not supported for Python 2.5 and earlier.]]></Val>
+          <Val><![CDATA[Debugging is not supported for Python 3.9 and earlier.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Debugowanie nie jest obsługiwane dla języka Python 2.5 i wcześniejszych.]]></Val>
+            <Val><![CDATA[Debugowanie nie jest obsługiwane w języku Python 3.9 i starszych.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Debugging is not supported for Python 2.5 and earlier.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -4871,7 +4874,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Toggle inlay hints for function return types.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Przełącz wskazówki dotyczące nakładek dla zwracanych typów funkcji.]]></Val>
+            <Val><![CDATA[Przełącz wskazówki wbudowane dla zwracanych typów funkcji.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -4880,7 +4883,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Toggle inlay hints for variable types.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Przełącz wbudowane wskazówki dla typów zmiennych.]]></Val>
+            <Val><![CDATA[Przełącz wskazówki wbudowane dla typów zmiennych.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

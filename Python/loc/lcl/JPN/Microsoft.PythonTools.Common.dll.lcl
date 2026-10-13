@@ -3333,10 +3333,13 @@
       </Item>
       <Item ItemId=";DebuggerPythonVersionNotSupported" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Debugging is not supported for Python 2.5 and earlier.]]></Val>
+          <Val><![CDATA[Debugging is not supported for Python 3.9 and earlier.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[デバッグは、Python 2.5 以前のバージョンではサポートされていません。]]></Val>
+            <Val><![CDATA[Python 3.9 以前では、デバッグはサポートされていません。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Debugging is not supported for Python 2.5 and earlier.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>

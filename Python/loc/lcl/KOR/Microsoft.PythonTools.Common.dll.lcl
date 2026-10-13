@@ -3333,10 +3333,13 @@
       </Item>
       <Item ItemId=";DebuggerPythonVersionNotSupported" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Debugging is not supported for Python 2.5 and earlier.]]></Val>
+          <Val><![CDATA[Debugging is not supported for Python 3.9 and earlier.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Python 2.5 이하 버전에서는 디버깅이 지원되지 않습니다.]]></Val>
+            <Val><![CDATA[Python 3.9 이하 버전에서는 디버깅이 지원되지 않습니다.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Debugging is not supported for Python 2.5 and earlier.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -7637,7 +7640,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Additional import search resolution paths. You can use line breaks or semicolons to separate multiple paths.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[추가 가져오기 검색 확인 경로입니다. 줄 바꿈 또는 세미콜론을 사용하여 여러 경로를 구분할 수 있습니다.]]></Val>
+            <Val><![CDATA[추가 가져오기 검색 해결 경로입니다. 줄 바꿈 또는 세미콜론을 사용하여 여러 경로를 구분할 수 있습니다.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
