@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Runtime.Serialization;
 
 namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
@@ -22,6 +23,11 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
     /// </summary>
     [DataContract]
     public class DidChangeWatchedFilesRegistrationOptions {
+        public string RegistrationId {
+            get;
+            set;
+        }
+
         /// <summary>
         /// Gets or sets the watchers that should be registered.
         /// </summary>
@@ -30,5 +36,13 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
             get;
             set;
         }
+    }
+
+    public sealed class DidChangeWatchedFilesUnregistrationEventArgs : EventArgs {
+        public DidChangeWatchedFilesUnregistrationEventArgs(string registrationId) {
+            RegistrationId = registrationId;
+        }
+
+        public string RegistrationId { get; }
     }
 }

@@ -99,7 +99,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private List<WorkspaceFolder> _workspaceFolders = new List<WorkspaceFolder>();
         private FileWatcher.Listener _fileListener;
         private static TaskCompletionSource<int> _readyTcs = new TaskCompletionSource<int>();
-        private readonly PythonSignatureHelpMiddleLayer _signatureHelpMiddleLayer;
+        private readonly PythonLanguageClientMiddleLayer _middleLayer;
         private bool _loaded = false;
         private bool _solutionClosing;
         // Set by the dispose action before any other cleanup; consulted by
@@ -109,7 +109,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         public PythonLanguageClient() {
             _disposables = new Common.Core.Disposables.DisposableBag(GetType().Name);
-            _signatureHelpMiddleLayer = new PythonSignatureHelpMiddleLayer();
+            _middleLayer = new PythonLanguageClientMiddleLayer();
         }
 
         public string ContentTypeName => PythonCoreConstants.ContentType;
@@ -122,7 +122,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public object InitializationOptions { get; private set; }
 
         public IEnumerable<string> FilesToWatch => null;
-        public object MiddleLayer => _signatureHelpMiddleLayer;
+        public object MiddleLayer => _middleLayer;
         public object CustomMessageTarget { get; private set; }
         public bool IsInitialized { get; private set; }
         public bool Loaded => this._loaded;
@@ -197,7 +197,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             // Force the package to load, since this is a MEF component,
             // there is no guarantee it has been loaded.
             var pyService = Site.GetPythonToolsService();
-            _signatureHelpMiddleLayer.Initialize(await pyService.GetLangPrefsAsync());
+            _middleLayer.Initialize(await pyService.GetLangPrefsAsync());
 
             // Indicate to python tools service we've loaded.
             _loaded = true;
@@ -211,6 +211,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             var customTarget = new PythonLanguageClientCustomTarget(Site, JoinableTaskContext);
             CustomMessageTarget = customTarget;
             customTarget.WatchedFilesRegistered += WatchedFilesRegistered;
+            customTarget.WatchedFilesUnregistered += WatchedFilesUnregistered;
             customTarget.WorkspaceFolderChangeRegistered += OnWorkspaceFolderWatched;
             customTarget.AnalysisComplete += OnAnalysisComplete;
             customTarget.WorkspaceConfiguration += OnWorkspaceConfiguration;
@@ -607,9 +608,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private void WatchedFilesRegistered(object sender, DidChangeWatchedFilesRegistrationOptions e) {
-            // Add the file globs to our listener. It will listen to the globs
-            _fileListener?.AddPatterns(e.Watchers);
+            _fileListener?.RegisterPatterns(e.RegistrationId, e.Watchers);
+        }
 
+        private void WatchedFilesUnregistered(object sender, DidChangeWatchedFilesUnregistrationEventArgs e) {
+            _fileListener?.UnregisterPatterns(e.RegistrationId);
         }
 
 
@@ -729,6 +732,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private Tuple<StreamData, bool> OnSendToServer(StreamData data) {
             var message = MessageParser.Deserialize(data);
             if (message != null) {
+                _middleLayer.TrackDocumentMessage(message);
                 if (_isDebugging) {
                     System.Diagnostics.Debug.WriteLine($"*** Sending pylance: {message.ToString()}");
                 }
