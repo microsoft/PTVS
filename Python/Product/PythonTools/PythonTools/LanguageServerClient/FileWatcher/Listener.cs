@@ -313,14 +313,21 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
                 return;
             }
 
+            var renamedArgs = e as System.IO.RenamedEventArgs;
+            var matchesNewPath = MatchesPattern(e.FullPath);
+            var matchesOldPath = renamedArgs != null && MatchesPattern(renamedArgs.OldFullPath);
+
             // See if this matches one of our patterns.
-            if (MatchesPattern(e.FullPath)) {
+            if (matchesNewPath || matchesOldPath) {
                 // Send out the event to the language server
-                var renamedArgs = e as System.IO.RenamedEventArgs;
                 var didChangeParams = new DidChangeWatchedFilesParams();
 
                 // Visual Studio actually does a rename when saving. The rename is from a file ending with '~'
                 if (renamedArgs == null || renamedArgs.OldFullPath.EndsWith("~")) {
+                    if (!matchesNewPath) {
+                        return;
+                    }
+
                     renamedArgs = null;
                     didChangeParams.Changes = new FileEvent[] { new FileEvent() };
                     didChangeParams.Changes[0].Uri = new Uri(e.FullPath);
@@ -345,15 +352,20 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
                     }
                 } else {
                     // file renamed
-                    var deleteEvent = new FileEvent();
-                    deleteEvent.FileChangeType = FileChangeType.Deleted;
-                    deleteEvent.Uri = new Uri(renamedArgs.OldFullPath);
-
-                    var createEvent = new FileEvent();
-                    createEvent.FileChangeType = FileChangeType.Created;
-                    createEvent.Uri = new Uri(renamedArgs.FullPath);
-
-                    didChangeParams.Changes = new FileEvent[] { deleteEvent, createEvent };
+                    var changes = new List<FileEvent>();
+                    if (matchesOldPath) {
+                        changes.Add(new FileEvent {
+                            FileChangeType = FileChangeType.Deleted,
+                            Uri = new Uri(renamedArgs.OldFullPath)
+                        });
+                    }
+                    if (matchesNewPath) {
+                        changes.Add(new FileEvent {
+                            FileChangeType = FileChangeType.Created,
+                            Uri = new Uri(renamedArgs.FullPath)
+                        });
+                    }
+                    didChangeParams.Changes = changes.ToArray();
                 }
 
                 if (didChangeParams.Changes.Any()) {
