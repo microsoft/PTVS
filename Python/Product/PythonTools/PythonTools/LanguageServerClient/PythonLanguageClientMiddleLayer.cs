@@ -12,6 +12,8 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
 using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Utilities;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
@@ -20,10 +22,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 #endif
     internal sealed class PythonLanguageClientMiddleLayer :
 #if DEV18_OR_LATER
-        ILanguageClientMiddleLayer2<JsonDocument> {
+        ILanguageClientMiddleLayer2<JsonDocument>,
 #else
-        ILanguageClientMiddleLayer {
+        ILanguageClientMiddleLayer,
 #endif
+        IPropertyOwner {
         private const string DidOpenMethod = "textDocument/didOpen";
         private const string DidChangeMethod = "textDocument/didChange";
         private const string DidCloseMethod = "textDocument/didClose";
@@ -34,6 +37,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private readonly Dictionary<string, DocumentState> _documents = new Dictionary<string, DocumentState>(StringComparer.OrdinalIgnoreCase);
         private LanguagePreferences _languagePreferences;
 
+        public PropertyCollection Properties { get; } = new PropertyCollection();
+
         internal void Initialize(LanguagePreferences languagePreferences) {
             Volatile.Write(ref _languagePreferences, languagePreferences ?? throw new ArgumentNullException(nameof(languagePreferences)));
         }
@@ -42,47 +47,15 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             var methodName = message?.Value<string>("method");
             var textDocument = message?["params"]?["textDocument"];
             var uri = textDocument?["uri"]?.Value<string>();
-            if (string.IsNullOrEmpty(uri)) {
-                return;
-            }
-
-            var key = GetDocumentKey(uri);
-            lock (_documentsLock) {
-                if (string.Equals(methodName, DidCloseMethod, StringComparison.Ordinal)) {
-                    _documents.Remove(key);
-                } else if (string.Equals(methodName, DidOpenMethod, StringComparison.Ordinal)) {
-                    var version = textDocument["version"]?.Value<int?>();
-                    var text = textDocument["text"]?.Value<string>();
-                    if (version.HasValue && text != null) {
-                        _documents[key] = new DocumentState(version.Value, text);
-                    }
-                } else if (string.Equals(methodName, DidChangeMethod, StringComparison.Ordinal)) {
-                    var version = textDocument["version"]?.Value<int?>();
-                    if (!version.HasValue) {
-                        return;
-                    }
-
-                    if (!_documents.TryGetValue(key, out var state)) {
-                        state = new DocumentState(version.Value, null);
-                        _documents[key] = state;
-                    }
-
-                    state.Version = Math.Max(state.Version, version.Value);
-                    if (state.Text != null &&
-                        message["params"]?["contentChanges"] is JArray changes &&
-                        TryApplyContentChanges(state.Text, changes, out var updatedText)) {
-                        state.Text = updatedText;
-                    } else {
-                        state.Text = null;
-                    }
-                }
-            }
+            var version = textDocument?["version"]?.Value<int?>();
+            UpdateDocumentState(methodName, uri, version, null);
         }
 
         public bool CanHandle(string methodName) =>
             string.Equals(methodName, Methods.TextDocumentSignatureHelpName, StringComparison.Ordinal) ||
             string.Equals(methodName, PublishDiagnosticsMethod, StringComparison.Ordinal) ||
-            string.Equals(methodName, WorkspaceApplyEditMethod, StringComparison.Ordinal);
+            string.Equals(methodName, WorkspaceApplyEditMethod, StringComparison.Ordinal) ||
+            IsDocumentLifecycleMethod(methodName);
 
 #if DEV18_OR_LATER
         public Task<JsonDocument> HandleRequestAsync(string methodName, JsonDocument methodParam, Func<JsonDocument, Task<JsonDocument>> sendRequest) {
@@ -95,6 +68,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         public Task HandleNotificationAsync(string methodName, JsonDocument methodParam, Func<JsonDocument, Task> sendNotification) {
+            if (IsDocumentLifecycleMethod(methodName)) {
+                TrackDocumentSnapshot(methodName, methodParam);
+                return sendNotification(methodParam);
+            }
+
             if (string.Equals(methodName, WorkspaceApplyEditMethod, StringComparison.Ordinal)) {
                 var normalized = NormalizeWorkspaceEdit(methodParam);
                 if (normalized != null) {
@@ -108,6 +86,29 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             }
 
             return sendNotification(methodParam);
+        }
+
+        private void TrackDocumentSnapshot(string methodName, JsonDocument methodParam) {
+            if (methodParam == null || methodParam.RootElement.ValueKind != JsonValueKind.Object) {
+                return;
+            }
+
+            var request = methodParam.RootElement;
+            if (!request.TryGetProperty("textDocument", out var textDocument) ||
+                textDocument.ValueKind != JsonValueKind.Object ||
+                !textDocument.TryGetProperty("uri", out var uriElement) ||
+                uriElement.ValueKind != JsonValueKind.String) {
+                return;
+            }
+
+            int? version = null;
+            if (textDocument.TryGetProperty("version", out var versionElement) &&
+                versionElement.ValueKind == JsonValueKind.Number &&
+                versionElement.TryGetInt32(out var parsedVersion)) {
+                version = parsedVersion;
+            }
+
+            UpdateDocumentState(methodName, uriElement.GetString(), version, GetCurrentTextBuffer());
         }
 
         private bool IsStaleDiagnostics(JsonDocument methodParam) {
@@ -174,6 +175,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         public Task HandleNotificationAsync(string methodName, JToken methodParam, Func<JToken, Task> sendNotification) {
+            if (IsDocumentLifecycleMethod(methodName)) {
+                TrackDocumentSnapshot(methodName, methodParam);
+                return sendNotification(methodParam);
+            }
+
             if (string.Equals(methodName, WorkspaceApplyEditMethod, StringComparison.Ordinal) &&
                 methodParam is JObject request) {
                 var normalized = (JObject)request.DeepClone();
@@ -188,6 +194,24 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             }
 
             return sendNotification(methodParam);
+        }
+
+        private void TrackDocumentSnapshot(string methodName, JToken methodParam) {
+            if (!(methodParam is JObject request) ||
+                !(request["textDocument"] is JObject textDocument) ||
+                textDocument["uri"]?.Type != JTokenType.String) {
+                return;
+            }
+
+            var version = textDocument["version"]?.Type == JTokenType.Integer
+                ? textDocument["version"].Value<int?>()
+                : null;
+            UpdateDocumentState(
+                methodName,
+                textDocument["uri"].Value<string>(),
+                version,
+                GetCurrentTextBuffer()
+            );
         }
 
         private bool IsStaleDiagnostics(JToken methodParam) {
@@ -231,6 +255,45 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 #endif
 
+        private static bool IsDocumentLifecycleMethod(string methodName) =>
+            string.Equals(methodName, DidOpenMethod, StringComparison.Ordinal) ||
+            string.Equals(methodName, DidChangeMethod, StringComparison.Ordinal) ||
+            string.Equals(methodName, DidCloseMethod, StringComparison.Ordinal);
+
+        private ITextBuffer GetCurrentTextBuffer() {
+            return Properties.TryGetProperty(typeof(ITextSnapshot), out ITextSnapshot snapshot)
+                ? snapshot?.TextBuffer
+                : null;
+        }
+
+        private void UpdateDocumentState(string methodName, string uri, int? version, ITextBuffer textBuffer) {
+            if (string.IsNullOrEmpty(uri) || !IsDocumentLifecycleMethod(methodName)) {
+                return;
+            }
+
+            var key = GetDocumentKey(uri);
+            lock (_documentsLock) {
+                if (string.Equals(methodName, DidCloseMethod, StringComparison.Ordinal)) {
+                    _documents.Remove(key);
+                    return;
+                }
+
+                if (!_documents.TryGetValue(key, out var document) ||
+                    (string.Equals(methodName, DidOpenMethod, StringComparison.Ordinal) && textBuffer != null)) {
+                    document = new DocumentState(version ?? -1);
+                    _documents[key] = document;
+                } else if (version.HasValue) {
+                    document.Version = string.Equals(methodName, DidOpenMethod, StringComparison.Ordinal)
+                        ? version.Value
+                        : Math.Max(document.Version, version.Value);
+                }
+
+                if (textBuffer != null) {
+                    document.TextBuffer = new WeakReference<ITextBuffer>(textBuffer);
+                }
+            }
+        }
+
         private bool IsStaleDiagnostics(string uri, int version) {
             if (string.IsNullOrEmpty(uri)) {
                 return false;
@@ -243,59 +306,63 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private bool NormalizeWorkspaceEdit(JObject request) {
-            if (!(request["edit"] is JObject workspaceEdit)) {
+            // Versioned documentChanges are resolved by the VS broker against their matching snapshot.
+            if (!(request["edit"]?["changes"] is JObject changes)) {
                 return false;
             }
 
             var changed = false;
-            if (workspaceEdit["changes"] is JObject changes) {
-                foreach (var documentChanges in changes.Properties()) {
-                    if (documentChanges.Value is JArray edits &&
-                        TryGetDocumentText(documentChanges.Name, out var text)) {
-                        changed |= NormalizeTextEdits(edits, text);
-                    }
+            foreach (var documentChanges in changes.Properties()) {
+                if (documentChanges.Value is JArray edits &&
+                    TryGetDocumentSnapshot(documentChanges.Name, out var snapshot)) {
+                    changed |= NormalizeTextEdits(edits, snapshot);
                 }
             }
 
             return changed;
         }
 
-        private bool TryGetDocumentText(string uri, out string text) {
+        private bool TryGetDocumentSnapshot(string uri, out ITextSnapshot snapshot) {
+            snapshot = null;
             lock (_documentsLock) {
-                if (_documents.TryGetValue(GetDocumentKey(uri), out var document) &&
-                    document.Text != null) {
-                    text = document.Text;
-                    return true;
+                if (!_documents.TryGetValue(GetDocumentKey(uri), out var document) ||
+                    document.TextBuffer == null ||
+                    !document.TextBuffer.TryGetTarget(out var textBuffer)) {
+                    return false;
                 }
-            }
 
-            text = null;
-            return false;
+                snapshot = textBuffer.CurrentSnapshot;
+                return true;
+            }
         }
 
-        private static bool NormalizeTextEdits(JArray edits, string text) {
+        private static bool NormalizeTextEdits(JArray edits, ITextSnapshot snapshot) {
             var changed = false;
             foreach (var edit in edits.OfType<JObject>()) {
                 if (!(edit["range"] is JObject range)) {
                     continue;
                 }
 
-                changed |= NormalizePosition(range["start"] as JObject, text);
-                changed |= NormalizePosition(range["end"] as JObject, text);
+                changed |= NormalizePosition(range["start"] as JObject, snapshot);
+                changed |= NormalizePosition(range["end"] as JObject, snapshot);
             }
 
             return changed;
         }
 
-        private static bool NormalizePosition(JObject position, string text) {
+        private static bool NormalizePosition(JObject position, ITextSnapshot snapshot) {
             if (position?["line"]?.Type != JTokenType.Integer ||
-                position["character"]?.Type != JTokenType.Integer ||
-                !TryGetLineBounds(text, position["line"].Value<int>(), out var lineStart, out var contentEnd, out _)) {
+                position["character"]?.Type != JTokenType.Integer) {
+                return false;
+            }
+
+            var lineNumber = position["line"].Value<int>();
+            if (lineNumber < 0 || lineNumber >= snapshot.LineCount) {
                 return false;
             }
 
             var character = position["character"].Value<int>();
-            var lineLength = contentEnd - lineStart;
+            var lineLength = snapshot.GetLineFromLineNumber(lineNumber).Length;
             if (character < 0 || character <= lineLength) {
                 return false;
             }
@@ -303,94 +370,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             // LSP positions cannot point into a line break.
             position["character"] = lineLength;
             return true;
-        }
-
-        private static bool TryApplyContentChanges(string text, JArray changes, out string updatedText) {
-            var current = text;
-            foreach (var change in changes.OfType<JObject>()) {
-                var newText = change["text"]?.Value<string>();
-                if (newText == null) {
-                    updatedText = null;
-                    return false;
-                }
-
-                if (!(change["range"] is JObject range)) {
-                    current = newText;
-                    continue;
-                }
-
-                if (!TryGetPosition(current, range["start"] as JObject, out var start) ||
-                    !TryGetPosition(current, range["end"] as JObject, out var end) ||
-                    end < start) {
-                    updatedText = null;
-                    return false;
-                }
-
-                current = string.Concat(
-                    current.Substring(0, start),
-                    newText,
-                    current.Substring(end)
-                );
-            }
-
-            updatedText = current;
-            return true;
-        }
-
-        private static bool TryGetPosition(string text, JObject position, out int offset) {
-            offset = 0;
-            if (position?["line"]?.Type != JTokenType.Integer ||
-                position["character"]?.Type != JTokenType.Integer ||
-                !TryGetLineBounds(text, position["line"].Value<int>(), out var lineStart, out _, out var nextLineStart)) {
-                return false;
-            }
-
-            var character = position["character"].Value<int>();
-            if (character < 0 || character > nextLineStart - lineStart) {
-                return false;
-            }
-
-            offset = lineStart + character;
-            return true;
-        }
-
-        private static bool TryGetLineBounds(string text, int targetLine, out int lineStart, out int contentEnd, out int nextLineStart) {
-            lineStart = 0;
-            contentEnd = 0;
-            nextLineStart = 0;
-            if (targetLine < 0) {
-                return false;
-            }
-
-            var line = 0;
-            var start = 0;
-            while (true) {
-                var end = start;
-                while (end < text.Length && text[end] != '\r' && text[end] != '\n') {
-                    end++;
-                }
-
-                var next = end;
-                if (next < text.Length) {
-                    next += text[next] == '\r' && next + 1 < text.Length && text[next + 1] == '\n'
-                        ? 2
-                        : 1;
-                }
-
-                if (line == targetLine) {
-                    lineStart = start;
-                    contentEnd = end;
-                    nextLineStart = next;
-                    return true;
-                }
-
-                if (end == text.Length) {
-                    return false;
-                }
-
-                line++;
-                start = next;
-            }
         }
 
         private static string GetDocumentKey(string uri) {
@@ -422,13 +401,12 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private sealed class DocumentState {
-            public DocumentState(int version, string text) {
+            public DocumentState(int version) {
                 Version = version;
-                Text = text;
             }
 
             public int Version { get; set; }
-            public string Text { get; set; }
+            public WeakReference<ITextBuffer> TextBuffer { get; set; }
         }
     }
 #if !DEV18_OR_LATER
