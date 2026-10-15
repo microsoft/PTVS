@@ -17,6 +17,7 @@
 using System;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.CookiecutterTools;
 
@@ -46,16 +47,48 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
                 callerName = callerType.FullName + "." + callerName;
             }
 
-            return string.Format(
+            return SensitiveDataRedactor.Sanitize(string.Format(
                 CultureInfo.CurrentCulture,
                 Strings.UnhandledException,
                 ex,
                 callerFile ?? String.Empty,
                 callerLineNumber,
                 callerName
-            );
+            ));
         }
 
+    }
+
+    static class SensitiveDataRedactor {
+        private const string RedactedValue = "<redacted>";
+
+        private static readonly Regex AuthorizationHeader = new Regex(
+            @"(?im)(\bAuthorization\s*:\s*)([^\r\n]+)",
+            RegexOptions.CultureInvariant
+        );
+
+        private static readonly Regex UriUserInfo = new Regex(
+            @"(?i)\b([a-z][a-z0-9+.-]*://)([^/\s:@]+(?::[^/\s@]*)?@)",
+            RegexOptions.CultureInvariant
+        );
+
+        private static readonly Regex SecretKeyValue = new Regex(
+            @"(?ix)(\b(?:password|passwd|pwd|token|access[_-]?token|refresh[_-]?token|secret|client[_-]?secret|api[_-]?key|subscription[_-]?key|credential|authorization|connection\s*string|connectionstring|sharedaccesssignature|sig|key)\b\s*[:=]\s*)(['""']?)([^'"";\s,&]+)(['""']?)",
+            RegexOptions.CultureInvariant
+        );
+
+        public static string Sanitize(string text) {
+            if (string.IsNullOrEmpty(text)) {
+                return text;
+            }
+
+            var sanitized = AuthorizationHeader.Replace(text, "$1" + RedactedValue);
+            sanitized = UriUserInfo.Replace(sanitized, "$1" + RedactedValue + "@");
+            sanitized = SecretKeyValue.Replace(sanitized, match =>
+                match.Groups[1].Value + match.Groups[2].Value + RedactedValue + match.Groups[4].Value
+            );
+            return sanitized;
+        }
     }
 
     /// <summary>
