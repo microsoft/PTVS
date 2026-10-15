@@ -75,12 +75,21 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         private static IPythonInterpreterFactory GetDebugAdapterHostInterpreter(PythonToolsService pyService) {
-            var defaultInterpreter = pyService.InterpreterOptionsService.DefaultInterpreter;
+            return GetDebugAdapterHostInterpreter(
+                pyService.InterpreterOptionsService.DefaultInterpreter,
+                pyService.InterpreterRegistryService.Interpreters
+            );
+        }
+
+        internal static IPythonInterpreterFactory GetDebugAdapterHostInterpreter(
+            IPythonInterpreterFactory defaultInterpreter,
+            IEnumerable<IPythonInterpreterFactory> interpreters
+        ) {
             if (CanHostDebugAdapter(defaultInterpreter)) {
                 return defaultInterpreter;
             }
 
-            var fallbackInterpreter = pyService.InterpreterRegistryService.Interpreters
+            var fallbackInterpreter = interpreters
                 .Where(CanHostDebugAdapter)
                 .OrderByDescending(interpreter => interpreter.Configuration.Version)
                 .ThenByDescending(interpreter => interpreter.Configuration.CanBeAutoDefault())
