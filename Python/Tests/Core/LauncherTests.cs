@@ -16,12 +16,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project.Web;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
+using TestUtilities.Python;
 
 namespace PythonToolsTests {
     [TestClass]
@@ -77,6 +79,89 @@ namespace PythonToolsTests {
             }
 
             Assert.Fail("Expected Python 3.9 debugging to be rejected.");
+        }
+
+        [TestMethod, Priority(UnitTestPriority.P0)]
+        public void LocalAttachUsesSupportedDefaultAdapterHost() {
+            var defaultInterpreter = CreateInterpreter("default", new Version(3, 10));
+            var newerInterpreter = CreateInterpreter("newer", new Version(3, 14));
+
+            var selected = DebugAdapterLauncher.GetDebugAdapterHostInterpreter(
+                defaultInterpreter,
+                new[] { newerInterpreter }
+            );
+
+            Assert.AreSame(defaultInterpreter, selected);
+        }
+
+        [TestMethod, Priority(UnitTestPriority.P0)]
+        public void LocalAttachSelectsNewestRunnableAdapterHost() {
+            var defaultInterpreter = CreateInterpreter("default", new Version(3, 9));
+            var supported310 = CreateInterpreter("supported310", new Version(3, 10));
+            var supported314 = CreateInterpreter("supported314", new Version(3, 14));
+            var missing315 = CreateInterpreter(
+                "missing315",
+                new Version(3, 15),
+                Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString(), "python.exe")
+            );
+
+            var selected = DebugAdapterLauncher.GetDebugAdapterHostInterpreter(
+                defaultInterpreter,
+                new[] { supported310, missing315, supported314 }
+            );
+
+            Assert.AreSame(supported314, selected);
+        }
+
+        [TestMethod, Priority(UnitTestPriority.P0)]
+        public void LocalAttachPrefersAutoDefaultAdapterHost() {
+            var defaultInterpreter = CreateInterpreter("default", new Version(3, 9));
+            var cannotBeAutoDefault = CreateInterpreter(
+                "a",
+                new Version(3, 14),
+                uiMode: InterpreterUIMode.CannotBeAutoDefault
+            );
+            var canBeAutoDefault = CreateInterpreter("z", new Version(3, 14));
+
+            var selected = DebugAdapterLauncher.GetDebugAdapterHostInterpreter(
+                defaultInterpreter,
+                new[] { cannotBeAutoDefault, canBeAutoDefault }
+            );
+
+            Assert.AreSame(canBeAutoDefault, selected);
+        }
+
+        [TestMethod, Priority(UnitTestPriority.P0)]
+        public void LocalAttachRejectsUnsupportedAdapterHosts() {
+            var defaultInterpreter = CreateInterpreter("default", new Version(3, 9));
+            var unsupportedFallback = CreateInterpreter("fallback", new Version(3, 8));
+
+            try {
+                DebugAdapterLauncher.GetDebugAdapterHostInterpreter(
+                    defaultInterpreter,
+                    new[] { unsupportedFallback }
+                );
+            } catch (NotSupportedException ex) {
+                Assert.AreEqual(Strings.DebuggerPythonVersionNotSupported, ex.Message);
+                return;
+            }
+
+            Assert.Fail("Expected unsupported adapter hosts to be rejected.");
+        }
+
+        private static IPythonInterpreterFactory CreateInterpreter(
+            string id,
+            Version version,
+            string interpreterPath = null,
+            InterpreterUIMode uiMode = InterpreterUIMode.Normal
+        ) {
+            return new MockPythonInterpreterFactory(new VisualStudioInterpreterConfiguration(
+                id,
+                id,
+                pythonExePath: interpreterPath ?? typeof(LauncherTests).Assembly.Location,
+                version: version,
+                uiMode: uiMode
+            ));
         }
     }
 }

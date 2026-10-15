@@ -231,7 +231,11 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         internal static bool IsPythonVersionSupportedForDebugging(Version version) {
-            return version == new Version(0, 0) || version >= MinimumSupportedPythonVersion;
+            return version == new Version(0, 0) || IsPythonVersionSupportedForDebugAdapterHost(version);
+        }
+
+        internal static bool IsPythonVersionSupportedForDebugAdapterHost(Version version) {
+            return version >= MinimumSupportedPythonVersion;
         }
 
         internal static void ThrowIfPythonVersionNotSupportedForDebugging(Version version) {
