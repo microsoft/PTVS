@@ -61,11 +61,8 @@ namespace Microsoft.PythonTools.Debugger {
                 pythonExe = launch.InterpreterPathAndArguments.FirstOrDefault();
                 webPageUrl = launch.LaunchWebPageUrl;
             } else if (_debugInfo is DebugLocalAttachInfo) {
-                var interp = ((PythonToolsService)Package.GetGlobalService(typeof(PythonToolsService))).InterpreterOptionsService.DefaultInterpreter;
-                if (interp == null) {
-                    throw new Exception(Strings.NoInterpretersAvailable);
-                }
-                interp.ThrowIfNotRunnable();
+                var pyService = (PythonToolsService)Package.GetGlobalService(typeof(PythonToolsService));
+                var interp = GetDebugAdapterHostInterpreter(pyService);
                 pythonExe = interp.Configuration.InterpreterPath;
                 webPageUrl = null;
             } else {
@@ -75,6 +72,35 @@ namespace Microsoft.PythonTools.Debugger {
             var debugPyAdapterDirectory = Path.GetDirectoryName(PythonToolsInstallPath.GetFile("debugpy\\adapter\\__init__.py"));
             var targetProcess = new DebugAdapterProcess(_adapterHostContext, targetInterop, debugPyAdapterDirectory);
             return targetProcess.StartProcess(pythonExe, webPageUrl);
+        }
+
+        private static IPythonInterpreterFactory GetDebugAdapterHostInterpreter(PythonToolsService pyService) {
+            var defaultInterpreter = pyService.InterpreterOptionsService.DefaultInterpreter;
+            if (CanHostDebugAdapter(defaultInterpreter)) {
+                return defaultInterpreter;
+            }
+
+            var fallbackInterpreter = pyService.InterpreterRegistryService.Interpreters
+                .Where(CanHostDebugAdapter)
+                .OrderByDescending(interpreter => interpreter.Configuration.Version)
+                .ThenByDescending(interpreter => interpreter.Configuration.CanBeAutoDefault())
+                .ThenBy(interpreter => interpreter.Configuration.Id, StringComparer.OrdinalIgnoreCase)
+                .FirstOrDefault();
+            if (fallbackInterpreter != null) {
+                return fallbackInterpreter;
+            }
+
+            if (defaultInterpreter == null) {
+                throw new Exception(Strings.NoInterpretersAvailable);
+            }
+
+            defaultInterpreter.ThrowIfNotRunnable();
+            throw new NotSupportedException(Strings.DebuggerPythonVersionNotSupported);
+        }
+
+        private static bool CanHostDebugAdapter(IPythonInterpreterFactory interpreter) {
+            return interpreter.IsRunnable() &&
+                DebugLaunchHelper.IsPythonVersionSupportedForDebugAdapterHost(interpreter.Configuration.Version);
         }
 
         public void UpdateLaunchOptions(IAdapterLaunchInfo adapterLaunchInfo) {
