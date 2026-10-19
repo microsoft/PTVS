@@ -73,6 +73,18 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.LoadPythonProjectWithNoConfigurations));
         }
 
+        [TestMethod, Priority(UITestPriority.P0)]
+        [TestCategory("Installed")]
+        public void LoadPythonProjectWithMissingActiveConfiguration() {
+            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.LoadPythonProjectWithMissingActiveConfiguration));
+        }
+
+        [TestMethod, Priority(UITestPriority.P0)]
+        [TestCategory("Installed")]
+        public void LoadPythonProjectWithX64SolutionPlatform() {
+            _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.LoadPythonProjectWithX64SolutionPlatform));
+        }
+
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void SaveProjectAs() {
