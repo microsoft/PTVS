@@ -153,6 +153,62 @@ namespace PythonToolsUITests {
             Assert.AreEqual("expected", value);
         }
 
+        public void LoadPythonProjectWithMissingActiveConfiguration(VisualStudioApp app) {
+            var solution = app.CopyProjectForTest(@"TestData\HelloWorld.sln");
+            var contents = File.ReadAllText(solution);
+            var updatedContents = contents.Replace(
+                "{12535E18-06DA-4F15-B99E-8F492FE721E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU",
+                "{12535E18-06DA-4F15-B99E-8F492FE721E2}.Debug|Any CPU.ActiveCfg = Missing|Any CPU"
+            );
+            Assert.AreNotEqual(contents, updatedContents, "Failed to update the active project configuration");
+            File.WriteAllText(solution, updatedContents);
+
+            var project = app.OpenProject(solution);
+            var projectName = app.ServiceProvider.GetUIThread().Invoke(
+                () => project.GetPythonProject().GetProjectProperty(ProjectFileConstants.Name)
+            );
+            Assert.AreEqual("HelloWorld", projectName);
+        }
+
+        public void LoadPythonProjectWithX64SolutionPlatform(VisualStudioApp app) {
+            var solution = app.CopyProjectForTest(@"TestData\HelloWorld.sln");
+            var contents = File.ReadAllText(solution);
+            var updatedContents = contents.Replace("|Any CPU", "|x64");
+            Assert.AreNotEqual(contents, updatedContents, "Failed to update the solution platform");
+            File.WriteAllText(solution, updatedContents);
+
+            var projectFile = Path.Combine(Path.GetDirectoryName(solution), "HelloWorld", "HelloWorld.pyproj");
+            var projectContents = File.ReadAllText(projectFile);
+            var updatedProjectContents = projectContents
+                .Replace(
+                    "<SchemaVersion>2.0</SchemaVersion>",
+                    @"<SchemaVersion>2.0</SchemaVersion>
+    <PlatformAware>true</PlatformAware>
+    <AvailablePlatforms>x64</AvailablePlatforms>"
+                )
+                .Replace(
+                    "</Project>",
+                    @"  <Target Name=""CoreCompile"" />
+  <Target Name=""BeforeBuild"">
+    <WriteLinesToFile File=""$(ProjectDir)platform.txt"" Lines=""$(Platform)"" Overwrite=""true"" />
+  </Target>
+</Project>"
+                );
+            Assert.AreNotEqual(projectContents, updatedProjectContents, "Failed to add the platform build check");
+            File.WriteAllText(projectFile, updatedProjectContents);
+
+            var project = app.OpenProject(solution);
+            app.ServiceProvider.GetUIThread().Invoke(
+                () => app.Dte.Solution.SolutionBuild.SolutionConfigurations.Item(1).Activate()
+            );
+
+            var result = app.ServiceProvider.GetUIThread().Invoke(
+                () => project.GetPythonProject().Build("Debug", "Build")
+            );
+            Assert.AreEqual(MSBuildResult.Successful, result, "The x64 project build failed");
+            Assert.AreEqual("x64", File.ReadAllText(Path.Combine(Path.GetDirectoryName(projectFile), "platform.txt")).Trim());
+        }
+
         public void SaveProjectAs(VisualStudioApp app) {
             var sln = app.CopyProjectForTest(@"TestData\HelloWorld.sln");
             var slnDir = PathUtils.GetParent(sln);

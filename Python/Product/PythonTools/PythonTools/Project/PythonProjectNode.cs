@@ -522,15 +522,23 @@ namespace Microsoft.PythonTools.Project {
                 return;
 
             var automationObject = (EnvDTE.Project)GetAutomationObject();
+            string activePlatform;
 
             try {
                 EnvDTE.Configuration activeConfig = automationObject.ConfigurationManager.ActiveConfiguration;
-                if (activeConfig != null) {
-                    this.BuildProject.SetGlobalProperty(ProjectFileConstants.Platform, activeConfig.PlatformName);
+                if (activeConfig == null) {
+                    return;
                 }
+                activePlatform = activeConfig.PlatformName;
             } catch (COMException ex) {
                 Debug.WriteLine("SetCurrentConfiguration(). Failed to get active configuration because of {0}", ex);
+                return;
+            } catch (ArgumentException ex) when (ex.HResult == VSConstants.E_INVALIDARG) {
+                Debug.WriteLine("SetCurrentConfiguration(). Failed to get active configuration because of {0}", ex);
+                return;
             }
+
+            this.BuildProject.SetGlobalProperty(ProjectFileConstants.Platform, activePlatform);
         }
 
         protected override bool SupportsIconMonikers {
