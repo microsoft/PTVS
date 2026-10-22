@@ -30,11 +30,24 @@ $expectedBaseEntries = @(
     '$MSBuild/Microsoft/VC/{0}/Platforms/x64/ImportBefore/Microsoft.PythonTools.Debugger.VCDebugLauncher.props' -f $targetVersion
 )
 
+$manifestContent = $null
 $archive = [IO.Compression.ZipFile]::OpenRead((Resolve-Path -LiteralPath $VsixPath).Path)
 try {
     $allEntries = @($archive.Entries | ForEach-Object { $_.FullName.Replace('\', '/').TrimStart('/') })
+    $manifestEntry = $archive.Entries | Where-Object FullName -eq 'extension.vsixmanifest' | Select-Object -First 1
+    if ($manifestEntry) {
+        $manifestReader = [IO.StreamReader]::new($manifestEntry.Open())
+        try {
+            $manifestContent = $manifestReader.ReadToEnd()
+        } finally {
+            $manifestReader.Dispose()
+        }
+    }
 } finally {
     $archive.Dispose()
+}
+if (!$manifestContent) {
+    throw "The VSIX does not contain extension.vsixmanifest."
 }
 
 $launcherEntries = @(
@@ -58,8 +71,47 @@ $localizedEntries = @(
         }
     }
 )
+$expectedLocalizedLocales = @()
+if ($RequireLocalizedContent) {
+    $languagesPath = Join-Path $PSScriptRoot 'VSLanguages.props'
+    if (!(Test-Path -LiteralPath $languagesPath -PathType Leaf)) {
+        throw "Visual Studio language definitions '$languagesPath' were not found."
+    }
+
+    [xml]$languagesXml = Get-Content -LiteralPath $languagesPath
+    $namespaceManager = [Xml.XmlNamespaceManager]::new($languagesXml.NameTable)
+    $namespaceManager.AddNamespace('msb', 'http://schemas.microsoft.com/developer/msbuild/2003')
+    $expectedLocalizedLocales = @(
+        $languagesXml.SelectNodes('/msb:Project/msb:ItemGroup/msb:VSLanguages/msb:LCID', $namespaceManager) |
+            ForEach-Object { $_.InnerText } |
+            Sort-Object -Unique
+    )
+    if ($expectedLocalizedLocales.Count -eq 0) {
+        throw "No localized LCIDs were defined in '$languagesPath'."
+    }
+}
 
 $violations = [Collections.Generic.List[string]]::new()
+[xml]$manifestXml = $manifestContent
+$manifestNamespaceManager = [Xml.XmlNamespaceManager]::new($manifestXml.NameTable)
+$manifestNamespaceManager.AddNamespace('vsix', 'http://schemas.microsoft.com/developer/vsx-schema/2011')
+$nextVSTarget = "$([int]$VSTarget.Split('.')[0] + 1).0"
+$expectedVersionRange = "[$VSTarget,$nextVSTarget)"
+$installationTargets = @($manifestXml.SelectNodes('/vsix:PackageManifest/vsix:Installation/vsix:InstallationTarget', $manifestNamespaceManager))
+if ($installationTargets.Count -eq 0) {
+    $violations.Add('The VSIX manifest does not contain an installation target.')
+}
+foreach ($installationTarget in $installationTargets) {
+    if ($installationTarget.Version -ne $expectedVersionRange) {
+        $violations.Add("Installation target '$($installationTarget.Id)' must use version range $expectedVersionRange, found $($installationTarget.Version).")
+    }
+}
+$prerequisites = @($manifestXml.SelectNodes('/vsix:PackageManifest/vsix:Prerequisites/vsix:Prerequisite', $manifestNamespaceManager))
+foreach ($prerequisite in $prerequisites) {
+    if ($prerequisite.Version -ne $expectedVersionRange) {
+        $violations.Add("Prerequisite '$($prerequisite.Id)' must use version range $expectedVersionRange, found $($prerequisite.Version).")
+    }
+}
 $duplicateEntries = @($launcherEntries | Group-Object | Where-Object Count -gt 1)
 foreach ($duplicateEntry in $duplicateEntries) {
     $violations.Add("Duplicate payload entry ($($duplicateEntry.Count)x): $($duplicateEntry.Name)")
@@ -89,8 +141,22 @@ foreach ($entry in $launcherEntries) {
     }
 }
 
-if ($RequireLocalizedContent -and $localizedEntries.Count -eq 0) {
-    $violations.Add("No localized VC debugger launcher XAML payloads were found.")
+if ($RequireLocalizedContent) {
+    $actualLocalizedLocales = @($localizedEntries.Locale | Sort-Object -Unique)
+    $expectedLocalizedEntryCount = $expectedLocalizedLocales.Count * 2
+    if ($localizedEntries.Count -ne $expectedLocalizedEntryCount) {
+        $violations.Add("Expected $expectedLocalizedEntryCount localized XAML payloads, found $($localizedEntries.Count).")
+    }
+    foreach ($locale in $expectedLocalizedLocales) {
+        if ($actualLocalizedLocales -notcontains $locale) {
+            $violations.Add("Missing localized payload for LCID $locale.")
+        }
+    }
+    foreach ($locale in $actualLocalizedLocales) {
+        if ($expectedLocalizedLocales -notcontains $locale) {
+            $violations.Add("Unexpected localized payload for LCID $locale.")
+        }
+    }
 }
 foreach ($localeGroup in $localizedEntries | Group-Object Locale) {
     $platforms = @($localeGroup.Group.Platform | Sort-Object -Unique)
