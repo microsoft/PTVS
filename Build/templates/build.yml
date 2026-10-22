@@ -2,6 +2,9 @@ parameters:
 - name: ptvsPackageVersion
   type: string
   default: $(Build.BuildNumber)
+- name: skipSigning
+  type: boolean
+  default: false
 
 steps:
 
@@ -52,10 +55,36 @@ steps:
                           /p:BuildNumber=${{ parameters.ptvsPackageVersion }} 
                           /bl:$(Build.SourcesDirectory)\logs\BuildTests.binlog'
 
-  # Build the installer (skip for PR builds since no VstsDrop upload is needed)
+  # Build the fast P0 test assembly for every PR.
+  - task: MSBuild@1
+    displayName: 'Build PR P0 tests'
+    condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+    inputs:
+      solution: $(Build.SourcesDirectory)/Python/Tests/Core/PythonToolsTests.csproj
+      msbuildVersion: $(MsBuildVersion)
+      platform: $(Platform)
+      configuration: $(BuildConfiguration)
+      msbuildArguments: ' /p:VSTarget=$(VSTarget)
+                          /p:BuildNumber=${{ parameters.ptvsPackageVersion }}
+                          /bl:$(Build.SourcesDirectory)\logs\BuildP0Tests.binlog'
+
+  # Build the installed-VS P0 runner only for same-repository PRs.
+  - task: MSBuild@1
+    displayName: 'Build trusted PR P0 UI tests'
+    condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'), ne(variables['System.PullRequest.IsFork'], 'True'))
+    inputs:
+      solution: $(Build.SourcesDirectory)/Python/Tests/PythonToolsUITestsRunner/PythonToolsUITestsRunner.csproj
+      msbuildVersion: $(MsBuildVersion)
+      platform: $(Platform)
+      configuration: $(BuildConfiguration)
+      msbuildArguments: ' /p:VSTarget=$(VSTarget)
+                          /p:BuildNumber=${{ parameters.ptvsPackageVersion }}
+                          /bl:$(Build.SourcesDirectory)\logs\BuildP0UITests.binlog'
+
+  # Trusted PRs build non-production-signed test-only setup artifacts for the installed-VS gate.
   - task: MSBuild@1
     displayName: 'Build installer'
-    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    condition: and(succeeded(), or(ne(variables['Build.Reason'], 'PullRequest'), ne(variables['System.PullRequest.IsFork'], 'True')))
     inputs:
       solution: $(Build.SourcesDirectory)/Python/Setup/dirs.proj
       msbuildVersion: $(MsBuildVersion)
@@ -66,4 +95,5 @@ steps:
                           /p:BuildNumber=${{ parameters.ptvsPackageVersion }} 
                           /p:BUILD_BINARIESDIRECTORY=$(Build.BinariesDirectory)
                           /p:BUILD_STAGINGDIRECTORY=$(Build.StagingDirectory) 
+                          /p:SkipSigning=${{ parameters.skipSigning }}
                           /bl:$(Build.SourcesDirectory)\logs\BuildInstaller.binlog'

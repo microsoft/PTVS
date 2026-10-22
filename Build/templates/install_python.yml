@@ -6,15 +6,19 @@ parameters:
   - name: outputVar
     type: string
     default: 'InstallPython'
+  - name: useCache
+    type: boolean
+    default: true
 
 steps:
-  - task: Cache@2
-    inputs:
-      key: 'python-installer-$(pythonVersion)'
-      path: '$(Pipeline.Workspace)/python-installer'
-      restoreKeys: |
-        python-installer-
-    displayName: 'Cache Python Installer for ${{ parameters.pythonVersion }}'
+  - ${{ if parameters.useCache }}:
+    - task: Cache@2
+      inputs:
+        key: 'python-installer-${{ parameters.pythonVersion }}'
+        path: '$(Pipeline.Workspace)/python-installer'
+        restoreKeys: |
+          python-installer-
+      displayName: 'Cache Python Installer for ${{ parameters.pythonVersion }}'
 
   - pwsh: |
       $pythonInstallerDir = "$(Pipeline.Workspace)/python-installer"

@@ -103,6 +103,16 @@ variables:
     value: ${{ parameters.refreshGlassCache }}
   - name: PublishNugetPackageAsBuildArtifact
     value: ${{ parameters.PublishNugetPackageAsBuildArtifact }}
+  - name: skipSigningVar
+    ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+      value: true
+    ${{ else }}:
+      value: false
+  - name: signingTypeVar
+    ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+      value: Test
+    ${{ else }}:
+      value: Real
 
   # If the build ran because of a nightly schedule, force pylance release type to preview
   - name: pylanceReleaseTypeVar
@@ -195,6 +205,17 @@ extends:
                   targetPath: "$(Build.SourcesDirectory)/Python/Tests/TestData/default.runsettings"
                   artifactName: "RunSettings"
                   sbomEnabled: false
+                - output: pipelineArtifact
+                  displayName: "Publish build artifact: P0 RunSettings"
+                  targetPath: "$(Build.SourcesDirectory)/Build/azuredevops/test/p0.runsettings"
+                  artifactName: "P0RunSettings"
+                  sbomEnabled: false
+                - output: pipelineArtifact
+                  displayName: "Publish build artifact: MicroBuildOutputs"
+                  condition: and(succeeded(), or(ne(variables['Build.Reason'], 'PullRequest'), ne(variables['System.PullRequest.IsFork'], 'True')))
+                  targetPath: "$(Build.ArtifactStagingDirectory)/MicroBuild/Output"
+                  artifactName: "MicroBuildOutputs"
+                  sbomEnabled: false
                 - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
                     - output: pipelineArtifact
                       displayName: "Publish build artifact: BoM"
@@ -217,8 +238,12 @@ extends:
                   - powershell: 'Write-Host "##vso[build.addbuildtag]$env:VSTarget"'
                     displayName: "Add vstarget build tag"
 
-                  # install microbuild plugins used for swixproj/vsmanproj, signing, and localization
-                  - template: /Build/templates/install_microbuild_plugins.yml@self
+              # Trusted PRs use test signing only; production builds keep real signing.
+              - template: /Build/templates/install_microbuild_plugins.yml@self
+                parameters:
+                  condition: and(succeeded(), or(ne(variables['Build.Reason'], 'PullRequest'), ne(variables['System.PullRequest.IsFork'], 'True')))
+                  installSigning: true
+                  signingType: ${{ variables.signingTypeVar }}
 
               # Restore packages and install dependencies (pylance, debugpy)
               - template: /Build/templates/restore_packages.yml@self
@@ -231,23 +256,26 @@ extends:
               - template: /Build/templates/build.yml@self
                 parameters:
                   ptvsPackageVersion: ${{ variables.ptvsPackageVersionVar }}
+                  skipSigning: ${{ variables.skipSigningVar }}
 
-              # Non-PR steps
+              # Create test-only bootstrapper artifacts for non-fork PRs and normal product builds.
+              - template: Build/templates/create_vs_bootstrapper.yml@self
+                parameters:
+                  condition: and(succeeded(), or(ne(variables['Build.Reason'], 'PullRequest'), ne(variables['System.PullRequest.IsFork'], 'True')))
+
+              # Upload the setup payload used by the bootstrapper.
+              - task: 1ES.MicroBuildVstsDrop@1
+                displayName: "Upload vsts drop"
+                condition: and(succeeded(), or(ne(variables['Build.Reason'], 'PullRequest'), ne(variables['System.PullRequest.IsFork'], 'True')))
+                inputs:
+                  dropFolder: '$(Build.StagingDirectory)\release'
+                  dropServiceUri: "https://devdiv.artifacts.visualstudio.com/DefaultCollection"
+                  vsDropServiceUri: "https://vsdrop.corp.microsoft.com/file/v1"
+                  accessToken: "$(System.AccessToken)"
+                  dropRetentionDays: 183
+
+              # Non-PR publishing steps
               - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
-                  # Create VS bootstrapper for testing
-                  - template: Build/templates/create_vs_bootstrapper.yml@self
-
-                  # Upload vsts drop used by Visual Studio insertions
-                  # For more info, see https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/1es-pipeline-templates/features/outputs/microbuild-vsts-drop
-                  - task: 1ES.MicroBuildVstsDrop@1
-                    displayName: "Upload vsts drop"
-                    inputs:
-                      dropFolder: '$(Build.StagingDirectory)\release'
-                      dropServiceUri: "https://devdiv.artifacts.visualstudio.com/DefaultCollection"
-                      vsDropServiceUri: "https://vsdrop.corp.microsoft.com/file/v1"
-                      accessToken: "$(System.AccessToken)"
-                      dropRetentionDays: 183
-
                   # publish symbols
                   - template: /Build/templates/publish_symbols.yml@self
 
@@ -264,11 +292,28 @@ extends:
               # Publish test data
               - template: /Build/templates/publish_test_data.yml@self
 
-            # Run tests on mixed mode debugger
+          - job: p0
+            displayName: P0
+            dependsOn: build
+            condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+            pool:
+              name: VSEng-Prcheck-Public
+            steps:
+              - checkout: self
+                clean: true
+                fetchDepth: 1
+
+              - template: /Build/templates/run_p0_tests.yml@self
+
+      # Glass remains diagnostic and non-gating. Keeping it in a separate stage lets
+      # PTVS-Testgate trigger as soon as the build and fast P0 gate have succeeded.
+      - stage: glass
+        displayName: Glass
+        dependsOn: build
+        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'), eq(variables['RefreshGlassCache'], 'true')))
+        jobs:
           - job: test
             displayName: Test
-            dependsOn: build
-            condition: or(eq(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'), eq(variables['RefreshGlassCache'], 'true'))
             continueOnError: true
             pool:
               name: VSEng-MicroBuildVSStable

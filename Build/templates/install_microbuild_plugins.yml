@@ -1,19 +1,38 @@
+parameters:
+- name: condition
+  type: string
+  default: succeeded()
+- name: installSigning
+  type: boolean
+  default: true
+- name: signingType
+  type: string
+  default: Real
+  values:
+  - Real
+  - Test
+
 steps:
 
   - task: MicroBuildSwixPlugin@4
     displayName: 'Install microbuild swix plugin'
+    condition: ${{ parameters.condition }}
     inputs:
       dropName: 'Products/$(System.TeamProject)/$(Build.Repository.Name)/$(Build.SourceBranchName)/$(Build.BuildNumber)'
 
-  - task: MicroBuildSigningPlugin@4
-    displayName: 'Install microbuild signing plugin'
-    inputs:
-      signType: 'Real'
-      zipSources: false
-      ConnectedPMEServiceName: 6cc74545-d7b9-4050-9dfa-ebefcc8961ea
+  - ${{ if parameters.installSigning }}:
+    - task: MicroBuildSigningPlugin@4
+      displayName: 'Install microbuild signing plugin'
+      condition: ${{ parameters.condition }}
+      inputs:
+        signType: ${{ parameters.signingType }}
+        zipSources: false
+        ${{ if eq(parameters.signingType, 'Real') }}:
+          ConnectedPMEServiceName: 6cc74545-d7b9-4050-9dfa-ebefcc8961ea
       
   - task: MicroBuildLocalizationPlugin@4
     displayName: 'Install localization plugin'
+    condition: ${{ parameters.condition }}
     inputs:
       type: 'Full'
       languages: 'VS'

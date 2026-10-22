@@ -1,16 +1,166 @@
-# Dummy pipeline: does not auto-trigger; prints hello world.
+# P0 installed-Visual-Studio gate. The source build stage is credential-free for
+# forks; this pipeline only downloads and executes its artifacts for same-repo PRs.
 trigger: none
 pr: none
 
-pool:
-  vmImage: windows-latest
+resources:
+  pipelines:
+    - pipeline: ComponentBuildUnderTest
+      project: DevDiv
+      source: 'Python\PTVS\PTVS-Build'
+      trigger:
+        branches:
+          include:
+            - refs/pull/*
+        stages:
+          - build
+
+    - pipeline: DartLab
+      project: DevDiv
+      source: DartLab
+      branch: main
+
+  repositories:
+    - repository: DartLabTemplates
+      type: git
+      name: DartLab.Templates
+      ref: refs/heads/main
 
 stages:
-- stage: Hello
-  displayName: Hello World
+- stage: classify
+  displayName: Classify source build
   jobs:
-  - job: hello
-    displayName: Print hello
+  - job: trust
+    displayName: Verify trusted PR
+    pool:
+      vmImage: windows-latest
     steps:
-    - script: echo Hello world
-      displayName: Hello world
+    - checkout: none
+
+    - pwsh: |
+        $ErrorActionPreference = 'Stop'
+
+        $runIdText = '$(resources.pipeline.ComponentBuildUnderTest.runID)'
+        $runId = 0
+        if (-not [int]::TryParse($runIdText, [ref] $runId)) {
+          throw "Invalid ComponentBuildUnderTest run ID: '$runIdText'."
+        }
+
+        $collectionUri = '$(System.CollectionUri)'.TrimEnd('/')
+        $project = [Uri]::EscapeDataString('$(System.TeamProject)')
+        $buildUri = "$collectionUri/$project/_apis/build/builds/$runId?api-version=7.1"
+        $headers = @{ Authorization = "Bearer $env:SYSTEM_ACCESSTOKEN" }
+        $build = Invoke-RestMethod -Uri $buildUri -Headers $headers -Method Get
+
+        if ($build.definition.id -ne 14121) {
+          throw "Run $runId came from unexpected definition $($build.definition.id)."
+        }
+
+        if ($build.reason -ne 'pullRequest') {
+          Write-Host "Source run $runId is not a PR build; installed-VS tests will not run."
+          Write-Host '##vso[task.setvariable variable=runInstalledTests;isOutput=true]false'
+          exit 0
+        }
+
+        if ($build.sourceBranch -notmatch '^refs/pull/(?<number>\d+)/merge$') {
+          throw "Unexpected PR source branch '$($build.sourceBranch)' for run $runId."
+        }
+
+        $resourceCommit = '$(resources.pipeline.ComponentBuildUnderTest.sourceCommit)'
+        if ($resourceCommit -and $resourceCommit -ne $build.sourceVersion) {
+          throw "Pipeline resource commit '$resourceCommit' does not match source run commit '$($build.sourceVersion)'."
+        }
+
+        $prNumber = $Matches.number
+        $triggerPrNumber = $build.triggerInfo.'pr.number'
+        if ($triggerPrNumber -and $triggerPrNumber -ne $prNumber) {
+          throw "PR number mismatch: source branch is $prNumber but trigger metadata is $triggerPrNumber."
+        }
+
+        $isForkText = $build.triggerInfo.'pr.isFork'
+        $isFork = $false
+        if (-not [bool]::TryParse($isForkText, [ref] $isFork)) {
+          throw "Missing or invalid pr.isFork metadata for source run $runId."
+        }
+
+        Write-Host "Source run: $runId"
+        Write-Host "PR: $prNumber"
+        Write-Host "Source commit: $($build.sourceVersion)"
+        Write-Host "Fork PR: $isFork"
+
+        if ($isFork) {
+          Write-Host 'Fork artifacts will not be downloaded or executed on internal test infrastructure.'
+          Write-Host '##vso[task.setvariable variable=runInstalledTests;isOutput=true]false'
+          exit 0
+        }
+
+        Write-Host '##vso[task.setvariable variable=runInstalledTests;isOutput=true]true'
+      name: classify
+      displayName: 'Classify source PR'
+      env:
+        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+- template: stages/visual-studio/single-runsettings.yml@DartLabTemplates
+  parameters:
+    name: p0_ui
+    displayName: P0 UI tests
+    dependsOn: classify
+    condition: and(succeeded(), eq(dependencies.classify.outputs['trust.classify.runInstalledTests'], 'true'))
+    isSkippable: false
+    runSettingsURI: '$(Pipeline.Workspace)\ComponentBuildUnderTest\RunSettings\default.runsettings'
+    visualStudioBootstrapperURI: $(VisualStudio.InstallationUnderTest.BootstrapperURL)
+    visualStudioSigning: Test
+    testLabPoolName: DDRITS-Public
+    testMachineTotalCount: 2
+    testMachineMinimumCount: 1
+    testRunCondition: 'false'
+    testRunContinueOnError: false
+    testExecutionJobTimeoutInMinutes: 300
+
+    preTestMachineConfigurationStepList:
+      - download: ComponentBuildUnderTest
+        artifact: MicroBuildOutputs
+        patterns: '**\BootstrapperInfo.json'
+        displayName: 'Download bootstrapper information'
+
+      - download: ComponentBuildUnderTest
+        artifact: RunSettings
+        patterns: '**\default.runsettings'
+        displayName: 'Download Visual Studio runsettings'
+
+      - task: PowerShell@2
+        displayName: "Set 'VisualStudio.InstallationUnderTest.BootstrapperURL'"
+        inputs:
+          filePath: $(DartLab.Path)\Scripts\VisualStudio\Bootstrapper\Get-BootstrapperURL.ps1
+          arguments: >
+            -BootstrapperInfoJsonURI '$(Pipeline.Workspace)\ComponentBuildUnderTest\MicroBuildOutputs\BootstrapperInfo.json'
+            -VSBranch main
+            -OutVariableName 'VisualStudio.InstallationUnderTest.BootstrapperURL'
+
+    preDeployAndRunTestsStepList:
+      - checkout: self
+        clean: true
+        fetchDepth: 1
+
+      - download: ComponentBuildUnderTest
+        artifact: Binaries
+        displayName: 'Download PTVS binaries'
+
+      - download: ComponentBuildUnderTest
+        artifact: TestData
+        displayName: 'Download PTVS test data'
+
+      - download: ComponentBuildUnderTest
+        artifact: P0RunSettings
+        displayName: 'Download P0 runsettings'
+
+      - template: /Build/azuredevops/test/uitest-integration-stage.yml@self
+        parameters:
+          BinariesDirectory: '$(Pipeline.Workspace)\ComponentBuildUnderTest\Binaries'
+          Drop: '$(Pipeline.Workspace)\ComponentBuildUnderTest'
+          MinimumExpectedTests: 123
+          ResultsDirectory: '$(Agent.TempDirectory)\P0UITestResults'
+          RunSettingsFile: '$(Pipeline.Workspace)\ComponentBuildUnderTest\P0RunSettings\p0.runsettings'
+          TestFilterCriteria: 'Priority=0'
+          UITestNames: PythonTools
+          VisualStudioInstallationPath: 'C:\Test\VisualStudio'

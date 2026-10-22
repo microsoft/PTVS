@@ -1,0 +1,91 @@
+parameters:
+- name: minimumExpectedTests
+  type: number
+  default: 58
+- name: testFilterCriteria
+  type: string
+  default: 'Priority=0&TestCategory!=10s&Name!=FormatSelectionBlack&Name!=RunInterpreterOutput'
+
+steps:
+  - template: ./install_python.yml
+    parameters:
+      pythonVersion: '3.13.0'
+      useCache: false
+
+  - download: current
+    artifact: Binaries
+    displayName: 'Download build binaries'
+
+  - download: current
+    artifact: TestData
+    displayName: 'Download test data'
+
+  - download: current
+    artifact: P0RunSettings
+    displayName: 'Download P0 runsettings'
+
+  - powershell: |
+      $ErrorActionPreference = 'Stop'
+
+      $source = '$(Pipeline.Workspace)\Binaries'
+      $destination = '$(Build.BinariesDirectory)\raw\binaries'
+      New-Item -ItemType Directory -Force -Path $destination | Out-Null
+      Copy-Item -Path "$source\*" -Destination $destination -Recurse -Force
+    displayName: 'Copy binaries to expected location'
+
+  - task: ExtractFiles@1
+    displayName: 'Extract test data'
+    inputs:
+      archiveFilePatterns: '$(Pipeline.Workspace)\TestData\TestData.zip'
+      destinationFolder: '$(Build.BinariesDirectory)\raw\binaries\TestData'
+      cleanDestinationFolder: true
+      overwriteExistingFiles: true
+
+  - powershell: |
+      $ErrorActionPreference = 'Stop'
+
+      $assembly = '$(Build.BinariesDirectory)\raw\binaries\PythonToolsTests.dll'
+      $runSettings = '$(Pipeline.Workspace)\P0RunSettings\p0.runsettings'
+      $results = '$(Agent.TempDirectory)\P0TestResults'
+
+      foreach ($requiredFile in @($assembly, $runSettings)) {
+        if (-not (Test-Path -LiteralPath $requiredFile -PathType Leaf)) {
+          throw "Required P0 test input not found: $requiredFile"
+        }
+      }
+
+      if (Test-Path -LiteralPath $results) {
+        Remove-Item -LiteralPath $results -Recurse -Force
+      }
+      New-Item -ItemType Directory -Force -Path $results | Out-Null
+    displayName: 'Validate P0 test inputs'
+
+  - task: VSTest@3
+    displayName: 'Run fast P0 tests'
+    inputs:
+      testSelector: testAssemblies
+      testAssemblyVer2: 'PythonToolsTests.dll'
+      searchFolder: '$(Build.BinariesDirectory)\raw\binaries'
+      resultsFolder: '$(Agent.TempDirectory)\P0TestResults'
+      testFiltercriteria: '${{ parameters.testFilterCriteria }}'
+      runSettingsFile: '$(Pipeline.Workspace)\P0RunSettings\p0.runsettings'
+      runInParallel: false
+      codeCoverageEnabled: false
+      publishRunAttachments: true
+      failOnMinTestsNotRun: true
+      minimumExpectedTests: ${{ parameters.minimumExpectedTests }}
+      diagnosticsEnabled: true
+      collectDumpOn: onAbortOnly
+    env:
+      _TESTDATA_ROOT_PATH: '$(Build.BinariesDirectory)\raw\binaries'
+
+  - task: PowerShell@2
+    displayName: 'Validate fast P0 test results'
+    condition: always()
+    inputs:
+      targetType: filePath
+      filePath: '$(Build.SourcesDirectory)\Build\ValidateTestResults.ps1'
+      arguments: >
+        -ResultsPath "$(Agent.TempDirectory)\P0TestResults"
+        -MinimumExpectedTests ${{ parameters.minimumExpectedTests }}
+        -TestRunName "Fast P0 tests"
