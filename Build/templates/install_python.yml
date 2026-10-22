@@ -14,7 +14,7 @@ steps:
   - ${{ if parameters.useCache }}:
     - task: Cache@2
       inputs:
-        key: 'python-installer-${{ parameters.pythonVersion }}'
+        key: '"python-installer-${{ parameters.pythonVersion }}"'
         path: '$(Pipeline.Workspace)/python-installer'
         restoreKeys: |
           python-installer-
