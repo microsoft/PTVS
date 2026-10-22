@@ -136,12 +136,12 @@ namespace Microsoft.PythonTools.Interpreter {
 
             var activateBat = Path.Combine(Path.GetDirectoryName(condaPath), "activate.bat");
             if (File.Exists(activateBat)) {
-                var args = prefixPath != null
-                    ? new[] { prefixPath, "&", "python.exe", "-c", PrintEnvironmentCode }
-                    : new[] { "&", "python.exe", "-c", PrintEnvironmentCode };
+                using (var processTree = CondaActivationProcessTree.TryStart(activateBat, prefixPath, PrintEnvironmentCode)) {
+                    if (processTree == null || !processTree.TryRelease()) {
+                        return new ActivationResult(activationVariables, false);
+                    }
 
-                using (var proc = ProcessOutput.RunHiddenAndCapture(activateBat, args))
-                using (var processTree = CondaActivationProcessTree.TryCreate(proc)) {
+                    var proc = processTree.Process;
                     var exited = await Task.Run(() => proc.Wait(timeout)).ConfigureAwait(false);
                     if (!exited) {
                         Trace.TraceWarning(
@@ -150,15 +150,7 @@ namespace Microsoft.PythonTools.Interpreter {
                             proc.ProcessId
                         );
                         LogActivationTimeout(logger, prefixPath, timeout);
-                        if (processTree != null) {
-                            processTree.Terminate(proc, ActivationProcessTreeTerminationTimeout);
-                        } else {
-                            try {
-                                proc.Kill();
-                            } catch (InvalidOperationException) {
-                            } catch (System.ComponentModel.Win32Exception) {
-                            }
-                        }
+                        processTree.Terminate(ActivationProcessTreeTerminationTimeout);
                         return new ActivationResult(activationVariables, false);
                     }
 

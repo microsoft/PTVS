@@ -127,17 +127,21 @@ namespace PythonToolsTests {
 
                 var condaExe = Path.Combine(scripts, "conda.exe");
                 var processIdsPath = Path.Combine(scripts, "process-ids.txt");
+                var intermediaryReleasePath = Path.Combine(scripts, "release-intermediary");
                 var waitScript = Path.Combine(scripts, "wait-tree.ps1");
                 File.WriteAllText(condaExe, string.Empty);
                 File.WriteAllText(
                     waitScript,
                     "$grandchild = Start-Process -FilePath (Join-Path $PSHOME 'powershell.exe') -ArgumentList @('-NoProfile', '-Command', 'Start-Sleep -Seconds 300') -PassThru\r\n" +
                     "Set-Content -LiteralPath $args[0] -Value @($PID, $grandchild.Id)\r\n" +
-                    "Start-Sleep -Seconds 300\r\n"
+                    "while (-not (Test-Path -LiteralPath $args[1])) { Start-Sleep -Milliseconds 10 }\r\n"
                 );
                 File.WriteAllText(
                     Path.Combine(scripts, "activate.bat"),
-                    "@echo off\r\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File \"%~dp0wait-tree.ps1\" \"%~dp0process-ids.txt\"\r\n"
+                    "@echo off\r\n" +
+                    "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"%~dp0wait-tree.ps1\" \"%~dp0process-ids.txt\" \"%~dp0release-intermediary\"\r\n" +
+                    ":wait\r\n" +
+                    "goto wait\r\n"
                 );
 
                 unrelated = Process.Start(new ProcessStartInfo {
@@ -156,12 +160,17 @@ namespace PythonToolsTests {
                 child = Process.GetProcessById(processIds[0]);
                 grandchild = Process.GetProcessById(processIds[1]);
                 wrapper = Process.GetProcessById(GetParentProcessId(child.Id));
+                File.WriteAllText(intermediaryReleasePath, string.Empty);
+                AssertProcessExited(child, "Short-lived Conda activation intermediary");
 
+                Assert.IsTrue(
+                    SpinWait.SpinUntil(() => activationTask.IsCompleted, TimeSpan.FromSeconds(10)),
+                    "Conda activation process-tree cleanup did not complete within the test bound."
+                );
                 var env = activationTask.WaitAndUnwrapExceptions();
 
                 Assert.AreEqual(0, env.Count());
                 AssertProcessExited(wrapper, "Conda activation wrapper");
-                AssertProcessExited(child, "Conda activation child");
                 AssertProcessExited(grandchild, "Conda activation grandchild");
                 Assert.IsFalse(unrelated.HasExited, "An unrelated process was terminated with the Conda activation tree.");
             } finally {
@@ -221,7 +230,8 @@ namespace PythonToolsTests {
         [TestMethod, Priority(UnitTestPriority.P0)]
         [TestCategory("10s")]
         public void CondaActivationTimeoutIsNotCached() {
-            var condaRoot = TestData.GetTempPath();
+            var condaRoot = Path.Combine(TestData.GetTempPath(), "conda%&^()!root");
+            var prefixPath = Path.Combine(condaRoot, "prefix%&^()!path");
             try {
                 var scripts = Path.Combine(condaRoot, "scripts");
                 Directory.CreateDirectory(scripts);
@@ -231,14 +241,14 @@ namespace PythonToolsTests {
                 File.WriteAllText(condaExe, string.Empty);
                 File.WriteAllText(activateBat, "@echo off\r\n:wait\r\ngoto wait\r\n");
 
-                var timedOutEnv = CondaUtils.GetActivationEnvironmentVariablesForPrefixAsync(condaExe, null, TimeSpan.FromMilliseconds(100)).WaitAndUnwrapExceptions();
+                var timedOutEnv = CondaUtils.GetActivationEnvironmentVariablesForPrefixAsync(condaExe, prefixPath, TimeSpan.FromMilliseconds(100)).WaitAndUnwrapExceptions();
                 Assert.AreEqual(0, timedOutEnv.Count());
 
                 var emitEnv = Path.Combine(scripts, "emit-env.ps1");
                 File.WriteAllText(emitEnv, "$payload = 'x' * 65536\r\nWrite-Output '!!!ENVIRONMENT MARKER!!!'\r\nWrite-Output ('{\"PTVS_TEST_ENV\":\"success\",\"PTVS_TEST_PAYLOAD\":\"' + $payload + '\"}')\r\n");
                 File.WriteAllText(activateBat, "@echo off\r\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File \"%~dp0emit-env.ps1\"\r\nexit 0\r\n");
 
-                var env = CondaUtils.GetActivationEnvironmentVariablesForPrefixAsync(condaExe, null, TimeSpan.FromSeconds(5)).WaitAndUnwrapExceptions();
+                var env = CondaUtils.GetActivationEnvironmentVariablesForPrefixAsync(condaExe, prefixPath, TimeSpan.FromSeconds(5)).WaitAndUnwrapExceptions();
 
                 Assert.AreEqual("success", env.Single(kv => kv.Key == "PTVS_TEST_ENV").Value);
                 Assert.AreEqual(65536, env.Single(kv => kv.Key == "PTVS_TEST_PAYLOAD").Value.Length);
