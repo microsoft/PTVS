@@ -118,6 +118,7 @@ steps:
           Remove-Item -LiteralPath $results -Recurse -Force
         }
         New-Item -ItemType Directory -Force -Path $results | Out-Null
+        Write-Host '##vso[task.setvariable variable=P0_UI_INPUTS_READY]true'
       errorActionPreference: stop
       failOnStderr: false
 
@@ -161,7 +162,7 @@ steps:
 
   - task: PowerShell@2
     displayName: Validate P0 UI test results
-    condition: always()
+    condition: and(always(), eq(variables['P0_UI_INPUTS_READY'], 'true'))
     inputs:
       targetType: filePath
       filePath: '$(Build.SourcesDirectory)\Build\ValidateTestResults.ps1'

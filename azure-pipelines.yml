@@ -300,7 +300,7 @@ extends:
             dependsOn: build
             condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
             pool:
-              vmImage: windows-latest
+              name: VSEng-MicroBuildVSStable
             steps:
               - checkout: self
                 clean: true
