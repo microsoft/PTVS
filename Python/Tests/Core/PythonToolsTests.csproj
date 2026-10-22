@@ -125,6 +125,7 @@
     <Compile Include="AssemblySetup.cs" />
     <None Include="AutoIndentTests.cs" />
     <Compile Include="PythonFormatterTests.cs" />
+    <Compile Include="PythonAnalysisOptionsTests.cs" />
     <Compile Include="LspDiffTextEditFactoryTests.cs" />
     <Compile Include="BuildTasksTests.cs" />
     <None Include="CodeCellTests.cs" />
