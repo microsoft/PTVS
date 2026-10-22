@@ -1935,6 +1935,10 @@ Expand selection to the full expression?</value>
     <value>Project: {0}</value>
     <comment>{0} is the name of the project</comment>
   </data>
+  <data name="ReplProjectEnvironmentCaption" xml:space="preserve">
+    <value>Project: {0} ({1})</value>
+    <comment>{0} is the name of the project, {1} is the name of the Python environment</comment>
+  </data>
   <data name="ReplWorkspaceCaption" xml:space="preserve">
     <value>Workspace: {0}</value>
     <comment>{0} is the name of the workspace</comment>

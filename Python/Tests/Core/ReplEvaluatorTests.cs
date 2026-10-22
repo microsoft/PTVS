@@ -40,6 +40,34 @@ namespace PythonToolsTests {
             AssertListener.Initialize();
         }
 
+        [TestMethod, Priority(UnitTestPriority.P0)]
+        public void ProjectEnvironmentEvaluatorIdRoundTripsStableIdentity() {
+            var projectGuid = new Guid("58829F89-E10D-4296-AF31-2EBDCEB4E8AA");
+            const string interpreterId = @"MSBuild|env;one|$(MSBuildProjectFullPath)";
+
+            var evaluatorId = PythonReplEvaluatorProvider.GetProjectEnvironmentEvaluatorId(
+                projectGuid,
+                interpreterId
+            );
+
+            Assert.IsTrue(
+                PythonReplEvaluatorProvider.TryParseProjectEnvironmentEvaluatorId(
+                    evaluatorId,
+                    out var parsedProjectGuid,
+                    out var parsedInterpreterId
+                )
+            );
+            Assert.AreEqual(projectGuid, parsedProjectGuid);
+            Assert.AreEqual(interpreterId, parsedInterpreterId);
+            Assert.IsFalse(
+                PythonReplEvaluatorProvider.TryParseProjectEnvironmentEvaluatorId(
+                    evaluatorId + ";unexpected",
+                    out _,
+                    out _
+                )
+            );
+        }
+
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void ExecuteTest() {
             using (var evaluator = MakeEvaluator()) {

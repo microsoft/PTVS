@@ -227,6 +227,10 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
+        internal void RefreshCaption() {
+            UpdateCaption();
+        }
+
         public IEnumerable<KeyValuePair<string, string>> AvailableEvaluators {
             get {
                 return _providers.SelectMany(e => e.GetEvaluators());

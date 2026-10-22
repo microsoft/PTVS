@@ -102,6 +102,38 @@ namespace Microsoft.PythonTools.Commands {
             return window;
         }
 
+        internal static IVsInteractiveWindow EnsureReplWindowForEnvironment(
+            IServiceProvider serviceProvider,
+            InterpreterConfiguration config,
+            PythonProjectNode project
+        ) {
+            if (config == null) {
+                throw new MissingInterpreterException(Strings.NoInterpretersAvailable);
+            }
+            if (project == null) {
+                throw new ArgumentNullException(nameof(project));
+            }
+            if (!config.IsRunnable()) {
+                throw new MissingInterpreterException(
+                    Strings.MissingEnvironment.FormatUI(config.Description, config.Version)
+                );
+            }
+
+            var provider = serviceProvider
+                .GetComponentModel()
+                .GetService<InteractiveWindowProvider>();
+            var replId = PythonReplEvaluatorProvider.GetEvaluatorId(project, config);
+            var window = provider.OpenOrCreate(replId);
+            var evaluator = (window.InteractiveWindow.Evaluator as SelectableReplEvaluator)
+                ?.Evaluator as PythonCommonInteractiveEvaluator;
+            evaluator?.RefreshProjectEnvironmentDisplayName();
+            project.AddActionOnClose(
+                window,
+                w => InteractiveWindowProvider.CloseIfEvaluatorMatches(w, replId)
+            );
+            return window;
+        }
+
         public override EventHandler BeforeQueryStatus {
             get {
                 return QueryStatusMethod;

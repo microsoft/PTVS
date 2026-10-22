@@ -22,8 +22,11 @@ using System.Threading;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Common;
 using Microsoft.PythonTools.Common.Parsing;
+using Microsoft.PythonTools.Environments;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Project;
+using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
@@ -584,19 +587,31 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
         private void EnvironmentReplWorkingDirectoryTest(
             PythonVisualStudioApp app,
             EnvDTE.Project project,
-            TreeNode env
+            TreeNode env,
+            string environmentDescription
         ) {
             var path1 = Path.Combine(Path.GetDirectoryName(project.FullName), Guid.NewGuid().ToString("N"));
             var path2 = Path.Combine(Path.GetDirectoryName(project.FullName), Guid.NewGuid().ToString("N"));
+            var searchPath = Path.Combine(Path.GetDirectoryName(project.FullName), Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(path1);
             Directory.CreateDirectory(path2);
+            Directory.CreateDirectory(searchPath);
 
-            app.OpenSolutionExplorer().SelectProject(project);
+            env.Select();
             app.Dte.ExecuteCommand("Python.Interactive");
 
-            using (var window = app.GetInteractiveWindow(string.Format("{0} Interactive", project.Name))) {
-                Assert.IsNotNull(window, string.Format("Failed to find '{0} Interactive'", project.Name));
-                app.ServiceProvider.GetUIThread().Invoke(() => project.GetPythonProject().SetProjectProperty("WorkingDirectory", path1));
+            var windowTitle = Strings.ReplProjectEnvironmentCaption.FormatUI(
+                project.Name,
+                environmentDescription
+            ) + " Interactive";
+            using (var window = app.GetInteractiveWindow(windowTitle)) {
+                Assert.IsNotNull(window, string.Format("Failed to find '{0}'", windowTitle));
+                app.ServiceProvider.GetUIThread().Invoke(() => {
+                    var pyProject = project.GetPythonProject();
+                    pyProject.SetProjectProperty("WorkingDirectory", path1);
+                    pyProject.SetProjectProperty(PythonConstants.EnvironmentSetting, "PTVS_REPL_TEST=project-value");
+                    pyProject._searchPaths.Add(searchPath, persisted: true);
+                });
 
                 window.Reset();
                 window.ExecuteText("import os; os.getcwd()").Wait();
@@ -604,6 +619,10 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                     string.Format("'{0}'", path1.Replace("\\", "\\\\")),
                     ">"
                 );
+                window.ExecuteText("import os; print(os.environ.get('PTVS_REPL_TEST'))").Wait();
+                window.WaitForTextEnd("project-value", ">");
+                window.ExecuteText("import sys; print(r'" + searchPath + "' in sys.path)").Wait();
+                window.WaitForTextEnd("True", ">");
 
                 app.ServiceProvider.GetUIThread().Invoke(() => project.GetPythonProject().SetProjectProperty("WorkingDirectory", path2));
 
@@ -614,6 +633,147 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                     ">"
                 );
             }
+        }
+
+        public void EnvironmentReplUsesSelectedInterpreter(PythonVisualStudioApp app) {
+            var python = PythonPaths.LatestVersion;
+            python.AssertInstalled();
+
+            using (var dis = app.SelectDefaultInterpreter(python)) {
+                var project = CreateTemporaryProject(app);
+                var pyProject = project.GetPythonProject();
+                var env1 = CreateProjectVirtualEnvironment(app, pyProject, dis.CurrentDefault, "env1");
+                var env2 = CreateProjectVirtualEnvironment(app, pyProject, dis.CurrentDefault, "env2");
+
+                app.ServiceProvider.GetUIThread().Invoke(() => {
+                    app.ServiceProvider.GetPythonToolsService().InteractiveBackendOverride = ReplWindowProxy.StandardBackend;
+                    pyProject.SetInterpreterFactory(env2);
+                });
+
+                var solutionExplorer = app.OpenSolutionExplorer();
+                var env1Node = solutionExplorer.WaitForChildOfProject(
+                    project,
+                    Strings.Environments,
+                    env1.Configuration.Description
+                );
+                var env2Node = solutionExplorer.WaitForChildOfProject(
+                    project,
+                    Strings.Environments,
+                    env2.Configuration.Description
+                );
+                var interactiveWindowProvider = app
+                    .GetService<Microsoft.VisualStudio.ComponentModelHost.IComponentModel>(
+                        typeof(Microsoft.VisualStudio.ComponentModelHost.SComponentModel)
+                    )
+                    .GetService<InteractiveWindowProvider>();
+                Microsoft.VisualStudio.InteractiveWindow.IInteractiveWindow env1InteractiveWindow;
+                Microsoft.VisualStudio.InteractiveWindow.IInteractiveWindow env2InteractiveWindow;
+
+                env1Node.Select();
+                app.ExecuteCommand("Python.Interactive");
+                var env1Title = Strings.ReplProjectEnvironmentCaption.FormatUI(
+                    project.Name,
+                    env1.Configuration.Description
+                ) + " Interactive";
+
+                var env1Window = app.WaitForInteractiveWindow(env1Title);
+                Assert.IsNotNull(env1Window, string.Format("Failed to find '{0}'", env1Title));
+                env1InteractiveWindow = env1Window.Window;
+                AssertReplExecutable(env1Window, env1.Configuration.InterpreterPath);
+
+                env2Node.Select();
+                app.ExecuteCommand("Python.Interactive");
+                var env2Title = Strings.ReplProjectEnvironmentCaption.FormatUI(
+                    project.Name,
+                    env2.Configuration.Description
+                ) + " Interactive";
+
+                var env2Window = app.WaitForInteractiveWindow(env2Title);
+                Assert.IsNotNull(env2Window, string.Format("Failed to find '{0}'", env2Title));
+                env2InteractiveWindow = env2Window.Window;
+                Assert.AreNotSame(env1Window.Window, env2Window.Window);
+                AssertReplExecutable(env2Window, env2.Configuration.InterpreterPath);
+
+                env1Node.Select();
+                app.ExecuteCommand("Python.Interactive");
+                using (var reopenedEnv1Window = app.WaitForInteractiveWindow(env1Title)) {
+                    Assert.IsNotNull(reopenedEnv1Window, string.Format("Failed to reopen '{0}'", env1Title));
+                    Assert.AreSame(env1Window.Window, reopenedEnv1Window.Window);
+                }
+
+                app.ServiceProvider.GetUIThread().Invoke(() => pyProject.SetInterpreterFactory(env1));
+                env2Window.Reset();
+                AssertReplExecutable(env2Window, env2.Configuration.InterpreterPath);
+
+                solutionExplorer.SelectProject(project);
+                app.ExecuteCommand("Python.Interactive");
+                var projectTitle = Strings.ReplProjectProjectCaption.FormatUI(project.Name) + " Interactive";
+                using (var projectWindow = app.WaitForInteractiveWindow(projectTitle)) {
+                    Assert.IsNotNull(projectWindow, string.Format("Failed to find '{0}'", projectTitle));
+                    Assert.AreNotSame(env1Window.Window, projectWindow.Window);
+                    Assert.AreNotSame(env2Window.Window, projectWindow.Window);
+                    AssertReplExecutable(projectWindow, env1.Configuration.InterpreterPath);
+                }
+
+                app.ServiceProvider.GetUIThread().Invoke(() => pyProject.RemoveInterpreterFactory(env2));
+                WaitForInteractiveWindowClosed(interactiveWindowProvider, env2InteractiveWindow);
+                Assert.IsTrue(
+                    interactiveWindowProvider.AllOpenWindows.Any(w => w.InteractiveWindow == env1InteractiveWindow),
+                    "Removing env2 unexpectedly closed env1's interactive window"
+                );
+
+                app.Dte.Solution.Close(false);
+                WaitForInteractiveWindowClosed(interactiveWindowProvider, env1InteractiveWindow);
+            }
+        }
+
+        private static IPythonInterpreterFactory CreateProjectVirtualEnvironment(
+            PythonVisualStudioApp app,
+            PythonProjectNode project,
+            IPythonInterpreterFactory baseInterpreter,
+            string name
+        ) {
+            var task = app.ServiceProvider.GetUIThread().InvokeTask(() => {
+                var model = app.GetService<Microsoft.VisualStudio.ComponentModelHost.IComponentModel>(
+                    typeof(Microsoft.VisualStudio.ComponentModelHost.SComponentModel)
+                );
+                return VirtualEnv.CreateAndAddFactory(
+                    app.ServiceProvider,
+                    model.GetService<IInterpreterRegistryService>(),
+                    model.GetService<IInterpreterOptionsService>(),
+                    project,
+                    null,
+                    Path.Combine(project.ProjectHome, name),
+                    baseInterpreter,
+                    registerAsCustomEnv: false,
+                    customEnvName: null,
+                    preferVEnv: true
+                );
+            });
+
+            Assert.IsTrue(task.Wait(TimeSpan.FromMinutes(3)), "Timed out creating " + name);
+            return task.Result;
+        }
+
+        private static void AssertReplExecutable(ReplWindowProxy window, string expectedExecutable) {
+            var execution = window.ExecuteText("import sys; print(sys.executable)");
+            Assert.IsTrue(execution.Wait(TimeSpan.FromSeconds(30)), "Timed out querying sys.executable");
+            Assert.IsTrue(execution.Result.IsSuccessful, "Failed to query sys.executable");
+            window.WaitForTextEnd(expectedExecutable, ">");
+        }
+
+        private static void WaitForInteractiveWindowClosed(
+            InteractiveWindowProvider provider,
+            Microsoft.VisualStudio.InteractiveWindow.IInteractiveWindow window
+        ) {
+            for (var retries = 50; retries > 0; --retries) {
+                if (!provider.AllOpenWindows.Any(w => w.InteractiveWindow == window)) {
+                    return;
+                }
+                Thread.Sleep(100);
+            }
+
+            Assert.Fail("Interactive window was not closed");
         }
 
         public void EnvironmentReplWorkingDirectory(PythonVisualStudioApp app) {
@@ -629,7 +789,12 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                 var sln = app.OpenSolutionExplorer();                
                 var env = sln.FindChildOfProject(project, Strings.Environments, envName);
 
-                EnvironmentReplWorkingDirectoryTest(app, project, env);
+                EnvironmentReplWorkingDirectoryTest(
+                    app,
+                    project,
+                    env,
+                    dis.CurrentDefault.Configuration.Description
+                );
             }
         }
 
@@ -639,7 +804,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
 
                 var env = app.CreateProjectVirtualEnvironment(project, out _);
 
-                EnvironmentReplWorkingDirectoryTest(app, project, env);
+                EnvironmentReplWorkingDirectoryTest(app, project, env, env.Value);
             }
         }
 
