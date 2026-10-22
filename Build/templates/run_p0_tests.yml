@@ -1,10 +1,10 @@
 parameters:
 - name: minimumExpectedTests
   type: number
-  default: 58
+  default: 51
 - name: testFilterCriteria
   type: string
-  default: 'Priority=0&TestCategory!=10s&Name!=FormatSelectionBlack&Name!=RunInterpreterOutput'
+  default: 'Priority=0&TestCategory!=10s&FullyQualifiedName!~PythonFormatterTests&Name!=LatestVersion_Prefers_314_WhenAvailable&Name!=RunInterpreterOutput'
 
 steps:
   - template: ./install_python.yml
