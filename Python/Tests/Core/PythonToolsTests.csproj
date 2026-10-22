@@ -116,6 +116,16 @@
     <Reference Include="System.Xaml" />
     <Reference Include="System.XML" />
     <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Text.Json, Version=8.0.0.5, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51" Condition="'$(VSTarget)' == '18.0'">
+      <HintPath>$(PackagesPath)\System.Text.Json.8.0.5\lib\net462\System.Text.Json.dll</HintPath>
+      <Private>false</Private>
+      <SpecificVersion>true</SpecificVersion>
+    </Reference>
+    <Reference Include="System.Memory, Version=4.0.1.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51" Condition="'$(VSTarget)' == '18.0'">
+      <HintPath>$(PackagesPath)\System.Memory.4.6.0\lib\net462\System.Memory.dll</HintPath>
+      <Private>false</Private>
+      <SpecificVersion>true</SpecificVersion>
+    </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="Microsoft.NET.StringTools">
       <Private>True</Private>
@@ -126,6 +136,7 @@
     <None Include="AutoIndentTests.cs" />
     <Compile Include="PythonFormatterTests.cs" />
     <Compile Include="LspDiffTextEditFactoryTests.cs" />
+    <Compile Include="LanguageServerSettingsTests.cs" />
     <Compile Include="BuildTasksTests.cs" />
     <None Include="CodeCellTests.cs" />
     <Compile Include="PythonVersionRecognition314Tests.cs" />

@@ -118,6 +118,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 /// </summary>
                 public bool? extraCommitChars { get; set; }
 
+                /// <summary>
+                /// Enable hover and navigation for importable module names in string literals.
+                /// </summary>
+                public bool gotoDefinitionInStringLiteral { get; set; } = true;
+
                 public PythonAnalysisInlayHintsSettings inlayHints { get; set; }
 
                 public string importFormat { get; set; }
