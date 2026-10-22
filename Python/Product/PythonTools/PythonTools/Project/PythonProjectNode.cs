@@ -85,9 +85,9 @@ namespace Microsoft.PythonTools.Project {
         private readonly PythonProject _pythonProject;
 
         private bool _infoBarCheckTriggered = false;
-        private bool _asyncInfoBarCheckTriggered = false;
         private bool _isDisposed = false;
         private readonly CondaEnvCreateInfoBar _condaEnvCreateInfoBar;
+        private readonly CondaEnvironmentInfoBarTrigger _condaEnvironmentInfoBarTrigger;
         private readonly VirtualEnvCreateInfoBar _virtualEnvCreateInfoBar;
         private readonly PackageInstallInfoBar _packageInstallInfoBar;
         private readonly TestFrameworkInfoBar _testFrameworkInfoBar;
@@ -120,10 +120,13 @@ namespace Microsoft.PythonTools.Project {
             // hooked up.
             InterpreterOptions.DefaultInterpreterChanged += GlobalDefaultInterpreterChanged;
             InterpreterRegistry.InterpretersChanged += OnInterpreterRegistryChanged;
-            InterpreterRegistry.CondaInterpreterDiscoveryCompleted += OnInterpreterDiscoveryCompleted;
             _pythonProject = new VsPythonProject(this);
 
             _condaEnvCreateInfoBar = new CondaEnvCreateProjectInfoBar(Site, this);
+            _condaEnvironmentInfoBarTrigger = new CondaEnvironmentInfoBarTrigger(
+                InterpreterRegistry,
+                () => _condaEnvCreateInfoBar.CheckAsync().HandleAllExceptions(Site, typeof(PythonProjectNode)).DoNotWait()
+            );
             _virtualEnvCreateInfoBar = new VirtualEnvCreateProjectInfoBar(Site, this);
             _packageInstallInfoBar = new PackageInstallProjectInfoBar(Site, this);
             _testFrameworkInfoBar = new TestFrameworkProjectInfoBar(Site, this);
@@ -206,16 +209,6 @@ namespace Microsoft.PythonTools.Project {
 
         private void OnInterpreterFactoriesChanged(object sender, EventArgs e) {
             Site.GetUIThread().Invoke(() => RefreshInterpreters());
-        }
-
-        // Called once all async interpreter factories have finished discovering interpreters
-        private void OnInterpreterDiscoveryCompleted(object sender, EventArgs e) {
-            if (!_asyncInfoBarCheckTriggered) {
-                _asyncInfoBarCheckTriggered = true;
-
-                // Check for any missing environments and show info bars for them
-                _condaEnvCreateInfoBar.CheckAsync().HandleAllExceptions(Site, typeof(PythonProjectNode)).DoNotWait();
-            }
         }
 
         private void OnInterpreterRegistryChanged(object sender, EventArgs e) {
@@ -721,6 +714,11 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
+        internal override void OnAfterProjectOpen() {
+            base.OnAfterProjectOpen();
+            _condaEnvironmentInfoBarTrigger.OnProjectOpened();
+        }
+
         private async Task TriggerInfoBarsAsync() {
             await Task.WhenAll(
                 _virtualEnvCreateInfoBar.CheckAsync(),
@@ -1064,6 +1062,7 @@ namespace Microsoft.PythonTools.Project {
                     }
                 }
 
+                _condaEnvironmentInfoBarTrigger.Dispose();
                 _condaEnvCreateInfoBar.Dispose();
                 _virtualEnvCreateInfoBar.Dispose();
                 _packageInstallInfoBar.Dispose();
@@ -1076,7 +1075,6 @@ namespace Microsoft.PythonTools.Project {
 
                 InterpreterOptions.DefaultInterpreterChanged -= GlobalDefaultInterpreterChanged;
                 InterpreterRegistry.InterpretersChanged -= OnInterpreterRegistryChanged;
-                InterpreterRegistry.CondaInterpreterDiscoveryCompleted -= OnInterpreterDiscoveryCompleted;
 
                 _searchPaths.Dispose();
 

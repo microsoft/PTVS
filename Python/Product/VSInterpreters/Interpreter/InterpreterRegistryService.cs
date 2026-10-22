@@ -21,6 +21,7 @@ using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Primitives;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 
 namespace Microsoft.PythonTools.Interpreter {
     [Export(typeof(IInterpreterRegistryService))]
@@ -28,10 +29,13 @@ namespace Microsoft.PythonTools.Interpreter {
     sealed class InterpreterRegistryService : IInterpreterRegistryService, IDisposable {
         private Lazy<IPythonInterpreterFactoryProvider, IDictionary<string, object>>[] _providers;
         private readonly object _suppressInterpretersChangedLock = new object();
+        private readonly object _factoryChangesWatchedLock = new object();
         IPythonInterpreterFactory _noInterpretersValue;
         private int _suppressInterpretersChanged;
+        private int _isCondaInterpreterDiscoveryComplete;
         private bool _raiseInterpretersChanged, _factoryChangesWatched;
         private EventHandler _interpretersChanged;
+        private EventHandler _condaInterpreterDiscoveryCompleted;
 
         private readonly Lazy<IInterpreterLog>[] _loggers;
         private const string InterpreterFactoryIdMetadata = "InterpreterFactoryId";
@@ -72,7 +76,22 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        public event EventHandler CondaInterpreterDiscoveryCompleted;
+        public event EventHandler CondaInterpreterDiscoveryCompleted {
+            add {
+                EnsureFactoryChangesWatched();
+                _condaInterpreterDiscoveryCompleted += value;
+            }
+            remove {
+                _condaInterpreterDiscoveryCompleted -= value;
+            }
+        }
+
+        public bool IsCondaInterpreterDiscoveryComplete {
+            get {
+                EnsureFactoryChangesWatched();
+                return Volatile.Read(ref _isCondaInterpreterDiscoveryComplete) != 0;
+            }
+        }
 
         public async void RefreshCondaInterpreterFactories() {
             foreach (var provider in GetProviders()) {
@@ -85,28 +104,62 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private void EnsureFactoryChangesWatched() {
+            if (_factoryChangesWatched) {
+                return;
+            }
 
-            if (!_factoryChangesWatched) {
+            lock (_factoryChangesWatchedLock) {
+                if (_factoryChangesWatched) {
+                    return;
+                }
+
+                _factoryChangesWatched = true;
                 BeginSuppressInterpretersChangedEvent();
                 try {
                     foreach (var provider in GetProviders()) {
-                        provider.InterpreterFactoriesChanged += Provider_InterpreterFactoriesChanged;
-
-                        // if the provider is conda, listen for the completed event
-                        if (provider is CondaEnvironmentFactoryProvider condaProvider) {
-                            condaProvider.InterpreterDiscoveryCompleted += Provider_CondaInterpreterDiscoveryCompleted;
-                        }
+                        WatchProvider(provider);
                     }
                 } finally {
                     EndSuppressInterpretersChangedEvent();
                 }
-                _factoryChangesWatched = true;
             }
+        }
+
+        private void WatchProvider(IPythonInterpreterFactoryProvider provider) {
+            if (provider is CondaEnvironmentFactoryProvider condaProvider) {
+                condaProvider.DiscoveryStarted += Provider_CondaInterpreterDiscoveryStarted;
+                condaProvider.InterpreterDiscoveryCompleted += Provider_CondaInterpreterDiscoveryCompleted;
+                Volatile.Write(
+                    ref _isCondaInterpreterDiscoveryComplete,
+                    condaProvider.IsDiscoveryComplete ? 1 : 0
+                );
+            }
+
+            provider.InterpreterFactoriesChanged += Provider_InterpreterFactoriesChanged;
+        }
+
+        private void UnwatchProvider(IPythonInterpreterFactoryProvider provider) {
+            provider.InterpreterFactoriesChanged -= Provider_InterpreterFactoriesChanged;
+
+            if (provider is CondaEnvironmentFactoryProvider condaProvider) {
+                condaProvider.DiscoveryStarted -= Provider_CondaInterpreterDiscoveryStarted;
+                condaProvider.InterpreterDiscoveryCompleted -= Provider_CondaInterpreterDiscoveryCompleted;
+                Volatile.Write(ref _isCondaInterpreterDiscoveryComplete, 0);
+            }
+        }
+
+        private void Provider_CondaInterpreterDiscoveryStarted(object sender, EventArgs e) {
+            Volatile.Write(ref _isCondaInterpreterDiscoveryComplete, 0);
         }
 
         // Called when the conda factory provider finishes discovering interpreters
         private void Provider_CondaInterpreterDiscoveryCompleted(object sender, EventArgs e) {
-            CondaInterpreterDiscoveryCompleted?.Invoke(this, EventArgs.Empty);
+            var condaProvider = sender as CondaEnvironmentFactoryProvider;
+            Volatile.Write(
+                ref _isCondaInterpreterDiscoveryComplete,
+                condaProvider?.IsDiscoveryComplete == true ? 1 : 0
+            );
+            _condaInterpreterDiscoveryCompleted?.Invoke(this, EventArgs.Empty);
         }
 
         public void BeginSuppressInterpretersChangedEvent() {
@@ -272,7 +325,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 } catch (CompositionException) {
                     continue;
                 }
-                provider.InterpreterFactoriesChanged -= Provider_InterpreterFactoriesChanged;
+                UnwatchProvider(provider);
             }
             foreach (var p in providers) {
                 IPythonInterpreterFactoryProvider provider;
@@ -281,7 +334,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 } catch (CompositionException) {
                     continue;
                 }
-                provider.InterpreterFactoriesChanged += Provider_InterpreterFactoriesChanged;
+                WatchProvider(provider);
             }
             Provider_InterpreterFactoriesChanged(this, EventArgs.Empty);
             return oldProviders;

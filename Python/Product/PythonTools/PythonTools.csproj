@@ -406,6 +406,7 @@
     </Compile>
     <Compile Include="PythonTools\Project\VirtualEnvCreateInfoBar.cs" />
     <Compile Include="PythonTools\Project\CondaEnvCreateInfoBar.cs" />
+    <Compile Include="PythonTools\Project\CondaEnvironmentInfoBarTrigger.cs" />
     <Compile Include="Attributes\ProvideFeatureFlagAttribute.cs" />
     <Compile Include="Attributes\ProvidePeekSupportedContentTypeAttribute.cs" />
     <Compile Include="PythonTools\CodeCoverage\CoverageExporter.cs" />

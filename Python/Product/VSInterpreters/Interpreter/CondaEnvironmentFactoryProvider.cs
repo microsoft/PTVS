@@ -46,6 +46,8 @@ namespace Microsoft.PythonTools.Interpreter {
         private bool _isDisposed;
         private int _ignoreNotifications;
         private bool _initialized;
+        private int _discoveryGeneration;
+        private int _completedDiscoveryGeneration;
         private readonly CPythonInterpreterFactoryProvider _globalProvider;
         private readonly ICondaLocatorProvider _condaLocatorProvider;
         private readonly JoinableTaskFactory _joinableTaskFactory;
@@ -63,6 +65,15 @@ namespace Microsoft.PythonTools.Interpreter {
 
         internal event EventHandler DiscoveryStarted;
         public event EventHandler InterpreterDiscoveryCompleted;
+
+        internal bool IsDiscoveryComplete {
+            get {
+                EnsureInitialized();
+                var discoveryGeneration = Volatile.Read(ref _discoveryGeneration);
+                return discoveryGeneration != 0 &&
+                    discoveryGeneration == Volatile.Read(ref _completedDiscoveryGeneration);
+            }
+        }
 
         [ImportingConstructor]
         public CondaEnvironmentFactoryProvider(
@@ -230,6 +241,7 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public async System.Threading.Tasks.Task ForceDiscoverInterpreterFactories() {
+            var discoveryGeneration = Interlocked.Increment(ref _discoveryGeneration);
             DiscoveryStarted?.Invoke(this, EventArgs.Empty);
 
             // Discover the available interpreters...
@@ -245,10 +257,18 @@ namespace Microsoft.PythonTools.Interpreter {
                 return;
             }
 
+            if (discoveryGeneration != Volatile.Read(ref _discoveryGeneration)) {
+                return;
+            }
+
             var uniqueIds = new HashSet<string>(found.Select(i => i.Configuration.Id));
 
             // Then update our cached state with the lock held.
             lock (_factories) {
+                if (discoveryGeneration != Volatile.Read(ref _discoveryGeneration)) {
+                    return;
+                }
+
                 foreach (var info in found) {
                     PythonInterpreterInformation existingInfo;
                     if (!_factories.TryGetValue(info.Configuration.Id, out existingInfo) ||
@@ -269,6 +289,11 @@ namespace Microsoft.PythonTools.Interpreter {
                 OnInterpreterFactoriesChanged();
             }
 
+            if (discoveryGeneration != Volatile.Read(ref _discoveryGeneration)) {
+                return;
+            }
+
+            Volatile.Write(ref _completedDiscoveryGeneration, discoveryGeneration);
             InterpreterDiscoveryCompleted?.Invoke(this, EventArgs.Empty);
         }
 

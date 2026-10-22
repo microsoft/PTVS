@@ -82,6 +82,58 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
+        public void CondaDiscoveryStateIsDurableAndResets() {
+            using (var globalProvider = new CPythonInterpreterFactoryProvider(null, false))
+            using (var condaProvider = new CondaEnvironmentFactoryProvider(
+                globalProvider,
+                null,
+                new JoinableTaskFactory(new JoinableTaskContext()),
+                false
+            )) {
+                var registry = new InterpreterRegistryService(
+                    new[] {
+                        new Lazy<IPythonInterpreterFactoryProvider, IDictionary<string, object>>(
+                            () => condaProvider,
+                            new Dictionary<string, object> {
+                                { "InterpreterFactoryId", CondaEnvironmentFactoryProvider.FactoryProviderName }
+                            }
+                        )
+                    },
+                    new Lazy<IInterpreterLog>[0]
+                );
+
+                var discoveryCompleted = false;
+                registry.CondaInterpreterDiscoveryCompleted += (sender, e) => {
+                    discoveryCompleted = true;
+                    Assert.IsTrue(
+                        registry.IsCondaInterpreterDiscoveryComplete,
+                        "Completion should be visible before the completion event is forwarded."
+                    );
+                };
+
+                Assert.IsTrue(
+                    registry.IsCondaInterpreterDiscoveryComplete,
+                    "Initial synchronous discovery completion should be retained."
+                );
+
+                var discoveryStarted = false;
+                condaProvider.DiscoveryStarted += (sender, e) => {
+                    discoveryStarted = true;
+                    Assert.IsFalse(
+                        registry.IsCondaInterpreterDiscoveryComplete,
+                        "Starting rediscovery should reset the durable completion state."
+                    );
+                };
+
+                condaProvider.ForceDiscoverInterpreterFactories().WaitAndUnwrapExceptions();
+
+                Assert.IsTrue(discoveryStarted);
+                Assert.IsTrue(discoveryCompleted);
+                Assert.IsTrue(registry.IsCondaInterpreterDiscoveryComplete);
+            }
+        }
+
+        [TestMethod, Priority(UnitTestPriority.P0)]
         [TestCategory("10s")]
         public void CondaActivationTimesOut() {
             var condaRoot = TestData.GetTempPath();

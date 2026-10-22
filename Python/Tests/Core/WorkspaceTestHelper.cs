@@ -132,6 +132,8 @@ namespace PythonToolsTests {
                 remove { }
             }
 
+            public bool IsCondaInterpreterDiscoveryComplete => false;
+
             public void BeginSuppressInterpretersChangedEvent() {
                 throw new NotImplementedException();
             }
