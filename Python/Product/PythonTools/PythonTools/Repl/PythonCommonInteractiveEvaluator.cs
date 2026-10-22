@@ -395,7 +395,12 @@ namespace Microsoft.PythonTools.Repl {
                         Configuration = pyProj.GetLaunchConfigurationOrThrow();
                     } else {
                         var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
-                        var interpreter = interpreterService.FindConfiguration(ProjectInterpreterId);
+                        var interpreter = interpreterService.FindConfiguration(
+                            PythonReplEvaluatorProvider.ResolveProjectEnvironmentInterpreterId(
+                                pyProj.GetMkDocument(),
+                                ProjectInterpreterId
+                            )
+                        );
                         if (interpreter == null || !interpreter.IsRunnable()) {
                             throw new MissingInterpreterException(
                                 Strings.MissingEnvironmentUnknownVersion.FormatUI(ProjectInterpreterId)
@@ -505,10 +510,7 @@ namespace Microsoft.PythonTools.Repl {
             var pyProj = _projectWithHookedEvents;
             if (pyProj != null) {
                 Debug.Assert(pyProj == sender || pyProj._searchPaths == sender, "Unexpected project raised the event");
-                if (ReferenceEquals(pyProj, sender) &&
-                    !string.IsNullOrEmpty(ProjectInterpreterId) &&
-                    !IsProjectInterpreterAvailable(pyProj, out _)) {
-                    CloseCurrentWindow();
+                if (ReferenceEquals(pyProj, sender) && !string.IsNullOrEmpty(ProjectInterpreterId)) {
                     return;
                 }
 
@@ -548,19 +550,23 @@ namespace Microsoft.PythonTools.Repl {
             PythonProjectNode project,
             out InterpreterConfiguration interpreter
         ) {
+            var interpreterId = PythonReplEvaluatorProvider.ResolveProjectEnvironmentInterpreterId(
+                project.GetMkDocument(),
+                ProjectInterpreterId
+            );
             interpreter = _serviceProvider
                 .GetComponentModel()
                 .GetService<IInterpreterRegistryService>()
-                .FindConfiguration(ProjectInterpreterId);
+                .FindConfiguration(interpreterId);
             if (interpreter == null || !interpreter.IsRunnable()) {
                 return false;
             }
 
-            return project.InterpreterIds.Contains(ProjectInterpreterId, StringComparer.OrdinalIgnoreCase) ||
+            return project.InterpreterIds.Contains(interpreterId, StringComparer.OrdinalIgnoreCase) ||
                 project.IsActiveInterpreterGlobalDefault &&
                 string.Equals(
                     project.ActiveInterpreter?.Configuration?.Id,
-                    ProjectInterpreterId,
+                    interpreterId,
                     StringComparison.OrdinalIgnoreCase
                 );
         }
@@ -606,7 +612,12 @@ namespace Microsoft.PythonTools.Repl {
             var interpreter = _serviceProvider
                 .GetComponentModel()
                 .GetService<IInterpreterRegistryService>()
-                .FindConfiguration(ProjectInterpreterId);
+                .FindConfiguration(
+                    PythonReplEvaluatorProvider.ResolveProjectEnvironmentInterpreterId(
+                        project?.GetMkDocument(),
+                        ProjectInterpreterId
+                    )
+                );
             if (project == null || interpreter == null) {
                 return;
             }
@@ -619,8 +630,21 @@ namespace Microsoft.PythonTools.Repl {
             InterpreterConfiguration current,
             InterpreterConfiguration updated
         ) {
-            return current?.Equals(updated) == true &&
-                PathUtils.IsSamePath(current.GetWindowsInterpreterPath(), updated.GetWindowsInterpreterPath());
+            return current != null &&
+                updated != null &&
+                string.Equals(current.Description, updated.Description, StringComparison.CurrentCulture) &&
+                PathUtils.IsSamePath(current.InterpreterPath, updated.InterpreterPath) &&
+                PathUtils.IsSamePath(current.GetWindowsInterpreterPath(), updated.GetWindowsInterpreterPath()) &&
+                string.Equals(
+                    current.PathEnvironmentVariable,
+                    updated.PathEnvironmentVariable,
+                    StringComparison.OrdinalIgnoreCase
+                ) &&
+                PathUtils.IsSamePath(current.LibraryPath, updated.LibraryPath) &&
+                PathUtils.IsSamePath(current.SitePackagesPath, updated.SitePackagesPath) &&
+                current.SearchPaths.SequenceEqual(updated.SearchPaths, StringComparer.OrdinalIgnoreCase) &&
+                Equals(current.Version, updated.Version) &&
+                current.Architecture == updated.Architecture;
         }
 
         private void Workspace_ConfigurationChanged(object sender, EventArgs e) {

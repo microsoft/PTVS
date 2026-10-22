@@ -37,6 +37,7 @@ namespace Microsoft.PythonTools.Repl {
         private readonly SolutionEventsListener _solutionEvents;
 
         private const string _prefix = "E915ECDA-2F45-4398-9E07-15A877137F44";
+        private const string _projectFullPathVariable = "$(MSBuildProjectFullPath)";
 
         [ImportingConstructor]
         public PythonReplEvaluatorProvider(
@@ -136,7 +137,42 @@ namespace Microsoft.PythonTools.Repl {
                 throw new ArgumentNullException(nameof(config));
             }
 
-            return GetProjectEnvironmentEvaluatorId(project.ProjectIDGuid, config.Id);
+            return GetProjectEnvironmentEvaluatorId(
+                project.ProjectIDGuid,
+                GetStableProjectEnvironmentInterpreterId(project.GetMkDocument(), config.Id)
+            );
+        }
+
+        internal static string GetStableProjectEnvironmentInterpreterId(
+            string projectMoniker,
+            string interpreterId
+        ) {
+            var relativeId = MSBuildProjectInterpreterFactoryProvider.GetProjectRelativeId(
+                projectMoniker,
+                interpreterId
+            );
+            return relativeId == null ?
+                interpreterId :
+                MSBuildProjectInterpreterFactoryProvider.GetInterpreterId(
+                    _projectFullPathVariable,
+                    relativeId
+                );
+        }
+
+        internal static string ResolveProjectEnvironmentInterpreterId(
+            string projectMoniker,
+            string interpreterId
+        ) {
+            var relativeId = MSBuildProjectInterpreterFactoryProvider.GetProjectRelativeId(
+                _projectFullPathVariable,
+                interpreterId
+            );
+            return relativeId == null || string.IsNullOrEmpty(projectMoniker) ?
+                interpreterId :
+                MSBuildProjectInterpreterFactoryProvider.GetInterpreterId(
+                    projectMoniker,
+                    relativeId
+                );
         }
 
         internal static string GetProjectEnvironmentEvaluatorId(Guid projectGuid, string interpreterId) {
@@ -263,7 +299,9 @@ namespace Microsoft.PythonTools.Repl {
                 .GetHierarchy(_serviceProvider, projectGuid)
                 ?.GetProject()
                 ?.GetPythonProject();
-            var config = _interpreterService.FindConfiguration(interpreterId);
+            var config = _interpreterService.FindConfiguration(
+                ResolveProjectEnvironmentInterpreterId(project?.GetMkDocument(), interpreterId)
+            );
             var eval = new PythonInteractiveEvaluator(_serviceProvider) {
                 DisplayName = Strings.ReplProjectEnvironmentCaption.FormatUI(
                     project?.Caption ?? projectGuid.ToString("D"),

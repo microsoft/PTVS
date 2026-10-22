@@ -43,11 +43,21 @@ namespace PythonToolsTests {
         [TestMethod, Priority(UnitTestPriority.P0)]
         public void ProjectEnvironmentEvaluatorIdRoundTripsStableIdentity() {
             var projectGuid = new Guid("58829F89-E10D-4296-AF31-2EBDCEB4E8AA");
-            const string interpreterId = @"MSBuild|env;one|$(MSBuildProjectFullPath)";
+            const string oldProjectMoniker = @"C:\Projects\OldName.pyproj";
+            const string newProjectMoniker = @"C:\Projects\NewName.pyproj";
+            const string relativeInterpreterId = "env;one";
+            var interpreterId = MSBuildProjectInterpreterFactoryProvider.GetInterpreterId(
+                oldProjectMoniker,
+                relativeInterpreterId
+            );
+            var stableInterpreterId = PythonReplEvaluatorProvider.GetStableProjectEnvironmentInterpreterId(
+                oldProjectMoniker,
+                interpreterId
+            );
 
             var evaluatorId = PythonReplEvaluatorProvider.GetProjectEnvironmentEvaluatorId(
                 projectGuid,
-                interpreterId
+                stableInterpreterId
             );
 
             Assert.IsTrue(
@@ -58,7 +68,32 @@ namespace PythonToolsTests {
                 )
             );
             Assert.AreEqual(projectGuid, parsedProjectGuid);
-            Assert.AreEqual(interpreterId, parsedInterpreterId);
+            Assert.AreEqual(stableInterpreterId, parsedInterpreterId);
+            Assert.AreEqual(
+                MSBuildProjectInterpreterFactoryProvider.GetInterpreterId(
+                    newProjectMoniker,
+                    relativeInterpreterId
+                ),
+                PythonReplEvaluatorProvider.ResolveProjectEnvironmentInterpreterId(
+                    newProjectMoniker,
+                    parsedInterpreterId
+                )
+            );
+            const string globalInterpreterId = "Global|PythonCore|3.11";
+            Assert.AreEqual(
+                globalInterpreterId,
+                PythonReplEvaluatorProvider.GetStableProjectEnvironmentInterpreterId(
+                    oldProjectMoniker,
+                    globalInterpreterId
+                )
+            );
+            Assert.AreEqual(
+                globalInterpreterId,
+                PythonReplEvaluatorProvider.ResolveProjectEnvironmentInterpreterId(
+                    newProjectMoniker,
+                    globalInterpreterId
+                )
+            );
             Assert.IsFalse(
                 PythonReplEvaluatorProvider.TryParseProjectEnvironmentEvaluatorId(
                     evaluatorId + ";unexpected",

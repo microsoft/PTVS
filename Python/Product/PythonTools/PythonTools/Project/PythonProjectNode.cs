@@ -1717,11 +1717,15 @@ namespace Microsoft.PythonTools.Project {
             GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory,
                 useProjectByDefault: false);
             try {
-                ExecuteInReplCommand.EnsureReplWindowForEnvironment(
-                    Site,
-                    selectedInterpreterFactory?.Configuration,
-                    this
-                ).Show(true);
+                if (selectedInterpreterFactory != null) {
+                    ExecuteInReplCommand.EnsureReplWindowForEnvironment(
+                        Site,
+                        selectedInterpreterFactory.Configuration,
+                        this
+                    ).Show(true);
+                } else {
+                    ExecuteInReplCommand.EnsureReplWindow(Site, null, this, null).Show(true);
+                }
             } catch (InvalidOperationException ex) {
                 MessageBox.Show(Strings.ErrorOpeningInteractiveWindow.FormatUI(ex), Strings.ProductTitle);
             } catch (MissingInterpreterException ex) {

@@ -702,6 +702,22 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                 }
 
                 app.ServiceProvider.GetUIThread().Invoke(() => pyProject.SetInterpreterFactory(env1));
+                var configurationChangedWarning = Strings.ReplProjectConfigurationChanged.FormatUI(project.Name);
+                Assert.IsFalse(
+                    env2Window.TextView.TextBuffer.CurrentSnapshot.GetText().Contains(configurationChangedWarning),
+                    "Changing the active interpreter should not invalidate a pinned environment window"
+                );
+
+                var refreshSearchPath = Path.Combine(
+                    Path.GetDirectoryName(project.FullName),
+                    Guid.NewGuid().ToString("N")
+                );
+                Directory.CreateDirectory(refreshSearchPath);
+                app.ServiceProvider.GetUIThread().Invoke(() => {
+                    pyProject._searchPaths.Add(refreshSearchPath, persisted: true);
+                });
+                env2Window.WaitForTextEnd(configurationChangedWarning, ">");
+
                 env2Window.Reset();
                 AssertReplExecutable(env2Window, env2.Configuration.InterpreterPath);
 
@@ -715,7 +731,44 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                     AssertReplExecutable(projectWindow, env1.Configuration.InterpreterPath);
                 }
 
-                app.ServiceProvider.GetUIThread().Invoke(() => pyProject.RemoveInterpreterFactory(env2));
+                var renamedProjectName = project.Name + "Renamed";
+                project.Name = renamedProjectName;
+                Assert.AreEqual(renamedProjectName, project.Name);
+
+                var renamedEnv1 = WaitForProjectInterpreter(
+                    app,
+                    pyProject,
+                    env1.Configuration.InterpreterPath
+                );
+                var renamedEnv2 = WaitForProjectInterpreter(
+                    app,
+                    pyProject,
+                    env2.Configuration.InterpreterPath
+                );
+                var renamedEnv1Node = solutionExplorer.WaitForChildOfProject(
+                    project,
+                    Strings.Environments,
+                    renamedEnv1.Configuration.Description
+                );
+                renamedEnv1Node.Select();
+                app.ExecuteCommand("Python.Interactive");
+                var renamedEnv1Title = Strings.ReplProjectEnvironmentCaption.FormatUI(
+                    renamedProjectName,
+                    renamedEnv1.Configuration.Description
+                ) + " Interactive";
+                using (var renamedEnv1Window = app.WaitForInteractiveWindow(renamedEnv1Title)) {
+                    Assert.IsNotNull(
+                        renamedEnv1Window,
+                        string.Format("Failed to find renamed project window '{0}'", renamedEnv1Title)
+                    );
+                    Assert.AreSame(env1InteractiveWindow, renamedEnv1Window.Window);
+                    AssertReplExecutable(
+                        renamedEnv1Window,
+                        renamedEnv1.Configuration.InterpreterPath
+                    );
+                }
+
+                app.ServiceProvider.GetUIThread().Invoke(() => pyProject.RemoveInterpreterFactory(renamedEnv2));
                 WaitForInteractiveWindowClosed(interactiveWindowProvider, env2InteractiveWindow);
                 Assert.IsTrue(
                     interactiveWindowProvider.AllOpenWindows.Any(w => w.InteractiveWindow == env1InteractiveWindow),
@@ -753,6 +806,34 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
 
             Assert.IsTrue(task.Wait(TimeSpan.FromMinutes(3)), "Timed out creating " + name);
             return task.Result;
+        }
+
+        private static IPythonInterpreterFactory WaitForProjectInterpreter(
+            PythonVisualStudioApp app,
+            PythonProjectNode project,
+            string interpreterPath
+        ) {
+            for (var retries = 100; retries > 0; --retries) {
+                var factory = app.ServiceProvider.GetUIThread().Invoke(() =>
+                    project.InterpreterFactories.FirstOrDefault(f =>
+                        PathUtils.IsSamePath(
+                            f.Configuration.InterpreterPath,
+                            interpreterPath
+                        ) &&
+                        MSBuildProjectInterpreterFactoryProvider.GetProjectRelativeId(
+                            project.GetMkDocument(),
+                            f.Configuration.Id
+                        ) != null
+                    )
+                );
+                if (factory != null) {
+                    return factory;
+                }
+                Thread.Sleep(100);
+            }
+
+            Assert.Fail("Timed out waiting for project interpreter after project rename");
+            return null;
         }
 
         private static void AssertReplExecutable(ReplWindowProxy window, string expectedExecutable) {
