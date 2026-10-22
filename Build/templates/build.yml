@@ -71,7 +71,7 @@ steps:
   # Build the installed-VS P0 runner only for same-repository PRs.
   - task: MSBuild@1
     displayName: 'Build trusted PR P0 UI tests'
-    condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'), ne(variables['System.PullRequest.IsFork'], 'True'))
+    condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'), eq(variables['System.PullRequest.IsFork'], 'False'))
     inputs:
       solution: $(Build.SourcesDirectory)/Python/Tests/PythonToolsUITestsRunner/PythonToolsUITestsRunner.csproj
       msbuildVersion: $(MsBuildVersion)
@@ -84,7 +84,7 @@ steps:
   # Trusted PRs build non-production-signed test-only setup artifacts for the installed-VS gate.
   - task: MSBuild@1
     displayName: 'Build installer'
-    condition: and(succeeded(), or(ne(variables['Build.Reason'], 'PullRequest'), ne(variables['System.PullRequest.IsFork'], 'True')))
+    condition: and(succeeded(), or(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['System.PullRequest.IsFork'], 'False')))
     inputs:
       solution: $(Build.SourcesDirectory)/Python/Setup/dirs.proj
       msbuildVersion: $(MsBuildVersion)
