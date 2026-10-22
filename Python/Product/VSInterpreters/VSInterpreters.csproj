@@ -156,6 +156,7 @@
     <Compile Include="Projects\PythonProjectPropertyChangedArgs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Interpreter\CondaEnvironmentFactoryConstants.cs" />
+    <Compile Include="PackageManager\CondaActivationProcessTree.cs" />
     <Compile Include="PackageManager\CondaUtils.cs" />
     <Compile Include="Interpreter\CondaEnvironmentFactoryProvider.cs" />
     <Compile Include="PackageManager\CondaPackageManager.cs" />

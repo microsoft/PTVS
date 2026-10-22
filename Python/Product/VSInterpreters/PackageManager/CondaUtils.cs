@@ -34,6 +34,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private static readonly Dictionary<CondaCacheKey, KeyValuePair<string, string>[]> _activationCache = new Dictionary<CondaCacheKey, KeyValuePair<string, string>[]>();
         private static readonly SemaphoreSlim _activationCacheLock = new SemaphoreSlim(1);
         private static readonly TimeSpan ActivationTimeout = TimeSpan.FromSeconds(30);
+        private static readonly TimeSpan ActivationProcessTreeTerminationTimeout = TimeSpan.FromSeconds(2);
 
         internal static string GetCondaExecutablePath(string prefixPath, bool allowBatch = true) {
             if (!Directory.Exists(prefixPath)) {
@@ -135,11 +136,12 @@ namespace Microsoft.PythonTools.Interpreter {
 
             var activateBat = Path.Combine(Path.GetDirectoryName(condaPath), "activate.bat");
             if (File.Exists(activateBat)) {
-                var args = prefixPath != null
-                    ? new[] { prefixPath, "&", "python.exe", "-c", PrintEnvironmentCode }
-                    : new[] { "&", "python.exe", "-c", PrintEnvironmentCode };
+                using (var processTree = CondaActivationProcessTree.TryStart(activateBat, prefixPath, PrintEnvironmentCode)) {
+                    if (processTree == null || !processTree.TryRelease()) {
+                        return new ActivationResult(activationVariables, false);
+                    }
 
-                using (var proc = ProcessOutput.RunHiddenAndCapture(activateBat, args)) {
+                    var proc = processTree.Process;
                     var exited = await Task.Run(() => proc.Wait(timeout)).ConfigureAwait(false);
                     if (!exited) {
                         Trace.TraceWarning(
@@ -148,11 +150,7 @@ namespace Microsoft.PythonTools.Interpreter {
                             proc.ProcessId
                         );
                         LogActivationTimeout(logger, prefixPath, timeout);
-                        try {
-                            proc.Kill();
-                        } catch (InvalidOperationException) {
-                        } catch (System.ComponentModel.Win32Exception) {
-                        }
+                        processTree.Terminate(ActivationProcessTreeTerminationTimeout);
                         return new ActivationResult(activationVariables, false);
                     }
 
