@@ -300,7 +300,7 @@ extends:
             dependsOn: build
             condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
             pool:
-              name: VSEng-Prcheck-Public
+              vmImage: windows-latest
             steps:
               - checkout: self
                 clean: true

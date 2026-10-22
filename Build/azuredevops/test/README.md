@@ -1,6 +1,6 @@
 # PTVS P0 pull request gates
 
-`PTVS-Build` runs an approved fast subset of the `Priority=0` tests from `PythonToolsTests.dll` for every pull request. It excludes the `10s` category plus `FormatSelectionBlack` and `RunInterpreterOutput`, which depend on mutable external tool or interpreter state. The gate requires all 58 selected tests to be discovered and executed, and any failed test or missing TRX file fails the build.
+`PTVS-Build` runs an approved fast subset of the `Priority=0` tests from `PythonToolsTests.dll` for every pull request on a Microsoft-hosted Windows agent. It excludes the `10s` category plus `FormatSelectionBlack` and `RunInterpreterOutput`, which depend on mutable external tool or interpreter state. The gate requires all 58 selected tests to be discovered and executed, and any failed test or missing TRX file fails the build.
 
 `PTVS-Testgate` consumes a successful `build` stage from `PTVS-Build`, creates the test bootstrapper inside the separately administered trusted pipeline, and runs the 123 `Priority=0` tests from `PythonToolsUITestsRunner.dll` in an installed Visual Studio instance. It uses the isolated `DDRITS-Public` lab and only downloads or executes source-build artifacts when Azure Pipelines reports `pr.isFork=False`. Fork pull requests complete the classification stage without accessing the bootstrapper, internal test lab, or source artifacts; their required coverage is the fast P0 gate in `PTVS-Build`.
 
