@@ -14,6 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing permissions
 // and limitations under the License.
 
+using Microsoft.PythonTools;
+using Microsoft.PythonTools.Options;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
@@ -53,6 +55,27 @@ namespace PythonToolsTests {
             options.Load();
 
             Assert.IsFalse(options.Indexing);
+        }
+
+        [TestMethod, Priority(UnitTestPriority.P0)]
+        public void ResetPagePersistsIndexingEnabled() {
+            var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider();
+            var service = serviceProvider.GetPythonToolsService();
+            var options = service.AnalysisOptions;
+            options.Indexing = false;
+            options.Save();
+
+            using (var control = new PythonAnalysisOptionsControl()) {
+                control.SyncControlWithPageSettings(service);
+                PythonAnalysisOptionsPage.ResetSettings(service, control);
+                control.SyncPageWithControlSettings(service);
+            }
+            options.Save();
+
+            options.Indexing = false;
+            options.Load();
+
+            Assert.IsTrue(options.Indexing);
         }
     }
 }
