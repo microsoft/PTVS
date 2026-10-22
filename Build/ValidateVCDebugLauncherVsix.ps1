@@ -142,7 +142,7 @@ foreach ($entry in $launcherEntries) {
 }
 
 if ($RequireLocalizedContent) {
-    $actualLocalizedLocales = @($localizedEntries.Locale | Sort-Object -Unique)
+    $actualLocalizedLocales = @($localizedEntries | ForEach-Object { $_.Locale } | Sort-Object -Unique)
     $expectedLocalizedEntryCount = $expectedLocalizedLocales.Count * 2
     if ($localizedEntries.Count -ne $expectedLocalizedEntryCount) {
         $violations.Add("Expected $expectedLocalizedEntryCount localized XAML payloads, found $($localizedEntries.Count).")

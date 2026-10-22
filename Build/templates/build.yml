@@ -31,18 +31,13 @@ steps:
       filePath: '$(Build.SourcesDirectory)\Build\ValidateVCDebugLauncherVsix.ps1'
       arguments: '-VsixPath "$(Build.BinariesDirectory)\raw\setup\Microsoft.PythonTools.Debugger.VCLauncher.vsix" -VSTarget "$(VSTarget)"'
 
-  - task: MSBuild@1
-    displayName: 'Build localized VC debugger launcher content'
+  - task: PowerShell@2
+    displayName: 'Stage localized VC debugger launcher test content'
     condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
     inputs:
-      solution: $(Build.SourcesDirectory)/Python/Setup/loclayout.proj
-      msbuildVersion: $(MsBuildVersion)
-      platform: $(Platform)
-      configuration: $(BuildConfiguration)
-      msbuildArguments: ' /p:VSTarget=$(VSTarget)
-                          /p:BuildNumber=${{ parameters.ptvsPackageVersion }}
-                          /p:BUILD_BINARIESDIRECTORY=$(Build.BinariesDirectory)
-                          /bl:$(Build.SourcesDirectory)\logs\BuildVCDebugLauncherLocalization.binlog'
+      targetType: filePath
+      filePath: '$(Build.SourcesDirectory)\Build\StageVCDebugLauncherLocalization.ps1'
+      arguments: '-SourceRoot "$(Build.SourcesDirectory)\Python\Product\VCDebugLauncher\VCTargets" -OutputRoot "$(Build.BinariesDirectory)\raw\binaries\localize"'
 
   - task: MSBuild@1
     displayName: 'Rebuild localized VC debugger launcher VSIX'
