@@ -210,11 +210,17 @@ extends:
                   targetPath: "$(Build.SourcesDirectory)/Build/azuredevops/test/p0.runsettings"
                   artifactName: "P0RunSettings"
                   sbomEnabled: false
+                - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
+                    - output: pipelineArtifact
+                      displayName: "Publish build artifact: MicroBuildOutputs"
+                      targetPath: "$(Build.ArtifactStagingDirectory)/MicroBuild/Output"
+                      artifactName: "MicroBuildOutputs"
+                      sbomEnabled: false
                 - output: pipelineArtifact
-                  displayName: "Publish build artifact: MicroBuildOutputs"
-                  condition: and(succeeded(), or(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['System.PullRequest.IsFork'], 'False')))
-                  targetPath: "$(Build.ArtifactStagingDirectory)/MicroBuild/Output"
-                  artifactName: "MicroBuildOutputs"
+                  displayName: "Publish build artifact: Bootstrapper Input"
+                  condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'), eq(variables['System.PullRequest.IsFork'], 'False'))
+                  targetPath: "$(Build.StagingDirectory)/release"
+                  artifactName: "BootstrapperInput"
                   sbomEnabled: false
                 - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
                     - output: pipelineArtifact
@@ -258,24 +264,21 @@ extends:
                   ptvsPackageVersion: ${{ variables.ptvsPackageVersionVar }}
                   skipSigning: ${{ variables.skipSigningVar }}
 
-              # Create test-only bootstrapper artifacts for non-fork PRs and normal product builds.
-              - template: Build/templates/create_vs_bootstrapper.yml@self
-                parameters:
-                  condition: and(succeeded(), or(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['System.PullRequest.IsFork'], 'False')))
-
-              # Upload the setup payload used by the bootstrapper.
-              - task: 1ES.MicroBuildVstsDrop@1
-                displayName: "Upload vsts drop"
-                condition: and(succeeded(), or(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['System.PullRequest.IsFork'], 'False')))
-                inputs:
-                  dropFolder: '$(Build.StagingDirectory)\release'
-                  dropServiceUri: "https://devdiv.artifacts.visualstudio.com/DefaultCollection"
-                  vsDropServiceUri: "https://vsdrop.corp.microsoft.com/file/v1"
-                  accessToken: "$(System.AccessToken)"
-                  dropRetentionDays: 183
-
               # Non-PR publishing steps
               - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
+                  # Create VS bootstrapper for product validation.
+                  - template: Build/templates/create_vs_bootstrapper.yml@self
+
+                  # Upload vsts drop used by Visual Studio insertions.
+                  - task: 1ES.MicroBuildVstsDrop@1
+                    displayName: "Upload vsts drop"
+                    inputs:
+                      dropFolder: '$(Build.StagingDirectory)\release'
+                      dropServiceUri: "https://devdiv.artifacts.visualstudio.com/DefaultCollection"
+                      vsDropServiceUri: "https://vsdrop.corp.microsoft.com/file/v1"
+                      accessToken: "$(System.AccessToken)"
+                      dropRetentionDays: 183
+
                   # publish symbols
                   - template: /Build/templates/publish_symbols.yml@self
 

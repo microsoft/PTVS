@@ -100,12 +100,67 @@ stages:
       env:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
+- stage: bootstrapper
+  displayName: Build test bootstrapper
+  dependsOn: classify
+  condition: and(succeeded(), eq(dependencies.classify.outputs['trust.classify.runInstalledTests'], 'true'))
+  jobs:
+  - job: build_bootstrapper
+    displayName: Build test bootstrapper
+    pool:
+      name: VSEng-MicroBuildVSStable
+    steps:
+    - checkout: self
+      clean: true
+      fetchDepth: 1
+
+    - template: /Build/templates/install_microbuild_plugins.yml@self
+      parameters:
+        installSigning: true
+        signingType: Test
+
+    - download: ComponentBuildUnderTest
+      artifact: BootstrapperInput
+      displayName: 'Download bootstrapper input'
+
+    - powershell: |
+        $ErrorActionPreference = 'Stop'
+        $source = '$(Pipeline.Workspace)\ComponentBuildUnderTest\BootstrapperInput'
+        $destination = '$(Build.StagingDirectory)\release'
+        if (-not (Test-Path -LiteralPath $source -PathType Container)) {
+          throw "Bootstrapper input artifact not found: $source"
+        }
+        New-Item -ItemType Directory -Force -Path $destination | Out-Null
+        Copy-Item -Path "$source\*" -Destination $destination -Recurse -Force
+      displayName: 'Stage bootstrapper input'
+
+    - template: /Build/templates/create_vs_bootstrapper.yml@self
+
+    - task: 1ES.MicroBuildVstsDrop@1
+      displayName: 'Upload test vsts drop'
+      inputs:
+        dropFolder: '$(Build.StagingDirectory)\release'
+        dropServiceUri: 'https://devdiv.artifacts.visualstudio.com/DefaultCollection'
+        vsDropServiceUri: 'https://vsdrop.corp.microsoft.com/file/v1'
+        accessToken: '$(System.AccessToken)'
+        dropRetentionDays: 30
+
+    - task: PublishPipelineArtifact@1
+      displayName: 'Publish bootstrapper information'
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)\MicroBuild\Output'
+        artifact: MicroBuildOutputs
+
+    - task: MicroBuildCleanup@1
+      displayName: 'Execute cleanup tasks'
+      condition: always()
+
 - template: stages/visual-studio/single-runsettings.yml@DartLabTemplates
   parameters:
     name: p0_ui
     displayName: P0 UI tests
-    dependsOn: classify
-    condition: and(succeeded(), eq(dependencies.classify.outputs['trust.classify.runInstalledTests'], 'true'))
+    dependsOn: bootstrapper
+    condition: succeeded()
     isSkippable: false
     runSettingsURI: '$(Pipeline.Workspace)\ComponentBuildUnderTest\RunSettings\default.runsettings'
     visualStudioBootstrapperURI: $(VisualStudio.InstallationUnderTest.BootstrapperURL)
@@ -118,7 +173,7 @@ stages:
     testExecutionJobTimeoutInMinutes: 300
 
     preTestMachineConfigurationStepList:
-      - download: ComponentBuildUnderTest
+      - download: current
         artifact: MicroBuildOutputs
         patterns: '**\BootstrapperInfo.json'
         displayName: 'Download bootstrapper information'
@@ -133,7 +188,7 @@ stages:
         inputs:
           filePath: $(DartLab.Path)\Scripts\VisualStudio\Bootstrapper\Get-BootstrapperURL.ps1
           arguments: >
-            -BootstrapperInfoJsonURI '$(Pipeline.Workspace)\ComponentBuildUnderTest\MicroBuildOutputs\BootstrapperInfo.json'
+            -BootstrapperInfoJsonURI '$(Pipeline.Workspace)\MicroBuildOutputs\BootstrapperInfo.json'
             -VSBranch main
             -OutVariableName 'VisualStudio.InstallationUnderTest.BootstrapperURL'
 
