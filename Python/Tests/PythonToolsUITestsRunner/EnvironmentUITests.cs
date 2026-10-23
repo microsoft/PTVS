@@ -168,6 +168,15 @@ namespace PythonToolsUITestsRunner {
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
+        public void EnvironmentReplUsesSelectedInterpreter() {
+            _vs.RunTest(
+                System.TimeSpan.FromMinutes(10),
+                nameof(PythonToolsUITests.EnvironmentUITests.EnvironmentReplUsesSelectedInterpreter)
+            );
+        }
+
+        [TestMethod, Priority(UITestPriority.P0)]
+        [TestCategory("Installed")]
         public void EnvironmentReplWorkingDirectory() {
             _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.EnvironmentReplWorkingDirectory));
         }

@@ -7233,6 +7233,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Project: {0} ({1}).
+        /// </summary>
+        public static string ReplProjectEnvironmentCaption {
+            get {
+                return ResourceManager.GetString("ReplProjectEnvironmentCaption", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Project: {0}.
         /// </summary>
         public static string ReplProjectProjectCaption {

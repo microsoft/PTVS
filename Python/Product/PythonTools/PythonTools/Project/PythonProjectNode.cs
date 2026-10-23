@@ -1184,15 +1184,32 @@ namespace Microsoft.PythonTools.Project {
         /// </exception>
         public LaunchConfiguration GetLaunchConfigurationOrThrow() {
             var fact = GetInterpreterFactoryOrThrow();
+            return GetLaunchConfigurationOrThrow(fact.Configuration, useProjectInterpreterPath: true);
+        }
 
-            var intPath = GetProjectProperty(PythonConstants.InterpreterPathSetting, resetCache: false);
-            if (string.IsNullOrEmpty(intPath)) {
-                intPath = null;
-            } else if (!Path.IsPathRooted(intPath)) {
-                intPath = PathUtils.GetAbsoluteFilePath(ProjectHome, intPath);
+        internal LaunchConfiguration GetLaunchConfigurationOrThrow(InterpreterConfiguration interpreter) {
+            if (interpreter == null) {
+                throw new ArgumentNullException(nameof(interpreter));
             }
 
-            var config = new LaunchConfiguration(fact.Configuration) {
+            return GetLaunchConfigurationOrThrow(interpreter, useProjectInterpreterPath: false);
+        }
+
+        private LaunchConfiguration GetLaunchConfigurationOrThrow(
+            InterpreterConfiguration interpreter,
+            bool useProjectInterpreterPath
+        ) {
+            string intPath = null;
+            if (useProjectInterpreterPath) {
+                intPath = GetProjectProperty(PythonConstants.InterpreterPathSetting, resetCache: false);
+                if (string.IsNullOrEmpty(intPath)) {
+                    intPath = null;
+                } else if (!Path.IsPathRooted(intPath)) {
+                    intPath = PathUtils.GetAbsoluteFilePath(ProjectHome, intPath);
+                }
+            }
+
+            var config = new LaunchConfiguration(interpreter) {
                 InterpreterPath = intPath,
                 InterpreterArguments = GetProjectProperty(PythonConstants.InterpreterArgumentsSetting, resetCache: false),
                 ScriptName = GetStartupFile(),
@@ -1698,7 +1715,15 @@ namespace Microsoft.PythonTools.Project {
             GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory,
                 useProjectByDefault: false);
             try {
-                ExecuteInReplCommand.EnsureReplWindow(Site, selectedInterpreterFactory?.Configuration, this, null).Show(true);
+                if (selectedInterpreterFactory != null) {
+                    ExecuteInReplCommand.EnsureReplWindowForEnvironment(
+                        Site,
+                        selectedInterpreterFactory.Configuration,
+                        this
+                    ).Show(true);
+                } else {
+                    ExecuteInReplCommand.EnsureReplWindow(Site, null, this, null).Show(true);
+                }
             } catch (InvalidOperationException ex) {
                 MessageBox.Show(Strings.ErrorOpeningInteractiveWindow.FormatUI(ex), Strings.ProductTitle);
             } catch (MissingInterpreterException ex) {

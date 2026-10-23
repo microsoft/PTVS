@@ -58,6 +58,7 @@ namespace Microsoft.PythonTools.Repl {
 
         private PythonProjectNode _projectWithHookedEvents;
         private IPythonWorkspaceContext _workspaceWithHookedEvents;
+        private bool _projectConfigurationChanged;
 
         protected IInteractiveWindowCommands _commands;
         private IInteractiveWindow _window;
@@ -88,6 +89,7 @@ namespace Microsoft.PythonTools.Repl {
 
             if (_projectWithHookedEvents != null) {
                 _projectWithHookedEvents.ActiveInterpreterChanged -= Project_ConfigurationChanged;
+                _projectWithHookedEvents.InterpreterFactoriesChanged -= Project_InterpretersChanged;
                 _projectWithHookedEvents._searchPaths.Changed -= Project_ConfigurationChanged;
                 _projectWithHookedEvents = null;
             }
@@ -113,7 +115,9 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public string DisplayName { get; set; }
+        public Guid ProjectGuid { get; set; }
         public string ProjectMoniker { get; set; }
+        public string ProjectInterpreterId { get; set; }
         public string WorkspaceMoniker { get; set; }
         public LaunchConfiguration Configuration { get; set; }
         public string ScriptsPath { get; set; }
@@ -172,6 +176,16 @@ namespace Microsoft.PythonTools.Repl {
 
         private PythonProjectNode GetAssociatedPythonProject(InterpreterConfiguration interpreter = null) {
             _serviceProvider.GetUIThread().MustBeCalledFromUIThread();
+
+            if (ProjectGuid != Guid.Empty) {
+                var project = VsShellUtilities
+                    .GetHierarchy(_serviceProvider, ProjectGuid)
+                    ?.GetProject()
+                    ?.GetPythonProject();
+                if (project != null) {
+                    return project;
+                }
+            }
 
             var moniker = ProjectMoniker;
             if (interpreter == null) {
@@ -363,18 +377,40 @@ namespace Microsoft.PythonTools.Repl {
             try {
                 if (_projectWithHookedEvents != null) {
                     _projectWithHookedEvents.ActiveInterpreterChanged -= Project_ConfigurationChanged;
+                    _projectWithHookedEvents.InterpreterFactoriesChanged -= Project_InterpretersChanged;
                     _projectWithHookedEvents._searchPaths.Changed -= Project_ConfigurationChanged;
                     _projectWithHookedEvents = null;
                 }
 
                 AssociatedProjectHasChanged = false;
+                _projectConfigurationChanged = false;
                 var pyProj = GetAssociatedPythonProject();
                 if (pyProj == null) {
                     return ExecutionResult.Success;
                 }
+                ProjectMoniker = pyProj.GetMkDocument();
 
                 if (Configuration?.GetLaunchOption(DoNotResetConfigurationLaunchOption) == null) {
-                    Configuration = pyProj.GetLaunchConfigurationOrThrow();
+                    if (string.IsNullOrEmpty(ProjectInterpreterId)) {
+                        Configuration = pyProj.GetLaunchConfigurationOrThrow();
+                    } else {
+                        var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
+                        var interpreter = interpreterService.FindConfiguration(
+                            PythonReplEvaluatorProvider.ResolveProjectEnvironmentInterpreterId(
+                                pyProj.GetMkDocument(),
+                                ProjectInterpreterId
+                            )
+                        );
+                        if (interpreter == null || !interpreter.IsRunnable()) {
+                            throw new MissingInterpreterException(
+                                Strings.MissingEnvironmentUnknownVersion.FormatUI(ProjectInterpreterId)
+                            );
+                        }
+
+                        Configuration = pyProj.GetLaunchConfigurationOrThrow(interpreter);
+                        UpdateProjectEnvironmentDisplayName(pyProj, interpreter);
+                    }
+
                     if (Configuration?.Interpreter != null) {
                         try {
                             ScriptsPath = GetScriptsPath(_serviceProvider, Configuration.Interpreter.Description, Configuration.Interpreter);
@@ -386,6 +422,9 @@ namespace Microsoft.PythonTools.Repl {
 
                 _projectWithHookedEvents = pyProj;
                 pyProj.ActiveInterpreterChanged += Project_ConfigurationChanged;
+                if (!string.IsNullOrEmpty(ProjectInterpreterId)) {
+                    pyProj.InterpreterFactoriesChanged += Project_InterpretersChanged;
+                }
                 pyProj._searchPaths.Changed += Project_ConfigurationChanged;
 
                 return ExecutionResult.Success;
@@ -469,16 +508,143 @@ namespace Microsoft.PythonTools.Repl {
 
         private void Project_ConfigurationChanged(object sender, EventArgs e) {
             var pyProj = _projectWithHookedEvents;
-            _projectWithHookedEvents = null;
-
             if (pyProj != null) {
                 Debug.Assert(pyProj == sender || pyProj._searchPaths == sender, "Unexpected project raised the event");
-                // Only warn once
-                pyProj.ActiveInterpreterChanged -= Project_ConfigurationChanged;
-                pyProj._searchPaths.Changed -= Project_ConfigurationChanged;
-                WriteError(Strings.ReplProjectConfigurationChanged.FormatUI(pyProj.Caption));
-                AssociatedProjectHasChanged = true;
+                if (ReferenceEquals(pyProj, sender) && !string.IsNullOrEmpty(ProjectInterpreterId)) {
+                    return;
+                }
+
+                if (string.IsNullOrEmpty(ProjectInterpreterId)) {
+                    pyProj.ActiveInterpreterChanged -= Project_ConfigurationChanged;
+                    pyProj._searchPaths.Changed -= Project_ConfigurationChanged;
+                    _projectWithHookedEvents = null;
+                }
+                ReportProjectConfigurationChanged(pyProj);
             }
+        }
+
+        private void Project_InterpretersChanged(object sender, EventArgs e) {
+            var pyProj = _projectWithHookedEvents;
+            if (pyProj == null || string.IsNullOrEmpty(ProjectInterpreterId)) {
+                return;
+            }
+
+            _serviceProvider.GetUIThread().Invoke(() => {
+                if (_isDisposed || !ReferenceEquals(pyProj, _projectWithHookedEvents)) {
+                    return;
+                }
+
+                if (!IsProjectInterpreterAvailable(pyProj, out var interpreter)) {
+                    CloseCurrentWindow();
+                    return;
+                }
+
+                UpdateProjectEnvironmentDisplayName(pyProj, interpreter);
+                if (!IsSameInterpreter(Configuration?.Interpreter, interpreter)) {
+                    ReportProjectConfigurationChanged(pyProj);
+                }
+            });
+        }
+
+        private bool IsProjectInterpreterAvailable(
+            PythonProjectNode project,
+            out InterpreterConfiguration interpreter
+        ) {
+            var interpreterId = PythonReplEvaluatorProvider.ResolveProjectEnvironmentInterpreterId(
+                project.GetMkDocument(),
+                ProjectInterpreterId
+            );
+            interpreter = _serviceProvider
+                .GetComponentModel()
+                .GetService<IInterpreterRegistryService>()
+                .FindConfiguration(interpreterId);
+            if (interpreter == null || !interpreter.IsRunnable()) {
+                return false;
+            }
+
+            return project.InterpreterIds.Contains(interpreterId, StringComparer.OrdinalIgnoreCase) ||
+                project.IsActiveInterpreterGlobalDefault &&
+                string.Equals(
+                    project.ActiveInterpreter?.Configuration?.Id,
+                    interpreterId,
+                    StringComparison.OrdinalIgnoreCase
+                );
+        }
+
+        private void CloseCurrentWindow() {
+            InteractiveWindowProvider.Close(
+                InteractiveWindowProvider.GetVsInteractiveWindow(CurrentWindow)
+            );
+        }
+
+        private void ReportProjectConfigurationChanged(PythonProjectNode pyProj) {
+            if (_projectConfigurationChanged) {
+                return;
+            }
+
+            _projectConfigurationChanged = true;
+            WriteError(Strings.ReplProjectConfigurationChanged.FormatUI(pyProj.Caption));
+            AssociatedProjectHasChanged = string.IsNullOrEmpty(ProjectInterpreterId);
+        }
+
+        private void UpdateProjectEnvironmentDisplayName(
+            PythonProjectNode project,
+            InterpreterConfiguration interpreter
+        ) {
+            var displayName = Strings.ReplProjectEnvironmentCaption.FormatUI(
+                project.Caption,
+                interpreter.Description
+            );
+            if (string.Equals(DisplayName, displayName, StringComparison.CurrentCulture)) {
+                return;
+            }
+
+            DisplayName = displayName;
+            (CurrentWindow?.Evaluator as SelectableReplEvaluator)?.RefreshCaption();
+        }
+
+        internal void RefreshProjectEnvironmentDisplayName() {
+            if (ProjectGuid == Guid.Empty || string.IsNullOrEmpty(ProjectInterpreterId)) {
+                return;
+            }
+
+            var project = GetAssociatedPythonProject();
+            var interpreter = _serviceProvider
+                .GetComponentModel()
+                .GetService<IInterpreterRegistryService>()
+                .FindConfiguration(
+                    PythonReplEvaluatorProvider.ResolveProjectEnvironmentInterpreterId(
+                        project?.GetMkDocument(),
+                        ProjectInterpreterId
+                    )
+                );
+            if (project == null || interpreter == null) {
+                return;
+            }
+
+            ProjectMoniker = project.GetMkDocument();
+            UpdateProjectEnvironmentDisplayName(project, interpreter);
+        }
+
+        private static bool IsSameInterpreter(
+            InterpreterConfiguration current,
+            InterpreterConfiguration updated
+        ) {
+            return current != null &&
+                updated != null &&
+                string.Equals(current.Description, updated.Description, StringComparison.CurrentCulture) &&
+                PathUtils.IsSamePath(current.InterpreterPath, updated.InterpreterPath) &&
+                PathUtils.IsSamePath(current.GetWindowsInterpreterPath(), updated.GetWindowsInterpreterPath()) &&
+                string.Equals(
+                    current.PathEnvironmentVariable,
+                    updated.PathEnvironmentVariable,
+                    StringComparison.OrdinalIgnoreCase
+                ) &&
+                PathUtils.IsSamePath(current.LibraryPath, updated.LibraryPath) &&
+                PathUtils.IsSamePath(current.SitePackagesPath, updated.SitePackagesPath) &&
+                current.SearchPaths.SequenceEqual(updated.SearchPaths, StringComparer.OrdinalIgnoreCase) &&
+                Equals(current.Version, updated.Version) &&
+                current.Architecture == updated.Architecture;
         }
 
         private void Workspace_ConfigurationChanged(object sender, EventArgs e) {

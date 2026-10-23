@@ -37,6 +37,7 @@ namespace Microsoft.PythonTools.Repl {
         private readonly SolutionEventsListener _solutionEvents;
 
         private const string _prefix = "E915ECDA-2F45-4398-9E07-15A877137F44";
+        private const string _projectFullPathVariable = "$(MSBuildProjectFullPath)";
 
         [ImportingConstructor]
         public PythonReplEvaluatorProvider(
@@ -71,8 +72,8 @@ namespace Microsoft.PythonTools.Repl {
         private void ProjectChanged(object sender, ProjectEventArgs e) {
             EvaluatorsChanged?.Invoke(this, EventArgs.Empty);
         }
-
         public void Dispose() {
+            _solutionEvents.Dispose();
             _solutionEvents.Dispose();
             _workspaceContextProvider.WorkspaceClosed -= OnWorkspaceChanged;
             _workspaceContextProvider.WorkspaceInitialized -= OnWorkspaceChanged;
@@ -128,6 +129,92 @@ namespace Microsoft.PythonTools.Repl {
             );
         }
 
+        internal static string GetEvaluatorId(PythonProjectNode project, InterpreterConfiguration config) {
+            if (project == null) {
+                throw new ArgumentNullException(nameof(project));
+            }
+            if (config == null) {
+                throw new ArgumentNullException(nameof(config));
+            }
+
+            return GetProjectEnvironmentEvaluatorId(
+                project.ProjectIDGuid,
+                GetStableProjectEnvironmentInterpreterId(project.GetMkDocument(), config.Id)
+            );
+        }
+
+        internal static string GetStableProjectEnvironmentInterpreterId(
+            string projectMoniker,
+            string interpreterId
+        ) {
+            var relativeId = MSBuildProjectInterpreterFactoryProvider.GetProjectRelativeId(
+                projectMoniker,
+                interpreterId
+            );
+            return relativeId == null ?
+                interpreterId :
+                MSBuildProjectInterpreterFactoryProvider.GetInterpreterId(
+                    _projectFullPathVariable,
+                    relativeId
+                );
+        }
+
+        internal static string ResolveProjectEnvironmentInterpreterId(
+            string projectMoniker,
+            string interpreterId
+        ) {
+            var relativeId = MSBuildProjectInterpreterFactoryProvider.GetProjectRelativeId(
+                _projectFullPathVariable,
+                interpreterId
+            );
+            return relativeId == null || string.IsNullOrEmpty(projectMoniker) ?
+                interpreterId :
+                MSBuildProjectInterpreterFactoryProvider.GetInterpreterId(
+                    projectMoniker,
+                    relativeId
+                );
+        }
+
+        internal static string GetProjectEnvironmentEvaluatorId(Guid projectGuid, string interpreterId) {
+            if (projectGuid == Guid.Empty) {
+                throw new ArgumentException("A project GUID is required.", nameof(projectGuid));
+            }
+            if (string.IsNullOrEmpty(interpreterId)) {
+                throw new ArgumentException("An interpreter ID is required.", nameof(interpreterId));
+            }
+
+            return "{0};project-env;{1};{2}".FormatInvariant(
+                _prefix,
+                projectGuid.ToString("D"),
+                Uri.EscapeDataString(interpreterId)
+            );
+        }
+
+        internal static bool TryParseProjectEnvironmentEvaluatorId(
+            string evaluatorId,
+            out Guid projectGuid,
+            out string interpreterId
+        ) {
+            projectGuid = Guid.Empty;
+            interpreterId = null;
+
+            var bits = evaluatorId?.Split(new[] { ';' }, 10);
+            if (bits == null ||
+                bits.Length != 4 ||
+                !bits[0].Equals(_prefix, StringComparison.OrdinalIgnoreCase) ||
+                !bits[1].Equals("project-env", StringComparison.OrdinalIgnoreCase)) {
+                return false;
+            }
+
+            try {
+                interpreterId = Uri.UnescapeDataString(bits[3]);
+            } catch (UriFormatException) {
+                return false;
+            }
+
+            return Guid.TryParse(bits[2], out projectGuid) && !string.IsNullOrEmpty(interpreterId);
+        }
+
         internal static string GetEvaluatorId(IPythonWorkspaceContext workspace) {
             return "{0};workspace;{1};{2}".FormatInvariant(
                 _prefix,
@@ -159,6 +246,10 @@ namespace Microsoft.PythonTools.Repl {
 
             if (bits[1].Equals("project", StringComparison.OrdinalIgnoreCase)) {
                 return GetProjectEvaluator(bits.Skip(2).ToArray());
+            }
+
+            if (bits[1].Equals("project-env", StringComparison.OrdinalIgnoreCase)) {
+                return GetProjectEnvironmentEvaluator(evaluatorId);
             }
 
             if (bits[1].Equals("workspace", StringComparison.OrdinalIgnoreCase)) {
@@ -194,6 +285,34 @@ namespace Microsoft.PythonTools.Repl {
 
             eval.UpdatePropertiesFromProjectMoniker();
 
+            return eval;
+        }
+
+        private IInteractiveEvaluator GetProjectEnvironmentEvaluator(string evaluatorId) {
+            _serviceProvider.MustBeCalledFromUIThread();
+
+            if (!TryParseProjectEnvironmentEvaluatorId(evaluatorId, out var projectGuid, out var interpreterId)) {
+                return null;
+            }
+
+            var project = VsShellUtilities
+                .GetHierarchy(_serviceProvider, projectGuid)
+                ?.GetProject()
+                ?.GetPythonProject();
+            var config = _interpreterService.FindConfiguration(
+                ResolveProjectEnvironmentInterpreterId(project?.GetMkDocument(), interpreterId)
+            );
+            var eval = new PythonInteractiveEvaluator(_serviceProvider) {
+                DisplayName = Strings.ReplProjectEnvironmentCaption.FormatUI(
+                    project?.Caption ?? projectGuid.ToString("D"),
+                    config?.Description ?? interpreterId
+                ),
+                ProjectGuid = projectGuid,
+                ProjectMoniker = project?.GetMkDocument() ?? projectGuid.ToString("D"),
+                ProjectInterpreterId = interpreterId
+            };
+
+            eval.UpdatePropertiesFromProjectMoniker();
             return eval;
         }
 

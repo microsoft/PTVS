@@ -40,6 +40,69 @@ namespace PythonToolsTests {
             AssertListener.Initialize();
         }
 
+        [TestMethod, Priority(UnitTestPriority.P0)]
+        public void ProjectEnvironmentEvaluatorIdRoundTripsStableIdentity() {
+            var projectGuid = new Guid("58829F89-E10D-4296-AF31-2EBDCEB4E8AA");
+            const string oldProjectMoniker = @"C:\Projects\OldName.pyproj";
+            const string newProjectMoniker = @"C:\Projects\NewName.pyproj";
+            const string relativeInterpreterId = "env;one";
+            var interpreterId = MSBuildProjectInterpreterFactoryProvider.GetInterpreterId(
+                oldProjectMoniker,
+                relativeInterpreterId
+            );
+            var stableInterpreterId = PythonReplEvaluatorProvider.GetStableProjectEnvironmentInterpreterId(
+                oldProjectMoniker,
+                interpreterId
+            );
+
+            var evaluatorId = PythonReplEvaluatorProvider.GetProjectEnvironmentEvaluatorId(
+                projectGuid,
+                stableInterpreterId
+            );
+
+            Assert.IsTrue(
+                PythonReplEvaluatorProvider.TryParseProjectEnvironmentEvaluatorId(
+                    evaluatorId,
+                    out var parsedProjectGuid,
+                    out var parsedInterpreterId
+                )
+            );
+            Assert.AreEqual(projectGuid, parsedProjectGuid);
+            Assert.AreEqual(stableInterpreterId, parsedInterpreterId);
+            Assert.AreEqual(
+                MSBuildProjectInterpreterFactoryProvider.GetInterpreterId(
+                    newProjectMoniker,
+                    relativeInterpreterId
+                ),
+                PythonReplEvaluatorProvider.ResolveProjectEnvironmentInterpreterId(
+                    newProjectMoniker,
+                    parsedInterpreterId
+                )
+            );
+            const string globalInterpreterId = "Global|PythonCore|3.11";
+            Assert.AreEqual(
+                globalInterpreterId,
+                PythonReplEvaluatorProvider.GetStableProjectEnvironmentInterpreterId(
+                    oldProjectMoniker,
+                    globalInterpreterId
+                )
+            );
+            Assert.AreEqual(
+                globalInterpreterId,
+                PythonReplEvaluatorProvider.ResolveProjectEnvironmentInterpreterId(
+                    newProjectMoniker,
+                    globalInterpreterId
+                )
+            );
+            Assert.IsFalse(
+                PythonReplEvaluatorProvider.TryParseProjectEnvironmentEvaluatorId(
+                    evaluatorId + ";unexpected",
+                    out _,
+                    out _
+                )
+            );
+        }
+
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void ExecuteTest() {
             using (var evaluator = MakeEvaluator()) {

@@ -28,6 +28,7 @@ using Microsoft.VisualStudio.InteractiveWindow.Commands;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Utilities;
+using Microsoft.VisualStudioTools;
 using Task = System.Threading.Tasks.Task;
 using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.PythonTools.Common.Parsing;
@@ -134,6 +135,10 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         private void Provider_EvaluatorsChanged(object sender, EventArgs e) {
+            _serviceProvider.GetUIThread().Invoke(
+                () => (_evaluator as PythonCommonInteractiveEvaluator)
+                    ?.RefreshProjectEnvironmentDisplayName()
+            );
             AvailableEvaluatorsChanged?.Invoke(this, EventArgs.Empty);
         }
 
@@ -225,6 +230,10 @@ namespace Microsoft.PythonTools.Repl {
             } else {
                 twp.Caption = Strings.ReplCaptionNoEvaluator;
             }
+        }
+
+        internal void RefreshCaption() {
+            UpdateCaption();
         }
 
         public IEnumerable<KeyValuePair<string, string>> AvailableEvaluators {
