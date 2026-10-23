@@ -4,6 +4,8 @@
 
 `PTVS-Testgate` consumes a successful `build` stage from `PTVS-Build`, creates the test bootstrapper inside the separately administered trusted pipeline, and runs the 123 `Priority=0` tests from `PythonToolsUITestsRunner.dll` in an installed Visual Studio instance. It uses the isolated `DDRITS-Public` lab and only downloads or executes source-build artifacts when Azure Pipelines reports `pr.isFork=False`. Fork pull requests complete the classification stage without accessing the bootstrapper, internal test lab, or source artifacts; their required coverage is the fast P0 gate in `PTVS-Build`.
 
+The legacy Glass suite remains diagnostic on `main`, release branches, and explicit cache-refresh runs. It is not part of the PR gate because its multi-gigabyte internal cache and mixed-mode environment are not reliable or credential-free for pull requests.
+
 ## Azure DevOps and branch policy activation
 
 The repository YAML cannot enable pipeline definitions or change repository branch policies. After this change is merged:
