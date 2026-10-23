@@ -223,8 +223,22 @@ namespace Microsoft.PythonTools {
         private PythonCondaOptions CreateCondaOptions() {
             var opts = new PythonCondaOptions(this);
             opts.Load();
+            opts.PersistedChanged += OnCondaOptionsChanged;
             return opts;
         }
+
+        internal bool AreCondaOptionsCreated => _condaOptions.IsValueCreated;
+
+        internal void RefreshCondaOptions() {
+            if (_condaOptions.IsValueCreated) {
+                _condaOptions.Value.RefreshFromStorage();
+            }
+        }
+
+        internal event EventHandler CondaOptionsChanged;
+
+        private void OnCondaOptionsChanged(object sender, EventArgs e)
+            => CondaOptionsChanged?.Invoke(this, EventArgs.Empty);
 
         private PythonAnalysisOptions CreateAnalysisOptions() {
             var opts = new PythonAnalysisOptions(this);

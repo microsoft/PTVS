@@ -81,6 +81,7 @@
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost" />
     <Reference Include="Microsoft.VisualStudio.Composition" />
     <Reference Include="Microsoft.VisualStudio.CoreUtility" />
+    <Reference Include="Microsoft.VisualStudio.Utilities" Condition="'$(VSTarget)' == '18.0'" />
     <Reference Include="Microsoft.VisualStudio.Language" />
     <Reference Include="Microsoft.VisualStudio.Language.Intellisense" />
     <Reference Include="Microsoft.VisualStudio.Language.StandardClassification" />
@@ -135,6 +136,7 @@
     <Compile Include="CoverageTests.cs" />
     <Compile Include="CondaEnvironmentManagerTests.cs" />
     <Compile Include="CondaInterpreterFactoryTests.cs" />
+    <Compile Include="PythonCondaUnifiedSettingsProviderTests.cs" />
     <None Include="InvalidEncodingSquiggleProviderTests.cs" />
     <None Include="EditorTests.cs" />
     <None Include="CodeFormatterTests.cs" />

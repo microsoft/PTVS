@@ -129,6 +129,9 @@
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <None Include="source.extension.vsixmanifest" />
+    <None Include="source.extension.legacy.vsixmanifest" />
+    <SourceVsixManifest Include="source.extension.vsixmanifest" Condition="'$(VSTarget)' == '18.0'" />
+    <SourceVsixManifest Include="source.extension.legacy.vsixmanifest" Condition="'$(VSTarget)' != '18.0'" />
     <Content Include="License_en-US.rtf" />
     <Content Include="$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll" />
     <Content Include="$(PackagesPath)\Microsoft.VisualStudio.LanguageServer.Protocol\lib\netstandard2.0\Microsoft.VisualStudio.LanguageServer.Protocol.dll" />

@@ -41,12 +41,13 @@
         <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.VSInterpreters;_GetTargetPath|" />
         <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.TestAdapter;_GetTargetPath|" />
         <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.Workspace;_GetTargetPath|" />
+        <Asset Type="Microsoft.VisualStudio.UnifiedSettings" Path="UnifiedSettings\PythonTools.registration.json" />
         <Asset Type="UnitTestExtension" Path="|Microsoft.PythonTools.TestAdapter.Executor;_GetTargetPath|" />
         <Asset Type="DebuggerEngineExtension" Path="DkmDebugger.vsdconfig" />
         <Asset Type="NativeVisualizer" Path="Visualizers\PythonDkm.natvis" />
         <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Newtonsoft.Json.dll" />
         <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Microsoft.PythonTools.Ipc.Json.dll" />
-        <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Microsoft.PythonTools.Attacher.exe" />        
+        <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Microsoft.PythonTools.Attacher.exe" />
         <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Microsoft.Extensions.FileSystemGlobbing.dll" />
     </Assets>
 </PackageManifest>
