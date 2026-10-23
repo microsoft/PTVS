@@ -8,12 +8,24 @@ parameters:
   - name: Drop
     type: string
     default: '$(System.ArtifactsDirectory)/$(DefinitionName)'
+  - name: MinimumExpectedTests
+    type: number
+    default: 123
+  - name: ResultsDirectory
+    type: string
+    default: '$(Agent.TempDirectory)/P0UITestResults'
+  - name: RunSettingsFile
+    type: string
+    default: '$(Drop)/p0.runsettings'
   - name: TestFilterCriteria
     type: string
     default: 'Priority=0'
   - name: UITestNames
     type: string
     default: ''
+  - name: VisualStudioInstallationPath
+    type: string
+    default: 'C:\Test\VisualStudio'
 
 steps:
   - task: ExtractFiles@1
@@ -32,9 +44,12 @@ steps:
     timeoutInMinutes: 5
     inputs:
       targetType: inline
-      arguments: '${{ parameters.CleanupProcesses }}'
       script: |
-        param ([string[]]$names)
+        $names = @(
+          '${{ parameters.CleanupProcesses }}' -split ',' |
+            ForEach-Object { $_.Trim() } |
+            Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+        )
         $running = Get-Process -Name $names -ErrorAction SilentlyContinue
         while ($running) {
           Write-Host 'Killing:'
@@ -52,25 +67,11 @@ steps:
   - task: CopyFiles@2
     displayName: Copy TestData into binaries
     condition: succeeded()
-    continueOnError: true
     inputs:
       SourceFolder: '${{ parameters.Drop }}/TestData'
       Contents: '**'
       TargetFolder: '${{ parameters.BinariesDirectory }}/TestData'
       CleanTargetFolder: 'true'
-      OverWrite: 'false'
-      flattenFolders: 'false'
-      preserveTimestamp: 'false'
-      retryCount: '0'
-
-  - task: CopyFiles@2
-    displayName: Copy runsettings to binary folder
-    condition: succeeded()
-    inputs:
-      SourceFolder: '${{ parameters.BinariesDirectory }}/TestData'
-      Contents: 'default.runsettings'
-      TargetFolder: '${{ parameters.BinariesDirectory }}'
-      CleanTargetFolder: 'false'
       OverWrite: 'false'
       flattenFolders: 'false'
       preserveTimestamp: 'false'
@@ -82,31 +83,63 @@ steps:
     inputs:
       targetType: inline
       script: |
-        reg import "${{ parameters.BinariesDirectory }}\TestData\EnableSkipVerification.reg"
+        $ErrorActionPreference = 'Stop'
+        $registryFile = '${{ parameters.BinariesDirectory }}\TestData\EnableSkipVerification.reg'
+        if (-not (Test-Path -LiteralPath $registryFile -PathType Leaf)) {
+          throw "Skip-verification registry file not found: $registryFile"
+        }
+        reg import "$registryFile"
+        if ($LASTEXITCODE -ne 0) {
+          throw "reg import failed with exit code $LASTEXITCODE for '$registryFile'."
+        }
       errorActionPreference: stop
       failOnStderr: false
 
-  - task: VSTest@2
+  - task: PowerShell@2
+    displayName: Validate P0 UI test inputs
+    condition: succeeded()
+    inputs:
+      targetType: inline
+      script: |
+        $ErrorActionPreference = 'Stop'
+
+        $assembly = '${{ parameters.BinariesDirectory }}\${{ parameters.UITestNames }}UITestsRunner.dll'
+        $runSettings = '${{ parameters.RunSettingsFile }}'
+        $visualStudio = '${{ parameters.VisualStudioInstallationPath }}\Common7\IDE\devenv.exe'
+        $results = '${{ parameters.ResultsDirectory }}'
+
+        foreach ($requiredFile in @($assembly, $runSettings, $visualStudio)) {
+          if (-not (Test-Path -LiteralPath $requiredFile -PathType Leaf)) {
+            throw "Required P0 UI test input not found: $requiredFile"
+          }
+        }
+
+        if (Test-Path -LiteralPath $results) {
+          Remove-Item -LiteralPath $results -Recurse -Force
+        }
+        New-Item -ItemType Directory -Force -Path $results | Out-Null
+        Write-Host '##vso[task.setvariable variable=P0_UI_INPUTS_READY]true'
+      errorActionPreference: stop
+      failOnStderr: false
+
+  - task: VSTest@3
     displayName: '[MultiConfiguration] Run UI Test ${{ parameters.UITestNames }}'
     condition: succeeded()
-    continueOnError: true
     inputs:
       testSelector: testAssemblies
       testAssemblyVer2: '${{ parameters.UITestNames }}UITestsRunner.dll'
-      tcmTestRun: '$(test.RunId)'
       searchFolder: '${{ parameters.BinariesDirectory }}'
-      resultsFolder: '$(Agent.TempDirectory)/TestResults'
+      resultsFolder: '${{ parameters.ResultsDirectory }}'
       testFiltercriteria: '${{ parameters.TestFilterCriteria }}'
       runOnlyImpactedTests: false
       runAllTestsAfterXBuilds: 50
       uiTests: true
       vstestLocationMethod: version
       vsTestVersion: latest
-      runSettingsFile: '${{ parameters.BinariesDirectory }}/default.runsettings'
-      overrideTestrunParameters: '-TargetFrameworkVersion .NETFramework,Version=v4.7.2'
+      runSettingsFile: '${{ parameters.RunSettingsFile }}'
       runInParallel: false
       runTestsInIsolation: false
-      codeCoverageEnabled: true
+      codeCoverageEnabled: false
       distributionBatchType: basedOnExecutionTime
       batchingBasedOnAgentsOption: autoBatchSize
       customBatchSizeValue: 10
@@ -115,25 +148,42 @@ steps:
       dontDistribute: false
       testRunTitle: '${{ parameters.UITestNames }} UI Tests'
       publishRunAttachments: true
-      failOnMinTestsNotRun: false
-      minimumExpectedTests: 1
+      failOnMinTestsNotRun: true
+      minimumExpectedTests: ${{ parameters.MinimumExpectedTests }}
       diagnosticsEnabled: true
       collectDumpOn: onAbortOnly
-      rerunFailedTests: true
-      rerunType: basedOnTestFailurePercentage
-      rerunFailedThreshold: 50
-      rerunFailedTestCasesMaxLimit: 5
-      rerunMaxAttempts: 2
+      rerunFailedTests: false
+    env:
+      _TESTDATA_ROOT_PATH: '${{ parameters.BinariesDirectory }}'
+      _TESTDATA_NO_ROOTSUFFIX: '1'
+      VisualStudio_IDE: '${{ parameters.VisualStudioInstallationPath }}\Common7\IDE'
+      VSAPPIDDIR: '${{ parameters.VisualStudioInstallationPath }}\Common7\IDE'
+      VSINSTALLDIR: '${{ parameters.VisualStudioInstallationPath }}'
+
+  - task: PowerShell@2
+    displayName: Validate P0 UI test results
+    condition: and(always(), eq(variables['P0_UI_INPUTS_READY'], 'true'))
+    inputs:
+      targetType: filePath
+      filePath: '$(Build.SourcesDirectory)\Build\ValidateTestResults.ps1'
+      arguments: >
+        -ResultsPath "${{ parameters.ResultsDirectory }}"
+        -MinimumExpectedTests ${{ parameters.MinimumExpectedTests }}
+        -TestRunName "${{ parameters.UITestNames }} P0 UI tests"
 
   - task: PowerShell@2
     displayName: Cleanup
-    condition: succeeded()
+    condition: always()
+    continueOnError: true
     timeoutInMinutes: 5
     inputs:
       targetType: inline
-      arguments: '${{ parameters.CleanupProcesses }}'
       script: |
-        param ([string[]]$names)
+        $names = @(
+          '${{ parameters.CleanupProcesses }}' -split ',' |
+            ForEach-Object { $_.Trim() } |
+            Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+        )
         $running = Get-Process -Name $names -ErrorAction SilentlyContinue
         while ($running) {
           Write-Host 'Killing:'

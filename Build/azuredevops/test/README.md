@@ -1,0 +1,18 @@
+# PTVS P0 pull request gates
+
+`PTVS-Build` runs an approved fast subset of the `Priority=0` tests from `PythonToolsTests.dll` for every pull request on the pipeline's existing authorized 1ES pool. It excludes the `10s` category, `PythonFormatterTests`, `LatestVersion_Prefers_314_WhenAvailable`, and `RunInterpreterOutput`, which depend on mutable package, interpreter, or long-running environment state. The gate disables cache writes, requires all 51 selected tests to be discovered and executed, and fails on any failed test or missing TRX file.
+
+`PTVS-Testgate` consumes a successful `build` stage from `PTVS-Build`, creates the test bootstrapper inside the separately administered trusted pipeline, and runs the 123 `Priority=0` tests from `PythonToolsUITestsRunner.dll` in an installed Visual Studio instance. It uses the isolated `DDRITS-Public` lab and only downloads or executes source-build artifacts when Azure Pipelines reports `pr.isFork=False`. Fork pull requests complete the classification stage without accessing the bootstrapper, internal test lab, or source artifacts; their required coverage is the fast P0 gate in `PTVS-Build`.
+
+The legacy Glass suite remains diagnostic on `main`, release branches, and explicit cache-refresh runs. It is not part of the PR gate because its multi-gigabyte internal cache and mixed-mode environment are not reliable or credential-free for pull requests.
+
+## Azure DevOps and branch policy activation
+
+The repository YAML cannot enable pipeline definitions or change repository branch policies. After this change is merged:
+
+1. Enable the existing `PTVS-Testgate` pipeline (definition ID `27846`) and authorize its `PTVS-Build`, `DartLab`, `DartLab.Templates`, and DartLab service-connection resources on the first trusted run.
+2. Confirm a same-repository pull request publishes `BootstrapperInput`, `Binaries`, `TestData`, `RunSettings`, and `P0RunSettings`, then `PTVS-Testgate` publishes `MicroBuildOutputs` and passes the installed-VS gate.
+3. Confirm a fork pull request runs only `Classify source build` in `PTVS-Testgate` and still passes the fast P0 gate in `PTVS-Build`.
+4. Add the `PTVS-Testgate` status as a required validation for `main` only after both checks above succeed. Keep `PTVS-Build` required for all pull requests.
+
+When intentionally changing either approved P0 inventory, update the corresponding minimum count in `Build/templates/run_p0_tests.yml` or `azure-pipelines-integration-testsgate.yml` in the same pull request.
