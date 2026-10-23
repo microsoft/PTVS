@@ -34,5 +34,14 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.IntellisenseTests.AutoComplete));
         }
 
+        [TestMethod, Priority(UITestPriority.P0)]
+        [TestCategory("Pylance")]
+        public void StringLiteralModuleQuickInfoAndNavigation() {
+            _vs.RunTest(
+                TimeSpan.FromMinutes(3),
+                nameof(PythonToolsUITests.IntellisenseTests.StringLiteralModuleQuickInfoAndNavigation)
+            );
+        }
+
     }
 }

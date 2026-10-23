@@ -5,8 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion;
 using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion.Data;
+using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.UI;
@@ -90,7 +92,55 @@ namespace PythonToolsUITests {
             }
         }
 
-        private static string PrepareProject(PythonVisualStudioApp app) {
+        public void StringLiteralModuleQuickInfoAndNavigation(PythonVisualStudioApp app) {
+            var slnPath = PrepareProject(app, includeStringLiteralTarget: true);
+            var project = app.OpenProject(slnPath);
+            var item = project.ProjectItems.Item("document.py");
+            var window = item.Open();
+            window.Activate();
+            var doc = app.GetDocument(item.Document.FullName);
+
+            try {
+                const string moduleName = "string_literal_target";
+                ITrackingPoint triggerPoint = null;
+                doc.Invoke(() => {
+                    using (var edit = doc.TextView.TextBuffer.CreateEdit()) {
+                        edit.Insert(edit.Snapshot.Length, $"\r\nmodule_name = \"{moduleName}\"\r\n");
+                        edit.Apply();
+                    }
+
+                    var position = doc.TextView.TextSnapshot.GetText().LastIndexOf(moduleName, StringComparison.Ordinal) + 1;
+                    doc.TextView.Caret.MoveTo(new Microsoft.VisualStudio.Text.SnapshotPoint(doc.TextView.TextSnapshot, position));
+                    triggerPoint = doc.TextView.TextSnapshot.CreateTrackingPoint(position, PointTrackingMode.Positive);
+                });
+
+                Assert.IsTrue(Microsoft.PythonTools.LanguageServerClient.PythonLanguageClient.ReadyTask.Wait(60000), "Pylance did not start");
+
+                var quickInfoBroker = app.ComponentModel.GetService<IAsyncQuickInfoBroker>();
+                Assert.IsNotNull(quickInfoBroker, "Quick Info broker is unavailable.");
+                QuickInfoItemsCollection quickInfo = null;
+                for (var retries = 0; retries < 60 && quickInfo?.Items.Any() != true; retries++) {
+                    doc.InvokeTask(async () => {
+                        quickInfo = await quickInfoBroker.GetQuickInfoItemsAsync(doc.TextView, triggerPoint, CancellationToken.None);
+                    });
+                    Thread.Sleep(500);
+                }
+
+                Assert.IsNotNull(quickInfo, "Quick Info was not returned for the module name string.");
+                Assert.IsTrue(quickInfo.Items.Any(), "Quick Info did not contain module information.");
+
+                for (var retries = 0; retries < 60 && app.Dte.ActiveDocument?.Name != $"{moduleName}.py"; retries++) {
+                    app.ExecuteCommand("Edit.GoToDefinition");
+                    Thread.Sleep(500);
+                }
+
+                Assert.AreEqual($"{moduleName}.py", app.Dte.ActiveDocument?.Name);
+            } finally {
+                app.Dte.Solution.Close(false);
+            }
+        }
+
+        private static string PrepareProject(PythonVisualStudioApp app, bool includeStringLiteralTarget = false) {
             // Use the formatting tests project.
             var slnPath = app.CopyProjectForTest(@"TestData\FormattingTests\FormattingTests.sln");
             var projFolder = Path.GetDirectoryName(slnPath);
@@ -99,6 +149,14 @@ namespace PythonToolsUITests {
             // The project file has a placeholder for the formatter which we must replace
             var projContents = File.ReadAllText(projPath);
             projContents = projContents.Replace("$$FORMATTER$$", "black");
+            if (includeStringLiteralTarget) {
+                const string targetFile = "string_literal_target.py";
+                File.WriteAllText(Path.Combine(projFolder, targetFile), "value = 42\r\n");
+                projContents = projContents.Replace(
+                    "<Compile Include=\"document.py\" />",
+                    $"<Compile Include=\"document.py\" />\r\n    <Compile Include=\"{targetFile}\" />"
+                );
+            }
             File.WriteAllText(projPath, projContents);
 
             return slnPath;
