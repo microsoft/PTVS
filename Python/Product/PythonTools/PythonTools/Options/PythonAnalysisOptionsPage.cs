@@ -38,7 +38,12 @@ namespace Microsoft.PythonTools.Options {
         /// a call to <see cref="SaveSettingsToStorage"/> to commit the new
         /// values.
         /// </summary>
-        public override void ResetSettings() => PyService.AnalysisOptions.Reset();
+        public override void ResetSettings() => ResetSettings(PyService, _window);
+
+        internal static void ResetSettings(PythonToolsService pyService, PythonAnalysisOptionsControl window) {
+            pyService.AnalysisOptions.Reset();
+            window?.SyncControlWithPageSettings(pyService);
+        }
 
         public override void LoadSettingsFromStorage() {
             PyService.AnalysisOptions.Load();

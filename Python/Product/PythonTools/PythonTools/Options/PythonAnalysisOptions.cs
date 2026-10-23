@@ -92,7 +92,7 @@ namespace Microsoft.PythonTools.Options {
                 changed = true;
             }
 
-            var indexing = _service.LoadBool(nameof(Indexing), Category) ?? false;
+            var indexing = _service.LoadBool(nameof(Indexing), Category) ?? true;
             if (Indexing != indexing) {
                 Indexing = indexing;
                 changed = true;
@@ -147,7 +147,7 @@ namespace Microsoft.PythonTools.Options {
             TypeCheckingMode = PylanceTypeCheckingMode.Basic;
             TypeshedPaths = null;
             UseLibraryCodeForTypes = true;
-            Indexing = false;
+            Indexing = true;
             ImportFormat = PylanceImportFormat.Absolute;
             InlayHintsVariableTypes = false;
             InlayHintsFunctionReturnTypes = false;
