@@ -46,6 +46,10 @@ namespace Microsoft.PythonTools.Interpreter {
         private bool _isDisposed;
         private int _ignoreNotifications;
         private bool _initialized;
+        private int _discoveryGeneration;
+        private int _completedDiscoveryGeneration;
+        private int _pendingWatcherDiscoveryGeneration;
+        private readonly SemaphoreSlim _discoveryLock = new SemaphoreSlim(1, 1);
         private readonly CPythonInterpreterFactoryProvider _globalProvider;
         private readonly ICondaLocatorProvider _condaLocatorProvider;
         private readonly JoinableTaskFactory _joinableTaskFactory;
@@ -63,6 +67,15 @@ namespace Microsoft.PythonTools.Interpreter {
 
         internal event EventHandler DiscoveryStarted;
         public event EventHandler InterpreterDiscoveryCompleted;
+
+        internal bool IsDiscoveryComplete {
+            get {
+                EnsureInitialized();
+                var discoveryGeneration = Volatile.Read(ref _discoveryGeneration);
+                return discoveryGeneration != 0 &&
+                    discoveryGeneration == Volatile.Read(ref _completedDiscoveryGeneration);
+            }
+        }
 
         [ImportingConstructor]
         public CondaEnvironmentFactoryProvider(
@@ -189,32 +202,51 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private void EnvironmentsWatcherTimer_Elapsed(object state) {
+            int discoveryGeneration;
             try {
                 lock (_factories) {
                     _envsWatcherTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                    discoveryGeneration = _pendingWatcherDiscoveryGeneration;
+                    _pendingWatcherDiscoveryGeneration = 0;
                 }
 
-                DiscoverInterpreterFactories();
+                if (discoveryGeneration != 0) {
+                    DiscoverInterpreterFactories(discoveryGeneration).DoNotWait();
+                }
             } catch (ObjectDisposedException) {
             }
         }
 
         private void EnvironmentsTxtWatcher_Changed(object sender, FileSystemEventArgs e) {
+            QueueDiscoveryFromFileSystem();
+        }
+
+        internal void QueueDiscoveryFromFileSystem() {
+            if (Volatile.Read(ref _ignoreNotifications) > 0) {
+                return;
+            }
+
+            bool discoveryQueued = false;
             lock (_factories) {
                 try {
                     _envsWatcherTimer.Change(1000, Timeout.Infinite);
+                    if (_pendingWatcherDiscoveryGeneration == 0) {
+                        _pendingWatcherDiscoveryGeneration = ReserveDiscoveryNoLock();
+                        discoveryQueued = true;
+                    }
                 } catch (ObjectDisposedException) {
                 }
+            }
+
+            if (discoveryQueued) {
+                DiscoveryStarted?.Invoke(this, EventArgs.Empty);
             }
         }
 
         private void CondaFolderWatcher_Created(object sender, FileSystemEventArgs e) {
-            lock (_factories) {
-                try {
-                    _envsWatcherTimer.Change(1000, Timeout.Infinite);
-                } catch (ObjectDisposedException) {
-                }
+            QueueDiscoveryFromFileSystem();
 
+            lock (_factories) {
                 if (_envsTxtWatcher == null) {
                     WatchForEnvironmentsTxtChanges();
                 }
@@ -229,47 +261,113 @@ namespace Microsoft.PythonTools.Interpreter {
             ForceDiscoverInterpreterFactories().DoNotWait();
         }
 
-        public async System.Threading.Tasks.Task ForceDiscoverInterpreterFactories() {
-            DiscoveryStarted?.Invoke(this, EventArgs.Empty);
+        public async Task ForceDiscoverInterpreterFactories() {
+            var discoveryGeneration = ReserveDiscovery(cancelPendingWatcher: true);
 
-            // Discover the available interpreters...
-            bool anyChanged = false;
+            while (!_isDisposed) {
+                await DiscoverInterpreterFactories(discoveryGeneration);
 
-            var found = new List<PythonInterpreterInformation>();
-
-            try {
-                var condaEnvs = await FindCondaEnvironments();
-                found.AddRange(condaEnvs.Where(i => i != null && i.Configuration != null));
-            } catch (ObjectDisposedException) {
-                // We are aborting, so silently return with no results.
-                return;
+                lock (_factories) {
+                    if (_completedDiscoveryGeneration == _discoveryGeneration) {
+                        return;
+                    }
+                    discoveryGeneration = _discoveryGeneration;
+                }
             }
+        }
 
-            var uniqueIds = new HashSet<string>(found.Select(i => i.Configuration.Id));
-
-            // Then update our cached state with the lock held.
+        private int ReserveDiscovery(bool cancelPendingWatcher) {
+            int discoveryGeneration;
             lock (_factories) {
-                foreach (var info in found) {
-                    PythonInterpreterInformation existingInfo;
-                    if (!_factories.TryGetValue(info.Configuration.Id, out existingInfo) ||
-                        info.Configuration != existingInfo.Configuration) {
-                        _factories[info.Configuration.Id] = info;
-                        anyChanged = true;
+                if (cancelPendingWatcher && _pendingWatcherDiscoveryGeneration != 0) {
+                    _pendingWatcherDiscoveryGeneration = 0;
+                    try {
+                        _envsWatcherTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+                    } catch (ObjectDisposedException) {
                     }
                 }
 
-                // Remove any factories we had before and no longer see...
-                foreach (var unregistered in _factories.Keys.Except(uniqueIds).ToArray()) {
-                    _factories.Remove(unregistered);
-                    anyChanged = true;
+                discoveryGeneration = ReserveDiscoveryNoLock();
+            }
+
+            DiscoveryStarted?.Invoke(this, EventArgs.Empty);
+            return discoveryGeneration;
+        }
+
+        private int ReserveDiscoveryNoLock() {
+            unchecked {
+                _discoveryGeneration += 1;
+                if (_discoveryGeneration == 0) {
+                    _discoveryGeneration = 1;
                 }
             }
+            return _discoveryGeneration;
+        }
 
-            if (anyChanged) {
-                OnInterpreterFactoriesChanged();
+        private async Task DiscoverInterpreterFactories(int discoveryGeneration) {
+            await _discoveryLock.WaitAsync();
+            try {
+                lock (_factories) {
+                    if (discoveryGeneration <= _completedDiscoveryGeneration) {
+                        return;
+                    }
+                }
+
+                // Discover the available interpreters...
+                bool anyChanged = false;
+
+                var found = new List<PythonInterpreterInformation>();
+
+                try {
+                    var condaEnvs = await FindCondaEnvironments();
+                    found.AddRange(condaEnvs.Where(i => i != null && i.Configuration != null));
+                } catch (ObjectDisposedException) {
+                    // We are aborting, so silently return with no results.
+                    return;
+                }
+
+                var uniqueIds = new HashSet<string>(found.Select(i => i.Configuration.Id));
+                bool discoveryCompleted;
+
+                // Then update our cached state with the lock held.
+                lock (_factories) {
+                    if (discoveryGeneration <= _completedDiscoveryGeneration) {
+                        return;
+                    }
+
+                    foreach (var info in found) {
+                        PythonInterpreterInformation existingInfo;
+                        if (!_factories.TryGetValue(info.Configuration.Id, out existingInfo) ||
+                            info.Configuration != existingInfo.Configuration) {
+                            _factories[info.Configuration.Id] = info;
+                            anyChanged = true;
+                        }
+                    }
+
+                    // Remove any factories we had before and no longer see...
+                    foreach (var unregistered in _factories.Keys.Except(uniqueIds).ToArray()) {
+                        _factories.Remove(unregistered);
+                        anyChanged = true;
+                    }
+
+                    discoveryCompleted = discoveryGeneration == _discoveryGeneration;
+                    if (discoveryCompleted) {
+                        _completedDiscoveryGeneration = discoveryGeneration;
+                    }
+                }
+
+                if (anyChanged) {
+                    OnInterpreterFactoriesChanged();
+                }
+
+                if (discoveryCompleted &&
+                    discoveryGeneration == Volatile.Read(ref _discoveryGeneration) &&
+                    discoveryGeneration == Volatile.Read(ref _completedDiscoveryGeneration)) {
+                    InterpreterDiscoveryCompleted?.Invoke(this, EventArgs.Empty);
+                }
+            } finally {
+                _discoveryLock.Release();
             }
-
-            InterpreterDiscoveryCompleted?.Invoke(this, EventArgs.Empty);
         }
 
         internal async static Task<CondaInfoResult> ExecuteCondaInfoAsync(string condaPath) {
@@ -375,7 +473,7 @@ namespace Microsoft.PythonTools.Interpreter {
             return _condaLocatorProvider?.FindLocator()?.CondaExecutablePath;
         }
 
-        private async Task<IReadOnlyList<PythonInterpreterInformation>> FindCondaEnvironments() {
+        protected virtual async Task<IReadOnlyList<PythonInterpreterInformation>> FindCondaEnvironments() {
             var mainCondaExePath = GetCondaExecutablePath();
             if (!string.IsNullOrEmpty(mainCondaExePath)) {
                 return await FindCondaEnvironments(mainCondaExePath);

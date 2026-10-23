@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
@@ -27,6 +28,7 @@ namespace TestUtilities.Python {
         readonly List<IPythonInterpreterFactoryProvider> _providers;
         readonly IPythonInterpreterFactory _noInterpretersValue;
         IPythonInterpreterFactory _defaultInterpreter;
+        int _isCondaInterpreterDiscoveryComplete;
 
         readonly Dictionary<IPythonInterpreterFactory, IReadOnlyList<IPackageManager>> _packageManagers;
 
@@ -124,9 +126,19 @@ namespace TestUtilities.Python {
         }
 
         public event EventHandler DefaultInterpreterChanged;
-        public event EventHandler CondaInterpreterDiscoveryCompleted {
-            add { }
-            remove { }
+        public event EventHandler CondaInterpreterDiscoveryCompleted;
+
+        public bool IsCondaInterpreterDiscoveryComplete {
+            get { return Volatile.Read(ref _isCondaInterpreterDiscoveryComplete) != 0; }
+        }
+
+        public void SimulateCondaInterpreterDiscoveryStarted() {
+            Volatile.Write(ref _isCondaInterpreterDiscoveryComplete, 0);
+        }
+
+        public void SimulateCondaInterpreterDiscoveryCompleted() {
+            Volatile.Write(ref _isCondaInterpreterDiscoveryComplete, 1);
+            CondaInterpreterDiscoveryCompleted?.Invoke(this, EventArgs.Empty);
         }
 
         public bool IsInterpreterGeneratingDatabase(IPythonInterpreterFactory interpreter) {

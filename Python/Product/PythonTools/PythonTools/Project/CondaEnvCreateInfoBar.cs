@@ -120,6 +120,10 @@ namespace Microsoft.PythonTools.Project {
         public override async Task CheckAsync() {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
+            if (Project.IsDisposed) {
+                return;
+            }
+
             if (IsCreated || IsGloballySuppressed) {
                 return;
             }
@@ -133,10 +137,6 @@ namespace Microsoft.PythonTools.Project {
             Caption = Project.Caption;
             Context = InfoBarContexts.Project;
             MissingEnvName = null;
-
-            if (Project == null || Project.IsDisposed) {
-                return;
-            }
 
             if (Project.GetProjectProperty(PythonConstants.SuppressEnvironmentCreationPrompt).IsTrue()) {
                 return;
