@@ -2,6 +2,9 @@ parameters:
 - name: refreshGlassCache
   type: boolean
   default: false
+- name: glassCacheVersion
+  type: string
+  default: v2
 
 steps:
   # Glass test setup scripts invoke pip; keep those downloads on the internal feed.
@@ -70,11 +73,26 @@ steps:
       Copy-Item -Path "$source\*" -Destination $dest -Recurse -Force
     displayName: 'Copy binaries to expected location'
 
+  - powershell: |
+      Write-Host "Agent.Name=$env:AGENT_NAME"
+      Write-Host "Agent.Version=$env:AGENT_VERSION"
+      Write-Host "Agent.OS=$env:AGENT_OS"
+      Write-Host "Image=$env:IMAGE"
+      Write-Host "Image.Version=$env:IMAGE_VERSION"
+      Write-Host "OS=$([System.Environment]::OSVersion.VersionString)"
+      Write-Host "PowerShell=$($PSVersionTable.PSVersion)"
+
+      $tar = Get-Command tar.exe -ErrorAction Stop
+      Write-Host "tar path: $($tar.Source)"
+      & $tar.Source '--version' 2>&1 | ForEach-Object { Write-Host $_ }
+    displayName: 'Log Glass cache archive tools'
+
   - task: Cache@2
     displayName: 'Restore glass binaries from cache'
     condition: and(eq('${{ parameters.refreshGlassCache }}', 'false'), ne(variables['System.PullRequest.IsFork'], 'True'))
     inputs:
-      key: '"glass" | Build/setup_glass.py'
+      # Pipeline caches are immutable. Bump the version when an existing cache cannot be restored.
+      key: '"glass" | "${{ parameters.glassCacheVersion }}" | Build/setup_glass.py'
       path: '$(Build.SourcesDirectory)\GlassTests'
       cacheHitVar: 'CACHE_RESTORED'
 
@@ -144,7 +162,7 @@ steps:
     displayName: 'Cache glass binaries'
     condition: and(succeeded(), eq(variables['SETUP_GLASS'], 'true'))
     inputs:
-      key: '"glass" | Build/setup_glass.py'
+      key: '"glass" | "${{ parameters.glassCacheVersion }}" | Build/setup_glass.py'
       path: '$(Build.SourcesDirectory)\GlassTests'
 
   - powershell: |
