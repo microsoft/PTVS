@@ -93,8 +93,21 @@ steps:
     inputs:
       # Pipeline caches are immutable. Bump the version when an existing cache cannot be restored.
       key: '"glass" | "${{ parameters.glassCacheVersion }}" | Build/setup_glass.py'
-      path: '$(Build.SourcesDirectory)\GlassTests'
+      path: '$(Pipeline.Workspace)\GlassTestsCache'
       cacheHitVar: 'CACHE_RESTORED'
+
+  - powershell: |
+      $source = '$(Pipeline.Workspace)\GlassTestsCache'
+      $dest = '$(Build.SourcesDirectory)\GlassTests'
+
+      if (Test-Path -LiteralPath $dest) {
+        Remove-Item -LiteralPath $dest -Recurse -Force
+      }
+
+      New-Item -ItemType Directory -Force -Path $dest | Out-Null
+      Copy-Item -Path "$source\*" -Destination $dest -Recurse -Force
+    displayName: 'Restore Glass runtime from cache snapshot'
+    condition: and(succeeded(), in(variables['CACHE_RESTORED'], 'true', 'inexact'))
 
   - powershell: |
       $isForkPr = '$(System.PullRequest.IsFork)' -eq 'True'
@@ -158,12 +171,25 @@ steps:
       failOnStderr: true
       pythonInterpreter: $(PYTHON_INTERPRETER)
 
+  - powershell: |
+      $source = '$(Build.SourcesDirectory)\GlassTests'
+      $dest = '$(Pipeline.Workspace)\GlassTestsCache'
+
+      if (Test-Path -LiteralPath $dest) {
+        Remove-Item -LiteralPath $dest -Recurse -Force
+      }
+
+      New-Item -ItemType Directory -Force -Path $dest | Out-Null
+      Copy-Item -Path "$source\*" -Destination $dest -Recurse -Force
+    displayName: 'Prepare Glass cache snapshot'
+    condition: and(succeeded(), eq(variables['SETUP_GLASS'], 'true'))
+
   - task: Cache@2
     displayName: 'Cache glass binaries'
     condition: and(succeeded(), eq(variables['SETUP_GLASS'], 'true'))
     inputs:
       key: '"glass" | "${{ parameters.glassCacheVersion }}" | Build/setup_glass.py'
-      path: '$(Build.SourcesDirectory)\GlassTests'
+      path: '$(Pipeline.Workspace)\GlassTestsCache'
 
   - powershell: |
       Write-Warning "GlassTests cache restore is disabled for fork PRs to prevent Cache@2 post-job cache writes, and fork PRs cannot run setup_glass.py because the internal DevDiv drop token is unavailable. Skipping Glass tests for this validation. A trusted main/release build can refresh the 'glass' cache."
