@@ -13,11 +13,14 @@
     <RunScript RunAs="VSUser">"$(GlassDir)GlassRegGen.exe" "PythonEngine.regdef" "$(GlassDir)glass2.exe.regroot" "$(GlassDir)PythonConGlass.reg"</RunScript>
   </Setup>
   <TestSetup>
-    <RunScript RunAs="Admin">..\tools\RegImport.cmd "$(GlassDir)ConGlass.reg" $(RunAs64)</RunScript>
-    <RunScript RunAs="Admin">..\tools\RegImport.cmd "$(GlassDir)PythonConGlass.reg" $(RunAs64)</RunScript>
+    <RunScript RunAs="VSUser" Condition="'$(UsePrivateRegistry)'=='true'">..\tools\SeedPrivateHive.cmd "$(GlassDir)" "$(PrivateRegistryDir)"</RunScript>
+    <RunScript RunAs="VSUser" Condition="'$(UsePrivateRegistry)'=='true'">"$(GlassDir)glass2.exe" reg import "$(GlassDir)PythonConGlass.reg" -privateRegistryDir "$(PrivateRegistryDir)"</RunScript>
+    <RunScript RunAs="Admin" Condition="'$(UsePrivateRegistry)'!='true'">..\tools\RegImport.cmd "$(GlassDir)ConGlass.reg" $(RunAs64)</RunScript>
+    <RunScript RunAs="Admin" Condition="'$(UsePrivateRegistry)'!='true'">..\tools\RegImport.cmd "$(GlassDir)PythonConGlass.reg" $(RunAs64)</RunScript>
   </TestSetup>
   <TestCleanup>
-    <RunScript RunAs="Admin">..\tools\RegDelete.cmd "$(GlassDir)glass2.exe.regroot" $(RunAs64)</RunScript>
+    <RunScript RunAs="VSUser" Condition="'$(UsePrivateRegistry)'=='true'">..\tools\CleanupPrivateHive.cmd "$(PrivateRegistryDir)"</RunScript>
+    <RunScript RunAs="Admin" Condition="'$(UsePrivateRegistry)'!='true'">..\tools\RegDelete.cmd "$(GlassDir)glass2.exe.regroot" $(RunAs64)</RunScript>
   </TestCleanup>
   
   <PropertyGroup>

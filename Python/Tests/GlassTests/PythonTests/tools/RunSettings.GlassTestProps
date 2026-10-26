@@ -23,6 +23,9 @@ also want to use this to set things like the path where we pick up the C++ compi
   <GlassDir Condition=" '$(UseEnlistmentOutput)'=='true' ">$(BinDir)SuiteBin\ConcordSDK\Tools\glass\</GlassDir>
   <GlassDir Condition=" '$(UseEnlistmentOutput)'!='true' ">$(BinDir)GlassStandAlone\Glass\</GlassDir>
 
+  <!-- Current Glass runners isolate each test in a private registry hive. -->
+  <UsePrivateRegistry CopyToEnvironment="true">true</UsePrivateRegistry>
+
   <!-- This can be overwritten to run Glass tests against a specific version of the CRT/VC Tools. -->
   <!-- By default, for internals we will grab VC Tools and the CRT from VCDrop.txt. -->
   <VcDropStore></VcDropStore>
