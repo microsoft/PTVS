@@ -4,7 +4,7 @@ parameters:
   default: false
 - name: glassCacheVersion
   type: string
-  default: v3
+  default: v4
 
 steps:
   # Glass test setup scripts invoke pip; keep those downloads on the internal feed.
@@ -98,33 +98,23 @@ steps:
     condition: and(eq('${{ parameters.refreshGlassCache }}', 'false'), ne(variables['System.PullRequest.IsFork'], 'True'))
     inputs:
       # Pipeline caches are immutable. Bump the version when an existing cache cannot be restored.
-      key: '"glass" | "${{ parameters.glassCacheVersion }}" | Build/setup_glass.py'
+      key: '"glass" | "${{ parameters.glassCacheVersion }}" | Build/setup_glass.py | Build/glass_cache.py'
       path: '$(Pipeline.Workspace)\GlassCacheArchive'
       cacheHitVar: 'CACHE_RESTORED'
     env:
       TEMP: $(Pipeline.Workspace)\GlassCacheTemp
       TMP: $(Pipeline.Workspace)\GlassCacheTemp
 
-  - powershell: |
-      $archive = '$(Pipeline.Workspace)\GlassCacheArchive\GlassTests.tar.gz'
-      $dest = '$(Build.SourcesDirectory)\GlassTests'
-
-      if (-not (Test-Path -LiteralPath $archive)) {
-        throw "Glass cache archive not found at '$archive'."
-      }
-
-      if (Test-Path -LiteralPath $dest) {
-        Remove-Item -LiteralPath $dest -Recurse -Force
-      }
-
-      New-Item -ItemType Directory -Force -Path $dest | Out-Null
-      $tar = (Get-Command tar.exe -ErrorAction Stop).Source
-      & $tar -xzf $archive -C $dest
-      if ($LASTEXITCODE -ne 0) {
-        throw "Extracting the Glass cache archive failed with exit code $LASTEXITCODE."
-      }
+  - task: PythonScript@0
     displayName: 'Restore Glass runtime from cache archive'
     condition: and(succeeded(), in(variables['CACHE_RESTORED'], 'true', 'inexact'))
+    inputs:
+      scriptSource: filePath
+      scriptPath: $(Build.SourcesDirectory)/Build/glass_cache.py
+      arguments: 'extract --archive "$(Pipeline.Workspace)\GlassCacheArchive\GlassTests.zip" --destination "$(Build.SourcesDirectory)\GlassTests"'
+      workingDirectory: $(Build.SourcesDirectory)
+      failOnStderr: true
+      pythonInterpreter: $(PYTHON_INTERPRETER)
 
   - powershell: |
       $isForkPr = '$(System.PullRequest.IsFork)' -eq 'True'
@@ -188,30 +178,16 @@ steps:
       failOnStderr: true
       pythonInterpreter: $(PYTHON_INTERPRETER)
 
-  - powershell: |
-      $source = '$(Build.SourcesDirectory)\GlassTests'
-      $dest = '$(Pipeline.Workspace)\GlassCacheArchive'
-      $archive = Join-Path $dest 'GlassTests.tar.gz'
-
-      if (Test-Path -LiteralPath $dest) {
-        Remove-Item -LiteralPath $dest -Recurse -Force
-      }
-
-      New-Item -ItemType Directory -Force -Path $dest | Out-Null
-      $files = @(Get-ChildItem -LiteralPath $source -Recurse -File -Force -ErrorAction Stop)
-      $sourceSize = ($files | Measure-Object -Property Length -Sum).Sum
-      Write-Host "Glass cache source: $($files.Count) files, $sourceSize bytes"
-
-      $tar = (Get-Command tar.exe -ErrorAction Stop).Source
-      & $tar -czf $archive -C $source .
-      if ($LASTEXITCODE -ne 0) {
-        throw "Creating the Glass cache archive failed with exit code $LASTEXITCODE."
-      }
-
-      $archiveSize = (Get-Item -LiteralPath $archive).Length
-      Write-Host "Glass cache archive: $archive ($archiveSize bytes)"
+  - task: PythonScript@0
     displayName: 'Prepare Glass cache archive'
     condition: and(succeeded(), eq(variables['SETUP_GLASS'], 'true'))
+    inputs:
+      scriptSource: filePath
+      scriptPath: $(Build.SourcesDirectory)/Build/glass_cache.py
+      arguments: 'create --source "$(Build.SourcesDirectory)\GlassTests" --archive "$(Pipeline.Workspace)\GlassCacheArchive\GlassTests.zip"'
+      workingDirectory: $(Build.SourcesDirectory)
+      failOnStderr: true
+      pythonInterpreter: $(PYTHON_INTERPRETER)
 
   # A normal cache miss is saved by the restore task's built-in post-job step.
   # Explicit refresh skips that restore task, so it needs a cache task of its own.
@@ -219,7 +195,7 @@ steps:
     displayName: 'Cache refreshed glass binaries'
     condition: and(succeeded(), eq(variables['SETUP_GLASS'], 'true'), eq('${{ parameters.refreshGlassCache }}', 'true'))
     inputs:
-      key: '"glass" | "${{ parameters.glassCacheVersion }}" | Build/setup_glass.py'
+      key: '"glass" | "${{ parameters.glassCacheVersion }}" | Build/setup_glass.py | Build/glass_cache.py'
       path: '$(Pipeline.Workspace)\GlassCacheArchive'
     env:
       TEMP: $(Pipeline.Workspace)\GlassCacheTemp
