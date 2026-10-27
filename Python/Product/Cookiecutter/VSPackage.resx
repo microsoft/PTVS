@@ -132,6 +132,24 @@
   <data name="115" xml:space="preserve">
     <value>Cookiecutter options</value>
   </data>
+  <data name="116" xml:space="preserve">
+    <value>Show Help</value>
+  </data>
+  <data name="117" xml:space="preserve">
+    <value>Show the help information bar.</value>
+  </data>
+  <data name="118" xml:space="preserve">
+    <value>Recommended feed URL</value>
+  </data>
+  <data name="119" xml:space="preserve">
+    <value>Location of the feed file. Feed files have one template URL on each line.</value>
+  </data>
+  <data name="120" xml:space="preserve">
+    <value>Check for updated templates</value>
+  </data>
+  <data name="121" xml:space="preserve">
+    <value>Automatically check online for updates to installed templates.</value>
+  </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="400" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>_BUILDROOT_\Python\Product\Icons\dev_VSVERSION_\PythonProject.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
