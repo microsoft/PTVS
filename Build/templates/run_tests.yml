@@ -4,7 +4,7 @@ parameters:
   default: false
 - name: glassCacheVersion
   type: string
-  default: v2
+  default: v3
 
 steps:
   # Glass test setup scripts invoke pip; keep those downloads on the internal feed.
@@ -85,6 +85,14 @@ steps:
       $tar = Get-Command tar.exe -ErrorAction Stop
       Write-Host "tar path: $($tar.Source)"
       & $tar.Source '--version' 2>&1 | ForEach-Object { Write-Host $_ }
+
+      $sevenZip = Get-Command 7z.exe -ErrorAction Stop
+      Write-Host "7-Zip path: $($sevenZip.Source)"
+      & $sevenZip.Source 2>&1 | Select-Object -First 3 | ForEach-Object { Write-Host $_ }
+
+      $cacheTemp = '$(Pipeline.Workspace)\GlassCacheTemp'
+      New-Item -ItemType Directory -Force -Path $cacheTemp | Out-Null
+      Write-Host "Cache temp path: $cacheTemp"
     displayName: 'Log Glass cache archive tools'
 
   - task: Cache@2
@@ -93,20 +101,31 @@ steps:
     inputs:
       # Pipeline caches are immutable. Bump the version when an existing cache cannot be restored.
       key: '"glass" | "${{ parameters.glassCacheVersion }}" | Build/setup_glass.py'
-      path: '$(Pipeline.Workspace)\GlassTestsCache'
+      path: '$(Pipeline.Workspace)\GlassCacheArchive'
       cacheHitVar: 'CACHE_RESTORED'
+    env:
+      TEMP: $(Pipeline.Workspace)\GlassCacheTemp
+      TMP: $(Pipeline.Workspace)\GlassCacheTemp
 
   - powershell: |
-      $source = '$(Pipeline.Workspace)\GlassTestsCache'
+      $archive = '$(Pipeline.Workspace)\GlassCacheArchive\GlassTests.7z'
       $dest = '$(Build.SourcesDirectory)\GlassTests'
+
+      if (-not (Test-Path -LiteralPath $archive)) {
+        throw "Glass cache archive not found at '$archive'."
+      }
 
       if (Test-Path -LiteralPath $dest) {
         Remove-Item -LiteralPath $dest -Recurse -Force
       }
 
       New-Item -ItemType Directory -Force -Path $dest | Out-Null
-      Copy-Item -Path "$source\*" -Destination $dest -Recurse -Force
-    displayName: 'Restore Glass runtime from cache snapshot'
+      $sevenZip = (Get-Command 7z.exe -ErrorAction Stop).Source
+      & $sevenZip x $archive "-o$dest" -y
+      if ($LASTEXITCODE -ne 0) {
+        throw "Extracting the Glass cache archive failed with exit code $LASTEXITCODE."
+      }
+    displayName: 'Restore Glass runtime from cache archive'
     condition: and(succeeded(), in(variables['CACHE_RESTORED'], 'true', 'inexact'))
 
   - powershell: |
@@ -173,15 +192,23 @@ steps:
 
   - powershell: |
       $source = '$(Build.SourcesDirectory)\GlassTests'
-      $dest = '$(Pipeline.Workspace)\GlassTestsCache'
+      $dest = '$(Pipeline.Workspace)\GlassCacheArchive'
+      $archive = Join-Path $dest 'GlassTests.7z'
 
       if (Test-Path -LiteralPath $dest) {
         Remove-Item -LiteralPath $dest -Recurse -Force
       }
 
       New-Item -ItemType Directory -Force -Path $dest | Out-Null
-      Copy-Item -Path "$source\*" -Destination $dest -Recurse -Force
-    displayName: 'Prepare Glass cache snapshot'
+      $sevenZip = (Get-Command 7z.exe -ErrorAction Stop).Source
+      & $sevenZip a -t7z -mx=1 -mmt=on $archive "$source\*"
+      if ($LASTEXITCODE -ne 0) {
+        throw "Creating the Glass cache archive failed with exit code $LASTEXITCODE."
+      }
+
+      $archiveSize = (Get-Item -LiteralPath $archive).Length
+      Write-Host "Glass cache archive: $archive ($archiveSize bytes)"
+    displayName: 'Prepare Glass cache archive'
     condition: and(succeeded(), eq(variables['SETUP_GLASS'], 'true'))
 
   - task: Cache@2
@@ -189,7 +216,10 @@ steps:
     condition: and(succeeded(), eq(variables['SETUP_GLASS'], 'true'))
     inputs:
       key: '"glass" | "${{ parameters.glassCacheVersion }}" | Build/setup_glass.py'
-      path: '$(Pipeline.Workspace)\GlassTestsCache'
+      path: '$(Pipeline.Workspace)\GlassCacheArchive'
+    env:
+      TEMP: $(Pipeline.Workspace)\GlassCacheTemp
+      TMP: $(Pipeline.Workspace)\GlassCacheTemp
 
   - powershell: |
       Write-Warning "GlassTests cache restore is disabled for fork PRs to prevent Cache@2 post-job cache writes, and fork PRs cannot run setup_glass.py because the internal DevDiv drop token is unavailable. Skipping Glass tests for this validation. A trusted main/release build can refresh the 'glass' cache."
