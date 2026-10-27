@@ -313,7 +313,7 @@ extends:
       - stage: glass
         displayName: Glass
         dependsOn: build
-        condition: and(succeeded(), or(and(eq(variables['Build.Reason'], 'PullRequest'), eq(variables['System.PullRequest.IsFork'], 'False')), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'), eq(variables['RefreshGlassCache'], 'true')))
+        condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'), eq(variables['RefreshGlassCache'], 'true')))
         jobs:
           - job: test
             displayName: Test
