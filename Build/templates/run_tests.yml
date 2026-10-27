@@ -86,13 +86,11 @@ steps:
       Write-Host "tar path: $($tar.Source)"
       & $tar.Source '--version' 2>&1 | ForEach-Object { Write-Host $_ }
 
-      $sevenZip = Get-Command 7z.exe -ErrorAction Stop
-      Write-Host "7-Zip path: $($sevenZip.Source)"
-      & $sevenZip.Source 2>&1 | Select-Object -First 3 | ForEach-Object { Write-Host $_ }
-
       $cacheTemp = '$(Pipeline.Workspace)\GlassCacheTemp'
       New-Item -ItemType Directory -Force -Path $cacheTemp | Out-Null
       Write-Host "Cache temp path: $cacheTemp"
+      Get-PSDrive -Name ([System.IO.Path]::GetPathRoot($cacheTemp).TrimEnd('\').TrimEnd(':')) |
+        ForEach-Object { Write-Host "Cache drive free space: $($_.Free) bytes" }
     displayName: 'Log Glass cache archive tools'
 
   - task: Cache@2
@@ -108,7 +106,7 @@ steps:
       TMP: $(Pipeline.Workspace)\GlassCacheTemp
 
   - powershell: |
-      $archive = '$(Pipeline.Workspace)\GlassCacheArchive\GlassTests.7z'
+      $archive = '$(Pipeline.Workspace)\GlassCacheArchive\GlassTests.tar.gz'
       $dest = '$(Build.SourcesDirectory)\GlassTests'
 
       if (-not (Test-Path -LiteralPath $archive)) {
@@ -120,8 +118,8 @@ steps:
       }
 
       New-Item -ItemType Directory -Force -Path $dest | Out-Null
-      $sevenZip = (Get-Command 7z.exe -ErrorAction Stop).Source
-      & $sevenZip x $archive "-o$dest" -y
+      $tar = (Get-Command tar.exe -ErrorAction Stop).Source
+      & $tar -xzf $archive -C $dest
       if ($LASTEXITCODE -ne 0) {
         throw "Extracting the Glass cache archive failed with exit code $LASTEXITCODE."
       }
@@ -193,15 +191,19 @@ steps:
   - powershell: |
       $source = '$(Build.SourcesDirectory)\GlassTests'
       $dest = '$(Pipeline.Workspace)\GlassCacheArchive'
-      $archive = Join-Path $dest 'GlassTests.7z'
+      $archive = Join-Path $dest 'GlassTests.tar.gz'
 
       if (Test-Path -LiteralPath $dest) {
         Remove-Item -LiteralPath $dest -Recurse -Force
       }
 
       New-Item -ItemType Directory -Force -Path $dest | Out-Null
-      $sevenZip = (Get-Command 7z.exe -ErrorAction Stop).Source
-      & $sevenZip a -t7z -mx=1 -mmt=on $archive "$source\*"
+      $files = @(Get-ChildItem -LiteralPath $source -Recurse -File -Force -ErrorAction Stop)
+      $sourceSize = ($files | Measure-Object -Property Length -Sum).Sum
+      Write-Host "Glass cache source: $($files.Count) files, $sourceSize bytes"
+
+      $tar = (Get-Command tar.exe -ErrorAction Stop).Source
+      & $tar -czf $archive -C $source .
       if ($LASTEXITCODE -ne 0) {
         throw "Creating the Glass cache archive failed with exit code $LASTEXITCODE."
       }
