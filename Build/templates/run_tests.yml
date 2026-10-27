@@ -213,9 +213,11 @@ steps:
     displayName: 'Prepare Glass cache archive'
     condition: and(succeeded(), eq(variables['SETUP_GLASS'], 'true'))
 
+  # A normal cache miss is saved by the restore task's built-in post-job step.
+  # Explicit refresh skips that restore task, so it needs a cache task of its own.
   - task: Cache@2
-    displayName: 'Cache glass binaries'
-    condition: and(succeeded(), eq(variables['SETUP_GLASS'], 'true'))
+    displayName: 'Cache refreshed glass binaries'
+    condition: and(succeeded(), eq(variables['SETUP_GLASS'], 'true'), eq('${{ parameters.refreshGlassCache }}', 'true'))
     inputs:
       key: '"glass" | "${{ parameters.glassCacheVersion }}" | Build/setup_glass.py'
       path: '$(Pipeline.Workspace)\GlassCacheArchive'
