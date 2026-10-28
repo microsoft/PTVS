@@ -127,19 +127,26 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         }
 
         public void RegisterTracing(ulong traceFunc) {
-            // In 3.10, the use_tracing flag sets tracing for the thread.
+            // Before 3.10, use_tracing lives directly on the thread state.
             if (_fields.use_tracing.Process != null) {
                 GetFieldProxy(_fields.use_tracing).Write(1);
             }
-            // In 3.11 the cframe has the use_tracing flag, but must be set to 255.
-            if (_fields.cframe.Process != null && Process.GetPythonRuntimeInfo().LanguageVersion == PythonLanguageVersion.V311) {
+            // In 3.10 and 3.11 it lives on the cframe; 3.11 requires 255 rather than 1.
+            var version = Process.GetPythonRuntimeInfo().LanguageVersion;
+            var cframeTracingFlag = GetCFrameTracingFlag(version);
+            if (_fields.cframe.Process != null && cframeTracingFlag != 0) {
                 var frame = cframe.Read();
-                frame.use_tracing.Write(255);
+                frame.use_tracing.Write(cframeTracingFlag);
             }
             // In 3.12, there's no longer a use_tracing flag. We have to register tracing through an API instead.
-            if (Process.GetPythonRuntimeInfo().LanguageVersion <= PythonLanguageVersion.V311) {
+            if (version <= PythonLanguageVersion.V311) {
                 c_tracefunc.Write(traceFunc);
             }
+        }
+
+        internal static int GetCFrameTracingFlag(PythonLanguageVersion version) {
+            return version == PythonLanguageVersion.V310 ? 1 :
+                version == PythonLanguageVersion.V311 ? 255 : 0;
         }
 
         

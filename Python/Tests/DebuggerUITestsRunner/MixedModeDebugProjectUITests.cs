@@ -64,4 +64,26 @@ namespace DebuggerUITestsRunner {
     public class MixedModeDebugProjectUITests3x_64 : MixedModeDebugProjectUITests {
         protected override string Interpreter => "Python39_x64|Python310_x64|Python311_x64|Python312_x64|Python313_x64|Python314_x64";
     }
+
+    [TestClass]
+    public class MixedModeDebugProjectUITests310_32 : MixedModeDebugProjectUITests {
+        protected override string Interpreter => "Python310";
+
+        [TestMethod, Priority(UITestPriority.P0)]
+        [TestCategory("Installed")]
+        public void DebugMixedModeStepping() {
+            _vs.RunTest(nameof(DebuggerUITests.MixedModeDebugProjectUITests.DebugMixedModeStepping), Interpreter);
+        }
+    }
+
+    [TestClass]
+    public class MixedModeDebugProjectUITests310_64 : MixedModeDebugProjectUITests {
+        protected override string Interpreter => "Python310_x64";
+
+        [TestMethod, Priority(UITestPriority.P0)]
+        [TestCategory("Installed")]
+        public void DebugMixedModeStepping() {
+            _vs.RunTest(nameof(DebuggerUITests.MixedModeDebugProjectUITests.DebugMixedModeStepping), Interpreter);
+        }
+    }
 }
