@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Microsoft.Dia;
 using Microsoft.PythonTools.Common.Parsing;
 using Microsoft.PythonTools.Debugger.Concord.Proxies;
 using Microsoft.PythonTools.Debugger.Concord.Proxies.Structs;
@@ -342,6 +343,20 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         }
 
         private void AddStepInGate(StepInGateHandler handler, DkmNativeModuleInstance module, string funcName, bool hasMultipleExitPoints) {
+            if (_pyrtInfo.LanguageVersion == PythonLanguageVersion.V310 && funcName == nameof(PythonDllBreakpointHandlers.do_richcompare)) {
+                using (var moduleSymbols = module.GetSymbols()) {
+                    IDiaEnumSymbols functions;
+                    moduleSymbols.Object.findChildren(SymTagEnum.SymTagFunction, funcName, 1, out functions);
+                    using (ComPtr.Create(functions)) {
+                        // Optimized 3.10 x86 builds inline do_richcompare into the exported wrapper.
+                        if (functions.count == 0) {
+                            funcName = nameof(PythonDllBreakpointHandlers.PyObject_RichCompare);
+                            handler = _handlers.PyObject_RichCompare310;
+                        }
+                    }
+                }
+            }
+
             var gate = new StepInGate {
                 Handler = handler,
                 HasMultipleExitPoints = hasMultipleExitPoints,
@@ -571,7 +586,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 _owner.OnPotentialRuntimeExit(thread, pProc);
             }
 
-            [StepInGate(MaxVersion = PythonLanguageVersion.V310)] 
+            [StepInGate(MaxVersion = PythonLanguageVersion.V39)]
             public void call_function(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters) {
                 var process = thread.Process;
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
@@ -594,6 +609,13 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 _owner.OnPotentialRuntimeExit(thread, ml_meth);
             }
 
+            // With tracing enabled, 3.10 routes calls through this non-inlined gate.
+            // Its call_function implementation can be inlined in optimized CPython builds.
+            [StepInGate(MinVersion = PythonLanguageVersion.V310, MaxVersion = PythonLanguageVersion.V310)]
+            public void trace_call_function(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters) {
+                OnCFunctionCall(thread, frameBase, vframe, useRegisters ? "@r8" : "func");
+            }
+
             [StepInGate(MinVersion = PythonLanguageVersion.V311)]
             public void PyObject_Vectorcall(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters) {
                 var process = thread.Process;
@@ -609,12 +631,15 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
             [StepInGate]
             public void PyCFunction_Call(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters) {
-                var process = thread.Process;
+                OnCFunctionCall(thread, frameBase, vframe, useRegisters ? "@rcx" : "func");
+            }
+
+            private void OnCFunctionCall(DkmThread thread, ulong frameBase, ulong vframe, string func) {
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
                 ulong ml_meth = cppEval.EvaluateUInt64(
                     "((PyObject*){0})->ob_type == &PyCFunction_Type ? ((PyCFunctionObject*){0})->m_ml->ml_meth : 0",
-                    useRegisters ? "@rcx" : "func");
+                    func);
                 _owner.OnPotentialRuntimeExit(thread, ml_meth);
             }
 
@@ -815,10 +840,25 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             [StepInGate(MinVersion = PythonLanguageVersion.V33, HasMultipleExitPoints = true)]
             public void do_richcompare(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters) {
                 var process = thread.Process;
-                var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
-
                 string vVar = useRegisters ? "((PyObject*)@rcx)" : "v";
                 string wVar = useRegisters ? "((PyObject*)@rdx)" : "w";
+                if (useRegisters && process.GetPythonRuntimeInfo().LanguageVersion == PythonLanguageVersion.V310) {
+                    // In 3.10 the internal helper takes a thread state before the operands.
+                    vVar = "((PyObject*)@rdx)";
+                    wVar = "((PyObject*)@r8)";
+                }
+
+                OnRichCompare(thread, frameBase, vframe, vVar, wVar);
+            }
+
+            public void PyObject_RichCompare310(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters) {
+                OnRichCompare(thread, frameBase, vframe,
+                    useRegisters ? "((PyObject*)@rcx)" : "v",
+                    useRegisters ? "((PyObject*)@rdx)" : "w");
+            }
+
+            private void OnRichCompare(DkmThread thread, ulong frameBase, ulong vframe, string vVar, string wVar) {
+                var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
                 ulong tp_richcompare1 = cppEval.EvaluateUInt64(vVar + "->ob_type->tp_richcompare");
                 _owner.OnPotentialRuntimeExit(thread, tp_richcompare1);

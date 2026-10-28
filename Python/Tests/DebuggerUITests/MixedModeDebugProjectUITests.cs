@@ -17,6 +17,7 @@
 using System.IO;
 using System.Linq;
 using EnvDTE;
+using EnvDTE90a;
 using TestUtilities;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
@@ -52,9 +53,64 @@ namespace DebuggerUITests {
             }
         }
 
+        public void DebugMixedModeStepping(PythonVisualStudioApp app, string interpreter) {
+            using (app.SelectDefaultInterpreter(FindInterpreter(interpreter)))
+            using (new DebugProjectUITests.DotNotWaitOnNormalExit(app.Dte)) {
+                DebugProjectUITests.OpenProjectAndBreak(app, @"TestData\MixedModeHelloWorld.sln", "Stepping.py", 4);
+
+                app.Dte.Debugger.StepOver(true);
+                AssertCurrentLine(app, 5);
+                app.Dte.Debugger.StepInto(true);
+                AssertCurrentLine(app, 1);
+                app.Dte.Debugger.StepOver(true);
+                AssertCurrentLine(app, 2);
+                app.Dte.Debugger.StepOut(true);
+                AssertCurrentLine(app, 5);
+                app.Dte.Debugger.StepOver(true);
+                AssertCurrentLine(app, 6);
+                app.Dte.Debugger.StepInto(true);
+                AssertCurrentLine(app, 1);
+                app.Dte.Debugger.StepOver(true);
+                AssertCurrentLine(app, 2);
+                app.Dte.Debugger.StepOut(true);
+                AssertCurrentLine(app, 6);
+                app.Dte.Debugger.StepOver(true);
+                AssertCurrentLine(app, 7);
+                app.Dte.Debugger.StepOver(true);
+                AssertCurrentLine(app, 8);
+                Assert.AreEqual("3", app.Dte.Debugger.GetExpression("result").Value);
+                Assert.AreEqual("7", app.Dte.Debugger.GetExpression("keyword_result").Value);
+                Assert.AreEqual("3", app.Dte.Debugger.GetExpression("native_result").Value);
+
+                app.Dte.Debugger.StepOver(true);
+                AssertCurrentLine(app, 10);
+                app.Dte.Debugger.StepOver(true);
+                AssertCurrentLine(app, 14);
+                app.Dte.Debugger.StepInto(true);
+                AssertCurrentLine(app, 11);
+                app.Dte.Debugger.StepOver(true);
+                AssertCurrentLine(app, 12);
+                app.Dte.Debugger.StepOut(true);
+                AssertCurrentLine(app, 14);
+                app.Dte.Debugger.StepOver(true);
+                AssertCurrentLine(app, 15);
+                Assert.AreEqual("True", app.Dte.Debugger.GetExpression("comparison_result").Value);
+
+                app.Dte.Debugger.Go(WaitForBreakOrEnd: true);
+                Assert.AreEqual(dbgDebugMode.dbgDesignMode, app.Dte.Debugger.CurrentMode);
+            }
+        }
+
         #endregion
 
         #region Helpers
+
+        private static void AssertCurrentLine(VisualStudioApp app, uint line) {
+            Assert.AreEqual(dbgDebugMode.dbgBreakMode, app.Dte.Debugger.CurrentMode);
+            var frame = (StackFrame2)app.Dte.Debugger.CurrentStackFrame;
+            Assert.AreEqual("Stepping.py", Path.GetFileName(frame.FileName));
+            Assert.AreEqual(line, frame.LineNumber);
+        }
 
         private static void StartHelloWorldAndBreak(VisualStudioApp app) {
             DebugProjectUITests.OpenProjectAndBreak(app, @"TestData\MixedModeHelloWorld.sln", "Program.py", 1);

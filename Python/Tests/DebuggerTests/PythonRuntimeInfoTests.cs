@@ -24,6 +24,15 @@ namespace DebuggerTests {
     [TestClass]
     public class PythonRuntimeInfoTests {
         [TestMethod, Priority(0)]
+        public void CFrameTracingFlagDependsOnLanguageVersion() {
+            Assert.AreEqual(0, PyThreadState.GetCFrameTracingFlag(PythonLanguageVersion.V39));
+            Assert.AreEqual(1, PyThreadState.GetCFrameTracingFlag(PythonLanguageVersion.V310));
+            Assert.AreEqual(255, PyThreadState.GetCFrameTracingFlag(PythonLanguageVersion.V311));
+            Assert.AreEqual(0, PyThreadState.GetCFrameTracingFlag(PythonLanguageVersion.V312));
+            Assert.AreEqual(0, PyThreadState.GetCFrameTracingFlag(PythonLanguageVersion.V315));
+        }
+
+        [TestMethod, Priority(0)]
         public void RecognizesPython315ModuleNames() {
             var moduleNames = new[] {
                 "python315.dll",
