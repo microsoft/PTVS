@@ -54,7 +54,7 @@ namespace PythonToolsTests {
 
         [TestMethod]
         public void NativeSettingsMatchTheVisibleLegacyPageOrder() {
-            AssertLegacyPageOrder("general",
+            AssertLegacyPageOrder("general.pythonTools",
                 "general.showOutputWindowForVirtualEnvCreate", "general.showOutputWindowForPackageInstallation",
                 "general.promptForEnvCreate", "general.promptForPackageInstallation",
                 "general.promptForTestFrameWorkInfoBar", "general.elevatePip");
@@ -75,16 +75,33 @@ namespace PythonToolsTests {
             AssertLegacyPageOrder("formatting", "formatting.formatter", "formatting.pasteRemovesReplPrompts");
         }
 
+        [TestMethod]
+        public void MigratedGeneralSettingsFollowBuiltInEditorSettings() {
+            var manifest = Manifest();
+            const string inlineCategory = Prefix + "general.pythonTools";
+            Assert.IsTrue(manifest["categories"][inlineCategory]["hideFromNavigation"].Value<bool>());
+            var settings = ((JObject)manifest["properties"]).Properties()
+                .Where(property => property.Name.StartsWith(Prefix + "general.", StringComparison.Ordinal)
+                    && property.Name != Prefix + "general.showCompletionOnTyping.parameterInfo")
+                .ToArray();
+            Assert.AreEqual(6, settings.Length);
+            // USX places child categories after direct settings, including editor settings with the maximum default order.
+            foreach (var setting in settings) {
+                Assert.AreEqual(inlineCategory, setting.Value["placements"].Single()["category"].Value<string>(), setting.Name);
+            }
+        }
+
         private static void AssertLegacyPageOrder(string category, params string[] expectedSuffixes) {
             var actual = ((JObject)Manifest()["properties"]).Properties()
                 .Select(property => new {
                     property.Name,
+                    Order = property.Value["order"]?.Value<int>() ?? int.MaxValue,
                     Placement = property.Value["placements"] == null
                         ? (property.Name.StartsWith(Prefix + category + ".", StringComparison.Ordinal) ? property.Value : null)
                         : property.Value["placements"].FirstOrDefault(placement => placement["category"].Value<string>() == Prefix + category)
                 })
                 .Where(property => property.Placement != null)
-                .OrderBy(property => property.Placement["order"].Value<int>())
+                .OrderBy(property => property.Placement["order"]?.Value<int>() ?? property.Order)
                 .Select(property => property.Name).ToArray();
             CollectionAssert.AreEqual(expectedSuffixes.Select(suffix => Prefix + suffix).ToArray(), actual, category);
         }

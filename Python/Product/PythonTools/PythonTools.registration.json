@@ -7,6 +7,7 @@
       "description": "@Microsoft.PythonTools.Options.UnifiedSettings:general.showOutputWindowForVirtualEnvCreate.Description;Microsoft.PythonTools.dll",
       "default": true,
       "order": 100,
+      "placements": [ { "category": "languages.python.general.pythonTools" } ],
       "transientScopesSupported": false
     },
     "languages.python.general.showOutputWindowForPackageInstallation": {
@@ -15,6 +16,7 @@
       "description": "@Microsoft.PythonTools.Options.UnifiedSettings:general.showOutputWindowForPackageInstallation.Description;Microsoft.PythonTools.dll",
       "default": true,
       "order": 110,
+      "placements": [ { "category": "languages.python.general.pythonTools" } ],
       "transientScopesSupported": false
     },
     "languages.python.general.promptForEnvCreate": {
@@ -23,6 +25,7 @@
       "description": "@Microsoft.PythonTools.Options.UnifiedSettings:general.promptForEnvCreate.Description;Microsoft.PythonTools.dll",
       "default": true,
       "order": 120,
+      "placements": [ { "category": "languages.python.general.pythonTools" } ],
       "transientScopesSupported": false
     },
     "languages.python.general.promptForPackageInstallation": {
@@ -31,6 +34,7 @@
       "description": "@Microsoft.PythonTools.Options.UnifiedSettings:general.promptForPackageInstallation.Description;Microsoft.PythonTools.dll",
       "default": true,
       "order": 130,
+      "placements": [ { "category": "languages.python.general.pythonTools" } ],
       "transientScopesSupported": false
     },
     "languages.python.general.promptForTestFrameWorkInfoBar": {
@@ -39,6 +43,7 @@
       "description": "@Microsoft.PythonTools.Options.UnifiedSettings:general.promptForTestFrameWorkInfoBar.Description;Microsoft.PythonTools.dll",
       "default": true,
       "order": 140,
+      "placements": [ { "category": "languages.python.general.pythonTools" } ],
       "transientScopesSupported": false
     },
     "languages.python.general.elevatePip": {
@@ -47,6 +52,7 @@
       "description": "@Microsoft.PythonTools.Options.UnifiedSettings:general.elevatePip.Description;Microsoft.PythonTools.dll",
       "default": false,
       "order": 150,
+      "placements": [ { "category": "languages.python.general.pythonTools" } ],
       "transientScopesSupported": false
     },
     "languages.python.analysis.autoSearchPaths": {
@@ -376,6 +382,10 @@
           }
         }
       ]
+    },
+    "languages.python.general.pythonTools": {
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:Category.PythonTools.Title;Microsoft.PythonTools.dll",
+      "hideFromNavigation": true
     },
     "languages.python.analysis": {
       "title": "@Microsoft.PythonTools.Options.UnifiedSettings:Category.Analysis.Title;Microsoft.PythonTools.dll",

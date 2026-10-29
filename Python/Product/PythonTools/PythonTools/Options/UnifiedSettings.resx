@@ -314,6 +314,9 @@
   <data name="Category.General.Title" xml:space="preserve">
 	<value>General</value>
   </data>
+	<data name="Category.PythonTools.Title" xml:space="preserve">
+	<value>Python tools</value>
+  </data>
   <data name="Category.Analysis.Title" xml:space="preserve">
 	<value>Analysis</value>
   </data>
