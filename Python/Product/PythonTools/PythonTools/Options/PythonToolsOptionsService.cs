@@ -28,6 +28,7 @@ namespace Microsoft.PythonTools.Options {
     class PythonToolsOptionsService : IPythonToolsOptionsService {
         private const string _optionsKey = "Options";
         private const string MigrationCategory = "UnifiedSettingsMigration\\v1";
+        private const string ImportCompleted = "Completed";
         private const string ParameterInfoMoniker = "languages.python.general.showCompletionOnTyping.parameterInfo";
         private readonly WritableSettingsStore _settingsStore;
         private readonly UnifiedSettingsStore _unifiedSettings;
@@ -42,15 +43,8 @@ namespace Microsoft.PythonTools.Options {
 
         internal PythonToolsOptionsService(WritableSettingsStore settingsStore, UnifiedSettingsStore unifiedSettings, Func<string> loadLegacyParameterInfo) {
             _settingsStore = settingsStore;
-            if (unifiedSettings.IsEnabled(PythonUnifiedSetting.All[0].Moniker)) {
-                _unifiedSettings = unifiedSettings;
-                foreach (var setting in PythonUnifiedSetting.All) {
-                    Import(setting.Moniker, () => LoadLegacyString(setting.Name, setting.Category), value => setting.Write(_unifiedSettings, value));
-                }
-                Import(ParameterInfoMoniker, loadLegacyParameterInfo, value => {
-                    _unifiedSettings.Write(ParameterInfoMoniker, bool.Parse(value), Strings.ProductTitle);
-                });
-            }
+            _unifiedSettings = unifiedSettings;
+            ImportLegacySettings(loadLegacyParameterInfo);
         }
 
         public void SaveString(string name, string category, string value) {
@@ -109,7 +103,7 @@ namespace Microsoft.PythonTools.Options {
         }
 
         internal IDisposable Subscribe(Action<string[]> changed) {
-            return _unifiedSettings?.Subscribe(update => {
+            return _unifiedSettings.Subscribe(update => {
                 var categories = PythonUnifiedSetting.All
                     .Where(setting => update.ChangedSettingMonikers.Contains(setting.Moniker))
                     .Select(setting => setting.Category).Distinct().ToArray();
@@ -120,28 +114,51 @@ namespace Microsoft.PythonTools.Options {
         }
 
         private PythonUnifiedSetting FindNativeSetting(string name, string category) {
-            return _unifiedSettings == null ? null : PythonUnifiedSetting.All.FirstOrDefault(setting => setting.Name == name && setting.Category == category);
+            return PythonUnifiedSetting.All.FirstOrDefault(setting => setting.Name == name && setting.Category == category);
         }
 
-        private void Import(string moniker, Func<string> loadLegacyValue, Action<string> writeNativeValue) {
+        private void ImportLegacySettings(Func<string> loadLegacyParameterInfo) {
             try {
                 var path = GetCollectionPath(MigrationCategory);
-                if (_settingsStore.CollectionExists(path) && _settingsStore.PropertyExists(path, moniker)) {
+                if (_settingsStore.CollectionExists(path) && _settingsStore.GetInt32(path, ImportCompleted, 0) == 1) {
                     return;
                 }
-                if (!_unifiedSettings.IsCustomized(moniker)) {
-                    var value = loadLegacyValue();
-                    if (value != null) {
-                        writeNativeValue(value);
+                if (PythonUnifiedSetting.All.Any(setting => _unifiedSettings.IsCustomized(setting.Moniker))
+                    || _unifiedSettings.IsCustomized(ParameterInfoMoniker)) {
+                    MarkImportCompleted(path);
+                    return;
+                }
+
+                var legacyValues = PythonUnifiedSetting.All
+                    .Select(setting => new { Setting = setting, Value = LoadLegacyString(setting.Name, setting.Category) })
+                    .Where(entry => entry.Value != null).ToArray();
+                var parameterInfo = loadLegacyParameterInfo();
+                if (legacyValues.Length == 0 && parameterInfo == null) {
+                    return;
+                }
+
+                _unifiedSettings.WriteBatch(writer => {
+                    foreach (var entry in legacyValues) {
+                        entry.Setting.Enqueue(writer, entry.Value);
                     }
-                }
-                if (!_settingsStore.CollectionExists(path)) {
-                    _settingsStore.CreateCollection(path);
-                }
-                _settingsStore.SetBoolean(path, moniker, true);
+                    if (parameterInfo != null) {
+                        if (!bool.TryParse(parameterInfo, out var value)) {
+                            throw new FormatException("The legacy Python Parameter Information setting must be a Boolean.");
+                        }
+                        UnifiedSettingsStore.EnqueueChange(writer, ParameterInfoMoniker, value);
+                    }
+                }, Strings.ProductTitle);
+                MarkImportCompleted(path);
             } catch (Exception ex) when (!ex.IsCriticalException()) {
-                CommonUtils.ActivityLogError(Strings.ProductTitle, $"Unable to import legacy setting '{moniker}'. The import will be retried on the next initialization. {ex}");
+                CommonUtils.ActivityLogError(Strings.ProductTitle, $"Unable to import legacy Python settings. The import remains incomplete. {ex}");
             }
+        }
+
+        private void MarkImportCompleted(string path) {
+            if (!_settingsStore.CollectionExists(path)) {
+                _settingsStore.CreateCollection(path);
+            }
+            _settingsStore.SetInt32(path, ImportCompleted, 1);
         }
 
         private static string LoadLegacyParameterInfo(IServiceProvider provider) {

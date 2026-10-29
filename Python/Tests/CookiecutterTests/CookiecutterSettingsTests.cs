@@ -11,164 +11,179 @@ namespace CookiecutterTests {
     [TestClass]
     public class CookiecutterSettingsTests {
         [TestMethod]
-        public void ImportsLegacyValuesBeforeCheckpoint() {
+        public void ImportsLegacyValuesBeforeMarkingComplete() {
             var store = new TestStore();
             var settings = new CookiecutterSettings(store);
-            var complete = new HashSet<string>();
-            settings.ImportLegacySettings(complete.Contains, LoadLegacy, moniker => {
-                Assert.IsTrue(store.IsCustomized(moniker), "Checkpoint must follow the native write.");
-                complete.Add(moniker);
-            }, (moniker, ex) => Assert.Fail(moniker + ": " + ex));
-            Assert.AreEqual(3, complete.Count);
+            var complete = false;
+            var completionWrites = 0;
+            settings.ImportLegacySettings(() => complete, LoadLegacy, () => {
+                Assert.AreEqual(3, store.WriteCount, "The completion flag must follow the whole import.");
+                completionWrites++;
+                complete = true;
+            }, ex => Assert.Fail(ex.ToString()));
+            Assert.IsTrue(complete);
+            Assert.AreEqual(1, completionWrites);
+            Assert.AreEqual(1, store.ImportCalls);
             Assert.IsFalse(settings.ShowHelp);
             Assert.AreEqual("https://example.test/legacy", settings.FeedUrl);
             Assert.IsFalse(settings.CheckForTemplateUpdate);
 
-            settings.ImportLegacySettings(complete.Contains, propertyName => {
+            settings.ImportLegacySettings(() => complete, propertyName => {
                 Assert.Fail("Completed migration must not read legacy storage again.");
                 return null;
-            }, moniker => Assert.Fail("Completed migration must not write its checkpoint again."),
-                (moniker, ex) => Assert.Fail(moniker + ": " + ex));
+            }, () => Assert.Fail("Completed migration must not write its flag again."),
+                ex => Assert.Fail(ex.ToString()));
             Assert.AreEqual(3, store.WriteCount);
+            Assert.AreEqual(1, store.ImportCalls);
         }
 
         [TestMethod]
-        public void AbsentLegacyValuesAreTerminalWithoutSyntheticCustomizations() {
+        public void NoLegacyValuesDoesNotMarkAnImportComplete() {
             var store = new TestStore();
             var settings = new CookiecutterSettings(store);
-            var complete = new HashSet<string>();
-            settings.ImportLegacySettings(complete.Contains, propertyName => null, moniker => complete.Add(moniker),
-                (moniker, ex) => Assert.Fail(moniker + ": " + ex));
-            Assert.AreEqual(3, complete.Count);
+            var complete = false;
+            settings.ImportLegacySettings(() => complete, propertyName => null, () => complete = true,
+                ex => Assert.Fail(ex.ToString()));
+            Assert.IsFalse(complete);
             Assert.AreEqual(0, store.WriteCount);
+            Assert.AreEqual(0, store.ImportCalls);
             Assert.IsTrue(settings.ShowHelp);
             Assert.AreEqual(UrlConstants.DefaultRecommendedFeed, settings.FeedUrl);
             Assert.IsTrue(settings.CheckForTemplateUpdate);
             Assert.IsFalse(store.IsCustomized(CookiecutterSettings.ShowHelpMoniker));
             Assert.IsFalse(store.IsCustomized(CookiecutterSettings.FeedUrlMoniker));
             Assert.IsFalse(store.IsCustomized(CookiecutterSettings.CheckForTemplateUpdateMoniker));
-
-            var reads = 0;
-            settings.ImportLegacySettings(complete.Contains, propertyName => {
-                reads++;
-                return LoadLegacy(propertyName);
-            }, moniker => Assert.Fail("Absent values were already checkpointed."),
-                (moniker, ex) => Assert.Fail(moniker + ": " + ex));
-            Assert.AreEqual(0, reads);
-            Assert.AreEqual(0, store.WriteCount);
         }
 
         [TestMethod]
         public void PresentDefaultValuesAreImportedAsCustomizations() {
             var store = new TestStore();
             var settings = new CookiecutterSettings(store);
-            var complete = new HashSet<string>();
-            settings.ImportLegacySettings(complete.Contains, propertyName => {
+            var complete = false;
+            settings.ImportLegacySettings(() => complete, propertyName => {
                 return propertyName == nameof(CookiecutterOptionPage.FeedUrl)
                     ? (object)UrlConstants.DefaultRecommendedFeed : "True";
-            }, moniker => complete.Add(moniker), (moniker, ex) => Assert.Fail(moniker + ": " + ex));
+            }, () => complete = true, ex => Assert.Fail(ex.ToString()));
             Assert.AreEqual(3, store.WriteCount);
-            Assert.AreEqual(3, complete.Count);
+            Assert.AreEqual(1, store.ImportCalls);
+            Assert.IsTrue(complete);
             Assert.IsTrue(store.IsCustomized(CookiecutterSettings.ShowHelpMoniker));
             Assert.IsTrue(store.IsCustomized(CookiecutterSettings.FeedUrlMoniker));
             Assert.IsTrue(store.IsCustomized(CookiecutterSettings.CheckForTemplateUpdateMoniker));
         }
 
         [TestMethod]
-        public void InvalidLegacyValueLeavesOnlyItsCheckpointUnset() {
+        public void InvalidLegacyValueDoesNotImportOrMarkComplete() {
             var store = new TestStore();
             var settings = new CookiecutterSettings(store);
-            var complete = new HashSet<string>();
-            var errors = new Dictionary<string, Exception>();
-            settings.ImportLegacySettings(complete.Contains, propertyName => {
+            var complete = false;
+            var errors = new List<Exception>();
+            settings.ImportLegacySettings(() => complete, propertyName => {
                 return propertyName == nameof(CookiecutterOptionPage.ShowHelp) ? "not a Boolean" : LoadLegacy(propertyName);
-            }, moniker => complete.Add(moniker), (moniker, ex) => errors.Add(moniker, ex));
-            Assert.AreEqual(2, complete.Count);
-            Assert.IsFalse(complete.Contains(CookiecutterSettings.ShowHelpMoniker));
+            }, () => complete = true, errors.Add);
+            Assert.IsFalse(complete);
             Assert.AreEqual(1, errors.Count);
-            Assert.IsInstanceOfType(errors[CookiecutterSettings.ShowHelpMoniker], typeof(FormatException));
-            Assert.AreEqual(2, store.WriteCount);
+            Assert.IsInstanceOfType(errors[0], typeof(FormatException));
+            StringAssert.Contains(errors[0].Message, nameof(CookiecutterOptionPage.ShowHelp));
+            Assert.AreEqual(0, store.WriteCount);
+            Assert.AreEqual(0, store.ImportCalls);
             Assert.IsTrue(settings.ShowHelp);
         }
 
         [TestMethod]
-        public void PreservesExistingCustomizationsIncludingDefaultValues() {
+        public void AnyCustomizedDefaultSkipsTheWholeCookiecutterImport() {
             var store = new TestStore();
             var settings = new CookiecutterSettings(store);
-            settings.ShowHelp = true;
-            settings.FeedUrl = UrlConstants.DefaultRecommendedFeed;
             settings.CheckForTemplateUpdate = true;
-            var complete = new HashSet<string>();
+            var complete = false;
             var reads = 0;
-            settings.ImportLegacySettings(complete.Contains, propertyName => {
+            settings.ImportLegacySettings(() => complete, propertyName => {
                 reads++;
                 return LoadLegacy(propertyName);
-            }, moniker => complete.Add(moniker), (moniker, ex) => Assert.Fail(moniker + ": " + ex));
+            }, () => complete = true, ex => Assert.Fail(ex.ToString()));
 
             Assert.IsTrue(settings.ShowHelp);
             Assert.AreEqual(UrlConstants.DefaultRecommendedFeed, settings.FeedUrl);
             Assert.IsTrue(settings.CheckForTemplateUpdate);
-            Assert.AreEqual(3, store.WriteCount);
-            Assert.AreEqual(3, complete.Count);
+            Assert.AreEqual(1, store.WriteCount);
+            Assert.AreEqual(0, store.ImportCalls);
+            Assert.IsTrue(complete);
             Assert.AreEqual(0, reads);
         }
 
         [TestMethod]
-        public void FailedImportRetriesWithoutReplayingCompletedSettings() {
+        public void FailedBatchDoesNotPartiallyImportOrMarkComplete() {
             var store = new TestStore { FailMoniker = CookiecutterSettings.FeedUrlMoniker };
             var settings = new CookiecutterSettings(store);
-            var complete = new HashSet<string>();
-            var errors = new Dictionary<string, Exception>();
-            settings.ImportLegacySettings(complete.Contains, LoadLegacy, moniker => complete.Add(moniker),
-                (moniker, ex) => errors.Add(moniker, ex));
+            var complete = false;
+            var errors = new List<Exception>();
+            settings.ImportLegacySettings(() => complete, LoadLegacy, () => complete = true, errors.Add);
             Assert.AreEqual(1, errors.Count);
-            Assert.IsTrue(errors.ContainsKey(CookiecutterSettings.FeedUrlMoniker));
-            Assert.AreEqual(2, complete.Count);
-            Assert.IsTrue(complete.Contains(CookiecutterSettings.ShowHelpMoniker));
-            Assert.IsTrue(complete.Contains(CookiecutterSettings.CheckForTemplateUpdateMoniker));
-            Assert.IsFalse(complete.Contains(CookiecutterSettings.FeedUrlMoniker));
-            Assert.AreEqual(2, store.WriteCount);
-
-            settings.ShowHelp = true;
-            store.FailMoniker = null;
-            var reads = new List<string>();
-            settings.ImportLegacySettings(complete.Contains, propertyName => {
-                reads.Add(propertyName);
-                return LoadLegacy(propertyName);
-            }, moniker => complete.Add(moniker), (moniker, ex) => Assert.Fail(moniker + ": " + ex));
-            Assert.AreEqual(3, complete.Count);
-            CollectionAssert.AreEqual(new[] { nameof(CookiecutterOptionPage.FeedUrl) }, reads);
+            Assert.IsInstanceOfType(errors[0], typeof(InvalidOperationException));
+            Assert.IsFalse(complete);
+            Assert.AreEqual(0, store.WriteCount);
+            Assert.AreEqual(1, store.ImportCalls);
             Assert.IsTrue(settings.ShowHelp);
+            Assert.AreEqual(UrlConstants.DefaultRecommendedFeed, settings.FeedUrl);
+            Assert.IsTrue(settings.CheckForTemplateUpdate);
+
+            store.FailMoniker = null;
+            settings.ImportLegacySettings(() => complete, LoadLegacy, () => complete = true, ex => Assert.Fail(ex.ToString()));
+            Assert.IsTrue(complete);
+            Assert.IsFalse(settings.ShowHelp);
             Assert.AreEqual("https://example.test/legacy", settings.FeedUrl);
             Assert.IsFalse(settings.CheckForTemplateUpdate);
-            Assert.AreEqual(4, store.WriteCount);
+            Assert.AreEqual(3, store.WriteCount);
+            Assert.AreEqual(2, store.ImportCalls);
         }
 
         [TestMethod]
-        public void CheckpointFailureCanBeRetriedWithoutRewritingCommittedValues() {
+        public void CompletionWriteFailureDoesNotCauseAnotherImport() {
             var store = new TestStore();
             var settings = new CookiecutterSettings(store);
-            var complete = new HashSet<string>();
-            var errors = new Dictionary<string, Exception>();
-            settings.ImportLegacySettings(complete.Contains, LoadLegacy, moniker => {
-                if (moniker == CookiecutterSettings.FeedUrlMoniker) {
-                    throw new InvalidOperationException("Checkpoint unavailable");
-                }
-                complete.Add(moniker);
-            }, (moniker, ex) => errors.Add(moniker, ex));
+            var complete = false;
+            var errors = new List<Exception>();
+            settings.ImportLegacySettings(() => complete, LoadLegacy,
+                () => { throw new InvalidOperationException("Completion storage unavailable"); }, errors.Add);
             Assert.AreEqual(1, errors.Count);
-            Assert.IsTrue(errors.ContainsKey(CookiecutterSettings.FeedUrlMoniker));
-            Assert.AreEqual(2, complete.Count);
+            Assert.IsFalse(complete);
             Assert.AreEqual(3, store.WriteCount);
+            Assert.AreEqual(1, store.ImportCalls);
 
             var reads = 0;
-            settings.ImportLegacySettings(complete.Contains, propertyName => {
+            settings.ImportLegacySettings(() => complete, propertyName => {
                 reads++;
                 return LoadLegacy(propertyName);
-            }, moniker => complete.Add(moniker), (moniker, ex) => Assert.Fail(moniker + ": " + ex));
-            Assert.AreEqual(3, complete.Count);
+            }, () => complete = true, ex => Assert.Fail(ex.ToString()));
+            Assert.IsTrue(complete);
             Assert.AreEqual(0, reads);
             Assert.AreEqual(3, store.WriteCount);
+            Assert.AreEqual(1, store.ImportCalls);
+        }
+
+        [TestMethod]
+        public void CompletedFlagSkipsProvenanceAndLegacyReads() {
+            var store = new TestStore { ProvenanceFailure = new InvalidOperationException("Unexpected provenance read") };
+            var settings = new CookiecutterSettings(store);
+            settings.ImportLegacySettings(() => true, propertyName => {
+                Assert.Fail("Completed import must not read legacy settings.");
+                return null;
+            }, () => Assert.Fail("Completed import must not write its flag again."), ex => Assert.Fail(ex.ToString()));
+            Assert.AreEqual(0, store.WriteCount);
+            Assert.AreEqual(0, store.ImportCalls);
+        }
+
+        [TestMethod]
+        public void UnknownProvenanceDoesNotImportOrMarkComplete() {
+            var store = new TestStore { ProvenanceFailure = new InvalidOperationException("Unknown provenance") };
+            var settings = new CookiecutterSettings(store);
+            var complete = false;
+            var errors = new List<Exception>();
+            settings.ImportLegacySettings(() => complete, LoadLegacy, () => complete = true, errors.Add);
+            Assert.IsFalse(complete);
+            Assert.AreEqual(1, errors.Count);
+            Assert.AreEqual(0, store.WriteCount);
+            Assert.AreEqual(0, store.ImportCalls);
         }
 
         [TestMethod]
@@ -204,10 +219,17 @@ namespace CookiecutterTests {
             };
             private readonly HashSet<string> _customized = new HashSet<string>();
             internal string FailMoniker;
+            internal Exception ProvenanceFailure;
             internal int WriteCount;
+            internal int ImportCalls;
 
             public T Read<T>(string moniker) => (T)_values[moniker];
-            public bool IsCustomized(string moniker) => _customized.Contains(moniker);
+            public bool IsCustomized(string moniker) {
+                if (ProvenanceFailure != null) {
+                    throw ProvenanceFailure;
+                }
+                return _customized.Contains(moniker);
+            }
             public void Write<T>(string moniker, T value, string description) {
                 if (moniker == FailMoniker) {
                     throw new InvalidOperationException("USX write unavailable");
@@ -215,6 +237,28 @@ namespace CookiecutterTests {
                 _values[moniker] = value;
                 _customized.Add(moniker);
                 WriteCount++;
+            }
+
+            public void Import(bool? showHelp, string feedUrl, bool? checkForTemplateUpdate, string description) {
+                ImportCalls++;
+                var pending = new Dictionary<string, object>();
+                if (showHelp.HasValue) {
+                    pending.Add(CookiecutterSettings.ShowHelpMoniker, showHelp.Value);
+                }
+                if (feedUrl != null) {
+                    pending.Add(CookiecutterSettings.FeedUrlMoniker, feedUrl);
+                }
+                if (checkForTemplateUpdate.HasValue) {
+                    pending.Add(CookiecutterSettings.CheckForTemplateUpdateMoniker, checkForTemplateUpdate.Value);
+                }
+                if (FailMoniker != null && pending.ContainsKey(FailMoniker)) {
+                    throw new InvalidOperationException("USX batch unavailable");
+                }
+                foreach (var pair in pending) {
+                    _values[pair.Key] = pair.Value;
+                    _customized.Add(pair.Key);
+                    WriteCount++;
+                }
             }
         }
     }

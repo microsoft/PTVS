@@ -26,14 +26,15 @@ namespace PythonToolsTests {
         private const string Prefix = "languages.python.";
         private const string Legacy = "PythonTools\\Options\\";
         private const string Checkpoints = Legacy + "UnifiedSettingsMigration\\v1";
+        private const string ImportCompleted = "Completed";
 
         [TestMethod]
         public void ManifestAndBackendInventoryAgree() {
             var properties = (JObject)Manifest()["properties"];
-            Assert.AreEqual(37, properties.Count);
-            Assert.AreEqual(36, PythonUnifiedSetting.All.Count);
-            Assert.AreEqual(36, PythonUnifiedSetting.All.Select(s => s.Moniker).Distinct().Count());
-            Assert.AreEqual(36, PythonUnifiedSetting.All.Select(s => s.Category + "/" + s.Name).Distinct().Count());
+            Assert.AreEqual(36, properties.Count);
+            Assert.AreEqual(35, PythonUnifiedSetting.All.Count);
+            Assert.AreEqual(35, PythonUnifiedSetting.All.Select(s => s.Moniker).Distinct().Count());
+            Assert.AreEqual(35, PythonUnifiedSetting.All.Select(s => s.Category + "/" + s.Name).Distinct().Count());
             foreach (var setting in PythonUnifiedSetting.All) {
                 Assert.IsNotNull(properties[setting.Moniker], setting.Moniker);
                 Assert.AreEqual(setting.IsArray, properties[setting.Moniker]["type"].Value<string>() == "array", setting.Moniker);
@@ -49,6 +50,57 @@ namespace PythonToolsTests {
             Assert.IsTrue(bridge["map"][1]["result"].Value<bool>());
             Assert.AreEqual("off", properties[Prefix + "analysis.typeCheckingMode"]["default"].Value<string>());
             Assert.IsTrue(properties[Prefix + "debugging.promptBeforeRunningWithBuildError"]["default"].Value<bool>());
+        }
+
+        [TestMethod]
+        public void NativeSettingsMatchTheVisibleLegacyPageOrder() {
+            AssertLegacyPageOrder("general",
+                "general.showOutputWindowForVirtualEnvCreate", "general.showOutputWindowForPackageInstallation",
+                "general.promptForEnvCreate", "general.promptForPackageInstallation",
+                "general.promptForTestFrameWorkInfoBar", "general.elevatePip");
+            AssertLegacyPageOrder("analysis",
+                "analysis.diagnosticMode", "analysis.logLevel", "analysis.typeCheckingMode", "analysis.importFormat",
+                "analysis.stubPath", "analysis.extraPaths", "analysis.typeshedPaths", "analysis.autoSearchPaths",
+                "analysis.indexing", "analysis.inlayHintsVariableTypes", "analysis.inlayHintsFunctionReturnTypes");
+            AssertLegacyPageOrder("debugging",
+                "debugging.promptBeforeRunningWithBuildError", "debugging.waitOnAbnormalExit", "debugging.waitOnNormalExit",
+                "debugging.teeStandardOutput", "debugging.breakOnSystemExitZero", "debugging.debugStdLib",
+                "debugging.showFunctionReturnValue", "debugging.variablePresentationForClasses",
+                "debugging.variablePresentationForProtected", "debugging.variablePresentationForFunctions",
+                "debugging.variablePresentationForSpecial");
+            AssertLegacyPageOrder("conda", "conda.customCondaExecutablePath");
+            AssertLegacyPageOrder("interactive", "interactive.scripts", "interactive.useSmartHistory");
+            AssertLegacyPageOrder("advanced",
+                "advanced.autoImportCompletions", "advanced.completeFunctionParens", "general.showCompletionOnTyping.parameterInfo");
+            AssertLegacyPageOrder("formatting", "formatting.formatter", "formatting.pasteRemovesReplPrompts");
+        }
+
+        private static void AssertLegacyPageOrder(string category, params string[] expectedSuffixes) {
+            var actual = ((JObject)Manifest()["properties"]).Properties()
+                .Select(property => new {
+                    property.Name,
+                    Placement = property.Value["placements"] == null
+                        ? (property.Name.StartsWith(Prefix + category + ".", StringComparison.Ordinal) ? property.Value : null)
+                        : property.Value["placements"].FirstOrDefault(placement => placement["category"].Value<string>() == Prefix + category)
+                })
+                .Where(property => property.Placement != null)
+                .OrderBy(property => property.Placement["order"].Value<int>())
+                .Select(property => property.Name).ToArray();
+            CollectionAssert.AreEqual(expectedSuffixes.Select(suffix => Prefix + suffix).ToArray(), actual, category);
+        }
+
+        [TestMethod]
+        public void CookiecutterManifestHidesGeneralAndKeepsLegacyPropertyGridOrder() {
+            var manifest = Manifest("CookiecutterSettings.json");
+            Assert.IsTrue(manifest["categories"]["cookiecutter.general"]["hideFromNavigation"].Value<bool>());
+            Assert.AreEqual("bdb4e0b1-4869-4a6f-ad55-5230b768261d",
+                manifest["categories"]["cookiecutter.general"]["legacyOptionPageId"].Value<string>());
+            var properties = (JObject)manifest["properties"];
+            CollectionAssert.AreEqual(new[] {
+                "cookiecutter.general.checkForTemplateUpdate",
+                "cookiecutter.general.feedUrl",
+                "cookiecutter.general.showHelp"
+            }, properties.Properties().OrderBy(property => property.Value["order"].Value<int>()).Select(property => property.Name).ToArray());
         }
 
         [TestMethod]
@@ -85,7 +137,9 @@ namespace PythonToolsTests {
             CollectionAssert.AreEqual(new[] { "first", "second", "third" }, backend.LoadArray("ExtraPaths", "Analysis"));
             Assert.IsFalse(native.Store.Read<bool>(Prefix + "general.showCompletionOnTyping.parameterInfo"));
             Assert.AreEqual("True", legacy.GetString(Legacy + "Advanced", "DontPromptBeforeRunningWithBuildError"));
-            Assert.AreEqual(1, legacy.GetInt32(Checkpoints, Prefix + "analysis.extraPaths"));
+            Assert.AreEqual(1, legacy.GetInt32(Checkpoints, ImportCompleted));
+            CollectionAssert.AreEqual(new[] { ImportCompleted }, legacy.GetPropertyNames(Checkpoints).Where(name => !string.IsNullOrEmpty(name)).ToArray());
+            Assert.AreEqual(1, native.CommitCalls);
         }
 
         [TestMethod]
@@ -106,6 +160,12 @@ namespace PythonToolsTests {
                 "debugInteractive.scripts", "C:\\legacy\\debug-scripts", "C:\\updated\\debug-scripts");
         }
 
+        [TestMethod]
+        public void UseLibraryCodeForTypesStaysInLegacyStorage() {
+            VerifyHiddenPreferenceStaysInLegacyStorage("Analysis", "UseLibraryCodeForTypes",
+                "analysis.useLibraryCodeForTypes", "False", "True");
+        }
+
         private static void VerifyHiddenPreferenceStaysInLegacyStorage(string category, string name, string suffix, string original, string updated) {
             var moniker = Prefix + suffix;
             Assert.IsNull(Manifest()["properties"][moniker], moniker);
@@ -118,67 +178,169 @@ namespace PythonToolsTests {
             var backend = new PythonToolsOptionsService(legacy, native.Store, () => null);
             Assert.AreEqual(original, backend.LoadString(name, category));
             Assert.AreEqual(original, legacy.GetString(path, name));
-            Assert.IsFalse(legacy.PropertyExists(Checkpoints, moniker));
+            Assert.IsFalse(legacy.CollectionExists(Checkpoints));
             Assert.AreEqual(0, native.CommitCalls);
 
             backend.SaveString(name, category, updated);
             Assert.AreEqual(updated, backend.LoadString(name, category));
             Assert.AreEqual(updated, legacy.GetString(path, name));
-            Assert.IsFalse(legacy.PropertyExists(Checkpoints, moniker));
+            Assert.IsFalse(legacy.CollectionExists(Checkpoints));
             Assert.AreEqual(0, native.CommitCalls);
         }
 
         [TestMethod]
-        public void ExistingCustomizedDefaultWinsAndMissingValuesAreTerminal() {
+        public void AnyCustomizedDefaultSkipsTheWholePythonImport() {
             var native = new NativeSettings();
-            var moniker = Prefix + "general.elevatePip";
+            var moniker = Prefix + "formatting.formatter";
             native.Customized.Add(moniker);
             var legacy = CreateLegacyStore();
             legacy.CreateCollection(Legacy + "Advanced");
             legacy.SetString(Legacy + "Advanced", "ElevatePip", "True");
-            new PythonToolsOptionsService(legacy, native.Store, () => null);
-            Assert.IsFalse(native.Store.Read<bool>(moniker));
-            Assert.AreEqual(0, native.CommitCalls);
-            Assert.AreEqual(1, legacy.GetInt32(Checkpoints, moniker));
             legacy.SetString(Legacy + "Advanced", "WaitOnNormalExit", "False");
-            new PythonToolsOptionsService(legacy, native.Store, () => null);
+            new PythonToolsOptionsService(legacy, native.Store, () => {
+                Assert.Fail("Existing native settings must skip all legacy reads.");
+                return null;
+            });
+            Assert.AreEqual("black", native.Store.Read<string>(moniker));
+            Assert.IsFalse(native.Store.Read<bool>(Prefix + "general.elevatePip"));
             Assert.IsTrue(native.Store.Read<bool>(Prefix + "debugging.waitOnNormalExit"));
             Assert.AreEqual(0, native.CommitCalls);
+            Assert.AreEqual(1, legacy.GetInt32(Checkpoints, ImportCompleted));
+            CollectionAssert.AreEqual(new[] { ImportCompleted }, legacy.GetPropertyNames(Checkpoints).Where(name => !string.IsNullOrEmpty(name)).ToArray());
         }
 
         [TestMethod]
-        public void FailedImportRetriesWithoutReplayingSuccessfulSettings() {
+        public void CustomizedParameterInformationAlsoSkipsTheWholeImport() {
             var native = new NativeSettings();
-            var failed = Prefix + "general.elevatePip";
+            native.Customized.Add(Prefix + "general.showCompletionOnTyping.parameterInfo");
+            var legacy = CreateLegacyStore();
+            legacy.CreateCollection(Legacy + "Advanced");
+            legacy.SetString(Legacy + "Advanced", "ElevatePip", "True");
+            new PythonToolsOptionsService(legacy, native.Store, () => {
+                Assert.Fail("Customized Parameter Information must skip legacy import.");
+                return null;
+            });
+            Assert.IsFalse(native.Store.Read<bool>(Prefix + "general.elevatePip"));
+            Assert.AreEqual(0, native.CommitCalls);
+            Assert.AreEqual(1, legacy.GetInt32(Checkpoints, ImportCompleted));
+        }
+
+        [TestMethod]
+        public void CompletedImportSkipsProvenanceAndLegacyReads() {
+            var native = new NativeSettings { ProvenanceOverride = SettingValueSource.Unknown };
+            var legacy = CreateLegacyStore();
+            legacy.CreateCollection(Checkpoints);
+            legacy.SetInt32(Checkpoints, ImportCompleted, 1);
+            legacy.CreateCollection(Legacy + "Advanced");
+            legacy.SetString(Legacy + "Advanced", "ElevatePip", "True");
+            new PythonToolsOptionsService(legacy, native.Store, () => {
+                Assert.Fail("Completed import must not read legacy settings.");
+                return null;
+            });
+            Assert.AreEqual(0, native.ProvenanceCalls);
+            Assert.AreEqual(0, native.CommitCalls);
+            Assert.IsFalse(native.Store.Read<bool>(Prefix + "general.elevatePip"));
+            Assert.AreEqual(1, legacy.GetInt32(Checkpoints, ImportCompleted));
+        }
+
+        [TestMethod]
+        public void NoLegacyValuesDoesNotMarkAnImportComplete() {
+            var native = new NativeSettings();
+            var legacy = CreateLegacyStore();
+            new PythonToolsOptionsService(legacy, native.Store, () => null);
+            Assert.IsFalse(legacy.CollectionExists(Checkpoints));
+            Assert.AreEqual(0, native.CommitCalls);
+            Assert.AreEqual(0, native.Customized.Count);
+        }
+
+        [TestMethod]
+        public void FalseCompletionFlagDoesNotSkipImport() {
+            var native = new NativeSettings();
+            var legacy = CreateLegacyStore();
+            legacy.CreateCollection(Checkpoints);
+            legacy.SetInt32(Checkpoints, ImportCompleted, 0);
+            legacy.CreateCollection(Legacy + "Advanced");
+            legacy.SetString(Legacy + "Advanced", "ElevatePip", "True");
+            new PythonToolsOptionsService(legacy, native.Store, () => null);
+            Assert.IsTrue(native.Store.Read<bool>(Prefix + "general.elevatePip"));
+            Assert.AreEqual(1, native.CommitCalls);
+            Assert.AreEqual(1, legacy.GetInt32(Checkpoints, ImportCompleted));
+        }
+
+        [TestMethod]
+        public void InvalidLegacyValueDoesNotPartiallyImportOrMarkComplete() {
+            var native = new NativeSettings();
+            var legacy = CreateLegacyStore();
+            legacy.CreateCollection(Legacy + "Advanced");
+            legacy.SetString(Legacy + "Advanced", "ElevatePip", "True");
+            legacy.SetString(Legacy + "Advanced", "AutoImportCompletions", "not a Boolean");
+            new PythonToolsOptionsService(legacy, native.Store, () => null);
+            Assert.IsFalse(legacy.CollectionExists(Checkpoints));
+            Assert.AreEqual(0, native.CommitCalls);
+            Assert.IsFalse(native.Store.Read<bool>(Prefix + "general.elevatePip"));
+        }
+
+        [TestMethod]
+        public void FailedBatchDoesNotPartiallyImportOrMarkComplete() {
+            var native = new NativeSettings();
+            var failed = Prefix + "debugging.waitOnNormalExit";
             native.ChangeFailures[failed] = SettingChangeOutcome.Denied;
             var legacy = CreateLegacyStore();
             legacy.CreateCollection(Legacy + "Advanced");
             legacy.SetString(Legacy + "Advanced", "ElevatePip", "True");
             legacy.SetString(Legacy + "Advanced", "WaitOnNormalExit", "False");
             new PythonToolsOptionsService(legacy, native.Store, () => null);
-            Assert.IsFalse(legacy.PropertyExists(Checkpoints, failed));
-            Assert.IsFalse(native.Store.Read<bool>(Prefix + "debugging.waitOnNormalExit"));
-            Assert.AreEqual(1, native.CommitCalls);
+            Assert.IsFalse(legacy.CollectionExists(Checkpoints));
+            Assert.IsFalse(native.Store.Read<bool>(Prefix + "general.elevatePip"));
+            Assert.IsTrue(native.Store.Read<bool>(failed));
+            Assert.AreEqual(0, native.CommitCalls);
             native.ChangeFailures.Clear();
             new PythonToolsOptionsService(legacy, native.Store, () => null);
-            Assert.AreEqual(1, legacy.GetInt32(Checkpoints, failed));
-            Assert.IsTrue(native.Store.Read<bool>(failed));
-            Assert.AreEqual(2, native.CommitCalls);
+            Assert.AreEqual(1, legacy.GetInt32(Checkpoints, ImportCompleted));
+            Assert.IsTrue(native.Store.Read<bool>(Prefix + "general.elevatePip"));
+            Assert.IsFalse(native.Store.Read<bool>(failed));
+            Assert.AreEqual(1, native.CommitCalls);
         }
 
         [TestMethod]
-        public void PendingCommitIsNotCheckpointed() {
+        public void PendingCommitDoesNotMarkTheImportComplete() {
             var native = new NativeSettings { CommitOutcome = SettingCommitOutcome.PendingApproval };
             var legacy = CreateLegacyStore();
             legacy.CreateCollection(Legacy + "Formatting");
             legacy.SetString(Legacy + "Formatting", "Formatter", "yapf");
             new PythonToolsOptionsService(legacy, native.Store, () => null);
-            Assert.IsFalse(legacy.PropertyExists(Checkpoints, Prefix + "formatting.formatter"));
+            Assert.IsFalse(legacy.CollectionExists(Checkpoints));
             Assert.AreEqual("black", native.Store.Read<string>(Prefix + "formatting.formatter"));
             native.CommitOutcome = SettingCommitOutcome.Success;
             new PythonToolsOptionsService(legacy, native.Store, () => null);
             Assert.AreEqual("yapf", native.Store.Read<string>(Prefix + "formatting.formatter"));
-            Assert.AreEqual(1, legacy.GetInt32(Checkpoints, Prefix + "formatting.formatter"));
+            Assert.AreEqual(1, legacy.GetInt32(Checkpoints, ImportCompleted));
+        }
+
+        [TestMethod]
+        public void UnknownProvenanceDoesNotImportOrMarkComplete() {
+            var native = new NativeSettings { ProvenanceOverride = SettingValueSource.Unknown };
+            var legacy = CreateLegacyStore();
+            legacy.CreateCollection(Legacy + "Advanced");
+            legacy.SetString(Legacy + "Advanced", "ElevatePip", "True");
+            new PythonToolsOptionsService(legacy, native.Store, () => null);
+            Assert.IsFalse(legacy.CollectionExists(Checkpoints));
+            Assert.AreEqual(0, native.CommitCalls);
+            Assert.IsFalse(native.Store.Read<bool>(Prefix + "general.elevatePip"));
+        }
+
+        [TestMethod]
+        public void NoChangesQueuedIsACompletedImport() {
+            var native = new NativeSettings { CommitOutcome = SettingCommitOutcome.NoChangesQueued };
+            var moniker = Prefix + "general.elevatePip";
+            native.ChangeFailures[moniker] = SettingChangeOutcome.NoOp;
+            var legacy = CreateLegacyStore();
+            legacy.CreateCollection(Legacy + "Advanced");
+            legacy.SetString(Legacy + "Advanced", "ElevatePip", "False");
+            new PythonToolsOptionsService(legacy, native.Store, () => null);
+            Assert.AreEqual(1, legacy.GetInt32(Checkpoints, ImportCompleted));
+            Assert.AreEqual(1, native.CommitCalls);
+            Assert.IsFalse(native.Store.Read<bool>(moniker));
         }
 
         [TestMethod]
@@ -219,14 +381,15 @@ namespace PythonToolsTests {
         }
 
         [TestMethod]
-        public void ClassicModeDoesNotImportOrCheckpoint() {
-            var native = new NativeSettings { ReadOutcome = SettingRetrievalOutcome.NotSupportedInClassicMode };
+        public void NativeReadFailureDoesNotFallBackToLegacyStorage() {
+            var native = new NativeSettings { ReadOutcome = SettingRetrievalOutcome.FailedValidation };
             var legacy = CreateLegacyStore();
+            legacy.CreateCollection(Checkpoints);
+            legacy.SetInt32(Checkpoints, ImportCompleted, 1);
             legacy.CreateCollection(Legacy + "Advanced");
             legacy.SetString(Legacy + "Advanced", "ElevatePip", "True");
-            var backend = new PythonToolsOptionsService(legacy, native.Store, () => { Assert.Fail("Classic mode must not import Parameter Information."); return null; });
-            Assert.AreEqual("True", backend.LoadString("ElevatePip", "Advanced"));
-            Assert.IsFalse(legacy.CollectionExists(Checkpoints));
+            var backend = new PythonToolsOptionsService(legacy, native.Store, () => null);
+            ExpectFailure(() => backend.LoadString("ElevatePip", "Advanced"), "FailedValidation");
             Assert.AreEqual(0, native.CommitCalls);
         }
 
@@ -248,8 +411,8 @@ namespace PythonToolsTests {
             Assert.Fail("Expected a reported settings failure.");
         }
 
-        private static JObject Manifest() {
-            using (var stream = typeof(UnifiedSettingsTests).Assembly.GetManifestResourceStream("PythonToolsTests.PythonTools.registration.json"))
+        private static JObject Manifest(string fileName = "PythonTools.registration.json") {
+            using (var stream = typeof(UnifiedSettingsTests).Assembly.GetManifestResourceStream("PythonToolsTests." + fileName))
             using (var reader = new StreamReader(stream)) {
                 return JObject.Parse(reader.ReadToEnd());
             }
@@ -275,6 +438,7 @@ namespace PythonToolsTests {
             public SettingValueSource? ProvenanceOverride;
             public SettingWriteOptions LastWriteOptions;
             public int CommitCalls;
+            public int ProvenanceCalls;
             public UnifiedSettingsStore Store { get; }
 
             public NativeSettings() {
@@ -282,9 +446,12 @@ namespace PythonToolsTests {
                     var value = property.Value["default"];
                     _values[property.Name] = value is JArray array ? (object)array.Values<string>().ToArray() : ((JValue)value).Value;
                 }
-                Store = new UnifiedSettingsStore(this, moniker => new SettingProvenance(
-                    ProvenanceOverride ?? (Customized.Contains(moniker) ? SettingValueSource.UserCustomization : SettingValueSource.RegisteredDefault),
-                    Customized.Contains(moniker) ? "user" : null, Customized.Contains(moniker)));
+                Store = new UnifiedSettingsStore(this, moniker => {
+                    ProvenanceCalls++;
+                    return new SettingProvenance(
+                        ProvenanceOverride ?? (Customized.Contains(moniker) ? SettingValueSource.UserCustomization : SettingValueSource.RegisteredDefault),
+                        Customized.Contains(moniker) ? "user" : null, Customized.Contains(moniker));
+                });
             }
 
             public ISettingsReader GetReader() => this;

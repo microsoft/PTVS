@@ -32,15 +32,6 @@ namespace Microsoft.PythonTools.Infrastructure {
             return new UnifiedSettingsStore(manager, metadata.GetProvenance);
         }
 
-        public bool IsEnabled(string moniker) {
-            var result = _reader.GetValue<object>(moniker, ReadOptions);
-            if (result.Outcome == SettingRetrievalOutcome.NotSupportedInClassicMode) {
-                return false;
-            }
-            CheckRead(moniker, result.Outcome, result.Message);
-            return true;
-        }
-
         public T Read<T>(string moniker) {
             var result = _reader.GetValue<T>(moniker, ReadOptions);
             CheckRead(moniker, result.Outcome, result.Message);
@@ -73,6 +64,20 @@ namespace Microsoft.PythonTools.Infrastructure {
             Commit(writer, moniker, result, description);
         }
 
+        public void WriteBatch(Action<ISettingsWriter> enqueueChanges, string description) {
+            var writer = _manager.GetWriter(description, _eventSource);
+            enqueueChanges(writer);
+            Commit(writer, description);
+        }
+
+        public static void EnqueueChange<T>(ISettingsWriter writer, string moniker, T value) {
+            CheckChange(moniker, writer.EnqueueChange(moniker, value, SettingWriteOptions.CustomizeUnconditionally));
+        }
+
+        public static void EnqueueArrayChange<T>(ISettingsWriter writer, string moniker, IReadOnlyList<T> values) {
+            CheckChange(moniker, writer.EnqueueArrayChange(moniker, values));
+        }
+
         public IDisposable Subscribe(Action<SettingsUpdate> handler, params string[] patterns) {
             return _reader.SubscribeToChanges(update => {
                 // Reloading during our own multi-property Save would overwrite values not yet saved.
@@ -88,16 +93,26 @@ namespace Microsoft.PythonTools.Infrastructure {
             }
         }
 
-        private static void Commit(ISettingsWriter writer, string moniker, SettingChangeResult change, string description) {
+        private static bool CheckChange(string moniker, SettingChangeResult change) {
             if (change.Outcome == SettingChangeOutcome.NoOp) {
-                return;
+                return false;
             }
             if (change.Outcome != SettingChangeOutcome.PendingCommit) {
                 throw new InvalidOperationException($"Updating Unified Setting '{moniker}' failed ({change.Outcome}): {change.Message}");
             }
+            return true;
+        }
+
+        private static void Commit(ISettingsWriter writer, string moniker, SettingChangeResult change, string description) {
+            if (CheckChange(moniker, change)) {
+                Commit(writer, description);
+            }
+        }
+
+        private static void Commit(ISettingsWriter writer, string description) {
             var commit = writer.RequestCommit(description);
             if (commit.Outcome != SettingCommitOutcome.Success && commit.Outcome != SettingCommitOutcome.NoChangesQueued) {
-                throw new InvalidOperationException($"Committing Unified Setting '{moniker}' failed ({commit.Outcome}): {commit.Message}");
+                throw new InvalidOperationException($"Committing Unified Settings failed ({commit.Outcome}): {commit.Message}");
             }
         }
     }

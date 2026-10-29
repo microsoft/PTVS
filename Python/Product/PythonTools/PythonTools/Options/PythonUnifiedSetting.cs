@@ -5,8 +5,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.VisualStudio.Utilities.UnifiedSettings;
 
 namespace Microsoft.PythonTools.Options {
     internal sealed class PythonUnifiedSetting {
@@ -23,7 +23,6 @@ namespace Microsoft.PythonTools.Options {
             Text("Analysis", "StubPath", "analysis.stubPath"),
             Text("Analysis", "TypeCheckingMode", "analysis.typeCheckingMode"),
             Array("Analysis", "TypeshedPaths", "analysis.typeshedPaths"),
-            Boolean("Analysis", "UseLibraryCodeForTypes", "analysis.useLibraryCodeForTypes"),
             Array("Analysis", "ExtraPaths", "analysis.extraPaths"),
             Boolean("Analysis", "Indexing", "analysis.indexing"),
             Text("Analysis", "ImportFormat", "analysis.importFormat"),
@@ -80,21 +79,24 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public void Write(UnifiedSettingsStore store, string value) {
-            switch (_kind) {
-                case ValueKind.Boolean:
-                    store.Write(Moniker, ParseBoolean(value, _inverted), Strings.ProductTitle);
-                    break;
-                case ValueKind.Array:
-                    store.WriteArray(Moniker, SplitLegacyPaths(value), Strings.ProductTitle);
-                    break;
-                default:
-                    store.Write(Moniker, value ?? _emptyValue, Strings.ProductTitle);
-                    break;
-            }
+            store.WriteBatch(writer => Enqueue(writer, value), Strings.ProductTitle);
         }
 
-        internal static bool ParseBoolean(string value, bool inverted) {
-            return bool.Parse(value) ^ inverted;
+        internal void Enqueue(ISettingsWriter writer, string value) {
+            switch (_kind) {
+                case ValueKind.Boolean:
+                    if (!bool.TryParse(value, out var boolean)) {
+                        throw new FormatException($"The legacy Python setting '{Moniker}' must be a Boolean.");
+                    }
+                    UnifiedSettingsStore.EnqueueChange(writer, Moniker, boolean ^ _inverted);
+                    break;
+                case ValueKind.Array:
+                    UnifiedSettingsStore.EnqueueArrayChange(writer, Moniker, SplitLegacyPaths(value));
+                    break;
+                default:
+                    UnifiedSettingsStore.EnqueueChange(writer, Moniker, value ?? _emptyValue);
+                    break;
+            }
         }
 
         internal static string[] SplitLegacyPaths(string value) {

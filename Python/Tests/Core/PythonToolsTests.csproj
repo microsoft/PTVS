@@ -148,6 +148,9 @@
     <EmbeddedResource Include="..\..\Product\PythonTools\PythonTools.registration.json">
       <LogicalName>PythonToolsTests.PythonTools.registration.json</LogicalName>
     </EmbeddedResource>
+    <EmbeddedResource Include="..\..\Product\Cookiecutter\CookiecutterSettings.json">
+      <LogicalName>PythonToolsTests.CookiecutterSettings.json</LogicalName>
+    </EmbeddedResource>
     <Compile Include="LspDiffTextEditFactoryTests.cs" />
     <Compile Include="LanguageServerSettingsTests.cs" />
     <Compile Include="BuildTasksTests.cs" />

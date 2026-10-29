@@ -22,8 +22,6 @@ using Microsoft.VisualStudio.Shell;
 namespace Microsoft.CookiecutterTools {
     [Guid("BDB4E0B1-4869-4A6F-AD55-5230B768261D")]
     public class CookiecutterOptionPage : DialogPage {
-        private readonly CookiecutterSettings.LegacySettings _legacy = new CookiecutterSettings.LegacySettings();
-        private bool _loadingLegacy;
         private bool? _showHelp;
         private bool? _checkForTemplateUpdate;
         private string _feedUrl;
@@ -39,14 +37,8 @@ namespace Microsoft.CookiecutterTools {
         [SRDescription(SR.SettingsShowHelpDescription)]
         [DefaultValue(true)]
         public bool ShowHelp {
-            get => _loadingLegacy || Settings == null ? _legacy.ShowHelp : _showHelp ?? Settings.ShowHelp;
-            set {
-                if (_loadingLegacy || Settings == null) {
-                    _legacy.ShowHelp = value;
-                } else {
-                    _showHelp = value;
-                }
-            }
+            get => _showHelp ?? Settings.ShowHelp;
+            set => _showHelp = value;
         }
 
         [SRCategory(SR.SettingsGeneralCategory)]
@@ -54,14 +46,10 @@ namespace Microsoft.CookiecutterTools {
         [SRDescription(SR.SettingsFeedUrlDescription)]
         [DefaultValue(UrlConstants.DefaultRecommendedFeed)]
         public string FeedUrl {
-            get => _loadingLegacy || Settings == null ? _legacy.FeedUrl : _feedUrlChanged ? _feedUrl : Settings.FeedUrl;
+            get => _feedUrlChanged ? _feedUrl : Settings.FeedUrl;
             set {
-                if (_loadingLegacy || Settings == null) {
-                    _legacy.FeedUrl = value;
-                } else {
-                    _feedUrl = value;
-                    _feedUrlChanged = true;
-                }
+                _feedUrl = value;
+                _feedUrlChanged = true;
             }
         }
 
@@ -70,31 +58,11 @@ namespace Microsoft.CookiecutterTools {
         [SRDescription(SR.SettingsCheckForTemplateUpdateDescription)]
         [DefaultValue(true)]
         public bool CheckForTemplateUpdate {
-            get => _loadingLegacy || Settings == null ? _legacy.CheckForTemplateUpdate : _checkForTemplateUpdate ?? Settings.CheckForTemplateUpdate;
-            set {
-                if (_loadingLegacy || Settings == null) {
-                    _legacy.CheckForTemplateUpdate = value;
-                } else {
-                    _checkForTemplateUpdate = value;
-                }
-            }
-        }
-
-        internal CookiecutterSettings.LegacySettings LoadLegacySettings() {
-            _loadingLegacy = true;
-            try {
-                base.LoadSettingsFromStorage();
-                return _legacy;
-            } finally {
-                _loadingLegacy = false;
-            }
+            get => _checkForTemplateUpdate ?? Settings.CheckForTemplateUpdate;
+            set => _checkForTemplateUpdate = value;
         }
 
         public override void LoadSettingsFromStorage() {
-            if (Settings == null) {
-                LoadLegacySettings();
-                return;
-            }
             _showHelp = null;
             _checkForTemplateUpdate = null;
             _feedUrl = null;
@@ -102,10 +70,6 @@ namespace Microsoft.CookiecutterTools {
         }
 
         public override void SaveSettingsToStorage() {
-            if (Settings == null) {
-                base.SaveSettingsToStorage();
-                return;
-            }
             if (_showHelp.HasValue) {
                 Settings.ShowHelp = _showHelp.Value;
                 _showHelp = null;

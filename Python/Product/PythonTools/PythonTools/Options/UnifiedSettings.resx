@@ -113,12 +113,6 @@
   <data name="analysis.typeshedPaths.Description" xml:space="preserve">
 	<value>Directories containing typeshed type stubs, in search order.</value>
   </data>
-  <data name="analysis.useLibraryCodeForTypes.Title" xml:space="preserve">
-	<value>Use library code for types</value>
-  </data>
-  <data name="analysis.useLibraryCodeForTypes.Description" xml:space="preserve">
-	<value>Infer types from library source code when type stubs are unavailable.</value>
-  </data>
   <data name="analysis.extraPaths.Title" xml:space="preserve">
 	<value>Search paths</value>
   </data>

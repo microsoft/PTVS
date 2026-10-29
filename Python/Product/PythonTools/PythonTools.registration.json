@@ -54,7 +54,7 @@
       "title": "@Microsoft.PythonTools.Options.UnifiedSettings:analysis.autoSearchPaths.Title;Microsoft.PythonTools.dll",
       "description": "@Microsoft.PythonTools.Options.UnifiedSettings:analysis.autoSearchPaths.Description;Microsoft.PythonTools.dll",
       "default": true,
-      "order": 100,
+      "order": 170,
       "transientScopesSupported": false
     },
     "languages.python.analysis.diagnosticMode": {
@@ -67,7 +67,7 @@
         "@Microsoft.PythonTools.Options.UnifiedSettings:DiagnosticMode.Workspace;Microsoft.PythonTools.dll"
       ],
       "default": "openFilesOnly",
-      "order": 110,
+      "order": 100,
       "transientScopesSupported": false
     },
     "languages.python.analysis.logLevel": {
@@ -82,7 +82,7 @@
         "@Microsoft.PythonTools.Options.UnifiedSettings:LogLevel.Trace;Microsoft.PythonTools.dll"
       ],
       "default": "Information",
-      "order": 120,
+      "order": 110,
       "transientScopesSupported": false
     },
     "languages.python.analysis.stubPath": {
@@ -92,7 +92,7 @@
       "format": "path",
       "pathKind": "folder",
       "default": "",
-      "order": 130,
+      "order": 140,
       "transientScopesSupported": false
     },
     "languages.python.analysis.typeCheckingMode": {
@@ -106,7 +106,7 @@
         "@Microsoft.PythonTools.Options.UnifiedSettings:TypeCheckingMode.Strict;Microsoft.PythonTools.dll"
       ],
       "default": "off",
-      "order": 140,
+      "order": 120,
       "transientScopesSupported": false
     },
     "languages.python.analysis.typeshedPaths": {
@@ -116,14 +116,6 @@
       "items": { "type": "string", "format": "path", "pathKind": "folder" },
       "itemsAreOrdered": true,
       "default": [],
-      "order": 150,
-      "transientScopesSupported": false
-    },
-    "languages.python.analysis.useLibraryCodeForTypes": {
-      "type": "boolean",
-      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:analysis.useLibraryCodeForTypes.Title;Microsoft.PythonTools.dll",
-      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:analysis.useLibraryCodeForTypes.Description;Microsoft.PythonTools.dll",
-      "default": true,
       "order": 160,
       "transientScopesSupported": false
     },
@@ -134,7 +126,7 @@
       "items": { "type": "string", "format": "path", "pathKind": "folder" },
       "itemsAreOrdered": true,
       "default": [],
-      "order": 170,
+      "order": 150,
       "transientScopesSupported": false
     },
     "languages.python.analysis.indexing": {
@@ -155,7 +147,7 @@
         "@Microsoft.PythonTools.Options.UnifiedSettings:ImportFormat.Relative;Microsoft.PythonTools.dll"
       ],
       "default": "absolute",
-      "order": 190,
+      "order": 130,
       "transientScopesSupported": false
     },
     "languages.python.analysis.inlayHintsVariableTypes": {
@@ -163,7 +155,7 @@
       "title": "@Microsoft.PythonTools.Options.UnifiedSettings:analysis.inlayHintsVariableTypes.Title;Microsoft.PythonTools.dll",
       "description": "@Microsoft.PythonTools.Options.UnifiedSettings:analysis.inlayHintsVariableTypes.Description;Microsoft.PythonTools.dll",
       "default": false,
-      "order": 200,
+      "order": 190,
       "transientScopesSupported": false
     },
     "languages.python.analysis.inlayHintsFunctionReturnTypes": {
@@ -171,7 +163,7 @@
       "title": "@Microsoft.PythonTools.Options.UnifiedSettings:analysis.inlayHintsFunctionReturnTypes.Title;Microsoft.PythonTools.dll",
       "description": "@Microsoft.PythonTools.Options.UnifiedSettings:analysis.inlayHintsFunctionReturnTypes.Description;Microsoft.PythonTools.dll",
       "default": false,
-      "order": 210,
+      "order": 200,
       "transientScopesSupported": false
     },
     "languages.python.debugging.promptBeforeRunningWithBuildError": {
@@ -255,7 +247,7 @@
         "@Microsoft.PythonTools.Options.UnifiedSettings:PresentationMode.Inline;Microsoft.PythonTools.dll"
       ],
       "default": "Group",
-      "order": 180,
+      "order": 190,
       "transientScopesSupported": false
     },
     "languages.python.debugging.variablePresentationForProtected": {
@@ -269,7 +261,7 @@
         "@Microsoft.PythonTools.Options.UnifiedSettings:PresentationMode.Inline;Microsoft.PythonTools.dll"
       ],
       "default": "Inline",
-      "order": 190,
+      "order": 180,
       "transientScopesSupported": false
     },
     "languages.python.debugging.variablePresentationForSpecial": {
@@ -301,7 +293,7 @@
       "title": "@Microsoft.PythonTools.Options.UnifiedSettings:interactive.useSmartHistory.Title;Microsoft.PythonTools.dll",
       "description": "@Microsoft.PythonTools.Options.UnifiedSettings:interactive.useSmartHistory.Description;Microsoft.PythonTools.dll",
       "default": true,
-      "order": 100,
+      "order": 110,
       "transientScopesSupported": false
     },
     "languages.python.interactive.scripts": {
@@ -311,7 +303,7 @@
       "format": "path",
       "pathKind": "folder",
       "default": "",
-      "order": 110,
+      "order": 100,
       "transientScopesSupported": false
     },
     "languages.python.advanced.completeFunctionParens": {
@@ -319,7 +311,7 @@
       "title": "@Microsoft.PythonTools.Options.UnifiedSettings:advanced.completeFunctionParens.Title;Microsoft.PythonTools.dll",
       "description": "@Microsoft.PythonTools.Options.UnifiedSettings:advanced.completeFunctionParens.Description;Microsoft.PythonTools.dll",
       "default": false,
-      "order": 100,
+      "order": 110,
       "transientScopesSupported": false
     },
     "languages.python.advanced.autoImportCompletions": {
@@ -327,7 +319,7 @@
       "title": "@Microsoft.PythonTools.Options.UnifiedSettings:advanced.autoImportCompletions.Title;Microsoft.PythonTools.dll",
       "description": "@Microsoft.PythonTools.Options.UnifiedSettings:advanced.autoImportCompletions.Description;Microsoft.PythonTools.dll",
       "default": true,
-      "order": 110,
+      "order": 100,
       "transientScopesSupported": false
     },
     "languages.python.general.showCompletionOnTyping.parameterInfo": {
@@ -353,7 +345,7 @@
       "title": "@Microsoft.PythonTools.Options.UnifiedSettings:formatting.pasteRemovesReplPrompts.Title;Microsoft.PythonTools.dll",
       "description": "@Microsoft.PythonTools.Options.UnifiedSettings:formatting.pasteRemovesReplPrompts.Description;Microsoft.PythonTools.dll",
       "default": true,
-      "order": 100,
+      "order": 110,
       "transientScopesSupported": false
     },
     "languages.python.formatting.formatter": {
@@ -367,7 +359,7 @@
         "@Microsoft.PythonTools.Options.UnifiedSettings:Formatter.Yapf;Microsoft.PythonTools.dll"
       ],
       "default": "black",
-      "order": 110,
+      "order": 100,
       "transientScopesSupported": false
     }
   },

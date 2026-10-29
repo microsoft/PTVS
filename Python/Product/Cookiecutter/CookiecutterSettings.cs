@@ -11,6 +11,7 @@ namespace Microsoft.CookiecutterTools {
         T Read<T>(string moniker);
         void Write<T>(string moniker, T value, string description);
         bool IsCustomized(string moniker);
+        void Import(bool? showHelp, string feedUrl, bool? checkForTemplateUpdate, string description);
     }
 
     internal sealed class CookiecutterSettings {
@@ -25,7 +26,7 @@ namespace Microsoft.CookiecutterTools {
 
         internal static CookiecutterSettings Create(IServiceProvider serviceProvider) {
             var store = UnifiedSettingsStore.Create(serviceProvider);
-            return store.IsEnabled(ShowHelpMoniker) ? new CookiecutterSettings(new SettingsStore(store)) : null;
+            return new CookiecutterSettings(new SettingsStore(store));
         }
 
         internal bool ShowHelp {
@@ -43,50 +44,49 @@ namespace Microsoft.CookiecutterTools {
             set => _store.Write(CheckForTemplateUpdateMoniker, value, GetDescription(SR.SettingsCheckForTemplateUpdateName));
         }
 
-        internal void ImportLegacySettings(Func<string, bool> isComplete, Func<string, object> loadLegacy,
-            Action<string> markComplete, Action<string, Exception> logFailure) {
-            Import(ShowHelpMoniker, nameof(CookiecutterOptionPage.ShowHelp), value => ShowHelp = ReadLegacyBoolean(value));
-            Import(FeedUrlMoniker, nameof(CookiecutterOptionPage.FeedUrl), value => FeedUrl = value as string
-                ?? throw new FormatException("The legacy Cookiecutter feed URL must be a string."));
-            Import(CheckForTemplateUpdateMoniker, nameof(CookiecutterOptionPage.CheckForTemplateUpdate),
-                value => CheckForTemplateUpdate = ReadLegacyBoolean(value));
-
-            void Import(string moniker, string propertyName, Action<object> write) {
-                try {
-                    if (isComplete(moniker)) {
-                        return;
-                    }
-                    if (!_store.IsCustomized(moniker)) {
-                        var value = loadLegacy(propertyName);
-                        if (value != null) {
-                            write(value);
-                        }
-                    }
-                    // Absent and already-customized values are terminal skips, not synthetic writes.
-                    markComplete(moniker);
-                } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    logFailure(moniker, ex);
+        internal void ImportLegacySettings(Func<bool> isComplete, Func<string, object> loadLegacy,
+            Action markComplete, Action<Exception> logFailure) {
+            try {
+                if (isComplete()) {
+                    return;
                 }
+                if (_store.IsCustomized(ShowHelpMoniker) || _store.IsCustomized(FeedUrlMoniker)
+                    || _store.IsCustomized(CheckForTemplateUpdateMoniker)) {
+                    markComplete();
+                    return;
+                }
+
+                var showHelp = loadLegacy(nameof(CookiecutterOptionPage.ShowHelp));
+                var feedUrl = loadLegacy(nameof(CookiecutterOptionPage.FeedUrl));
+                var checkForTemplateUpdate = loadLegacy(nameof(CookiecutterOptionPage.CheckForTemplateUpdate));
+                if (showHelp == null && feedUrl == null && checkForTemplateUpdate == null) {
+                    return;
+                }
+
+                _store.Import(
+                    showHelp == null ? (bool?)null : ReadLegacyBoolean(showHelp, nameof(CookiecutterOptionPage.ShowHelp)),
+                    feedUrl == null ? null : feedUrl as string
+                        ?? throw new FormatException("The legacy Cookiecutter feed URL must be a string."),
+                    checkForTemplateUpdate == null ? (bool?)null
+                        : ReadLegacyBoolean(checkForTemplateUpdate, nameof(CookiecutterOptionPage.CheckForTemplateUpdate)),
+                    GetDescription(SR.SettingsGeneralCategory));
+                markComplete();
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                logFailure(ex);
             }
         }
 
-        private static bool ReadLegacyBoolean(object value) {
+        private static bool ReadLegacyBoolean(object value, string propertyName) {
             if (value is bool boolean) {
                 return boolean;
             }
             if (value is string text && bool.TryParse(text, out boolean)) {
                 return boolean;
             }
-            throw new FormatException("The legacy Cookiecutter preference must be a Boolean.");
+            throw new FormatException($"The legacy Cookiecutter preference '{propertyName}' must be a Boolean.");
         }
 
         private static string GetDescription(string resourceName) => Strings.ResourceManager.GetString(resourceName, Strings.Culture);
-
-        internal sealed class LegacySettings {
-            internal bool ShowHelp { get; set; } = true;
-            internal string FeedUrl { get; set; } = UrlConstants.DefaultRecommendedFeed;
-            internal bool CheckForTemplateUpdate { get; set; } = true;
-        }
 
         private sealed class SettingsStore : ICookiecutterSettingsStore {
             private readonly UnifiedSettingsStore _store;
@@ -98,6 +98,20 @@ namespace Microsoft.CookiecutterTools {
             public T Read<T>(string moniker) => _store.Read<T>(moniker);
             public void Write<T>(string moniker, T value, string description) => _store.Write(moniker, value, description);
             public bool IsCustomized(string moniker) => _store.IsCustomized(moniker);
+
+            public void Import(bool? showHelp, string feedUrl, bool? checkForTemplateUpdate, string description) {
+                _store.WriteBatch(writer => {
+                    if (showHelp.HasValue) {
+                        UnifiedSettingsStore.EnqueueChange(writer, ShowHelpMoniker, showHelp.Value);
+                    }
+                    if (feedUrl != null) {
+                        UnifiedSettingsStore.EnqueueChange(writer, FeedUrlMoniker, feedUrl);
+                    }
+                    if (checkForTemplateUpdate.HasValue) {
+                        UnifiedSettingsStore.EnqueueChange(writer, CheckForTemplateUpdateMoniker, checkForTemplateUpdate.Value);
+                    }
+                }, description);
+            }
         }
     }
 }

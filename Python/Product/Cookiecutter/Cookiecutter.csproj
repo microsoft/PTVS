@@ -384,7 +384,7 @@
     <UseCodebase>true</UseCodebase>
   </PropertyGroup>
   <Import Project="..\ProjectAfter.settings" />
-  <Import Project="$(PackagesPath)\Microsoft.VisualStudio.Settings.Manifest.Build.18.12.1217\build\Microsoft.VisualStudio.Settings.Manifest.Build.targets" Condition="'$(VSTarget)' == '18.0'" />
+  <Import Project="$(PackagesPath)\Microsoft.VisualStudio.Settings.Manifest.Build.18.13.940\build\Microsoft.VisualStudio.Settings.Manifest.Build.targets" Condition="'$(VSTarget)' == '18.0'" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

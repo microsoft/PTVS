@@ -93,19 +93,16 @@ namespace Microsoft.CookiecutterTools {
 
             Settings = CookiecutterSettings.Create(this);
             try {
-                if (Settings != null) {
-                    using (var migration = UserRegistryRoot.CreateSubKey("Cookiecutter\\UnifiedSettingsMigration\\v1")) {
-                        Settings.ImportLegacySettings(
-                            moniker => Equals(migration.GetValue(moniker), 1),
-                            LoadLegacySetting,
-                            moniker => migration.SetValue(moniker, 1, Microsoft.Win32.RegistryValueKind.DWord),
-                            (moniker, ex) => ActivityLog.LogError(Strings.ProductTitle,
-                                $"Cookiecutter setting '{moniker}' migration failed; it will be retried on next initialization. {ex}")
-                        );
-                    }
+                using (var migration = UserRegistryRoot.CreateSubKey("Cookiecutter\\UnifiedSettingsMigration\\v1")) {
+                    Settings.ImportLegacySettings(
+                        () => Equals(migration.GetValue("Completed"), 1),
+                        LoadLegacySetting,
+                        () => migration.SetValue("Completed", 1, Microsoft.Win32.RegistryValueKind.DWord),
+                        ex => ActivityLog.LogError(Strings.ProductTitle, $"Unable to import legacy Cookiecutter settings. The import remains incomplete. {ex}")
+                    );
                 }
             } catch (Exception ex) when (!ex.IsCriticalException()) {
-                ActivityLog.LogError(Strings.ProductTitle, "Cookiecutter settings migration failed; it will be retried on next initialization. " + ex);
+                ActivityLog.LogError(Strings.ProductTitle, "Cookiecutter settings migration remains incomplete. " + ex);
             }
 
             if (GetService(typeof(UIThreadBase)) == null) {
@@ -299,8 +296,6 @@ namespace Microsoft.CookiecutterTools {
             return VSConstants.S_OK;
         }
 
-        private CookiecutterOptionPage LegacyOptions => (CookiecutterOptionPage)GetDialogPage(typeof(CookiecutterOptionPage));
-
         private object LoadLegacySetting(string propertyName) {
             var settings = GetService(typeof(SVsSettingsPersistenceManager)) as Microsoft.VisualStudio.Settings.ISettingsManager;
             if (settings == null) {
@@ -318,30 +313,16 @@ namespace Microsoft.CookiecutterTools {
             return value;
         }
 
-        internal string RecommendedFeed => Settings != null ? Settings.FeedUrl : LegacyOptions.FeedUrl;
+        internal string RecommendedFeed => Settings.FeedUrl;
 
         internal bool ShowHelp {
-            get => Settings != null ? Settings.ShowHelp : LegacyOptions.ShowHelp;
-            set {
-                if (Settings != null) {
-                    Settings.ShowHelp = value;
-                } else {
-                    LegacyOptions.ShowHelp = value;
-                    LegacyOptions.SaveSettingsToStorage();
-                }
-            }
+            get => Settings.ShowHelp;
+            set => Settings.ShowHelp = value;
         }
 
         internal bool CheckForTemplateUpdate {
-            get => Settings != null ? Settings.CheckForTemplateUpdate : LegacyOptions.CheckForTemplateUpdate;
-            set {
-                if (Settings != null) {
-                    Settings.CheckForTemplateUpdate = value;
-                } else {
-                    LegacyOptions.CheckForTemplateUpdate = value;
-                    LegacyOptions.SaveSettingsToStorage();
-                }
-            }
+            get => Settings.CheckForTemplateUpdate;
+            set => Settings.CheckForTemplateUpdate = value;
         }
     }
 }
