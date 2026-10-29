@@ -1,0 +1,425 @@
+{
+  "$schema": "https://aka.ms/unified-settings-experience/registration/schema",
+  "properties": {
+    "languages.python.general.showOutputWindowForVirtualEnvCreate": {
+      "type": "boolean",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:general.showOutputWindowForVirtualEnvCreate.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:general.showOutputWindowForVirtualEnvCreate.Description;Microsoft.PythonTools.dll",
+      "default": true,
+      "order": 100,
+      "transientScopesSupported": false
+    },
+    "languages.python.general.showOutputWindowForPackageInstallation": {
+      "type": "boolean",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:general.showOutputWindowForPackageInstallation.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:general.showOutputWindowForPackageInstallation.Description;Microsoft.PythonTools.dll",
+      "default": true,
+      "order": 110,
+      "transientScopesSupported": false
+    },
+    "languages.python.general.promptForEnvCreate": {
+      "type": "boolean",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:general.promptForEnvCreate.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:general.promptForEnvCreate.Description;Microsoft.PythonTools.dll",
+      "default": true,
+      "order": 120,
+      "transientScopesSupported": false
+    },
+    "languages.python.general.promptForPackageInstallation": {
+      "type": "boolean",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:general.promptForPackageInstallation.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:general.promptForPackageInstallation.Description;Microsoft.PythonTools.dll",
+      "default": true,
+      "order": 130,
+      "transientScopesSupported": false
+    },
+    "languages.python.general.promptForTestFrameWorkInfoBar": {
+      "type": "boolean",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:general.promptForTestFrameWorkInfoBar.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:general.promptForTestFrameWorkInfoBar.Description;Microsoft.PythonTools.dll",
+      "default": true,
+      "order": 140,
+      "transientScopesSupported": false
+    },
+    "languages.python.general.elevatePip": {
+      "type": "boolean",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:general.elevatePip.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:general.elevatePip.Description;Microsoft.PythonTools.dll",
+      "default": false,
+      "order": 150,
+      "transientScopesSupported": false
+    },
+    "languages.python.analysis.autoSearchPaths": {
+      "type": "boolean",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:analysis.autoSearchPaths.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:analysis.autoSearchPaths.Description;Microsoft.PythonTools.dll",
+      "default": true,
+      "order": 100,
+      "transientScopesSupported": false
+    },
+    "languages.python.analysis.diagnosticMode": {
+      "type": "string",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:analysis.diagnosticMode.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:analysis.diagnosticMode.Description;Microsoft.PythonTools.dll",
+      "enum": [ "openFilesOnly", "workspace" ],
+      "enumItemLabels": [
+        "@Microsoft.PythonTools.Options.UnifiedSettings:DiagnosticMode.OpenFilesOnly;Microsoft.PythonTools.dll",
+        "@Microsoft.PythonTools.Options.UnifiedSettings:DiagnosticMode.Workspace;Microsoft.PythonTools.dll"
+      ],
+      "default": "openFilesOnly",
+      "order": 110,
+      "transientScopesSupported": false
+    },
+    "languages.python.analysis.logLevel": {
+      "type": "string",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:analysis.logLevel.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:analysis.logLevel.Description;Microsoft.PythonTools.dll",
+      "enum": [ "Error", "Warning", "Information", "Trace" ],
+      "enumItemLabels": [
+        "@Microsoft.PythonTools.Options.UnifiedSettings:LogLevel.Error;Microsoft.PythonTools.dll",
+        "@Microsoft.PythonTools.Options.UnifiedSettings:LogLevel.Warning;Microsoft.PythonTools.dll",
+        "@Microsoft.PythonTools.Options.UnifiedSettings:LogLevel.Information;Microsoft.PythonTools.dll",
+        "@Microsoft.PythonTools.Options.UnifiedSettings:LogLevel.Trace;Microsoft.PythonTools.dll"
+      ],
+      "default": "Information",
+      "order": 120,
+      "transientScopesSupported": false
+    },
+    "languages.python.analysis.stubPath": {
+      "type": "string",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:analysis.stubPath.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:analysis.stubPath.Description;Microsoft.PythonTools.dll",
+      "format": "path",
+      "pathKind": "folder",
+      "default": "",
+      "order": 130,
+      "transientScopesSupported": false
+    },
+    "languages.python.analysis.typeCheckingMode": {
+      "type": "string",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:analysis.typeCheckingMode.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:analysis.typeCheckingMode.Description;Microsoft.PythonTools.dll",
+      "enum": [ "off", "basic", "strict" ],
+      "enumItemLabels": [
+        "@Microsoft.PythonTools.Options.UnifiedSettings:TypeCheckingMode.Off;Microsoft.PythonTools.dll",
+        "@Microsoft.PythonTools.Options.UnifiedSettings:TypeCheckingMode.Basic;Microsoft.PythonTools.dll",
+        "@Microsoft.PythonTools.Options.UnifiedSettings:TypeCheckingMode.Strict;Microsoft.PythonTools.dll"
+      ],
+      "default": "off",
+      "order": 140,
+      "transientScopesSupported": false
+    },
+    "languages.python.analysis.typeshedPaths": {
+      "type": "array",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:analysis.typeshedPaths.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:analysis.typeshedPaths.Description;Microsoft.PythonTools.dll",
+      "items": { "type": "string", "format": "path", "pathKind": "folder" },
+      "itemsAreOrdered": true,
+      "default": [],
+      "order": 150,
+      "transientScopesSupported": false
+    },
+    "languages.python.analysis.useLibraryCodeForTypes": {
+      "type": "boolean",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:analysis.useLibraryCodeForTypes.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:analysis.useLibraryCodeForTypes.Description;Microsoft.PythonTools.dll",
+      "default": true,
+      "order": 160,
+      "transientScopesSupported": false
+    },
+    "languages.python.analysis.extraPaths": {
+      "type": "array",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:analysis.extraPaths.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:analysis.extraPaths.Description;Microsoft.PythonTools.dll",
+      "items": { "type": "string", "format": "path", "pathKind": "folder" },
+      "itemsAreOrdered": true,
+      "default": [],
+      "order": 170,
+      "transientScopesSupported": false
+    },
+    "languages.python.analysis.indexing": {
+      "type": "boolean",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:analysis.indexing.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:analysis.indexing.Description;Microsoft.PythonTools.dll",
+      "default": true,
+      "order": 180,
+      "transientScopesSupported": false
+    },
+    "languages.python.analysis.importFormat": {
+      "type": "string",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:analysis.importFormat.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:analysis.importFormat.Description;Microsoft.PythonTools.dll",
+      "enum": [ "absolute", "relative" ],
+      "enumItemLabels": [
+        "@Microsoft.PythonTools.Options.UnifiedSettings:ImportFormat.Absolute;Microsoft.PythonTools.dll",
+        "@Microsoft.PythonTools.Options.UnifiedSettings:ImportFormat.Relative;Microsoft.PythonTools.dll"
+      ],
+      "default": "absolute",
+      "order": 190,
+      "transientScopesSupported": false
+    },
+    "languages.python.analysis.inlayHintsVariableTypes": {
+      "type": "boolean",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:analysis.inlayHintsVariableTypes.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:analysis.inlayHintsVariableTypes.Description;Microsoft.PythonTools.dll",
+      "default": false,
+      "order": 200,
+      "transientScopesSupported": false
+    },
+    "languages.python.analysis.inlayHintsFunctionReturnTypes": {
+      "type": "boolean",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:analysis.inlayHintsFunctionReturnTypes.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:analysis.inlayHintsFunctionReturnTypes.Description;Microsoft.PythonTools.dll",
+      "default": false,
+      "order": 210,
+      "transientScopesSupported": false
+    },
+    "languages.python.debugging.promptBeforeRunningWithBuildError": {
+      "type": "boolean",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:debugging.promptBeforeRunningWithBuildError.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:debugging.promptBeforeRunningWithBuildError.Description;Microsoft.PythonTools.dll",
+      "default": true,
+      "order": 100,
+      "transientScopesSupported": false
+    },
+    "languages.python.debugging.waitOnAbnormalExit": {
+      "type": "boolean",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:debugging.waitOnAbnormalExit.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:debugging.waitOnAbnormalExit.Description;Microsoft.PythonTools.dll",
+      "default": true,
+      "order": 110,
+      "transientScopesSupported": false
+    },
+    "languages.python.debugging.waitOnNormalExit": {
+      "type": "boolean",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:debugging.waitOnNormalExit.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:debugging.waitOnNormalExit.Description;Microsoft.PythonTools.dll",
+      "default": true,
+      "order": 120,
+      "transientScopesSupported": false
+    },
+    "languages.python.debugging.teeStandardOutput": {
+      "type": "boolean",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:debugging.teeStandardOutput.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:debugging.teeStandardOutput.Description;Microsoft.PythonTools.dll",
+      "default": true,
+      "order": 130,
+      "transientScopesSupported": false
+    },
+    "languages.python.debugging.breakOnSystemExitZero": {
+      "type": "boolean",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:debugging.breakOnSystemExitZero.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:debugging.breakOnSystemExitZero.Description;Microsoft.PythonTools.dll",
+      "default": false,
+      "order": 140,
+      "transientScopesSupported": false
+    },
+    "languages.python.debugging.debugStdLib": {
+      "type": "boolean",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:debugging.debugStdLib.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:debugging.debugStdLib.Description;Microsoft.PythonTools.dll",
+      "default": false,
+      "order": 150,
+      "transientScopesSupported": false
+    },
+    "languages.python.debugging.showFunctionReturnValue": {
+      "type": "boolean",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:debugging.showFunctionReturnValue.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:debugging.showFunctionReturnValue.Description;Microsoft.PythonTools.dll",
+      "default": true,
+      "order": 160,
+      "transientScopesSupported": false
+    },
+    "languages.python.debugging.variablePresentationForClasses": {
+      "type": "string",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:debugging.variablePresentationForClasses.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:debugging.variablePresentationForClasses.Description;Microsoft.PythonTools.dll",
+      "enum": [ "Group", "Hide", "Inline" ],
+      "enumItemLabels": [
+        "@Microsoft.PythonTools.Options.UnifiedSettings:PresentationMode.Group;Microsoft.PythonTools.dll",
+        "@Microsoft.PythonTools.Options.UnifiedSettings:PresentationMode.Hide;Microsoft.PythonTools.dll",
+        "@Microsoft.PythonTools.Options.UnifiedSettings:PresentationMode.Inline;Microsoft.PythonTools.dll"
+      ],
+      "default": "Group",
+      "order": 170,
+      "transientScopesSupported": false
+    },
+    "languages.python.debugging.variablePresentationForFunctions": {
+      "type": "string",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:debugging.variablePresentationForFunctions.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:debugging.variablePresentationForFunctions.Description;Microsoft.PythonTools.dll",
+      "enum": [ "Group", "Hide", "Inline" ],
+      "enumItemLabels": [
+        "@Microsoft.PythonTools.Options.UnifiedSettings:PresentationMode.Group;Microsoft.PythonTools.dll",
+        "@Microsoft.PythonTools.Options.UnifiedSettings:PresentationMode.Hide;Microsoft.PythonTools.dll",
+        "@Microsoft.PythonTools.Options.UnifiedSettings:PresentationMode.Inline;Microsoft.PythonTools.dll"
+      ],
+      "default": "Group",
+      "order": 180,
+      "transientScopesSupported": false
+    },
+    "languages.python.debugging.variablePresentationForProtected": {
+      "type": "string",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:debugging.variablePresentationForProtected.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:debugging.variablePresentationForProtected.Description;Microsoft.PythonTools.dll",
+      "enum": [ "Group", "Hide", "Inline" ],
+      "enumItemLabels": [
+        "@Microsoft.PythonTools.Options.UnifiedSettings:PresentationMode.Group;Microsoft.PythonTools.dll",
+        "@Microsoft.PythonTools.Options.UnifiedSettings:PresentationMode.Hide;Microsoft.PythonTools.dll",
+        "@Microsoft.PythonTools.Options.UnifiedSettings:PresentationMode.Inline;Microsoft.PythonTools.dll"
+      ],
+      "default": "Inline",
+      "order": 190,
+      "transientScopesSupported": false
+    },
+    "languages.python.debugging.variablePresentationForSpecial": {
+      "type": "string",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:debugging.variablePresentationForSpecial.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:debugging.variablePresentationForSpecial.Description;Microsoft.PythonTools.dll",
+      "enum": [ "Group", "Hide", "Inline" ],
+      "enumItemLabels": [
+        "@Microsoft.PythonTools.Options.UnifiedSettings:PresentationMode.Group;Microsoft.PythonTools.dll",
+        "@Microsoft.PythonTools.Options.UnifiedSettings:PresentationMode.Hide;Microsoft.PythonTools.dll",
+        "@Microsoft.PythonTools.Options.UnifiedSettings:PresentationMode.Inline;Microsoft.PythonTools.dll"
+      ],
+      "default": "Group",
+      "order": 200,
+      "transientScopesSupported": false
+    },
+    "languages.python.conda.customCondaExecutablePath": {
+      "type": "string",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:conda.customCondaExecutablePath.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:conda.customCondaExecutablePath.Description;Microsoft.PythonTools.dll",
+      "format": "path",
+      "pathKind": "file",
+      "default": "",
+      "order": 100,
+      "transientScopesSupported": false
+    },
+    "languages.python.interactive.useSmartHistory": {
+      "type": "boolean",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:interactive.useSmartHistory.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:interactive.useSmartHistory.Description;Microsoft.PythonTools.dll",
+      "default": true,
+      "order": 100,
+      "transientScopesSupported": false
+    },
+    "languages.python.interactive.scripts": {
+      "type": "string",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:interactive.scripts.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:interactive.scripts.Description;Microsoft.PythonTools.dll",
+      "format": "path",
+      "pathKind": "folder",
+      "default": "",
+      "order": 110,
+      "transientScopesSupported": false
+    },
+    "languages.python.advanced.completeFunctionParens": {
+      "type": "boolean",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:advanced.completeFunctionParens.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:advanced.completeFunctionParens.Description;Microsoft.PythonTools.dll",
+      "default": false,
+      "order": 100,
+      "transientScopesSupported": false
+    },
+    "languages.python.advanced.autoImportCompletions": {
+      "type": "boolean",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:advanced.autoImportCompletions.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:advanced.autoImportCompletions.Description;Microsoft.PythonTools.dll",
+      "default": true,
+      "order": 110,
+      "transientScopesSupported": false
+    },
+    "languages.python.general.showCompletionOnTyping.parameterInfo": {
+      "type": "boolean",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:advanced.parameterInfo.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:advanced.parameterInfo.Description;Microsoft.PythonTools.dll",
+      "default": true,
+      "transientScopesSupported": false,
+      "placements": [ { "category": "languages.python.advanced", "order": 120 } ],
+      "migration": {
+        "custom": {
+          "mode": "apiOnly",
+          "inputs": [ { "store": "SettingsManager", "path": "TextEditor.Python.Auto List Params" } ],
+          "map": [
+            { "result": false, "matches": [ 0 ] },
+            { "result": true, "matches": [ 1 ] }
+          ]
+        }
+      }
+    },
+    "languages.python.formatting.pasteRemovesReplPrompts": {
+      "type": "boolean",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:formatting.pasteRemovesReplPrompts.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:formatting.pasteRemovesReplPrompts.Description;Microsoft.PythonTools.dll",
+      "default": true,
+      "order": 100,
+      "transientScopesSupported": false
+    },
+    "languages.python.formatting.formatter": {
+      "type": "string",
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:formatting.formatter.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:formatting.formatter.Description;Microsoft.PythonTools.dll",
+      "enum": [ "black", "autopep8", "yapf" ],
+      "enumItemLabels": [
+        "@Microsoft.PythonTools.Options.UnifiedSettings:Formatter.Black;Microsoft.PythonTools.dll",
+        "@Microsoft.PythonTools.Options.UnifiedSettings:Formatter.Autopep8;Microsoft.PythonTools.dll",
+        "@Microsoft.PythonTools.Options.UnifiedSettings:Formatter.Yapf;Microsoft.PythonTools.dll"
+      ],
+      "default": "black",
+      "order": 110,
+      "transientScopesSupported": false
+    }
+  },
+  "categories": {
+    "languages.python.general": {
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:Category.General.Title;Microsoft.PythonTools.dll",
+      "legacyOptionPageId": "bfd99b9b-9309-382e-84d6-755b12e1a306",
+      "commands": [
+        {
+          "vsct": {
+            "text": "@Microsoft.PythonTools.Options.UnifiedSettings:General.ResetSuppressedDialogs;Microsoft.PythonTools.dll",
+            "set": "bdfa79d2-2cd2-474a-a82a-ce8694116825",
+            "id": 263
+          }
+        }
+      ]
+    },
+    "languages.python.analysis": {
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:Category.Analysis.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:Category.Analysis.Description;Microsoft.PythonTools.dll",
+      "legacyOptionPageId": "a9f3f627-aa17-35a5-912e-02c5cced5db1",
+      "order": 100
+    },
+    "languages.python.debugging": {
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:Category.Debugging.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:Category.Debugging.Description;Microsoft.PythonTools.dll",
+      "legacyOptionPageId": "53dcf398-7a07-345f-9012-20a351d293b2",
+      "order": 110
+    },
+    "languages.python.conda": {
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:Category.Conda.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:Category.Conda.Description;Microsoft.PythonTools.dll",
+      "legacyOptionPageId": "e73e8e2b-74dc-3834-b015-e56cb1fdadba",
+      "order": 120
+    },
+    "languages.python.interactive": {
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:Category.Interactive.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:Category.Interactive.Description;Microsoft.PythonTools.dll",
+      "legacyOptionPageId": "87d187c3-1d8a-3c0b-bd1c-149e4e440509",
+      "order": 130
+    },
+    "languages.python.advanced": {
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:Category.Advanced.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:Category.Advanced.Description;Microsoft.PythonTools.dll",
+      "legacyOptionPageId": "9edd4dcc-0808-380a-b7bc-43bcc43d277a",
+      "order": 140
+    },
+    "languages.python.formatting": {
+      "title": "@Microsoft.PythonTools.Options.UnifiedSettings:Category.Formatting.Title;Microsoft.PythonTools.dll",
+      "description": "@Microsoft.PythonTools.Options.UnifiedSettings:Category.Formatting.Description;Microsoft.PythonTools.dll",
+      "legacyOptionPageId": "98394afa-811c-35b7-9ee9-314bd6267a78",
+      "order": 150
+    }
+  }
+}

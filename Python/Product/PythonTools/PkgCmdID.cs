@@ -26,6 +26,7 @@ namespace Microsoft.PythonTools {
         public const uint cmdidSendToRepl = 0x103;
         public const uint cmdidFillParagraph = 0x105;
         public const uint cmdidDiagnostics = 0x106;
+        public const uint cmdidResetSuppressedDialogs = 0x107;
         public const uint cmdidImportWizard = 0x10d;
         public const uint cmdidImportCoverage = 0x10f;
 

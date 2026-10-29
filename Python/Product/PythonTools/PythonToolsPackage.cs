@@ -71,13 +71,14 @@ namespace Microsoft.PythonTools {
     [ProvideKeyBindingTable(PythonConstants.TextMateEditorGuid, 3004, AllowNavKeyBinding = true)]
     [Description("Python Tools Package")]
     [ProvideAutomationObject("VsPython")]
-    [ProvideLanguageEditorOptionPage(typeof(PythonAdvancedEditorOptionsPage), PythonConstants.LanguageName, "", "Advanced", "#113")]
-    [ProvideLanguageEditorOptionPage(typeof(PythonFormattingOptionsPage), PythonConstants.LanguageName, "", "Formatting", "#126")]
-    [ProvideOptionPage(typeof(PythonInteractiveOptionsPage), "Python Tools", "Interactive Windows", 115, 117, true)]
-    [ProvideOptionPage(typeof(PythonGeneralOptionsPage), "Python Tools", "General", 115, 120, true)]
-    [ProvideOptionPage(typeof(PythonAnalysisOptionsPage), "Python Tools", "Analysis", 115, 129, true)]
-    [ProvideOptionPage(typeof(PythonDebuggingOptionsPage), "Python Tools", "Debugging", 115, 125, true)]
-    [ProvideOptionPage(typeof(PythonCondaOptionsPage), "Python Tools", "Conda", 115, 132, true)]
+    [ProvideSettingsManifest(PackageRelativeManifestFile = "PythonTools.registration.json")]
+    [ProvideLanguageEditorOptionPage(typeof(PythonAdvancedEditorOptionsPage), PythonConstants.LanguageName, "", "Advanced", "#113", IsInUnifiedSettings = true)]
+    [ProvideLanguageEditorOptionPage(typeof(PythonFormattingOptionsPage), PythonConstants.LanguageName, "", "Formatting", "#126", IsInUnifiedSettings = true)]
+    [ProvideOptionPage(typeof(PythonInteractiveOptionsPage), "Python Tools", "Interactive Windows", 115, 117, true, IsInUnifiedSettings = true)]
+    [ProvideOptionPage(typeof(PythonGeneralOptionsPage), "Python Tools", "General", 115, 120, true, IsInUnifiedSettings = true)]
+    [ProvideOptionPage(typeof(PythonAnalysisOptionsPage), "Python Tools", "Analysis", 115, 129, true, IsInUnifiedSettings = true)]
+    [ProvideOptionPage(typeof(PythonDebuggingOptionsPage), "Python Tools", "Debugging", 115, 125, true, IsInUnifiedSettings = true)]
+    [ProvideOptionPage(typeof(PythonCondaOptionsPage), "Python Tools", "Conda", 115, 132, true, IsInUnifiedSettings = true)]
     [Guid(CommonGuidList.guidPythonToolsPkgString)]              // our packages GUID
     [ProvideLanguageService(typeof(PythonLanguageInfo), PythonConstants.LanguageName, 106, RequestStockColors = true, EnableLineNumbers = true, ShowSmartIndent = true, ShowCompletion = false, DefaultToInsertSpaces = true, HideAdvancedMembersByDefault = true, EnableAdvancedMembersOption = true, ShowDropDownOptions = false)]
     [ProvideLanguageExtension(typeof(PythonLanguageInfo), PythonConstants.FileExtension)]
@@ -432,6 +433,7 @@ namespace Microsoft.PythonTools {
             AddService<IPythonToolsLogger>(PythonToolsLogger.CreateService, promote: true);
             AddService<PythonToolsService>(PythonToolsService.CreateService, promote: true);
             AddService<IPythonDebugOptionsService>((container, serviceType) => new PythonDebugOptionsService(this), promote: true);
+            GetService(typeof(IPythonToolsOptionsService));
 
             var solutionEventListener = new SolutionEventsListener(this);
             solutionEventListener.StartListeningForChanges();
@@ -448,6 +450,7 @@ namespace Microsoft.PythonTools {
                 new ExecuteInReplCommand(this),
                 new SendToReplCommand(this),
                 new FillParagraphCommand(this),
+                new ResetSuppressedDialogsCommand(this),
                 new DiagnosticsCommand(this),
                 new OpenInterpreterListCommand(this),
                 new ImportWizardCommand(this),

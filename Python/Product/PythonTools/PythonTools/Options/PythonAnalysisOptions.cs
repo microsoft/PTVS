@@ -144,8 +144,9 @@ namespace Microsoft.PythonTools.Options {
             DiagnosticMode = PylanceDiagnosticMode.OpenFilesOnly;
             LogLevel = PylanceLogLevel.Information;
             StubPath = null;
-            TypeCheckingMode = PylanceTypeCheckingMode.Basic;
-            TypeshedPaths = null;
+            TypeCheckingMode = PylanceTypeCheckingMode.Off;
+            TypeshedPaths = Array.Empty<string>();
+            ExtraPaths = Array.Empty<string>();
             UseLibraryCodeForTypes = true;
             Indexing = true;
             ImportFormat = PylanceImportFormat.Absolute;

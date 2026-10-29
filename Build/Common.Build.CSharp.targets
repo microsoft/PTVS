@@ -36,7 +36,18 @@
       <_NugetAssemblies Include="$(PackagesPath)\Microsoft.ServiceHub.*\lib\netstandard2.0\Microsoft.ServiceHub.*.dll" />
     </ItemGroup>
     <PropertyGroup>
+      <_UnifiedSettingsReferencePaths Condition="'$(VSTarget)' == '18.0'">
+        $(PackagesPath)Microsoft.VisualStudio.Utilities.18.0.42423\lib\net472;
+        $(PackagesPath)Microsoft.VisualStudio.Shell.15.0.18.0.42423\lib\net472;
+        $(PackagesPath)Microsoft.VisualStudio.Shell.Framework.18.0.42423\lib\net472;
+        $(PackagesPath)Microsoft.Internal.VisualStudio.Shell.Framework.18.0.42423\lib\net472;
+        $(PackagesPath)Microsoft.VisualStudio.Threading.Only.18.0.5\lib\net472;
+        $(PackagesPath)Microsoft.VisualStudio.Interop.18.0.42421\lib\net472;
+        $(PackagesPath)Microsoft.Internal.VisualStudio.Interop.18.0.42421\lib\net472;
+        $(PackagesPath)Microsoft.VisualStudio.RpcContracts.18.0.9\lib\netstandard2.0;
+      </_UnifiedSettingsReferencePaths>
       <AssemblySearchPaths>
+        $(_UnifiedSettingsReferencePaths)
         $(BuildRoot)Python\References\Dev$(VSTarget);
         $(BuildRoot)Python\References\Common;
         @(_NugetAssemblies->'%(RootDir)%(Directory)',';');

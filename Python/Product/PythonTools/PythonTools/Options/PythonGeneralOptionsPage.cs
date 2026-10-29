@@ -36,9 +36,13 @@ namespace Microsoft.PythonTools.Options {
         }
 
         private void ResetSuppressDialog(object sender, EventArgs e) {
-            PyService.SuppressDialogOptions.Reset();
-            PyService.SuppressDialogOptions.Save();
-            UntrustedWorkspaceInfoBar.ClearTrustedWorkspaces(PyService);
+            ResetSuppressedDialogs(PyService);
+        }
+
+        internal static void ResetSuppressedDialogs(PythonToolsService service) {
+            service.SuppressDialogOptions.Reset();
+            service.SuppressDialogOptions.Save();
+            UntrustedWorkspaceInfoBar.ClearTrustedWorkspaces(service);
         }
 
         /// <summary>

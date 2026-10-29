@@ -1,0 +1,39 @@
+{
+  "$schema": "https://aka.ms/unified-settings-experience/registration/schema",
+  "categories": {
+    "cookiecutter": {
+      "title": "@Microsoft.CookiecutterTools.Strings:ProductTitle;Microsoft.CookiecutterTools.dll",
+      "legacyOptionCategoryMoniker": "Cookiecutter"
+    },
+    "cookiecutter.general": {
+      "title": "@Microsoft.CookiecutterTools.Strings:Settings_General_Category;Microsoft.CookiecutterTools.dll",
+      "legacyOptionPageId": "bdb4e0b1-4869-4a6f-ad55-5230b768261d"
+    }
+  },
+  "properties": {
+    "cookiecutter.general.showHelp": {
+      "type": "boolean",
+      "default": true,
+      "title": "@Microsoft.CookiecutterTools.Strings:Settings_ShowHelp_Name;Microsoft.CookiecutterTools.dll",
+      "description": "@Microsoft.CookiecutterTools.Strings:Settings_ShowHelp_Description;Microsoft.CookiecutterTools.dll",
+      "transientScopesSupported": false,
+      "order": 0
+    },
+    "cookiecutter.general.feedUrl": {
+      "type": "string",
+      "default": "https://go.microsoft.com/fwlink/?LinkID=823051",
+      "title": "@Microsoft.CookiecutterTools.Strings:Settings_FeedUrl_Name;Microsoft.CookiecutterTools.dll",
+      "description": "@Microsoft.CookiecutterTools.Strings:Settings_FeedUrl_Description;Microsoft.CookiecutterTools.dll",
+      "transientScopesSupported": false,
+      "order": 1
+    },
+    "cookiecutter.general.checkForTemplateUpdate": {
+      "type": "boolean",
+      "default": true,
+      "title": "@Microsoft.CookiecutterTools.Strings:Settings_CheckForTemplateUpdate_Name;Microsoft.CookiecutterTools.dll",
+      "description": "@Microsoft.CookiecutterTools.Strings:Settings_CheckForTemplateUpdate_Description;Microsoft.CookiecutterTools.dll",
+      "transientScopesSupported": false,
+      "order": 2
+    }
+  }
+}

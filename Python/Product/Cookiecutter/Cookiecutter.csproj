@@ -36,8 +36,20 @@
     <Reference Include="Microsoft.VisualStudio.Editor" />
     <Reference Include="Microsoft.VisualStudio.Language.Intellisense" />
     <Reference Include="Microsoft.VisualStudio.Language.StandardClassification" />
-    <Reference Include="Microsoft.VisualStudio.Shell.15.0" />
-    <Reference Include="Microsoft.VisualStudio.Shell.Framework" />
+    <Reference Include="Microsoft.VisualStudio.Shell.15.0">
+      <HintPath>$(PackagesPath)\Microsoft.VisualStudio.Shell.15.0.18.0.42423\lib\net472\Microsoft.VisualStudio.Shell.15.0.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Shell.Framework">
+      <HintPath>$(PackagesPath)\Microsoft.VisualStudio.Shell.Framework.18.0.42423\lib\net472\Microsoft.VisualStudio.Shell.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Internal.VisualStudio.Shell.Framework">
+      <HintPath>$(PackagesPath)\Microsoft.Internal.VisualStudio.Shell.Framework.18.0.42423\lib\net472\Microsoft.Internal.VisualStudio.Shell.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Internal.VisualStudio.Interop">
+      <HintPath>$(PackagesPath)\Microsoft.Internal.VisualStudio.Interop.18.0.42421\lib\net472\Microsoft.Internal.VisualStudio.Interop.dll</HintPath>
+      <Private>False</Private>
+      <IncludeInVSIX>False</IncludeInVSIX>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.Interop">
       <IncludeInVSIX>False</IncludeInVSIX>
     </Reference>
@@ -54,7 +66,9 @@
     <Reference Include="Microsoft.VisualStudio.Threading">
       <HintPath Condition="'$(VSTarget)' == '18.0'">$(PackagesPath)\Microsoft.VisualStudio.Threading.Only\lib\net472\Microsoft.VisualStudio.Threading.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.VisualStudio.Utilities" />
+    <Reference Include="Microsoft.VisualStudio.Utilities">
+      <HintPath>$(PackagesPath)\Microsoft.VisualStudio.Utilities.18.0.42423\lib\net472\Microsoft.VisualStudio.Utilities.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Build, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
@@ -80,6 +94,10 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CookiecutterSettings.cs" />
+    <Compile Include="..\..\..\Common\Product\SharedProject\UnifiedSettingsStore.cs">
+      <Link>Shared\Infrastructure\UnifiedSettingsStore.cs</Link>
+    </Compile>
     <Compile Include="Model\CookiecutterSessionStartInfo.cs" />
     <Compile Include="Model\GitRunException.cs" />
     <Compile Include="Model\KnownValueSources.cs" />
@@ -229,6 +247,11 @@
     </ConditionalEmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <VsSettingsManifest Include="CookiecutterSettings.json" />
+    <Content Include="CookiecutterSettings.json">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Resource Include="Shared\readme.txt" />
     <ImageManifest Include="Resources\Images.imagemanifest">
       <SubType>Designer</SubType>
@@ -361,6 +384,7 @@
     <UseCodebase>true</UseCodebase>
   </PropertyGroup>
   <Import Project="..\ProjectAfter.settings" />
+  <Import Project="$(PackagesPath)\Microsoft.VisualStudio.Settings.Manifest.Build.18.12.1217\build\Microsoft.VisualStudio.Settings.Manifest.Build.targets" Condition="'$(VSTarget)' == '18.0'" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

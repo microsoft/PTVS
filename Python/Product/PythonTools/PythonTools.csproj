@@ -220,6 +220,11 @@
     <Reference Include="Microsoft.VisualStudio.Settings.15.0">
       <Private>false</Private>
     </Reference>
+    <Reference Include="Microsoft.Internal.VisualStudio.Interop">
+      <HintPath>$(PackagesPath)Microsoft.Internal.VisualStudio.Interop.18.0.42421\lib\net472\Microsoft.Internal.VisualStudio.Interop.dll</HintPath>
+      <Private>false</Private>
+      <IncludeInVSIX>false</IncludeInVSIX>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.Threading">
       <HintPath Condition="'$(VSTarget)' == '18.0'">$(PackagesPath)\Microsoft.VisualStudio.Threading.Only\lib\net472\Microsoft.VisualStudio.Threading.dll</HintPath>
     </Reference>
@@ -1113,12 +1118,23 @@
   <ItemGroup>
     <None Include="app.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Compile Include="PythonTools\Options\PythonUnifiedSetting.cs" />
+    <Compile Include="PythonTools\Commands\ResetSuppressedDialogsCommand.cs" />
+    <Compile Include="$(BuildRoot)Common\Product\SharedProject\UnifiedSettingsStore.cs">
+      <Link>SharedProject\UnifiedSettingsStore.cs</Link>
+    </Compile>
+    <EmbeddedResource Include="PythonTools\Options\UnifiedSettings.resx">
+      <LogicalName>Microsoft.PythonTools.Options.UnifiedSettings.resources</LogicalName>
+    </EmbeddedResource>
+    <VsSettingsManifest Include="PythonTools.registration.json" />
+  </ItemGroup>
   <PropertyGroup>
     <SharedProject_IncludeUIThreadBase>false</SharedProject_IncludeUIThreadBase>
   </PropertyGroup>
   <Import Project="$(BuildRoot)\Common\Product\SharedProject\SharedProject.proj" />
   <Import Project="..\ProjectAfter.settings" />
+  <Import Project="$(PackagesPath)Microsoft.VisualStudio.Settings.Manifest.Build.18.12.1217\build\Microsoft.VisualStudio.Settings.Manifest.Build.targets" Condition="'$(VSTarget)' == '18.0'" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
