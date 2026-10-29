@@ -11,12 +11,12 @@ using Microsoft.VisualStudio.Utilities.UnifiedSettings;
 namespace Microsoft.PythonTools.Options {
     internal sealed class PythonUnifiedSetting {
         public static readonly IReadOnlyList<PythonUnifiedSetting> All = new[] {
-            Boolean("Advanced", "ShowOutputWindowForVirtualEnvCreate", "general.showOutputWindowForVirtualEnvCreate"),
-            Boolean("Advanced", "ShowOutputWindowForPackageInstallation", "general.showOutputWindowForPackageInstallation"),
-            Boolean("Advanced", "PromptForEnvCreate", "general.promptForEnvCreate"),
-            Boolean("Advanced", "PromptForPackageInstallation", "general.promptForPackageInstallation"),
-            Boolean("Advanced", "PromptForTestFrameWorkInfoBar", "general.promptForTestFrameWorkInfoBar"),
-            Boolean("Advanced", "ElevatePip", "general.elevatePip"),
+            Boolean("Advanced", "ShowOutputWindowForVirtualEnvCreate", "general.pythonTools.showOutputWindowForVirtualEnvCreate"),
+            Boolean("Advanced", "ShowOutputWindowForPackageInstallation", "general.pythonTools.showOutputWindowForPackageInstallation"),
+            Boolean("Advanced", "PromptForEnvCreate", "general.pythonTools.promptForEnvCreate"),
+            Boolean("Advanced", "PromptForPackageInstallation", "general.pythonTools.promptForPackageInstallation"),
+            Boolean("Advanced", "PromptForTestFrameWorkInfoBar", "general.pythonTools.promptForTestFrameWorkInfoBar"),
+            Boolean("Advanced", "ElevatePip", "general.pythonTools.elevatePip"),
             Boolean("Analysis", "AutoSearchPaths", "analysis.autoSearchPaths"),
             Text("Analysis", "DiagnosticMode", "analysis.diagnosticMode"),
             Text("Analysis", "LogLevel", "analysis.logLevel"),

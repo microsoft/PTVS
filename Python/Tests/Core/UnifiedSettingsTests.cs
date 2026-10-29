@@ -55,9 +55,9 @@ namespace PythonToolsTests {
         [TestMethod]
         public void NativeSettingsMatchTheVisibleLegacyPageOrder() {
             AssertLegacyPageOrder("general.pythonTools",
-                "general.showOutputWindowForVirtualEnvCreate", "general.showOutputWindowForPackageInstallation",
-                "general.promptForEnvCreate", "general.promptForPackageInstallation",
-                "general.promptForTestFrameWorkInfoBar", "general.elevatePip");
+                "general.pythonTools.showOutputWindowForVirtualEnvCreate", "general.pythonTools.showOutputWindowForPackageInstallation",
+                "general.pythonTools.promptForEnvCreate", "general.pythonTools.promptForPackageInstallation",
+                "general.pythonTools.promptForTestFrameWorkInfoBar", "general.pythonTools.elevatePip");
             AssertLegacyPageOrder("analysis",
                 "analysis.diagnosticMode", "analysis.logLevel", "analysis.typeCheckingMode", "analysis.importFormat",
                 "analysis.stubPath", "analysis.extraPaths", "analysis.typeshedPaths", "analysis.autoSearchPaths",
@@ -87,7 +87,8 @@ namespace PythonToolsTests {
             Assert.AreEqual(6, settings.Length);
             // USX places child categories after direct settings, including editor settings with the maximum default order.
             foreach (var setting in settings) {
-                Assert.AreEqual(inlineCategory, setting.Value["placements"].Single()["category"].Value<string>(), setting.Name);
+                Assert.AreEqual(inlineCategory, setting.Name.Substring(0, setting.Name.LastIndexOf('.')), setting.Name);
+                Assert.IsNull(setting.Value["placements"], setting.Name);
             }
         }
 
@@ -219,7 +220,7 @@ namespace PythonToolsTests {
                 return null;
             });
             Assert.AreEqual("black", native.Store.Read<string>(moniker));
-            Assert.IsFalse(native.Store.Read<bool>(Prefix + "general.elevatePip"));
+            Assert.IsFalse(native.Store.Read<bool>(Prefix + "general.pythonTools.elevatePip"));
             Assert.IsTrue(native.Store.Read<bool>(Prefix + "debugging.waitOnNormalExit"));
             Assert.AreEqual(0, native.CommitCalls);
             Assert.AreEqual(1, legacy.GetInt32(Checkpoints, ImportCompleted));
@@ -237,7 +238,7 @@ namespace PythonToolsTests {
                 Assert.Fail("Customized Parameter Information must skip legacy import.");
                 return null;
             });
-            Assert.IsFalse(native.Store.Read<bool>(Prefix + "general.elevatePip"));
+            Assert.IsFalse(native.Store.Read<bool>(Prefix + "general.pythonTools.elevatePip"));
             Assert.AreEqual(0, native.CommitCalls);
             Assert.AreEqual(1, legacy.GetInt32(Checkpoints, ImportCompleted));
         }
@@ -256,7 +257,7 @@ namespace PythonToolsTests {
             });
             Assert.AreEqual(0, native.ProvenanceCalls);
             Assert.AreEqual(0, native.CommitCalls);
-            Assert.IsFalse(native.Store.Read<bool>(Prefix + "general.elevatePip"));
+            Assert.IsFalse(native.Store.Read<bool>(Prefix + "general.pythonTools.elevatePip"));
             Assert.AreEqual(1, legacy.GetInt32(Checkpoints, ImportCompleted));
         }
 
@@ -279,7 +280,7 @@ namespace PythonToolsTests {
             legacy.CreateCollection(Legacy + "Advanced");
             legacy.SetString(Legacy + "Advanced", "ElevatePip", "True");
             new PythonToolsOptionsService(legacy, native.Store, () => null);
-            Assert.IsTrue(native.Store.Read<bool>(Prefix + "general.elevatePip"));
+            Assert.IsTrue(native.Store.Read<bool>(Prefix + "general.pythonTools.elevatePip"));
             Assert.AreEqual(1, native.CommitCalls);
             Assert.AreEqual(1, legacy.GetInt32(Checkpoints, ImportCompleted));
         }
@@ -294,7 +295,7 @@ namespace PythonToolsTests {
             new PythonToolsOptionsService(legacy, native.Store, () => null);
             Assert.IsFalse(legacy.CollectionExists(Checkpoints));
             Assert.AreEqual(0, native.CommitCalls);
-            Assert.IsFalse(native.Store.Read<bool>(Prefix + "general.elevatePip"));
+            Assert.IsFalse(native.Store.Read<bool>(Prefix + "general.pythonTools.elevatePip"));
         }
 
         [TestMethod]
@@ -308,13 +309,13 @@ namespace PythonToolsTests {
             legacy.SetString(Legacy + "Advanced", "WaitOnNormalExit", "False");
             new PythonToolsOptionsService(legacy, native.Store, () => null);
             Assert.IsFalse(legacy.CollectionExists(Checkpoints));
-            Assert.IsFalse(native.Store.Read<bool>(Prefix + "general.elevatePip"));
+            Assert.IsFalse(native.Store.Read<bool>(Prefix + "general.pythonTools.elevatePip"));
             Assert.IsTrue(native.Store.Read<bool>(failed));
             Assert.AreEqual(0, native.CommitCalls);
             native.ChangeFailures.Clear();
             new PythonToolsOptionsService(legacy, native.Store, () => null);
             Assert.AreEqual(1, legacy.GetInt32(Checkpoints, ImportCompleted));
-            Assert.IsTrue(native.Store.Read<bool>(Prefix + "general.elevatePip"));
+            Assert.IsTrue(native.Store.Read<bool>(Prefix + "general.pythonTools.elevatePip"));
             Assert.IsFalse(native.Store.Read<bool>(failed));
             Assert.AreEqual(1, native.CommitCalls);
         }
@@ -343,13 +344,13 @@ namespace PythonToolsTests {
             new PythonToolsOptionsService(legacy, native.Store, () => null);
             Assert.IsFalse(legacy.CollectionExists(Checkpoints));
             Assert.AreEqual(0, native.CommitCalls);
-            Assert.IsFalse(native.Store.Read<bool>(Prefix + "general.elevatePip"));
+            Assert.IsFalse(native.Store.Read<bool>(Prefix + "general.pythonTools.elevatePip"));
         }
 
         [TestMethod]
         public void NoChangesQueuedIsACompletedImport() {
             var native = new NativeSettings { CommitOutcome = SettingCommitOutcome.NoChangesQueued };
-            var moniker = Prefix + "general.elevatePip";
+            var moniker = Prefix + "general.pythonTools.elevatePip";
             native.ChangeFailures[moniker] = SettingChangeOutcome.NoOp;
             var legacy = CreateLegacyStore();
             legacy.CreateCollection(Legacy + "Advanced");
@@ -374,7 +375,7 @@ namespace PythonToolsTests {
         [TestMethod]
         public void ScalarWritesPreserveDefaultCustomizations() {
             var native = new NativeSettings();
-            var moniker = Prefix + "general.elevatePip";
+            var moniker = Prefix + "general.pythonTools.elevatePip";
             native.Store.Write(moniker, false, "test");
             Assert.AreEqual(SettingWriteOptions.CustomizeUnconditionally, native.LastWriteOptions);
             Assert.IsTrue(native.Store.IsCustomized(moniker));
