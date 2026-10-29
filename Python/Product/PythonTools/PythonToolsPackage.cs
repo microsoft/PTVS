@@ -72,13 +72,6 @@ namespace Microsoft.PythonTools {
     [Description("Python Tools Package")]
     [ProvideAutomationObject("VsPython")]
     [ProvideSettingsManifest(PackageRelativeManifestFile = "PythonTools.registration.json")]
-    [ProvideLanguageEditorOptionPage(typeof(PythonAdvancedEditorOptionsPage), PythonConstants.LanguageName, "", "Advanced", "#113", IsInUnifiedSettings = true)]
-    [ProvideLanguageEditorOptionPage(typeof(PythonFormattingOptionsPage), PythonConstants.LanguageName, "", "Formatting", "#126", IsInUnifiedSettings = true)]
-    [ProvideOptionPage(typeof(PythonInteractiveOptionsPage), "Python Tools", "Interactive Windows", 115, 117, true, IsInUnifiedSettings = true)]
-    [ProvideOptionPage(typeof(PythonGeneralOptionsPage), "Python Tools", "General", 115, 120, true, IsInUnifiedSettings = true)]
-    [ProvideOptionPage(typeof(PythonAnalysisOptionsPage), "Python Tools", "Analysis", 115, 129, true, IsInUnifiedSettings = true)]
-    [ProvideOptionPage(typeof(PythonDebuggingOptionsPage), "Python Tools", "Debugging", 115, 125, true, IsInUnifiedSettings = true)]
-    [ProvideOptionPage(typeof(PythonCondaOptionsPage), "Python Tools", "Conda", 115, 132, true, IsInUnifiedSettings = true)]
     [Guid(CommonGuidList.guidPythonToolsPkgString)]              // our packages GUID
     [ProvideLanguageService(typeof(PythonLanguageInfo), PythonConstants.LanguageName, 106, RequestStockColors = true, EnableLineNumbers = true, ShowSmartIndent = true, ShowCompletion = false, DefaultToInsertSpaces = true, HideAdvancedMembersByDefault = true, EnableAdvancedMembersOption = true, ShowDropDownOptions = false)]
     [ProvideLanguageExtension(typeof(PythonLanguageInfo), PythonConstants.FileExtension)]

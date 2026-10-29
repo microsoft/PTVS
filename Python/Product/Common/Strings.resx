@@ -2563,9 +2563,6 @@ Please specify at least one package.</value>
   <data name="AddExistingEnvironmentVersionEmpty" xml:space="preserve">
     <value>Version is not specified.</value>
   </data>
-  <data name="CondaExecutableFilter" xml:space="preserve">
-    <value>Executable Files (*.exe)|*.exe|All Files (*.*)|*.*</value>
-  </data>
   <data name="EnvironmentSwitcherNoCurrentEnvironment" xml:space="preserve">
     <value>(no Python environment)</value>
   </data>
@@ -3001,51 +2998,6 @@ Please specify at least one package.</value>
   <data name="InstallFormatterPrompt" xml:space="preserve">
     <value>Install '{0}' in environment '{1}' now?</value>
   </data>
-  <data name="DiagnosticModeOpenFiles" xml:space="preserve">
-    <value>Open files only</value>
-  </data>
-  <data name="DiagnosticModeWorkspace" xml:space="preserve">
-    <value>Workspace</value>
-  </data>
-  <data name="LogLevelError" xml:space="preserve">
-    <value>Error</value>
-  </data>
-  <data name="LogLevelInformation" xml:space="preserve">
-    <value>Information</value>
-  </data>
-  <data name="LogLevelTrace" xml:space="preserve">
-    <value>Trace</value>
-  </data>
-  <data name="LogLevelWarning" xml:space="preserve">
-    <value>Warning</value>
-  </data>
-  <data name="TypeCheckingModeBasic" xml:space="preserve">
-    <value>Basic</value>
-  </data>
-  <data name="TypeCheckingModeStrict" xml:space="preserve">
-    <value>Strict</value>
-  </data>
-  <data name="DiagnosticModeToolTip" xml:space="preserve">
-    <value>Analyzes and reports errors on only open files or the entire workspace.</value>
-  </data>
-  <data name="LogLevelToolTip" xml:space="preserve">
-    <value>Specifies the level of logging for the Output panel.</value>
-  </data>
-  <data name="SearchPathsToolTip" xml:space="preserve">
-    <value>Additional import search resolution paths. You can use line breaks or semicolons to separate multiple paths.</value>
-  </data>
-  <data name="StubPathToolTip" xml:space="preserve">
-    <value>Path to directory containing custom type stub files.</value>
-  </data>
-  <data name="TypeCheckingModeToolTip" xml:space="preserve">
-    <value>Defines the default rule set for type checking.</value>
-  </data>
-  <data name="TypeshedPathsToolTip" xml:space="preserve">
-    <value>Paths to look for typeshed modules. You can use line breaks or semicolons to separate multiple paths.</value>
-  </data>
-  <data name="TypeCheckingModeOff" xml:space="preserve">
-    <value>Off</value>
-  </data>
   <data name="WarningPython2NotSupported" xml:space="preserve">
     <value>Pylance language server does not support Python 2.x. Type checking will be performed as in Python 3.x.</value>
   </data>
@@ -3429,32 +3381,8 @@ Please specify at least one package.</value>
     <value>Environment detected using Python version {0}. Some features might not work as expected since Visual Studio does not officially support this version.</value>
     <comment>{0} is the Python version</comment>
   </data>
-  <data name="VariablePresentation_Group" xml:space="preserve">
-    <value>Group</value>
-  </data>
-  <data name="VariablePresentation_Hide" xml:space="preserve">
-    <value>Hide</value>
-  </data>
-  <data name="VariablePresentation_Inline" xml:space="preserve">
-    <value>Inline</value>
-  </data>
   <data name="AddVirtualEnvironmentNameInvalid" xml:space="preserve">
     <value>Virtual environment name can't contain any of the following characters: {0}</value>
     <comment>{0} is a list of invalid path characters, space-delimited.</comment>
-  </data>
-  <data name="ImportFormatAbsolute" xml:space="preserve">
-    <value>Absolute</value>
-  </data>
-  <data name="ImportFormatRelative" xml:space="preserve">
-    <value>Relative</value>
-  </data>
-  <data name="ImportFormatToolTip" xml:space="preserve">
-    <value>Defines the default format for import module.</value>
-  </data>
-  <data name="InlayHintsFunctionReturnTypesToolTip" xml:space="preserve">
-    <value>Toggle inlay hints for function return types.</value>
-  </data>
-  <data name="InlayHintsVariableTypeToolTip" xml:space="preserve">
-    <value>Toggle inlay hints for variable types.</value>
   </data>
 </root>

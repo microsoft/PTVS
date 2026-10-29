@@ -4,7 +4,7 @@
 // Licensed under the Apache License, Version 2.0 (the License).
 
 using System;
-using Microsoft.PythonTools.Options;
+using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Commands {
@@ -18,7 +18,10 @@ namespace Microsoft.PythonTools.Commands {
         public override int CommandId => (int)PkgCmdIDList.cmdidResetSuppressedDialogs;
 
         public override void DoCommand(object sender, EventArgs args) {
-            PythonGeneralOptionsPage.ResetSuppressedDialogs(_provider.GetPythonToolsService());
+            var service = _provider.GetPythonToolsService();
+            service.SuppressDialogOptions.Reset();
+            service.SuppressDialogOptions.Save();
+            UntrustedWorkspaceInfoBar.ClearTrustedWorkspaces(service);
         }
     }
 }

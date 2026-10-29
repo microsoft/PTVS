@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using Microsoft.PythonTools.Options;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools;
 
@@ -28,7 +27,7 @@ namespace Microsoft.PythonTools.Commands {
         }
 
         public override void DoCommand(object sender, EventArgs args) {
-            _provider.ShowOptionsPage(typeof(PythonAnalysisOptionsPage));
+            _provider.ShowOptionsPage(new Guid("a9f3f627-aa17-35a5-912e-02c5cced5db1"));
         }
 
         public override EventHandler BeforeQueryStatus {

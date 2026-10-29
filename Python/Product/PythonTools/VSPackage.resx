@@ -123,9 +123,6 @@
   <data name="112" xml:space="preserve">
     <value>Provides IntelliSense, projects, templates, debugging, interactive windows, and other support for Python developers.</value>
   </data>
-  <data name="113" xml:space="preserve">
-    <value>Advanced</value>
-  </data>
   <data name="2000" xml:space="preserve">
     <value>IronPython</value>
   </data>
@@ -141,14 +138,8 @@
   <data name="114" xml:space="preserve">
     <value>Intellisense</value>
   </data>
-  <data name="115" xml:space="preserve">
-    <value>Python</value>
-  </data>
   <data name="116" xml:space="preserve">
     <value>Environment Options</value>
-  </data>
-  <data name="117" xml:space="preserve">
-    <value>Interactive Windows</value>
   </data>
   <data name="118" xml:space="preserve">
     <value>Advanced</value>
@@ -235,9 +226,6 @@
   <data name="4000" xml:space="preserve">
     <value>Web Platform Installer</value>
   </data>
-  <data name="120" xml:space="preserve">
-    <value>General</value>
-  </data>
   <data name="121" xml:space="preserve">
     <value>New Lines</value>
   </data>
@@ -249,9 +237,6 @@
   </data>
   <data name="124" xml:space="preserve">
     <value>Wrapping</value>
-  </data>
-  <data name="125" xml:space="preserve">
-    <value>Debugging</value>
   </data>
   <data name="3016" xml:space="preserve">
     <value>Python</value>
@@ -526,17 +511,11 @@ This file should normally be deployed in your /static folder. See https://aka.ms
   <data name="5079" xml:space="preserve">
     <value>A project for creating a worker role in an Azure Cloud Service</value>
   </data>
-  <data name="126" xml:space="preserve">
-    <value>Formatting</value>
-  </data>
   <data name="127" xml:space="preserve">
     <value>Python Project Files;*.pyproj</value>
   </data>
   <data name="128" xml:space="preserve">
     <value>Python Files;*.py,*.pyw,*.pyi</value>
-  </data>
-  <data name="129" xml:space="preserve">
-    <value>Analysis</value>
   </data>
   <data name="130" xml:space="preserve">
     <value>Experimental</value>
@@ -549,9 +528,6 @@ This file should normally be deployed in your /static folder. See https://aka.ms
   </data>
   <data name="131" xml:space="preserve">
     <value>Language Server</value>
-  </data>
-  <data name="132" xml:space="preserve">
-    <value>Conda</value>
   </data>
   <data name="3019" xml:space="preserve">
     <value>Python type checker configuration file</value>

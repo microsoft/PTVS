@@ -360,27 +360,9 @@
     <Compile Include="PythonTools\Navigation\Navigable\NavigableSymbolSourceProvider.cs" />
     <Compile Include="PythonTools\Navigation\TextViewFilter.cs" />
     <Compile Include="PythonTools\Navigation\TextViewFilterProvider.cs" />
-    <Compile Include="PythonTools\Options\PythonAdvancedEditorOptionsControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="PythonTools\Options\PythonAdvancedEditorOptionsControl.Designer.cs">
-      <DependentUpon>PythonAdvancedEditorOptionsControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="PythonTools\Options\PythonAdvancedEditorOptionsPage.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="PythonTools\Options\PythonAdvancedEditorOptions.cs" />
     <Compile Include="PythonTools\PythonLanguageInfo.cs" />
     <Compile Include="PythonTools\Options\PythonCondaOptions.cs" />
-    <Compile Include="PythonTools\Options\PythonCondaOptionsControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="PythonTools\Options\PythonCondaOptionsControl.Designer.cs">
-      <DependentUpon>PythonCondaOptionsControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="PythonTools\Options\PythonCondaOptionsPage.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="PythonTools\Environments\AddCondaEnvironmentControl.xaml.cs">
       <DependentUpon>AddCondaEnvironmentControl.xaml</DependentUpon>
     </Compile>
@@ -430,15 +412,6 @@
     <Compile Include="PythonTools\Editor\Paste\ReplPromptHelpers.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionResult.cs" />
     <Compile Include="PythonTools\Options\PythonAnalysisOptions.cs" />
-    <Compile Include="PythonTools\Options\PythonAnalysisOptionsControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="PythonTools\Options\PythonAnalysisOptionsControl.Designer.cs">
-      <DependentUpon>PythonAnalysisOptionsControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="PythonTools\Options\PythonAnalysisOptionsPage.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="PythonTools\Environments\AddEnvironmentDialog.xaml.cs">
       <DependentUpon>AddEnvironmentDialog.xaml</DependentUpon>
     </Compile>
@@ -468,15 +441,6 @@
     <Compile Include="PythonTools\SearchPathManager.cs" />
     <Compile Include="PythonTools\Project\VsPackageManagerUI.cs" />
     <Compile Include="PythonTools\ProvideBraceCompletionAttribute.cs" />
-    <Compile Include="PythonTools\Options\PythonInteractiveOptionsControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="PythonTools\Options\PythonInteractiveOptionsControl.Designer.cs">
-      <DependentUpon>PythonInteractiveOptionsControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="PythonTools\Options\PythonInteractiveOptionsPage.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="PythonTools\Options\SuppressDialogOptions.cs" />
     <Compile Include="PythonTools\Repl\IMultipleScopeEvaluator.cs" />
     <Compile Include="PythonTools\Repl\InlineReplAdornment.cs" />
@@ -506,15 +470,6 @@
     <Compile Include="PythonTools\Logging\InMemoryLogger.cs" />
     <Compile Include="PythonTools\Logging\PythonToolsLogger.cs" />
     <Compile Include="PythonTools\Options\IPythonToolsOptionsService.cs" />
-    <Compile Include="PythonTools\Options\PythonGeneralOptionsControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="PythonTools\Options\PythonGeneralOptionsControl.Designer.cs">
-      <DependentUpon>PythonGeneralOptionsControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="PythonTools\Options\PythonGeneralOptionsPage.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="PythonTools\Options\PythonToolsOptionsService.cs" />
     <Compile Include="PythonTools\Environments\AddVirtualEnvironmentOperation.cs" />
     <Compile Include="PythonTools\Project\Attributes.cs" />
@@ -581,15 +536,6 @@
     <Compile Include="PythonTools\Commands\FillParagraphCommand.cs" />
     <Compile Include="PythonTools\Commands\OpenReplCommand.cs" />
     <Compile Include="PythonTools\Commands\SendToReplCommand.cs" />
-    <Compile Include="PythonTools\Options\PythonFormattingOptionsControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="PythonTools\Options\PythonFormattingOptionsControl.Designer.cs">
-      <DependentUpon>PythonFormattingOptionsControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="PythonTools\Options\PythonFormattingOptionsPage.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="PythonTools\Options\PythonInteractiveOptions.cs" />
     <Compile Include="PythonTools\Project\PythonAssemblyReferenceNode.cs" />
     <Compile Include="PythonTools\Project\Automation\OADeprecatedReference.cs" />
@@ -662,18 +608,6 @@
     <Compile Include="PythonTools\Repl\OverloadDoc.cs" />
     <Compile Include="PythonTools\PythonPredefinedClassificationTypeNames.cs" />
     <Compile Include="PythonTools\Extensions.cs" />
-    <Compile Include="PythonTools\Options\PythonDialogPage.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="PythonTools\Options\PythonDebuggingOptionsControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="PythonTools\Options\PythonDebuggingOptionsControl.Designer.cs">
-      <DependentUpon>PythonDebuggingOptionsControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="PythonTools\Options\PythonDebuggingOptionsPage.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="PythonTools\Project\ThemeAwareUserControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -990,27 +924,6 @@
       <ManifestResourceName>Microsoft.VisualStudioTools.SharedProject</ManifestResourceName>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="PythonTools\Options\PythonCondaOptionsControl.resx">
-      <DependentUpon>PythonCondaOptionsControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="PythonTools\Options\PythonAnalysisOptionsControl.resx">
-      <DependentUpon>PythonAnalysisOptionsControl.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="PythonTools\Options\PythonAdvancedEditorOptionsControl.resx">
-      <DependentUpon>PythonAdvancedEditorOptionsControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="PythonTools\Options\PythonGeneralOptionsControl.resx">
-      <DependentUpon>PythonGeneralOptionsControl.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="PythonTools\Options\PythonFormattingOptionsControl.resx">
-      <DependentUpon>PythonFormattingOptionsControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="PythonTools\Options\PythonInteractiveOptionsControl.resx">
-      <DependentUpon>PythonInteractiveOptionsControl.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Project\DefaultPythonLauncherOptions.resx">
       <DependentUpon>DefaultPythonLauncherOptions.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -1029,9 +942,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Project\StartWithErrorsDialog.resx">
       <DependentUpon>StartWithErrorsDialog.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="PythonTools\Options\PythonDebuggingOptionsControl.resx">
-      <DependentUpon>PythonDebuggingOptionsControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Project\PythonGeneralPropertyPageControl.resx">
       <DependentUpon>PythonGeneralPropertyPageControl.cs</DependentUpon>

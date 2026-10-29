@@ -55,7 +55,6 @@ namespace Microsoft.CookiecutterTools {
     // This attribute is needed to let the shell know that this package exposes some menus.
     [ProvideMenuResource("Menus.ctmenu", 1)]
     [ProvideToolWindow(typeof(CookiecutterToolWindow), Style = VsDockStyle.Linked, Window = ToolWindowGuids80.ServerExplorer)]
-    [ProvideOptionPage(typeof(CookiecutterOptionPage), "Cookiecutter", "General", 113, 114, true, IsInUnifiedSettings = true)]
     [ProvideSettingsManifest(PackageRelativeManifestFile = "CookiecutterSettings.json")]
     [Guid(PackageGuids.guidCookiecutterPkgString)]
     public sealed class CookiecutterPackage : AsyncPackage, IOleCommandTarget {
@@ -302,7 +301,7 @@ namespace Microsoft.CookiecutterTools {
                 throw new InvalidOperationException("The legacy Visual Studio settings service is unavailable.");
             }
             // DialogPage's unannotated properties use AutomationObject's full type name plus property name.
-            var path = typeof(CookiecutterOptionPage).FullName + "." + propertyName;
+            var path = CookiecutterSettings.LegacySettingsPrefix + propertyName;
             var result = settings.TryGetValue<object>(path, out var value);
             if (result == Microsoft.VisualStudio.Settings.GetValueResult.Missing) {
                 return null;

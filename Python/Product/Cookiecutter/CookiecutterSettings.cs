@@ -15,6 +15,7 @@ namespace Microsoft.CookiecutterTools {
     }
 
     internal sealed class CookiecutterSettings {
+        internal const string LegacySettingsPrefix = "Microsoft.CookiecutterTools.CookiecutterOptionPage.";
         internal const string ShowHelpMoniker = "cookiecutter.general.showHelp";
         internal const string FeedUrlMoniker = "cookiecutter.general.feedUrl";
         internal const string CheckForTemplateUpdateMoniker = "cookiecutter.general.checkForTemplateUpdate";
@@ -31,17 +32,17 @@ namespace Microsoft.CookiecutterTools {
 
         internal bool ShowHelp {
             get => _store.Read<bool>(ShowHelpMoniker);
-            set => _store.Write(ShowHelpMoniker, value, GetDescription(SR.SettingsShowHelpName));
+            set => _store.Write(ShowHelpMoniker, value, Strings.Settings_ShowHelp_Name);
         }
 
         internal string FeedUrl {
             get => _store.Read<string>(FeedUrlMoniker);
-            set => _store.Write(FeedUrlMoniker, value, GetDescription(SR.SettingsFeedUrlName));
+            set => _store.Write(FeedUrlMoniker, value, Strings.Settings_FeedUrl_Name);
         }
 
         internal bool CheckForTemplateUpdate {
             get => _store.Read<bool>(CheckForTemplateUpdateMoniker);
-            set => _store.Write(CheckForTemplateUpdateMoniker, value, GetDescription(SR.SettingsCheckForTemplateUpdateName));
+            set => _store.Write(CheckForTemplateUpdateMoniker, value, Strings.Settings_CheckForTemplateUpdate_Name);
         }
 
         internal void ImportLegacySettings(Func<bool> isComplete, Func<string, object> loadLegacy,
@@ -56,20 +57,20 @@ namespace Microsoft.CookiecutterTools {
                     return;
                 }
 
-                var showHelp = loadLegacy(nameof(CookiecutterOptionPage.ShowHelp));
-                var feedUrl = loadLegacy(nameof(CookiecutterOptionPage.FeedUrl));
-                var checkForTemplateUpdate = loadLegacy(nameof(CookiecutterOptionPage.CheckForTemplateUpdate));
+                var showHelp = loadLegacy(nameof(ShowHelp));
+                var feedUrl = loadLegacy(nameof(FeedUrl));
+                var checkForTemplateUpdate = loadLegacy(nameof(CheckForTemplateUpdate));
                 if (showHelp == null && feedUrl == null && checkForTemplateUpdate == null) {
                     return;
                 }
 
                 _store.Import(
-                    showHelp == null ? (bool?)null : ReadLegacyBoolean(showHelp, nameof(CookiecutterOptionPage.ShowHelp)),
+                    showHelp == null ? (bool?)null : ReadLegacyBoolean(showHelp, nameof(ShowHelp)),
                     feedUrl == null ? null : feedUrl as string
                         ?? throw new FormatException("The legacy Cookiecutter feed URL must be a string."),
                     checkForTemplateUpdate == null ? (bool?)null
-                        : ReadLegacyBoolean(checkForTemplateUpdate, nameof(CookiecutterOptionPage.CheckForTemplateUpdate)),
-                    GetDescription(SR.SettingsGeneralCategory));
+                        : ReadLegacyBoolean(checkForTemplateUpdate, nameof(CheckForTemplateUpdate)),
+                    Strings.Settings_General_Category);
                 markComplete();
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 logFailure(ex);
@@ -85,8 +86,6 @@ namespace Microsoft.CookiecutterTools {
             }
             throw new FormatException($"The legacy Cookiecutter preference '{propertyName}' must be a Boolean.");
         }
-
-        private static string GetDescription(string resourceName) => Strings.ResourceManager.GetString(resourceName, Strings.Culture);
 
         private sealed class SettingsStore : ICookiecutterSettingsStore {
             private readonly UnifiedSettingsStore _store;

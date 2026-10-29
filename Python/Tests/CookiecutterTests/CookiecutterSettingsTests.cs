@@ -38,6 +38,22 @@ namespace CookiecutterTests {
         }
 
         [TestMethod]
+        public void LegacyImportPreservesOriginalPropertyNames() {
+            var settings = new CookiecutterSettings(new TestStore());
+            var paths = new List<string>();
+            settings.ImportLegacySettings(() => false, propertyName => {
+                paths.Add(CookiecutterSettings.LegacySettingsPrefix + propertyName);
+                return null;
+            }, () => Assert.Fail("No values were imported."), ex => Assert.Fail(ex.ToString()));
+
+            CollectionAssert.AreEqual(new[] {
+                "Microsoft.CookiecutterTools.CookiecutterOptionPage.ShowHelp",
+                "Microsoft.CookiecutterTools.CookiecutterOptionPage.FeedUrl",
+                "Microsoft.CookiecutterTools.CookiecutterOptionPage.CheckForTemplateUpdate"
+            }, paths);
+        }
+
+        [TestMethod]
         public void NoLegacyValuesDoesNotMarkAnImportComplete() {
             var store = new TestStore();
             var settings = new CookiecutterSettings(store);
@@ -61,7 +77,7 @@ namespace CookiecutterTests {
             var settings = new CookiecutterSettings(store);
             var complete = false;
             settings.ImportLegacySettings(() => complete, propertyName => {
-                return propertyName == nameof(CookiecutterOptionPage.FeedUrl)
+                return propertyName == nameof(CookiecutterSettings.FeedUrl)
                     ? (object)UrlConstants.DefaultRecommendedFeed : "True";
             }, () => complete = true, ex => Assert.Fail(ex.ToString()));
             Assert.AreEqual(3, store.WriteCount);
@@ -79,12 +95,12 @@ namespace CookiecutterTests {
             var complete = false;
             var errors = new List<Exception>();
             settings.ImportLegacySettings(() => complete, propertyName => {
-                return propertyName == nameof(CookiecutterOptionPage.ShowHelp) ? "not a Boolean" : LoadLegacy(propertyName);
+                return propertyName == nameof(CookiecutterSettings.ShowHelp) ? "not a Boolean" : LoadLegacy(propertyName);
             }, () => complete = true, errors.Add);
             Assert.IsFalse(complete);
             Assert.AreEqual(1, errors.Count);
             Assert.IsInstanceOfType(errors[0], typeof(FormatException));
-            StringAssert.Contains(errors[0].Message, nameof(CookiecutterOptionPage.ShowHelp));
+            StringAssert.Contains(errors[0].Message, nameof(CookiecutterSettings.ShowHelp));
             Assert.AreEqual(0, store.WriteCount);
             Assert.AreEqual(0, store.ImportCalls);
             Assert.IsTrue(settings.ShowHelp);
@@ -204,9 +220,9 @@ namespace CookiecutterTests {
 
         private static object LoadLegacy(string propertyName) {
             switch (propertyName) {
-                case nameof(CookiecutterOptionPage.ShowHelp): return false;
-                case nameof(CookiecutterOptionPage.FeedUrl): return "https://example.test/legacy";
-                case nameof(CookiecutterOptionPage.CheckForTemplateUpdate): return "False";
+                case nameof(CookiecutterSettings.ShowHelp): return false;
+                case nameof(CookiecutterSettings.FeedUrl): return "https://example.test/legacy";
+                case nameof(CookiecutterSettings.CheckForTemplateUpdate): return "False";
                 default: throw new ArgumentOutOfRangeException(nameof(propertyName));
             }
         }

@@ -101,8 +101,6 @@
     <Compile Include="Model\CookiecutterSessionStartInfo.cs" />
     <Compile Include="Model\GitRunException.cs" />
     <Compile Include="Model\KnownValueSources.cs" />
-    <Compile Include="ProjectResources.cs" />
-    <Compile Include="Attributes.cs" />
     <Compile Include="Commands\DeleteInstalledTemplateCommand.cs" />
     <Compile Include="Commands\GitHubHomeCommand.cs" />
     <Compile Include="Commands\RunCommand.cs" />
@@ -137,9 +135,6 @@
       <DependentUpon>Cookiecutter.vsct</DependentUpon>
     </Compile>
     <Compile Include="Commands\HomeCommand.cs" />
-    <Compile Include="CookiecutterOptionPage.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="Model\ContextItem.cs" />
     <Compile Include="Model\FeedTemplateSource.cs" />
     <Compile Include="Model\GitClient.cs" />
