@@ -19,7 +19,7 @@ namespace Microsoft.PythonTools {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Strings {
@@ -1622,15 +1622,6 @@ namespace Microsoft.PythonTools {
         public static string CondaEnvNotDetected {
             get {
                 return ResourceManager.GetString("CondaEnvNotDetected", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Executable Files (*.exe)|*.exe|All Files (*.*)|*.*.
-        /// </summary>
-        public static string CondaExecutableFilter {
-            get {
-                return ResourceManager.GetString("CondaExecutableFilter", resourceCulture);
             }
         }
         
@@ -3412,33 +3403,6 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Open files only.
-        /// </summary>
-        public static string DiagnosticModeOpenFiles {
-            get {
-                return ResourceManager.GetString("DiagnosticModeOpenFiles", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Analyzes and reports errors on only open files or the entire workspace..
-        /// </summary>
-        public static string DiagnosticModeToolTip {
-            get {
-                return ResourceManager.GetString("DiagnosticModeToolTip", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Workspace.
-        /// </summary>
-        public static string DiagnosticModeWorkspace {
-            get {
-                return ResourceManager.GetString("DiagnosticModeWorkspace", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Diagnostics log was copied to the clipboard..
         /// </summary>
         public static string DiagnosticsLogCopiedToClipboard {
@@ -4589,33 +4553,6 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Absolute.
-        /// </summary>
-        public static string ImportFormatAbsolute {
-            get {
-                return ResourceManager.GetString("ImportFormatAbsolute", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Relative.
-        /// </summary>
-        public static string ImportFormatRelative {
-            get {
-                return ResourceManager.GetString("ImportFormatRelative", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Defines the default format for import module..
-        /// </summary>
-        public static string ImportFormatToolTip {
-            get {
-                return ResourceManager.GetString("ImportFormatToolTip", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to import * only allowed at module level.
         /// </summary>
         public static string ImportOnlyAllowedAtModuleErrorMsg {
@@ -4918,24 +4855,6 @@ namespace Microsoft.PythonTools {
         public static string IncorrectStartLocationErrorMsg {
             get {
                 return ResourceManager.GetString("IncorrectStartLocationErrorMsg", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Toggle inlay hints for function return types..
-        /// </summary>
-        public static string InlayHintsFunctionReturnTypesToolTip {
-            get {
-                return ResourceManager.GetString("InlayHintsFunctionReturnTypesToolTip", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Toggle inlay hints for variable types..
-        /// </summary>
-        public static string InlayHintsVariableTypeToolTip {
-            get {
-                return ResourceManager.GetString("InlayHintsVariableTypeToolTip", resourceCulture);
             }
         }
         
@@ -5398,51 +5317,6 @@ namespace Microsoft.PythonTools {
         public static string LinesBetweenMethodsInClassShort {
             get {
                 return ResourceManager.GetString("LinesBetweenMethodsInClassShort", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error.
-        /// </summary>
-        public static string LogLevelError {
-            get {
-                return ResourceManager.GetString("LogLevelError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Information.
-        /// </summary>
-        public static string LogLevelInformation {
-            get {
-                return ResourceManager.GetString("LogLevelInformation", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Specifies the level of logging for the Output panel..
-        /// </summary>
-        public static string LogLevelToolTip {
-            get {
-                return ResourceManager.GetString("LogLevelToolTip", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Trace.
-        /// </summary>
-        public static string LogLevelTrace {
-            get {
-                return ResourceManager.GetString("LogLevelTrace", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Warning.
-        /// </summary>
-        public static string LogLevelWarning {
-            get {
-                return ResourceManager.GetString("LogLevelWarning", resourceCulture);
             }
         }
         
@@ -7701,15 +7575,6 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Additional import search resolution paths. You can use line breaks or semicolons to separate multiple paths..
-        /// </summary>
-        public static string SearchPathsToolTip {
-            get {
-                return ResourceManager.GetString("SearchPathsToolTip", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to An unexpected error occurred.
         ///
         ///You can get more information by running Visual Studio with the /log parameter on the command line, and then examining the file &apos;{0}&apos;, or by checking Event Viewer..
@@ -8238,15 +8103,6 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Path to directory containing custom type stub files..
-        /// </summary>
-        public static string StubPathToolTip {
-            get {
-                return ResourceManager.GetString("StubPathToolTip", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to sublist parameters are not supported in 3.x.
         /// </summary>
         public static string SublistParametersNotSupported3dotXErrorMsg {
@@ -8396,51 +8252,6 @@ namespace Microsoft.PythonTools {
         public static string TwoStarredExpressionErrorMsg {
             get {
                 return ResourceManager.GetString("TwoStarredExpressionErrorMsg", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Basic.
-        /// </summary>
-        public static string TypeCheckingModeBasic {
-            get {
-                return ResourceManager.GetString("TypeCheckingModeBasic", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Off.
-        /// </summary>
-        public static string TypeCheckingModeOff {
-            get {
-                return ResourceManager.GetString("TypeCheckingModeOff", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Strict.
-        /// </summary>
-        public static string TypeCheckingModeStrict {
-            get {
-                return ResourceManager.GetString("TypeCheckingModeStrict", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Defines the default rule set for type checking..
-        /// </summary>
-        public static string TypeCheckingModeToolTip {
-            get {
-                return ResourceManager.GetString("TypeCheckingModeToolTip", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Paths to look for typeshed modules. You can use line breaks or semicolons to separate multiple paths..
-        /// </summary>
-        public static string TypeshedPathsToolTip {
-            get {
-                return ResourceManager.GetString("TypeshedPathsToolTip", resourceCulture);
             }
         }
         
@@ -8846,33 +8657,6 @@ namespace Microsoft.PythonTools {
         public static string VariableIn3dotXErrorMsg {
             get {
                 return ResourceManager.GetString("VariableIn3dotXErrorMsg", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Group.
-        /// </summary>
-        public static string VariablePresentation_Group {
-            get {
-                return ResourceManager.GetString("VariablePresentation_Group", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Hide.
-        /// </summary>
-        public static string VariablePresentation_Hide {
-            get {
-                return ResourceManager.GetString("VariablePresentation_Hide", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Inline.
-        /// </summary>
-        public static string VariablePresentation_Inline {
-            get {
-                return ResourceManager.GetString("VariablePresentation_Inline", resourceCulture);
             }
         }
         

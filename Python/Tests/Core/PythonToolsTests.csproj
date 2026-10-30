@@ -78,7 +78,9 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow" />
-    <Reference Include="Microsoft.VisualStudio.ComponentModelHost" />
+    <Reference Include="Microsoft.VisualStudio.ComponentModelHost">
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.Composition" />
     <Reference Include="Microsoft.VisualStudio.CoreUtility" />
     <Reference Include="Microsoft.VisualStudio.Language" />
@@ -119,8 +121,17 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Text.Json, Version=8.0.0.5, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51" Condition="'$(VSTarget)' == '18.0'">
       <HintPath>$(PackagesPath)\System.Text.Json.8.0.5\lib\net462\System.Text.Json.dll</HintPath>
-      <Private>false</Private>
+      <Private>True</Private>
       <SpecificVersion>true</SpecificVersion>
+    </Reference>
+    <Reference Include="System.Text.Encodings.Web, Version=8.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51" Condition="'$(VSTarget)' == '18.0'">
+      <HintPath>$(PackagesPath)\System.Text.Encodings.Web.8.0.0\lib\net462\System.Text.Encodings.Web.dll</HintPath>
+      <Private>True</Private>
+      <SpecificVersion>true</SpecificVersion>
+    </Reference>
+    <Reference Include="Microsoft.Bcl.AsyncInterfaces" Condition="'$(VSTarget)' == '18.0'">
+      <HintPath>$(PackagesPath)\Microsoft.Bcl.AsyncInterfaces.8.0.0\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Memory" Condition="'$(VSTarget)' == '18.0'">
       <HintPath>$(PackagesPath)\System.Memory.4.6.0\lib\net462\System.Memory.dll</HintPath>
@@ -130,12 +141,25 @@
     <Reference Include="Microsoft.NET.StringTools">
       <Private>True</Private>
     </Reference>
+    <Reference Include="Microsoft.VisualStudio.Utilities">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Internal.VisualStudio.Shell.Framework">
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblySetup.cs" />
     <None Include="AutoIndentTests.cs" />
     <Compile Include="PythonFormatterTests.cs" />
     <Compile Include="PythonAnalysisOptionsTests.cs" />
+    <Compile Include="UnifiedSettingsTests.cs" />
+    <EmbeddedResource Include="..\..\Product\PythonTools\PythonTools.registration.json">
+      <LogicalName>PythonToolsTests.PythonTools.registration.json</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\Product\Cookiecutter\CookiecutterSettings.json">
+      <LogicalName>PythonToolsTests.CookiecutterSettings.json</LogicalName>
+    </EmbeddedResource>
     <Compile Include="LspDiffTextEditFactoryTests.cs" />
     <Compile Include="LanguageServerSettingsTests.cs" />
     <Compile Include="BuildTasksTests.cs" />

@@ -16,23 +16,43 @@
 
 using System;
 using System.ComponentModel.Design;
+using System.Globalization;
+using System.Linq;
+using Microsoft.Internal.VisualStudio.Shell.Interop;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Settings;
+using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Options {
     class PythonToolsOptionsService : IPythonToolsOptionsService {
         private const string _optionsKey = "Options";
+        private const string MigrationCategory = "UnifiedSettingsMigration\\v1";
+        private const string ImportCompleted = "Completed";
+        private const string ParameterInfoMoniker = "languages.python.general.showCompletionOnTyping.parameterInfo";
         private readonly WritableSettingsStore _settingsStore;
+        private readonly UnifiedSettingsStore _unifiedSettings;
 
         public static object CreateService(IServiceContainer container, Type serviceType) 
             => serviceType.IsEquivalentTo(typeof(IPythonToolsOptionsService)) ? new PythonToolsOptionsService(container) : null;
 
-        private PythonToolsOptionsService(IServiceProvider serviceProvider) {
-            var settingsManager = SettingsManagerCreator.GetSettingsManager(serviceProvider);
-            _settingsStore = settingsManager.GetWritableSettingsStore(SettingsScope.UserSettings);
+        private PythonToolsOptionsService(IServiceProvider serviceProvider)
+            : this(SettingsManagerCreator.GetSettingsManager(serviceProvider).GetWritableSettingsStore(SettingsScope.UserSettings),
+                  UnifiedSettingsStore.Create(serviceProvider), () => LoadLegacyParameterInfo(serviceProvider)) {
+        }
+
+        internal PythonToolsOptionsService(WritableSettingsStore settingsStore, UnifiedSettingsStore unifiedSettings, Func<string> loadLegacyParameterInfo) {
+            _settingsStore = settingsStore;
+            _unifiedSettings = unifiedSettings;
+            ImportLegacySettings(loadLegacyParameterInfo);
         }
 
         public void SaveString(string name, string category, string value) {
+            var setting = FindNativeSetting(name, category);
+            if (setting != null) {
+                setting.Write(_unifiedSettings, value);
+                return;
+            }
             var path = GetCollectionPath(category);
             if (value == null) {
                 if (_settingsStore.CollectionExists(path)) {
@@ -51,6 +71,11 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public string LoadString(string name, string category) {
+            var setting = FindNativeSetting(name, category);
+            return setting != null ? setting.Read(_unifiedSettings) : LoadLegacyString(name, category);
+        }
+
+        private string LoadLegacyString(string name, string category) {
             var path = GetCollectionPath(category);
             if (!_settingsStore.CollectionExists(path)) {
                 return null;
@@ -59,6 +84,100 @@ namespace Microsoft.PythonTools.Options {
                 return null;
             }
             return _settingsStore.GetString(path, name, "");
+        }
+
+        internal bool IsNativeArray(string name, string category) => FindNativeSetting(name, category)?.IsArray == true;
+
+        internal string[] LoadArray(string name, string category) {
+            return _unifiedSettings.ReadArray<string>(FindNativeSetting(name, category).Moniker).ToArray();
+        }
+
+        internal bool SaveArray(string name, string category, string[] value) {
+            value = value ?? Array.Empty<string>();
+            var setting = FindNativeSetting(name, category);
+            if (_unifiedSettings.ReadArray<string>(setting.Moniker).SequenceEqual(value)) {
+                return false;
+            }
+            _unifiedSettings.WriteArray(setting.Moniker, value, Strings.ProductTitle);
+            return true;
+        }
+
+        internal IDisposable Subscribe(Action<string[]> changed) {
+            return _unifiedSettings.Subscribe(update => {
+                var categories = PythonUnifiedSetting.All
+                    .Where(setting => update.ChangedSettingMonikers.Contains(setting.Moniker))
+                    .Select(setting => setting.Category).Distinct().ToArray();
+                if (categories.Length != 0) {
+                    changed(categories);
+                }
+            }, "languages.python.*");
+        }
+
+        private PythonUnifiedSetting FindNativeSetting(string name, string category) {
+            return PythonUnifiedSetting.All.FirstOrDefault(setting => setting.Name == name && setting.Category == category);
+        }
+
+        private void ImportLegacySettings(Func<string> loadLegacyParameterInfo) {
+            try {
+                var path = GetCollectionPath(MigrationCategory);
+                if (_settingsStore.CollectionExists(path) && _settingsStore.GetInt32(path, ImportCompleted, 0) == 1) {
+                    return;
+                }
+                if (PythonUnifiedSetting.All.Any(setting => _unifiedSettings.IsCustomized(setting.Moniker))
+                    || _unifiedSettings.IsCustomized(ParameterInfoMoniker)) {
+                    MarkImportCompleted(path);
+                    return;
+                }
+
+                var legacyValues = PythonUnifiedSetting.All
+                    .Select(setting => new { Setting = setting, Value = LoadLegacyString(setting.Name, setting.Category) })
+                    .Where(entry => entry.Value != null).ToArray();
+                var parameterInfo = loadLegacyParameterInfo();
+                if (legacyValues.Length == 0 && parameterInfo == null) {
+                    return;
+                }
+
+                _unifiedSettings.WriteBatch(writer => {
+                    foreach (var entry in legacyValues) {
+                        entry.Setting.Enqueue(writer, entry.Value);
+                    }
+                    if (parameterInfo != null) {
+                        if (!bool.TryParse(parameterInfo, out var value)) {
+                            throw new FormatException("The legacy Python Parameter Information setting must be a Boolean.");
+                        }
+                        UnifiedSettingsStore.EnqueueChange(writer, ParameterInfoMoniker, value);
+                    }
+                }, Strings.ProductTitle);
+                MarkImportCompleted(path);
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                CommonUtils.ActivityLogError(Strings.ProductTitle, $"Unable to import legacy Python settings. The import remains incomplete. {ex}");
+            }
+        }
+
+        private void MarkImportCompleted(string path) {
+            if (!_settingsStore.CollectionExists(path)) {
+                _settingsStore.CreateCollection(path);
+            }
+            _settingsStore.SetInt32(path, ImportCompleted, 1);
+        }
+
+        private static string LoadLegacyParameterInfo(IServiceProvider provider) {
+            var settings = provider.GetService(typeof(SVsSettingsPersistenceManager)) as Microsoft.VisualStudio.Settings.ISettingsManager;
+            if (settings == null) {
+                throw new InvalidOperationException("The legacy Visual Studio settings service is unavailable.");
+            }
+            var result = settings.TryGetValue<object>("TextEditor.Python.Auto List Params", out var value);
+            if (result == GetValueResult.Missing) {
+                return null;
+            }
+            if (result != GetValueResult.Success) {
+                throw new InvalidOperationException($"Reading the legacy Python Parameter Information setting failed ({result}).");
+            }
+            var numericValue = Convert.ToInt32(value, CultureInfo.InvariantCulture);
+            if (numericValue != 0 && numericValue != 1) {
+                throw new FormatException("The legacy Python Parameter Information setting must be 0 or 1.");
+            }
+            return (numericValue == 1).ToString();
         }
 
         public void DeleteCategory(string category) {

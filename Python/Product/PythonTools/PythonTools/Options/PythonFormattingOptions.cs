@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Options {
 
         public void Load() {
             PasteRemovesReplPrompts = _service.LoadBool(PasteRemovesReplPromptsSetting, Category) ?? true;
-            Formatter = _service.LoadString(FormatterSetting, Category);
+            Formatter = _service.LoadString(FormatterSetting, Category) ?? "black";
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Options {
 
         public void Reset() {
             PasteRemovesReplPrompts = true;
-            Formatter = null;
+            Formatter = "black";
             Changed?.Invoke(this, EventArgs.Empty);
         }
 

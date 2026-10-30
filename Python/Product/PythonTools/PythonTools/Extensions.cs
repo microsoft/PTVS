@@ -754,11 +754,11 @@ namespace Microsoft.PythonTools {
             mcs.GlobalInvoke(cmdID, arg);
         }
 
-        internal static void ShowOptionsPage(this IServiceProvider serviceProvider, Type optionsPageType) {
+        internal static void ShowOptionsPage(this IServiceProvider serviceProvider, Guid optionsPageId) {
             CommandID cmd = new CommandID(VSConstants.GUID_VSStandardCommandSet97, VSConstants.cmdidToolsOptions);
             serviceProvider.GlobalInvoke(
                 cmd,
-                optionsPageType.GUID.ToString()
+                optionsPageId.ToString()
             );
         }
 

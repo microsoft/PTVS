@@ -268,6 +268,13 @@ permissions and limitations under the License.
     </Groups>
     
     <Buttons>
+      <Button guid="guidPythonToolsCmdSet" id="cmdidResetSuppressedDialogs" type="Button">
+        <CommandFlag>CommandWellOnly</CommandFlag>
+        <Strings>
+          <ButtonText>Reset all permanently hidden dialogs</ButtonText>
+          <CanonicalName>Python.ResetSuppressedDialogs</CanonicalName>
+        </Strings>
+      </Button>
       <Button guid="guidPythonToolsCmdSet" id="cmdidAddExistingFolder" priority="0x0500" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_PROJ_ADD"/>
         <CommandFlag>DefaultInvisible</CommandFlag>
@@ -1107,6 +1114,7 @@ permissions and limitations under the License.
       <IDSymbol name="cmdidSendToRepl" value="0x0103"/>
       <IDSymbol name="cmdidFillParagraph" value="0x0105"/>
       <IDSymbol name="cmdidDiagnostics" value ="0x0106" />
+      <IDSymbol name="cmdidResetSuppressedDialogs" value="0x0107" />
       <IDSymbol name="cmdidImportWizard" value ="0x010d" />
       <IDSymbol name="cmdidImportCoverage" value ="0x010f" />
 

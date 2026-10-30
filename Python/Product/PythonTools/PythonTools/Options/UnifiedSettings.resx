@@ -1,0 +1,356 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+	<xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+	<xsd:element name="root" msdata:IsDataSet="true">
+	  <xsd:complexType>
+		<xsd:choice maxOccurs="unbounded">
+		  <xsd:element name="data">
+			<xsd:complexType>
+			  <xsd:sequence>
+				<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+				<xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+			  </xsd:sequence>
+			  <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+			  <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+			  <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+			  <xsd:attribute ref="xml:space" />
+			</xsd:complexType>
+		  </xsd:element>
+		  <xsd:element name="resheader">
+			<xsd:complexType>
+			  <xsd:sequence>
+				<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+			  </xsd:sequence>
+			  <xsd:attribute name="name" type="xsd:string" use="required" />
+			</xsd:complexType>
+		  </xsd:element>
+		</xsd:choice>
+	  </xsd:complexType>
+	</xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+	<value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+	<value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+	<value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+	<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="general.showOutputWindowForVirtualEnvCreate.Title" xml:space="preserve">
+	<value>Show the Output Window when creating virtual environments</value>
+  </data>
+  <data name="general.showOutputWindowForVirtualEnvCreate.Description" xml:space="preserve">
+	<value>Display environment creation progress in the Output Window.</value>
+  </data>
+  <data name="general.showOutputWindowForPackageInstallation.Title" xml:space="preserve">
+	<value>Show the Output Window when installing or removing packages</value>
+  </data>
+  <data name="general.showOutputWindowForPackageInstallation.Description" xml:space="preserve">
+	<value>Display package installation and removal progress in the Output Window.</value>
+  </data>
+  <data name="general.promptForEnvCreate.Title" xml:space="preserve">
+	<value>Show notification bar to create environments</value>
+  </data>
+  <data name="general.promptForEnvCreate.Description" xml:space="preserve">
+	<value>Suggest creating a Python environment when opening a project that needs one.</value>
+  </data>
+  <data name="general.promptForPackageInstallation.Title" xml:space="preserve">
+	<value>Show notification bar to install packages</value>
+  </data>
+  <data name="general.promptForPackageInstallation.Description" xml:space="preserve">
+	<value>Suggest installing missing packages required by the project.</value>
+  </data>
+  <data name="general.promptForTestFrameWorkInfoBar.Title" xml:space="preserve">
+	<value>Show notification bar to configure test framework</value>
+  </data>
+  <data name="general.promptForTestFrameWorkInfoBar.Description" xml:space="preserve">
+	<value>Suggest configuring a Python test framework for the project.</value>
+  </data>
+  <data name="general.elevatePip.Title" xml:space="preserve">
+	<value>Always run package managers as Administrator</value>
+  </data>
+  <data name="general.elevatePip.Description" xml:space="preserve">
+	<value>Request administrator privileges when installing or removing Python packages.</value>
+  </data>
+  <data name="analysis.autoSearchPaths.Title" xml:space="preserve">
+	<value>Automatically add common search paths like 'src'</value>
+  </data>
+  <data name="analysis.autoSearchPaths.Description" xml:space="preserve">
+	<value>Automatically discover common source directories for import resolution.</value>
+  </data>
+  <data name="analysis.diagnosticMode.Title" xml:space="preserve">
+	<value>Diagnostic mode</value>
+  </data>
+  <data name="analysis.diagnosticMode.Description" xml:space="preserve">
+	<value>Choose whether to report diagnostics only for open files or for all files in the workspace.</value>
+  </data>
+  <data name="analysis.logLevel.Title" xml:space="preserve">
+	<value>Log level</value>
+  </data>
+  <data name="analysis.logLevel.Description" xml:space="preserve">
+	<value>Set the level of detail in Python language server logs.</value>
+  </data>
+  <data name="analysis.stubPath.Title" xml:space="preserve">
+	<value>Stubs path</value>
+  </data>
+  <data name="analysis.stubPath.Description" xml:space="preserve">
+	<value>Directory containing custom type stub files used by Python analysis.</value>
+  </data>
+  <data name="analysis.typeCheckingMode.Title" xml:space="preserve">
+	<value>Type checking</value>
+  </data>
+  <data name="analysis.typeCheckingMode.Description" xml:space="preserve">
+	<value>Choose the level of type checking performed by Python analysis.</value>
+  </data>
+  <data name="analysis.typeshedPaths.Title" xml:space="preserve">
+	<value>Typeshed paths</value>
+  </data>
+  <data name="analysis.typeshedPaths.Description" xml:space="preserve">
+	<value>Directories containing typeshed type stubs, in search order.</value>
+  </data>
+  <data name="analysis.extraPaths.Title" xml:space="preserve">
+	<value>Search paths</value>
+  </data>
+  <data name="analysis.extraPaths.Description" xml:space="preserve">
+	<value>Additional directories to search when resolving imports, in search order.</value>
+  </data>
+  <data name="analysis.indexing.Title" xml:space="preserve">
+	<value>Index installed third-party libraries and user files</value>
+  </data>
+  <data name="analysis.indexing.Description" xml:space="preserve">
+	<value>Build an index for language features such as auto-import, add import, and workspace symbols.</value>
+  </data>
+  <data name="analysis.importFormat.Title" xml:space="preserve">
+	<value>Import format</value>
+  </data>
+  <data name="analysis.importFormat.Description" xml:space="preserve">
+	<value>Choose absolute or relative imports for automatically added imports.</value>
+  </data>
+  <data name="analysis.inlayHintsVariableTypes.Title" xml:space="preserve">
+	<value>Turn on inlay hints for variable types</value>
+  </data>
+  <data name="analysis.inlayHintsVariableTypes.Description" xml:space="preserve">
+	<value>Display inferred variable types as inlay hints in the editor.</value>
+  </data>
+  <data name="analysis.inlayHintsFunctionReturnTypes.Title" xml:space="preserve">
+	<value>Turn on inlay hints for function return types</value>
+  </data>
+  <data name="analysis.inlayHintsFunctionReturnTypes.Description" xml:space="preserve">
+	<value>Display inferred function return types as inlay hints in the editor.</value>
+  </data>
+  <data name="debugging.promptBeforeRunningWithBuildError.Title" xml:space="preserve">
+	<value>Prompt before running when errors are present</value>
+  </data>
+  <data name="debugging.promptBeforeRunningWithBuildError.Description" xml:space="preserve">
+	<value>Ask whether to run Python code when errors have been detected.</value>
+  </data>
+  <data name="debugging.waitOnAbnormalExit.Title" xml:space="preserve">
+	<value>Wait for input when process exits abnormally</value>
+  </data>
+  <data name="debugging.waitOnAbnormalExit.Description" xml:space="preserve">
+	<value>Keep the console open after a Python process exits with an error.</value>
+  </data>
+  <data name="debugging.waitOnNormalExit.Title" xml:space="preserve">
+	<value>Wait for input when process exits normally</value>
+  </data>
+  <data name="debugging.waitOnNormalExit.Description" xml:space="preserve">
+	<value>Keep the console open after a Python process completes successfully.</value>
+  </data>
+  <data name="debugging.teeStandardOutput.Title" xml:space="preserve">
+	<value>Tee program output to Debug Output window</value>
+  </data>
+  <data name="debugging.teeStandardOutput.Description" xml:space="preserve">
+	<value>Copy Python program standard output to the Debug Output window.</value>
+  </data>
+  <data name="debugging.breakOnSystemExitZero.Title" xml:space="preserve">
+	<value>Break on SystemExit exception with exit code of zero</value>
+  </data>
+  <data name="debugging.breakOnSystemExitZero.Description" xml:space="preserve">
+	<value>Allow the debugger to break on SystemExit even when the exit code indicates success.</value>
+  </data>
+  <data name="debugging.debugStdLib.Title" xml:space="preserve">
+	<value>Enable debugging of the Python standard library</value>
+  </data>
+  <data name="debugging.debugStdLib.Description" xml:space="preserve">
+	<value>Allow stepping into Python standard library code while debugging.</value>
+  </data>
+  <data name="debugging.showFunctionReturnValue.Title" xml:space="preserve">
+	<value>Show function return value</value>
+  </data>
+  <data name="debugging.showFunctionReturnValue.Description" xml:space="preserve">
+	<value>Show function return values in the Locals window while debugging.</value>
+  </data>
+  <data name="debugging.variablePresentationForClasses.Title" xml:space="preserve">
+	<value>Show class variables</value>
+  </data>
+  <data name="debugging.variablePresentationForClasses.Description" xml:space="preserve">
+	<value>Choose whether class variables are grouped, hidden, or displayed inline in debugger variable windows.</value>
+  </data>
+  <data name="debugging.variablePresentationForFunctions.Title" xml:space="preserve">
+	<value>Show function variables</value>
+  </data>
+  <data name="debugging.variablePresentationForFunctions.Description" xml:space="preserve">
+	<value>Choose whether function variables are grouped, hidden, or displayed inline in debugger variable windows.</value>
+  </data>
+  <data name="debugging.variablePresentationForProtected.Title" xml:space="preserve">
+	<value>Show protected variables</value>
+  </data>
+  <data name="debugging.variablePresentationForProtected.Description" xml:space="preserve">
+	<value>Choose whether protected variables are grouped, hidden, or displayed inline in debugger variable windows.</value>
+  </data>
+  <data name="debugging.variablePresentationForSpecial.Title" xml:space="preserve">
+	<value>Show special variables</value>
+  </data>
+  <data name="debugging.variablePresentationForSpecial.Description" xml:space="preserve">
+	<value>Choose whether special variables are grouped, hidden, or displayed inline in debugger variable windows.</value>
+  </data>
+  <data name="conda.customCondaExecutablePath.Title" xml:space="preserve">
+	<value>Conda executable path</value>
+  </data>
+  <data name="conda.customCondaExecutablePath.Description" xml:space="preserve">
+	<value>Path to the conda executable used to manage conda environments. Leave empty to discover conda automatically.</value>
+  </data>
+  <data name="interactive.useSmartHistory.Title" xml:space="preserve">
+	<value>Up/down arrows navigate history</value>
+  </data>
+  <data name="interactive.useSmartHistory.Description" xml:space="preserve">
+	<value>Use the Up and Down arrow keys to navigate command history in the Python Interactive window.</value>
+  </data>
+  <data name="interactive.scripts.Title" xml:space="preserve">
+	<value>Scripts</value>
+  </data>
+  <data name="interactive.scripts.Description" xml:space="preserve">
+	<value>Directory containing startup scripts for the Python Interactive window.</value>
+  </data>
+  <data name="advanced.completeFunctionParens.Title" xml:space="preserve">
+	<value>Automatically add brackets for functions</value>
+  </data>
+  <data name="advanced.completeFunctionParens.Description" xml:space="preserve">
+	<value>Insert parentheses when completing a function name.</value>
+  </data>
+  <data name="advanced.autoImportCompletions.Title" xml:space="preserve">
+	<value>Offer auto-import completions</value>
+  </data>
+  <data name="advanced.autoImportCompletions.Description" xml:space="preserve">
+	<value>Include completions that automatically add an import for a symbol.</value>
+  </data>
+  <data name="advanced.parameterInfo.Title" xml:space="preserve">
+	<value>Parameter information</value>
+  </data>
+  <data name="advanced.parameterInfo.Description" xml:space="preserve">
+	<value>Show function parameter information while typing a call.</value>
+  </data>
+  <data name="formatting.pasteRemovesReplPrompts.Title" xml:space="preserve">
+	<value>Paste removes REPL prompts</value>
+  </data>
+  <data name="formatting.pasteRemovesReplPrompts.Description" xml:space="preserve">
+	<value>Remove Python interactive prompts when pasting code into the editor.</value>
+  </data>
+  <data name="formatting.formatter.Title" xml:space="preserve">
+	<value>Formatter</value>
+  </data>
+  <data name="formatting.formatter.Description" xml:space="preserve">
+	<value>Choose the tool used to format Python code.</value>
+  </data>
+  <data name="DiagnosticMode.OpenFilesOnly" xml:space="preserve">
+	<value>Open files only</value>
+  </data>
+  <data name="DiagnosticMode.Workspace" xml:space="preserve">
+	<value>Workspace</value>
+  </data>
+  <data name="LogLevel.Error" xml:space="preserve">
+	<value>Error</value>
+  </data>
+  <data name="LogLevel.Warning" xml:space="preserve">
+	<value>Warning</value>
+  </data>
+  <data name="LogLevel.Information" xml:space="preserve">
+	<value>Information</value>
+  </data>
+  <data name="LogLevel.Trace" xml:space="preserve">
+	<value>Trace</value>
+  </data>
+  <data name="TypeCheckingMode.Off" xml:space="preserve">
+	<value>Off</value>
+  </data>
+  <data name="TypeCheckingMode.Basic" xml:space="preserve">
+	<value>Basic</value>
+  </data>
+  <data name="TypeCheckingMode.Strict" xml:space="preserve">
+	<value>Strict</value>
+  </data>
+  <data name="ImportFormat.Absolute" xml:space="preserve">
+	<value>Absolute</value>
+  </data>
+  <data name="ImportFormat.Relative" xml:space="preserve">
+	<value>Relative</value>
+  </data>
+  <data name="PresentationMode.Group" xml:space="preserve">
+	<value>Group</value>
+  </data>
+  <data name="PresentationMode.Hide" xml:space="preserve">
+	<value>Hide</value>
+  </data>
+  <data name="PresentationMode.Inline" xml:space="preserve">
+	<value>Inline</value>
+  </data>
+  <data name="Formatter.Black" xml:space="preserve">
+	<value>black</value>
+  </data>
+  <data name="Formatter.Autopep8" xml:space="preserve">
+	<value>autopep8</value>
+  </data>
+  <data name="Formatter.Yapf" xml:space="preserve">
+	<value>yapf</value>
+  </data>
+	<data name="General.ResetSuppressedDialogs" xml:space="preserve">
+	<value>Reset all permanently hidden dialogs</value>
+  </data>
+  <data name="Category.General.Title" xml:space="preserve">
+	<value>General</value>
+  </data>
+	<data name="Category.PythonTools.Title" xml:space="preserve">
+	<value>Python tools</value>
+  </data>
+  <data name="Category.Analysis.Title" xml:space="preserve">
+	<value>Analysis</value>
+  </data>
+  <data name="Category.Analysis.Description" xml:space="preserve">
+	<value>Configure Python language analysis, import resolution, and type checking.</value>
+  </data>
+  <data name="Category.Debugging.Title" xml:space="preserve">
+	<value>Debugging</value>
+  </data>
+  <data name="Category.Debugging.Description" xml:space="preserve">
+	<value>Configure Python execution and debugger variable presentation.</value>
+  </data>
+  <data name="Category.Conda.Title" xml:space="preserve">
+	<value>Conda</value>
+  </data>
+  <data name="Category.Conda.Description" xml:space="preserve">
+	<value>Configure conda environment management.</value>
+  </data>
+  <data name="Category.Interactive.Title" xml:space="preserve">
+	<value>Interactive Windows</value>
+  </data>
+  <data name="Category.Interactive.Description" xml:space="preserve">
+	<value>Configure the Python Interactive window.</value>
+  </data>
+  <data name="Category.Advanced.Title" xml:space="preserve">
+	<value>Advanced</value>
+  </data>
+  <data name="Category.Advanced.Description" xml:space="preserve">
+	<value>Configure Python completions and parameter information.</value>
+  </data>
+  <data name="Category.Formatting.Title" xml:space="preserve">
+	<value>Formatting</value>
+  </data>
+  <data name="Category.Formatting.Description" xml:space="preserve">
+	<value>Configure Python code formatting and pasting.</value>
+  </data>
+</root>

@@ -82,7 +82,7 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public void Reset() {
-            PromptBeforeRunningWithBuildError = false;
+            PromptBeforeRunningWithBuildError = true;
             WaitOnAbnormalExit = true;
             WaitOnNormalExit = true;
             TeeStandardOutput = true;

@@ -59,6 +59,8 @@ namespace Microsoft.PythonTools {
         private readonly IdleManager _idleManager;
         private readonly DiagnosticsProvider _diagnosticsProvider;
         private readonly bool _forTests;
+        private readonly IDisposable _optionsSubscription;
+        private bool _disposed;
 
         /// <summary>
         /// The <see cref="ILanguageClientBroker.LoadAsync(ILanguageClientMetadata, ILanguageClient)"/> 
@@ -114,6 +116,7 @@ namespace Microsoft.PythonTools {
             Logger = (IPythonToolsLogger)container.GetService(typeof(IPythonToolsLogger));
             EnvironmentSwitcherManager = new EnvironmentSwitcherManager(container);
             WorkspaceInfoBarManager = new WorkspaceInfoBarManager(container);
+            _optionsSubscription = (_optionsService as PythonToolsOptionsService)?.Subscribe(OnOptionsChanged);
 
             if (_idleManager != null) {
                 _idleManager.OnIdle += OnIdleInitialization;
@@ -136,14 +139,37 @@ namespace Microsoft.PythonTools {
         internal UIThreadBase UIThread => _container.GetUIThread();
 
         public void Dispose() {
+            _disposed = true;
+            _optionsSubscription?.Dispose();
             if (_langPrefs.IsValueCreated) {
                 _langPrefs.Value.Dispose();
             }
 
-            _idleManager.Dispose();
+            _idleManager?.Dispose();
 
             EnvironmentSwitcherManager.Dispose();
             WorkspaceInfoBarManager.Dispose();
+        }
+
+        private void OnOptionsChanged(string[] categories) {
+            UIThread.InvokeAsync(() => {
+                if (_disposed) {
+                    return;
+                }
+                try {
+                    if (categories.Contains("Advanced")) {
+                        if (_generalOptions.IsValueCreated) { _generalOptions.Value.Load(); }
+                        if (_debuggerOptions.IsValueCreated) { _debuggerOptions.Value.Load(); }
+                        if (_advancedEditorOptions.IsValueCreated) { _advancedEditorOptions.Value.Load(); }
+                    }
+                    if (categories.Contains("Analysis") && _analysisOptions.IsValueCreated) { _analysisOptions.Value.Load(); }
+                    if (categories.Contains("Conda") && _condaOptions.IsValueCreated) { _condaOptions.Value.Load(); }
+                    if (categories.Contains("Formatting") && _formattingOptions.IsValueCreated) { _formattingOptions.Value.Load(); }
+                    if (categories.Contains("Interactive") && _interactiveOptions.IsValueCreated) { _interactiveOptions.Value.Load(); }
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                    CommonUtils.ActivityLogError(Strings.ProductTitle, $"Unable to reload Python settings after a Unified Settings change. {ex}");
+                }
+            }).DoNotWait();
         }
 
         private void InitializeLogging() {
@@ -308,6 +334,9 @@ namespace Microsoft.PythonTools {
         }
 
         internal bool SaveMultilineString(string name, string category, string[] values) {
+            if (_optionsService is PythonToolsOptionsService native && native.IsNativeArray(name, category)) {
+                return native.SaveArray(name, category, values);
+            }
             values = values ?? Array.Empty<string>();
             if (!Enumerable.SequenceEqual(LoadMultilineString(name, category), values)) {
                 _optionsService.SaveString(name, category, string.Join("\n", values));
@@ -320,6 +349,9 @@ namespace Microsoft.PythonTools {
         internal string LoadString(string name, string category) => _optionsService.LoadString(name, category);
 
         internal string[] LoadMultilineString(string name, string category) {
+            if (_optionsService is PythonToolsOptionsService native && native.IsNativeArray(name, category)) {
+                return native.LoadArray(name, category);
+            }
             return _optionsService.LoadString(name, category)?
                 .Split(new[] { ';', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
         }

@@ -27,6 +27,7 @@ using System.Windows;
 using Microsoft.CookiecutterTools.Infrastructure;
 using Microsoft.CookiecutterTools.Model;
 using Microsoft.CookiecutterTools.Telemetry;
+using Microsoft.Internal.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
@@ -54,14 +55,14 @@ namespace Microsoft.CookiecutterTools {
     // This attribute is needed to let the shell know that this package exposes some menus.
     [ProvideMenuResource("Menus.ctmenu", 1)]
     [ProvideToolWindow(typeof(CookiecutterToolWindow), Style = VsDockStyle.Linked, Window = ToolWindowGuids80.ServerExplorer)]
-    [ProvideOptionPage(typeof(CookiecutterOptionPage), "Cookiecutter", "General", 113, 114, true)]
-    [ProvideProfile(typeof(CookiecutterOptionPage), "Cookiecutter", "General", 113, 114, isToolsOptionPage: true, DescriptionResourceID = 115)]
+    [ProvideSettingsManifest(PackageRelativeManifestFile = "CookiecutterSettings.json")]
     [Guid(PackageGuids.guidCookiecutterPkgString)]
     public sealed class CookiecutterPackage : AsyncPackage, IOleCommandTarget {
         internal static CookiecutterPackage Instance;
 
         //private readonly 
         private ProjectSystemClient _projectSystem;
+        internal CookiecutterSettings Settings { get; private set; }
 
         /// <summary>
         /// Default constructor of the package.
@@ -88,6 +89,20 @@ namespace Microsoft.CookiecutterTools {
 
             await base.InitializeAsync(cancellationToken, progress);
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+
+            Settings = CookiecutterSettings.Create(this);
+            try {
+                using (var migration = UserRegistryRoot.CreateSubKey("Cookiecutter\\UnifiedSettingsMigration\\v1")) {
+                    Settings.ImportLegacySettings(
+                        () => Equals(migration.GetValue("Completed"), 1),
+                        LoadLegacySetting,
+                        () => migration.SetValue("Completed", 1, Microsoft.Win32.RegistryValueKind.DWord),
+                        ex => ActivityLog.LogError(Strings.ProductTitle, $"Unable to import legacy Cookiecutter settings. The import remains incomplete. {ex}")
+                    );
+                }
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                ActivityLog.LogError(Strings.ProductTitle, "Cookiecutter settings migration remains incomplete. " + ex);
+            }
 
             if (GetService(typeof(UIThreadBase)) == null) {
                 ((IServiceContainer) this).AddService(typeof(UIThreadBase), new UIThread(JoinableTaskFactory), true);
@@ -280,37 +295,33 @@ namespace Microsoft.CookiecutterTools {
             return VSConstants.S_OK;
         }
 
-        internal string RecommendedFeed {
-            get {
-                var page = (CookiecutterOptionPage)GetDialogPage(typeof(CookiecutterOptionPage));
-                return page.FeedUrl;
+        private object LoadLegacySetting(string propertyName) {
+            var settings = GetService(typeof(SVsSettingsPersistenceManager)) as Microsoft.VisualStudio.Settings.ISettingsManager;
+            if (settings == null) {
+                throw new InvalidOperationException("The legacy Visual Studio settings service is unavailable.");
             }
+            // DialogPage's unannotated properties use AutomationObject's full type name plus property name.
+            var path = CookiecutterSettings.LegacySettingsPrefix + propertyName;
+            var result = settings.TryGetValue<object>(path, out var value);
+            if (result == Microsoft.VisualStudio.Settings.GetValueResult.Missing) {
+                return null;
+            }
+            if (result != Microsoft.VisualStudio.Settings.GetValueResult.Success || value == null) {
+                throw new InvalidOperationException($"Reading legacy Cookiecutter setting '{path}' failed ({result}).");
+            }
+            return value;
         }
 
-        internal bool ShowHelp {
-            get {
-                var page = (CookiecutterOptionPage)GetDialogPage(typeof(CookiecutterOptionPage));
-                return page.ShowHelp;
-            }
+        internal string RecommendedFeed => Settings.FeedUrl;
 
-            set {
-                var page = (CookiecutterOptionPage)GetDialogPage(typeof(CookiecutterOptionPage));
-                page.ShowHelp = value;
-                page.SaveSettingsToStorage();
-            }
+        internal bool ShowHelp {
+            get => Settings.ShowHelp;
+            set => Settings.ShowHelp = value;
         }
 
         internal bool CheckForTemplateUpdate {
-            get {
-                var page = (CookiecutterOptionPage)GetDialogPage(typeof(CookiecutterOptionPage));
-                return page.CheckForTemplateUpdate;
-            }
-
-            set {
-                var page = (CookiecutterOptionPage)GetDialogPage(typeof(CookiecutterOptionPage));
-                page.CheckForTemplateUpdate = value;
-                page.SaveSettingsToStorage();
-            }
+            get => Settings.CheckForTemplateUpdate;
+            set => Settings.CheckForTemplateUpdate = value;
         }
     }
 }
