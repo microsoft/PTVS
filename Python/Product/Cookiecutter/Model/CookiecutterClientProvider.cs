@@ -42,11 +42,17 @@ namespace Microsoft.CookiecutterTools.Model {
         private static CookiecutterPythonInterpreter FindCompatibleInterpreter(IServiceProvider provider) {
 
             if (provider == null) {
-                return null;
+                // No service provider is available (e.g. when called from tests).
+                // Fall back to enumerating Python installations directly from the
+                // registry so we can still find a compatible interpreter.
+                return FindCompatibleInterpreterFromRegistry();
             }
 
             var compModel = provider.GetService(typeof(SComponentModel)) as IComponentModel;
-            var interpreters = compModel.GetService<IInterpreterRegistryService>();
+            var interpreters = compModel?.GetService<IInterpreterRegistryService>();
+            if (interpreters == null) {
+                return null;
+            }
 
             var all = interpreters.Configurations
                 .Where(x => File.Exists(x.InterpreterPath))
@@ -65,12 +71,38 @@ namespace Microsoft.CookiecutterTools.Model {
                     cpython.Add(configuration);
                 }
             }          
-            
+
             var best = cpython.FirstOrDefault() ?? all.FirstOrDefault();
 
             return best != null ? new CookiecutterPythonInterpreter(
                 best.GetPrefixPath(),
                 best.InterpreterPath
+            ) : null;
+        }
+
+        private static CookiecutterPythonInterpreter FindCompatibleInterpreterFromRegistry() {
+            // Enumerate Python installations directly from the registry. This path
+            // is used when no IServiceProvider is available (for example, in unit
+            // tests), where the MEF-based IInterpreterRegistryService can't be
+            // resolved.
+            var all = PythonRegistrySearch.PerformDefaultSearch()
+                .Where(info => File.Exists(info.Configuration.InterpreterPath))
+                .Where(info => info.Configuration.Version >= new Version(3, 5))
+                .OrderByDescending(info => info.Configuration.Version)
+                .ToList();
+
+            // Prefer a CPython installation if there is one because
+            // some Anaconda installs have trouble creating a venv.
+            var cpython = all
+                .Where(info => info.Vendor != null &&
+                    info.Vendor.IndexOfOrdinal("Python Software Foundation", ignoreCase: true) == 0)
+                .ToList();
+
+            var best = cpython.FirstOrDefault() ?? all.FirstOrDefault();
+
+            return best != null ? new CookiecutterPythonInterpreter(
+                best.Configuration.GetPrefixPath(),
+                best.Configuration.InterpreterPath
             ) : null;
         }
     }
