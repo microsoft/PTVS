@@ -129,6 +129,10 @@
       <Private>True</Private>
       <SpecificVersion>true</SpecificVersion>
     </Reference>
+    <Reference Include="Microsoft.Bcl.AsyncInterfaces" Condition="'$(VSTarget)' == '18.0'">
+      <HintPath>$(PackagesPath)\Microsoft.Bcl.AsyncInterfaces.8.0.0\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Memory" Condition="'$(VSTarget)' == '18.0'">
       <HintPath>$(PackagesPath)\System.Memory.4.6.0\lib\net462\System.Memory.dll</HintPath>
       <Private>false</Private>
