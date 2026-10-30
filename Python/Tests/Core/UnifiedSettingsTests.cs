@@ -161,6 +161,25 @@ namespace PythonToolsTests {
         }
 
         [TestMethod]
+        public void EmptyLegacyFormatterImportsBlackAndOtherPreferences() {
+            var native = new NativeSettings();
+            var legacy = CreateLegacyStore();
+            legacy.CreateCollection(Legacy + "Formatting");
+            legacy.SetString(Legacy + "Formatting", "Formatter", "");
+            legacy.CreateCollection(Legacy + "Analysis");
+            legacy.SetString(Legacy + "Analysis", "ExtraPaths", "first;second");
+
+            var backend = new PythonToolsOptionsService(legacy, native.Store, () => null);
+
+            Assert.AreEqual("black", native.Store.Read<string>(Prefix + "formatting.formatter"));
+            Assert.IsTrue(native.Customized.Contains(Prefix + "formatting.formatter"));
+            CollectionAssert.AreEqual(new[] { "first", "second" }, backend.LoadArray("ExtraPaths", "Analysis"));
+            Assert.AreEqual(1, legacy.GetInt32(Checkpoints, ImportCompleted));
+            Assert.AreEqual(1, native.CommitCalls);
+            Assert.AreEqual("", legacy.GetString(Legacy + "Formatting", "Formatter"));
+        }
+
+        [TestMethod]
         public void UnsupportedVersionPromptStaysInLegacyStorage() {
             VerifyHiddenPreferenceStaysInLegacyStorage("Advanced", "PromptForPythonVersionNotSupportedInfoBarSetting",
                 "general.promptForPythonVersionNotSupported", "False", "True");

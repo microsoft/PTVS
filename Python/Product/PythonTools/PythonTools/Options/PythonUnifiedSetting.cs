@@ -94,7 +94,7 @@ namespace Microsoft.PythonTools.Options {
                     UnifiedSettingsStore.EnqueueArrayChange(writer, Moniker, SplitLegacyPaths(value));
                     break;
                 default:
-                    UnifiedSettingsStore.EnqueueChange(writer, Moniker, value ?? _emptyValue);
+                    UnifiedSettingsStore.EnqueueChange(writer, Moniker, string.IsNullOrEmpty(value) ? _emptyValue : value);
                     break;
             }
         }
