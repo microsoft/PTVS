@@ -148,6 +148,7 @@
     <Compile Include="CondaEnvironmentManagerTests.cs" />
     <Compile Include="CondaEnvironmentInfoBarTriggerTests.cs" />
     <Compile Include="CondaInterpreterFactoryTests.cs" />
+    <Compile Include="DebugAdapterRemoteProcessTests.cs" />
     <None Include="InvalidEncodingSquiggleProviderTests.cs" />
     <None Include="EditorTests.cs" />
     <None Include="CodeFormatterTests.cs" />
