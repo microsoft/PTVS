@@ -378,15 +378,16 @@ namespace Microsoft.PythonTools.Repl.Completion {
             var items = new List<(ILanguageClient client, LSP.CompletionItem completionItem, Func<LSP.CompletionItem, CancellationToken, Task<LSP.CompletionItem>> resolver)>();
             var suggestionMode = false;
             object taskResults = await completionTask.ConfigureAwait(false);
-            var converted = ResultConverter.ConvertResult(taskResults as Newtonsoft.Json.Linq.JObject) as LSP.CompletionList[];
+            var converted = ResultConverter.ConvertResult(taskResults) as LSP.CompletionList[];
+            var completionList = converted?.FirstOrDefault();
             Func<LSP.CompletionItem, CancellationToken, Task<LSP.CompletionItem>> resolveFunc = (c, t) => this.languageClient.InvokeResolveAsync(c, t);
-            if (converted != null) {
-                foreach (var completionItem in converted[0].Items) {
+            if (completionList?.Items != null) {
+                foreach (var completionItem in completionList.Items) {
                     items.Add((this.languageClient, completionItem as LSP.CompletionItem, resolveFunc));
                 }
             }
 
-            return new CompletionResults() { ResultsAreIncomplete = converted != null ? converted[0].IsIncomplete : false, Items = items.ToArray(), SuggestionMode = suggestionMode };
+            return new CompletionResults() { ResultsAreIncomplete = completionList?.IsIncomplete ?? false, Items = items.ToArray(), SuggestionMode = suggestionMode };
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "VSTHRD003:Avoid awaiting foreign Tasks", Justification = "Request needs to be prepared and called separately for synchronization")]

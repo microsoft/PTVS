@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
+#if DEV18_OR_LATER
+using System.Text.Json;
+#endif
 using Newtonsoft.Json.Linq;
 using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
 
@@ -12,9 +11,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
     /// Class used for converting LSP results from JSON structures to LSP objects
     /// </summary>
     internal static class ResultConverter {
-        internal static object[] ConvertResult(JToken jToken) {
+        internal static object[] ConvertResult(object result) {
+            var jToken = ConvertToJToken(result);
             if (jToken != null) {
-                var jsonSerializer = new JsonSerializer();
+                var jsonSerializer = new Newtonsoft.Json.JsonSerializer();
 
                 if (jToken.Type == JTokenType.Array) {
                     var jArray = (JArray)jToken;
@@ -42,6 +42,26 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             }
 
             return Array.Empty<object>();
+        }
+
+        private static JToken ConvertToJToken(object result) {
+            if (result is JToken jToken) {
+                return jToken;
+            }
+
+#if DEV18_OR_LATER
+            if (result is JsonDocument jsonDocument) {
+                return ConvertToJToken(jsonDocument.RootElement);
+            }
+
+            if (result is JsonElement jsonElement &&
+                jsonElement.ValueKind != JsonValueKind.Null &&
+                jsonElement.ValueKind != JsonValueKind.Undefined) {
+                return JToken.Parse(jsonElement.GetRawText());
+            }
+#endif
+
+            return null;
         }
 
         private static bool IsDocumentSymbol(JToken jobject) {
