@@ -32,7 +32,6 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
-using Newtonsoft.Json.Linq;
 using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.PythonTools.Navigation.Navigable {
@@ -97,16 +96,11 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
                     },
                     cancellationToken);
 
-                if (result != null) {
-                    if (result is JToken token) {
-                        var array = ResultConverter.ConvertResult(token);
-                        var locations = array as LSP.Location[];
-                        if (locations != null) {
-                            return locations.OrderBy(l => l.Range.Start.Line).Select(l => {
-                                return new NavigableSymbol(_serviceProvider, span.GetText(), l, span);
-                            }).ToArray();
-                        }
-                    }
+                var locations = ResultConverter.ConvertResult(result) as LSP.Location[];
+                if (locations != null) {
+                    return locations.OrderBy(l => l.Range.Start.Line).Select(l => {
+                        return new NavigableSymbol(_serviceProvider, span.GetText(), l, span);
+                    }).ToArray();
                 }
             }
 

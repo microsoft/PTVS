@@ -162,6 +162,7 @@
     </EmbeddedResource>
     <Compile Include="LspDiffTextEditFactoryTests.cs" />
     <Compile Include="LanguageServerSettingsTests.cs" />
+    <Compile Include="ResultConverterTests.cs" />
     <Compile Include="BuildTasksTests.cs" />
     <None Include="CodeCellTests.cs" />
     <Compile Include="PythonVersionRecognition314Tests.cs" />
