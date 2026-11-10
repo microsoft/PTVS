@@ -9,6 +9,16 @@ Python support for Visual Studio is developed and managed here.
 * We welcome code contributions - see [Contributing](https://github.com/Microsoft/PTVS/wiki/Contributing-to-PTVS) for information. Documentation contributions may be made at the [visualstudio-docs](https://github.com/Microsoft/visualstudio-docs/tree/master/docs/python) repository.
 * For all other documentation, please see the [Wiki](https://github.com/Microsoft/PTVS/wiki)
 
+## Unsupported Python version notifications
+
+When a project or workspace uses an unsupported Python version, Visual Studio
+shows a nonblocking information bar instead of a modal warning during solution
+load. **Don't show this message again** remembers the dismissal for that Python
+major/minor version across projects, workspaces, and Visual Studio restarts.
+A different unsupported version can still show its own warning. Closing the bar
+without that action only dismisses it for the current project or workspace
+session. This does not change which Python versions or features are supported.
+
 ## Visual Studio 2017 and Visual Studio 2019 installation
 
 The Python development workload is available as part of [Visual Studio](https://aka.ms/PTVS) Community, Professional and Enterprise. To install, run the [normal VS installer](https://visualstudio.com/vs/downloads?wt.mc_id=github_microsoft_com) and select either the **Python development workload** or the **Data science and analytical applications workload**.

@@ -171,6 +171,7 @@
     <Compile Include="CoverageTests.cs" />
     <Compile Include="CondaEnvironmentManagerTests.cs" />
     <Compile Include="CondaEnvironmentInfoBarTriggerTests.cs" />
+    <Compile Include="PythonNotSupportedInfoBarTests.cs" />
     <Compile Include="CondaInterpreterFactoryTests.cs" />
     <None Include="InvalidEncodingSquiggleProviderTests.cs" />
     <None Include="EditorTests.cs" />

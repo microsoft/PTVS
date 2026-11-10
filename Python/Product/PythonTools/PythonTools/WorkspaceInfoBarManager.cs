@@ -159,7 +159,9 @@ namespace Microsoft.PythonTools {
         }
 
         private void TriggerPythonNotSupportedInforBar(object sender, EventArgs e) {
-            TriggerPythonNotSupportedInforBarAsync().HandleAllExceptions(_serviceProvider, GetType()).DoNotWait();
+            if (_infoBarCheckTriggered) {
+                TriggerPythonNotSupportedInforBarAsync().HandleAllExceptions(_serviceProvider, GetType()).DoNotWait();
+            }
         }
 
         private Task TriggerPythonNotSupportedInforBarAsync() {
