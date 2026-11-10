@@ -31,6 +31,8 @@ namespace Microsoft.PythonTools.Project {
         private uint _adviseCookie;
         private IVsInfoBarUIElement _infoBar;
         private InfoBarModel _infoBarModel;
+        private bool _waitingForIdle;
+        private bool _isDisposed;
 
         protected PythonInfoBar(IServiceProvider site) {
             Site = site ?? throw new ArgumentNullException(nameof(site));
@@ -44,20 +46,37 @@ namespace Microsoft.PythonTools.Project {
 
         protected IPythonToolsLogger Logger { get; }
 
-        protected bool IsCreated => _infoBar != null;
+        protected bool IsCreated => _infoBar != null || _infoBarModel != null;
+
+        protected bool IsVisible => _infoBar != null;
+
+        protected bool IsDisposed => _isDisposed;
 
         public abstract Task CheckAsync();
 
         protected void Create(InfoBarModel model) {
+            if (_isDisposed) {
+                return;
+            }
+
             _infoBarModel = model;
             FinishCreate();
         }
 
         protected void Close() {
+            if (_waitingForIdle) {
+                _idleManager.OnIdle -= OnIdle;
+                _waitingForIdle = false;
+            }
+            _infoBarModel = null;
             _infoBar?.Close();
         }
 
         protected void FinishCreate() {
+            if (_isDisposed || _infoBarModel == null) {
+                return;
+            }
+
             if (_infoBar != null) {
                 Debug.Fail("Should not try to create info bar more than once.");
                 return;
@@ -65,7 +84,10 @@ namespace Microsoft.PythonTools.Project {
 
             if (ErrorHandler.Failed(_shell.GetProperty((int)__VSSPROPID7.VSSPROPID_MainWindowInfoBarHost, out object infoBarHostObj)) || infoBarHostObj == null) {
                 // Main window is not ready yet, finish creating it later
-                _idleManager.OnIdle += OnIdle;
+                if (!_waitingForIdle) {
+                    _waitingForIdle = true;
+                    _idleManager.OnIdle += OnIdle;
+                }
                 return;
             }
 
@@ -79,7 +101,12 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void OnIdle(object sender, ComponentManagerEventArgs e) {
+            if (_isDisposed || !_waitingForIdle) {
+                return;
+            }
+
             _idleManager.OnIdle -= OnIdle;
+            _waitingForIdle = false;
             FinishCreate();
         }
 
@@ -90,13 +117,22 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public void OnClosed(IVsInfoBarUIElement infoBarUIElement) {
+            if (infoBarUIElement != _infoBar) {
+                return;
+            }
+
             infoBarUIElement.Unadvise(_adviseCookie);
             _infoBar = null;
+            _infoBarModel = null;
         }
 
         public void Dispose() {
-            _infoBar?.Close();
-            _idleManager.OnIdle -= OnIdle;
+            if (_isDisposed) {
+                return;
+            }
+
+            _isDisposed = true;
+            Close();
             _idleManager.Dispose();
         }
     }

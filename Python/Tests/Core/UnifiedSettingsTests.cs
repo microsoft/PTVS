@@ -186,6 +186,20 @@ namespace PythonToolsTests {
         }
 
         [TestMethod]
+        public void UnsupportedVersionDismissalIsStoredIndependentlyPerVersion() {
+            var native = new NativeSettings();
+            var legacy = CreateLegacyStore();
+            var backend = new PythonToolsOptionsService(legacy, native.Store, () => null);
+
+            backend.SaveString("3.16", "DismissedPythonVersionWarnings", "True");
+
+            Assert.AreEqual("True", backend.LoadString("3.16", "DismissedPythonVersionWarnings"));
+            Assert.IsNull(backend.LoadString("3.17", "DismissedPythonVersionWarnings"));
+            Assert.AreEqual("True", legacy.GetString(Legacy + "DismissedPythonVersionWarnings", "3.16"));
+            Assert.AreEqual(0, native.CommitCalls);
+        }
+
+        [TestMethod]
         public void DebugInteractiveSmartHistoryStaysInLegacyStorage() {
             VerifyHiddenPreferenceStaysInLegacyStorage("Debug Interactive Window", "UseSmartHistory",
                 "debugInteractive.useSmartHistory", "False", "True");
