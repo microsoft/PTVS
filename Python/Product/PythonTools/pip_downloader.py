@@ -147,7 +147,13 @@ def install_from_ensurepip(ensurepip):
     sys.stdout.flush()
 
     # We can bootstrap with ensurepip, but then have to upgrade to the latest
-    ensurepip.bootstrap(upgrade=True, default_pip=True)
+    if sys.platform == 'cli':
+        ensurepip.bootstrap(upgrade=True, default_pip=True)
+    else:
+        # In-process ensurepip disables pip configuration for the pip upgrade below.
+        subprocess.check_call(
+            EXECUTABLE + ["-m", "ensurepip", "--upgrade", "--default-pip"]
+        )
 
     # Latest version doesn't work on IronPython, so don't upgrade
     if sys.platform != 'cli':
