@@ -189,7 +189,62 @@ namespace TestUtilities {
 
         public static void DeleteDirectory(string path) {
             Trace.TraceInformation("Removing directory: {0}", path);
-            NativeMethods.RecursivelyDeleteDirectory(path, silent: true);
+
+            // Historically this called shell32!SHFileOperation via
+            // NativeMethods.RecursivelyDeleteDirectory. That API is documented
+            // as not thread safe and its behavior is "undefined" when invoked
+            // from an MTA thread (see docs for SHFileOperation). MSTest runs
+            // test methods on MTA threads, and on modern Windows builds the
+            // undefined behavior manifests as an AccessViolationException that
+            // tears down the test host. Use a managed recursive delete instead
+            // - test directories don't need shell semantics (recycle bin, long
+            // path handling, etc.).
+            if (!Directory.Exists(path) && !File.Exists(path)) {
+                return;
+            }
+
+            const int maxRetries = 10;
+            for (int attempt = 1; attempt <= maxRetries; attempt++) {
+                try {
+                    ClearReadOnlyAttributes(path);
+                    Directory.Delete(path, recursive: true);
+                    return;
+                } catch (DirectoryNotFoundException) {
+                    return;
+                } catch (FileNotFoundException) {
+                    return;
+                } catch (IOException) when (attempt < maxRetries) {
+                } catch (UnauthorizedAccessException) when (attempt < maxRetries) {
+                }
+                Thread.Sleep(100);
+            }
+        }
+
+        private static void ClearReadOnlyAttributes(string path) {
+            try {
+                if (File.Exists(path)) {
+                    var attrs = File.GetAttributes(path);
+                    if ((attrs & FileAttributes.ReadOnly) != 0) {
+                        File.SetAttributes(path, attrs & ~FileAttributes.ReadOnly);
+                    }
+                    return;
+                }
+                if (!Directory.Exists(path)) {
+                    return;
+                }
+                foreach (var file in Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories)) {
+                    try {
+                        var attrs = File.GetAttributes(file);
+                        if ((attrs & FileAttributes.ReadOnly) != 0) {
+                            File.SetAttributes(file, attrs & ~FileAttributes.ReadOnly);
+                        }
+                    } catch (IOException) {
+                    } catch (UnauthorizedAccessException) {
+                    }
+                }
+            } catch (IOException) {
+            } catch (UnauthorizedAccessException) {
+            }
         }
 
         public static void Delete(string path) {

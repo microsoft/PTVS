@@ -188,7 +188,10 @@ namespace Microsoft.PythonTools.Interpreter {
                 sysVersion = new Version(0, 0);
             }
 
-            if (sysVersion < new Version(3, 0)) {
+            // Only filter Python 2.x for PythonCore-compatible entries.
+            // Custom configurable interpreters (e.g. company == "VisualStudio")
+            // may legitimately have no SysVersion set, and must not be filtered here.
+            if (pythonCoreCompatibility && sysVersion > new Version(0, 0) && sysVersion < new Version(3, 0)) {
                 return null; // Python 2.x is no longer supported.
             }
 
