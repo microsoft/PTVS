@@ -51,6 +51,7 @@
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PipDownloaderTests.cs" />
     <Compile Include="PipRequirementsUtilsTests.cs" />
     <Compile Include="StringListReaderTests.cs" />
     <Compile Include="VSInterpretersTests.cs" />
