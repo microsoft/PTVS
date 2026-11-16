@@ -499,7 +499,7 @@ Please delete the installed template and try again.</value>
     <value>General</value>
   </data>
   <data name="Settings_ShowHelp_Name" xml:space="preserve">
-    <value>Show Help</value>
+    <value>Show help</value>
   </data>
   <data name="Settings_ShowHelp_Description" xml:space="preserve">
     <value>Show the help information bar.</value>

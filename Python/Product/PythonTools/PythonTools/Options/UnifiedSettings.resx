@@ -42,16 +42,16 @@
 	<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="general.showOutputWindowForVirtualEnvCreate.Title" xml:space="preserve">
-	<value>Show the Output Window when creating virtual environments</value>
+	<value>Show the Output window when creating virtual environments</value>
   </data>
   <data name="general.showOutputWindowForVirtualEnvCreate.Description" xml:space="preserve">
-	<value>Display environment creation progress in the Output Window.</value>
+	<value>Display environment creation progress in the Output window.</value>
   </data>
   <data name="general.showOutputWindowForPackageInstallation.Title" xml:space="preserve">
-	<value>Show the Output Window when installing or removing packages</value>
+	<value>Show the Output window when installing or removing packages</value>
   </data>
   <data name="general.showOutputWindowForPackageInstallation.Description" xml:space="preserve">
-	<value>Display package installation and removal progress in the Output Window.</value>
+	<value>Display package installation and removal progress in the Output window.</value>
   </data>
   <data name="general.promptForEnvCreate.Title" xml:space="preserve">
 	<value>Show notification bar to create environments</value>
@@ -72,7 +72,7 @@
 	<value>Suggest configuring a Python test framework for the project.</value>
   </data>
   <data name="general.elevatePip.Title" xml:space="preserve">
-	<value>Always run package managers as Administrator</value>
+	<value>Always run package managers as administrator</value>
   </data>
   <data name="general.elevatePip.Description" xml:space="preserve">
 	<value>Request administrator privileges when installing or removing Python packages.</value>
@@ -300,13 +300,13 @@
 	<value>Inline</value>
   </data>
   <data name="Formatter.Black" xml:space="preserve">
-	<value>black</value>
+	<value>Black</value>
   </data>
   <data name="Formatter.Autopep8" xml:space="preserve">
 	<value>autopep8</value>
   </data>
   <data name="Formatter.Yapf" xml:space="preserve">
-	<value>yapf</value>
+	<value>YAPF</value>
   </data>
 	<data name="General.ResetSuppressedDialogs" xml:space="preserve">
 	<value>Reset all permanently hidden dialogs</value>
@@ -336,7 +336,7 @@
 	<value>Configure conda environment management.</value>
   </data>
   <data name="Category.Interactive.Title" xml:space="preserve">
-	<value>Interactive Windows</value>
+	<value>Interactive windows</value>
   </data>
   <data name="Category.Interactive.Description" xml:space="preserve">
 	<value>Configure the Python Interactive window.</value>
