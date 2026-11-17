@@ -9,8 +9,12 @@ namespace Microsoft.PythonTools.LanguageServerClient {
     /// </summary>
     internal static class ResultConverter {
         internal static object[] ConvertResult(object result) {
-            if (result is not JsonElement json) {
+            if (result == null) {
                 return Array.Empty<object>();
+            }
+
+            if (result is not JsonElement json) {
+                throw new ArgumentException("Expected a JSON result.", nameof(result));
             }
 
             if (json.ValueKind == JsonValueKind.Array) {

@@ -413,7 +413,14 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             }
 
             try {
-                return await rpc.InvokeWithParameterObjectAsync<R>(request, parameters, t).ConfigureAwait(false);
+                var result = await rpc.InvokeWithParameterObjectAsync<JsonElement>(
+                    request, JsonSerializer.SerializeToElement(parameters, ProtocolJsonSerialization.Options), t).ConfigureAwait(false);
+                if (result.ValueKind == JsonValueKind.Null) {
+                    return null;
+                }
+                return typeof(R) == typeof(object)
+                    ? (R)(object)result
+                    : result.Deserialize<R>(ProtocolJsonSerialization.Options);
             } catch (ConnectionLostException) {
                 // Pylance crashed mid-request. Returning null - editor LSP integration
                 // tolerates null (no completions / no references shown) rather than
@@ -432,7 +439,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             }
 
             try {
-                await rpc.NotifyWithParameterObjectAsync(request, parameters).ConfigureAwait(false);
+                await rpc.NotifyWithParameterObjectAsync(
+                    request, JsonSerializer.SerializeToElement(parameters, ProtocolJsonSerialization.Options)).ConfigureAwait(false);
             } catch (ConnectionLostException) {
                 // Pylance crashed mid-notify - silently drop; the notification is fire-and-forget.
             } catch (ObjectDisposedException) {
