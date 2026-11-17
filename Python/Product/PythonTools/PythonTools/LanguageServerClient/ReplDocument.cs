@@ -118,7 +118,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             // server are expected to apply to the state as of the previous change in the list. To prevent the
             // changes from affecting one another we reverse the list.
             foreach (var textChange in textChanges.Reverse()) {
-                var changeEvent = new LSP.TextDocumentContentChangeEvent {
+                var changeEvent = new LSP.TextDocumentContentChangePartial {
                     Text = textChange.NewText,
                     Range = new LSP.Range {
                         Start = new LSP.Position {
@@ -133,7 +133,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     RangeLength = textChange.OldSpan.Length
                 };
 
-                contentChanges.Add(changeEvent);
+                contentChanges.Add(new LSP.TextDocumentContentChangeEvent(changeEvent));
             }
 
             _version++;

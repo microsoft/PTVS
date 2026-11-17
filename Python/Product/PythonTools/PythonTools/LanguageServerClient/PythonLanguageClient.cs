@@ -43,8 +43,12 @@ using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
 using Microsoft.VisualStudioTools;
 using StreamJsonRpc;
+using DidChangeWatchedFilesRegistrationOptions = Microsoft.PythonTools.LanguageServerClient.FileWatcher.DidChangeWatchedFilesRegistrationOptions;
+using DidChangeWorkspaceFoldersParams = Microsoft.PythonTools.LanguageServerClient.WorkspaceFolderChanged.DidChangeWorkspaceFoldersParams;
 using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
 using Task = System.Threading.Tasks.Task;
+using WorkspaceFolder = Microsoft.PythonTools.LanguageServerClient.WorkspaceFolderChanged.WorkspaceFolder;
+using WorkspaceFoldersChangeEvent = Microsoft.PythonTools.LanguageServerClient.WorkspaceFolderChanged.WorkspaceFoldersChangeEvent;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
     /// <summary>
@@ -554,11 +558,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     }
 
                     var createEvent = new FileEvent();
-                    createEvent.FileChangeType = FileChangeType.Changed;
+                    createEvent.Type = FileChangeType.Changed;
                     createEvent.Uri = new Uri(CommonUtils.GetParent(interpreterPath));
                     var didChangeParams = new DidChangeWatchedFilesParams();
                     didChangeParams.Changes = new FileEvent[] { createEvent };
-                    NotifyWithParametersAsync(Methods.WorkspaceDidChangeWatchedFiles.Name, didChangeParams).DoNotWait();
+                    NotifyWithParametersAsync(Notifications.WorkspaceDidChangeWatchedFilesMethod, didChangeParams).DoNotWait();
                 }
 
 

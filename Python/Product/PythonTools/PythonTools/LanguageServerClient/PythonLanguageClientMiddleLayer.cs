@@ -40,13 +40,13 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         public bool CanHandle(string methodName) =>
-            string.Equals(methodName, Methods.TextDocumentSignatureHelpName, StringComparison.Ordinal) ||
+            string.Equals(methodName, Requests.TextDocumentSignatureHelpMethod, StringComparison.Ordinal) ||
             string.Equals(methodName, PublishDiagnosticsMethod, StringComparison.Ordinal) ||
             string.Equals(methodName, WorkspaceApplyEditMethod, StringComparison.Ordinal) ||
             IsDocumentLifecycleMethod(methodName);
 
         public Task<JsonDocument> HandleRequestAsync(string methodName, JsonDocument methodParam, Func<JsonDocument, Task<JsonDocument>> sendRequest) {
-            if (string.Equals(methodName, Methods.TextDocumentSignatureHelpName, StringComparison.Ordinal) &&
+            if (string.Equals(methodName, Requests.TextDocumentSignatureHelpMethod, StringComparison.Ordinal) &&
                 ShouldSuppressAutomaticSignatureHelp(methodParam)) {
                 return Task.FromResult<JsonDocument>(null);
             }

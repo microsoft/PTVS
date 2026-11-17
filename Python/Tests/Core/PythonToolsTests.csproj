@@ -72,7 +72,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.InteractiveWindow" />
-    <Reference Include="Microsoft.VisualStudio.LanguageServer.Protocol">
+    <Reference Include="Microsoft.VisualStudio.LanguageServer.Protocol.Internal">
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.LanguageServer.Client">

@@ -44,7 +44,7 @@ namespace PythonToolsTests {
             Assert.IsNull(configuration.items[1].scopeUri);
 
             using var fileEvent = JsonSerializer.SerializeToDocument(
-                new LSP.FileEvent { Uri = uri, FileChangeType = LSP.FileChangeType.Changed });
+                new LSP.FileEvent { Uri = uri, Type = LSP.FileChangeType.Changed });
             Assert.AreEqual(2, fileEvent.RootElement.GetProperty("type").GetInt32());
             Assert.IsFalse(fileEvent.RootElement.TryGetProperty("fileChangeType", out _));
         }
@@ -115,10 +115,10 @@ namespace PythonToolsTests {
                 """);
             var list = ((LSP.CompletionList[])ResultConverter.ConvertResult(json.RootElement))[0];
             Assert.IsTrue(list.IsIncomplete);
-            Assert.IsTrue(list.Items[0].TextEdit.Value.TryGetFirst(out _));
-            Assert.AreEqual("plain", list.Items[0].Documentation.Value.First);
-            Assert.IsTrue(list.Items[1].TextEdit.Value.TryGetSecond(out _));
-            Assert.AreEqual(LSP.MarkupKind.Markdown, list.Items[1].Documentation.Value.Second.Kind);
+            Assert.IsInstanceOfType(list.Items[0].TextEdit.Value, typeof(LSP.TextEdit));
+            Assert.AreEqual("plain", list.Items[0].Documentation.Value);
+            Assert.IsInstanceOfType(list.Items[1].TextEdit.Value, typeof(LSP.InsertReplaceEdit));
+            Assert.AreEqual(LSP.MarkupKind.Markdown, ((LSP.MarkupContent)list.Items[1].Documentation.Value).Kind);
 
             using var resolved = JsonSerializer.SerializeToDocument(list.Items[1]);
             Assert.AreEqual("markdown", resolved.RootElement.GetProperty("documentation").GetProperty("kind").GetString());
