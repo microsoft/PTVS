@@ -20,6 +20,8 @@ using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
@@ -40,7 +42,6 @@ using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
 using Microsoft.VisualStudioTools;
-using Newtonsoft.Json.Linq;
 using StreamJsonRpc;
 using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
 using Task = System.Threading.Tasks.Task;
@@ -412,7 +413,14 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             }
 
             try {
-                return await rpc.InvokeWithParameterObjectAsync<R>(request, parameters, t).ConfigureAwait(false);
+                var result = await rpc.InvokeWithParameterObjectAsync<JsonElement>(
+                    request, JsonSerializer.SerializeToElement(parameters, ProtocolJsonSerialization.Options), t).ConfigureAwait(false);
+                if (result.ValueKind == JsonValueKind.Null) {
+                    return null;
+                }
+                return typeof(R) == typeof(object)
+                    ? (R)(object)result
+                    : result.Deserialize<R>(ProtocolJsonSerialization.Options);
             } catch (ConnectionLostException) {
                 // Pylance crashed mid-request. Returning null - editor LSP integration
                 // tolerates null (no completions / no references shown) rather than
@@ -431,7 +439,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             }
 
             try {
-                await rpc.NotifyWithParameterObjectAsync(request, parameters).ConfigureAwait(false);
+                await rpc.NotifyWithParameterObjectAsync(
+                    request, JsonSerializer.SerializeToElement(parameters, ProtocolJsonSerialization.Options)).ConfigureAwait(false);
             } catch (ConnectionLostException) {
                 // Pylance crashed mid-notify - silently drop; the notification is fire-and-forget.
             } catch (ObjectDisposedException) {
@@ -738,20 +747,21 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 }
                 try {
                     // If this is the initialize method, add the workspace folders capability
-                    if (message.Value<string>("method") == "initialize") {
-                        if (message.TryGetValue("params", out JToken messageParams)) {
+                    if (message["method"]?.GetValue<string>() == "initialize") {
+                        if (message["params"] is JsonObject messageParams) {
                             var capabilities = messageParams["capabilities"];
                             if (capabilities != null) {
                                 if (capabilities["workspace"] == null) {
-                                    capabilities["workspace"] = JToken.FromObject(new { });
+                                    capabilities["workspace"] = new JsonObject();
                                 }
                                 capabilities["workspace"]["workspaceFolders"] = true;
+                                capabilities["workspace"]["didChangeWatchedFiles"] ??= new JsonObject();
                                 capabilities["workspace"]["didChangeWatchedFiles"]["dynamicRegistration"] = true;
                                 capabilities["workspace"]["configuration"] = true;
 
                                 var folders = GetFolders();
                                 if (folders.Any()) {
-                                    messageParams["workspaceFolders"] = JToken.FromObject(folders.ToArray());
+                                    messageParams["workspaceFolders"] = JsonSerializer.SerializeToNode(folders, ProtocolJsonSerialization.Options);
                                     _sentInitialWorkspaceFolders = true;
                                     _workspaceFoldersSupported = true;
                                 }
@@ -767,21 +777,21 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                                 return Tuple.Create(MessageParser.Serialize(message), true);
                             }
                         }
-                    } else if (message.Value<string>("method") == "textDocument/codeAction") {
-                        if (message.TryGetValue("params", out JToken messageParams)) {
+                    } else if (message["method"]?.GetValue<string>() == "textDocument/codeAction") {
+                        if (message["params"] is JsonObject messageParams) {
                             if (messageParams != null && messageParams["range"] != null
                                 && messageParams["context"] != null
                                 && messageParams["context"]["_vs_selectionRange"] != null) {
                                 var selectionRange = messageParams["context"]["_vs_selectionRange"];
-                                messageParams["range"]["start"] = selectionRange["start"];
-                                messageParams["range"]["end"] = selectionRange["end"];
+                                messageParams["range"]["start"] = selectionRange["start"]?.DeepClone();
+                                messageParams["range"]["end"] = selectionRange["end"]?.DeepClone();
                                 return Tuple.Create(MessageParser.Serialize(message), true);
                             }
 
                         }
                     }
-                } catch {
-                    // Don't care if this happens. Just skip the message
+                } catch (InvalidOperationException ex) {
+                    Debug.WriteLine(ex);
                 }
             }
 

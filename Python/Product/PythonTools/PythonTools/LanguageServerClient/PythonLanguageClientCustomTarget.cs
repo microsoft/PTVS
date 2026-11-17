@@ -23,8 +23,8 @@ using System.Linq;
 using Microsoft.PythonTools.Logging;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Threading;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using StreamJsonRpc;
 using Task = System.Threading.Tasks.Task;
 
@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         [Serializable]
         private sealed class PylanceTelemetryEvent {
             public string EventName { get; set; }
-            public Dictionary<string, object> Properties { get; set; }
+            public Dictionary<string, JsonElement> Properties { get; set; }
             public Dictionary<string, double> Measurements { get; set; }
             public PylanceError Exception { get; set; }
         }
@@ -62,10 +62,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private sealed class UnregistrationParamsCompat {
-            [JsonProperty("unregisterations")]
+            [JsonPropertyName("unregisterations")]
             public VisualStudio.LanguageServer.Protocol.Unregistration[] LegacyUnregistrations { get; set; }
 
-            [JsonProperty("unregistrations")]
+            [JsonPropertyName("unregistrations")]
             public VisualStudio.LanguageServer.Protocol.Unregistration[] Unregistrations { get; set; }
 
             public VisualStudio.LanguageServer.Protocol.Unregistration[] GetUnregistrations() =>
@@ -110,11 +110,12 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         internal event AsyncEventHandler<WorkspaceFoldersArgs> WorkspaceFolders;
 
         [JsonRpcMethod("telemetry/event", UseSingleObjectParameterDeserialization = true)]
-        public void OnTelemetryEvent(object arg) {
+        public void OnTelemetryEvent(JsonElement arg) {
             PylanceTelemetryEvent telemetry;
             try {
-                telemetry = Deserialize<PylanceTelemetryEvent>(arg);
-            } catch (JsonException) {
+                telemetry = arg.Deserialize<PylanceTelemetryEvent>(ProtocolJsonSerialization.Options);
+            } catch (JsonException ex) {
+                Debug.WriteLine(ex);
                 return;
             }
 
@@ -124,7 +125,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
             Trace.WriteLine(arg);
             if (telemetry.Exception == null) {
-                _logger?.LogEvent(telemetry.EventName, telemetry.Properties, telemetry.Measurements);
+                _logger?.LogEvent(telemetry.EventName, telemetry.Properties?.ToDictionary(p => p.Key, p => TelemetryProperty(p.Value)), telemetry.Measurements);
             } else {
                 _logger?.LogFault(new PylanceException(telemetry.EventName, telemetry.Exception.stack), telemetry.EventName, false);
             }
@@ -132,9 +133,18 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             // Special case language_server/analysis_complete. We need this for testing so we
             // know when it's okay to try to bring up intellisense
             if (telemetry.EventName == "language_server/analysis_complete") {
-AnalysisComplete?.Invoke(this, EventArgs.Empty);
+                AnalysisComplete?.Invoke(this, EventArgs.Empty);
             }
         }
+
+        private static object TelemetryProperty(JsonElement value) => value.ValueKind switch {
+            JsonValueKind.String => value.GetString(),
+            JsonValueKind.Number => value.TryGetInt64(out var number) ? (object)number : value.GetDouble(),
+            JsonValueKind.True => true,
+            JsonValueKind.False => false,
+            JsonValueKind.Null => null,
+            _ => value.Clone()
+        };
 
         [JsonRpcMethod("python/beginProgress")]
         public void OnBeginProgressAsync() {
@@ -162,8 +172,8 @@ AnalysisComplete?.Invoke(this, EventArgs.Empty);
         }
 
         [JsonRpcMethod("client/registerCapability", UseSingleObjectParameterDeserialization = true)]
-        public void OnRegisterCapability(object arg) {
-            var regParams = Deserialize<VisualStudio.LanguageServer.Protocol.RegistrationParams>(arg);
+        public void OnRegisterCapability(JsonElement arg) {
+            var regParams = arg.Deserialize<VisualStudio.LanguageServer.Protocol.RegistrationParams>(ProtocolJsonSerialization.Options);
             if (regParams?.Registrations == null) {
                 return;
             }
@@ -172,8 +182,8 @@ AnalysisComplete?.Invoke(this, EventArgs.Empty);
                 _joinableTaskContext.Factory.RunAsync(async () => this.WorkspaceFolderChangeRegistered.Invoke(this, EventArgs.Empty));
             }
             var watchedFilesReg = regParams.Registrations.FirstOrDefault(p => p.Method == "workspace/didChangeWatchedFiles");
-            if (watchedFilesReg?.RegisterOptions is JObject optionsObj) {
-                var options = optionsObj.ToObject<DidChangeWatchedFilesRegistrationOptions>();
+            if (watchedFilesReg?.RegisterOptions is JsonElement optionsObj && optionsObj.ValueKind == JsonValueKind.Object) {
+                var options = optionsObj.Deserialize<DidChangeWatchedFilesRegistrationOptions>(ProtocolJsonSerialization.Options);
                 if (options != null) {
                     options.RegistrationId = watchedFilesReg.Id;
                     _joinableTaskContext.Factory.RunAsync(async () => this.WatchedFilesRegistered.Invoke(this, options));
@@ -182,8 +192,8 @@ AnalysisComplete?.Invoke(this, EventArgs.Empty);
         }
 
         [JsonRpcMethod("client/unregisterCapability", UseSingleObjectParameterDeserialization = true)]
-        public void OnUnregisterCapability(object arg) {
-            var unregParams = Deserialize<UnregistrationParamsCompat>(arg);
+        public void OnUnregisterCapability(JsonElement arg) {
+            var unregParams = arg.Deserialize<UnregistrationParamsCompat>(ProtocolJsonSerialization.Options);
             var watchedFilesRegistrations = unregParams?.GetUnregistrations()?
                 .Where(p => p.Method == "workspace/didChangeWatchedFiles")
                 .ToArray();
@@ -198,25 +208,14 @@ AnalysisComplete?.Invoke(this, EventArgs.Empty);
         }
 
         [JsonRpcMethod("workspace/configuration", UseSingleObjectParameterDeserialization = true)]
-        public async Task<object> OnWorkspaceConfiguration(object arg) {
-            var reqParams = Deserialize<WorkspaceConfiguration.ConfigurationParams>(arg);
+        public async Task<object> OnWorkspaceConfiguration(JsonElement arg) {
+            var reqParams = arg.Deserialize<WorkspaceConfiguration.ConfigurationParams>(ProtocolJsonSerialization.Options);
             if (this.WorkspaceConfiguration != null && reqParams != null) {
                 var eventArgs = new ConfigurationArgs { requestParams = reqParams, requestResult = null };
                 await this.WorkspaceConfiguration.InvokeAsync(this, eventArgs);
                 return eventArgs.requestResult;
             }
             return null;
-        }
-
-        private static T Deserialize<T>(object arg) where T : class {
-            if (arg == null) {
-                return null;
-            }
-
-            // Dev18 supplies System.Text.Json values; older formatters supply JToken.
-            return arg is JToken token
-                ? token.ToObject<T>()
-                : JsonConvert.DeserializeObject<T>(arg.ToString());
         }
 
         [JsonRpcMethod("workspace/workspaceFolders")]

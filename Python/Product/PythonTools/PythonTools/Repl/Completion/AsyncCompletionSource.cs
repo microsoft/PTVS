@@ -378,7 +378,7 @@ namespace Microsoft.PythonTools.Repl.Completion {
             var items = new List<(ILanguageClient client, LSP.CompletionItem completionItem, Func<LSP.CompletionItem, CancellationToken, Task<LSP.CompletionItem>> resolver)>();
             var suggestionMode = false;
             object taskResults = await completionTask.ConfigureAwait(false);
-            var converted = ResultConverter.ConvertResult(taskResults as Newtonsoft.Json.Linq.JObject) as LSP.CompletionList[];
+            var converted = ResultConverter.ConvertResult(taskResults) as LSP.CompletionList[];
             Func<LSP.CompletionItem, CancellationToken, Task<LSP.CompletionItem>> resolveFunc = (c, t) => this.languageClient.InvokeResolveAsync(c, t);
             if (converted != null) {
                 foreach (var completionItem in converted[0].Items) {

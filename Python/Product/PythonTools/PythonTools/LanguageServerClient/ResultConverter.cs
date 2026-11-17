@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
 using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
@@ -12,50 +8,42 @@ namespace Microsoft.PythonTools.LanguageServerClient {
     /// Class used for converting LSP results from JSON structures to LSP objects
     /// </summary>
     internal static class ResultConverter {
-        internal static object[] ConvertResult(JToken jToken) {
-            if (jToken != null) {
-                var jsonSerializer = new JsonSerializer();
+        internal static object[] ConvertResult(object result) {
+            if (result == null) {
+                return Array.Empty<object>();
+            }
 
-                if (jToken.Type == JTokenType.Array) {
-                    var jArray = (JArray)jToken;
-                    if (jArray.Any()) {
-                        if (IsDocumentSymbol(jArray.First)) {
-                            return jArray.ToObject<LSP.DocumentSymbol[]>(jsonSerializer);
-                        } else if (IsSymbolInformation(jArray.First)) {
-                            return jArray.ToObject<LSP.SymbolInformation[]>(jsonSerializer);
-                        } else if (IsLocation(jArray.First)) {
-                            return jArray.ToObject<LSP.Location[]>(jsonSerializer);
-                        }
-                    }
-                } else if (jToken.Type == JTokenType.Object) {
-                    var jObject = (JObject)jToken;
-                    if (IsDocumentSymbol(jObject)) {
-                        return new LSP.DocumentSymbol[] { jObject.ToObject<LSP.DocumentSymbol>(jsonSerializer) };
-                    } else if (IsSymbolInformation(jObject)) {
-                        return new LSP.SymbolInformation[] { jObject.ToObject<LSP.SymbolInformation>(jsonSerializer) };
-                    } else if (IsLocation(jObject)) {
-                        return new LSP.Location[] { jObject.ToObject<LSP.Location>(jsonSerializer) };
-                    } else if (IsCompletionList(jObject)) {
-                        return new LSP.CompletionList[] { jObject.ToObject<LSP.CompletionList>(jsonSerializer) };
-                    }
+            if (result is not JsonElement json) {
+                throw new ArgumentException("Expected a JSON result.", nameof(result));
+            }
+
+            if (json.ValueKind == JsonValueKind.Array) {
+                var first = json.EnumerateArray().FirstOrDefault();
+                if (HasProperty(first, "range") && HasProperty(first, "kind")) {
+                    return json.Deserialize<LSP.DocumentSymbol[]>(ProtocolJsonSerialization.Options);
+                } else if (HasProperty(first, "location") && HasProperty(first, "kind")) {
+                    return json.Deserialize<LSP.SymbolInformation[]>(ProtocolJsonSerialization.Options);
+                } else if (HasProperty(first, "uri")) {
+                    return json.Deserialize<LSP.Location[]>(ProtocolJsonSerialization.Options);
+                } else if (HasProperty(first, "label")) {
+                    return new LSP.CompletionList[] { new LSP.CompletionList { Items = json.Deserialize<LSP.CompletionItem[]>(ProtocolJsonSerialization.Options) } };
+                }
+            } else if (json.ValueKind == JsonValueKind.Object) {
+                if (HasProperty(json, "range") && HasProperty(json, "kind")) {
+                    return new LSP.DocumentSymbol[] { json.Deserialize<LSP.DocumentSymbol>(ProtocolJsonSerialization.Options) };
+                } else if (HasProperty(json, "location") && HasProperty(json, "kind")) {
+                    return new LSP.SymbolInformation[] { json.Deserialize<LSP.SymbolInformation>(ProtocolJsonSerialization.Options) };
+                } else if (HasProperty(json, "uri")) {
+                    return new LSP.Location[] { json.Deserialize<LSP.Location>(ProtocolJsonSerialization.Options) };
+                } else if (HasProperty(json, "isIncomplete")) {
+                    return new LSP.CompletionList[] { json.Deserialize<LSP.CompletionList>(ProtocolJsonSerialization.Options) };
                 }
             }
 
             return Array.Empty<object>();
         }
 
-        private static bool IsDocumentSymbol(JToken jobject) {
-            return (jobject != null && jobject["range"] != null && jobject["kind"] != null);
-        }
-        private static bool IsSymbolInformation(JToken jobject) {
-            return (jobject != null && jobject["location"] != null && jobject["kind"] != null);
-        }
-        private static bool IsLocation(JToken jobject) {
-            return (jobject != null && jobject["uri"] != null);
-        }
-
-        private static bool IsCompletionList(JToken jobject) {
-            return (jobject != null && jobject["isIncomplete"] != null);
-        }
+        private static bool HasProperty(JsonElement json, string name) =>
+            json.ValueKind == JsonValueKind.Object && json.TryGetProperty(name, out _);
     }
 }

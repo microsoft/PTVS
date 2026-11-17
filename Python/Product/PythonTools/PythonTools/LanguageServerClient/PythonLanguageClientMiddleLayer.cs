@@ -1,12 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-#if DEV18_OR_LATER
 using System.Text.Json;
-#else
-using System.Globalization;
-#endif
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
@@ -14,18 +10,10 @@ using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Utilities;
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
-#if !DEV18_OR_LATER
-#pragma warning disable CS0618
-#endif
     internal sealed class PythonLanguageClientMiddleLayer :
-#if DEV18_OR_LATER
         ILanguageClientMiddleLayer2<JsonDocument>,
-#else
-        ILanguageClientMiddleLayer,
-#endif
         IPropertyOwner {
         private const string DidOpenMethod = "textDocument/didOpen";
         private const string DidChangeMethod = "textDocument/didChange";
@@ -43,11 +31,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             Volatile.Write(ref _languagePreferences, languagePreferences ?? throw new ArgumentNullException(nameof(languagePreferences)));
         }
 
-        internal void TrackDocumentMessage(JObject message) {
-            var methodName = message?.Value<string>("method");
+        internal void TrackDocumentMessage(JsonObject message) {
+            var methodName = message?["method"]?.GetValue<string>();
             var textDocument = message?["params"]?["textDocument"];
-            var uri = textDocument?["uri"]?.Value<string>();
-            var version = textDocument?["version"]?.Value<int?>();
+            var uri = textDocument?["uri"]?.GetValue<string>();
+            var version = textDocument?["version"]?.GetValue<int?>();
             UpdateDocumentState(methodName, uri, version, null);
         }
 
@@ -57,7 +45,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             string.Equals(methodName, WorkspaceApplyEditMethod, StringComparison.Ordinal) ||
             IsDocumentLifecycleMethod(methodName);
 
-#if DEV18_OR_LATER
         public Task<JsonDocument> HandleRequestAsync(string methodName, JsonDocument methodParam, Func<JsonDocument, Task<JsonDocument>> sendRequest) {
             if (string.Equals(methodName, Methods.TextDocumentSignatureHelpName, StringComparison.Ordinal) &&
                 ShouldSuppressAutomaticSignatureHelp(methodParam)) {
@@ -67,25 +54,27 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             return sendRequest(methodParam);
         }
 
-        public Task HandleNotificationAsync(string methodName, JsonDocument methodParam, Func<JsonDocument, Task> sendNotification) {
+        public async Task HandleNotificationAsync(string methodName, JsonDocument methodParam, Func<JsonDocument, Task> sendNotification) {
             if (IsDocumentLifecycleMethod(methodName)) {
                 TrackDocumentSnapshot(methodName, methodParam);
-                return sendNotification(methodParam);
+                await sendNotification(methodParam).ConfigureAwait(false);
+                return;
             }
 
             if (string.Equals(methodName, WorkspaceApplyEditMethod, StringComparison.Ordinal)) {
-                var normalized = NormalizeWorkspaceEdit(methodParam);
+                using var normalized = NormalizeWorkspaceEdit(methodParam);
                 if (normalized != null) {
-                    return sendNotification(normalized);
+                    await sendNotification(normalized).ConfigureAwait(false);
+                    return;
                 }
             }
 
             if (string.Equals(methodName, PublishDiagnosticsMethod, StringComparison.Ordinal) &&
                 IsStaleDiagnostics(methodParam)) {
-                return Task.CompletedTask;
+                return;
             }
 
-            return sendNotification(methodParam);
+            await sendNotification(methodParam).ConfigureAwait(false);
         }
 
         private void TrackDocumentSnapshot(string methodName, JsonDocument methodParam) {
@@ -130,14 +119,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 return null;
             }
 
-            try {
-                var request = JObject.Parse(methodParam.RootElement.GetRawText());
-                return NormalizeWorkspaceEdit(request)
-                    ? JsonDocument.Parse(request.ToString(Newtonsoft.Json.Formatting.None))
-                    : null;
-            } catch (Newtonsoft.Json.JsonException) {
-                return null;
-            }
+            var request = JsonNode.Parse(methodParam.RootElement.GetRawText()).AsObject();
+            return NormalizeWorkspaceEdit(request) ? JsonSerializer.SerializeToDocument(request) : null;
         }
 
         private bool ShouldSuppressAutomaticSignatureHelp(JsonDocument methodParam) {
@@ -164,96 +147,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             return triggerKind == (int)SignatureHelpTriggerKind.TriggerCharacter ||
                 triggerKind == (int)SignatureHelpTriggerKind.ContentChange;
         }
-#else
-        public Task<JToken> HandleRequestAsync(string methodName, JToken methodParam, Func<JToken, Task<JToken>> sendRequest) {
-            if (string.Equals(methodName, Methods.TextDocumentSignatureHelpName, StringComparison.Ordinal) &&
-                ShouldSuppressAutomaticSignatureHelp(methodParam)) {
-                return Task.FromResult<JToken>(JValue.CreateNull());
-            }
-
-            return sendRequest(methodParam);
-        }
-
-        public Task HandleNotificationAsync(string methodName, JToken methodParam, Func<JToken, Task> sendNotification) {
-            if (IsDocumentLifecycleMethod(methodName)) {
-                TrackDocumentSnapshot(methodName, methodParam);
-                return sendNotification(methodParam);
-            }
-
-            if (string.Equals(methodName, WorkspaceApplyEditMethod, StringComparison.Ordinal) &&
-                methodParam is JObject request) {
-                var normalized = (JObject)request.DeepClone();
-                if (NormalizeWorkspaceEdit(normalized)) {
-                    return sendNotification(normalized);
-                }
-            }
-
-            if (string.Equals(methodName, PublishDiagnosticsMethod, StringComparison.Ordinal) &&
-                IsStaleDiagnostics(methodParam)) {
-                return Task.CompletedTask;
-            }
-
-            return sendNotification(methodParam);
-        }
-
-        private void TrackDocumentSnapshot(string methodName, JToken methodParam) {
-            if (!(methodParam is JObject request) ||
-                !(request["textDocument"] is JObject textDocument) ||
-                textDocument["uri"]?.Type != JTokenType.String) {
-                return;
-            }
-
-            var version = textDocument["version"]?.Type == JTokenType.Integer
-                ? textDocument["version"].Value<int?>()
-                : null;
-            UpdateDocumentState(
-                methodName,
-                textDocument["uri"].Value<string>(),
-                version,
-                GetCurrentTextBuffer()
-            );
-        }
-
-        private bool IsStaleDiagnostics(JToken methodParam) {
-            if (!(methodParam is JObject diagnostics) ||
-                diagnostics["uri"]?.Type != JTokenType.String ||
-                diagnostics["version"]?.Type != JTokenType.Integer) {
-                return false;
-            }
-
-            return IsStaleDiagnostics(
-                diagnostics["uri"].Value<string>(),
-                diagnostics["version"].Value<int>()
-            );
-        }
-
-        private bool ShouldSuppressAutomaticSignatureHelp(JToken methodParam) {
-            var languagePreferences = Volatile.Read(ref _languagePreferences);
-            if (languagePreferences == null || languagePreferences.AutoListParams) {
-                return false;
-            }
-
-            if (!(methodParam is JObject request) ||
-                !(request["context"] is JObject context) ||
-                context["triggerKind"]?.Type != JTokenType.Integer ||
-                context["isRetrigger"]?.Type != JTokenType.Boolean ||
-                context["isRetrigger"].Value<bool>() ||
-                (context["activeSignatureHelp"] != null && context["activeSignatureHelp"].Type != JTokenType.Null)) {
-                return false;
-            }
-
-            if (!int.TryParse(
-                context["triggerKind"].ToString(),
-                NumberStyles.Integer,
-                CultureInfo.InvariantCulture,
-                out var triggerKind)) {
-                return false;
-            }
-
-            return triggerKind == (int)SignatureHelpTriggerKind.TriggerCharacter ||
-                triggerKind == (int)SignatureHelpTriggerKind.ContentChange;
-        }
-#endif
 
         private static bool IsDocumentLifecycleMethod(string methodName) =>
             string.Equals(methodName, DidOpenMethod, StringComparison.Ordinal) ||
@@ -305,16 +198,16 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             }
         }
 
-        private bool NormalizeWorkspaceEdit(JObject request) {
+        private bool NormalizeWorkspaceEdit(JsonObject request) {
             // Versioned documentChanges are resolved by the VS broker against their matching snapshot.
-            if (!(request["edit"]?["changes"] is JObject changes)) {
+            if (!(request["edit"]?["changes"] is JsonObject changes)) {
                 return false;
             }
 
             var changed = false;
-            foreach (var documentChanges in changes.Properties()) {
-                if (documentChanges.Value is JArray edits &&
-                    TryGetDocumentSnapshot(documentChanges.Name, out var snapshot)) {
+            foreach (var documentChanges in changes) {
+                if (documentChanges.Value is JsonArray edits &&
+                    TryGetDocumentSnapshot(documentChanges.Key, out var snapshot)) {
                     changed |= NormalizeTextEdits(edits, snapshot);
                 }
             }
@@ -336,32 +229,30 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             }
         }
 
-        private static bool NormalizeTextEdits(JArray edits, ITextSnapshot snapshot) {
+        private static bool NormalizeTextEdits(JsonArray edits, ITextSnapshot snapshot) {
             var changed = false;
-            foreach (var edit in edits.OfType<JObject>()) {
-                if (!(edit["range"] is JObject range)) {
+            foreach (var edit in edits) {
+                if (edit is not JsonObject editObject || editObject["range"] is not JsonObject range) {
                     continue;
                 }
 
-                changed |= NormalizePosition(range["start"] as JObject, snapshot);
-                changed |= NormalizePosition(range["end"] as JObject, snapshot);
+                changed |= NormalizePosition(range["start"] as JsonObject, snapshot);
+                changed |= NormalizePosition(range["end"] as JsonObject, snapshot);
             }
 
             return changed;
         }
 
-        private static bool NormalizePosition(JObject position, ITextSnapshot snapshot) {
-            if (position?["line"]?.Type != JTokenType.Integer ||
-                position["character"]?.Type != JTokenType.Integer) {
+        private static bool NormalizePosition(JsonObject position, ITextSnapshot snapshot) {
+            if (position?["line"] is not JsonValue line || !line.TryGetValue<int>(out var lineNumber) ||
+                position["character"] is not JsonValue characterValue || !characterValue.TryGetValue<int>(out var character)) {
                 return false;
             }
 
-            var lineNumber = position["line"].Value<int>();
             if (lineNumber < 0 || lineNumber >= snapshot.LineCount) {
                 return false;
             }
 
-            var character = position["character"].Value<int>();
             var lineLength = snapshot.GetLineFromLineNumber(lineNumber).Length;
             if (character < 0 || character <= lineLength) {
                 return false;
@@ -409,7 +300,4 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             public WeakReference<ITextBuffer> TextBuffer { get; set; }
         }
     }
-#if !DEV18_OR_LATER
-#pragma warning restore CS0618
-#endif
 }

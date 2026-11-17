@@ -14,16 +14,18 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 using System;
-using Newtonsoft.Json.Linq;
+using System.Diagnostics;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace Microsoft.PythonTools.LanguageServerClient.StreamHacking {
     /// <summary>
-    /// This class is used for parsing byte streams for LSP messages. It can Deserialize to/from a NewtonSoft Json object
+    /// This class is used for parsing byte streams for LSP messages.
     /// </summary>
     static class MessageParser {
         private static string ContentLengthHeader = "Content-Length: ";
 
-        public static JObject Deserialize(StreamData data) {
+        public static JsonObject Deserialize(StreamData data) {
             // Go through the byte stream until we get past the http header
             var contentLength = data.count;
             var httpHeaderOffset = -1;
@@ -53,18 +55,17 @@ namespace Microsoft.PythonTools.LanguageServerClient.StreamHacking {
                 try {
                     contentLength = Math.Min(contentLength, data.bytes.Length - httpHeaderOffset);
                     var messageJson = System.Text.Encoding.UTF8.GetString(data.bytes, httpHeaderOffset, contentLength);
-                    var messageJsonLength = System.Text.Encoding.UTF8.GetBytes(messageJson).Length;
-                    return JObject.Parse(messageJson);
-                } catch {
-
+                    return JsonNode.Parse(messageJson)?.AsObject();
+                } catch (JsonException ex) {
+                    Debug.WriteLine(ex);
                 }
 
             }
             return null;
         }
 
-        public static StreamData Serialize(JObject message) {
-            var newJson = message.ToString(Newtonsoft.Json.Formatting.None);
+        public static StreamData Serialize(JsonObject message) {
+            var newJson = message.ToJsonString();
             var newJsonLength = System.Text.Encoding.UTF8.GetBytes(newJson).Length;
 
             // Http header is just 'Content-Length: number'

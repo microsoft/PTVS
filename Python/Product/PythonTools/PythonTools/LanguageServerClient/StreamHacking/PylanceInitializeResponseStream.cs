@@ -18,9 +18,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.LanguageServerClient.StreamHacking {
     /// <summary>
@@ -149,26 +149,25 @@ namespace Microsoft.PythonTools.LanguageServerClient.StreamHacking {
             var headerEnd = FindHeaderEnd(frame);
             var contentLength = ParseContentLength(frame, headerEnd);
             var messageJson = Encoding.UTF8.GetString(frame, headerEnd + 4, contentLength);
-            var message = JObject.Parse(messageJson);
-            var capabilities = message["result"]?["capabilities"] as JObject;
+            var message = JsonNode.Parse(messageJson).AsObject();
+            var capabilities = message["result"]?["capabilities"] as JsonObject;
             if (message["id"] == null || capabilities == null) {
                 return frame;
             }
 
             _initializeResponseProcessed = true;
             var textDocumentSync = capabilities["textDocumentSync"];
-            if (textDocumentSync?.Type != JTokenType.Integer) {
+            if (textDocumentSync is not JsonValue syncValue || !syncValue.TryGetValue<int>(out var syncKind)) {
                 return frame;
             }
 
-            var syncKind = textDocumentSync.Value<int>();
-            textDocumentSync.Replace(new JObject {
+            capabilities["textDocumentSync"] = new JsonObject {
                 ["openClose"] = true,
                 ["change"] = syncKind,
-                ["save"] = new JObject {
+                ["save"] = new JsonObject {
                     ["includeText"] = false
                 }
-            });
+            };
             return MessageParser.Serialize(message).bytes;
         }
 
