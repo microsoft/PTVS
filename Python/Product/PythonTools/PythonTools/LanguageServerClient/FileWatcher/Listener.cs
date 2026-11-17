@@ -334,16 +334,16 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
 
                     switch (e.ChangeType) {
                         case WatcherChangeTypes.Created:
-                            didChangeParams.Changes[0].FileChangeType = FileChangeType.Created;
+                            didChangeParams.Changes[0].Type = FileChangeType.Created;
                             break;
                         case WatcherChangeTypes.Deleted:
-                            didChangeParams.Changes[0].FileChangeType = FileChangeType.Deleted;
+                            didChangeParams.Changes[0].Type = FileChangeType.Deleted;
                             break;
                         case WatcherChangeTypes.Changed:
-                            didChangeParams.Changes[0].FileChangeType = FileChangeType.Changed;
+                            didChangeParams.Changes[0].Type = FileChangeType.Changed;
                             break;
                         case WatcherChangeTypes.Renamed:
-                            didChangeParams.Changes[0].FileChangeType = FileChangeType.Changed;
+                            didChangeParams.Changes[0].Type = FileChangeType.Changed;
                             break;
 
                         default:
@@ -355,13 +355,13 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
                     var changes = new List<FileEvent>();
                     if (matchesOldPath) {
                         changes.Add(new FileEvent {
-                            FileChangeType = FileChangeType.Deleted,
+                            Type = FileChangeType.Deleted,
                             Uri = new Uri(renamedArgs.OldFullPath)
                         });
                     }
                     if (matchesNewPath) {
                         changes.Add(new FileEvent {
-                            FileChangeType = FileChangeType.Created,
+                            Type = FileChangeType.Created,
                             Uri = new Uri(renamedArgs.FullPath)
                         });
                     }
@@ -370,7 +370,7 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
 
                 if (didChangeParams.Changes.Any()) {
                     try {
-                        await rpc.NotifyWithParameterObjectAsync(Methods.WorkspaceDidChangeWatchedFiles.Name, didChangeParams);
+                        await rpc.NotifyWithParameterObjectAsync(Notifications.WorkspaceDidChangeWatchedFilesMethod, didChangeParams);
                     } catch (ObjectDisposedException) {
                         // The JsonRpc was disposed by its owner before Disconnected reached us.
                     } catch (ConnectionLostException) {

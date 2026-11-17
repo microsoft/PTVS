@@ -124,22 +124,12 @@ namespace Microsoft.PythonTools.Repl.Completion {
             // otherwise, parse the Documentation property
             if (protocolItem.Documentation != null) {
                 var documentationBuilder = new StringBuilder();
-                var content = protocolItem.Documentation.Value.Match(
-                    s => s,
-                    markupContent => {
-                        if (markupContent.Kind == LSP.MarkupKind.Markdown) {
-                            var codeBlocks = MarkdownUtil.ExtractCodeBlocks(markupContent.Value);
-                            var joinedBlocks = string.Join(Environment.NewLine, codeBlocks);
-                            if (string.IsNullOrEmpty(joinedBlocks)) {
-                                return null;
-                            }
-
-                            return joinedBlocks;
-                        }
-                        else {
-                            return markupContent.Value;
-                        }
-                    });
+                var content = protocolItem.Documentation.Value switch {
+                    LSP.MarkupContent markupContent when markupContent.Kind == LSP.MarkupKind.Markdown =>
+                        string.Join(Environment.NewLine, MarkdownUtil.ExtractCodeBlocks(markupContent.Value)) is { Length: > 0 } joinedBlocks ? joinedBlocks : null,
+                    LSP.MarkupContent markupContent => markupContent.Value,
+                    var s => s as string
+                };
 
                 if (!string.IsNullOrEmpty(content)) {
                     if (documentationBuilder.Length > 0) {
@@ -250,11 +240,11 @@ namespace Microsoft.PythonTools.Repl.Completion {
                             buffer.Delete(deleteSpan);
                         }
 
-                        if (protocolItem.TextEdit.HasValue) {
+                        if (protocolItem.TextEdit is not null) {
 
-                            if (protocolItem.TextEdit.Value.TryGetFirst(out TextEdit textEdit)) {
+                            if (protocolItem.TextEdit.Value is TextEdit textEdit) {
                                 Utilities.ApplyTextEdit(textEdit, triggerLocation.Snapshot, buffer);
-                            } else if (protocolItem.TextEdit.Value.TryGetSecond(out InsertReplaceEdit insertReplaceEdit)) {
+                            } else if (protocolItem.TextEdit.Value is InsertReplaceEdit) {
                                 buffer.Replace(session.ApplicableToSpan.GetSpan(buffer.CurrentSnapshot), protocolItem.InsertText);
                             } else if (protocolItem.Label != null) {
                                 buffer.Replace(session.ApplicableToSpan.GetSpan(buffer.CurrentSnapshot), protocolItem.Label);
@@ -378,7 +368,7 @@ namespace Microsoft.PythonTools.Repl.Completion {
             var items = new List<(ILanguageClient client, LSP.CompletionItem completionItem, Func<LSP.CompletionItem, CancellationToken, Task<LSP.CompletionItem>> resolver)>();
             var suggestionMode = false;
             object taskResults = await completionTask.ConfigureAwait(false);
-            var converted = ResultConverter.ConvertResult(taskResults as Newtonsoft.Json.Linq.JObject) as LSP.CompletionList[];
+            var converted = ResultConverter.ConvertResult(taskResults) as LSP.CompletionList[];
             Func<LSP.CompletionItem, CancellationToken, Task<LSP.CompletionItem>> resolveFunc = (c, t) => this.languageClient.InvokeResolveAsync(c, t);
             if (converted != null) {
                 foreach (var completionItem in converted[0].Items) {
@@ -456,8 +446,8 @@ namespace Microsoft.PythonTools.Repl.Completion {
             SnapshotSpan result = new SnapshotSpan();
 
             // See if this is from a text edit
-            if (item != null && item.TextEdit.HasValue) {
-                if (item.TextEdit.Value.TryGetFirst(out TextEdit textEdit)) {
+            if (item?.TextEdit is not null) {
+                if (item.TextEdit.Value is TextEdit textEdit) {
                     result = textEdit.Range.ToSnapshotSpan(owningSnapshot);
                 }
             } else {
@@ -614,7 +604,7 @@ namespace Microsoft.PythonTools.Repl.Completion {
             }
 
             var executeCommandParams = new LSP.ExecuteCommandParams() {
-                Command = completionItem.Command.CommandIdentifier,
+                Command = completionItem.Command.CommandValue,
                 Arguments = completionItem.Command.Arguments,
             };
 

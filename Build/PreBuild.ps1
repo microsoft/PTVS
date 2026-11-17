@@ -92,6 +92,7 @@ $need_symlink = @(
     "Microsoft.DiaSymReader.Pdb2Pdb",
     "Microsoft.Extensions.FileSystemGlobbing",
     "Microsoft.VisualStudio.LanguageServer.Protocol",
+    "Microsoft.VisualStudio.LanguageServer.Protocol.Internal",
     "Microsoft.VisualStudio.Debugger.Engine",
     "Microsoft.VisualStudio.Interop",
     "Microsoft.VSSDK.BuildTools",
