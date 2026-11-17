@@ -16,6 +16,7 @@
 
 using System;
 using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 
 namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
     /// <summary>
@@ -23,6 +24,7 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
     /// </summary>
     [DataContract]
     public class DidChangeWatchedFilesRegistrationOptions {
+        [JsonIgnore]
         public string RegistrationId {
             get;
             set;

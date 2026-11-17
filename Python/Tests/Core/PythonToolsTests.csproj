@@ -54,6 +54,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>PythonToolsTests</RootNamespace>
     <AssemblyName>PythonToolsTests</AssemblyName>
+    <LangVersion>latest</LangVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
   </PropertyGroup>
@@ -119,22 +120,22 @@
     <Reference Include="System.Xaml" />
     <Reference Include="System.XML" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Text.Json, Version=8.0.0.5, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51" Condition="'$(VSTarget)' == '18.0'">
-      <HintPath>$(PackagesPath)\System.Text.Json.8.0.5\lib\net462\System.Text.Json.dll</HintPath>
+    <Reference Include="System.Text.Json, Version=10.0.0.10, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51" Condition="'$(VSTarget)' == '18.0'">
+      <HintPath>$(PackagesPath)\System.Text.Json.10.0.10\lib\net462\System.Text.Json.dll</HintPath>
       <Private>True</Private>
       <SpecificVersion>true</SpecificVersion>
     </Reference>
-    <Reference Include="System.Text.Encodings.Web, Version=8.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51" Condition="'$(VSTarget)' == '18.0'">
-      <HintPath>$(PackagesPath)\System.Text.Encodings.Web.8.0.0\lib\net462\System.Text.Encodings.Web.dll</HintPath>
+    <Reference Include="System.Text.Encodings.Web, Version=10.0.0.10, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51" Condition="'$(VSTarget)' == '18.0'">
+      <HintPath>$(PackagesPath)\System.Text.Encodings.Web.10.0.10\lib\net462\System.Text.Encodings.Web.dll</HintPath>
       <Private>True</Private>
       <SpecificVersion>true</SpecificVersion>
     </Reference>
     <Reference Include="Microsoft.Bcl.AsyncInterfaces" Condition="'$(VSTarget)' == '18.0'">
-      <HintPath>$(PackagesPath)\Microsoft.Bcl.AsyncInterfaces.8.0.0\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+      <HintPath>$(PackagesPath)\Microsoft.Bcl.AsyncInterfaces.10.0.10\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Memory" Condition="'$(VSTarget)' == '18.0'">
-      <HintPath>$(PackagesPath)\System.Memory.4.6.0\lib\net462\System.Memory.dll</HintPath>
+      <HintPath>$(PackagesPath)\System.Memory.4.6.3\lib\net462\System.Memory.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="WindowsBase" />
@@ -162,6 +163,7 @@
     </EmbeddedResource>
     <Compile Include="LspDiffTextEditFactoryTests.cs" />
     <Compile Include="LanguageServerSettingsTests.cs" />
+    <Compile Include="ProtocolJsonSerializationTests.cs" />
     <Compile Include="BuildTasksTests.cs" />
     <None Include="CodeCellTests.cs" />
     <Compile Include="PythonVersionRecognition314Tests.cs" />

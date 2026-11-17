@@ -17,8 +17,8 @@
 
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
     /// <summary>
@@ -52,35 +52,34 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
         public Uri BaseUri { get; }
     }
 
-    internal sealed class GlobPatternConverter : JsonConverter {
-        public override bool CanConvert(Type objectType) => objectType == typeof(GlobPattern);
-
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
-            var token = JToken.Load(reader);
-            if (token.Type == JTokenType.String) {
-                return CreatePattern(token.Value<string>(), null);
+    internal sealed class GlobPatternConverter : JsonConverter<GlobPattern> {
+        public override GlobPattern Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
+            using var document = JsonDocument.ParseValue(ref reader);
+            var token = document.RootElement;
+            if (token.ValueKind == JsonValueKind.String) {
+                return CreatePattern(token.GetString(), null);
             }
 
-            if (token is JObject relativePattern) {
-                var baseUriToken = relativePattern["baseUri"];
-                var baseUriValue = baseUriToken?.Type == JTokenType.String
-                    ? baseUriToken.Value<string>()
-                    : (baseUriToken as JObject)?["uri"]?.Value<string>();
+            if (token.ValueKind == JsonValueKind.Object) {
+                var baseUriToken = token.GetProperty("baseUri");
+                var baseUriValue = baseUriToken.ValueKind == JsonValueKind.String
+                    ? baseUriToken.GetString()
+                    : baseUriToken.GetProperty("uri").GetString();
                 if (!Uri.TryCreate(baseUriValue, UriKind.Absolute, out var baseUri)) {
-                    return null;
+                    throw new JsonException("A relative glob pattern requires an absolute base URI.");
                 }
-                return CreatePattern(relativePattern.Value<string>("pattern"), baseUri);
+                return CreatePattern(token.GetProperty("pattern").GetString(), baseUri);
             }
 
-            return null;
+            throw new JsonException("Expected a glob string or relative pattern.");
         }
 
         private static GlobPattern CreatePattern(string pattern, Uri baseUri) =>
-            string.IsNullOrEmpty(pattern) ? null : new GlobPattern(pattern, baseUri);
+            string.IsNullOrEmpty(pattern)
+                ? throw new JsonException("A glob pattern cannot be empty.")
+                : new GlobPattern(pattern, baseUri);
 
-        public override bool CanWrite => false;
-
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) =>
+        public override void Write(Utf8JsonWriter writer, GlobPattern value, JsonSerializerOptions options) =>
             throw new NotSupportedException();
     }
 

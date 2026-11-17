@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Microsoft.PythonTools.LanguageServerClient.WorkspaceConfiguration {
     /// <summary>
@@ -13,10 +9,10 @@ namespace Microsoft.PythonTools.LanguageServerClient.WorkspaceConfiguration {
     [DataContract]
     internal class ConfigurationItem {
         [DataMember]
-        [JsonConverter(typeof(Microsoft.VisualStudio.LanguageServer.Protocol.DocumentUriConverter))]
-        public Uri scopeUri;
+        [JsonConverter(typeof(ProtocolJsonSerialization.DocumentUriConverter))]
+        public Uri scopeUri { get; set; }
 
         [DataMember]
-        public string section;
+        public string section { get; set; }
     }
 }
