@@ -31,23 +31,44 @@
       <_NugetAssemblies Include="$(PackagesPath)\Microsoft.Python.*\lib\netstandard2.0\Microsoft.Python.*.dll" />
       <_NugetAssemblies Include="$(PackagesPath)\Microsoft.Extensions.*\lib\netstandard2.0\Microsoft.Extensions.*.dll" />
       <_NugetAssemblies Include="$(PackagesPath)\StreamJsonRpc*\lib\netstandard2.0\StreamJsonRpc.dll" />
+      <_NugetAssemblies Include="$(PackagesPath)\System.*\lib\net462\System.*.dll" Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'" />
       <_NugetAssemblies Include="$(PackagesPath)\System.*\lib\netstandard2.0\System.*.dll" />
+      <!-- The MEF netstandard facade forwards Lazy&lt;T, TMetadata&gt; to System.Runtime; desktop builds need the inbox assembly. -->
+      <_NugetAssemblies Remove="$(PackagesPath)\System.ComponentModel.Composition.*\lib\netstandard2.0\System.ComponentModel.Composition.dll" Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'" />
       <_NugetAssemblies Include="$(PackagesPath)\Microsoft.NET.*\lib\net472\Microsoft.NET.*.dll" />
       <_NugetAssemblies Include="$(PackagesPath)\Microsoft.ServiceHub.*\lib\netstandard2.0\Microsoft.ServiceHub.*.dll" />
     </ItemGroup>
     <PropertyGroup>
-      <_UnifiedSettingsReferencePaths Condition="'$(VSTarget)' == '18.0'">
+      <!-- Prefer the pinned SDK cohort over older packages left by an in-place restore. -->
+      <_Dev18ReferencePaths Condition="'$(VSTarget)' == '18.0'">
         $(PackagesPath)Microsoft.VisualStudio.Utilities.18.0.42423\lib\net472;
         $(PackagesPath)Microsoft.VisualStudio.Shell.15.0.18.0.42423\lib\net472;
         $(PackagesPath)Microsoft.VisualStudio.Shell.Framework.18.0.42423\lib\net472;
         $(PackagesPath)Microsoft.Internal.VisualStudio.Shell.Framework.18.0.42423\lib\net472;
-        $(PackagesPath)Microsoft.VisualStudio.Threading.Only.18.0.5\lib\net472;
+        $(PackagesPath)Microsoft.VisualStudio.Threading.Only.18.13.4\lib\net472;
+        $(PackagesPath)Microsoft.VisualStudio.Composition.18.9.55\lib\net472;
+        $(PackagesPath)Microsoft.VisualStudio.CoreUtility.18.14.8\lib\netstandard2.0;
+        $(PackagesPath)Microsoft.VisualStudio.Text.Data.18.14.8\lib\netstandard2.0;
+        $(PackagesPath)Microsoft.VisualStudio.Text.Logic.18.14.8\lib\netstandard2.0;
+        $(PackagesPath)Microsoft.VisualStudio.Text.UI.18.14.8\lib\netstandard2.0;
+        $(PackagesPath)Microsoft.VisualStudio.Text.UI.Wpf.18.14.8\lib\net472;
+        $(PackagesPath)Microsoft.VisualStudio.Language.StandardClassification.18.14.8\lib\netstandard2.0;
+        $(PackagesPath)Microsoft.VisualStudio.LanguageServer.Protocol.Internal.18.14.12\lib\netstandard2.0;
+        $(PackagesPath)Microsoft.VisualStudio.Validation.18.7.19\lib\netstandard2.0;
+        $(PackagesPath)System.Collections.Immutable.10.0.10\lib\net462;
+        $(PackagesPath)System.Memory.4.6.3\lib\net462;
+        $(PackagesPath)System.Buffers.4.6.1\lib\net462;
+        $(PackagesPath)System.Runtime.CompilerServices.Unsafe.6.1.2\lib\net462;
+        $(PackagesPath)System.Threading.Tasks.Extensions.4.6.3\lib\net462;
+        $(PackagesPath)System.IO.Pipelines.10.0.10\lib\net462;
+        $(PackagesPath)System.Text.Json.10.0.10\lib\net462;
+        $(PackagesPath)System.Text.Encodings.Web.10.0.10\lib\net462;
         $(PackagesPath)Microsoft.VisualStudio.Interop.18.0.42421\lib\net472;
         $(PackagesPath)Microsoft.Internal.VisualStudio.Interop.18.0.42421\lib\net472;
         $(PackagesPath)Microsoft.VisualStudio.RpcContracts.18.0.9\lib\netstandard2.0;
-      </_UnifiedSettingsReferencePaths>
+      </_Dev18ReferencePaths>
       <AssemblySearchPaths>
-        $(_UnifiedSettingsReferencePaths)
+        $(_Dev18ReferencePaths)
         $(BuildRoot)Python\References\Dev$(VSTarget);
         $(BuildRoot)Python\References\Common;
         @(_NugetAssemblies->'%(RootDir)%(Directory)',';');

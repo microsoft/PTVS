@@ -16,7 +16,13 @@
 
 using System;
 using System.Runtime.Serialization;
-using Microsoft.VisualStudio.LanguageServer.Protocol;
+#if DEV18_OR_LATER
+using System.Text.Json.Serialization;
+using DocumentUriConverter = Microsoft.PythonTools.LanguageServerClient.ProtocolJsonSerialization.DocumentUriConverter;
+#else
+using Newtonsoft.Json;
+using DocumentUriConverter = Microsoft.VisualStudio.LanguageServer.Protocol.DocumentUriConverter;
+#endif
 
 namespace Microsoft.PythonTools.LanguageServerClient.WorkspaceFolderChanged {
     [DataContract]
@@ -25,14 +31,14 @@ namespace Microsoft.PythonTools.LanguageServerClient.WorkspaceFolderChanged {
          * The associated URI for this workspace folder.
          */
         [DataMember]
-        [Newtonsoft.Json.JsonConverter(typeof(DocumentUriConverter))]
-        public Uri uri;
+        [JsonConverter(typeof(DocumentUriConverter))]
+        public Uri uri { get; set; }
 
         /**
          * The name of the workspace folder. Used to refer to this
          * workspace folder in the user interface.
          */
         [DataMember]
-        public string name;
+        public string name { get; set; }
     }
 }

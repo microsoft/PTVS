@@ -1,10 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
+#if DEV18_OR_LATER
+using System.Text.Json.Serialization;
+using DocumentUriConverter = Microsoft.PythonTools.LanguageServerClient.ProtocolJsonSerialization.DocumentUriConverter;
+#else
 using Newtonsoft.Json;
+using DocumentUriConverter = Microsoft.VisualStudio.LanguageServer.Protocol.DocumentUriConverter;
+#endif
 
 namespace Microsoft.PythonTools.LanguageServerClient.WorkspaceConfiguration {
     /// <summary>
@@ -13,10 +15,10 @@ namespace Microsoft.PythonTools.LanguageServerClient.WorkspaceConfiguration {
     [DataContract]
     internal class ConfigurationItem {
         [DataMember]
-        [JsonConverter(typeof(Microsoft.VisualStudio.LanguageServer.Protocol.DocumentUriConverter))]
-        public Uri scopeUri;
+        [JsonConverter(typeof(DocumentUriConverter))]
+        public Uri scopeUri { get; set; }
 
         [DataMember]
-        public string section;
+        public string section { get; set; }
     }
 }

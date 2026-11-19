@@ -134,7 +134,8 @@
     </Content>
     <Content Include="License_en-US.rtf" />
     <Content Include="$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll" />
-    <Content Include="$(PackagesPath)\Microsoft.VisualStudio.LanguageServer.Protocol\lib\netstandard2.0\Microsoft.VisualStudio.LanguageServer.Protocol.dll" />
+    <Content Include="$(PackagesPath)\Microsoft.VisualStudio.LanguageServer.Protocol.Internal\lib\netstandard2.0\Microsoft.VisualStudio.LanguageServer.Protocol.Internal.dll" Condition="'$(VSTarget)' == '18.0'" />
+    <Content Include="$(PackagesPath)\Microsoft.VisualStudio.LanguageServer.Protocol\lib\netstandard2.0\Microsoft.VisualStudio.LanguageServer.Protocol.dll" Condition="'$(VSTarget)' != '18.0'" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />

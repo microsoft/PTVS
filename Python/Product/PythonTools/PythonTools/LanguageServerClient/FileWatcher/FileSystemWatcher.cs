@@ -17,8 +17,13 @@
 
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
+#if DEV18_OR_LATER
+using System.Text.Json;
+using System.Text.Json.Serialization;
+#else
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+#endif
 
 namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
     /// <summary>
@@ -52,6 +57,51 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
         public Uri BaseUri { get; }
     }
 
+#if DEV18_OR_LATER
+    internal sealed class GlobPatternConverter : JsonConverter<GlobPattern> {
+        public override GlobPattern Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
+            using var document = JsonDocument.ParseValue(ref reader);
+            var token = document.RootElement;
+            if (token.ValueKind == JsonValueKind.String) {
+                return CreatePattern(token.GetString(), null);
+            }
+
+            if (token.ValueKind == JsonValueKind.Object) {
+                if (!token.TryGetProperty("baseUri", out var baseUriToken) ||
+                    !token.TryGetProperty("pattern", out var patternToken) ||
+                    patternToken.ValueKind != JsonValueKind.String) {
+                    throw new JsonException("A relative glob pattern requires a base URI and a pattern.");
+                }
+
+                string baseUriValue;
+                if (baseUriToken.ValueKind == JsonValueKind.String) {
+                    baseUriValue = baseUriToken.GetString();
+                } else if (baseUriToken.ValueKind == JsonValueKind.Object &&
+                    baseUriToken.TryGetProperty("uri", out var uriToken) &&
+                    uriToken.ValueKind == JsonValueKind.String) {
+                    baseUriValue = uriToken.GetString();
+                } else {
+                    throw new JsonException("A relative glob pattern requires an absolute base URI.");
+                }
+
+                if (!Uri.TryCreate(baseUriValue, UriKind.Absolute, out var baseUri)) {
+                    throw new JsonException("A relative glob pattern requires an absolute base URI.");
+                }
+                return CreatePattern(patternToken.GetString(), baseUri);
+            }
+
+            throw new JsonException("Expected a glob string or relative pattern.");
+        }
+
+        private static GlobPattern CreatePattern(string pattern, Uri baseUri) =>
+            string.IsNullOrEmpty(pattern)
+                ? throw new JsonException("A glob pattern cannot be empty.")
+                : new GlobPattern(pattern, baseUri);
+
+        public override void Write(Utf8JsonWriter writer, GlobPattern value, JsonSerializerOptions options) =>
+            throw new NotSupportedException();
+    }
+#else
     internal sealed class GlobPatternConverter : JsonConverter {
         public override bool CanConvert(Type objectType) => objectType == typeof(GlobPattern);
 
@@ -83,6 +133,7 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) =>
             throw new NotSupportedException();
     }
+#endif
 
     [DataContract]
     public class FileSystemWatcher {
