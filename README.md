@@ -31,12 +31,12 @@ Core registers the packaged Internal DLL's strong-name codebase in
 aligned with the protocol package pin. Including the DLL in the VSIX payload
 alone does not make it resolvable by the Visual Studio host.
 
-Restore dependencies through the `msft_consumption` source in
-`Build\nuget.config`. New upstream package versions must first be saved to that
-feed by an authenticated identity with Feed and Upstream Reader (Collaborator)
-permissions or higher; anonymous contributors cannot populate the feed. A
-successful restore from a local cache or a private source does not establish
-that an anonymous clean build can restore the same dependencies.
+`Build\nuget.config` includes `msft_consumption` for general dependencies and
+the public `vs-impl` and `vssdk` feeds for the VS 18 dependency cohort. Internal
+18.14.12 is published by `vs-impl`; the matching editor packages are published
+by `vssdk`. Keep those direct sources until all pinned versions are available
+through `msft_consumption`; a Reader cannot populate that feed from its
+configured upstreams.
 
 Runtime qualification requires a VS main build containing the consolidated LSP
 client, not just a newer build toolset or a newer protocol package. Verify
