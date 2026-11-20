@@ -40,8 +40,15 @@ using Microsoft.VisualStudio.Shell;
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.VSInterpreters", CodeBase = "Microsoft.PythonTools.VSInterpreters.dll", Version = AssemblyVersionInfo.StableVersion)]
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.Workspace", CodeBase = "Microsoft.PythonTools.Workspace.dll", Version = AssemblyVersionInfo.StableVersion)]
 
-// Conditional version for Microsoft.Extensions.FileSystemGlobbing based on VS target
+// Conditional codebase registrations based on VS target
 #if DEV18
+[assembly: ProvideRawCodeBase(
+    AssemblyName = "Microsoft.VisualStudio.LanguageServer.Protocol.Internal",
+    PublicKeyToken = "b03f5f7f11d50a3a",
+    Culture = "neutral",
+    Version = "18.14.12.0",
+    CodeBase = "$PackageFolder$\\Microsoft.VisualStudio.LanguageServer.Protocol.Internal.dll"
+)]
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.Extensions.FileSystemGlobbing", CodeBase = "Microsoft.Extensions.FileSystemGlobbing.dll", Version = "8.0.0.0")]
 #else
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.Extensions.FileSystemGlobbing", CodeBase = "Microsoft.Extensions.FileSystemGlobbing.dll", Version = "3.1.8.0")]
