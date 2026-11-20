@@ -26,6 +26,11 @@ The VS 18 target uses `Microsoft.VisualStudio.LanguageServer.Protocol.Internal`
 retain their legacy protocol references and Newtonsoft.Json message handling.
 This does not remove Newtonsoft.Json from unrelated PTVS components.
 
+Core registers the packaged Internal DLL's strong-name codebase in
+`Python\Product\Core\Properties\AssemblyInfo.cs`. Keep that assembly version
+aligned with the protocol package pin. Including the DLL in the VSIX payload
+alone does not make it resolvable by the Visual Studio host.
+
 Restore dependencies through the `msft_consumption` source in
 `Build\nuget.config`. New upstream package versions must first be saved to that
 feed by an authenticated identity with Feed and Upstream Reader (Collaborator)
