@@ -70,16 +70,16 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         public PackageSpec Package => _package;
 
-        public string PackageSpec {
-            get {
-                if (_package.IsValid) {
-                    if (_package.ExactVersion.IsEmpty) {
-                        return _package.Name;
-                    }
-                    return "{0}=={1}".FormatInvariant(_package.Name, _package.ExactVersion);
+        public string PackageSpec => GetPackageSpecString(_package);
+
+        internal static string GetPackageSpecString(PackageSpec package) {
+            if (package.IsValid) {
+                if (package.ExactVersion.IsEmpty) {
+                    return package.Name;
                 }
-                return Resources.PipPackageUnknownPackageSpec;
+                return "{0}=={1}".FormatInvariant(package.Name, package.ExactVersion);
             }
+            return Resources.PipPackageUnknownPackageSpec;
         }
 
         public string Name => _package.Name;

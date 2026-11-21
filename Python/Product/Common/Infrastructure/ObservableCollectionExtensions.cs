@@ -68,7 +68,8 @@ namespace Microsoft.PythonTools.Infrastructure {
             Func<TRight, TKey> getRightKey,
             Func<TRight, TLeft> project,
             IEqualityComparer<TKey> compareId,
-            IComparer<TKey> compareSortKey
+            IComparer<TKey> compareSortKey,
+            Action<TLeft> onRemoved = null
         ) {
             var toAdd = new SortedList<TKey, TRight>(compareSortKey);
             var toRemove = new Dictionary<TKey, int>(compareId);
@@ -94,6 +95,7 @@ namespace Microsoft.PythonTools.Infrastructure {
             }
 
             foreach (var removeAt in toRemove.Values.Concat(alsoRemove).OrderByDescending(i => i)) {
+                onRemoved?.Invoke(left[removeAt]);
                 left.RemoveAt(removeAt);
             }
 

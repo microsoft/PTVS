@@ -177,6 +177,7 @@
     </Compile>
     <Compile Include="EnvironmentView.cs" />
     <Compile Include="IEnvironmentViewExtension.cs" />
+    <Compile Include="InstallablePackageFilter.cs" />
     <Compile Include="PipExtensionProvider.cs" />
     <Compile Include="PipPackageView.cs" />
     <Compile Include="ToolWindow.xaml.cs">

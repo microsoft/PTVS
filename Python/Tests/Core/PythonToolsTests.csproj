@@ -184,6 +184,8 @@
     <None Include="FuzzyStringMatcherTests.cs" />
     <Compile Include="ImportWizardTests.cs" />
     <Compile Include="LauncherTests.cs" />
+    <Compile Include="InstallablePackageFilterTests.cs" />
+    <Compile Include="ObservableCollectionExtensionsTests.cs" />
     <Compile Include="Pep440VersionTests.cs" />
     <Compile Include="ProcessOutputTests.cs" />
     <Compile Include="ProjectUpgradeTests.cs" />

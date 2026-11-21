@@ -93,14 +93,13 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 .ToArray();
         }
 
-        internal async Task<IList<PipPackageView>> GetAvailablePackagesAsync() {
+        internal async Task<IList<PackageSpec>> GetAvailablePackageSpecsAsync() {
             if (_packageManager == null) {
-                return Array.Empty<PipPackageView>();
+                return Array.Empty<PackageSpec>();
             }
 
             return (await _packageManager.GetInstallablePackagesAsync(_cancelAll.Token))
                 .Where(p => p.IsValid)
-                .Select(p => new PipPackageView(_packageManager, p, false))
                 .ToArray();
         }
 
