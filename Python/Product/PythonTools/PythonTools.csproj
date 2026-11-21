@@ -234,10 +234,8 @@
       <HintPath>$(PackagesPath)\Microsoft.Internal.VisualStudio.Shell.Framework\lib\net472\Microsoft.Internal.VisualStudio.Shell.Framework.dll</HintPath>
       <Private>false</Private>
     </Reference>
-    <Reference Include="Microsoft.VisualStudio.LanguageServer.Protocol.Internal" Condition="'$(VSTarget)' == '18.0'">
-      <Private>True</Private>
-      <IncludeInVSIX>True</IncludeInVSIX>
-    </Reference>
+    <!-- Visual Studio ships this assembly; PTVS binds to that copy instead of packaging its own. -->
+    <Reference Include="Microsoft.VisualStudio.LanguageServer.Protocol.Internal" Condition="'$(VSTarget)' == '18.0'" />
     <Reference Include="Microsoft.VisualStudio.LanguageServer.Protocol" Condition="'$(VSTarget)' != '18.0'">
       <Private>True</Private>
       <IncludeInVSIX>True</IncludeInVSIX>
