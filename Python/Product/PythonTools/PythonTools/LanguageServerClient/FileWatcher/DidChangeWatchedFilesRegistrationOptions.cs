@@ -16,6 +16,9 @@
 
 using System;
 using System.Runtime.Serialization;
+#if DEV18_OR_LATER
+using System.Text.Json.Serialization;
+#endif
 
 namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
     /// <summary>
@@ -23,6 +26,9 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
     /// </summary>
     [DataContract]
     public class DidChangeWatchedFilesRegistrationOptions {
+#if DEV18_OR_LATER
+        [JsonIgnore]
+#endif
         public string RegistrationId {
             get;
             set;

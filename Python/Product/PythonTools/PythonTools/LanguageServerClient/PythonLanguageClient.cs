@@ -20,6 +20,13 @@ using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+#if DEV18_OR_LATER
+using System.Text.Json;
+using System.Text.Json.Nodes;
+#else
+using Newtonsoft.Json.Linq;
+using JsonObject = Newtonsoft.Json.Linq.JObject;
+#endif
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
@@ -40,10 +47,13 @@ using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
 using Microsoft.VisualStudioTools;
-using Newtonsoft.Json.Linq;
 using StreamJsonRpc;
+using DidChangeWatchedFilesRegistrationOptions = Microsoft.PythonTools.LanguageServerClient.FileWatcher.DidChangeWatchedFilesRegistrationOptions;
+using DidChangeWorkspaceFoldersParams = Microsoft.PythonTools.LanguageServerClient.WorkspaceFolderChanged.DidChangeWorkspaceFoldersParams;
 using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
 using Task = System.Threading.Tasks.Task;
+using WorkspaceFolder = Microsoft.PythonTools.LanguageServerClient.WorkspaceFolderChanged.WorkspaceFolder;
+using WorkspaceFoldersChangeEvent = Microsoft.PythonTools.LanguageServerClient.WorkspaceFolderChanged.WorkspaceFoldersChangeEvent;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
     /// <summary>
@@ -412,7 +422,18 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             }
 
             try {
+#if DEV18_OR_LATER
+                var result = await rpc.InvokeWithParameterObjectAsync<JsonElement>(
+                    request, JsonSerializer.SerializeToElement(parameters, ProtocolJsonSerialization.Options), t).ConfigureAwait(false);
+                if (result.ValueKind == JsonValueKind.Null) {
+                    return null;
+                }
+                return typeof(R) == typeof(object)
+                    ? (R)(object)result
+                    : result.Deserialize<R>(ProtocolJsonSerialization.Options);
+#else
                 return await rpc.InvokeWithParameterObjectAsync<R>(request, parameters, t).ConfigureAwait(false);
+#endif
             } catch (ConnectionLostException) {
                 // Pylance crashed mid-request. Returning null - editor LSP integration
                 // tolerates null (no completions / no references shown) rather than
@@ -431,7 +452,12 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             }
 
             try {
+#if DEV18_OR_LATER
+                await rpc.NotifyWithParameterObjectAsync(
+                    request, JsonSerializer.SerializeToElement(parameters, ProtocolJsonSerialization.Options)).ConfigureAwait(false);
+#else
                 await rpc.NotifyWithParameterObjectAsync(request, parameters).ConfigureAwait(false);
+#endif
             } catch (ConnectionLostException) {
                 // Pylance crashed mid-notify - silently drop; the notification is fire-and-forget.
             } catch (ObjectDisposedException) {
@@ -553,11 +579,15 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     }
 
                     var createEvent = new FileEvent();
+#if DEV18_OR_LATER
+                    createEvent.Type = FileChangeType.Changed;
+#else
                     createEvent.FileChangeType = FileChangeType.Changed;
+#endif
                     createEvent.Uri = new Uri(CommonUtils.GetParent(interpreterPath));
                     var didChangeParams = new DidChangeWatchedFilesParams();
                     didChangeParams.Changes = new FileEvent[] { createEvent };
-                    NotifyWithParametersAsync(Methods.WorkspaceDidChangeWatchedFiles.Name, didChangeParams).DoNotWait();
+                    NotifyWithParametersAsync("workspace/didChangeWatchedFiles", didChangeParams).DoNotWait();
                 }
 
 
@@ -738,20 +768,25 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 }
                 try {
                     // If this is the initialize method, add the workspace folders capability
-                    if (message.Value<string>("method") == "initialize") {
-                        if (message.TryGetValue("params", out JToken messageParams)) {
+                    if (message["method"]?.ToString() == "initialize") {
+                        if (message["params"] is JsonObject messageParams) {
                             var capabilities = messageParams["capabilities"];
                             if (capabilities != null) {
                                 if (capabilities["workspace"] == null) {
-                                    capabilities["workspace"] = JToken.FromObject(new { });
+                                    capabilities["workspace"] = new JsonObject();
                                 }
                                 capabilities["workspace"]["workspaceFolders"] = true;
+                                capabilities["workspace"]["didChangeWatchedFiles"] ??= new JsonObject();
                                 capabilities["workspace"]["didChangeWatchedFiles"]["dynamicRegistration"] = true;
                                 capabilities["workspace"]["configuration"] = true;
 
                                 var folders = GetFolders();
                                 if (folders.Any()) {
+#if DEV18_OR_LATER
+                                    messageParams["workspaceFolders"] = JsonSerializer.SerializeToNode(folders, ProtocolJsonSerialization.Options);
+#else
                                     messageParams["workspaceFolders"] = JToken.FromObject(folders.ToArray());
+#endif
                                     _sentInitialWorkspaceFolders = true;
                                     _workspaceFoldersSupported = true;
                                 }
@@ -767,21 +802,21 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                                 return Tuple.Create(MessageParser.Serialize(message), true);
                             }
                         }
-                    } else if (message.Value<string>("method") == "textDocument/codeAction") {
-                        if (message.TryGetValue("params", out JToken messageParams)) {
+                    } else if (message["method"]?.ToString() == "textDocument/codeAction") {
+                        if (message["params"] is JsonObject messageParams) {
                             if (messageParams != null && messageParams["range"] != null
                                 && messageParams["context"] != null
                                 && messageParams["context"]["_vs_selectionRange"] != null) {
                                 var selectionRange = messageParams["context"]["_vs_selectionRange"];
-                                messageParams["range"]["start"] = selectionRange["start"];
-                                messageParams["range"]["end"] = selectionRange["end"];
+                                messageParams["range"]["start"] = selectionRange["start"]?.DeepClone();
+                                messageParams["range"]["end"] = selectionRange["end"]?.DeepClone();
                                 return Tuple.Create(MessageParser.Serialize(message), true);
                             }
 
                         }
                     }
-                } catch {
-                    // Don't care if this happens. Just skip the message
+                } catch (InvalidOperationException ex) {
+                    Trace.TraceWarning("Unable to transform an outgoing Pylance message: {0}", ex);
                 }
             }
 

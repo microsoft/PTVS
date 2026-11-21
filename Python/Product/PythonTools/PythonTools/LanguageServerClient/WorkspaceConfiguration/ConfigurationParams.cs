@@ -12,6 +12,6 @@ namespace Microsoft.PythonTools.LanguageServerClient.WorkspaceConfiguration {
     [DataContract]
     internal class ConfigurationParams {
         [DataMember]
-        public ConfigurationItem[] items;
+        public ConfigurationItem[] items { get; set; }
     }
 }

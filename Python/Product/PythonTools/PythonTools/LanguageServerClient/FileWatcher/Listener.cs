@@ -19,6 +19,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+#if DEV18_OR_LATER
+using System.Text.Json;
+#endif
 using System.Threading.Tasks;
 using Microsoft.Extensions.FileSystemGlobbing;
 using Microsoft.PythonTools.Infrastructure;
@@ -329,48 +332,46 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
                     }
 
                     renamedArgs = null;
-                    didChangeParams.Changes = new FileEvent[] { new FileEvent() };
-                    didChangeParams.Changes[0].Uri = new Uri(e.FullPath);
+                    FileChangeType? changeType = null;
 
                     switch (e.ChangeType) {
                         case WatcherChangeTypes.Created:
-                            didChangeParams.Changes[0].FileChangeType = FileChangeType.Created;
+                            changeType = FileChangeType.Created;
                             break;
                         case WatcherChangeTypes.Deleted:
-                            didChangeParams.Changes[0].FileChangeType = FileChangeType.Deleted;
+                            changeType = FileChangeType.Deleted;
                             break;
                         case WatcherChangeTypes.Changed:
-                            didChangeParams.Changes[0].FileChangeType = FileChangeType.Changed;
+                            changeType = FileChangeType.Changed;
                             break;
                         case WatcherChangeTypes.Renamed:
-                            didChangeParams.Changes[0].FileChangeType = FileChangeType.Changed;
-                            break;
-
-                        default:
-                            didChangeParams.Changes = Array.Empty<FileEvent>();
+                            changeType = FileChangeType.Changed;
                             break;
                     }
+                    didChangeParams.Changes = changeType.HasValue
+                        ? new[] { CreateFileEvent(e.FullPath, changeType.Value) }
+                        : Array.Empty<FileEvent>();
                 } else {
                     // file renamed
                     var changes = new List<FileEvent>();
                     if (matchesOldPath) {
-                        changes.Add(new FileEvent {
-                            FileChangeType = FileChangeType.Deleted,
-                            Uri = new Uri(renamedArgs.OldFullPath)
-                        });
+                        changes.Add(CreateFileEvent(renamedArgs.OldFullPath, FileChangeType.Deleted));
                     }
                     if (matchesNewPath) {
-                        changes.Add(new FileEvent {
-                            FileChangeType = FileChangeType.Created,
-                            Uri = new Uri(renamedArgs.FullPath)
-                        });
+                        changes.Add(CreateFileEvent(renamedArgs.FullPath, FileChangeType.Created));
                     }
                     didChangeParams.Changes = changes.ToArray();
                 }
 
                 if (didChangeParams.Changes.Any()) {
                     try {
-                        await rpc.NotifyWithParameterObjectAsync(Methods.WorkspaceDidChangeWatchedFiles.Name, didChangeParams);
+#if DEV18_OR_LATER
+                        await rpc.NotifyWithParameterObjectAsync(
+                            "workspace/didChangeWatchedFiles",
+                            JsonSerializer.SerializeToElement(didChangeParams, ProtocolJsonSerialization.Options));
+#else
+                        await rpc.NotifyWithParameterObjectAsync("workspace/didChangeWatchedFiles", didChangeParams);
+#endif
                     } catch (ObjectDisposedException) {
                         // The JsonRpc was disposed by its owner before Disconnected reached us.
                     } catch (ConnectionLostException) {
@@ -379,6 +380,15 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
                 }
             }
         }
+
+        private static FileEvent CreateFileEvent(string path, FileChangeType changeType) => new FileEvent {
+            Uri = new Uri(path),
+#if DEV18_OR_LATER
+            Type = changeType
+#else
+            FileChangeType = changeType
+#endif
+        };
 
         protected virtual void Dispose(bool disposing) {
             if (!disposing) {

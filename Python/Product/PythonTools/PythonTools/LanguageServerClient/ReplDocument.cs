@@ -62,6 +62,9 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
             var textDocItem = new LSP.TextDocumentItem {
                 Uri = new Uri(_tempFilePath),
+#if DEV18_OR_LATER
+                LanguageId = LSP.LanguageKind.Python,
+#endif
                 Text = string.Empty,
                 Version = _version,
             };
@@ -118,7 +121,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             // server are expected to apply to the state as of the previous change in the list. To prevent the
             // changes from affecting one another we reverse the list.
             foreach (var textChange in textChanges.Reverse()) {
+#if DEV18_OR_LATER
+                var changeEvent = new LSP.TextDocumentContentChangePartial {
+#else
                 var changeEvent = new LSP.TextDocumentContentChangeEvent {
+#endif
                     Text = textChange.NewText,
                     Range = new LSP.Range {
                         Start = new LSP.Position {
@@ -133,7 +140,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     RangeLength = textChange.OldSpan.Length
                 };
 
+#if DEV18_OR_LATER
+                contentChanges.Add(new LSP.TextDocumentContentChangeEvent(changeEvent));
+#else
                 contentChanges.Add(changeEvent);
+#endif
             }
 
             _version++;

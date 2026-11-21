@@ -15,6 +15,9 @@
 // permissions and limitations under the License.
 
 using System.Runtime.Serialization;
+#if DEV18_OR_LATER
+using System.Text.Json.Serialization;
+#endif
 
 namespace Microsoft.PythonTools.LanguageServerClient.WorkspaceFolderChanged {
     /// <summary>
@@ -26,6 +29,9 @@ namespace Microsoft.PythonTools.LanguageServerClient.WorkspaceFolderChanged {
 	    * The actual workspace folder change event.
 	    */
         [DataMember(Name = "event")]
-        public WorkspaceFoldersChangeEvent changeEvent;
+#if DEV18_OR_LATER
+        [JsonPropertyName("event")]
+#endif
+        public WorkspaceFoldersChangeEvent changeEvent { get; set; }
     }
 }

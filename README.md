@@ -19,6 +19,37 @@ A different unsupported version can still show its own warning. Closing the bar
 without that action only dismisses it for the current project or workspace
 session. This does not change which Python versions or features are supported.
 
+## Building the VS 18 language client
+
+The VS 18 target uses `Microsoft.VisualStudio.LanguageServer.Protocol.Internal`
+18.14.12 and System.Text.Json for its Pylance protocol messages. Older VS targets
+retain their legacy protocol references and Newtonsoft.Json message handling.
+This does not remove Newtonsoft.Json from unrelated PTVS components.
+
+PTVS compiles against the Internal package but does not ship the DLL; at runtime
+it binds to the copy that Visual Studio ships. Visual Studio redirects older
+18.14 references to its newer copy but cannot redirect to an older one, so keep
+the package pin at or below the version shipped by every VS build that PTVS
+targets.
+
+Restore dependencies only through the `msft_consumption` source in
+`Build\nuget.config`; the build's Secure Supply Chain Analysis fails if that file
+declares additional feeds. New upstream package versions must first be saved to
+`msft_consumption` by an authenticated identity with Feed and Upstream Reader
+(Collaborator) permissions or higher; anonymous contributors and CI builds cannot
+populate the feed. A successful restore from a local cache or a private source
+does not establish that an anonymous clean build can restore the same
+dependencies.
+
+Runtime qualification requires a VS main build containing the consolidated LSP
+client, not just a newer build toolset or a newer protocol package. Verify
+completion and commit in both the editor and Interactive Window, hover and
+signature help, navigation, diagnostics, code actions and rename, workspace and
+interpreter settings, file-change notifications, and solution shutdown/reopen.
+The existing PTVS file-watching, workspace, cancellation, and stream
+compatibility code is retained; replacing it with built-in VS support is a
+separate change.
+
 ## Visual Studio 2017 and Visual Studio 2019 installation
 
 The Python development workload is available as part of [Visual Studio](https://aka.ms/PTVS) Community, Professional and Enterprise. To install, run the [normal VS installer](https://visualstudio.com/vs/downloads?wt.mc_id=github_microsoft_com) and select either the **Python development workload** or the **Data science and analytical applications workload**.

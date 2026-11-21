@@ -23,12 +23,12 @@ namespace Microsoft.PythonTools.LanguageServerClient.WorkspaceFolderChanged {
 	     * The array of added workspace folders
 	     */
         [DataMember]
-        public WorkspaceFolder[] added;
+        public WorkspaceFolder[] added { get; set; }
 
         /**
          * The array of the removed workspace folders
          */
         [DataMember]
-        public WorkspaceFolder[] removed;
+        public WorkspaceFolder[] removed { get; set; }
     }
 }
