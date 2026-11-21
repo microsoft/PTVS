@@ -32,12 +32,14 @@ it binds to the copy that Visual Studio ships. Visual Studio redirects older
 the package pin at or below the version shipped by every VS build that PTVS
 targets.
 
-`Build\nuget.config` includes `msft_consumption` for general dependencies and
-the public `vs-impl` and `vssdk` feeds for the VS 18 dependency cohort. Internal
-18.14.12 is published by `vs-impl`; the matching editor packages are published
-by `vssdk`. Keep those direct sources until all pinned versions are available
-through `msft_consumption`; a Reader cannot populate that feed from its
-configured upstreams.
+Restore dependencies only through the `msft_consumption` source in
+`Build\nuget.config`; the build's Secure Supply Chain Analysis fails if that file
+declares additional feeds. New upstream package versions must first be saved to
+`msft_consumption` by an authenticated identity with Feed and Upstream Reader
+(Collaborator) permissions or higher; anonymous contributors and CI builds cannot
+populate the feed. A successful restore from a local cache or a private source
+does not establish that an anonymous clean build can restore the same
+dependencies.
 
 Runtime qualification requires a VS main build containing the consolidated LSP
 client, not just a newer build toolset or a newer protocol package. Verify
